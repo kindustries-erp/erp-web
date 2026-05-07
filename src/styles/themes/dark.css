@@ -1,0 +1,49 @@
+/* ══════════════════════════════════════════
+   Dark Theme Variables
+   ══════════════════════════════════════════ */
+.dark {
+  /* ── Palette ── */
+  --background: #070b12;
+  --surface: #111827;
+  --surface-hover: #1a2435;
+  --border: #263247;
+  --border-light: #1d2636;
+  --foreground: #f4f7fb;
+  --muted: #0d1420;
+  --muted-fg: #aab6ca;
+  --faint: #76849d;
+  --primary: #e9eef7;
+  --primary-fg: #0b1220;
+
+  /* ── Semantic colors ── */
+  --up-bg: #0c2a1b;
+  --up-fg: #4ade80;
+  --down-bg: #321707;
+  --down-fg: #fb923c;
+  --warn-bg: #332900;
+  --warn-fg: #facc15;
+  --approve-bg: #0c2a1b;
+  --approve-fg: #4ade80;
+
+  --card-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03), 0 14px 34px rgba(0, 0, 0, 0.24);
+
+  /* ── Glass chrome (top bar & tab bar only) ── */
+  --glass-chrome: rgba(8, 13, 21, 0.84);
+  --glass-border: rgba(148, 163, 184, 0.15);
+  --glass-blur: 20px;
+
+  /* ── Popups & dropdowns ── */
+  --popup-bg: #121b2b;
+  --popup-bg-hover: #1b2638;
+  --popup-border: #2a374d;
+  --popup-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
+
+  /* ── App shell ── */
+  --app-shell-bg: #070a10;
+  --app-shell-border: #182236;
+  --sidebar-bg: #1d1d1d;
+  --sidebar-border: #2c3447;
+  --main-panel-bg: #0b111c;
+  --main-panel-border: #223049;
+}

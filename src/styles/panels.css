@@ -1,0 +1,282 @@
+/* ══════════════════════════════════════════
+   Panels — Slide Panel, Partner Drawer,
+   Import Modal, Toast
+   ══════════════════════════════════════════ */
+
+/* ── Slide Panel Overlay ── */
+.slide-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 400;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s;
+}
+.slide-panel-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.dark .slide-panel-overlay {
+  background: rgba(0, 0, 0, 0);
+}
+
+/* ── Slide Panel ── */
+.slide-panel {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  bottom: 18px;
+  width: 420px;
+  max-width: calc(100vw - 44px);
+  height: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateX(calc(100% + 16px));
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-panel-overlay.open .slide-panel {
+  transform: translateX(0);
+}
+
+@media (max-width: 500px) {
+  .slide-panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+    border: none;
+  }
+  /* Panels overlay each other at full width on mobile */
+  .slide-panel-overlay.open .slide-panel {
+    transform: translateX(0) !important;
+  }
+}
+
+/* ── Partner Drawer ── */
+.partner-drawer-panel {
+  width: min(1180px, calc(100vw - 44px));
+}
+.partner-drawer-body {
+  padding: 14px 16px;
+}
+
+.partner-drawer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 0.55fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.partner-card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.86),
+      rgba(255, 255, 255, 0.72)
+    ),
+    var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 12px 8px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+}
+.dark .partner-card {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.02)
+    ),
+    var(--surface);
+}
+
+/* Grid placement */
+.partner-card-main {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+.partner-card-role {
+  grid-column: 3;
+  grid-row: 1;
+}
+.partner-card-contact {
+  grid-column: 1;
+  grid-row: 2;
+}
+.partner-card-bank {
+  grid-column: 2 / 4;
+  grid-row: 2;
+}
+
+.partner-card > div {
+  margin-bottom: 0;
+}
+.partner-card > div > div:first-child {
+  margin: -2px 0 10px;
+  padding-bottom: 7px;
+  letter-spacing: 0.12em;
+}
+
+/* Partner drawer form sizing */
+.partner-drawer-panel input,
+.partner-drawer-panel textarea,
+.partner-drawer-panel [data-radix-popper-content-wrapper] button,
+.partner-drawer-panel [role="combobox"],
+.partner-drawer-panel button {
+  font-size: 12px;
+}
+.partner-drawer-panel input,
+.partner-drawer-panel textarea {
+  background: color-mix(in srgb, var(--muted) 72%, var(--surface));
+}
+.partner-drawer-panel textarea {
+  min-height: 52px;
+}
+.partner-drawer-panel .mb-\[10px\] {
+  margin-bottom: 8px;
+}
+
+/* Partner check row & sub-items */
+.partner-check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+.partner-check-row label {
+  min-height: 24px;
+}
+
+.partner-sublist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.partner-subitem {
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, var(--muted));
+  border-radius: 10px;
+  padding: 9px 9px 6px;
+}
+.partner-subitem-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+.partner-subitem-head button,
+.partner-add-line {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted-fg);
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.partner-subitem-head button:hover,
+.partner-add-line:hover {
+  color: var(--foreground);
+  background: var(--surface-hover);
+}
+
+.partner-add-line {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-style: dashed;
+}
+
+@media (max-width: 900px) {
+  .partner-drawer-grid {
+    grid-template-columns: 1fr;
+  }
+  .partner-card-main,
+  .partner-card-role,
+  .partner-card-contact,
+  .partner-card-bank {
+    grid-column: 1;
+    grid-row: auto;
+  }
+}
+
+/* ── Import Modal ── */
+.import-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.import-modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.dark .import-modal-overlay {
+  background: rgba(0, 0, 0, 0);
+}
+.import-modal-overlay.open .slide-panel {
+  transform: translateX(0);
+}
+
+/* ── Toast ── */
+.toast-root[data-state="open"] {
+  animation: toast-in 180ms ease-out;
+}
+.toast-root[data-state="closed"] {
+  animation: toast-out 160ms ease-in;
+}
+.toast-root[data-swipe="move"] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+.toast-root[data-swipe="cancel"] {
+  transform: translateX(0);
+  transition: transform 160ms ease-out;
+}
+.toast-root[data-swipe="end"] {
+  animation: toast-swipe-out 140ms ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 24px));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes toast-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 24px));
+  }
+}
+@keyframes toast-swipe-out {
+  from {
+    transform: translateX(var(--radix-toast-swipe-end-x));
+  }
+  to {
+    transform: translateX(calc(100% + 24px));
+  }
+}

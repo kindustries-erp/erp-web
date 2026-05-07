@@ -1,0 +1,21 @@
+/* ── Theme Variables ── */
+@import "./styles/themes/default.css";
+@import "./styles/themes/dark.css";
+@import "./styles/themes/classic.css";
+@import "./styles/themes/classic-dark.css";
+
+/* ── Base & Reset ── */
+@import "./styles/base.css";
+
+/* ── App Shell & Layout ── */
+@import "./styles/shell.css";
+
+/* ── UI Components ── */
+@import "./styles/components.css";
+
+/* ── Overlay Panels & Toast ── */
+@import "./styles/panels.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

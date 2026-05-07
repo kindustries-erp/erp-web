@@ -1,0 +1,378 @@
+/* ══════════════════════════════════════════
+   Shell — App Shell, Sidebar, Right Panel,
+   Topbar, Tab Bar, App Content,
+   Sub Nav, Mobile Responsive
+   ══════════════════════════════════════════ */
+
+/* ── App Shell ── */
+.app-shell {
+  gap: 8px;
+  margin: 8px;
+  padding: 8px 0px 8px 8px;
+  height: calc(100vh - 16px) !important;
+  border: 1px solid var(--app-shell-border);
+  border-radius: 20px;
+  background: var(--app-shell-bg);
+  box-shadow:
+    0 10px 24px rgba(2, 6, 23, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+.dark .app-shell {
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.theme-classic .app-shell {
+  padding: 0;
+  border-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--background);
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  background: var(--sidebar-bg);
+  border: none;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 4;
+  /* Scoped tokens so sidebar children use its own palette */
+  --surface: #1e1e1e;
+  --surface-hover: #2a2a2a;
+  --border: var(--sidebar-border);
+  --muted: #2a2a2a;
+  --foreground: #e8eeff;
+  --muted-fg: #aab8d6;
+  --faint: #7f93bd;
+}
+.dark .sidebar {
+  --surface: #111827;
+  --surface-hover: #20263a;
+  --muted: #172033;
+  --foreground: #f8fafc;
+  --muted-fg: #c4ccdc;
+  --faint: #95a0b8;
+}
+.theme-classic .sidebar {
+  margin: 8px 0 8px 8px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 16px;
+  --surface: var(--sidebar-bg);
+  --surface-hover: var(--muted);
+  --border: var(--sidebar-border);
+  --muted: #f8fafc;
+  --foreground: #0f172a;
+  --muted-fg: #64748b;
+  --faint: #94a3b8;
+}
+.theme-classic.dark .sidebar {
+  --surface: var(--sidebar-bg);
+  --surface-hover: #2a2a2c;
+  --border: var(--sidebar-border);
+  --muted: #2a2a2c;
+  --foreground: #f0f0ee;
+  --muted-fg: #909090;
+  --faint: #666;
+}
+
+/* Collapsed state */
+.sidebar.collapsed {
+  width: 52px;
+}
+
+.sidebar.collapsed .hide-on-collapse {
+  opacity: 0;
+  max-width: 0;
+  pointer-events: none;
+  overflow: hidden;
+  display: none;
+}
+.sidebar.collapsed .sidebar-label-el {
+  opacity: 0;
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+.sidebar.collapsed .sub-nav-el {
+  max-height: 0 !important;
+}
+.sidebar.collapsed .nav-arrow-el {
+  opacity: 0;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding-left: 0;
+  padding-right: 0;
+  gap: 0;
+  justify-content: center;
+}
+.sidebar.collapsed .sidebar-logo-wrap {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  flex: 0 0 0;
+  padding: 0;
+}
+.sidebar.collapsed .sidebar-bottom {
+  padding-left: 0;
+  padding-right: 0;
+}
+.sidebar.collapsed .sidebar-bottom button,
+.sidebar.collapsed .sidebar-bottom > div {
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
+.sidebar.collapsed .sidebar-nav-section {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.sidebar.collapsed .nav-icon {
+  transform: translateX(4px);
+}
+
+/* ── Right Panel ── */
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--main-panel-border);
+  background: var(--main-panel-bg);
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.05);
+  position: relative;
+  z-index: 2;
+  isolation: isolate;
+}
+.dark .right-panel {
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.theme-classic .right-panel {
+  margin: 8px 0 8px 0;
+  box-shadow:
+    0 8px 24px rgba(15, 23, 42, 0.08),
+    0 2px 8px rgba(15, 23, 42, 0.05);
+}
+.theme-classic.dark .right-panel {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ── App Content ── */
+.app-content {
+  /* topbar(54px) + desired content spacing(20px) */
+  padding-top: calc(54px + 20px);
+  padding-bottom: calc(54px + 20px) !important;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.dark .app-content {
+  border-color: #26344b;
+  background: #111827;
+}
+.theme-classic .app-content {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* ── Topbar ── */
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  flex-shrink: 0;
+  background: var(--background);
+  border-bottom: 0.5px solid var(--glass-border);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.theme-classic .topbar {
+  background: var(--background);
+}
+
+/* ── Tab Bar ── */
+.tab-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  z-index: 20;
+  flex-shrink: 0;
+  background: var(--background);
+  border-top: 0.5px solid var(--glass-border);
+  padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Sub Nav ── */
+.sub-nav-el {
+  overflow: hidden;
+  transition: max-height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ══════════════════════════════════════════
+   Mobile — max-width: 768px
+   ══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .app-shell {
+    margin: 0;
+    padding: 8px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    height: 100vh !important;
+    gap: 0;
+    justify-content: center;
+  }
+  .theme-classic .app-shell {
+    padding: 8px;
+  }
+
+  .right-panel {
+    flex: 1 1 auto;
+    width: 100%;
+    margin: 0;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: none;
+  }
+  .theme-classic .right-panel {
+    margin: 0;
+  }
+  .dark .right-panel {
+    box-shadow: none;
+  }
+  .right-panel > .flex-1 {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .app-content {
+    margin: 6px;
+    /* topbar(48px) + desired content spacing(16px) */
+    padding-top: calc(48px + 16px) !important;
+    padding-bottom: calc(48px + 16px) !important;
+    padding-left: 16px;
+    padding-right: 16px;
+    border-radius: 12px;
+  }
+  .theme-classic .app-content {
+    margin: 6px;
+    border-radius: 12px;
+  }
+
+  .mobile-sidebar-overlay {
+    background: transparent;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: min(66svh, 620px);
+    max-height: calc(100svh - 18px);
+    z-index: 300;
+    width: 100vw !important;
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 22px 22px 0 0;
+  }
+  .theme-classic .sidebar {
+    margin: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-radius: 22px 22px 0 0;
+  }
+  .sidebar.mobile-open {
+    transform: translateY(0);
+  }
+  .sidebar.collapsed {
+    width: 100vw !important;
+  }
+
+  /* Restore collapsed items on mobile (full-width drawer shows everything) */
+  .sidebar.collapsed .hide-on-collapse {
+    display: block !important;
+    opacity: 1 !important;
+    max-width: none !important;
+    pointer-events: auto !important;
+  }
+  .sidebar.collapsed .sidebar-label-el {
+    opacity: 1 !important;
+    height: auto !important;
+  }
+  .sidebar.collapsed .sub-nav-el {
+    max-height: none !important;
+  }
+  .sidebar.collapsed .nav-arrow-el {
+    opacity: 1 !important;
+  }
+  .sidebar.collapsed .nav-icon {
+    transform: none !important;
+  }
+
+  .sidebar.collapsed .sidebar-header {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+  }
+  .sidebar.collapsed .sidebar-logo-wrap {
+    max-width: none !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    flex: 1 1 0% !important;
+  }
+  .sidebar.collapsed .sidebar-nav-section {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  .sidebar.collapsed .sidebar-bottom {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .sidebar.collapsed .sidebar-bottom button,
+  .sidebar.collapsed .sidebar-bottom > div {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    justify-content: flex-start !important;
+  }
+
+  .sidebar-toggle-btn {
+    display: none !important;
+  }
+  .mobile-hamburger {
+    display: flex !important;
+  }
+}
