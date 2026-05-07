@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml build",
+    "docker:up": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml up -d",
+    "docker:deploy": "npm run docker:build && npm run docker:up"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",

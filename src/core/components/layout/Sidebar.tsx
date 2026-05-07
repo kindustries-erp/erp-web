@@ -434,17 +434,17 @@ export function Sidebar() {
   const [baocaoOpen, setBaocaoOpen] = useState(isInBaoCaoGroup);
   // ── Permission gates (hide sections the current session cannot access) ──
   const canFinance = useHasAnyPermission([
-    "gw_payment_vouchers",
-    "gw_cash_funds",
-    "gw_company_bank_accounts",
-    "gw_chart_of_accounts",
+    "payment_vouchers",
+    "cash_funds",
+    "company_bank_accounts",
+    "chart_of_accounts",
   ]);
   const canHR = useHasAnyPermission([
-    "gw_employees",
-    "gw_departments",
-    "gw_positions",
+    "employees",
+    "departments",
+    "positions",
   ]);
-  const canPartners = useHasPermission("gw_business_partners");
+  const canPartners = useHasPermission("business_partners");
   const canActivityLog = useHasPermission("directus_activity");
   const canRBAC = useHasPermission("directus_roles");
 

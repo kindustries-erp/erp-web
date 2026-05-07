@@ -80,64 +80,64 @@ export interface CollectionDef {
 export const RBAC_COLLECTIONS: CollectionDef[] = [
   // Tài chính
   {
-    collection: "gw_payment_vouchers",
+    collection: "payment_vouchers",
     label: "Phiếu thu/chi",
     group: "Tài chính",
   },
   {
-    collection: "gw_payment_voucher_attachments",
+    collection: "payment_voucher_attachments",
     label: "Đính kèm chứng từ",
     group: "Tài chính",
   },
   {
-    collection: "gw_payment_voucher_approval_logs",
+    collection: "payment_voucher_approval_logs",
     label: "Nhật ký duyệt phiếu thu/chi",
     group: "Tài chính",
   },
-  { collection: "gw_cash_funds", label: "Quỹ tiền mặt", group: "Tài chính" },
+  { collection: "cash_funds", label: "Quỹ tiền mặt", group: "Tài chính" },
   {
-    collection: "gw_company_bank_accounts",
+    collection: "company_bank_accounts",
     label: "TK NH công ty",
     group: "Tài chính",
   },
   {
-    collection: "gw_chart_of_accounts",
+    collection: "chart_of_accounts",
     label: "Sơ đồ tài khoản",
     group: "Tài chính",
   },
   {
-    collection: "gw_accounting_accounts",
+    collection: "accounting_accounts",
     label: "Tài khoản kế toán",
     group: "Tài chính",
   },
   {
-    collection: "gw_opening_balances",
+    collection: "opening_balances",
     label: "Số dư đầu kỳ",
     group: "Tài chính",
   },
   {
-    collection: "gw_voucher_numbering_configs",
+    collection: "voucher_numbering_configs",
     label: "Cấu hình số chứng từ",
     group: "Tài chính",
   },
   // Nhân sự
-  { collection: "gw_employees", label: "Nhân viên", group: "Nhân sự" },
-  { collection: "gw_departments", label: "Phòng ban", group: "Nhân sự" },
-  { collection: "gw_positions", label: "Chức danh", group: "Nhân sự" },
+  { collection: "employees", label: "Nhân viên", group: "Nhân sự" },
+  { collection: "departments", label: "Phòng ban", group: "Nhân sự" },
+  { collection: "positions", label: "Chức danh", group: "Nhân sự" },
   // Đối tác
-  { collection: "gw_business_partners", label: "Đối tác", group: "Đối tác" },
+  { collection: "business_partners", label: "Đối tác", group: "Đối tác" },
   {
-    collection: "gw_business_partner_roles",
+    collection: "business_partner_roles",
     label: "Vai trò đối tác",
     group: "Đối tác",
   },
   {
-    collection: "gw_business_partner_contacts",
+    collection: "business_partner_contacts",
     label: "Liên hệ đối tác",
     group: "Đối tác",
   },
   {
-    collection: "gw_business_partner_bank_accounts",
+    collection: "business_partner_bank_accounts",
     label: "TK NH đối tác",
     group: "Đối tác",
   },
