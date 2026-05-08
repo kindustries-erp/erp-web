@@ -46,10 +46,13 @@ import { VoucherKpiRow } from "@/modules/finance/components/VoucherKpiRow";
 import { VoucherChartRow } from "@/modules/finance/components/VoucherChartRow";
 import { VoucherTable } from "@/modules/finance/components/VoucherTable";
 import { CashVoucherDrawer } from "@/modules/finance/components/CashVoucherDrawer";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 export function TienMat() {
   const isDark = useAppStore((s) => s.isDark);
   const t = useT();
+  const canCreateVoucher = useHasPermission("payment_vouchers", "create");
+  const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
 
   // ── Hooks ──────────────────────────────────────────────────────────────────
   const {
@@ -374,14 +377,16 @@ export function TienMat() {
         desc={t("tienmat.desc")}
         icon={<Wallet className="h-4 w-4" />}
         actions={
-          <>
-          <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}>
-            <IconPlus /> {t("tienmat.createReceipt")}
-          </BtnPrimary>
-          <BtnPrimary onClick={() => openNew("CASH_PAYMENT")}>
-            <IconPlus /> {t("tienmat.createPayment")}
-          </BtnPrimary>
-          </>
+          canCreateVoucher ? (
+            <>
+              <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}>
+                <IconPlus /> {t("tienmat.createReceipt")}
+              </BtnPrimary>
+              <BtnPrimary onClick={() => openNew("CASH_PAYMENT")}>
+                <IconPlus /> {t("tienmat.createPayment")}
+              </BtnPrimary>
+            </>
+          ) : undefined
         }
         className="mb-4"
       />
@@ -495,6 +500,7 @@ export function TienMat() {
         coaOpts={coaOpts}
         debitAccountOpts={debitAccountOpts}
         creditAccountOpts={creditAccountOpts}
+        canUpdateVoucher={canUpdateVoucher}
         onClose={closeDrawer}
         onSave={handleSave}
         onStatusTransition={(action) => handleStatusTransition(action, reloadAll)}

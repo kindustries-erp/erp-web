@@ -365,6 +365,10 @@ export async function getPaymentVouchersPagedApi(
     amount_max?: number;
     counterparty_source?: CounterpartySource;
     employee_id?: string;
+    /** Filter by counterparty (business partner / employee) ID */
+    counterparty_id?: string;
+    /** Filter by voucher direction (IN or OUT) */
+    voucher_direction?: VoucherDirection;
   } = {},
 ): Promise<PaginatedResponse<PaymentVoucher>> {
   const page = params.page ?? 1;
@@ -386,6 +390,8 @@ export async function getPaymentVouchersPagedApi(
     params.amount_max ?? "",
     params.counterparty_source ?? "",
     params.employee_id ?? "",
+    params.counterparty_id ?? "",
+    params.voucher_direction ?? "",
   ].join(":");
 
   return dedupeRequest(key, async () => {
@@ -407,6 +413,8 @@ export async function getPaymentVouchersPagedApi(
           ...(params.amount_max != null ? { amount_max: params.amount_max } : {}),
           ...(params.counterparty_source ? { counterparty_source: params.counterparty_source } : {}),
           ...(params.employee_id ? { employee_id: params.employee_id } : {}),
+          ...(params.counterparty_id ? { counterparty_id: params.counterparty_id } : {}),
+          ...(params.voucher_direction ? { voucher_direction: params.voucher_direction } : {}),
         },
       },
     );
@@ -728,4 +736,212 @@ export async function getVoucherApprovalLogsApi(
     params: { payment_voucher_id: voucherId, pageSize: 50 },
   });
   return data.items;
+}
+
+// ─── PartnerLedger ────────────────────────────────────────────────────────────
+
+export type PartnerLedgerItemType = "RECEIVABLE" | "PAYABLE";
+export type PartnerLedgerSourceType =
+  | "OPENING"
+  | "MANUAL"
+  | "SALES_DOC"
+  | "PURCHASE_DOC"
+  | "ADJUSTMENT";
+export type PartnerLedgerStatus = "OPEN" | "PARTIAL" | "SETTLED" | "CANCELLED";
+
+export interface PartnerLedgerItem {
+  id: string;
+  item_no: string;
+  item_type: PartnerLedgerItemType;
+  source_type: PartnerLedgerSourceType;
+  business_partner_id: string;
+  accounting_account_id: string;
+  document_date: string;
+  posting_date: string;
+  due_date: string | null;
+  reference_no: string | null;
+  description: string;
+  currency: string;
+  original_amount: number;
+  settled_amount: number;
+  open_amount: number;
+  status: PartnerLedgerStatus;
+  note: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface CreatePartnerLedgerItemDto {
+  item_no: string;
+  item_type: PartnerLedgerItemType;
+  source_type?: PartnerLedgerSourceType;
+  business_partner_id: string;
+  accounting_account_id: string;
+  document_date: string;
+  posting_date: string;
+  due_date?: string;
+  reference_no?: string;
+  description: string;
+  currency?: string;
+  original_amount: number;
+  note?: string;
+}
+
+export type UpdatePartnerLedgerItemDto = Partial<CreatePartnerLedgerItemDto>;
+
+export interface PartnerLedgerSummary {
+  total_open: number;
+  total_overdue: number;
+  total_settled: number;
+  total_count: number;
+  buckets: {
+    current: number;
+    days_1_30: number;
+    days_31_60: number;
+    days_61_90: number;
+    days_90_plus: number;
+  };
+}
+
+export interface PartnerLedgerSettlement {
+  id: string;
+  partner_ledger_item_id: string;
+  payment_voucher_id: string;
+  settlement_date: string;
+  amount: number;
+  note: string | null;
+  created_at: string;
+}
+
+export interface CreatePartnerLedgerSettlementDto {
+  partner_ledger_item_id: string;
+  payment_voucher_id: string;
+  settlement_date: string;
+  amount: number;
+  note?: string;
+}
+
+export interface PartnerLedgerListParams extends ListParams {
+  item_type?: PartnerLedgerItemType;
+  business_partner_id?: string;
+  accounting_account_id?: string;
+  status?: PartnerLedgerStatus;
+  due_from?: string;
+  due_to?: string;
+  overdue?: boolean;
+}
+
+export interface PartnerLedgerSettlementListParams extends ListParams {
+  partner_ledger_item_id?: string;
+  payment_voucher_id?: string;
+}
+
+export async function getPartnerLedgerItemsApi(
+  params: PartnerLedgerListParams = {},
+): Promise<PaginatedResponse<PartnerLedgerItem>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<PartnerLedgerItem>>(
+    "/api/v1/partner-ledger-items",
+    {
+      params: {
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        sort: (params.sort ?? ["-document_date"]).join(","),
+        ...(params.search ? { search: params.search } : {}),
+        ...(params.item_type ? { item_type: params.item_type } : {}),
+        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+        ...(params.accounting_account_id ? { accounting_account_id: params.accounting_account_id } : {}),
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.due_from ? { due_from: params.due_from } : {}),
+        ...(params.due_to ? { due_to: params.due_to } : {}),
+        ...(params.overdue ? { overdue: true } : {}),
+      },
+    },
+  );
+  return data;
+}
+
+export async function getPartnerLedgerItemApi(
+  id: string,
+): Promise<PartnerLedgerItem> {
+  const { data } = await axiosInstance.get<
+    { data?: PartnerLedgerItem } | PartnerLedgerItem
+  >(`/api/v1/partner-ledger-items/${id}`);
+  return "data" in data && data.data ? data.data : (data as PartnerLedgerItem);
+}
+
+export async function getPartnerLedgerSummaryApi(
+  params: {
+    item_type?: PartnerLedgerItemType;
+    business_partner_id?: string;
+    accounting_account_id?: string;
+  } = {},
+): Promise<PartnerLedgerSummary> {
+  const { data } = await axiosInstance.get<PartnerLedgerSummary>(
+    "/api/v1/partner-ledger-items/summary",
+    { params },
+  );
+  return data;
+}
+
+export async function createPartnerLedgerItemApi(
+  dto: CreatePartnerLedgerItemDto,
+): Promise<PartnerLedgerItem> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PartnerLedgerItem;
+  }>("/api/v1/partner-ledger-items", dto);
+  return data.data;
+}
+
+export async function updatePartnerLedgerItemApi(
+  id: string,
+  dto: UpdatePartnerLedgerItemDto,
+): Promise<PartnerLedgerItem> {
+  const { data } = await axiosInstance.patch<{
+    message: string;
+    data: PartnerLedgerItem;
+  }>(`/api/v1/partner-ledger-items/${id}`, dto);
+  return data.data;
+}
+
+export async function deletePartnerLedgerItemApi(id: string): Promise<void> {
+  await axiosInstance.delete(`/api/v1/partner-ledger-items/${id}`);
+}
+
+export async function getPartnerLedgerSettlementsApi(
+  params: PartnerLedgerSettlementListParams = {},
+): Promise<PaginatedResponse<PartnerLedgerSettlement>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<PartnerLedgerSettlement>>(
+    "/api/v1/partner-ledger-settlements",
+    {
+      params: {
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        sort: (params.sort ?? ["-settlement_date"]).join(","),
+        ...(params.partner_ledger_item_id
+          ? { partner_ledger_item_id: params.partner_ledger_item_id }
+          : {}),
+        ...(params.payment_voucher_id
+          ? { payment_voucher_id: params.payment_voucher_id }
+          : {}),
+      },
+    },
+  );
+  return data;
+}
+
+export async function createPartnerLedgerSettlementApi(
+  dto: CreatePartnerLedgerSettlementDto,
+): Promise<PartnerLedgerSettlement> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PartnerLedgerSettlement;
+  }>("/api/v1/partner-ledger-settlements", dto);
+  return data.data;
+}
+
+export async function deletePartnerLedgerSettlementApi(
+  id: string,
+): Promise<void> {
+  await axiosInstance.delete(`/api/v1/partner-ledger-settlements/${id}`);
 }

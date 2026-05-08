@@ -68,6 +68,7 @@ import {
   useAmountRangeFilter,
   useSearchFilter,
 } from "@/shared/hooks/useFilterState";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { useBankVoucherHandlers } from "@/modules/finance/hooks/useBankVoucherHandlers";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 
@@ -76,6 +77,8 @@ import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 export function TienGui() {
   const isDark = useAppStore((s) => s.isDark);
   const t = useT();
+  const canCreateVoucher = useHasPermission("payment_vouchers", "create");
+  const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
 
   // Dropdown data
   const [companyBankAccounts, setCompanyBankAccounts] = useState<CompanyBankAccount[]>([]);
@@ -450,27 +453,39 @@ export function TienGui() {
       case "DRAFT":
         return [
           { label: "Đóng", onClick: closeDrawer },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
-          { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData) },
+          ...(canUpdateVoucher
+            ? [
+                { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
+                { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData) },
+              ]
+            : []),
         ];
       case "PENDING_APPROVAL":
         return [
           { label: "Đóng", onClick: closeDrawer },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
-          { label: "Từ chối", disabled: saving, onClick: () => handleStatusTransition("REJECT", reloadCurrentData) },
-          { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("APPROVE", reloadCurrentData) },
+          ...(canUpdateVoucher
+            ? [
+                { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
+                { label: "Từ chối", disabled: saving, onClick: () => handleStatusTransition("REJECT", reloadCurrentData) },
+                { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("APPROVE", reloadCurrentData) },
+              ]
+            : []),
         ];
       case "APPROVED":
         return [
           { label: "Đóng", onClick: closeDrawer },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
-          { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("POST", reloadCurrentData) },
+          ...(canUpdateVoucher
+            ? [
+                { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
+                { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("POST", reloadCurrentData) },
+              ]
+            : []),
         ];
       default:
         return [{ label: "Đóng", onClick: closeDrawer }];
     }
   })();
-  const editToggle = editing && canEditVoucher ? (
+  const editToggle = editing && canEditVoucher && canUpdateVoucher ? (
     <button
       onClick={handleToggleEditMode}
       className={cn(
@@ -509,10 +524,16 @@ export function TienGui() {
         desc={t("tiengui.desc")}
         icon={<Landmark className="h-4 w-4" />}
         actions={
-          <>
-          <BtnPrimary onClick={() => openNew("BANK_RECEIPT")}><IconPlus /> {t("tiengui.createUNT")}</BtnPrimary>
-          <BtnPrimary onClick={() => openNew("BANK_PAYMENT")}><IconPlus /> {t("tiengui.createUNC")}</BtnPrimary>
-          </>
+          canCreateVoucher ? (
+            <>
+              <BtnPrimary onClick={() => openNew("BANK_RECEIPT")}>
+                <IconPlus /> {t("tiengui.createUNT")}
+              </BtnPrimary>
+              <BtnPrimary onClick={() => openNew("BANK_PAYMENT")}>
+                <IconPlus /> {t("tiengui.createUNC")}
+              </BtnPrimary>
+            </>
+          ) : undefined
         }
       />
 

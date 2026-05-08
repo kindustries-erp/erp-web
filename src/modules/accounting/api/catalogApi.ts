@@ -43,6 +43,8 @@ export interface ChartOfAccount {
   parent_account_id: string | null;
   level: number | null;
   is_cash_account?: boolean;
+  is_receivable_account?: boolean;
+  is_payable_account?: boolean;
   is_active?: boolean;
   created_at: string;
   updated_at: string | null;

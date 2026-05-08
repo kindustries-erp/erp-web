@@ -439,6 +439,7 @@ export function Sidebar() {
     "company_bank_accounts",
     "chart_of_accounts",
   ]);
+  const canCongNo = useHasPermission("partner_ledger_items", "read");
   const canHR = useHasAnyPermission([
     "employees",
     "departments",
@@ -576,7 +577,9 @@ export function Sidebar() {
                   onClick={() => navTo("dinhkem")}
                 />
               </SubNav>
+              </>}
 
+              {canCongNo && <>
               <NavItem
                 collapsed={c}
                 icon={<IconBox />}
@@ -600,7 +603,9 @@ export function Sidebar() {
                   onClick={() => navTo("phaittra")}
                 />
               </SubNav>
+              </>}
 
+              {canFinance && <>
               <NavItem
                 collapsed={c}
                 icon={<IconFileText />}

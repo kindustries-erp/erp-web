@@ -120,6 +120,16 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Cấu hình số chứng từ",
     group: "Tài chính",
   },
+  {
+    collection: "partner_ledger_items",
+    label: "Công nợ phải thu/phải trả",
+    group: "Tài chính",
+  },
+  {
+    collection: "partner_ledger_settlements",
+    label: "Bù trừ công nợ",
+    group: "Tài chính",
+  },
   // Nhân sự
   { collection: "employees", label: "Nhân viên", group: "Nhân sự" },
   { collection: "departments", label: "Phòng ban", group: "Nhân sự" },

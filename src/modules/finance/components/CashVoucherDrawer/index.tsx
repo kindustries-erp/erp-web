@@ -47,6 +47,7 @@ export interface CashVoucherDrawerProps {
   coaOpts: SelectOption[];
   debitAccountOpts: SelectOption[];
   creditAccountOpts: SelectOption[];
+  canUpdateVoucher: boolean;
 
   onClose: () => void;
   onSave: (status?: VoucherStatus) => void;
@@ -75,6 +76,7 @@ export function CashVoucherDrawer({
   open, editing, drawerEditMode, form, saving, saveError,
   existingAttachments, attachmentFiles, attachmentType, attachmentNote,
   fundOpts, partnerOpts, employeeOpts, coaOpts, debitAccountOpts, creditAccountOpts,
+  canUpdateVoucher,
   onClose, onSave, onStatusTransition, onToggleEditMode,
   onFieldChange, onDocumentDateChange, onPostingDateChange, onAmountChange,
   onCashFundChange, onPartnerChange, onEmployeeChange, onSourceChange,
@@ -98,28 +100,40 @@ export function CashVoucherDrawer({
       case "DRAFT":
         return [
           { label: "Đóng", onClick: onClose },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-          { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("SUBMIT") },
+          ...(canUpdateVoucher
+            ? [
+                { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
+                { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("SUBMIT") },
+              ]
+            : []),
         ];
       case "PENDING_APPROVAL":
         return [
           { label: "Đóng", onClick: onClose },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-          { label: "Từ chối", disabled: saving, onClick: () => onStatusTransition("REJECT") },
-          { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("APPROVE") },
+          ...(canUpdateVoucher
+            ? [
+                { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
+                { label: "Từ chối", disabled: saving, onClick: () => onStatusTransition("REJECT") },
+                { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("APPROVE") },
+              ]
+            : []),
         ];
       case "APPROVED":
         return [
           { label: "Đóng", onClick: onClose },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-          { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("POST") },
+          ...(canUpdateVoucher
+            ? [
+                { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
+                { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("POST") },
+              ]
+            : []),
         ];
       default:
         return [{ label: "Đóng", onClick: onClose }];
     }
   })();
 
-  const editToggle = editing && canEdit ? (
+  const editToggle = editing && canEdit && canUpdateVoucher ? (
     <button
       onClick={onToggleEditMode}
       className={cn(

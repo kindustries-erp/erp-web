@@ -18,6 +18,8 @@ import { ThietLap } from "@/pages/ThietLap";
 import { NhanSu } from "@/pages/NhanSu";
 import { PhongBan } from "@/pages/PhongBan";
 import { ChucVu } from "@/pages/ChucVu";
+import { PhaiThu } from "@/pages/PhaiThu";
+import { PhaiTra } from "@/pages/PhaiTra";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { Login } from "@/pages/Login";
 import { ActivityLog } from "@/pages/ActivityLog";
@@ -108,9 +110,9 @@ export default function App() {
               {currentPage === "nhansu" && <NhanSu />}
               {currentPage === "phongban" && <PhongBan />}
               {currentPage === "chucvu" && <ChucVu />}
-              {(currentPage === "phaithu" ||
-                currentPage === "phaittra" ||
-                currentPage === "socat" ||
+              {currentPage === "phaithu" && <PhaiThu />}
+              {currentPage === "phaittra" && <PhaiTra />}
+              {(currentPage === "socat" ||
                 currentPage === "nhatkyechung" ||
                 currentPage === "banhang" ||
                 currentPage === "khachhang" ||
