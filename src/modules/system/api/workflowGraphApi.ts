@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+import axiosInstance from '../../../core/api/axiosInstance';
 
 export interface EmployeeSnippet {
   id: string;
@@ -62,9 +60,6 @@ export interface WorkflowGraph {
 }
 
 export async function getWorkflowGraphApi(): Promise<WorkflowGraph> {
-  const token = localStorage.getItem('access_token') ?? '';
-  const res = await axios.get<WorkflowGraph>(`${API_BASE}/api/v1/workflow-graph`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await axiosInstance.get<WorkflowGraph>('/api/v1/workflow-graph');
   return res.data;
 }
