@@ -1,522 +1,526 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   MiniMap,
-  useNodesState,
-  useEdgesState,
-  type Node,
-  type Edge,
-  type NodeTypes,
+  useReactFlow,
   Handle,
   Position,
+  type NodeProps,
+  type Node,
+  type Edge,
+  type FitViewOptions,
   MarkerType,
-  Panel,
-  useReactFlow,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { GitBranch, RefreshCw, Layers, ZoomIn, ZoomOut } from "lucide-react";
-import { PageHeader } from "@/shared/components/PageHeader";
-import {
-  getWorkflowGraphApi,
-  type WorkflowGraph,
-  type WorkflowNode as ApiNode,
-  type WorkflowEdge as ApiEdge,
-  type WorkflowGroup,
-} from "@/modules/system/api/workflowGraphApi";
-import { cn } from "@/shared/utils";
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { getWorkflowGraphApi } from '../modules/system/api/workflowGraphApi';
+import type { WorkflowNode, WorkflowEdge } from '../modules/system/api/workflowGraphApi';
 
-// ─── Group layout config (column + row slot per group) ───────────────────────
+// ─── ReactFlow node type helpers ──────────────────────────────────────────────
 
-const GROUP_LAYOUT: Record<string, { col: number; label: string }> = {
-  system:           { col: 0, label: "Hệ thống" },
-  hr:               { col: 1, label: "Nhân sự" },
-  master:           { col: 2, label: "Danh mục đối tác" },
-  "finance-setup":  { col: 3, label: "Thiết lập tài chính" },
-  voucher:          { col: 4, label: "Phiếu thu/chi" },
-  "voucher-workflow": { col: 5, label: "Luồng duyệt" },
-  ledger:           { col: 6, label: "Công nợ" },
+type WFNode = Node<WorkflowNode, string>;
+
+// ─── Layout constants ─────────────────────────────────────────────────────────
+
+const LEVEL_Y: Record<number, number> = {
+  0: 0,
+  1: 180,
+  2: 380,
+  3: 640,
+  4: 900,
 };
 
-const NODE_W = 220;
-const NODE_H = 90;
-const COL_GAP = 80;
-const ROW_GAP = 24;
-const COL_X_START = 40;
-const ROW_Y_START = 120;
+const NODE_W = 280;
+const NODE_GAP_X = 32;
+const STATUS_W = 150;
+const STATUS_GAP_X = 20;
 
-// ─── Edge type colours ────────────────────────────────────────────────────────
+// ─── Auto layout ──────────────────────────────────────────────────────────────
 
-const EDGE_COLOR: Record<string, string> = {
-  depends_on:          "#3b82f6",
-  creates:             "#10b981",
-  belongs_to:          "#f59e0b",
-  triggers:            "#8b5cf6",
-  settles:             "#ec4899",
-  workflow_transition: "#f97316",
-  reads:               "#6b7280",
-};
+function computeLayout(
+  apiNodes: WorkflowNode[],
+  apiEdges: WorkflowEdge[],
+): { rfNodes: WFNode[]; rfEdges: Edge[] } {
+  const byLevel: Record<number, WorkflowNode[]> = {};
+  for (const n of apiNodes) {
+    (byLevel[n.level] ??= []).push(n);
+  }
 
-const EDGE_LABEL_BG: Record<string, string> = {
-  depends_on:          "#eff6ff",
-  creates:             "#f0fdf4",
-  belongs_to:          "#fffbeb",
-  triggers:            "#f5f3ff",
-  settles:             "#fdf4ff",
-  workflow_transition: "#fff7ed",
-  reads:               "#f9fafb",
-};
+  const posMap: Record<string, { x: number; y: number }> = {};
 
-// ─── Custom Node component ────────────────────────────────────────────────────
+  const lvl0 = byLevel[0] ?? [];
+  lvl0.forEach((n, i) => {
+    posMap[n.id] = {
+      x: i * (NODE_W + NODE_GAP_X) - ((lvl0.length - 1) * (NODE_W + NODE_GAP_X)) / 2,
+      y: LEVEL_Y[0],
+    };
+  });
 
-interface NodeData extends Record<string, unknown> {
-  label: string;
-  description: string;
-  color: string;
-  icon: string;
-  type: "module" | "process" | "status";
-  endpoints?: string[];
-  statusValue?: string;
-  groupLabel: string;
+  for (const lvl of [1, 2, 3]) {
+    const nodesAtLevel = byLevel[lvl] ?? [];
+    if (!nodesAtLevel.length) continue;
+    const groups: Record<string, WorkflowNode[]> = {};
+    for (const n of nodesAtLevel) {
+      const parent = n.meta?.parentId ?? (lvl === 1 ? 'root' : 'admin');
+      (groups[parent] ??= []).push(n);
+    }
+    for (const [parentId, children] of Object.entries(groups)) {
+      const parentPos = posMap[parentId] ?? { x: 0, y: 0 };
+      const totalW = children.length * NODE_W + (children.length - 1) * NODE_GAP_X;
+      const startX = parentPos.x + NODE_W / 2 - totalW / 2;
+      children.forEach((child, i) => {
+        posMap[child.id] = {
+          x: startX + i * (NODE_W + NODE_GAP_X),
+          y: LEVEL_Y[lvl],
+        };
+      });
+    }
+  }
+
+  const lvl4 = byLevel[4] ?? [];
+  const procGroups: Record<string, WorkflowNode[]> = {};
+  for (const n of lvl4) {
+    const parent = n.meta?.parentId ?? '';
+    (procGroups[parent] ??= []).push(n);
+  }
+  for (const [procId, statusNodes] of Object.entries(procGroups)) {
+    const parentPos = posMap[procId] ?? { x: 0, y: 0 };
+    const totalW = statusNodes.length * STATUS_W + (statusNodes.length - 1) * STATUS_GAP_X;
+    const startX = parentPos.x + NODE_W / 2 - totalW / 2;
+    statusNodes.forEach((n, i) => {
+      posMap[n.id] = {
+        x: startX + i * (STATUS_W + STATUS_GAP_X),
+        y: LEVEL_Y[4],
+      };
+    });
+  }
+
+  const rfNodes: WFNode[] = apiNodes.map((n) => ({
+    id: n.id,
+    type: n.type,
+    position: posMap[n.id] ?? { x: 0, y: LEVEL_Y[n.level] },
+    data: n,
+    style: { width: n.type === 'status' ? STATUS_W : NODE_W },
+  }));
+
+  const rfEdges: Edge[] = apiEdges.map((e) => {
+    const isTransition = e.type === 'workflow_transition';
+    const isHierarchy = e.type === 'hierarchy';
+    return {
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      label: e.label,
+      type: isTransition ? 'smoothstep' : 'bezier',
+      animated: isTransition,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: isTransition ? '#6366f1' : isHierarchy ? '#1e40af' : '#64748b',
+      },
+      style: {
+        stroke: isTransition ? '#6366f1' : isHierarchy ? '#1e40af' : '#94a3b8',
+        strokeWidth: isHierarchy ? 2 : 1.5,
+      },
+      labelStyle: { fontSize: 10, fill: '#64748b' },
+      labelBgStyle: { fill: '#f8fafc', fillOpacity: 0.85 },
+    };
+  });
+
+  return { rfNodes, rfEdges };
 }
 
-function ModuleNode({ data }: { data: NodeData }) {
-  const [showTooltip, setShowTooltip] = useState(false);
-  const isStatus = data.type === "status";
+// ─── Employee chips ────────────────────────────────────────────────────────────
 
+function EmployeeChips({ employees }: { employees: WorkflowNode['employees'] }) {
+  const show = employees.slice(0, 4);
+  const rest = employees.length - show.length;
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
-    >
-      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
-      <Handle type="target" position={Position.Top} style={{ opacity: 0 }} />
-      <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} />
-
-      <div
-        style={{
-          width: NODE_W,
-          minHeight: NODE_H,
-          borderColor: data.color,
-          borderLeftWidth: isStatus ? 0 : 3,
-          borderTopWidth: isStatus ? 3 : 0,
-          boxShadow: `0 2px 8px ${data.color}22`,
-        }}
-        className={cn(
-          "bg-white dark:bg-[#1e1e2e] rounded-xl border border-[#e5e7eb] dark:border-[#2d2d3a] p-3 cursor-default select-none",
-          isStatus && "rounded-2xl text-center",
-        )}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-1">
-          {isStatus && (
-            <span
-              className="inline-block w-3 h-3 rounded-full flex-shrink-0 mx-auto"
-              style={{ background: data.color }}
-            />
-          )}
-          <span
-            className={cn(
-              "font-semibold text-[13px] leading-tight text-gray-800 dark:text-gray-100",
-              isStatus && "w-full text-center",
-            )}
-          >
-            {data.label}
-          </span>
-          {!isStatus && (
-            <span
-              className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded"
-              style={{
-                background: data.color + "22",
-                color: data.color,
-              }}
-            >
-              {data.groupLabel}
-            </span>
-          )}
-        </div>
-
-        {!isStatus && (
-          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-snug line-clamp-2">
-            {data.description}
-          </p>
-        )}
-
-        {isStatus && data.statusValue && (
-          <span
-            className="text-[10px] font-mono mt-1 block"
-            style={{ color: data.color }}
-          >
-            {data.statusValue}
-          </span>
-        )}
-      </div>
-
-      {/* Tooltip */}
-      {showTooltip && !isStatus && (
-        <div
-          className="absolute left-full top-0 ml-3 z-50 w-72 rounded-xl bg-white dark:bg-[#1e1e2e] border border-[#e5e7eb] dark:border-[#2d2d3a] p-3 shadow-xl text-[12px]"
-          style={{ borderTopColor: data.color, borderTopWidth: 2 }}
+    <div className="mt-2 flex flex-wrap gap-1">
+      {show.map((e) => (
+        <span
+          key={e.id}
+          title={`${e.name} — ${e.position}`}
+          className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] text-white"
         >
-          <p className="font-semibold text-gray-800 dark:text-gray-100 mb-1">
-            {data.label}
-          </p>
-          <p className="text-gray-500 dark:text-gray-400 mb-2 leading-relaxed">
-            {data.description}
-          </p>
-          {data.endpoints && data.endpoints.length > 0 && (
-            <div>
-              <p className="font-semibold text-gray-600 dark:text-gray-300 mb-1">
-                Endpoints
-              </p>
-              <ul className="space-y-0.5">
-                {data.endpoints.map((ep) => (
-                  <li key={ep} className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
-                    {ep}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+          <span className="h-1.5 w-1.5 rounded-full bg-white/60" />
+          {e.name}
+        </span>
+      ))}
+      {rest > 0 && (
+        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] text-white">
+          +{rest}
+        </span>
       )}
     </div>
   );
 }
 
-const nodeTypes: NodeTypes = { erp: ModuleNode };
+// ─── Custom node components ────────────────────────────────────────────────────
 
-// ─── Legend item ──────────────────────────────────────────────────────────────
-
-function LegendItem({ color, label }: { color: string; label: string }) {
+function RootNode({ data }: NodeProps<WFNode>) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="inline-block w-6 h-0.5 rounded" style={{ background: color }} />
-      <span className="text-[11px] text-gray-500 dark:text-gray-400">{label}</span>
+    <div className="rounded-xl border-2 border-blue-400 bg-gradient-to-br from-blue-700 to-blue-900 p-4 text-white shadow-lg">
+      <div className="text-center text-sm font-bold uppercase tracking-widest opacity-60">
+        Hệ thống
+      </div>
+      <div className="mt-1 text-center text-lg font-extrabold">{data.label}</div>
+      <div className="mt-1 text-center text-xs opacity-75">{data.description}</div>
+      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 }
 
-// ─── Group header labels ──────────────────────────────────────────────────────
-
-interface GroupHeaderNode extends Record<string, unknown> {
-  label: string;
-  color: string;
-}
-
-function GroupHeader({ data }: { data: GroupHeaderNode }) {
+function AdminNode({ data }: NodeProps<WFNode>) {
   return (
-    <div
-      className="px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest"
-      style={{ color: data.color, background: data.color + "18", border: `1px solid ${data.color}40` }}
-    >
-      {data.label}
-    </div>
-  );
-}
-
-const nodeTypesAll: NodeTypes = { erp: ModuleNode, groupHeader: GroupHeader };
-
-// ─── Layout builder ───────────────────────────────────────────────────────────
-
-function buildLayout(graph: WorkflowGraph): { nodes: Node[]; edges: Edge[] } {
-  const colCounters: Record<number, number> = {};
-
-  const rfNodes: Node[] = [];
-
-  // Group header nodes
-  for (const [groupId, layout] of Object.entries(GROUP_LAYOUT)) {
-    const group = graph.groups.find((g) => g.id === groupId);
-    const color = group?.color ?? "#6b7280";
-    rfNodes.push({
-      id: `__header_${groupId}`,
-      type: "groupHeader",
-      position: {
-        x: COL_X_START + layout.col * (NODE_W + COL_GAP),
-        y: 40,
-      },
-      data: { label: layout.label, color } as GroupHeaderNode,
-      draggable: false,
-      selectable: false,
-    });
-  }
-
-  // Module / status nodes
-  for (const apiNode of graph.nodes) {
-    const layout = GROUP_LAYOUT[apiNode.group];
-    const col = layout?.col ?? 7;
-    const row = colCounters[col] ?? 0;
-    colCounters[col] = row + 1;
-
-    const group = graph.groups.find((g) => g.id === apiNode.group);
-
-    rfNodes.push({
-      id: apiNode.id,
-      type: "erp",
-      position: {
-        x: COL_X_START + col * (NODE_W + COL_GAP),
-        y: ROW_Y_START + row * (NODE_H + ROW_GAP),
-      },
-      data: {
-        label: apiNode.label,
-        description: apiNode.description,
-        color: apiNode.meta.color,
-        icon: apiNode.meta.icon,
-        type: apiNode.type,
-        endpoints: apiNode.meta.endpoints,
-        statusValue: apiNode.meta.statusValue,
-        groupLabel: layout?.label ?? apiNode.group,
-        groupColor: group?.color ?? apiNode.meta.color,
-      } as NodeData,
-    });
-  }
-
-  // Edges
-  const rfEdges: Edge[] = graph.edges.map((e: ApiEdge) => ({
-    id: e.id,
-    source: e.source,
-    target: e.target,
-    label: e.label,
-    type: "smoothstep",
-    animated: e.type === "workflow_transition",
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: EDGE_COLOR[e.type] ?? "#6b7280",
-      width: 14,
-      height: 14,
-    },
-    style: {
-      stroke: EDGE_COLOR[e.type] ?? "#6b7280",
-      strokeWidth: e.type === "workflow_transition" ? 2.5 : 1.5,
-      strokeDasharray: e.type === "depends_on" ? "5 3" : undefined,
-    },
-    labelStyle: { fontSize: 10, fill: EDGE_COLOR[e.type] ?? "#6b7280" },
-    labelBgStyle: {
-      fill: EDGE_LABEL_BG[e.type] ?? "#f9fafb",
-      fillOpacity: 0.9,
-    },
-    labelBgPadding: [4, 3] as [number, number],
-    labelBgBorderRadius: 4,
-    data: { edgeType: e.type, description: e.meta.description, field: e.meta.field },
-  }));
-
-  return { nodes: rfNodes, edges: rfEdges };
-}
-
-// ─── Filter legend ────────────────────────────────────────────────────────────
-
-const EDGE_TYPES = [
-  { type: "depends_on",          label: "Phụ thuộc" },
-  { type: "creates",             label: "Tạo ra" },
-  { type: "belongs_to",          label: "Thuộc về" },
-  { type: "triggers",            label: "Kích hoạt" },
-  { type: "settles",             label: "Bù trừ" },
-  { type: "workflow_transition", label: "Luồng duyệt" },
-];
-
-// ─── Inner canvas (needs ReactFlowProvider context) ───────────────────────────
-
-function CanvasInner({
-  graph,
-  visibleEdgeTypes,
-}: {
-  graph: WorkflowGraph;
-  visibleEdgeTypes: Set<string>;
-}) {
-  const { fitView } = useReactFlow();
-  const { nodes: initialNodes, edges: initialEdges } = useMemo(
-    () => buildLayout(graph),
-    [graph],
-  );
-
-  const filteredEdges = useMemo(
-    () =>
-      initialEdges.filter((e) =>
-        visibleEdgeTypes.has((e.data as { edgeType: string }).edgeType),
-      ),
-    [initialEdges, visibleEdgeTypes],
-  );
-
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, , onEdgesChange] = useEdgesState(filteredEdges);
-
-  // Update edges when filter changes
-  const [displayEdges, setDisplayEdges] = useEdgesState(filteredEdges);
-  useEffect(() => {
-    setDisplayEdges(filteredEdges);
-  }, [filteredEdges, setDisplayEdges]);
-
-  useEffect(() => {
-    setTimeout(() => fitView({ padding: 0.08, duration: 400 }), 50);
-  }, [fitView]);
-
-  return (
-    <ReactFlow
-      nodes={nodes}
-      edges={displayEdges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypesAll}
-      fitView
-      minZoom={0.15}
-      maxZoom={2}
-      defaultEdgeOptions={{ type: "smoothstep" }}
-      proOptions={{ hideAttribution: true }}
-    >
-      <Background gap={20} size={1} color="#e5e7eb" />
-      <Controls showInteractive={false} />
-      <MiniMap
-        nodeColor={(n) => {
-          if (n.type === "groupHeader") return "transparent";
-          return (n.data as NodeData).color ?? "#6b7280";
-        }}
-        maskColor="rgba(0,0,0,0.06)"
-        style={{ borderRadius: 8 }}
-      />
-      <Panel position="bottom-left">
-        <div className="bg-white dark:bg-[#1e1e2e] rounded-xl border border-[#e5e7eb] dark:border-[#2d2d3a] p-3 shadow-lg flex flex-col gap-1.5">
-          <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">
-            Loại liên kết
-          </p>
-          {EDGE_TYPES.map((et) => (
-            <LegendItem key={et.type} color={EDGE_COLOR[et.type]} label={et.label} />
+    <div className="rounded-xl border-2 border-indigo-400 bg-gradient-to-br from-indigo-700 to-indigo-900 p-4 text-white shadow-lg">
+      <Handle type="target" position={Position.Top} />
+      <div className="flex items-center gap-2">
+        <span className="text-lg">👑</span>
+        <div className="font-bold leading-tight">{data.label}</div>
+      </div>
+      {data.roles.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {data.roles.map((r) => (
+            <span key={r} className="rounded bg-white/20 px-1.5 py-0.5 text-[10px]">
+              {r}
+            </span>
           ))}
         </div>
-      </Panel>
-    </ReactFlow>
+      )}
+      {data.employees.length > 0 && <EmployeeChips employees={data.employees} />}
+      {data.employees.length === 0 && (
+        <p className="mt-2 text-[10px] italic opacity-60">Chưa có dữ liệu người dùng</p>
+      )}
+      <Handle type="source" position={Position.Bottom} />
+    </div>
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+function DepartmentNode({ data }: NodeProps<WFNode>) {
+  return (
+    <div className="rounded-xl border border-sky-300 bg-gradient-to-br from-sky-600 to-sky-800 p-3 text-white shadow-md">
+      <Handle type="target" position={Position.Top} />
+      <div className="flex items-center gap-2">
+        <span className="text-base">🏢</span>
+        <div className="font-semibold leading-tight">{data.label}</div>
+      </div>
+      {data.description && (
+        <p className="mt-1 text-[10px] opacity-70 line-clamp-2">{data.description}</p>
+      )}
+      {data.employees.length > 0 ? (
+        <>
+          <div className="mt-2 text-[10px] font-semibold uppercase tracking-wide opacity-60">
+            Nhân viên ({data.employees.length})
+          </div>
+          <EmployeeChips employees={data.employees} />
+        </>
+      ) : (
+        <p className="mt-2 text-[10px] italic opacity-50">Chưa có nhân viên</p>
+      )}
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
 
-export function WorkflowCanvas() {
-  const [graph, setGraph] = useState<WorkflowGraph | null>(null);
+function ProcessNode({ data }: NodeProps<WFNode>) {
+  const color = data.meta?.color ?? '#6366f1';
+  return (
+    <div
+      className="rounded-xl border text-white shadow-md"
+      style={{
+        borderColor: color,
+        background: `linear-gradient(135deg, ${color}dd 0%, ${color}99 100%)`,
+        padding: '12px',
+      }}
+    >
+      <Handle type="target" position={Position.Top} />
+      <div className="font-bold">{data.label}</div>
+      <p className="mt-0.5 text-[10px] opacity-75 line-clamp-2">{data.description}</p>
+
+      {data.rules.length > 0 && (
+        <>
+          <div className="mt-2 text-[10px] font-semibold uppercase tracking-wide opacity-70">
+            Quy tắc
+          </div>
+          <ul className="mt-1 space-y-0.5">
+            {data.rules.slice(0, 4).map((r, i) => (
+              <li key={i} className="text-[9px] leading-snug opacity-80">
+                • {r}
+              </li>
+            ))}
+            {data.rules.length > 4 && (
+              <li className="text-[9px] opacity-50">+{data.rules.length - 4} quy tắc...</li>
+            )}
+          </ul>
+        </>
+      )}
+
+      {data.statuses.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {data.statuses.map((s) => (
+            <span
+              key={s.value}
+              className="rounded-full px-2 py-0.5 text-[9px] font-semibold text-white"
+              style={{ backgroundColor: s.color }}
+            >
+              {s.label}{s.terminal ? ' ✓' : ''}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {data.meta?.endpoints && data.meta.endpoints.length > 0 && (
+        <>
+          <div className="mt-2 text-[10px] font-semibold uppercase tracking-wide opacity-70">
+            API
+          </div>
+          {data.meta.endpoints.slice(0, 3).map((ep) => (
+            <code key={ep} className="block text-[8px] font-mono opacity-70 truncate">
+              {ep}
+            </code>
+          ))}
+          {data.meta.endpoints.length > 3 && (
+            <code className="block text-[8px] font-mono opacity-50">
+              +{data.meta.endpoints.length - 3} more...
+            </code>
+          )}
+        </>
+      )}
+
+      <Handle type="source" position={Position.Bottom} />
+    </div>
+  );
+}
+
+function StatusNode({ data }: NodeProps<WFNode>) {
+  const color = data.meta?.color ?? '#94a3b8';
+  const terminal = data.meta?.terminal === true;
+  return (
+    <div
+      className="rounded-full border-2 px-3 py-2 text-center text-white shadow"
+      style={{ borderColor: color, backgroundColor: color + 'dd' }}
+    >
+      <Handle type="target" position={Position.Top} />
+      <div className="text-[10px] font-bold leading-tight">{data.label}</div>
+      {terminal && <div className="mt-0.5 text-[8px] opacity-70">■ terminal</div>}
+      {!terminal && <Handle type="source" position={Position.Bottom} />}
+    </div>
+  );
+}
+
+const NODE_TYPES = {
+  root: RootNode,
+  admin: AdminNode,
+  department: DepartmentNode,
+  process: ProcessNode,
+  status: StatusNode,
+};
+
+// ─── Fit on mount ─────────────────────────────────────────────────────────────
+
+const FIT_OPTIONS: FitViewOptions = { padding: 0.12 };
+
+function FitViewOnMount() {
+  const { fitView } = useReactFlow();
+  useEffect(() => {
+    const t = setTimeout(() => fitView(FIT_OPTIONS), 80);
+    return () => clearTimeout(t);
+  }, [fitView]);
+  return null;
+}
+
+// ─── Canvas ───────────────────────────────────────────────────────────────────
+
+function CanvasInner() {
+  const [rfNodes, setRfNodes] = useState<WFNode[]>([]);
+  const [rfEdges, setRfEdges] = useState<Edge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [visibleEdgeTypes, setVisibleEdgeTypes] = useState<Set<string>>(
-    new Set(EDGE_TYPES.map((e) => e.type)),
-  );
+  const [selected, setSelected] = useState<WorkflowNode | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getWorkflowGraphApi();
-      setGraph(data);
-    } catch {
-      setError("Không thể tải sơ đồ quy trình. Vui lòng thử lại.");
+      const graph = await getWorkflowGraphApi();
+      const { rfNodes: n, rfEdges: e } = computeLayout(graph.nodes, graph.edges);
+      setRfNodes(n);
+      setRfEdges(e);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể tải sơ đồ quy trình';
+      setError(msg);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
-  function toggleEdgeType(type: string) {
-    setVisibleEdgeTypes((prev) => {
-      const next = new Set(prev);
-      if (next.has(type)) {
-        if (next.size === 1) return prev; // keep at least 1
-        next.delete(type);
-      } else {
-        next.add(type);
-      }
-      return next;
-    });
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center text-slate-500">
+          <div className="mb-2 text-3xl animate-spin">⚙</div>
+          <div>Đang tải sơ đồ quy trình...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <div className="mb-2 text-red-400 text-4xl">✕</div>
+          <p className="text-red-500 font-medium">{error}</p>
+          <button
+            onClick={load}
+            className="mt-4 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+          >
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-5 h-full flex flex-col" style={{ minHeight: "calc(100vh - 80px)" }}>
-      <PageHeader
-        icon={<GitBranch className="w-5 h-5" />}
-        title="Sơ đồ quy trình ERP"
-        desc={
-          graph
-            ? `${graph.meta.totalNodes} nodes · ${graph.meta.totalEdges} edges · ${graph.meta.totalGroups} nhóm`
-            : "Toàn bộ quy trình hoạt động và mối liên kết giữa các phân hệ"
-        }
-        actions={
-          <button
-            onClick={load}
-            disabled={loading}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-[#e5e7eb] dark:border-[#2d2d3a] bg-white dark:bg-[#1e1e2e] hover:bg-gray-50 dark:hover:bg-[#2d2d3a] disabled:opacity-50 transition-colors"
-          >
-            <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
-            Làm mới
-          </button>
-        }
-      />
-
-      {/* Edge type filter bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {EDGE_TYPES.map((et) => {
-          const active = visibleEdgeTypes.has(et.type);
-          return (
-            <button
-              key={et.type}
-              onClick={() => toggleEdgeType(et.type)}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-all",
-                active
-                  ? "text-white border-transparent"
-                  : "bg-white dark:bg-[#1e1e2e] border-[#e5e7eb] dark:border-[#2d2d3a] text-gray-400",
-              )}
-              style={active ? { background: EDGE_COLOR[et.type], borderColor: EDGE_COLOR[et.type] } : {}}
-            >
-              <span
-                className="inline-block w-4 h-0.5 rounded"
-                style={{ background: active ? "#fff" : EDGE_COLOR[et.type] }}
-              />
-              {et.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Canvas area */}
-      <div
-        className="flex-1 rounded-2xl border border-[#e5e7eb] dark:border-[#2d2d3a] overflow-hidden bg-[#fafafa] dark:bg-[#13131f]"
-        style={{ minHeight: 520 }}
+    <div className="relative h-full w-full bg-slate-900">
+      <ReactFlow
+        nodes={rfNodes}
+        edges={rfEdges}
+        nodeTypes={NODE_TYPES}
+        fitView
+        fitViewOptions={FIT_OPTIONS}
+        minZoom={0.05}
+        maxZoom={2}
+        nodesDraggable
+        nodesConnectable={false}
+        onNodeClick={(_, node) => setSelected(node.data as unknown as WorkflowNode)}
+        onPaneClick={() => setSelected(null)}
       >
-        {loading && (
-          <div className="h-full flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <Layers className="w-8 h-8 text-blue-400 animate-pulse" />
-              <p className="text-sm text-gray-500">Đang tải sơ đồ quy trình…</p>
-            </div>
-          </div>
-        )}
+        <Background color="#334155" gap={20} />
+        <Controls />
+        <MiniMap
+          nodeColor={(n) => {
+            const d = n.data as unknown as WorkflowNode;
+            return d?.meta?.color ?? '#64748b';
+          }}
+          style={{ background: '#0f172a' }}
+        />
+        <FitViewOnMount />
+      </ReactFlow>
 
-        {error && (
-          <div className="h-full flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <p className="text-red-500 text-sm">{error}</p>
-              <button
-                onClick={load}
-                className="px-4 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-              >
-                Thử lại
-              </button>
-            </div>
+      {/* Legend */}
+      <div className="pointer-events-none absolute left-3 top-3 rounded-lg bg-slate-800/90 p-3 text-xs text-slate-200 shadow">
+        <div className="mb-1 font-bold text-white">Chú thích</div>
+        {[
+          { color: '#1e40af', label: 'Root / Hệ thống' },
+          { color: '#4f46e5', label: 'Ban Giám Đốc' },
+          { color: '#0369a1', label: 'Phòng ban' },
+          { color: '#ec4899', label: 'Quy trình nghiệp vụ' },
+          { color: '#94a3b8', label: 'Trạng thái' },
+        ].map(({ color, label }) => (
+          <div key={label} className="mt-0.5 flex items-center gap-2">
+            <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: color }} />
+            <span>{label}</span>
           </div>
-        )}
-
-        {!loading && !error && graph && (
-          <CanvasInner graph={graph} visibleEdgeTypes={visibleEdgeTypes} />
-        )}
+        ))}
       </div>
 
-      {/* Meta footer */}
-      {graph && (
-        <p className="mt-2 text-[11px] text-gray-400 text-right">
-          Cập nhật lúc {new Date(graph.meta.generatedAt).toLocaleTimeString("vi-VN")} · v{graph.meta.version}
-        </p>
+      {/* Detail panel */}
+      {selected && (
+        <div className="absolute right-3 top-3 bottom-3 w-72 overflow-y-auto rounded-lg bg-slate-800/95 p-4 text-xs text-slate-200 shadow-xl">
+          <button
+            onClick={() => setSelected(null)}
+            className="float-right text-base text-slate-400 hover:text-white"
+          >✕</button>
+          <div
+            className="mb-1 inline-block rounded px-2 py-0.5 text-[10px] font-bold uppercase text-white"
+            style={{ background: selected.meta?.color ?? '#475569' }}
+          >
+            {selected.type}
+          </div>
+          <h3 className="mt-1 text-base font-bold text-white">{selected.label}</h3>
+          <p className="mt-1 text-slate-400">{selected.description}</p>
+
+          {selected.employees.length > 0 && (
+            <section className="mt-3">
+              <div className="mb-1 font-semibold text-slate-300">
+                👤 Nhân viên ({selected.employees.length})
+              </div>
+              {selected.employees.map((e) => (
+                <div key={e.id} className="mt-0.5 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400" />
+                  <span className="font-medium text-white">{e.name}</span>
+                  {e.position && <span className="truncate text-slate-400">— {e.position}</span>}
+                </div>
+              ))}
+            </section>
+          )}
+
+          {selected.rules.length > 0 && (
+            <section className="mt-3">
+              <div className="mb-1 font-semibold text-slate-300">📋 Quy tắc nghiệp vụ</div>
+              <ol className="list-inside list-decimal space-y-1">
+                {selected.rules.map((r, i) => (
+                  <li key={i} className="leading-snug text-slate-300">{r}</li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {selected.statuses.length > 0 && (
+            <section className="mt-3">
+              <div className="mb-1 font-semibold text-slate-300">🔵 Trạng thái</div>
+              <div className="flex flex-wrap gap-1">
+                {selected.statuses.map((s) => (
+                  <span
+                    key={s.value}
+                    className="rounded-full px-2 py-0.5 text-[10px] font-semibold text-white"
+                    style={{ background: s.color }}
+                  >
+                    {s.label}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {selected.meta?.endpoints && selected.meta.endpoints.length > 0 && (
+            <section className="mt-3">
+              <div className="mb-1 font-semibold text-slate-300">🔗 API Endpoints</div>
+              {selected.meta.endpoints.map((ep) => (
+                <code key={ep} className="block font-mono text-[10px] text-slate-400">{ep}</code>
+              ))}
+            </section>
+          )}
+        </div>
       )}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function WorkflowCanvas() {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between border-b border-slate-700 bg-slate-800 px-5 py-3">
+        <div>
+          <h1 className="text-lg font-bold text-white">Sơ đồ Quy trình ERP</h1>
+          <p className="text-xs text-slate-400">
+            BGĐ → Phòng ban → Nghiệp vụ → Trạng thái • Click vào node để xem chi tiết
+          </p>
+        </div>
+      </div>
+      <div className="flex-1 overflow-hidden">
+        <ReactFlowProvider>
+          <CanvasInner />
+        </ReactFlowProvider>
+      </div>
     </div>
   );
 }

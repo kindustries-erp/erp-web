@@ -26,7 +26,7 @@ import { ActivityLog } from "@/pages/ActivityLog";
 import { DoiTac } from "@/pages/DoiTac";
 import { PhanQuyen } from "@/pages/PhanQuyen";
 import { NotFound } from "@/pages/NotFound";
-import { WorkflowCanvas } from "@/pages/WorkflowCanvas";
+import WorkflowCanvas from "@/pages/WorkflowCanvas";
 import { ErrorPage } from "@/shared/components/ErrorPage";
 
 /**
