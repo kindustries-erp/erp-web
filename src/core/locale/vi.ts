@@ -36,6 +36,7 @@ export const vi = {
       suppliers: "Nhà cung cấp",
       activitylog: "Nhật ký hoạt động",
       phanquyen: "Phân quyền & Vai trò",
+      workflowcanvas: "Sơ đồ quy trình",
       partners: "Đối tác",
       catalogRoles: "Vai trò đối tác",
       catalogOpeningBalance: "Số dư đầu kỳ",
@@ -83,6 +84,7 @@ export const vi = {
     activitylog: "Nhật ký hoạt động",
     attachments: "Tài liệu đính kèm",
     phanquyen: "Phân quyền & Vai trò",
+    workflowcanvas: "Sơ đồ quy trình",
     partners: "Đối tác",
   },
   topbar: {

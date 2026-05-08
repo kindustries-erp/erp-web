@@ -38,6 +38,7 @@ export const en: Dict = {
       suppliers: "Suppliers",
       activitylog: "Activity Logs",
       phanquyen: "Roles & Permissions",
+      workflowcanvas: "Workflow Canvas",
       partners: "Partners",
       catalogRoles: "Partner Roles",
       catalogOpeningBalance: "Opening Balances",
@@ -85,6 +86,7 @@ export const en: Dict = {
     activitylog: "Activity Logs",
     attachments: "Attachments",
     phanquyen: "Roles & Permissions",
+    workflowcanvas: "Workflow Canvas",
     partners: "Partners",
   },
   topbar: {

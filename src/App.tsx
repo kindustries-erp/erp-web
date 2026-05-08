@@ -26,6 +26,7 @@ import { ActivityLog } from "@/pages/ActivityLog";
 import { DoiTac } from "@/pages/DoiTac";
 import { PhanQuyen } from "@/pages/PhanQuyen";
 import { NotFound } from "@/pages/NotFound";
+import { WorkflowCanvas } from "@/pages/WorkflowCanvas";
 import { ErrorPage } from "@/shared/components/ErrorPage";
 
 /**
@@ -122,6 +123,7 @@ export default function App() {
               {/* {currentPage === "phanquyen" && <ActivityLog />} */}
               {currentPage === "activitylog" && <ActivityLog />}
               {currentPage === "doitac" && <DoiTac />}
+              {currentPage === "workflowcanvas" && <WorkflowCanvas />}
               {/* Catch-all — unknown page keys (e.g. from stale persisted state) */}
               {![
                 "dashboard",
@@ -144,6 +146,7 @@ export default function App() {
                 "phanquyen",
                 "activitylog",
                 "doitac",
+                "workflowcanvas",
               ].includes(currentPage) && <NotFound />}
             </>
           )}

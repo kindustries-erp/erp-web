@@ -150,6 +150,20 @@ const IconShield = () => (
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
+const IconGitBranch = () => (
+  <svg
+    className="w-4 h-4 opacity-65 flex-shrink-0"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+  >
+    <line x1="6" y1="3" x2="6" y2="15" />
+    <circle cx="18" cy="6" r="3" />
+    <circle cx="6" cy="18" r="3" />
+    <path d="M18 9a9 9 0 0 1-9 9" />
+  </svg>
+);
 const IconPeople = () => (
   <svg
     className="w-4 h-4 opacity-65 flex-shrink-0"
@@ -781,6 +795,14 @@ export function Sidebar() {
                 onClick={() => navTo("phanquyen")}
                 contextPage="phanquyen"
               />}
+              <NavItem
+                collapsed={c}
+                icon={<IconGitBranch />}
+                label={t("nav.items.workflowcanvas")}
+                active={currentPage === "workflowcanvas"}
+                onClick={() => navTo("workflowcanvas")}
+                contextPage="workflowcanvas"
+              />
             </div>}
           </div>
 

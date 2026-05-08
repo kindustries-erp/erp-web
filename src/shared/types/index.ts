@@ -18,7 +18,8 @@ export type PageKey =
   | "nhacungcap"
   | "activitylog"
   | "doitac"
-  | "phanquyen";
+  | "phanquyen"
+  | "workflowcanvas";
 export type TxSource = "tienmat" | "tiengui";
 
 export interface Transaction {
