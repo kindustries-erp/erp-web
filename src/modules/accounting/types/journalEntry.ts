@@ -1,4 +1,4 @@
-export type JournalEntryStatus = "draft" | "posted" | "reversed";
+export type JournalEntryStatus = "posted" | "reversed";
 
 export interface JournalEntryAccount {
   id: string;
@@ -94,7 +94,6 @@ export const JOURNAL_ENTRY_STATUS_OPTIONS: Array<{
   labelKey: string;
 }> = [
   { value: "", labelKey: "journalEntries.status.all" },
-  { value: "draft", labelKey: "journalEntries.status.draft" },
   { value: "posted", labelKey: "journalEntries.status.posted" },
   { value: "reversed", labelKey: "journalEntries.status.reversed" },
 ];

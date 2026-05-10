@@ -218,14 +218,13 @@ export const vi = {
     },
     status: {
       all: "Tất cả trạng thái",
-      draft: "Nháp",
       posted: "Đã hạch toán",
       reversed: "Đã đảo",
     },
     actions: {
       new: "Hạch toán bút toán",
-      createDraft: "Tạo bút toán nháp",
-      post: "Hạch toán",
+      createDraft: "Tạo bút toán đã hạch toán",
+      post: "Đã hạch toán",
       reverse: "Đảo bút toán",
       reverseReason: "Lý do đảo bút toán",
     },

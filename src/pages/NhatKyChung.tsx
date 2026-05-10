@@ -267,14 +267,6 @@ export function NhatKyChung() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  disabled={actions.selected.status !== "draft" || actions.saving}
-                  onClick={() => actions.post(actions.selected!.id)}
-                  className="rounded-lg border border-border px-3 py-2 disabled:opacity-40"
-                >
-                  {t("journalEntries.actions.post")}
-                </button>
-                <button
-                  type="button"
                   disabled={actions.selected.status !== "posted" || actions.saving}
                   onClick={() => actions.reverse(actions.selected!.id, { reason: reverseReason })}
                   className="rounded-lg border border-border px-3 py-2 disabled:opacity-40"

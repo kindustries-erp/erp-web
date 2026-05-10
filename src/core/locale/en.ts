@@ -226,14 +226,13 @@ export const en: Dict = {
     },
     status: {
       all: "All statuses",
-      draft: "Draft",
       posted: "Posted",
       reversed: "Reversed",
     },
     actions: {
       new: "Create journal entry",
-      createDraft: "Create draft",
-      post: "Post",
+      createDraft: "Create posted entry",
+      post: "Posted",
       reverse: "Reverse",
       reverseReason: "Reverse reason",
     },
