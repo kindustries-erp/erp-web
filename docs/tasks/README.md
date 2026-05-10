@@ -6,16 +6,25 @@
 - Không bắt đầu sửa code khi chưa có task file trong `docs/tasks/`.
 - Task mới nên khởi tạo từ template: `docs/tasks/_template.md`.
 
-### 2) Tick done realtime
+### 2) Universal DB-first (FEATURE/ENHANCE/FIX)
+- Mọi task đều phải làm Gate 0 DB precheck trước.
+- Nếu `DB_GAP_FOUND` thì bổ sung từ DB/directus staging trước, rồi mới tới API/UI.
+- Thứ tự bắt buộc: DB -> API workflow -> UI.
+
+### 3) Tick done realtime
 - Mỗi sub-task hoàn thành phải đổi ngay `- [ ]` -> `- [x]`.
 - Không để dồn tick vào cuối task.
 
-### 3) Lessons learned khi có issue
+### 4) Lessons learned khi có issue
 - Nếu gặp lỗi/blocker/sai hướng triển khai, bắt buộc ghi lessons learned trước khi đóng task.
 - Dùng template: `docs/lessons-learned/_template.md`.
 - Link lessons entry vào cuối task file để dễ tra cứu.
 
-### 4) Thứ tự đọc trước khi làm task
+### 5) Task closing rule
+- Sau khi hoàn tất task: commit + push code (web/api).
+- Riêng DB/directus staging: không bắt buộc commit/push code DB repo, nhưng phải có evidence apply+verify+document.
+
+### 6) Thứ tự đọc trước khi làm task
 1. `AGENTS.md`
 2. `docs/ai/technical-instructions.md`
 3. `docs/app-structure.md`
@@ -48,13 +57,6 @@ Thứ tự thực hiện **bắt buộc**. Chạy `tsc --noEmit` sau mỗi task 
 | [08](task-08-impersonate-axios.md)         | `src/core/api/axiosInstance.ts`                                                                             | Xử lý 401 khi impersonation token hết hạn: restore actor session thay vì logout                                                                           | Task 07     |
 | [09](task-09-impersonate-nhansu-ui.md)     | `src/pages/NhanSu.tsx` + locale files                                                                       | Thêm nút "Login as user" vào cột actions, gated by `canImpersonate`, ConfirmModal, toast                                                                  | Task 06, 07 |
 | [10](task-10-impersonate-topbar-banner.md) | `src/core/components/layout/Topbar.tsx` + `src/modules/auth/components/UserProfileModal.tsx` + locale files | Impersonation banner trên topbar, section "Quay lại" trong UserProfileModal                                                                               | Task 07     |
-
-## Quy tắc thực hiện
-
-- Mỗi task file **tự chứa đủ context** để AI agent chạy trực tiếp mà không cần thêm prompt.
-- Sau mỗi task, chạy `tsc --noEmit` để xác nhận compile sạch trước khi chuyển task tiếp theo.
-- Không tạo thêm file ngoài task-05 (`ApprovalHistory/index.tsx`).
-- Không refactor code không liên quan đến task.
 
 ## Lệnh kiểm tra nhanh
 
