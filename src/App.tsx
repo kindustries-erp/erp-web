@@ -21,6 +21,7 @@ import { ChucVu } from "@/pages/ChucVu";
 import { PhaiThu } from "@/pages/PhaiThu";
 import { PhaiTra } from "@/pages/PhaiTra";
 import { ComingSoon } from "@/pages/ComingSoon";
+import { NhatKyChung } from "@/pages/NhatKyChung";
 import { Login } from "@/pages/Login";
 import { ActivityLog } from "@/pages/ActivityLog";
 import { DoiTac } from "@/pages/DoiTac";
@@ -113,8 +114,8 @@ export default function App() {
               {currentPage === "chucvu" && <ChucVu />}
               {currentPage === "phaithu" && <PhaiThu />}
               {currentPage === "phaittra" && <PhaiTra />}
+              {currentPage === "nhatkyechung" && <NhatKyChung />}
               {(currentPage === "socat" ||
-                currentPage === "nhatkyechung" ||
                 currentPage === "banhang" ||
                 currentPage === "khachhang" ||
                 currentPage === "muahang" ||
