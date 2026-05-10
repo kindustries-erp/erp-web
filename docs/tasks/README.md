@@ -1,5 +1,28 @@
 # Task Index
 
+## Quy tắc bắt buộc cho mọi task mới
+
+### 1) No code without task
+- Không bắt đầu sửa code khi chưa có task file trong `docs/tasks/`.
+- Task mới nên khởi tạo từ template: `docs/tasks/_template.md`.
+
+### 2) Tick done realtime
+- Mỗi sub-task hoàn thành phải đổi ngay `- [ ]` -> `- [x]`.
+- Không để dồn tick vào cuối task.
+
+### 3) Lessons learned khi có issue
+- Nếu gặp lỗi/blocker/sai hướng triển khai, bắt buộc ghi lessons learned trước khi đóng task.
+- Dùng template: `docs/lessons-learned/_template.md`.
+- Link lessons entry vào cuối task file để dễ tra cứu.
+
+### 4) Thứ tự đọc trước khi làm task
+1. `AGENTS.md`
+2. `docs/ai/technical-instructions.md`
+3. `docs/app-structure.md`
+4. Task file cụ thể
+
+---
+
 ## Feature: Payment Voucher Frontend
 
 Thứ tự thực hiện **bắt buộc** (mỗi task phụ thuộc task trước).
@@ -42,6 +65,12 @@ npx tsc --noEmit
 # Dev server
 npm run dev
 ```
+
+## Tài liệu liên quan
+
+- Canonical rules: `docs/ai/technical-instructions.md`
+- Task template: `docs/tasks/_template.md`
+- Lessons learned template: `docs/lessons-learned/_template.md`
 
 ## File đã obsolete
 

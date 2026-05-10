@@ -1,12 +1,14 @@
 # ERP Frontend — Copilot Instructions
 
-## Read the App Structure
-Always refer to `docs/app-structure.md` for the complete architecture, rules, and existing components documentation.
+## Required reading order
+1. `docs/ai/technical-instructions.md`
+2. `docs/app-structure.md`
+3. Relevant task file in `docs/tasks/`
 
-## Key Rules Summary
-- Follow the Atomic Design architecture documented in `docs/app-structure.md`
-- Reuse existing components before creating new ones
-- One component per folder
-- Keep pages thin
-- Use hooks for business logic
-- Shared components accept no domain types
+## Mandatory workflow
+- No code without task file.
+- Update checklist in realtime (`[ ]` -> `[x]`).
+- If issue/blocker happens, record lessons learned before closing.
+
+## Canonical source of truth
+Use `docs/ai/technical-instructions.md` as the only canonical rules document.
