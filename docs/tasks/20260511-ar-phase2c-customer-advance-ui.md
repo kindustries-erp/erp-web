@@ -55,6 +55,6 @@ Cho phép người dùng tài chính xem và tạo/post/reverse customer advance
 - Actual Phase 2C advance status values are `UNAPPLIED`, `PARTIALLY_APPLIED`, `FULLY_APPLIED`, `REVERSED`; keep Web type union aligned with DB trigger output.
 
 ## Commit/Push Status
-- Web repo: pending
-- API repo: pending
+- Web repo: committed and pushed to `master` (`0dd450f`)
+- API repo: committed and pushed to `master` (`d40c206`)
 - DB/directus staging: apply+verify+document done in Directus task
