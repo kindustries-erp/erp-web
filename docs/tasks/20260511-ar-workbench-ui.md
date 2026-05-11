@@ -38,24 +38,28 @@ Provide a backward-compatible AR workbench UI for production AR use-case coverag
   - [x] 3.1 Add backward-compatible AR workbench entry point: `/phai-thu` now has AR Workbench tab plus legacy ledger tab
   - [x] 3.2 Implement summary/coverage/document UI with loading/error/empty states
   - [x] 3.3 Ensure old ledger flow still accessible: `Sổ công nợ hiện tại` tab keeps `PartnerLedgerPage`
-- [ ] 4.0 Validation
+- [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`: passed
-  - [ ] 4.2 Smoke test `/phai-thu`, `/phai-tra`, `/tien-mat`, `/tien-gui`, `/nhat-ky-chung`
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+  - [x] 4.2 Smoke test `/phai-thu`, `/phai-tra`, `/tien-mat`, `/tien-gui`, `/nhat-ky-chung`
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue)
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 - DB precheck result: `DB_READY` after Directus phase 1 migration created additive `ar_*` collections and transaction+rollback smoke passed.
 - `npx tsc --noEmit`: passed.
 - `npm run build`: passed; Vite emitted existing chunk-size/dynamic-import warnings only.
-- Smoke test: pending deploy/runtime verification.
+- Runtime image build: `/opt/stacks/liouni-erp-web docker compose build` passed after commit `db83dc4`; same existing Vite warnings only.
+- Deploy: `/opt/stacks/liouni-erp-web docker compose up -d` recreated and started container `liouni-erp-web`.
+- Smoke test:
+  - Public routes returned HTTP 200: `/phai-thu`, `/phai-tra`, `/tien-mat`, `/tien-gui`, `/nhat-ky-chung`.
+  - Runtime bundle contains `ar-workbench` in `/usr/share/nginx/html/assets/index-fidIjYmQ.js`, confirming rebuilt UI includes new AR Workbench code.
 
 ## Lessons Learned
 - Không có UI-specific issue; DB lesson: `/opt/repos/liouni-erp/directus-staging/ops/lessons-learned/20260511-directus-permission-json-distinct.md`
 
 ## Commit/Push Status
-- Web repo: pending commit/push
-- API repo: pending in API task
+- Web repo: committed and pushed `db83dc4` (`Add AR workbench UI`)
+- API repo: committed and pushed `da06319` (`Add AR workbench API foundation`)
 - DB/directus staging: apply+verify+document complete (no code push required)
