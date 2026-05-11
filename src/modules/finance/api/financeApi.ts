@@ -945,3 +945,157 @@ export async function deletePartnerLedgerSettlementApi(
 ): Promise<void> {
   await axiosInstance.delete(`/api/v1/partner-ledger-settlements/${id}`);
 }
+
+
+// ─── AR Workbench ─────────────────────────────────────────────────────────────
+
+export type ArDocumentType =
+  | "INVOICE"
+  | "IMMEDIATE_SALE"
+  | "ADVANCE"
+  | "CREDIT_NOTE"
+  | "SALES_RETURN"
+  | "REFUND"
+  | "WRITE_OFF"
+  | "SUSPENSE"
+  | "FX_REVALUATION"
+  | "RETENTION"
+  | "COD"
+  | "GATEWAY"
+  | "INTERCOMPANY"
+  | "CONTRACT_MILESTONE"
+  | "ADJUSTMENT";
+
+export type ArDocumentStatus =
+  | "DRAFT"
+  | "POSTED"
+  | "PARTIAL"
+  | "SETTLED"
+  | "DISPUTED"
+  | "REVERSED"
+  | "CANCELLED";
+
+export interface ArDocument {
+  id: string;
+  document_no: string;
+  document_type: ArDocumentType;
+  business_partner_id: string | null;
+  accounting_account_id: string | null;
+  document_date: string;
+  posting_date: string;
+  due_date: string | null;
+  currency: string;
+  exchange_rate: number;
+  total_amount: number;
+  settled_amount: number;
+  open_amount: number;
+  status: ArDocumentStatus;
+  source_type: string | null;
+  source_id: string | null;
+  reference_no: string | null;
+  description: string;
+  risk_status: "NORMAL" | "OVERDUE" | "BAD_DEBT_RISK" | "LEGAL";
+  dispute_status: "NONE" | "DISPUTED" | "RESOLVED";
+  collection_status: "NOT_STARTED" | "REMINDER_SENT" | "PROMISED" | "ESCALATED" | "LEGAL";
+  promise_to_pay_date: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface CreateArDocumentDto {
+  document_no: string;
+  document_type: ArDocumentType;
+  business_partner_id?: string;
+  accounting_account_id?: string;
+  document_date: string;
+  posting_date: string;
+  due_date?: string;
+  currency?: string;
+  exchange_rate?: number;
+  total_amount: number;
+  status?: ArDocumentStatus;
+  reference_no?: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ArCoverageItem {
+  id: number;
+  use_case: string;
+  status: "phase1_supported" | "phase1_foundation" | "existing_supported";
+  route: string;
+}
+
+export interface ArSummary {
+  totals: {
+    count: number;
+    total_amount: number;
+    settled_amount: number;
+    open_amount: number;
+    overdue_amount: number;
+  };
+  by_type: Record<string, { count: number; open_amount: number; total_amount: number }>;
+  coverage: ArCoverageItem[];
+}
+
+export interface ArDocumentListParams extends ListParams {
+  business_partner_id?: string;
+  document_type?: ArDocumentType;
+  status?: ArDocumentStatus;
+  risk_status?: string;
+  open_only?: boolean;
+  overdue?: boolean;
+}
+
+export async function getArDocumentsApi(
+  params: ArDocumentListParams = {},
+): Promise<PaginatedResponse<ArDocument>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<ArDocument>>(
+    "/api/v1/ar-workbench/documents",
+    {
+      params: {
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        sort: (params.sort ?? ["-posting_date"]).join(","),
+        ...(params.search ? { search: params.search } : {}),
+        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+        ...(params.document_type ? { document_type: params.document_type } : {}),
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.risk_status ? { risk_status: params.risk_status } : {}),
+        ...(params.open_only ? { open_only: true } : {}),
+        ...(params.overdue ? { overdue: true } : {}),
+      },
+    },
+  );
+  return data;
+}
+
+export async function createArDocumentApi(dto: CreateArDocumentDto): Promise<ArDocument> {
+  const { data } = await axiosInstance.post<{ message: string; data: ArDocument }>(
+    "/api/v1/ar-workbench/documents",
+    dto,
+  );
+  return data.data;
+}
+
+export async function getArSummaryApi(
+  params: ArDocumentListParams = {},
+): Promise<ArSummary> {
+  const { data } = await axiosInstance.get<ArSummary>("/api/v1/ar-workbench/summary", {
+    params: {
+      ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+      ...(params.document_type ? { document_type: params.document_type } : {}),
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.open_only ? { open_only: true } : {}),
+      ...(params.overdue ? { overdue: true } : {}),
+    },
+  });
+  return data;
+}
+
+export async function getArCoverageApi(): Promise<{ items: ArCoverageItem[]; total: number }> {
+  const { data } = await axiosInstance.get<{ items: ArCoverageItem[]; total: number }>(
+    "/api/v1/ar-workbench/coverage",
+  );
+  return data;
+}
