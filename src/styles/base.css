@@ -56,12 +56,6 @@ body::before {
   border-radius: 99px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #3b4658;
-}
-.theme-classic.dark ::-webkit-scrollbar-thumb {
-  background: #333;
-}
 
 /* ── Keyframes ── */
 @keyframes slideLeftAndFade {

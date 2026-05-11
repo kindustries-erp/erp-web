@@ -1,8 +1,6 @@
 /* ── Theme Variables ── */
 @import "./styles/themes/default.css";
-@import "./styles/themes/dark.css";
 @import "./styles/themes/classic.css";
-@import "./styles/themes/classic-dark.css";
 
 /* ── Base & Reset ── */
 @import "./styles/base.css";

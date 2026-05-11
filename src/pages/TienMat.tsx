@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { Wallet } from "lucide-react";
@@ -49,7 +49,7 @@ import { CashVoucherDrawer } from "@/modules/finance/components/CashVoucherDrawe
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 export function TienMat() {
-  const isDark = useAppStore((s) => s.isDark);
+
   const t = useT();
   const canCreateVoucher = useHasPermission("payment_vouchers", "create");
   const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
@@ -429,7 +429,7 @@ export function TienMat() {
 
       {/* Charts */}
       <VoucherChartRow
-        isDark={isDark}
+
         openingLoading={openingLoading}
         donutLoading={donutLoading}
         chartData={chartData}

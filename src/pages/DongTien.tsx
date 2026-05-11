@@ -8,17 +8,17 @@ import { useAppStore } from "@/core/config/appStore";
 import { useT, useDict } from "@/core/i18n";
 
 export function DongTien() {
-  const { navigate, isDark } = useAppStore();
+  const { navigate } = useAppStore();
   const t = useT();
   const dict = useDict();
-  const barIn = isDark ? "#5a5a58" : "#e8e8e4";
-  const barOut = isDark ? "#c8c8c4" : "#1a1a1a";
+  const barIn = "#e8e8e4";
+  const barOut = "#1a1a1a";
   const CHART_ITEMS_THU = [
     { label: t("dongtien.donut.sales"), value: 52, color: "#378add" },
     {
       label: t("dongtien.donut.untDebt"),
       value: 28,
-      color: isDark ? "#8888bb" : "#1a1a1a",
+      color: "#1a1a1a",
     },
     { label: t("dongtien.donut.other"), value: 20, color: "#b4b2a9" },
   ];

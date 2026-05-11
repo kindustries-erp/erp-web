@@ -11,7 +11,7 @@ interface DonutItem {
 }
 
 interface VoucherChartRowProps {
-  isDark: boolean;
+
   openingLoading: boolean;
   donutLoading: boolean;
   chartData: number[];
@@ -30,7 +30,7 @@ interface VoucherChartRowProps {
  * Dùng chung cho TienMat và TienGui.
  */
 export function VoucherChartRow({
-  isDark,
+
   openingLoading,
   donutLoading,
   chartData,
@@ -52,7 +52,7 @@ export function VoucherChartRow({
           ) : (
             <LineChart
               labels={chartLabels}
-              datasets={[{ data: chartData, color: isDark ? "#e0e0de" : "#1a1a1a" }]}
+              datasets={[{ data: chartData, color: "#1a1a1a" }]}
               yMax={chartYMax}
               yCallback={(v) => `${v}${chartUnit}`}
             />

@@ -35,6 +35,7 @@ export function ConfirmModal({
       className="fixed inset-0 transition-all duration-300"
       style={{
         zIndex,
+        backgroundColor: "rgba(0, 0, 0, 0.1)",
         // backdropFilter: "blur(1px)",
         // WebkitBackdropFilter: "blur(1px)",
       }}

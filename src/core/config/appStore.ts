@@ -5,12 +5,11 @@ import { pageToPath } from "@/shared/utils/pageUrl";
 
 export type AppTheme = "shell" | "classic";
 
-function applyDocumentTheme(appTheme: AppTheme, isDark: boolean) {
+function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
     "theme-classic",
     appTheme === "classic",
   );
-  document.documentElement.classList.toggle("dark", isDark);
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
@@ -99,7 +98,6 @@ interface AppState {
   openTabs: PageKey[];
   sidebarCollapsed: boolean;
   mobileSidebarOpen: boolean;
-  isDark: boolean;
   appTheme: AppTheme;
   locale: "vi" | "en";
   settingsActiveTab: string;
@@ -111,7 +109,6 @@ interface AppState {
   closeTab: (key: PageKey) => void;
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
-  toggleTheme: () => void;
   toggleAppTheme: () => void;
   toggleLocale: () => void;
   setSettingsTab: (tab: string) => void;
@@ -127,7 +124,6 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      isDark: false,
       appTheme: "shell",
       locale: "vi",
       settingsActiveTab: "quy",
@@ -209,16 +205,10 @@ export const useAppStore = create<AppState>()(
       },
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
-      toggleTheme: () => {
-        const isDark = !get().isDark;
-        set({ isDark });
-        applyDocumentTheme(get().appTheme, isDark);
-      },
-
       toggleAppTheme: () => {
         const appTheme = get().appTheme === "shell" ? "classic" : "shell";
         set({ appTheme });
-        applyDocumentTheme(appTheme, get().isDark);
+        applyDocumentTheme(appTheme);
       },
 
       toggleLocale: () =>
@@ -231,13 +221,12 @@ export const useAppStore = create<AppState>()(
       name: "erp-ui",
       partialize: (s) => ({
         sidebarCollapsed: s.sidebarCollapsed,
-        isDark: s.isDark,
         appTheme: s.appTheme,
         locale: s.locale,
         isLoggedIn: s.isLoggedIn,
       }),
       onRehydrateStorage: () => (state) => {
-        applyDocumentTheme(state?.appTheme ?? "shell", !!state?.isDark);
+        applyDocumentTheme(state?.appTheme ?? "shell");
       },
     },
   ),

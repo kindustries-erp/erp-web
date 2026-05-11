@@ -31,10 +31,9 @@ const APPROVALS_DATA = [
 ];
 
 export function Dashboard() {
-  const { isDark } = useAppStore();
   const t = useT();
-  const barIn = isDark ? "#5a5a58" : "#e0e0de";
-  const barOut = isDark ? "#c8c8c4" : "#1a1a1a";
+  const barIn = "#e0e0de";
+  const barOut = "#1a1a1a";
   return (
     <div>
       <PageHeader

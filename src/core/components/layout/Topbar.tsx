@@ -10,9 +10,7 @@ export function Topbar() {
     currentPage,
     navigate,
     setMobileSidebarOpen,
-    isDark,
     appTheme,
-    toggleTheme,
     toggleAppTheme,
     locale,
     toggleLocale,
@@ -24,7 +22,7 @@ export function Topbar() {
   const crumbs = BREADCRUMBS[currentPage] ?? [[currentPage]];
 
   return (
-    <div className="topbar h-12 flex items-center px-6 gap-[10px] flex-shrink-0">
+    <div className="topbar h-12 flex items-center gap-[10px] flex-shrink-0">
       {/* Hamburger (mobile) */}
       <button
         className="mobile-hamburger hidden w-8 h-8 border border-border rounded-lg items-center justify-center cursor-pointer flex-shrink-0 bg-surface"
@@ -172,51 +170,6 @@ export function Topbar() {
             <path d="M12 2C6.5 2 2 6.1 2 11.2c0 3.7 2.8 6.8 6.5 6.8h1.2c1 0 1.7.8 1.7 1.7 0 1.2.9 2.1 2.1 2.1 4.7 0 8.5-4.4 8.5-9.8C22 6.5 17.5 2 12 2z" />
           </svg>
         </button>
-
-        {/* Theme toggle — temporarily hidden */}
-        {false && (
-          <button
-            onClick={toggleTheme}
-            title={
-              isDark ? t("nav.bottom.themeDark") : t("nav.bottom.themeLight")
-            }
-            className="w-8 h-8 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover"
-          >
-            {isDark ? (
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[color:var(--muted-fg)]"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            ) : (
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-[color:var(--muted-fg)]"
-              >
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            )}
-          </button>
-        )}
 
         {/* Bell */}
         <button className="w-8 h-8 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover">

@@ -75,7 +75,7 @@ import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function TienGui() {
-  const isDark = useAppStore((s) => s.isDark);
+
   const t = useT();
   const canCreateVoucher = useHasPermission("payment_vouchers", "create");
   const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
@@ -564,7 +564,7 @@ export function TienGui() {
 
       {/* Charts */}
       <VoucherChartRow
-        isDark={isDark}
+
         openingLoading={openingLoading}
         donutLoading={donutLoading}
         chartData={chartData}
