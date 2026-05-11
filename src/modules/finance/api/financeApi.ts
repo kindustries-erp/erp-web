@@ -179,7 +179,9 @@ export type VoucherType =
   | "CASH_RECEIPT"
   | "CASH_PAYMENT"
   | "BANK_RECEIPT"
-  | "BANK_PAYMENT";
+  | "BANK_PAYMENT"
+  | "EWALLET_RECEIPT"
+  | "CUSTOMER_ADVANCE_RECEIPT";
 
 export interface VoucherNumberingConfig {
   id: string;
@@ -241,8 +243,8 @@ export async function updateVoucherNumberingConfigApi(
 
 // ─── PaymentVoucher ───────────────────────────────────────────────────────────
 
-export type VoucherChannel = "CASH" | "BANK";
-export type VoucherDirection = "IN" | "OUT";
+export type VoucherChannel = "CASH" | "BANK" | "MANUAL";
+export type VoucherDirection = "IN" | "OUT" | "RECEIPT" | "PAYMENT";
 export type VoucherStatus =
   | "DRAFT"
   | "PENDING_APPROVAL"
@@ -312,6 +314,10 @@ export interface PaymentVoucher {
   beneficiary_bank_name_snapshot: string | null;
   beneficiary_bank_account_snapshot: string | null;
   beneficiary_account_holder_snapshot: string | null;
+  ar_advance_original_amount?: number | string | null;
+  ar_advance_applied_amount?: number | string | null;
+  ar_advance_remaining_amount?: number | string | null;
+  ar_advance_status?: "NONE" | "UNAPPLIED" | "PARTIALLY_APPLIED" | "FULLY_APPLIED" | "REVERSED" | null;
 }
 
 export interface CreatePaymentVoucherDto {
@@ -1163,3 +1169,152 @@ export async function getArCoverageApi(): Promise<{ items: ArCoverageItem[]; tot
   );
   return data;
 }
+
+// ─── Payment Voucher / Receipt (AR Workbench) ─────────────────────────────────
+
+export type PaymentMethod = "CASH" | "BANK" | "EWALLET";
+
+export interface PaymentAllocationLine {
+  target_document_id: string;
+  amount: number;
+  writeoff_amount?: number;
+  writeoff_account_id?: string;
+  reason?: string;
+}
+
+export interface CreatePaymentReceiptDto {
+  voucher_no?: string;
+  payment_method: PaymentMethod;
+  document_date: string;
+  posting_date?: string;
+  counterparty_id: string;
+  counterparty_name_snapshot?: string;
+  debit_account_id?: string;
+  credit_account_id?: string;
+  amount: number;
+  currency?: string;
+  description?: string;
+  allocations?: PaymentAllocationLine[];
+}
+
+export interface CreateCustomerAdvanceDto {
+  voucher_no?: string;
+  payment_method: PaymentMethod;
+  document_date: string;
+  posting_date?: string;
+  counterparty_id: string;
+  counterparty_name_snapshot?: string;
+  debit_account_id?: string;
+  credit_account_id?: string;
+  amount: number;
+  currency?: string;
+  description?: string;
+}
+
+export async function getPaymentVouchersApi(
+  params: ArDocumentListParams = {},
+): Promise<PaginatedResponse<PaymentVoucher>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<PaymentVoucher>>(
+    "/api/v1/ar-workbench/payment-vouchers",
+    {
+      params: {
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+        ...(params.status ? { status: params.status } : {}),
+      },
+    },
+  );
+  return data;
+}
+
+export async function createPaymentReceiptApi(
+  dto: CreatePaymentReceiptDto,
+): Promise<{ voucher: PaymentVoucher; applications: unknown[] }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { voucher: PaymentVoucher; applications: unknown[] };
+  }>("/api/v1/ar-workbench/payment-vouchers", dto);
+  return data.data;
+}
+
+export async function postArPaymentVoucherApi(
+  id: string,
+): Promise<{ voucher: PaymentVoucher; journal_entry: unknown }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { voucher: PaymentVoucher; journal_entry: unknown };
+  }>(`/api/v1/ar-workbench/payment-vouchers/${id}/post`);
+  return data.data;
+}
+
+export async function allocatePaymentApi(
+  voucherId: string,
+  allocations: PaymentAllocationLine[],
+): Promise<unknown[]> {
+  const { data } = await axiosInstance.post<{ message: string; data: unknown[] }>(
+    `/api/v1/ar-workbench/payment-vouchers/${voucherId}/allocate`,
+    { allocations },
+  );
+  return data.data;
+}
+
+export async function reversePaymentVoucherApi(
+  id: string,
+  body: { reason?: string },
+): Promise<{ voucher: PaymentVoucher }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { voucher: PaymentVoucher };
+  }>(`/api/v1/ar-workbench/payment-vouchers/${id}/reverse`, body);
+  return data.data;
+}
+
+export async function getCustomerAdvancesApi(
+  params: ArDocumentListParams = {},
+): Promise<PaginatedResponse<PaymentVoucher>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<PaymentVoucher>>(
+    "/api/v1/ar-workbench/customer-advances",
+    {
+      params: {
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+        ...(params.status ? { status: params.status } : {}),
+      },
+    },
+  );
+  return data;
+}
+
+export async function createCustomerAdvanceApi(
+  dto: CreateCustomerAdvanceDto,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
+    "/api/v1/ar-workbench/customer-advances",
+    dto,
+  );
+  return data.data;
+}
+
+export async function postCustomerAdvanceApi(
+  id: string,
+): Promise<{ voucher: PaymentVoucher; journal_entry: unknown }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { voucher: PaymentVoucher; journal_entry: unknown };
+  }>(`/api/v1/ar-workbench/customer-advances/${id}/post`);
+  return data.data;
+}
+
+export async function reverseCustomerAdvanceApi(
+  id: string,
+  body: { reason?: string },
+): Promise<{ voucher: PaymentVoucher; reversal_journal_entry: unknown }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { voucher: PaymentVoucher; reversal_journal_entry: unknown };
+  }>(`/api/v1/ar-workbench/customer-advances/${id}/reverse`, body);
+  return data.data;
+}
+
