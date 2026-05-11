@@ -1019,10 +1019,43 @@ export interface CreateArDocumentDto {
   metadata?: Record<string, unknown>;
 }
 
+export interface CreateArSalesInvoiceLineDto {
+  line_no?: number;
+  item_code?: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate?: number;
+  revenue_account_id?: string;
+  tax_account_id?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CreateArSalesInvoiceDto {
+  document_no: string;
+  business_partner_id: string;
+  accounting_account_id?: string;
+  document_date: string;
+  posting_date: string;
+  due_date?: string;
+  currency?: string;
+  exchange_rate?: number;
+  reference_no?: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  lines: CreateArSalesInvoiceLineDto[];
+}
+
+export interface ReverseArDocumentDto {
+  posting_date?: string;
+  reason?: string;
+  metadata?: Record<string, unknown>;
+}
+
 export interface ArCoverageItem {
   id: number;
   use_case: string;
-  status: "phase1_supported" | "phase1_foundation" | "existing_supported";
+  status: "phase1_supported" | "phase1_foundation" | "phase2a_supported" | "existing_supported";
   route: string;
 }
 
@@ -1075,6 +1108,37 @@ export async function createArDocumentApi(dto: CreateArDocumentDto): Promise<ArD
     "/api/v1/ar-workbench/documents",
     dto,
   );
+  return data.data;
+}
+
+export async function createArSalesInvoiceApi(
+  dto: CreateArSalesInvoiceDto,
+): Promise<{ document: ArDocument }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { document: ArDocument };
+  }>("/api/v1/ar-workbench/sales-invoices", dto);
+  return data.data;
+}
+
+export async function postArDocumentApi(
+  id: string,
+): Promise<{ document: ArDocument; journal_entry: unknown }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { document: ArDocument; journal_entry: unknown };
+  }>(`/api/v1/ar-workbench/documents/${id}/post`);
+  return data.data;
+}
+
+export async function reverseArDocumentApi(
+  id: string,
+  dto: ReverseArDocumentDto,
+): Promise<{ document: ArDocument; reversal_journal_entry: unknown }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { document: ArDocument; reversal_journal_entry: unknown };
+  }>(`/api/v1/ar-workbench/documents/${id}/reverse`, dto);
   return data.data;
 }
 
