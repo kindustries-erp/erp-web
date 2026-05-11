@@ -1318,3 +1318,80 @@ export async function reverseCustomerAdvanceApi(
   return data.data;
 }
 
+// ─── UC#4 Apply Advance to Invoice / Cấn trừ cọc ────────────────────────────
+
+export interface ApplyAdvanceToInvoiceDto {
+  advance_voucher_id: string;
+  ar_document_id: string;
+  amount: number;
+  application_date: string;
+  application_no?: string;
+  reason?: string;
+}
+
+export interface AdvanceApplication {
+  id: string;
+  application_no: string;
+  application_type: "ADVANCE_APPLICATION";
+  payment_voucher_id: string;
+  source_document_id?: string | null;
+  target_document_id: string;
+  application_date: string;
+  amount: number;
+  status: "POSTED" | "REVERSED";
+  reason?: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+}
+
+export interface ApplyAdvanceResult {
+  application: AdvanceApplication;
+  advance_after: {
+    id: string;
+    voucher_no: string;
+    ar_advance_remaining_amount: number;
+    ar_advance_status: string;
+  };
+  invoice_after: {
+    id: string;
+    document_no: string;
+    open_amount: number;
+    settled_amount: number;
+    status: string;
+  };
+}
+
+export async function getAdvanceApplicationsApi(params: {
+  advance_voucher_id?: string;
+  ar_document_id?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedResponse<AdvanceApplication>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<AdvanceApplication>>(
+    "/api/v1/ar-workbench/advance-applications",
+    { params },
+  );
+  return data;
+}
+
+export async function applyAdvanceToInvoiceApi(
+  dto: ApplyAdvanceToInvoiceDto,
+): Promise<ApplyAdvanceResult> {
+  const { data } = await axiosInstance.post<{ message: string; data: ApplyAdvanceResult }>(
+    "/api/v1/ar-workbench/advance-applications",
+    dto,
+  );
+  return data.data;
+}
+
+export async function reverseAdvanceApplicationApi(
+  id: string,
+  body: { reason?: string },
+): Promise<{ original_application_id: string; reversal: AdvanceApplication }> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: { original_application_id: string; reversal: AdvanceApplication };
+  }>(`/api/v1/ar-workbench/advance-applications/${id}/reverse`, body);
+  return data.data;
+}
+

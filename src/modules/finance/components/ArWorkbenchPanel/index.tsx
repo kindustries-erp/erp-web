@@ -8,9 +8,11 @@ import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
 import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
+  applyAdvanceToInvoiceApi,
   createArSalesInvoiceApi,
   createCustomerAdvanceApi,
   createPaymentReceiptApi,
+  getAdvanceApplicationsApi,
   getArCoverageApi,
   getArDocumentsApi,
   getArSummaryApi,
@@ -20,8 +22,10 @@ import {
   postArPaymentVoucherApi,
   postCustomerAdvanceApi,
   reverseArDocumentApi,
+  reverseAdvanceApplicationApi,
   reverseCustomerAdvanceApi,
   reversePaymentVoucherApi,
+  type AdvanceApplication,
   type ArCoverageItem,
   type ArDocument,
   type ArDocumentStatus,
@@ -30,6 +34,7 @@ import {
   type CreateArSalesInvoiceDto,
   type CreateCustomerAdvanceDto,
   type CreatePaymentReceiptDto,
+  type ApplyAdvanceToInvoiceDto,
   type PaymentMethod,
   type PaymentVoucher,
   type VoucherStatus,
@@ -96,7 +101,7 @@ function emptySalesInvoiceForm(): CreateArSalesInvoiceDto {
 }
 
 export function ArWorkbenchPanel() {
-  const [activeTab, setActiveTab] = useState<"invoices" | "receipts" | "advances">("invoices");
+  const [activeTab, setActiveTab] = useState<"invoices" | "receipts" | "advances" | "advanceApplications">("invoices");
   const [summary, setSummary] = useState<ArSummary | null>(null);
   const [coverage, setCoverage] = useState<ArCoverageItem[]>([]);
   const [docs, setDocs] = useState<ArDocument[]>([]);
@@ -257,6 +262,17 @@ export function ArWorkbenchPanel() {
           >
             <Receipt className="h-3.5 w-3.5" /> Đặt cọc
           </button>
+          <button
+            onClick={() => setActiveTab("advanceApplications")}
+            className={cn(
+              "flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors",
+              activeTab === "advanceApplications"
+                ? "border-b-2 border-[color:var(--primary)] text-[color:var(--primary)]"
+                : "text-[color:var(--muted-fg)] hover:text-[color:var(--fg)]",
+            )}
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" /> Cấn trừ cọc
+          </button>
         </div>
       </div>
 
@@ -266,6 +282,10 @@ export function ArWorkbenchPanel() {
 
       {activeTab === "advances" && (
         <CustomerAdvancesTab />
+      )}
+
+      {activeTab === "advanceApplications" && (
+        <AdvanceApplicationsTab />
       )}
 
       {activeTab === "invoices" && (<>
@@ -670,6 +690,228 @@ function PaymentReceiptsTab() {
           {saveError && <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{saveError}</div>}
         </div>
       </DrawerModal>
+    </section>
+  );
+}
+
+// ─── AdvanceApplicationsTab / UC#4 ─────────────────────────────────────────────
+
+function emptyApplyAdvanceForm(): ApplyAdvanceToInvoiceDto {
+  return {
+    advance_voucher_id: "",
+    ar_document_id: "",
+    amount: 0,
+    application_date: todayIsoDate(),
+    reason: "Cấn trừ tiền cọc vào invoice",
+  };
+}
+
+function AdvanceApplicationsTab() {
+  const [advances, setAdvances] = useState<PaymentVoucher[]>([]);
+  const [invoices, setInvoices] = useState<ArDocument[]>([]);
+  const [applications, setApplications] = useState<AdvanceApplication[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState<ApplyAdvanceToInvoiceDto>(() => emptyApplyAdvanceForm());
+  const [saving, setSaving] = useState(false);
+  const [actioningId, setActioningId] = useState<string | null>(null);
+
+  const selectedAdvance = advances.find((item) => item.id === form.advance_voucher_id);
+  const selectedInvoice = invoices.find((item) => item.id === form.ar_document_id);
+  const maxApply = Math.min(
+    Number(selectedAdvance?.ar_advance_remaining_amount ?? 0),
+    Number(selectedInvoice?.open_amount ?? 0),
+  );
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      getCustomerAdvancesApi({ page: 1, pageSize: 100, status: "POSTED" }),
+      getArDocumentsApi({ page: 1, pageSize: 100, document_type: "INVOICE", open_only: true, sort: ["-posting_date"] }),
+      getAdvanceApplicationsApi({ page: 1, pageSize: 50 }),
+    ])
+      .then(([advanceRes, invoiceRes, appRes]) => {
+        setAdvances(advanceRes.items.filter((item) => Number(item.ar_advance_remaining_amount ?? 0) > 0));
+        setInvoices(invoiceRes.items.filter((item) => Number(item.open_amount ?? 0) > 0));
+        setApplications(appRes.items);
+      })
+      .catch((e) => setError(extractApiError(e, "Không tải được dữ liệu cấn trừ cọc")))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (maxApply > 0 && (!form.amount || form.amount > maxApply)) {
+      setForm((current) => ({ ...current, amount: maxApply }));
+    }
+  }, [form.amount, maxApply]);
+
+  const applyAdvance = () => {
+    if (!form.advance_voucher_id || !form.ar_document_id || form.amount <= 0) {
+      setError("Chọn phiếu cọc, invoice và số tiền cấn trừ hợp lệ");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    applyAdvanceToInvoiceApi({
+      ...form,
+      amount: Number(form.amount),
+      reason: form.reason?.trim() || undefined,
+    })
+      .then(() => { setForm(emptyApplyAdvanceForm()); load(); })
+      .catch((e) => setError(extractApiError(e, "Không cấn trừ được tiền cọc")))
+      .finally(() => setSaving(false));
+  };
+
+  const reverseApplication = (app: AdvanceApplication) => {
+    setActioningId(app.id);
+    setError(null);
+    reverseAdvanceApplicationApi(app.id, { reason: `Hủy cấn trừ cọc ${todayIsoDate()}` })
+      .then(load)
+      .catch((e) => setError(extractApiError(e, "Không hủy được cấn trừ cọc")))
+      .finally(() => setActioningId(null));
+  };
+
+  return (
+    <section className="space-y-4">
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
+          <p className="text-xs text-[color:var(--muted-fg)]">Advance khả dụng</p>
+          <p className="text-xl font-semibold">{advances.length}</p>
+        </div>
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
+          <p className="text-xs text-[color:var(--muted-fg)]">Invoice còn công nợ</p>
+          <p className="text-xl font-semibold">{invoices.length}</p>
+        </div>
+        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
+          <p className="text-xs text-[color:var(--muted-fg)]">Hạch toán</p>
+          <p className="text-sm font-semibold">N131 advance / C131 invoice</p>
+          <p className="text-xs text-[color:var(--muted-fg)]">Không tạo revenue/VAT mới; chỉ giảm open amount.</p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg bg-error-bg p-3 text-sm text-error-fg">
+          <AlertTriangle className="h-4 w-4 shrink-0" /> {error}
+        </div>
+      )}
+
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold">Use case #4 — Cấn trừ tiền cọc</h3>
+            <p className="text-sm text-[color:var(--muted-fg)]">Chọn phiếu cọc POSTED còn số dư và invoice còn open amount.</p>
+          </div>
+          {loading ? <Loader2 className="h-4 w-4 animate-spin text-[color:var(--muted-fg)]" /> : null}
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <DrawerField label="Phiếu đặt cọc *">
+            <select
+              className={cn(inputCls, "h-10 w-full")}
+              value={form.advance_voucher_id}
+              onChange={(e) => setForm((current) => ({ ...current, advance_voucher_id: e.target.value }))}
+            >
+              <option value="">Chọn advance voucher</option>
+              {advances.map((advance) => (
+                <option key={advance.id} value={advance.id}>
+                  {advance.voucher_no ?? advance.id.slice(0, 8)} — còn {money(advance.ar_advance_remaining_amount)}
+                </option>
+              ))}
+            </select>
+          </DrawerField>
+          <DrawerField label="Invoice/công nợ *">
+            <select
+              className={cn(inputCls, "h-10 w-full")}
+              value={form.ar_document_id}
+              onChange={(e) => setForm((current) => ({ ...current, ar_document_id: e.target.value }))}
+            >
+              <option value="">Chọn invoice</option>
+              {invoices.map((invoice) => (
+                <option key={invoice.id} value={invoice.id}>
+                  {invoice.document_no} — còn {money(invoice.open_amount)}
+                </option>
+              ))}
+            </select>
+          </DrawerField>
+          <DrawerField label="Ngày cấn trừ *">
+            <input
+              type="date"
+              className={inputCls}
+              value={form.application_date}
+              onChange={(e) => setForm((current) => ({ ...current, application_date: e.target.value }))}
+            />
+          </DrawerField>
+          <DrawerField label={`Số tiền cấn trừ *${maxApply > 0 ? ` (tối đa ${money(maxApply)})` : ""}`}>
+            <input
+              type="number"
+              min={0}
+              max={maxApply || undefined}
+              className={cn(inputCls, "text-right")}
+              value={form.amount}
+              onChange={(e) => setForm((current) => ({ ...current, amount: Number(e.target.value) }))}
+            />
+          </DrawerField>
+          <div className="md:col-span-2">
+            <DrawerField label="Lý do / diễn giải">
+              <input
+                className={inputCls}
+                value={form.reason ?? ""}
+                onChange={(e) => setForm((current) => ({ ...current, reason: e.target.value }))}
+                placeholder="Cấn trừ tiền cọc vào invoice"
+              />
+            </DrawerField>
+          </div>
+        </div>
+        <div className="mt-4 flex justify-end">
+          <BtnPrimary onClick={applyAdvance} disabled={saving || maxApply <= 0}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Cấn trừ cọc
+          </BtnPrimary>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)]">
+        <div className="border-b border-[color:var(--border)] p-3 text-sm font-semibold">Lịch sử cấn trừ gần nhất</div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b border-[color:var(--border)] bg-[color:var(--muted)] text-left text-xs uppercase tracking-wider text-[color:var(--muted-fg)]">
+              <tr>
+                <th className="px-3 py-2">Số cấn trừ</th>
+                <th className="px-3 py-2">Ngày</th>
+                <th className="px-3 py-2 text-right">Số tiền</th>
+                <th className="px-3 py-2">Trạng thái</th>
+                <th className="px-3 py-2">Diễn giải</th>
+                <th className="px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {applications.length === 0 ? (
+                <tr><td colSpan={6} className="py-8 text-center text-[color:var(--muted-fg)]">Chưa có bản ghi cấn trừ cọc</td></tr>
+              ) : applications.map((app) => (
+                <tr key={app.id} className="border-b border-[color:var(--border)]">
+                  <td className="px-3 py-2 font-mono text-xs">{app.application_no}</td>
+                  <td className="px-3 py-2">{app.application_date}</td>
+                  <td className="px-3 py-2 text-right font-semibold">{money(app.amount)}</td>
+                  <td className="px-3 py-2">{app.status}</td>
+                  <td className="px-3 py-2 text-[color:var(--muted-fg)]">{app.reason ?? "—"}</td>
+                  <td className="px-3 py-2 text-right">
+                    {app.status === "POSTED" && Number(app.amount) > 0 ? (
+                      <button
+                        disabled={actioningId === app.id}
+                        onClick={() => reverseApplication(app)}
+                        className="rounded bg-error-bg px-2 py-0.5 text-xs font-medium text-error-fg hover:opacity-80 disabled:opacity-50"
+                      >
+                        {actioningId === app.id ? "Đang hủy..." : "Reverse"}
+                      </button>
+                    ) : null}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
   );
 }
