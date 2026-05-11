@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
-import { Wallet } from "lucide-react";
-import { PageHeader } from "@/shared/components/PageHeader";
-import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   getCashFundsApi,
   getPaymentVoucherLookupBusinessPartnersApi,
@@ -18,7 +15,6 @@ import {
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { Employee } from "@/modules/auth/api/auth";
 import type { CashFund } from "@/modules/finance/api/financeApi";
-import { OpeningBalancePanel } from "@/modules/finance/components/OpeningBalancePanel";
 import { TODAY } from "@/modules/finance/utils/financeHelpers";
 // Hooks
 import { usePeriodFilter } from "@/modules/finance/hooks/usePeriodFilter";
@@ -31,22 +27,8 @@ import { useVoucherDrawer } from "@/modules/finance/hooks/useVoucherDrawer";
 import { useCashVoucherHandlers } from "@/modules/finance/hooks/useCashVoucherHandlers";
 import { useSearchFilter } from "@/shared/hooks/useFilterState";
 import { useAmountRangeFilter } from "@/shared/hooks/useFilterState";
-// Shared UI
-import { BtnPrimary } from "@/shared/components/BtnPrimary";
-import { attachmentFileName } from "@/shared/components/AttachmentComponents";
-import {
-  IconPlus,
-  IconCard,
-  IconTrendUp as IconUp,
-  IconTrendDown as IconDown,
-} from "@/shared/components/icons";
-
-import { VoucherFilterBar } from "@/modules/finance/components/VoucherFilterBar";
-import { VoucherKpiRow } from "@/modules/finance/components/VoucherKpiRow";
-import { VoucherChartRow } from "@/modules/finance/components/VoucherChartRow";
-import { VoucherTable } from "@/modules/finance/components/VoucherTable";
-import { CashVoucherDrawer } from "@/modules/finance/components/CashVoucherDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { TienMatView } from "@/modules/finance/components/TienMat/TienMatView";
 
 export function TienMat() {
 
@@ -368,179 +350,98 @@ export function TienMat() {
     [cashFunds],
   );
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
-    <div>
-      <PageHeader
-        title={t("tienmat.title")}
-        desc={t("tienmat.desc")}
-        icon={<Wallet className="h-4 w-4" />}
-        actions={
-          canCreateVoucher ? (
-            <>
-              <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}>
-                <IconPlus /> {t("tienmat.createReceipt")}
-              </BtnPrimary>
-              <BtnPrimary onClick={() => openNew("CASH_PAYMENT")}>
-                <IconPlus /> {t("tienmat.createPayment")}
-              </BtnPrimary>
-            </>
-          ) : undefined
-        }
-        className="mb-4"
-      />
-
-      {/* Filter bar */}
-      <VoucherFilterBar
-        period={period}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
-        channelFilter={fundFilter}
-        channelOpts={fundOpts}
-        channelLabel={t("voucher.filter.fund")}
-        channelPlaceholder={t("voucher.filter.fundPlaceholder")}
-        hasActiveFilter={hasActiveFilter}
-        onPeriodChange={handlePeriodChange}
-        onDateFrom={handleDateFrom}
-        onDateTo={handleDateTo}
-        onChannelChange={handleFundFilter}
-        onReset={handleReset}
-      />
-
-      {/* KPIs */}
-      <VoucherKpiRow
-        openingLoading={openingLoading}
-        summaryLoading={summaryLoading}
-        openingBal={openingBal}
-        closingBal={closingBal}
-        receiptTotal={summary?.receipt ?? null}
-        paymentTotal={summary?.payment ?? null}
-        fmtAmount={fmtAmount}
-        openingIcon={<IconCard />}
-        receiptIcon={<IconUp />}
-        paymentIcon={<IconDown />}
-        closingIcon={<IconCard />}
-        openingLabel={t("tienmat.kpi.fund")}
-        receiptLabel={t("tienmat.kpi.income")}
-        paymentLabel={t("tienmat.kpi.expense")}
-        closingLabel={t("tienmat.kpi.fund")}
-      />
-
-      {/* Charts */}
-      <VoucherChartRow
-
-        openingLoading={openingLoading}
-        donutLoading={donutLoading}
-        chartData={chartData}
-        chartLabels={chartLabels}
-        chartYMax={chartYMax}
-        chartUnit={chartUnit}
-        receiptDonutItems={receiptDonutItems}
-        paymentDonutItems={paymentDonutItems}
-        balanceTrendTitle={t("tienmat.balanceTrend")}
-        incomeStructureTitle={t("tienmat.incomeStructure")}
-        expenseStructureTitle={t("tienmat.expenseStructure")}
-      />
-
-      {/* Voucher table */}
-      <VoucherTable
-        title={t("tienmat.txList")}
-        vouchers={vouchers}
-        loading={loading}
-        fetchError={fetchError}
-        voucherAttachments={voucherAttachments}
-        sortCol={sortCol}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        searchInput={searchInput}
-        amountMinInput={amountMinInput}
-        amountMaxInput={amountMaxInput}
-        statusFilter={statusFilter}
-        noDataLabel={t("common.noData")}
-        channelNameResolver={fundName}
-        channelColLabel={t("voucher.table.colFund")}
-        onSort={handleSort}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-        onEdit={openEdit}
-        onDelete={setDeleteTarget}
-        onSearchInput={handleSearchInput}
-        onAmountMin={(v) => handleAmountRangeInput("min", v)}
-        onAmountMax={(v) => handleAmountRangeInput("max", v)}
-        onStatusFilter={setStatusFilter}
-        counterpartySourceFilter={counterpartySourceFilter}
-        onCounterpartySourceFilter={(v) => {
-          setCounterpartySourceFilter(v);
-          setPage(1);
-        }}
-      />
-
-      <div className="mt-4">
-        <OpeningBalancePanel type="CASH" />
-      </div>
-
-      {/* Create/Edit Drawer */}
-      <CashVoucherDrawer
-        open={drawerOpen}
-        editing={editing}
-        drawerEditMode={drawerEditMode}
-        form={form}
-        saving={saving}
-        saveError={saveError}
-        existingAttachments={existingAttachments}
-        attachmentFiles={attachmentFiles}
-        attachmentType={attachmentType}
-        attachmentNote={attachmentNote}
-        fundOpts={fundOpts}
-        partnerOpts={partnerOpts}
-        employeeOpts={employeeOpts}
-        coaOpts={coaOpts}
-        debitAccountOpts={debitAccountOpts}
-        creditAccountOpts={creditAccountOpts}
-        canUpdateVoucher={canUpdateVoucher}
-        onClose={closeDrawer}
-        onSave={handleSave}
-        onStatusTransition={(action) => handleStatusTransition(action, reloadAll)}
-        onToggleEditMode={handleToggleEditMode}
-        onFieldChange={setField}
-        onDocumentDateChange={handleDocumentDateChange}
-        onPostingDateChange={handlePostingDateChange}
-        onAmountChange={handleAmountChange}
-        onCashFundChange={handleCashFundChange}
-        onPartnerChange={handlePartnerChange}
-        onEmployeeChange={handleEmployeeChange}
-        onSourceChange={(src) => setField("counterparty_source", src)}
-        onDeleteAttachment={(item) =>
-          handleDeleteAttachment(
-            item,
-            () => loadVoucherAttachments(vouchers),
-            attachmentFileName,
-          )
-        }
-        onAttachmentFilesChange={setAttachmentFiles}
-        onAttachmentTypeChange={setAttachmentType}
-        onAttachmentNoteChange={setAttachmentNote}
-      />
-
-      <ConfirmModal
-        open={!!deleteTarget}
-        title={t("voucher.actions.deleteConfirmTitle")}
-        message={
-          deleteTarget
-            ? t("voucher.actions.deleteConfirmDesc").replace(
-                "{0}",
-                deleteTarget.voucher_no,
-              )
-            : ""
-        }
-        confirmLabel={t("voucher.actions.deleteConfirmBtn")}
-        loading={deleting}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-    </div>
+    <TienMatView
+      {...{
+        t,
+        canCreateVoucher,
+        canUpdateVoucher,
+        openNew,
+        period,
+        dateFrom,
+        dateTo,
+        fundFilter,
+        fundOpts,
+        hasActiveFilter,
+        handlePeriodChange,
+        handleDateFrom,
+        handleDateTo,
+        handleFundFilter,
+        handleReset,
+        openingLoading,
+        summaryLoading,
+        openingBal,
+        closingBal,
+        summary,
+        fmtAmount,
+        chartData,
+        chartLabels,
+        chartYMax,
+        chartUnit,
+        receiptDonutItems,
+        paymentDonutItems,
+        donutLoading,
+        vouchers,
+        loading,
+        fetchError,
+        voucherAttachments,
+        sortCol,
+        page,
+        pageSize,
+        total,
+        totalPages,
+        searchInput,
+        amountMinInput,
+        amountMaxInput,
+        statusFilter,
+        fundName,
+        handleSort,
+        setPage,
+        handlePageSize,
+        openEdit,
+        setDeleteTarget,
+        handleSearchInput,
+        handleAmountRangeInput,
+        setStatusFilter,
+        counterpartySourceFilter,
+        setCounterpartySourceFilter,
+        drawerOpen,
+        editing,
+        drawerEditMode,
+        form,
+        saving,
+        saveError,
+        existingAttachments,
+        attachmentFiles,
+        attachmentType,
+        attachmentNote,
+        fundOptsDrawer: fundOpts,
+        partnerOpts,
+        employeeOpts,
+        coaOpts,
+        debitAccountOpts,
+        creditAccountOpts,
+        closeDrawer,
+        handleSave,
+        handleStatusTransition,
+        reloadAll,
+        handleToggleEditMode,
+        setField,
+        handleDocumentDateChange,
+        handlePostingDateChange,
+        handleAmountChange,
+        handleCashFundChange,
+        handlePartnerChange,
+        handleEmployeeChange,
+        handleDeleteAttachment,
+        loadVoucherAttachments,
+        setAttachmentFiles,
+        setAttachmentType,
+        setAttachmentNote,
+        deleteTarget,
+        deleting,
+        handleDelete,
+      }}
+    />
   );
 }

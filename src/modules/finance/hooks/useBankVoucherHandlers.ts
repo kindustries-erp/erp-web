@@ -1,4 +1,4 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useState } from "react";
 import { useUIStore } from "@/core/config/uiStore";
 import { extractApiError } from "@/shared/utils/apiError";
 import type { CompanyBankAccount } from "@/modules/accounting/api/catalogApi";
@@ -40,73 +40,7 @@ import {
   voucherNoFromToday,
 } from "@/modules/finance/utils/financeHelpers";
 
-interface LoadVouchersParams {
-  page: number;
-  pageSize: number;
-  search: string;
-  statusFilter: VoucherStatus | "";
-  channelFilter: string;
-  channelParam: "company_bank_account_id";
-  voucherChannel: "BANK";
-  sortCol: string;
-  dateFrom: string;
-  dateTo: string;
-  amountMin: string;
-  amountMax: string;
-}
-
-interface DashboardParams {
-  voucherChannel: "BANK";
-  channelParam: "company_bank_account_id";
-  channelFilter: string;
-  receiptType: "BANK_RECEIPT";
-  paymentType: "BANK_PAYMENT";
-}
-
-interface UseBankVoucherHandlersParams {
-  companyBankAccounts: CompanyBankAccount[];
-  partners: BusinessPartner[];
-  employees: Employee[];
-  vouchers: PaymentVoucher[];
-  page: number;
-  pageSize: number;
-  search: string;
-  statusFilter: VoucherStatus | "";
-  bankFilter: string;
-  sortCol: string;
-  dateFrom: string;
-  dateTo: string;
-  amountMin: string;
-  amountMax: string;
-  coaItemsLength: number;
-  attachmentFileName: (item: PaymentVoucherAttachment) => string;
-  setPage: Dispatch<SetStateAction<number>>;
-  loadVouchers: (params: LoadVouchersParams) => Promise<PaymentVoucher[] | undefined>;
-  loadVoucherAttachments: (items: PaymentVoucher[]) => Promise<void>;
-  loadSummary: (from: string, to: string, params: DashboardParams) => Promise<void>;
-  loadOpeningBalanceAndChart: (
-    from: string,
-    chartEndDate: string,
-    params: DashboardParams,
-  ) => Promise<void>;
-  reloadDonutData: () => void;
-}
-
-const bankDashboardParamsBase = {
-  voucherChannel: "BANK",
-  channelParam: "company_bank_account_id",
-  receiptType: "BANK_RECEIPT",
-  paymentType: "BANK_PAYMENT",
-} as const;
-
-function partnerRole(partner: BusinessPartner | undefined): CounterpartyRole | "" {
-  const value =
-    (partner as (BusinessPartner & { counterparty_role?: string | null }))?.counterparty_role ??
-    (partner as (BusinessPartner & { role?: string | null }))?.role ??
-    "";
-  if (value === "SERVICE_PROVIDER") return "VENDOR";
-  return (value as CounterpartyRole) || "";
-}
+import { bankDashboardParamsBase, partnerRole, type DashboardParams, type LoadVouchersParams, type UseBankVoucherHandlersParams } from "./useBankVoucherHandlersSupport";
 
 export function useBankVoucherHandlers({
   companyBankAccounts,
@@ -543,41 +477,5 @@ export function useBankVoucherHandlers({
     }
   }
 
-  return {
-    drawerOpen,
-    editing,
-    drawerEditMode,
-    form,
-    saving,
-    saveError,
-    attachmentFiles,
-    attachmentType,
-    attachmentNote,
-    existingAttachments,
-    deleteTarget,
-    deleting,
-    partnerBankAccounts,
-    partnerBankLoading,
-    setSaving,
-    setSaveError,
-    reloadCurrentData,
-    closeDrawer,
-    openNew,
-    openEdit,
-    setField,
-    setAttachmentFiles,
-    setAttachmentType,
-    setAttachmentNote,
-    setDeleteTarget,
-    handleDocumentDateChange,
-    handlePostingDateChange,
-    handleAmountChange,
-    handleCompanyBankChange,
-    handlePartnerChange,
-    handleEmployeeChange,
-    handleToggleEditMode,
-    handleDeleteAttachment,
-    handleSave,
-    handleDelete,
-  };
+  return { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleToggleEditMode, handleDeleteAttachment, handleSave, handleDelete };
 }
