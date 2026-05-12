@@ -15,6 +15,7 @@ import {
   getArCoverageApi,
   getArDocumentsApi,
   getArSummaryApi,
+  getPaymentVoucherLookupBusinessPartnersApi,
   postArDocumentApi,
   reverseArDocumentApi,
   type ArCoverageItem,
@@ -24,6 +25,7 @@ import {
   type ArSummary,
   type CreateArSalesInvoiceDto,
 } from "@/modules/finance/api/financeApi";
+import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { AdvanceApplicationsTab } from "./AdvanceApplicationsTab";
 import { CustomerAdvancesTab } from "./CustomerAdvancesTab";
 import { PaymentReceiptsTab } from "./PaymentReceiptsTab";
@@ -58,6 +60,8 @@ export function ArWorkbenchPanel() {
   const [saving, setSaving] = useState(false);
   const [actioningId, setActioningId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [partners, setPartners] = useState<BusinessPartner[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(false);
 
   const params = useMemo(() => ({
     page,
@@ -85,6 +89,15 @@ export function ArWorkbenchPanel() {
   }, [params]);
 
   useEffect(() => { load(); }, [load]);
+
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    setPartnersLoading(true);
+    getPaymentVoucherLookupBusinessPartnersApi({ pageSize: 200 })
+      .then(setPartners)
+      .catch(() => setPartners([]))
+      .finally(() => setPartnersLoading(false));
+  };
 
   const supported = coverage.filter((c) => c.status !== "phase1_foundation").length;
   const foundation = coverage.length - supported;
@@ -118,7 +131,7 @@ export function ArWorkbenchPanel() {
 
   return (
     <section className="space-y-4">
-      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreate={() => setDrawerOpen(true)} />
+      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreate={openDrawer} />
       {activeTab === "receipts" && <PaymentReceiptsTab />}
       {activeTab === "advances" && <CustomerAdvancesTab />}
       {activeTab === "advanceApplications" && <AdvanceApplicationsTab />}
@@ -147,7 +160,7 @@ export function ArWorkbenchPanel() {
             runDocumentAction={runDocumentAction}
           />
           <CoveragePreview coverage={coverage} />
-          <SalesInvoiceDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} />
+          <SalesInvoiceDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
         </>
       )}
     </section>
@@ -239,9 +252,9 @@ function CoveragePreview({ coverage }: { coverage: ArCoverageItem[] }) {
   return <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4"><div className="mb-3 flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4 text-approve-fg" /> Đối chiếu 40 use case</div><div className="grid gap-2 md:grid-cols-2">{coverage.slice(0, 12).map((item) => <div key={item.id} className="rounded-lg border border-[color:var(--border)] p-3 text-sm"><div className="font-medium">#{item.id} {item.use_case}</div><div className="mt-1 text-xs text-[color:var(--muted-fg)]">{item.route}</div></div>)}</div></div>;
 }
 
-function SalesInvoiceDrawer({ open, onClose, form, setForm, saving, saveError, saveDocument, updateLine, addLine, removeLine }: { open: boolean; onClose: () => void; form: CreateArSalesInvoiceDto; setForm: React.Dispatch<React.SetStateAction<CreateArSalesInvoiceDto>>; saving: boolean; saveError: string | null; saveDocument: () => void; updateLine: (index: number, patch: Partial<CreateArSalesInvoiceDto["lines"][number]>) => void; addLine: () => void; removeLine: (index: number) => void }) {
+function SalesInvoiceDrawer({ open, onClose, form, setForm, saving, saveError, saveDocument, updateLine, addLine, removeLine, partners, partnersLoading }: { open: boolean; onClose: () => void; form: CreateArSalesInvoiceDto; setForm: React.Dispatch<React.SetStateAction<CreateArSalesInvoiceDto>>; saving: boolean; saveError: string | null; saveDocument: () => void; updateLine: (index: number, patch: Partial<CreateArSalesInvoiceDto["lines"][number]>) => void; addLine: () => void; removeLine: (index: number) => void; partners: BusinessPartner[]; partnersLoading: boolean }) {
   const total = form.lines.reduce((acc, l) => acc + l.quantity * l.unit_price * (1 + (l.tax_rate ?? 0) / 100), 0);
-  return <DrawerModal open={open} title="Tạo sales invoice" onClose={onClose} actions={[{ label: "Hủy", onClick: onClose }, { label: saving ? "Đang lưu..." : "Lưu nháp", onClick: saveDocument, primary: true, loading: saving }]}><div className="space-y-4"><DrawerSection title="Thông tin chính"><DrawerField label="Số chứng từ"><input className={inputCls} value={form.document_no} onChange={(e) => setForm({ ...form, document_no: e.target.value })} required /></DrawerField><DrawerField label="Mã khách hàng (UUID)"><input className={inputCls} value={form.business_partner_id} onChange={(e) => setForm({ ...form, business_partner_id: e.target.value })} required placeholder="UUID khách hàng trong hệ thống" /></DrawerField><DateInput label="Ngày chứng từ" value={form.document_date} onChange={(v) => setForm({ ...form, document_date: v })} /><DateInput label="Ngày hạch toán" value={form.posting_date} onChange={(v) => setForm({ ...form, posting_date: v })} /><DateInput label="Ngày đến hạn" value={form.due_date || ""} onChange={(v) => setForm({ ...form, due_date: v })} /><DrawerField label="Tiền tệ"><input className={inputCls} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="VND" /></DrawerField><DrawerField label="Tỷ giá"><input className={inputCls} type="number" min="1" value={form.exchange_rate} onChange={(e) => setForm({ ...form, exchange_rate: Number(e.target.value) })} /></DrawerField><DrawerField label="Số tham chiếu"><input className={inputCls} value={form.reference_no || ""} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} placeholder="Số hợp đồng / PO / hoá đơn VAT" /></DrawerField><DrawerField label="Diễn giải"><textarea className={inputCls} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></DrawerField></DrawerSection><InvoiceLinesTable form={form} updateLine={updateLine} removeLine={removeLine} /><button onClick={addLine} className="mt-2 rounded-md border border-dashed border-[color:var(--border)] px-3 py-1.5 text-xs text-[color:var(--muted-fg)] hover:border-[color:var(--primary)] hover:text-[color:var(--primary)]">+ Thêm dòng</button><div className="mt-2 text-right text-sm font-semibold">Tổng: {money(total)}</div>{saveError ? <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{saveError}</div> : null}</div></DrawerModal>;
+  return <DrawerModal open={open} title="Tạo sales invoice" onClose={onClose} actions={[{ label: "Hủy", onClick: onClose }, { label: saving ? "Đang lưu..." : "Lưu nháp", onClick: saveDocument, primary: true, loading: saving }]}><div className="space-y-4"><DrawerSection title="Thông tin chính"><DrawerField label="Số chứng từ"><input className={inputCls} value={form.document_no} onChange={(e) => setForm({ ...form, document_no: e.target.value })} required /></DrawerField><DrawerField label="Khách hàng *">{partnersLoading ? <div className="flex items-center gap-2 text-sm text-[color:var(--muted-fg)]"><Loader2 className="h-4 w-4 animate-spin" /> Đang tải...</div> : <Combobox options={partners.map((p) => ({ value: p.id, label: p.display_name ?? p.name }))} value={form.business_partner_id} onChange={(v) => setForm({ ...form, business_partner_id: v ?? "" })} placeholder="Tìm và chọn khách hàng..." className="w-full" />}</DrawerField><DateInput label="Ngày chứng từ" value={form.document_date} onChange={(v) => setForm({ ...form, document_date: v })} /><DateInput label="Ngày hạch toán" value={form.posting_date} onChange={(v) => setForm({ ...form, posting_date: v })} /><DateInput label="Ngày đến hạn" value={form.due_date || ""} onChange={(v) => setForm({ ...form, due_date: v })} /><DrawerField label="Tiền tệ"><input className={inputCls} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="VND" /></DrawerField><DrawerField label="Tỷ giá"><input className={inputCls} type="number" min="1" value={form.exchange_rate} onChange={(e) => setForm({ ...form, exchange_rate: Number(e.target.value) })} /></DrawerField><DrawerField label="Số tham chiếu"><input className={inputCls} value={form.reference_no || ""} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} placeholder="Số hợp đồng / PO / hoá đơn VAT" /></DrawerField><DrawerField label="Diễn giải"><textarea className={inputCls} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></DrawerField></DrawerSection><InvoiceLinesTable form={form} updateLine={updateLine} removeLine={removeLine} /><button onClick={addLine} className="mt-2 rounded-md border border-dashed border-[color:var(--border)] px-3 py-1.5 text-xs text-[color:var(--muted-fg)] hover:border-[color:var(--primary)] hover:text-[color:var(--primary)]">+ Thêm dòng</button><div className="mt-2 text-right text-sm font-semibold">Tổng: {money(total)}</div>{saveError ? <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{saveError}</div> : null}</div></DrawerModal>;
 }
 
 function DateInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
