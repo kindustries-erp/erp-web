@@ -49,9 +49,13 @@ export function PartnerLedgerDrawer({
           <input className={inputCls} placeholder={t("ledger.drawer.itemNoPlaceholder")} value={form.item_no} onChange={(e) => setField("item_no", e.target.value)} />
         </DrawerField>
         <DrawerField label={t("ledger.drawer.sourceType")}>
-          <select className={inputCls} value={form.source_type ?? "MANUAL"} onChange={(e) => setField("source_type", e.target.value as PartnerLedgerSourceType)}>
-            {SOURCE_TYPE_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <Combobox
+            options={SOURCE_TYPE_OPTS}
+            value={form.source_type ?? "MANUAL"}
+            onChange={(v) => setField("source_type", v as PartnerLedgerSourceType)}
+            className="w-full"
+            allowClear={false}
+          />
         </DrawerField>
         <DrawerField label={t("ledger.drawer.partner")}>
           <Combobox options={partnerOpts} value={form.business_partner_id} onChange={(v) => setField("business_partner_id", v)} placeholder="— Chọn đối tác —" />
@@ -72,9 +76,13 @@ export function PartnerLedgerDrawer({
 
       <DrawerSection title={t("ledger.drawer.sectionAmount")}>
         <DrawerField label={t("ledger.drawer.currency")}>
-          <select className={inputCls} value={form.currency ?? "VND"} onChange={(e) => setField("currency", e.target.value)}>
-            {CURRENCY_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          <Combobox
+            options={CURRENCY_OPTS}
+            value={form.currency ?? "VND"}
+            onChange={(v) => setField("currency", v)}
+            className="w-full"
+            allowClear={false}
+          />
         </DrawerField>
         <DrawerField label={t("ledger.drawer.amount")}>
           <input type="number" className={inputCls} min={0} step={1000} value={form.original_amount} onChange={(e) => setField("original_amount", parseFloat(e.target.value) || 0)} />

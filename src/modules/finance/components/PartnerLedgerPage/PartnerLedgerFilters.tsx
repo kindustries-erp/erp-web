@@ -71,14 +71,13 @@ export function PartnerLedgerFilters({
         />
       </FilterField>
       <FilterField label={t("ledger.filter.status")}>
-        <select
-          className={cn(inputCls, "w-36 text-sm")}
+        <Combobox
+          options={STATUS_OPTS}
           value={statusFilter}
-          onChange={(e) => applyFilter(() => setStatusFilter(e.target.value as PartnerLedgerStatus | ""))}
-        >
-          <option value="">{t("ledger.filter.statusPlaceholder")}</option>
-          {STATUS_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
+          onChange={(v) => applyFilter(() => setStatusFilter(v as PartnerLedgerStatus | ""))}
+          placeholder={t("ledger.filter.statusPlaceholder")}
+          className="w-36"
+        />
       </FilterField>
       <FilterField label={t("ledger.filter.dueFrom")}>
         <input type="date" className={cn(inputCls, "w-36 text-sm")} value={dueFrom} onChange={(e) => applyFilter(() => setDueFrom(e.target.value))} />

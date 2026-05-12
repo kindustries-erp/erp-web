@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, FilePlus2, Loader2, Receipt } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
+import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, DrawerModal, DrawerSection, inputCls } from "@/shared/components/DrawerModal";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { TablePagination } from "@/shared/components/TablePagination";
@@ -197,8 +198,20 @@ function InvoiceList(props: InvoiceListProps) {
   return <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
     <div className="flex flex-wrap items-center gap-2">
       <SearchInput value={search} onChange={setSearch} placeholder="Tìm document / reference" />
-      <select className={cn(inputCls, "h-10 w-52")} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as ArDocumentType | "")}><option value="">Tất cả loại</option>{DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-      <select className={cn(inputCls, "h-10 w-44")} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as ArDocumentStatus | "")}><option value="">Tất cả trạng thái</option>{Object.entries(STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
+      <Combobox
+        options={DOC_TYPES}
+        value={typeFilter}
+        onChange={(v) => { setPage(1); setTypeFilter(v as ArDocumentType | ""); }}
+        placeholder="Tất cả loại"
+        className="w-52"
+      />
+      <Combobox
+        options={Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label: label as string }))}
+        value={statusFilter}
+        onChange={(v) => { setPage(1); setStatusFilter(v as ArDocumentStatus | ""); }}
+        placeholder="Tất cả trạng thái"
+        className="w-44"
+      />
       <label className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm"><input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} />Chỉ còn phải thu</label>
       {loading ? <Loader2 className="h-4 w-4 animate-spin text-[color:var(--muted-fg)]" /> : null}
     </div>

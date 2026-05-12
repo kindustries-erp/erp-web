@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Receipt } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
+import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, DrawerModal, DrawerSection, inputCls } from "@/shared/components/DrawerModal";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
@@ -187,13 +188,14 @@ export function CustomerAdvancesTab() {
         <div className="space-y-6">
           <DrawerSection title="Thông tin đặt cọc">
             <DrawerField label="Phương thức thu cọc *">
-              <select
-                className={cn(inputCls, "h-10 w-full")}
+              <Combobox
+                options={PAYMENT_METHODS}
                 value={form.payment_method}
-                onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value as PaymentMethod }))}
-              >
-                {PAYMENT_METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
+                onChange={(v) => setForm((f) => ({ ...f, payment_method: v as PaymentMethod }))}
+                placeholder="Chọn phương thức"
+                className="w-full"
+                allowClear={false}
+              />
             </DrawerField>
             <DrawerField label="ID khách hàng *">
               <input

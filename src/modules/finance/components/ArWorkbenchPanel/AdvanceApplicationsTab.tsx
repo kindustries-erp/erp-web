@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
+import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
@@ -120,32 +121,28 @@ export function AdvanceApplicationsTab() {
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           <DrawerField label="Phiếu đặt cọc *">
-            <select
-              className={cn(inputCls, "h-10 w-full")}
+            <Combobox
+              options={advances.map((advance) => ({
+                value: advance.id,
+                label: `${advance.voucher_no ?? advance.id.slice(0, 8)} — còn ${money(advance.ar_advance_remaining_amount)}`,
+              }))}
               value={form.advance_voucher_id}
-              onChange={(e) => setForm((current) => ({ ...current, advance_voucher_id: e.target.value }))}
-            >
-              <option value="">Chọn advance voucher</option>
-              {advances.map((advance) => (
-                <option key={advance.id} value={advance.id}>
-                  {advance.voucher_no ?? advance.id.slice(0, 8)} — còn {money(advance.ar_advance_remaining_amount)}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((current) => ({ ...current, advance_voucher_id: v }))}
+              placeholder="Chọn advance voucher"
+              className="w-full"
+            />
           </DrawerField>
           <DrawerField label="Invoice/công nợ *">
-            <select
-              className={cn(inputCls, "h-10 w-full")}
+            <Combobox
+              options={invoices.map((invoice) => ({
+                value: invoice.id,
+                label: `${invoice.document_no} — còn ${money(invoice.open_amount)}`,
+              }))}
               value={form.ar_document_id}
-              onChange={(e) => setForm((current) => ({ ...current, ar_document_id: e.target.value }))}
-            >
-              <option value="">Chọn invoice</option>
-              {invoices.map((invoice) => (
-                <option key={invoice.id} value={invoice.id}>
-                  {invoice.document_no} — còn {money(invoice.open_amount)}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setForm((current) => ({ ...current, ar_document_id: v }))}
+              placeholder="Chọn invoice"
+              className="w-full"
+            />
           </DrawerField>
           <DrawerField label="Ngày cấn trừ *">
             <input
