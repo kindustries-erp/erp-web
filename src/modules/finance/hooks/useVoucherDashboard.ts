@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   getPaymentVouchersPagedApi,
   getPaymentVouchersSummaryApi,
@@ -50,7 +50,7 @@ export function useVoucherDashboard() {
     paymentType: ChannelPaymentType;
   }
 
-  async function loadSummary(
+  const loadSummary = useCallback(async function loadSummary(
     from: string,
     to: string,
     params: DashboardParams,
@@ -70,9 +70,9 @@ export function useVoucherDashboard() {
     } finally {
       setSummaryLoading(false);
     }
-  }
+  }, []);
 
-  async function loadOpeningBalanceAndChart(
+  const loadOpeningBalanceAndChart = useCallback(async function loadOpeningBalanceAndChart(
     from: string,
     chartEndDate: string,
     params: DashboardParams,
@@ -192,9 +192,9 @@ export function useVoucherDashboard() {
     } finally {
       setOpeningLoading(false);
     }
-  }
+  }, []);
 
-  async function loadDonutData(
+  const loadDonutData = useCallback(async function loadDonutData(
     channelFilter: string,
     coa: ChartOfAccount[],
     params: DashboardParams,
@@ -237,7 +237,7 @@ export function useVoucherDashboard() {
     } finally {
       setDonutLoading(false);
     }
-  }
+  }, []);
 
   return {
     summary,

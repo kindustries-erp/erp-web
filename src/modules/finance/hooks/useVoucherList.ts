@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   getPaymentVouchersPagedApi,
   getVoucherAttachmentsApi,
@@ -50,7 +50,7 @@ export function useVoucherList() {
     setPage(1);
   }
 
-  async function loadVouchers(params: LoadVouchersParams) {
+  const loadVouchers = useCallback(async function loadVouchers(params: LoadVouchersParams) {
     const {
       page: pg, pageSize: ps, search: q, statusFilter: st,
       channelFilter, channelParam, voucherChannel, sortCol: sc,
@@ -111,7 +111,7 @@ export function useVoucherList() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   return {
     vouchers,
@@ -138,7 +138,7 @@ export function useVoucherAttachments() {
     Record<string, PaymentVoucherAttachment[]>
   >({});
 
-  async function loadVoucherAttachments(items: PaymentVoucher[]) {
+  const loadVoucherAttachments = useCallback(async function loadVoucherAttachments(items: PaymentVoucher[]) {
     if (!items.length) {
       setVoucherAttachments({});
       return;
@@ -151,7 +151,7 @@ export function useVoucherAttachments() {
       ),
     );
     setVoucherAttachments(Object.fromEntries(pairs));
-  }
+  }, []);
 
   return { voucherAttachments, loadVoucherAttachments };
 }

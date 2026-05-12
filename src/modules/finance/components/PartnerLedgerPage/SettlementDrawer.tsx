@@ -1,5 +1,6 @@
 import { Combobox } from "@/shared/components/Combobox";
 import { DrawerModal, DrawerSection, DrawerField, inputCls } from "@/shared/components/DrawerModal";
+import { DatePicker } from "@/shared/components/DatePicker";
 import { Skeleton } from "@/shared/components/Skeleton";
 import type { PartnerLedgerItem, PaymentVoucher } from "@/modules/finance/api/financeApi";
 import { fmtAmt } from "./helpers";
@@ -63,7 +64,7 @@ export function SettlementDrawer({
           </div>
         )}
         <DrawerField label={t("ledger.settlement.date")}>
-          <input type="date" className={inputCls} value={form.settlement_date} onChange={(e) => setForm((f) => ({ ...f, settlement_date: e.target.value }))} />
+          <DatePicker value={form.settlement_date} onChange={(v) => setForm((f) => ({ ...f, settlement_date: v }))} className="w-full" />
         </DrawerField>
         <DrawerField label={t("ledger.settlement.amount")}>
           <input type="number" className={inputCls} min={0} step={1000} value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: parseFloat(e.target.value) || 0 }))} />

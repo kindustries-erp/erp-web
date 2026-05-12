@@ -1,5 +1,7 @@
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
+import { DatePicker } from "@/shared/components/DatePicker";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { inputCls } from "@/shared/components/DrawerModal";
 import { cn } from "@/shared/utils";
 import type { PartnerLedgerStatus } from "@/modules/finance/api/financeApi";
@@ -80,13 +82,13 @@ export function PartnerLedgerFilters({
         />
       </FilterField>
       <FilterField label={t("ledger.filter.dueFrom")}>
-        <input type="date" className={cn(inputCls, "w-36 text-sm")} value={dueFrom} onChange={(e) => applyFilter(() => setDueFrom(e.target.value))} />
+        <DatePicker value={dueFrom} onChange={(v) => applyFilter(() => setDueFrom(v))} className="w-36" />
       </FilterField>
       <FilterField label={t("ledger.filter.dueTo")}>
-        <input type="date" className={cn(inputCls, "w-36 text-sm")} value={dueTo} onChange={(e) => applyFilter(() => setDueTo(e.target.value))} />
+        <DatePicker value={dueTo} onChange={(v) => applyFilter(() => setDueTo(v))} className="w-36" />
       </FilterField>
       <label className="flex items-center gap-1 text-sm cursor-pointer mt-4">
-        <input type="checkbox" checked={overdueOnly} onChange={(e) => applyFilter(() => setOverdueOnly(e.target.checked))} className="rounded" />
+        <Checkbox checked={overdueOnly} onCheckedChange={(checked) => applyFilter(() => setOverdueOnly(!!checked))} />
         {t("ledger.filter.overdueOnly")}
       </label>
       <button className="ml-auto text-xs text-[color:var(--muted-fg)] hover:text-foreground underline mt-4" onClick={resetFilters}>

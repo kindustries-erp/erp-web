@@ -3,6 +3,8 @@ import { AlertTriangle, CheckCircle2, FilePlus2, Loader2, Receipt } from "lucide
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, DrawerModal, DrawerSection, inputCls } from "@/shared/components/DrawerModal";
+import { DatePicker } from "@/shared/components/DatePicker";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
@@ -212,7 +214,7 @@ function InvoiceList(props: InvoiceListProps) {
         placeholder="Tất cả trạng thái"
         className="w-44"
       />
-      <label className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm"><input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} />Chỉ còn phải thu</label>
+      <label className="inline-flex items-center gap-2 rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm"><Checkbox checked={openOnly} onCheckedChange={(checked) => setOpenOnly(!!checked)} />Chỉ còn phải thu</label>
       {loading ? <Loader2 className="h-4 w-4 animate-spin text-[color:var(--muted-fg)]" /> : null}
     </div>
     {error ? <div className="mt-3 rounded-lg bg-warn-bg p-3 text-sm text-warn-fg"><AlertTriangle className="mr-2 inline h-4 w-4" />{error}</div> : null}
@@ -243,7 +245,7 @@ function SalesInvoiceDrawer({ open, onClose, form, setForm, saving, saveError, s
 }
 
 function DateInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <DrawerField label={label}><input className={inputCls} type="date" value={value} onChange={(e) => onChange(e.target.value)} required /></DrawerField>;
+  return <DrawerField label={label}><DatePicker value={value} onChange={onChange} className="w-full" /></DrawerField>;
 }
 
 function InvoiceLinesTable({ form, updateLine, removeLine }: { form: CreateArSalesInvoiceDto; updateLine: (index: number, patch: Partial<CreateArSalesInvoiceDto["lines"][number]>) => void; removeLine: (index: number) => void }) {

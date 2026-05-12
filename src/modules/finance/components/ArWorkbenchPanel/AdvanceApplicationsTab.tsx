@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
+import { DatePicker } from "@/shared/components/DatePicker";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
 import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
@@ -145,11 +146,10 @@ export function AdvanceApplicationsTab() {
             />
           </DrawerField>
           <DrawerField label="Ngày cấn trừ *">
-            <input
-              type="date"
-              className={inputCls}
+            <DatePicker
               value={form.application_date}
-              onChange={(e) => setForm((current) => ({ ...current, application_date: e.target.value }))}
+              onChange={(v) => setForm((current) => ({ ...current, application_date: v }))}
+              className="w-full"
             />
           </DrawerField>
           <DrawerField label={`Số tiền cấn trừ *${maxApply > 0 ? ` (tối đa ${money(maxApply)})` : ""}`}>

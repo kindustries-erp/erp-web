@@ -1,4 +1,5 @@
 import { Combobox } from "@/shared/components/Combobox";
+import { DatePicker } from "@/shared/components/DatePicker";
 import { DrawerModal, DrawerSection, DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { cn } from "@/shared/utils";
 import type {
@@ -98,5 +99,5 @@ export function PartnerLedgerDrawer({
 }
 
 function DateField({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
-  return <DrawerField label={label}><input type="date" className={inputCls} value={value} onChange={(e) => onChange(e.target.value)} /></DrawerField>;
+  return <DrawerField label={label}><DatePicker value={value} onChange={onChange} className="w-full" /></DrawerField>;
 }

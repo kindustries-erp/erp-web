@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Loader2, Receipt } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, DrawerModal, DrawerSection, inputCls } from "@/shared/components/DrawerModal";
+import { DatePicker } from "@/shared/components/DatePicker";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
@@ -214,10 +215,10 @@ export function CustomerAdvancesTab() {
               />
             </DrawerField>
             <DrawerField label="Ngày chứng từ *">
-              <input type="date" className={inputCls} value={form.document_date} onChange={(e) => setForm((f) => ({ ...f, document_date: e.target.value }))} />
+              <DatePicker value={form.document_date} onChange={(v) => setForm((f) => ({ ...f, document_date: v }))} className="w-full" />
             </DrawerField>
             <DrawerField label="Ngày hạch toán">
-              <input type="date" className={inputCls} value={form.posting_date ?? ""} onChange={(e) => setForm((f) => ({ ...f, posting_date: e.target.value }))} />
+              <DatePicker value={form.posting_date ?? ""} onChange={(v) => setForm((f) => ({ ...f, posting_date: v }))} className="w-full" />
             </DrawerField>
             <DrawerField label="Số tiền đặt cọc *">
               <input
