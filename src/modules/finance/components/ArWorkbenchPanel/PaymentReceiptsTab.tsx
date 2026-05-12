@@ -11,12 +11,14 @@ import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   createPaymentReceiptApi,
   getPaymentVouchersApi,
+  getPaymentVoucherLookupBusinessPartnersApi,
   postArPaymentVoucherApi,
   reversePaymentVoucherApi,
   type CreatePaymentReceiptDto,
   type PaymentMethod,
   type PaymentVoucher,
 } from "@/modules/finance/api/financeApi";
+import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { PAYMENT_METHODS, StatusPill, emptyReceiptForm } from "./shared";
 
 export function PaymentReceiptsTab() {
@@ -32,6 +34,8 @@ export function PaymentReceiptsTab() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [partners, setPartners] = useState<BusinessPartner[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -47,6 +51,16 @@ export function PaymentReceiptsTab() {
   }, [page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Load danh sách đối tác khi mở drawer
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    setPartnersLoading(true);
+    getPaymentVoucherLookupBusinessPartnersApi({ pageSize: 200 })
+      .then(setPartners)
+      .catch(() => setPartners([]))
+      .finally(() => setPartnersLoading(false));
+  };
 
   const saveReceipt = () => {
     setSaving(true);
@@ -77,7 +91,7 @@ export function PaymentReceiptsTab() {
         <div>
           <p className="text-sm text-[color:var(--muted-fg)]">Tổng phiếu thu: <span className="font-semibold text-[color:var(--fg)]">{total}</span></p>
         </div>
-        <BtnPrimary onClick={() => setDrawerOpen(true)}>
+        <BtnPrimary onClick={openDrawer}>
           <Receipt className="h-4 w-4" /> Tạo phiếu thu
         </BtnPrimary>
       </div>
@@ -178,21 +192,30 @@ export function PaymentReceiptsTab() {
                 allowClear={false}
               />
             </DrawerField>
-            <DrawerField label="ID Đối tác *">
-              <input
-                className={inputCls}
-                value={form.counterparty_id}
-                onChange={(e) => setForm((f) => ({ ...f, counterparty_id: e.target.value }))}
-                placeholder="UUID của business partner"
-              />
-            </DrawerField>
-            <DrawerField label="Tên đối tác">
-              <input
-                className={inputCls}
-                value={form.counterparty_name_snapshot ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, counterparty_name_snapshot: e.target.value }))}
-                placeholder="Tên hiển thị"
-              />
+            <DrawerField label="Đối tác *">
+              {partnersLoading ? (
+                <div className="flex items-center gap-2 text-sm text-[color:var(--muted-fg)]">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Đang tải...
+                </div>
+              ) : (
+                <Combobox
+                  options={partners.map((p) => ({
+                    value: p.id,
+                    label: p.display_name ?? p.name,
+                  }))}
+                  value={form.counterparty_id}
+                  onChange={(v) => {
+                    const partner = partners.find((p) => p.id === v);
+                    setForm((f) => ({
+                      ...f,
+                      counterparty_id: v ?? "",
+                      counterparty_name_snapshot: partner?.display_name ?? partner?.name ?? f.counterparty_name_snapshot,
+                    }));
+                  }}
+                  placeholder="Tìm và chọn đối tác..."
+                  className="w-full"
+                />
+              )}
             </DrawerField>
             <DrawerField label="Ngày chứng từ *">
               <DatePicker value={form.document_date} onChange={(v) => setForm((f) => ({ ...f, document_date: v }))} className="w-full" />

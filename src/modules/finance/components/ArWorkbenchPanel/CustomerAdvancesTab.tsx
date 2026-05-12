@@ -11,12 +11,14 @@ import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   createCustomerAdvanceApi,
   getCustomerAdvancesApi,
+  getPaymentVoucherLookupBusinessPartnersApi,
   postCustomerAdvanceApi,
   reverseCustomerAdvanceApi,
   type CreateCustomerAdvanceDto,
   type PaymentMethod,
   type PaymentVoucher,
 } from "@/modules/finance/api/financeApi";
+import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { PAYMENT_METHODS, VOUCHER_STATUS_LABELS, emptyAdvanceForm, money } from "./shared";
 
 export function CustomerAdvancesTab() {
@@ -32,6 +34,8 @@ export function CustomerAdvancesTab() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [partners, setPartners] = useState<BusinessPartner[]>([]);
+  const [partnersLoading, setPartnersLoading] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -47,6 +51,16 @@ export function CustomerAdvancesTab() {
   }, [page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Load danh sách đối tác khi mở drawer
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    setPartnersLoading(true);
+    getPaymentVoucherLookupBusinessPartnersApi({ pageSize: 200 })
+      .then(setPartners)
+      .catch(() => setPartners([]))
+      .finally(() => setPartnersLoading(false));
+  };
 
   const saveAdvance = () => {
     setSaving(true);
@@ -95,7 +109,7 @@ export function CustomerAdvancesTab() {
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-[color:var(--muted-fg)]">Use case #3 — Khách đặt cọc trước</p>
-        <BtnPrimary onClick={() => setDrawerOpen(true)}>
+        <BtnPrimary onClick={openDrawer}>
           <Receipt className="h-4 w-4" /> Tạo phiếu đặt cọc
         </BtnPrimary>
       </div>
@@ -198,21 +212,30 @@ export function CustomerAdvancesTab() {
                 allowClear={false}
               />
             </DrawerField>
-            <DrawerField label="ID khách hàng *">
-              <input
-                className={inputCls}
-                value={form.counterparty_id}
-                onChange={(e) => setForm((f) => ({ ...f, counterparty_id: e.target.value }))}
-                placeholder="UUID của business partner"
-              />
-            </DrawerField>
-            <DrawerField label="Tên khách hàng">
-              <input
-                className={inputCls}
-                value={form.counterparty_name_snapshot ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, counterparty_name_snapshot: e.target.value }))}
-                placeholder="Để trống sẽ lấy từ business partner"
-              />
+            <DrawerField label="Khách hàng *">
+              {partnersLoading ? (
+                <div className="flex items-center gap-2 text-sm text-[color:var(--muted-fg)]">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Đang tải...
+                </div>
+              ) : (
+                <Combobox
+                  options={partners.map((p) => ({
+                    value: p.id,
+                    label: p.display_name ?? p.name,
+                  }))}
+                  value={form.counterparty_id}
+                  onChange={(v) => {
+                    const partner = partners.find((p) => p.id === v);
+                    setForm((f) => ({
+                      ...f,
+                      counterparty_id: v ?? "",
+                      counterparty_name_snapshot: partner?.display_name ?? partner?.name ?? f.counterparty_name_snapshot,
+                    }));
+                  }}
+                  placeholder="Tìm và chọn khách hàng..."
+                  className="w-full"
+                />
+              )}
             </DrawerField>
             <DrawerField label="Ngày chứng từ *">
               <DatePicker value={form.document_date} onChange={(v) => setForm((f) => ({ ...f, document_date: v }))} className="w-full" />
