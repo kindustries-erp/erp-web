@@ -14,7 +14,9 @@ import { DongTien } from "@/pages/DongTien";
 import { TienMat } from "@/pages/TienMat";
 import { TienGui } from "@/pages/TienGui";
 import { DinhKemChungTu } from "@/pages/DinhKemChungTu";
-import { ThietLap } from "@/pages/ThietLap";
+import { ThietLapQuy } from "@/pages/ThietLapQuy";
+import { ThietLapNganHang } from "@/pages/ThietLapNganHang";
+import { ThietLapTaiKhoan } from "@/pages/ThietLapTaiKhoan";
 import { NhanSu } from "@/pages/NhanSu";
 import { PhongBan } from "@/pages/PhongBan";
 import { ChucVu } from "@/pages/ChucVu";
@@ -108,7 +110,9 @@ export default function App() {
               {currentPage === "tienmat" && <TienMat />}
               {currentPage === "tiengui" && <TienGui />}
               {currentPage === "dinhkem" && <DinhKemChungTu />}
-              {currentPage === "thietlap" && <ThietLap />}
+              {currentPage === "thietlap-quy" && <ThietLapQuy />}
+              {currentPage === "thietlap-nh" && <ThietLapNganHang />}
+              {currentPage === "thietlap-tk" && <ThietLapTaiKhoan />}
               {currentPage === "nhansu" && <NhanSu />}
               {currentPage === "phongban" && <PhongBan />}
               {currentPage === "chucvu" && <ChucVu />}
@@ -132,7 +136,9 @@ export default function App() {
                 "tienmat",
                 "tiengui",
                 "dinhkem",
-                "thietlap",
+                "thietlap-quy",
+                "thietlap-nh",
+                "thietlap-tk",
                 "nhansu",
                 "phongban",
                 "chucvu",

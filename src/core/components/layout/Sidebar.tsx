@@ -45,12 +45,15 @@ export function Sidebar() {
     "tiengui",
     "dinhkem",
   ].includes(currentPage);
-  const isThietLap = currentPage === "thietlap";
+  const isThietLapQuy = currentPage === "thietlap-quy";
+  const isThietLapNH = currentPage === "thietlap-nh";
+  const isThietLapTK = currentPage === "thietlap-tk";
+  const isThietLapGroup = isThietLapQuy || isThietLapNH || isThietLapTK;
   const isPartners = currentPage === "doitac";
   const isInCongNoGroup = ["phaithu", "phaittra"].includes(currentPage);
   const isInBaoCaoGroup = ["socat", "nhatkyechung"].includes(currentPage);
   const [dongtienOpen, setDongtienOpen] = useState(isInDongTienGroup);
-  const [thietlapOpen, setThietlapOpen] = useState(isThietLap);
+  const [thietlapOpen, setThietlapOpen] = useState(isThietLapGroup);
   const [congnoOpen, setCongnoOpen] = useState(isInCongNoGroup);
   const [baocaoOpen, setBaocaoOpen] = useState(isInBaoCaoGroup);
   // ── Permission gates (hide sections the current session cannot access) ──
@@ -248,42 +251,40 @@ export function Sidebar() {
               </SubNav>
 
               <NavItem
-                collapsed={c}
                 icon={<IconList />}
                 label={t("nav.items.catalog")}
-                active={isThietLap}
-                onClick={() => setThietlapOpen((o) => !o)}
+                active={isThietLapGroup}
+                onClick={() => {
+                  setThietlapOpen((o) => !o);
+                }}
                 hasArrow
-                expanded={thietlapOpen || isThietLap}
+                expanded={thietlapOpen || isThietLapGroup}
               />
-              <SubNav id="sub-thietlap" expanded={thietlapOpen || isThietLap}>
+              <SubNav id="sub-thietlap" expanded={thietlapOpen || isThietLapGroup}>
                 <SubItem
                   label={t("nav.items.catalogFunds")}
-                  pageKey="thietlap"
-                  tabKey="quy"
-                  active={isThietLap && settingsActiveTab === "quy"}
+                  pageKey="thietlap-quy"
+                  active={isThietLapQuy}
                   onClick={() => {
-                    navigate("thietlap", "quy");
+                    navigate("thietlap-quy");
                     setMobileSidebarOpen(false);
                   }}
                 />
                 <SubItem
                   label={t("nav.items.catalogBank")}
-                  pageKey="thietlap"
-                  tabKey="nh"
-                  active={isThietLap && settingsActiveTab === "nh"}
+                  pageKey="thietlap-nh"
+                  active={isThietLapNH}
                   onClick={() => {
-                    navigate("thietlap", "nh");
+                    navigate("thietlap-nh");
                     setMobileSidebarOpen(false);
                   }}
                 />
                 <SubItem
                   label={t("nav.items.catalogAccounts")}
-                  pageKey="thietlap"
-                  tabKey="tk"
-                  active={isThietLap && settingsActiveTab === "tk"}
+                  pageKey="thietlap-tk"
+                  active={isThietLapTK}
                   onClick={() => {
-                    navigate("thietlap", "tk");
+                    navigate("thietlap-tk");
                     setMobileSidebarOpen(false);
                   }}
                 />

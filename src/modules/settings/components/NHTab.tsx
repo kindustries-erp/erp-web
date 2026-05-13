@@ -90,7 +90,7 @@ export function NHTab() {
       setTotal(res.total);
       setTotalPages(res.totalPages);
     } catch {
-      setFetchError(t("thietlap.banks.fetchError"));
+      setFetchError(t("settings.nh.fetchError"));
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export function NHTab() {
 
   async function handleSave() {
     if (!form.bank_name.trim() || !form.account_number.trim() || !form.account_holder.trim()) {
-      setSaveError(t("thietlap.banks.requiredError"));
+      setSaveError(t("settings.nh.requiredError"));
       return;
     }
     setSaving(true);
@@ -128,7 +128,7 @@ export function NHTab() {
       else loadItems(page, pageSize);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string } }; message?: string };
-      setSaveError(err?.response?.data?.message || err?.message || t("thietlap.common.unknownError"));
+      setSaveError(err?.response?.data?.message || err?.message || t("settings.tk.unknownError"));
     } finally {
       setSaving(false);
     }
@@ -151,12 +151,12 @@ export function NHTab() {
 
   const isDirty = !!form.bank_name.trim() || !!form.account_number.trim();
   const columns: DataTableColumn<CompanyBankAccount>[] = [
-    { key: "bank_account_code", header: t("thietlap.headers.bankAccountCode"), cell: (b) => b.bank_account_code || "—", className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
-    { key: "bank_name", header: t("thietlap.headers.bankName"), cell: (b) => b.bank_name, className: "font-medium", skeletonClassName: "w-32" },
-    { key: "account_number", header: t("thietlap.headers.accountNumber"), cell: (b) => b.account_number, skeletonClassName: "w-28" },
-    { key: "account_holder", header: t("thietlap.headers.accountHolder"), cell: (b) => b.account_holder, skeletonClassName: "w-28" },
-    { key: "accounting_account_id", header: t("thietlap.headers.accountingAccount"), cell: (b) => coaItems.find((c) => c.id === b.accounting_account_id)?.account_code || "—", skeletonClassName: "w-20" },
-    { key: "currency", header: t("thietlap.headers.currency"), cell: (b) => b.currency, className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-12" },
+    { key: "bank_account_code", header: t("settings.nh.headers.bankAccountCode"), cell: (b) => b.bank_account_code || "—", className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
+    { key: "bank_name", header: t("settings.nh.headers.bankName"), cell: (b) => b.bank_name, className: "font-medium", skeletonClassName: "w-32" },
+    { key: "account_number", header: t("settings.nh.headers.accountNumber"), cell: (b) => b.account_number, skeletonClassName: "w-28" },
+    { key: "account_holder", header: t("settings.nh.headers.accountHolder"), cell: (b) => b.account_holder, skeletonClassName: "w-28" },
+    { key: "accounting_account_id", header: t("settings.tk.headers.accountingAccount"), cell: (b) => coaItems.find((c) => c.id === b.accounting_account_id)?.account_code || "—", skeletonClassName: "w-20" },
+    { key: "currency", header: t("settings.tk.headers.currency"), cell: (b) => b.currency, className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-12" },
     {
       key: "actions", header: "", headerClassName: "w-[80px]", skeletonClassName: "",
       cell: (b) => (
@@ -170,37 +170,37 @@ export function NHTab() {
 
   return (
     <div>
-      <SectionHeader title={t("thietlap.banks.title")} desc={t("thietlap.banks.desc")} icon={<Landmark className="h-4 w-4" />} onAdd={openNew} />
+      <SectionHeader title={t("settings.nh.title")} desc={t("settings.nh.desc")} icon={<Landmark className="h-4 w-4" />} onAdd={openNew} />
       <DataTable items={items} columns={columns} getRowKey={(b) => b.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={750} loadingRows={4} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
 
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
         confirmOnClose={isDirty && !editing}
-        title={editing ? t("thietlap.banks.editTitle") : t("thietlap.banks.createTitle")}
-        subtitle={editing ? editing.bank_name : t("thietlap.common.subtitle")}
+        title={editing ? t("settings.nh.editTitle") : t("settings.nh.createTitle")}
+        subtitle={editing ? editing.bank_name : t("settings.nh.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
           { label: editing ? t("common.saveChanges") : t("common.addNew"), primary: true, loading: saving, disabled: saving, onClick: handleSave },
         ]}
       >
-        <DrawerSection title={t("thietlap.banks.sectionInfo")}>
-          <DrawerField label={t("thietlap.headers.bankAccountCode")}>
-            <input type="text" className={inputCls} value={form.bank_account_code} onChange={(e) => setField("bank_account_code", e.target.value)} placeholder={t("thietlap.banks.codePlaceholder")} />
+        <DrawerSection title={t("settings.nh.sectionInfo")}>
+          <DrawerField label={t("settings.tk.headers.bankAccountCode")}>
+            <input type="text" className={inputCls} value={form.bank_account_code} onChange={(e) => setField("bank_account_code", e.target.value)} placeholder={t("settings.nh.codePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.bankName")} required>
-            <input type="text" className={inputCls} value={form.bank_name} onChange={(e) => setField("bank_name", e.target.value)} placeholder={t("thietlap.banks.bankNamePlaceholder")} />
+          <DrawerField label={t("settings.tk.headers.bankName")} required>
+            <input type="text" className={inputCls} value={form.bank_name} onChange={(e) => setField("bank_name", e.target.value)} placeholder={t("settings.nh.bankNamePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.accountNumber")} required>
-            <input type="text" className={inputCls} value={form.account_number} onChange={(e) => setField("account_number", e.target.value)} placeholder={t("thietlap.banks.accountNumberPlaceholder")} />
+          <DrawerField label={t("settings.tk.headers.accountNumber")} required>
+            <input type="text" className={inputCls} value={form.account_number} onChange={(e) => setField("account_number", e.target.value)} placeholder={t("settings.nh.accountNumberPlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.accountHolder")} required>
-            <input type="text" className={inputCls} value={form.account_holder} onChange={(e) => setField("account_holder", e.target.value)} placeholder={t("thietlap.banks.accountHolderPlaceholder")} />
+          <DrawerField label={t("settings.tk.headers.accountHolder")} required>
+            <input type="text" className={inputCls} value={form.account_holder} onChange={(e) => setField("account_holder", e.target.value)} placeholder={t("settings.nh.accountHolderPlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.accountingAccount")}>
-            <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("thietlap.common.selectAccount")} />
+          <DrawerField label={t("settings.tk.headers.accountingAccount")}>
+            <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("common.selectAccount")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.currency")}>
+          <DrawerField label={t("settings.tk.headers.currency")}>
             <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />
           </DrawerField>
         </DrawerSection>
@@ -210,7 +210,7 @@ export function NHTab() {
       <ConfirmModal
         open={!!deleteTarget}
         title={t("confirmModal.defaultTitle")}
-        message={t("thietlap.banks.deleteMessage").replace("{0}", deleteTarget?.bank_name ?? "")}
+        message={t("settings.nh.deleteMessage").replace("{0}", deleteTarget?.bank_name ?? "")}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}
         onConfirm={handleDelete}

@@ -38,7 +38,7 @@ Tài liệu mô tả cách hệ thống ERP tải thông tin user (profile, role
     "directus_user_id": {
       "role": {
         "id": "role-uuid",
-        "name": "GW Approver",
+        "name": "Approver",
         "users": ["directus-user-id-1", "directus-user-id-2"]
       }
     }

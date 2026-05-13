@@ -95,7 +95,7 @@ export function QuyTab() {
       setTotal(res.total);
       setTotalPages(res.totalPages);
     } catch {
-      setFetchError(t("thietlap.funds.fetchError"));
+      setFetchError(t("settings.quy.fetchError"));
     } finally {
       setLoading(false);
     }
@@ -109,7 +109,7 @@ export function QuyTab() {
 
   async function handleSave() {
     if (!form.fund_code.trim() || !form.fund_name.trim() || !form.accounting_account_id) {
-      setSaveError(t("thietlap.funds.requiredError"));
+      setSaveError(t("settings.quy.requiredError"));
       return;
     }
     setSaving(true);
@@ -132,7 +132,7 @@ export function QuyTab() {
       if (!editing && page !== 1) setPage(1);
       else loadFunds(page, pageSize);
     } catch (e: unknown) {
-      setSaveError(extractApiError(e, t("thietlap.common.unknownError")));
+      setSaveError(extractApiError(e, t("settings.tk.unknownError")));
     } finally {
       setSaving(false);
     }
@@ -155,11 +155,11 @@ export function QuyTab() {
 
   const isDirty = !!form.fund_code.trim() || !!form.fund_name.trim();
   const columns: DataTableColumn<CashFund>[] = [
-    { key: "fund_code", header: t("thietlap.headers.fundCode"), cell: (q) => q.fund_code, className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
-    { key: "fund_name", header: t("thietlap.headers.fundName"), cell: (q) => q.fund_name, className: "font-medium", skeletonClassName: "w-32" },
-    { key: "accounting_account_id", header: t("thietlap.headers.accountingAccount"), cell: (q) => coaItems.find((c) => c.id === q.accounting_account_id)?.account_code || "—", skeletonClassName: "w-28" },
-    { key: "currency", header: t("thietlap.headers.currency"), cell: (q) => q.currency, className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-12" },
-    { key: "status", header: t("thietlap.headers.status"), cell: (q) => <TagCell active={q.is_active} isDefault={false} />, skeletonClassName: "w-16" },
+    { key: "fund_code", header: t("settings.quy.headers.fundCode"), cell: (q) => q.fund_code, className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
+    { key: "fund_name", header: t("settings.quy.headers.fundName"), cell: (q) => q.fund_name, className: "font-medium", skeletonClassName: "w-32" },
+    { key: "accounting_account_id", header: t("settings.tk.headers.accountingAccount"), cell: (q) => coaItems.find((c) => c.id === q.accounting_account_id)?.account_code || "—", skeletonClassName: "w-28" },
+    { key: "currency", header: t("settings.tk.headers.currency"), cell: (q) => q.currency, className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-12" },
+    { key: "status", header: t("settings.tk.headers.status"), cell: (q) => <TagCell active={q.is_active} isDefault={false} />, skeletonClassName: "w-16" },
     {
       key: "actions", header: "", headerClassName: "w-[80px]", skeletonClassName: "",
       cell: (q) => (
@@ -173,34 +173,34 @@ export function QuyTab() {
 
   return (
     <div>
-      <SectionHeader title={t("thietlap.funds.title")} desc={t("thietlap.funds.desc")} icon={<Wallet className="h-4 w-4" />} onAdd={openNew} />
+      <SectionHeader title={t("settings.quy.title")} desc={t("settings.quy.desc")} icon={<Wallet className="h-4 w-4" />} onAdd={openNew} />
       <DataTable items={items} columns={columns} getRowKey={(q) => q.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={600} loadingRows={4} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
 
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
         confirmOnClose={isDirty && !editing}
-        title={editing ? t("thietlap.funds.editTitle") : t("thietlap.funds.createTitle")}
-        subtitle={editing ? editing.fund_name : t("thietlap.common.subtitle")}
+        title={editing ? t("settings.quy.editTitle") : t("settings.quy.createTitle")}
+        subtitle={editing ? editing.fund_name : t("settings.quy.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
           { label: editing ? t("common.saveChanges") : t("common.addNew"), primary: true, loading: saving, disabled: saving, onClick: handleSave },
         ]}
       >
-        <DrawerSection title={t("thietlap.funds.sectionInfo")}>
-          <DrawerField label={t("thietlap.headers.fundCode")} required>
-            <input type="text" className={inputCls} value={form.fund_code} onChange={(e) => setField("fund_code", e.target.value)} placeholder={t("thietlap.funds.codePlaceholder")} />
+        <DrawerSection title={t("settings.quy.sectionInfo")}>
+          <DrawerField label={t("settings.quy.headers.fundCode")} required>
+            <input type="text" className={inputCls} value={form.fund_code} onChange={(e) => setField("fund_code", e.target.value)} placeholder={t("settings.quy.codePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.fundName")} required>
-            <input type="text" className={inputCls} value={form.fund_name} onChange={(e) => setField("fund_name", e.target.value)} placeholder={t("thietlap.funds.namePlaceholder")} />
+          <DrawerField label={t("settings.quy.headers.fundName")} required>
+            <input type="text" className={inputCls} value={form.fund_name} onChange={(e) => setField("fund_name", e.target.value)} placeholder={t("settings.quy.namePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.accountingAccount")} required>
-            <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("thietlap.common.selectAccount")} />
+          <DrawerField label={t("settings.tk.headers.accountingAccount")} required>
+            <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("common.selectAccount")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.currency")}>
+          <DrawerField label={t("settings.tk.headers.currency")}>
             <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.status")}>
+          <DrawerField label={t("settings.tk.headers.status")}>
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox checked={form.is_active} onCheckedChange={(v) => setField("is_active", v === true)} />
               <span className="text-xs text-foreground">{t("thietlap.common.activeLabel")}</span>
@@ -216,7 +216,7 @@ export function QuyTab() {
       <ConfirmModal
         open={!!deleteTarget}
         title={t("confirmModal.defaultTitle")}
-        message={t("thietlap.funds.deleteMessage").replace("{0}", deleteTarget?.fund_name ?? "")}
+        message={t("settings.quy.deleteMessage").replace("{0}", deleteTarget?.fund_name ?? "")}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}
         onConfirm={handleDelete}
