@@ -16,40 +16,61 @@ import {
   money,
   getPeriodLabel,
 } from "@/modules/accounting/utils/journalEntryUtils";
+import {
+  getPaymentVoucherApi,
+  type PaymentVoucher,
+  type ArDocument,
+  getArDocumentsApi,
+} from "@/modules/finance/api/financeApi";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function getJournalLineAmount(line: JournalEntryLine): number {
-  const d = money(line.debit);
-  return d > 0 ? d : money(line.credit);
+interface FlatRow {
+  entry: JournalEntry;
+  debitLine: JournalEntryLine | null;
+  creditLine: JournalEntryLine | null;
+  amount: number;
+  description: string;
 }
 
 /**
- * Pair lines by sort order into [debit_line, credit_line] pairs.
- * If pairing fails, return each line as standalone.
+ * Flatten journal entry lines into display rows.
+ * Each item = 1 row in table, showing debit account / credit account / amount / description.
+ * A single entry with N debit lines + N credit lines → N rows (paired by sort order).
+ * Unpaired lines also get their own row (debit-only or credit-only).
  */
-function pairLines(lines: JournalEntryLine[]) {
-  type Pair = { debit: JournalEntryLine | null; credit: JournalEntryLine | null };
-  const pairs: Pair[] = [];
-  const sorted = [...lines].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
-  let i = 0;
-  while (i < sorted.length) {
-    const cur = sorted[i];
-    const d = money(cur.debit);
-    const c = money(cur.credit);
-    if (d > 0 && i + 1 < sorted.length && money(sorted[i + 1].credit) > 0) {
-      pairs.push({ debit: cur, credit: sorted[i + 1] });
-      i += 2;
-    } else if (c > 0 && i + 1 < sorted.length && money(sorted[i + 1].debit) > 0) {
-      pairs.push({ debit: sorted[i + 1], credit: cur });
-      i += 2;
-    } else {
-      pairs.push({ debit: d > 0 ? cur : null, credit: c > 0 ? cur : null });
-      i += 1;
-    }
+function flattenEntry(entry: JournalEntry): FlatRow[] {
+  const lines = entry.lines ?? [];
+  if (lines.length === 0) {
+    return [{ entry, debitLine: null, creditLine: null, amount: 0, description: entry.description || "" }];
   }
-  return pairs;
+
+  const sorted = [...lines].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+  const debits = sorted.filter((l) => money(l.debit) > 0);
+  const credits = sorted.filter((l) => money(l.credit) > 0);
+  const rows: FlatRow[] = [];
+
+  // Pair by index
+  const maxLen = Math.max(debits.length, credits.length);
+  for (let i = 0; i < maxLen; i++) {
+    const d = debits[i] ?? null;
+    const c = credits[i] ?? null;
+    const amount = d ? money(d.debit) : c ? money(c.credit) : 0;
+    const description = (d ?? c)?.description || entry.description || "";
+    rows.push({ entry, debitLine: d, creditLine: c, amount, description });
+  }
+
+  return rows;
 }
+
+// ─── voucher ref types ─────────────────────────────────────────────────────────
+
+type VoucherDetailState =
+  | { kind: "loading" }
+  | { kind: "payment"; voucher: PaymentVoucher }
+  | { kind: "ar"; doc: ArDocument }
+  | { kind: "journal"; entry: JournalEntry }
+  | { kind: "error"; msg: string };
 
 // ─── component ────────────────────────────────────────────────────────────────
 
@@ -60,19 +81,68 @@ export function NhatKyChung() {
   const actions = useJournalEntryActions(list.load);
   const [createOpen, setCreateOpen] = useState(false);
   const [reverseReason, setReverseReason] = useState("");
-  const [detailEntry, setDetailEntry] = useState<JournalEntry | null>(null);
 
-  function openDetail(entry: JournalEntry) {
-    setDetailEntry(entry);
-    // Also fetch full detail in background to ensure lines are populated
-    if (!entry.lines || entry.lines.length === 0) {
-      actions.openDetail(entry.id);
+  // Unified detail modal state
+  const [detailState, setDetailState] = useState<VoucherDetailState | null>(null);
+
+  async function handleRowClick(entry: JournalEntry) {
+    const refType = entry.reference_type;
+
+    if (refType === "payment_vouchers" && entry.reference_id) {
+      setDetailState({ kind: "loading" });
+      try {
+        const v = await getPaymentVoucherApi(entry.reference_id);
+        setDetailState({ kind: "payment", voucher: v });
+      } catch {
+        setDetailState({ kind: "error", msg: `Không tải được phiếu tiền: ${entry.reference_id}` });
+      }
+      return;
+    }
+
+    if ((refType === "ar_documents" || refType === "ar_documents_reversal") && entry.reference_id) {
+      setDetailState({ kind: "loading" });
+      try {
+        const res = await getArDocumentsApi({ page: 1, pageSize: 1 });
+        const doc = (res.items as ArDocument[] | undefined)?.find?.((d) => d.id === entry.reference_id);
+        if (doc) {
+          setDetailState({ kind: "ar", doc });
+        } else {
+          await openJournalDetail(entry);
+        }
+      } catch {
+        await openJournalDetail(entry);
+      }
+      return;
+    }
+
+    // manual / journal_entries / unknown → show journal entry detail
+    await openJournalDetail(entry);
+  }
+
+  async function openJournalDetail(entry: JournalEntry) {
+    if (entry.lines && entry.lines.length > 0) {
+      setDetailState({ kind: "journal", entry });
     } else {
-      actions.setSelected(entry);
+      setDetailState({ kind: "loading" });
+      try {
+        await actions.openDetail(entry.id);
+        const full = actions.selected;
+        setDetailState({ kind: "journal", entry: full ?? entry });
+      } catch {
+        setDetailState({ kind: "journal", entry });
+      }
     }
   }
 
-  const displayEntry = actions.selected ?? detailEntry;
+  function closeDetail() {
+    setDetailState(null);
+    actions.setSelected(null);
+    actions.setError("");
+    setReverseReason("");
+  }
+
+  // Build flat rows for display
+  const flatRows = list.items.flatMap(flattenEntry);
 
   return (
     <div className="p-5 space-y-4">
@@ -147,7 +217,7 @@ export function NhatKyChung() {
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{list.error}</div>
       )}
 
-      {/* Journal Table — 1 row per journal line, grouped by voucher */}
+      {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
       <div className="rounded-2xl border border-border bg-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
@@ -168,68 +238,35 @@ export function NhatKyChung() {
                     {t("journalEntries.loading")}
                   </td>
                 </tr>
-              ) : list.items.length === 0 ? (
+              ) : flatRows.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">
                     {t("common.noData")}
                   </td>
                 </tr>
               ) : (
-                list.items.flatMap((entry) => {
-                  const lines = entry.lines ?? [];
-                  const pairs = pairLines(lines);
-
-                  if (pairs.length === 0) {
-                    // No lines yet — show one placeholder row
-                    return [
-                      <tr
-                        key={entry.id}
-                        onClick={() => openDetail(entry)}
-                        className="border-t border-border cursor-pointer hover:bg-surface-hover"
-                      >
-                        <td className="px-3 py-2 font-medium">{entry.voucher_no || entry.id.slice(0, 8)}</td>
-                        <td className="px-3 py-2">{entry.date}</td>
-                        <td className="px-3 py-2 text-[color:var(--muted-fg)]" colSpan={4}>
-                          {entry.description || "-"}
-                        </td>
-                      </tr>,
-                    ];
-                  }
-
-                  return pairs.map((pair, pi) => (
-                    <tr
-                      key={`${entry.id}-${pi}`}
-                      onClick={() => openDetail(entry)}
-                      className="border-t border-border cursor-pointer hover:bg-surface-hover"
-                    >
-                      {/* Voucher info only on first pair row */}
-                      {pi === 0 ? (
-                        <>
-                          <td
-                            className="px-3 py-2 font-medium align-top"
-                            rowSpan={pairs.length}
-                          >
-                            {entry.voucher_no || entry.id.slice(0, 8)}
-                          </td>
-                          <td
-                            className="px-3 py-2 align-top"
-                            rowSpan={pairs.length}
-                          >
-                            {entry.date}
-                          </td>
-                        </>
-                      ) : null}
-                      <td className="px-3 py-2">{pair.debit ? getAccountLabel(pair.debit.account_id) : "-"}</td>
-                      <td className="px-3 py-2">{pair.credit ? getAccountLabel(pair.credit.account_id) : "-"}</td>
-                      <td className="px-3 py-2 text-right">
-                        {pair.debit ? formatMoney(money(pair.debit.debit)) : pair.credit ? formatMoney(money(pair.credit.credit)) : "-"}
-                      </td>
-                      <td className="px-3 py-2 max-w-[200px] truncate">
-                        {(pair.debit ?? pair.credit)?.description || entry.description || "-"}
-                      </td>
-                    </tr>
-                  ));
-                })
+                flatRows.map((row, idx) => (
+                  <tr
+                    key={`${row.entry.id}-${idx}`}
+                    onClick={() => handleRowClick(row.entry)}
+                    className="border-t border-border cursor-pointer hover:bg-surface-hover"
+                  >
+                    <td className="px-3 py-2 font-medium">
+                      {row.entry.voucher_no || row.entry.id.slice(0, 8)}
+                    </td>
+                    <td className="px-3 py-2">{row.entry.date}</td>
+                    <td className="px-3 py-2">
+                      {row.debitLine ? getAccountLabel(row.debitLine.account_id) : "—"}
+                    </td>
+                    <td className="px-3 py-2">
+                      {row.creditLine ? getAccountLabel(row.creditLine.account_id) : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {row.amount > 0 ? formatMoney(row.amount) : "—"}
+                    </td>
+                    <td className="px-3 py-2 max-w-[200px] truncate">{row.description || "—"}</td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -275,98 +312,155 @@ export function NhatKyChung() {
         />
       </DrawerModal>
 
-      {/* Detail modal */}
+      {/* Detail modal — routing by reference_type */}
       <DrawerModal
-        open={!!(displayEntry || actions.detailLoading)}
-        onClose={() => {
-          actions.setSelected(null);
-          actions.setError("");
-          setDetailEntry(null);
-          setReverseReason("");
-        }}
-        title={displayEntry?.voucher_no || t("journalEntries.detail.title")}
-        subtitle={displayEntry?.description || undefined}
+        open={!!detailState}
+        onClose={closeDetail}
+        title={detailState?.kind === "payment"
+          ? `Phiếu tiền ${detailState.voucher.voucher_no}`
+          : detailState?.kind === "ar"
+          ? `Phiếu AR ${detailState.doc.document_no ?? detailState.doc.id}`
+          : detailState?.kind === "journal"
+          ? (detailState.entry.voucher_no || t("journalEntries.detail.title"))
+          : t("journalEntries.detail.title")}
+        subtitle={
+          detailState?.kind === "payment"
+            ? detailState.voucher.description
+            : detailState?.kind === "journal"
+            ? detailState.entry.description ?? undefined
+            : undefined
+        }
         panelClassName="max-w-[860px]"
       >
-        {actions.error && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-            {actions.error}
-          </div>
-        )}
-        {actions.detailLoading && !displayEntry ? (
+        {detailState?.kind === "loading" && (
           <div className="p-6 text-center text-xs text-[color:var(--muted-fg)]">{t("journalEntries.loading")}</div>
-        ) : displayEntry ? (
-          <div className="space-y-4 text-xs">
-            {/* Header info */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 rounded-xl border border-border p-3">
-              <div>
-                <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.date")}</div>
-                <div>{displayEntry.date}</div>
-              </div>
-              <div>
-                <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.period")}</div>
-                <div>{getPeriodLabel(displayEntry.period_id)}</div>
-              </div>
-              <div>
-                <div className="text-[color:var(--muted-fg)]">{t("journalEntries.form.total")}</div>
-                <div>{formatMoney(displayEntry.total_debit)}</div>
-              </div>
-            </div>
+        )}
 
-            {/* Lines table — simplified 4-column view */}
-            <div className="rounded-xl border border-border overflow-hidden">
-              <table className="min-w-full">
-                <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
-                    <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.amount")}</th>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pairLines(displayEntry.lines ?? []).map((pair, pi) => (
-                    <tr key={pi} className="border-t border-border">
-                      <td className="px-3 py-2">{pair.debit ? getAccountLabel(pair.debit.account_id) : "-"}</td>
-                      <td className="px-3 py-2">{pair.credit ? getAccountLabel(pair.credit.account_id) : "-"}</td>
-                      <td className="px-3 py-2 text-right">
-                        {pair.debit
-                          ? formatMoney(money(pair.debit.debit))
-                          : pair.credit
-                          ? formatMoney(money(pair.credit.credit))
-                          : "-"}
-                      </td>
-                      <td className="px-3 py-2">
-                        {(pair.debit ?? pair.credit)?.description || displayEntry.description || "-"}
-                      </td>
+        {detailState?.kind === "error" && (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-xs text-red-700">{detailState.msg}</div>
+        )}
+
+        {/* Payment Voucher (TienMat / TienGui) — read-only summary */}
+        {detailState?.kind === "payment" && (
+          <PaymentVoucherReadOnly voucher={detailState.voucher} />
+        )}
+
+        {/* AR Document — read-only summary */}
+        {detailState?.kind === "ar" && (
+          <ArDocumentReadOnly doc={detailState.doc} />
+        )}
+
+        {/* Journal Entry (created in Nhật Ký Chung) */}
+        {detailState?.kind === "journal" && (() => {
+          const entry = detailState.entry;
+          return (
+            <div className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 rounded-xl border border-border p-3">
+                <div>
+                  <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.date")}</div>
+                  <div>{entry.date}</div>
+                </div>
+                <div>
+                  <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.period")}</div>
+                  <div>{getPeriodLabel(entry.period_id)}</div>
+                </div>
+                <div>
+                  <div className="text-[color:var(--muted-fg)]">{t("journalEntries.form.total")}</div>
+                  <div>{formatMoney(entry.total_debit)}</div>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border overflow-hidden">
+                <table className="min-w-full">
+                  <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
+                      <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
+                      <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.amount")}</th>
+                      <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {flattenEntry(entry).map((row, ri) => (
+                      <tr key={ri} className="border-t border-border">
+                        <td className="px-3 py-2">{row.debitLine ? getAccountLabel(row.debitLine.account_id) : "—"}</td>
+                        <td className="px-3 py-2">{row.creditLine ? getAccountLabel(row.creditLine.account_id) : "—"}</td>
+                        <td className="px-3 py-2 text-right">{row.amount > 0 ? formatMoney(row.amount) : "—"}</td>
+                        <td className="px-3 py-2">{row.description || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* Reverse action */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <input
-                value={reverseReason}
-                onChange={(e) => setReverseReason(e.target.value)}
-                placeholder={t("journalEntries.actions.reverseReason")}
-                className="min-w-[260px] flex-1 rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-primary"
-              />
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <input
+                  value={reverseReason}
+                  onChange={(e) => setReverseReason(e.target.value)}
+                  placeholder={t("journalEntries.actions.reverseReason")}
+                  className="min-w-[260px] flex-1 rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-primary"
+                />
                 <button
                   type="button"
-                  disabled={displayEntry.status !== "posted" || actions.saving}
-                  onClick={() => actions.reverse(displayEntry.id, { reason: reverseReason })}
+                  disabled={entry.status !== "posted" || actions.saving}
+                  onClick={() => actions.reverse(entry.id, { reason: reverseReason })}
                   className="rounded-lg border border-border px-3 py-2 disabled:opacity-40"
                 >
                   {t("journalEntries.actions.reverse")}
                 </button>
               </div>
             </div>
-          </div>
-        ) : null}
+          );
+        })()}
       </DrawerModal>
+    </div>
+  );
+}
+
+// ─── Read-only modals ──────────────────────────────────────────────────────────
+
+function PaymentVoucherReadOnly({ voucher: v }: { voucher: PaymentVoucher }) {
+  const fields: [string, string][] = [
+    ["Số phiếu", v.voucher_no],
+    ["Loại", v.voucher_type],
+    ["Ngày chứng từ", v.document_date],
+    ["Ngày hạch toán", v.posting_date],
+    ["Diễn giải", v.description],
+    ["Đối tác", v.counterparty_name_snapshot || "—"],
+    ["Người thực thu/chi", v.actual_person_name || "—"],
+    ["Số tiền", v.amount != null ? new Intl.NumberFormat("vi-VN").format(Number(v.amount)) : "—"],
+    ["Trạng thái", v.status],
+  ];
+  return (
+    <div className="space-y-3 text-xs">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-border p-3">
+        {fields.map(([label, val]) => (
+          <div key={label}>
+            <div className="text-[color:var(--muted-fg)]">{label}</div>
+            <div>{val}</div>
+          </div>
+        ))}
+      </div>
+      <p className="text-[color:var(--muted-fg)] italic">
+        Xem chi tiết đầy đủ tại mục Tiền Mặt / Tiền Gửi.
+      </p>
+    </div>
+  );
+}
+
+function ArDocumentReadOnly({ doc: d }: { doc: ArDocument }) {
+  return (
+    <div className="space-y-3 text-xs">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-border p-3">
+        <div><div className="text-[color:var(--muted-fg)]">Số phiếu</div><div>{d.document_no ?? d.id}</div></div>
+        <div><div className="text-[color:var(--muted-fg)]">Ngày hạch toán</div><div>{d.posting_date ?? "—"}</div></div>
+        <div><div className="text-[color:var(--muted-fg)]">Loại</div><div>{d.document_type ?? "—"}</div></div>
+        <div><div className="text-[color:var(--muted-fg)]">Trạng thái</div><div>{d.status ?? "—"}</div></div>
+        <div className="col-span-2"><div className="text-[color:var(--muted-fg)]">Diễn giải</div><div>{d.description ?? "—"}</div></div>
+      </div>
+      <p className="text-[color:var(--muted-fg)] italic">
+        Xem chi tiết đầy đủ tại mục Phải Thu.
+      </p>
     </div>
   );
 }
