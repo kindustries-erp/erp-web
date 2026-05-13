@@ -132,7 +132,7 @@ Rollback:
 - Chưa có blocker trong pha lập kế hoạch.
 
 ## Commit/Push Status
-- Web repo: Chưa thực hiện (PLAN mode).
+- Web repo: DONE — commit 57c8352, pushed to master.
 - API repo: Không áp dụng.
 - DB/directus staging: Không thay đổi.
 
