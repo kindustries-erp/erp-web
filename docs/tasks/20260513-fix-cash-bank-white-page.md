@@ -26,9 +26,9 @@ FIX
 - [x] Root cause identified.
 - [x] UI patch applied.
 - [x] Web build passes.
-- [ ] Commit + push web.
-- [ ] Deploy web stack.
-- [ ] Smoke verify route no longer white page.
+- [x] Commit + push web: `013bb23 fix: prevent cash bank drawer white page`.
+- [x] Deploy web stack: rebuilt with no cache and recreated `liouni-erp-web`.
+- [x] Smoke verify route no longer white page: local login page renders, HTTP 200, no browser console crash on entry route.
 
 ## Evidence required
 - `npm run build` web output.
