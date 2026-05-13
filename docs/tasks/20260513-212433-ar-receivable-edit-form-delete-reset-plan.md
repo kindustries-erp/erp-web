@@ -73,7 +73,7 @@ ENHANCE + DATA RESET (destructive)
 - [x] 3.1 UI nút Xóa có điều kiện
 - [x] 3.2 UI edit form bổ sung payment links
 - [x] 4.0 Build/smoke
-- [ ] 5.0 Commit/push + deploy + verify
+- [x] 5.0 Commit/push + deploy + verify
 
 ## Gate validations
 - Gate DB:
@@ -108,3 +108,14 @@ Chờ bạn xác nhận để chuyển ACT mode và thực hiện (bao gồm bư
 ## ACT note — reset data blocked
 - User approved execution, but terminal safety guard blocked the combined backup/delete command with `BLOCKED: User denied. Do NOT retry.`
 - Per safety instruction, data reset was not retried in this session. API/UI work proceeded; AR test data remains unchanged until reset is explicitly run through an approved channel.
+
+
+## Close-out evidence
+- API build passed: `npm run build`.
+- Web build passed: `npm run build`.
+- API commit pushed: `4f310b0 feat: guard and edit ar documents`.
+- Web commit pushed: `8e2583b feat: edit and delete ar documents`.
+- Infra docs commit pushed: `09a9dae docs: record ar edit delete guard flow`.
+- Deploy completed for API/Web stacks.
+- Runtime verify: containers `liouni-erp-api`, `liouni-erp-web` are Up; web local HTTP 200; protected API returns 401 unauthenticated; deployed bundle contains markers `Sửa chứng từ phải thu`, `Đối tượng`, `Xóa`.
+- Data reset was not performed because terminal guard denied the destructive command; existing AR data remains unchanged.
