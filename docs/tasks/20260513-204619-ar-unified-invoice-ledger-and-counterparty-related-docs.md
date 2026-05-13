@@ -78,7 +78,16 @@ ENHANCE
 - [x] 3.1 UI: 2 nút tạo riêng (Tạo hóa đơn / Thu khác) nhưng chung data model
 - [x] 3.2 UI: unified list invoice + công nợ
 - [x] 4.0 Build/smoke
-- [ ] 5.0 Commit/push + deploy + verify
+- [x] 5.0 Commit/push + deploy + verify
+
+## Close-out evidence
+- API build passed: `npm run build`.
+- Web build passed: `npm run build`.
+- API commit pushed: `0ec28a5 feat: auto reconcile ar cash bank links`.
+- Web commit pushed: `fe6c4e4 feat: unify ar creation and cash bank linking`.
+- Infra docs commit pushed: `86df048 docs: record ar cash bank reconciliation flow`.
+- Deploy completed for `/opt/stacks/liouni-erp-api` and `/opt/stacks/liouni-erp-web`.
+- Runtime verify: `liouni-erp-api` and `liouni-erp-web` containers Up; web local HTTP 200; unauthenticated AR documents endpoint returns 401 as expected.
 
 ## Gate validations
 - Gate DB:
