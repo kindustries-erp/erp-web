@@ -4,6 +4,7 @@ import type {
   JournalEntryAccount,
   JournalEntryFormLine,
   JournalEntryLine,
+  SimpleJournalEntryFormLine,
 } from "@/modules/accounting/types/journalEntry";
 
 export function money(value: number | string | null | undefined): number {
@@ -69,5 +70,35 @@ export function buildCreatePayload(form: {
       description: line.description.trim(),
       sort: index,
     })),
+  };
+}
+
+export function emptySimpleLine(): SimpleJournalEntryFormLine {
+  return { debit_account_id: "", credit_account_id: "", amount: "0", description: "" };
+}
+
+/** Build payload from simplified form (1 row → 2 journal lines) */
+export function buildCreatePayloadFromSimple(form: {
+  voucher_no: string;
+  date: string;
+  period_id: string;
+  description: string;
+  lines: SimpleJournalEntryFormLine[];
+}): CreateJournalEntryPayload {
+  const lines: CreateJournalEntryPayload["lines"] = [];
+  form.lines.forEach((sl, i) => {
+    const amt = money(sl.amount);
+    lines.push(
+      { account_id: sl.debit_account_id, debit: amt, credit: 0, description: sl.description.trim(), sort: i * 2 },
+      { account_id: sl.credit_account_id, debit: 0, credit: amt, description: sl.description.trim(), sort: i * 2 + 1 },
+    );
+  });
+  return {
+    ...(form.voucher_no.trim() ? { voucher_no: form.voucher_no.trim() } : {}),
+    date: form.date,
+    ...(form.period_id ? { period_id: form.period_id } : {}),
+    description: form.description.trim(),
+    reference_type: "manual",
+    lines,
   };
 }

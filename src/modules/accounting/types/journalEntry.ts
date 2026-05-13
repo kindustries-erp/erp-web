@@ -68,6 +68,14 @@ export interface JournalEntryFormLine {
   description: string;
 }
 
+/** Simplified form line: debit account + credit account + amount (single row = 2 lines) */
+export interface SimpleJournalEntryFormLine {
+  debit_account_id: string;
+  credit_account_id: string;
+  amount: string;
+  description: string;
+}
+
 export interface CreateJournalEntryPayload {
   voucher_no?: string;
   date: string;

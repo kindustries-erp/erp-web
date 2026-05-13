@@ -1,5 +1,5 @@
 import { BookOpen, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useT } from "@/core/i18n";
@@ -9,14 +9,49 @@ import {
   useJournalEntryLookups,
 } from "@/modules/accounting/hooks/useJournalEntries";
 import { JournalEntryForm } from "@/modules/accounting/components/JournalEntryForm";
-import { JOURNAL_ENTRY_STATUS_OPTIONS } from "@/modules/accounting/types/journalEntry";
-import type { JournalEntryStatus } from "@/modules/accounting/types/journalEntry";
+import type { JournalEntry, JournalEntryLine } from "@/modules/accounting/types/journalEntry";
 import {
   formatMoney,
   getAccountLabel,
-  getLineTotals,
+  money,
   getPeriodLabel,
 } from "@/modules/accounting/utils/journalEntryUtils";
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
+
+function getJournalLineAmount(line: JournalEntryLine): number {
+  const d = money(line.debit);
+  return d > 0 ? d : money(line.credit);
+}
+
+/**
+ * Pair lines by sort order into [debit_line, credit_line] pairs.
+ * If pairing fails, return each line as standalone.
+ */
+function pairLines(lines: JournalEntryLine[]) {
+  type Pair = { debit: JournalEntryLine | null; credit: JournalEntryLine | null };
+  const pairs: Pair[] = [];
+  const sorted = [...lines].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+  let i = 0;
+  while (i < sorted.length) {
+    const cur = sorted[i];
+    const d = money(cur.debit);
+    const c = money(cur.credit);
+    if (d > 0 && i + 1 < sorted.length && money(sorted[i + 1].credit) > 0) {
+      pairs.push({ debit: cur, credit: sorted[i + 1] });
+      i += 2;
+    } else if (c > 0 && i + 1 < sorted.length && money(sorted[i + 1].debit) > 0) {
+      pairs.push({ debit: sorted[i + 1], credit: cur });
+      i += 2;
+    } else {
+      pairs.push({ debit: d > 0 ? cur : null, credit: c > 0 ? cur : null });
+      i += 1;
+    }
+  }
+  return pairs;
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
 
 export function NhatKyChung() {
   const t = useT();
@@ -25,11 +60,19 @@ export function NhatKyChung() {
   const actions = useJournalEntryActions(list.load);
   const [createOpen, setCreateOpen] = useState(false);
   const [reverseReason, setReverseReason] = useState("");
+  const [detailEntry, setDetailEntry] = useState<JournalEntry | null>(null);
 
-  const selectedTotals = useMemo(
-    () => getLineTotals(actions.selected?.lines ?? []),
-    [actions.selected?.lines],
-  );
+  function openDetail(entry: JournalEntry) {
+    setDetailEntry(entry);
+    // Also fetch full detail in background to ensure lines are populated
+    if (!entry.lines || entry.lines.length === 0) {
+      actions.openDetail(entry.id);
+    } else {
+      actions.setSelected(entry);
+    }
+  }
+
+  const displayEntry = actions.selected ?? detailEntry;
 
   return (
     <div className="p-5 space-y-4">
@@ -48,74 +91,46 @@ export function NhatKyChung() {
         }
       />
 
+      {/* Filters */}
       <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3">
           <input
             value={list.search}
-            onChange={(e) => {
-              list.setSearch(e.target.value);
-              list.setPage(1);
-            }}
+            onChange={(e) => { list.setSearch(e.target.value); list.setPage(1); }}
             placeholder={t("journalEntries.filters.search")}
             className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
           />
           <select
-            value={list.status}
-            onChange={(e) => {
-              list.setStatus(e.target.value as JournalEntryStatus | "");
-              list.setPage(1);
-            }}
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-          >
-            {JOURNAL_ENTRY_STATUS_OPTIONS.map((option) => (
-              <option key={option.value || "all"} value={option.value}>
-                {t(option.labelKey)}
-              </option>
-            ))}
-          </select>
-          <select
             value={list.accountId}
-            onChange={(e) => {
-              list.setAccountId(e.target.value);
-              list.setPage(1);
-            }}
+            onChange={(e) => { list.setAccountId(e.target.value); list.setPage(1); }}
             className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
           >
             <option value="">{t("journalEntries.filters.account")}</option>
-            {lookups.accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {[account.account_code, account.account_name].filter(Boolean).join(" — ")}
+            {lookups.accounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {[a.account_code, a.account_name].filter(Boolean).join(" — ")}
               </option>
             ))}
           </select>
           <select
             value={list.periodId}
-            onChange={(e) => {
-              list.setPeriodId(e.target.value);
-              list.setPage(1);
-            }}
+            onChange={(e) => { list.setPeriodId(e.target.value); list.setPage(1); }}
             className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
           >
             <option value="">{t("journalEntries.filters.period")}</option>
-            {lookups.periods.map((period) => (
-              <option key={period.id} value={period.id}>{period.name}</option>
+            {lookups.periods.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
           <input
             value={list.dateFrom}
-            onChange={(e) => {
-              list.setDateFrom(e.target.value);
-              list.setPage(1);
-            }}
+            onChange={(e) => { list.setDateFrom(e.target.value); list.setPage(1); }}
             type="date"
             className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
           />
           <input
             value={list.dateTo}
-            onChange={(e) => {
-              list.setDateTo(e.target.value);
-              list.setPage(1);
-            }}
+            onChange={(e) => { list.setDateTo(e.target.value); list.setPage(1); }}
             type="date"
             className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
           />
@@ -128,8 +143,11 @@ export function NhatKyChung() {
         </div>
       </div>
 
-      {list.error && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{list.error}</div>}
+      {list.error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{list.error}</div>
+      )}
 
+      {/* Journal Table — 1 row per journal line, grouped by voucher */}
       <div className="rounded-2xl border border-border bg-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
@@ -137,38 +155,81 @@ export function NhatKyChung() {
               <tr>
                 <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.voucherNo")}</th>
                 <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.date")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.period")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.description")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("journalEntries.columns.debit")}</th>
-                <th className="px-3 py-2 text-right font-medium">{t("journalEntries.columns.credit")}</th>
-                <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.status")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.amount")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
               </tr>
             </thead>
             <tbody>
               {list.loading ? (
-                <tr><td colSpan={7} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">{t("journalEntries.loading")}</td></tr>
+                <tr>
+                  <td colSpan={6} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">
+                    {t("journalEntries.loading")}
+                  </td>
+                </tr>
               ) : list.items.length === 0 ? (
-                <tr><td colSpan={7} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">{t("common.noData")}</td></tr>
+                <tr>
+                  <td colSpan={6} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">
+                    {t("common.noData")}
+                  </td>
+                </tr>
               ) : (
-                list.items.map((entry) => (
-                  <tr
-                    key={entry.id}
-                    onClick={() => actions.openDetail(entry.id)}
-                    className="border-t border-border cursor-pointer hover:bg-surface-hover"
-                  >
-                    <td className="px-3 py-2 font-medium">{entry.voucher_no || entry.id.slice(0, 8)}</td>
-                    <td className="px-3 py-2">{entry.date}</td>
-                    <td className="px-3 py-2">{getPeriodLabel(entry.period_id)}</td>
-                    <td className="px-3 py-2 max-w-[320px] truncate">{entry.description || "-"}</td>
-                    <td className="px-3 py-2 text-right">{formatMoney(entry.total_debit)}</td>
-                    <td className="px-3 py-2 text-right">{formatMoney(entry.total_credit)}</td>
-                    <td className="px-3 py-2">
-                      <span className="rounded-full bg-surface-hover px-2 py-1">
-                        {t(`journalEntries.status.${entry.status}`)}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                list.items.flatMap((entry) => {
+                  const lines = entry.lines ?? [];
+                  const pairs = pairLines(lines);
+
+                  if (pairs.length === 0) {
+                    // No lines yet — show one placeholder row
+                    return [
+                      <tr
+                        key={entry.id}
+                        onClick={() => openDetail(entry)}
+                        className="border-t border-border cursor-pointer hover:bg-surface-hover"
+                      >
+                        <td className="px-3 py-2 font-medium">{entry.voucher_no || entry.id.slice(0, 8)}</td>
+                        <td className="px-3 py-2">{entry.date}</td>
+                        <td className="px-3 py-2 text-[color:var(--muted-fg)]" colSpan={4}>
+                          {entry.description || "-"}
+                        </td>
+                      </tr>,
+                    ];
+                  }
+
+                  return pairs.map((pair, pi) => (
+                    <tr
+                      key={`${entry.id}-${pi}`}
+                      onClick={() => openDetail(entry)}
+                      className="border-t border-border cursor-pointer hover:bg-surface-hover"
+                    >
+                      {/* Voucher info only on first pair row */}
+                      {pi === 0 ? (
+                        <>
+                          <td
+                            className="px-3 py-2 font-medium align-top"
+                            rowSpan={pairs.length}
+                          >
+                            {entry.voucher_no || entry.id.slice(0, 8)}
+                          </td>
+                          <td
+                            className="px-3 py-2 align-top"
+                            rowSpan={pairs.length}
+                          >
+                            {entry.date}
+                          </td>
+                        </>
+                      ) : null}
+                      <td className="px-3 py-2">{pair.debit ? getAccountLabel(pair.debit.account_id) : "-"}</td>
+                      <td className="px-3 py-2">{pair.credit ? getAccountLabel(pair.credit.account_id) : "-"}</td>
+                      <td className="px-3 py-2 text-right">
+                        {pair.debit ? formatMoney(money(pair.debit.debit)) : pair.credit ? formatMoney(money(pair.credit.credit)) : "-"}
+                      </td>
+                      <td className="px-3 py-2 max-w-[200px] truncate">
+                        {(pair.debit ?? pair.credit)?.description || entry.description || "-"}
+                      </td>
+                    </tr>
+                  ));
+                })
               )}
             </tbody>
           </table>
@@ -194,6 +255,7 @@ export function NhatKyChung() {
         </div>
       </div>
 
+      {/* Create modal */}
       <DrawerModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -213,50 +275,77 @@ export function NhatKyChung() {
         />
       </DrawerModal>
 
+      {/* Detail modal */}
       <DrawerModal
-        open={!!actions.selected || actions.detailLoading}
+        open={!!(displayEntry || actions.detailLoading)}
         onClose={() => {
           actions.setSelected(null);
           actions.setError("");
+          setDetailEntry(null);
           setReverseReason("");
         }}
-        title={actions.selected?.voucher_no || t("journalEntries.detail.title")}
-        subtitle={actions.selected?.description || undefined}
+        title={displayEntry?.voucher_no || t("journalEntries.detail.title")}
+        subtitle={displayEntry?.description || undefined}
         panelClassName="max-w-[860px]"
       >
-        {actions.error && <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{actions.error}</div>}
-        {actions.detailLoading || !actions.selected ? (
+        {actions.error && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+            {actions.error}
+          </div>
+        )}
+        {actions.detailLoading && !displayEntry ? (
           <div className="p-6 text-center text-xs text-[color:var(--muted-fg)]">{t("journalEntries.loading")}</div>
-        ) : (
+        ) : displayEntry ? (
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 rounded-xl border border-border p-3">
-              <div><div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.date")}</div><div>{actions.selected.date}</div></div>
-              <div><div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.period")}</div><div>{getPeriodLabel(actions.selected.period_id)}</div></div>
-              <div><div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.status")}</div><div>{t(`journalEntries.status.${actions.selected.status}`)}</div></div>
-              <div><div className="text-[color:var(--muted-fg)]">{t("journalEntries.form.total")}</div><div>{formatMoney(selectedTotals.debit)}</div></div>
+            {/* Header info */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 rounded-xl border border-border p-3">
+              <div>
+                <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.date")}</div>
+                <div>{displayEntry.date}</div>
+              </div>
+              <div>
+                <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.period")}</div>
+                <div>{getPeriodLabel(displayEntry.period_id)}</div>
+              </div>
+              <div>
+                <div className="text-[color:var(--muted-fg)]">{t("journalEntries.form.total")}</div>
+                <div>{formatMoney(displayEntry.total_debit)}</div>
+              </div>
             </div>
+
+            {/* Lines table — simplified 4-column view */}
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="min-w-full">
                 <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.account")}</th>
-                    <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.debit")}</th>
-                    <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.credit")}</th>
+                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
+                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
+                    <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.amount")}</th>
                     <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(actions.selected.lines ?? []).map((line) => (
-                    <tr key={line.id} className="border-t border-border">
-                      <td className="px-3 py-2">{getAccountLabel(line.account_id)}</td>
-                      <td className="px-3 py-2 text-right">{formatMoney(line.debit)}</td>
-                      <td className="px-3 py-2 text-right">{formatMoney(line.credit)}</td>
-                      <td className="px-3 py-2">{line.description || "-"}</td>
+                  {pairLines(displayEntry.lines ?? []).map((pair, pi) => (
+                    <tr key={pi} className="border-t border-border">
+                      <td className="px-3 py-2">{pair.debit ? getAccountLabel(pair.debit.account_id) : "-"}</td>
+                      <td className="px-3 py-2">{pair.credit ? getAccountLabel(pair.credit.account_id) : "-"}</td>
+                      <td className="px-3 py-2 text-right">
+                        {pair.debit
+                          ? formatMoney(money(pair.debit.debit))
+                          : pair.credit
+                          ? formatMoney(money(pair.credit.credit))
+                          : "-"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {(pair.debit ?? pair.credit)?.description || displayEntry.description || "-"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+
+            {/* Reverse action */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <input
                 value={reverseReason}
@@ -267,8 +356,8 @@ export function NhatKyChung() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  disabled={actions.selected.status !== "posted" || actions.saving}
-                  onClick={() => actions.reverse(actions.selected!.id, { reason: reverseReason })}
+                  disabled={displayEntry.status !== "posted" || actions.saving}
+                  onClick={() => actions.reverse(displayEntry.id, { reason: reverseReason })}
                   className="rounded-lg border border-border px-3 py-2 disabled:opacity-40"
                 >
                   {t("journalEntries.actions.reverse")}
@@ -276,7 +365,7 @@ export function NhatKyChung() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </DrawerModal>
     </div>
   );
