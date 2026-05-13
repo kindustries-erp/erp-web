@@ -185,16 +185,16 @@ export function NHTab() {
         ]}
       >
         <DrawerSection title={t("settings.nh.sectionInfo")}>
-          <DrawerField label={t("settings.tk.headers.bankAccountCode")}>
+          <DrawerField label={t("settings.nh.headers.bankAccountCode")}>
             <input type="text" className={inputCls} value={form.bank_account_code} onChange={(e) => setField("bank_account_code", e.target.value)} placeholder={t("settings.nh.codePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("settings.tk.headers.bankName")} required>
+          <DrawerField label={t("settings.nh.headers.bankName")} required>
             <input type="text" className={inputCls} value={form.bank_name} onChange={(e) => setField("bank_name", e.target.value)} placeholder={t("settings.nh.bankNamePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("settings.tk.headers.accountNumber")} required>
+          <DrawerField label={t("settings.nh.headers.accountNumber")} required>
             <input type="text" className={inputCls} value={form.account_number} onChange={(e) => setField("account_number", e.target.value)} placeholder={t("settings.nh.accountNumberPlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("settings.tk.headers.accountHolder")} required>
+          <DrawerField label={t("settings.nh.headers.accountHolder")} required>
             <input type="text" className={inputCls} value={form.account_holder} onChange={(e) => setField("account_holder", e.target.value)} placeholder={t("settings.nh.accountHolderPlaceholder")} />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.accountingAccount")}>
