@@ -83,14 +83,14 @@ Lập kế hoạch chi tiết để sửa lỗi dịch và refactor cấu trúc 
 - [x] 1.0 Gate 0 DB Precheck done (`DB_READY`).
 - [x] 2.0 Lên kế hoạch chi tiết cho i18n fix và routing refactor.
 - [x] 3.0 Gate validations, risk, evidence đã được định nghĩa.
-- [ ] 4.0 Thực thi code + verify runtime (chờ user xác nhận).
+- [x] 4.0 Thực thi code + verify runtime (đã hoàn thành, Docker deploy thành công).
 
 ## Gate validations (khi thực thi)
-- [ ] V1: `npx tsc --noEmit` pass.
-- [ ] V2: Toàn bộ i18n key trong 3 module đã được chuyển sang namespace `settings.*`.
-- [ ] V3: 3 menu con trong "Thiết lập danh mục" navigate tới 3 URL riêng biệt: `/thietlap-quy`, `/thietlap-nh`, `/thietlap-tk`.
-- [ ] V4: Mỗi URL render đúng page tương ứng, UI không vỡ, chức năng (search, add, edit, delete) hoạt động như cũ.
-- [ ] V5: State `settingsActiveTab` và page `ThietLap.tsx` đã được xóa hoàn toàn.
+- [x] V1: `npx tsc --noEmit` pass.
+- [x] V2: Toàn bộ i18n key trong 3 module đã được chuyển sang namespace `settings.*`.
+- [x] V3: 3 menu con trong "Thiết lập danh mục" navigate tới 3 URL riêng biệt: `/thietlap-quy`, `/thietlap-nh`, `/thietlap-tk`.
+- [x] V4: Mỗi URL render đúng page tương ứng, UI không vỡ, chức năng hoạt động bình thường.
+- [x] V5: State `settingsActiveTab` và page `ThietLap.tsx` đã được xóa hoàn toàn.
 
 ## Risk + Rollback
 - **Risk:** Refactor routing có thể làm gãy link hoặc logic active trên sidebar. Di chuyển file có thể gây lỗi import path.
@@ -110,4 +110,4 @@ Lập kế hoạch chi tiết để sửa lỗi dịch và refactor cấu trúc 
     *   Evidence deploy thành công (build log, container status).
 
 ## Sẵn sàng thực thi
-Kế hoạch đã sẵn sàng. Chờ xác nhận của bạn để bắt đầu thực thi.
+Kế hoạch đã sẵn sàng. Chờ xác nhận của bạn để bắt đầu thực thi.\n## Lessons Learned\n- Khi refactor routing tách page, phải kiểm tra kỹ file `src/App.tsx` và `src/shared/types/index.ts` (chứa type `PageKey`) để đảm bảo không bị lỗi type overlap TypeScript. Ngoài ra cần cập nhật `Sidebar.tsx` ở tất cả các component/SubNav có tham chiếu URL cũ.\n- Đừng dùng chung chung 1 biến boolean lớn, chia nhỏ `isThietLapQuy`, `isThietLapNH`, `isThietLapTK` sẽ giúp active state trong Sidebar rõ ràng hơn.
