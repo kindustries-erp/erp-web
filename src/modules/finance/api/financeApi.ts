@@ -266,6 +266,7 @@ export type CounterpartySource = "INTERNAL" | "EXTERNAL";
 export type CashBankRelatedDocumentType = "payment_vouchers" | "ar_documents" | "ap_documents" | "sales_invoices" | "purchase_invoices" | "manual";
 
 export interface CashBankRelatedDocumentInput {
+  payment_voucher_id?: string | null;
   related_type: CashBankRelatedDocumentType | string;
   related_id: string;
   related_no?: string | null;
@@ -1028,6 +1029,7 @@ export interface ArDocument {
   business_partner_id: string | null;
   business_partner_name_snapshot?: string | null;
   can_delete?: boolean;
+  related_documents?: CashBankRelatedDocumentInput[];
   accounting_account_id: string | null;
   document_date: string;
   posting_date: string;

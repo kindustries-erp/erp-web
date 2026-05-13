@@ -10,6 +10,7 @@ interface Props {
   value: CashBankRelatedDocumentInput[];
   disabled?: boolean;
   counterpartyId?: string;
+  maxSettlementAmount?: number;
   onChange: (value: CashBankRelatedDocumentInput[]) => void;
 }
 
@@ -31,18 +32,20 @@ const emptyDoc = (): CashBankRelatedDocumentInput => ({
   note: "",
 });
 
-function arDocToRelated(doc: ArDocument): CashBankRelatedDocumentInput {
+function arDocToRelated(doc: ArDocument, maxSettlementAmount?: number): CashBankRelatedDocumentInput {
+  const openAmount = Number(doc.open_amount ?? doc.total_amount ?? 0) || 0;
+  const cappedAmount = maxSettlementAmount && maxSettlementAmount > 0 ? Math.min(openAmount, maxSettlementAmount) : openAmount;
   return {
     related_type: "ar_documents",
     related_id: doc.id,
     related_no: doc.document_no,
     related_date: doc.document_date,
-    amount: Number(doc.open_amount ?? doc.total_amount ?? 0) || undefined,
+    amount: cappedAmount || undefined,
     note: doc.description || "Chứng từ công nợ",
   };
 }
 
-export function RelatedDocumentsEditor({ value, disabled, counterpartyId, onChange }: Props) {
+export function RelatedDocumentsEditor({ value, disabled, counterpartyId, maxSettlementAmount, onChange }: Props) {
   const safeValue = Array.isArray(value) ? value : [];
   const [arDocs, setArDocs] = useState<ArDocument[]>([]);
   const [arDocId, setArDocId] = useState("");
@@ -74,7 +77,7 @@ export function RelatedDocumentsEditor({ value, disabled, counterpartyId, onChan
       setArDocId("");
       return;
     }
-    onChange([...safeValue, arDocToRelated(doc)]);
+    onChange([...safeValue, arDocToRelated(doc, maxSettlementAmount)]);
     setArDocId("");
   }
 

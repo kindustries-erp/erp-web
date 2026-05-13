@@ -363,6 +363,7 @@ export function CashVoucherDrawer({
           value={form.related_documents}
           disabled={viewOnly}
           counterpartyId={form.counterparty_id}
+          maxSettlementAmount={Number(form.amount) || undefined}
           onChange={(value) => onFieldChange("related_documents", value)}
         />
       </DrawerSection>

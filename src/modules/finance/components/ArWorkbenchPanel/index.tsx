@@ -287,6 +287,9 @@ function EditArDocumentDrawer({ open, doc, paidAmount, setPaidAmount, saving, sa
         <DrawerField label="Đã thanh toán/cấn trừ"><input className={inputCls} type="number" min="0" max={total} value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))} /></DrawerField>
         <DrawerField label="Còn lại"><input className={inputCls} value={money(remaining)} disabled /></DrawerField>
       </DrawerSection>
+      <DrawerSection title="Phiếu tiền mặt/tiền gửi đã cấn trừ">
+        {(doc?.related_documents?.length ?? 0) === 0 ? <div className="text-xs text-[color:var(--muted-fg)]">Chưa có phiếu tiền mặt/tiền gửi cấn trừ chứng từ này.</div> : <div className="space-y-2">{doc?.related_documents?.map((item, idx) => <div key={`${item.related_id}-${idx}`} className="rounded-lg border border-[color:var(--border)] p-3 text-sm"><div className="font-medium">{item.related_no || item.payment_voucher_id || "Phiếu liên quan"}</div><div className="text-xs text-[color:var(--muted-fg)]">Ngày {item.related_date || "—"} · Số tiền {money(item.amount)} · {item.note || "Cấn trừ công nợ"}</div></div>)}</div>}
+      </DrawerSection>
     </div>
   </DrawerModal>;
 }
