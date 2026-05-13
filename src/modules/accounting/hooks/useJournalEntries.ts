@@ -6,7 +6,6 @@ import {
   getJournalEntryApi,
   getJournalEntryPeriodsApi,
   postJournalEntryApi,
-  reverseJournalEntryApi,
 } from "@/modules/accounting/api/journalEntriesApi";
 import type {
   AccountingPeriod,
@@ -15,7 +14,6 @@ import type {
   JournalEntryAccount,
   JournalEntryListParams,
   JournalEntryStatus,
-  ReverseJournalEntryPayload,
 } from "@/modules/accounting/types/journalEntry";
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -194,23 +192,6 @@ export function useJournalEntryActions(onDone: () => void) {
     [onDone],
   );
 
-  const reverse = useCallback(
-    async (id: string, payload: ReverseJournalEntryPayload) => {
-      setSaving(true);
-      setError("");
-      try {
-        await reverseJournalEntryApi(id, payload);
-        await onDone();
-        setSelected(await getJournalEntryApi(id));
-      } catch (err) {
-        setError(getErrorMessage(err, "Không thể đảo bút toán."));
-      } finally {
-        setSaving(false);
-      }
-    },
-    [onDone],
-  );
-
   return {
     selected,
     setSelected,
@@ -221,6 +202,5 @@ export function useJournalEntryActions(onDone: () => void) {
     openDetail,
     create,
     post,
-    reverse,
   };
 }

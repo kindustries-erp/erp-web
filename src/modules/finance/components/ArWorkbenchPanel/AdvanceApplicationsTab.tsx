@@ -6,13 +6,11 @@ import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
-import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   applyAdvanceToInvoiceApi,
   getAdvanceApplicationsApi,
   getArDocumentsApi,
   getCustomerAdvancesApi,
-  reverseAdvanceApplicationApi,
   type AdvanceApplication,
   type ApplyAdvanceToInvoiceDto,
   type ArDocument,
@@ -28,7 +26,7 @@ export function AdvanceApplicationsTab() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<ApplyAdvanceToInvoiceDto>(() => emptyApplyAdvanceForm());
   const [saving, setSaving] = useState(false);
-  const [actioningId, setActioningId] = useState<string | null>(null);
+
 
   const selectedAdvance = advances.find((item) => item.id === form.advance_voucher_id);
   const selectedInvoice = invoices.find((item) => item.id === form.ar_document_id);
@@ -79,14 +77,6 @@ export function AdvanceApplicationsTab() {
       .finally(() => setSaving(false));
   };
 
-  const reverseApplication = (app: AdvanceApplication) => {
-    setActioningId(app.id);
-    setError(null);
-    reverseAdvanceApplicationApi(app.id, { reason: `Hủy cấn trừ cọc ${todayIsoDate()}` })
-      .then(load)
-      .catch((e) => setError(extractApiError(e, "Không hủy được cấn trừ cọc")))
-      .finally(() => setActioningId(null));
-  };
 
   return (
     <section className="space-y-4">
@@ -191,12 +181,12 @@ export function AdvanceApplicationsTab() {
                 <th className="px-3 py-2 text-right">Số tiền</th>
                 <th className="px-3 py-2">Trạng thái</th>
                 <th className="px-3 py-2">Diễn giải</th>
-                <th className="px-3 py-2" />
+
               </tr>
             </thead>
             <tbody>
               {applications.length === 0 ? (
-                <tr><td colSpan={6} className="py-8 text-center text-[color:var(--muted-fg)]">Chưa có bản ghi cấn trừ cọc</td></tr>
+                <tr><td colSpan={5} className="py-8 text-center text-[color:var(--muted-fg)]">Chưa có bản ghi cấn trừ cọc</td></tr>
               ) : applications.map((app) => (
                 <tr key={app.id} className="border-b border-[color:var(--border)]">
                   <td className="px-3 py-2 font-mono text-xs">{app.application_no}</td>
@@ -204,17 +194,7 @@ export function AdvanceApplicationsTab() {
                   <td className="px-3 py-2 text-right font-semibold">{money(app.amount)}</td>
                   <td className="px-3 py-2">{app.status}</td>
                   <td className="px-3 py-2 text-[color:var(--muted-fg)]">{app.reason ?? "—"}</td>
-                  <td className="px-3 py-2 text-right">
-                    {app.status === "POSTED" && Number(app.amount) > 0 ? (
-                      <button
-                        disabled={actioningId === app.id}
-                        onClick={() => reverseApplication(app)}
-                        className="rounded bg-error-bg px-2 py-0.5 text-xs font-medium text-error-fg hover:opacity-80 disabled:opacity-50"
-                      >
-                        {actioningId === app.id ? "Đang hủy..." : "Reverse"}
-                      </button>
-                    ) : null}
-                  </td>
+
                 </tr>
               ))}
             </tbody>

@@ -7,13 +7,11 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
-import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   createPaymentReceiptApi,
   getPaymentVouchersApi,
   getPaymentVoucherLookupBusinessPartnersApi,
   postArPaymentVoucherApi,
-  reversePaymentVoucherApi,
   type CreatePaymentReceiptDto,
   type PaymentMethod,
   type PaymentVoucher,
@@ -74,14 +72,11 @@ export function PaymentReceiptsTab() {
       .finally(() => setSaving(false));
   };
 
-  const runVoucherAction = (v: PaymentVoucher, action: "post" | "reverse") => {
+  const runVoucherAction = (v: PaymentVoucher) => {
     setActioningId(v.id);
     setError(null);
-    const req = action === "post"
-      ? postArPaymentVoucherApi(v.id)
-      : reversePaymentVoucherApi(v.id, { reason: `Reverse ${todayIsoDate()}` });
-    req.then(load)
-      .catch((e) => setError(extractApiError(e, action === "post" ? "Không post được phiếu thu" : "Không reverse được phiếu thu")))
+    postArPaymentVoucherApi(v.id).then(load)
+      .catch((e) => setError(extractApiError(e, "Không post được phiếu thu")))
       .finally(() => setActioningId(null));
   };
 
@@ -145,23 +140,14 @@ export function PaymentReceiptsTab() {
                         {v.status === "DRAFT" && (
                           <button
                             disabled={actioningId === v.id}
-                            onClick={() => runVoucherAction(v, "post")}
+                            onClick={() => runVoucherAction(v)}
                             className="flex items-center gap-1 rounded bg-approve-bg px-2 py-0.5 text-xs font-medium text-approve-fg hover:opacity-80 disabled:opacity-50"
                           >
                             {actioningId === v.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
                             Post
                           </button>
                         )}
-                        {v.status === "POSTED" && (
-                          <button
-                            disabled={actioningId === v.id}
-                            onClick={() => runVoucherAction(v, "reverse")}
-                            className="flex items-center gap-1 rounded bg-error-bg px-2 py-0.5 text-xs font-medium text-error-fg hover:opacity-80 disabled:opacity-50"
-                          >
-                            {actioningId === v.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                            Reverse
-                          </button>
-                        )}
+
                       </div>
                     </td>
                   </tr>

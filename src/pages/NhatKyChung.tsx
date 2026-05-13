@@ -80,7 +80,6 @@ export function NhatKyChung() {
   const lookups = useJournalEntryLookups();
   const actions = useJournalEntryActions(list.load);
   const [createOpen, setCreateOpen] = useState(false);
-  const [reverseReason, setReverseReason] = useState("");
 
   // Unified detail modal state
   const [detailState, setDetailState] = useState<VoucherDetailState | null>(null);
@@ -138,7 +137,6 @@ export function NhatKyChung() {
     setDetailState(null);
     actions.setSelected(null);
     actions.setError("");
-    setReverseReason("");
   }
 
   // Build flat rows for display
@@ -393,22 +391,6 @@ export function NhatKyChung() {
                 </table>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <input
-                  value={reverseReason}
-                  onChange={(e) => setReverseReason(e.target.value)}
-                  placeholder={t("journalEntries.actions.reverseReason")}
-                  className="min-w-[260px] flex-1 rounded-lg border border-border bg-surface px-3 py-2 outline-none focus:border-primary"
-                />
-                <button
-                  type="button"
-                  disabled={entry.status !== "posted" || actions.saving}
-                  onClick={() => actions.reverse(entry.id, { reason: reverseReason })}
-                  className="rounded-lg border border-border px-3 py-2 disabled:opacity-40"
-                >
-                  {t("journalEntries.actions.reverse")}
-                </button>
-              </div>
             </div>
           );
         })()}

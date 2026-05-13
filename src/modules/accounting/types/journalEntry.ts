@@ -92,11 +92,6 @@ export interface CreateJournalEntryPayload {
   }>;
 }
 
-export interface ReverseJournalEntryPayload {
-  reason?: string;
-  reverse_date?: string;
-}
-
 export const JOURNAL_ENTRY_STATUS_OPTIONS: Array<{
   value: JournalEntryStatus | "";
   labelKey: string;

@@ -1096,11 +1096,6 @@ export interface CreateArSalesInvoiceDto {
 
 export type UpdateArDocumentDto = Partial<CreateArDocumentDto>;
 
-export interface ReverseArDocumentDto {
-  posting_date?: string;
-  reason?: string;
-  metadata?: Record<string, unknown>;
-}
 
 export interface ArCoverageItem {
   id: number;
@@ -1190,16 +1185,6 @@ export async function postArDocumentApi(
   return data.data;
 }
 
-export async function reverseArDocumentApi(
-  id: string,
-  dto: ReverseArDocumentDto,
-): Promise<{ document: ArDocument; reversal_journal_entry: unknown }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { document: ArDocument; reversal_journal_entry: unknown };
-  }>(`/api/v1/ar-workbench/documents/${id}/reverse`, dto);
-  return data.data;
-}
 
 export async function getArSummaryApi(
   params: ArDocumentListParams = {},
@@ -1312,16 +1297,6 @@ export async function allocatePaymentApi(
   return data.data;
 }
 
-export async function reversePaymentVoucherApi(
-  id: string,
-  body: { reason?: string },
-): Promise<{ voucher: PaymentVoucher }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { voucher: PaymentVoucher };
-  }>(`/api/v1/ar-workbench/payment-vouchers/${id}/reverse`, body);
-  return data.data;
-}
 
 export async function getCustomerAdvancesApi(
   params: ArDocumentListParams = {},
@@ -1360,16 +1335,6 @@ export async function postCustomerAdvanceApi(
   return data.data;
 }
 
-export async function reverseCustomerAdvanceApi(
-  id: string,
-  body: { reason?: string },
-): Promise<{ voucher: PaymentVoucher; reversal_journal_entry: unknown }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { voucher: PaymentVoucher; reversal_journal_entry: unknown };
-  }>(`/api/v1/ar-workbench/customer-advances/${id}/reverse`, body);
-  return data.data;
-}
 
 // ─── UC#4 Apply Advance to Invoice / Cấn trừ cọc ────────────────────────────
 
@@ -1437,14 +1402,4 @@ export async function applyAdvanceToInvoiceApi(
   return data.data;
 }
 
-export async function reverseAdvanceApplicationApi(
-  id: string,
-  body: { reason?: string },
-): Promise<{ original_application_id: string; reversal: AdvanceApplication }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { original_application_id: string; reversal: AdvanceApplication };
-  }>(`/api/v1/ar-workbench/advance-applications/${id}/reverse`, body);
-  return data.data;
-}
 

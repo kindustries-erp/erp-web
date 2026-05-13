@@ -9,7 +9,6 @@ import { SearchInput } from "@/shared/components/SearchInput";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
-import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   createArDocumentApi,
   deleteArDocumentApi,
@@ -19,7 +18,6 @@ import {
   getArSummaryApi,
   getPaymentVoucherLookupBusinessPartnersApi,
   postArDocumentApi,
-  reverseArDocumentApi,
   updateArDocumentApi,
   type ArCoverageItem,
   type ArDocument,
@@ -150,11 +148,10 @@ export function ArWorkbenchPanel() {
   const saveEdit = () => { if (!editDoc) return; setSaving(true); setSaveError(null); updateArDocumentApi(editDoc.id, { settled_amount: editPaidAmount } as any).then(() => { setEditDoc(null); load(); }).catch((err) => setSaveError(extractApiError(err, "Không cập nhật được thanh toán"))).finally(() => setSaving(false)); };
   const deleteDocument = (doc: ArDocument) => { if (!doc.can_delete) return; setActioningId(doc.id); deleteArDocumentApi(doc.id).then(load).catch((err) => setError(extractApiError(err, "Không xóa được chứng từ"))).finally(() => setActioningId(null)); };
 
-  const runDocumentAction = (doc: ArDocument, action: "post" | "reverse") => {
+  const runDocumentAction = (doc: ArDocument) => {
     setActioningId(doc.id);
     setError(null);
-    const request = action === "post" ? postArDocumentApi(doc.id) : reverseArDocumentApi(doc.id, { reason: `Reverse from AR Workbench ${todayIsoDate()}` });
-    request.then(load).catch((err) => setError(extractApiError(err, action === "post" ? "Không post được hóa đơn" : "Không reverse được hóa đơn"))).finally(() => setActioningId(null));
+    postArDocumentApi(doc.id).then(load).catch((err) => setError(extractApiError(err, "Không post được hóa đơn"))).finally(() => setActioningId(null));
   };
 
   return (
@@ -233,7 +230,7 @@ function Kpi({ label, value, sub, warn }: { label: string; value: string | numbe
 
 interface InvoiceListProps {
   docs: ArDocument[]; loading: boolean; error: string | null; search: string; typeFilter: ArDocumentType | ""; statusFilter: ArDocumentStatus | ""; openOnly: boolean; page: number; pageSize: number; total: number; totalPages: number; actioningId: string | null;
-  setSearch: (value: string) => void; setTypeFilter: (value: ArDocumentType | "") => void; setStatusFilter: (value: ArDocumentStatus | "") => void; setOpenOnly: (value: boolean) => void; setPage: (page: number) => void; setPageSize: (size: number) => void; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void;
+  setSearch: (value: string) => void; setTypeFilter: (value: ArDocumentType | "") => void; setStatusFilter: (value: ArDocumentStatus | "") => void; setOpenOnly: (value: boolean) => void; setPage: (page: number) => void; setPageSize: (size: number) => void; runDocumentAction: (doc: ArDocument) => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void;
 }
 
 function InvoiceList(props: InvoiceListProps) {
@@ -264,16 +261,16 @@ function InvoiceList(props: InvoiceListProps) {
   </div>;
 }
 
-function InvoiceTable({ docs, loading, actioningId, runDocumentAction, onEdit, onDelete }: { docs: ArDocument[]; loading: boolean; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
+function InvoiceTable({ docs, loading, actioningId, runDocumentAction, onEdit, onDelete }: { docs: ArDocument[]; loading: boolean; actioningId: string | null; runDocumentAction: (doc: ArDocument) => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
   return <table className="min-w-full text-sm"><thead className="bg-[color:var(--muted)] text-left text-xs uppercase tracking-wide text-[color:var(--muted-fg)]"><tr>{["Số chứng từ", "Đối tượng", "Loại", "Ngày", "Tổng", "Đã thanh toán", "Còn lại", "Trạng thái", "Thao tác"].map((h, i) => <th key={h} className={cn("px-3 py-2", i === 4 || i === 5 || i === 6 || i === 8 ? "text-right" : "")}>{h}</th>)}</tr></thead><tbody>{docs.length === 0 && !loading ? <tr><td colSpan={9} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">Chưa có AR document. Flow cũ vẫn ở tab Sổ công nợ.</td></tr> : docs.map((doc) => <InvoiceRow key={doc.id} doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} onEdit={onEdit} onDelete={onDelete} />)}</tbody></table>;
 }
 
-function InvoiceRow({ doc, actioningId, runDocumentAction, onEdit, onDelete }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
+function InvoiceRow({ doc, actioningId, runDocumentAction, onEdit, onDelete }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument) => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
   return <tr className="border-t border-[color:var(--border)]"><td className="px-3 py-2 font-medium">{doc.document_no}<div className="text-xs text-[color:var(--muted-fg)]">{doc.reference_no || doc.description}</div></td><td className="px-3 py-2">{doc.business_partner_name_snapshot || doc.business_partner_id || "—"}</td><td className="px-3 py-2">{doc.document_type}</td><td className="px-3 py-2">{doc.posting_date}</td><td className="px-3 py-2 text-right">{money(doc.total_amount)}</td><td className="px-3 py-2 text-right text-approve-fg">{money(doc.settled_amount)}</td><td className="px-3 py-2 text-right font-semibold">{money(doc.open_amount)}</td><td className="px-3 py-2"><span className={cn("rounded-full px-2 py-1 text-xs", statusCls(doc.status))}>{STATUS_LABELS[doc.status]}</span></td><td className="px-3 py-2 text-right"><InvoiceActions doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} onEdit={onEdit} onDelete={onDelete} /></td></tr>;
 }
 
-function InvoiceActions({ doc, actioningId, runDocumentAction, onEdit, onDelete }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
-  return <div className="flex justify-end gap-1"><button onClick={() => onEdit(doc)} className="rounded-md border border-[color:var(--border)] px-2.5 py-1 text-xs hover:bg-[color:var(--muted)]">Sửa</button>{doc.status === "DRAFT" && doc.document_type === "INVOICE" && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc, "post")} className="rounded-md bg-[#2a6dd9] px-2.5 py-1 text-xs text-white hover:bg-[#1e5ab8] disabled:opacity-50">{actioningId === doc.id ? "..." : "Ghi sổ"}</button>}{doc.status === "POSTED" && Number(doc.settled_amount ?? 0) === 0 && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc, "reverse")} className="rounded-md border border-[color:var(--border)] px-2.5 py-1 text-xs hover:bg-[color:var(--muted)] disabled:opacity-50">{actioningId === doc.id ? "..." : "Đảo bút toán"}</button>}{doc.can_delete && <button disabled={actioningId === doc.id} onClick={() => onDelete(doc)} className="rounded-md border border-red-300 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50">Xóa</button>}</div>;
+function InvoiceActions({ doc, actioningId, runDocumentAction, onEdit, onDelete }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument) => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
+  return <div className="flex justify-end gap-1"><button onClick={() => onEdit(doc)} className="rounded-md border border-[color:var(--border)] px-2.5 py-1 text-xs hover:bg-[color:var(--muted)]">Sửa</button>{doc.status === "DRAFT" && doc.document_type === "INVOICE" && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc)} className="rounded-md bg-[#2a6dd9] px-2.5 py-1 text-xs text-white hover:bg-[#1e5ab8] disabled:opacity-50">{actioningId === doc.id ? "..." : "Ghi sổ"}</button>}{doc.can_delete && <button disabled={actioningId === doc.id} onClick={() => onDelete(doc)} className="rounded-md border border-red-300 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50">Xóa</button>}</div>;
 }
 
 

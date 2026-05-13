@@ -6,7 +6,6 @@ import type {
   JournalEntryAccount,
   JournalEntryListParams,
   JournalEntryListResponse,
-  ReverseJournalEntryPayload,
 } from "@/modules/accounting/types/journalEntry";
 
 export async function getJournalEntriesApi(
@@ -54,17 +53,6 @@ export async function postJournalEntryApi(id: string): Promise<JournalEntry> {
     {},
   );
   return data.data;
-}
-
-export async function reverseJournalEntryApi(
-  id: string,
-  payload: ReverseJournalEntryPayload,
-): Promise<unknown> {
-  const { data } = await axiosInstance.post(
-    `/api/v1/journal-entries/${id}/reverse`,
-    payload,
-  );
-  return data;
 }
 
 export async function getJournalEntryAccountsApi(

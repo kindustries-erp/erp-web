@@ -7,13 +7,11 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
-import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   createCustomerAdvanceApi,
   getCustomerAdvancesApi,
   getPaymentVoucherLookupBusinessPartnersApi,
   postCustomerAdvanceApi,
-  reverseCustomerAdvanceApi,
   type CreateCustomerAdvanceDto,
   type PaymentMethod,
   type PaymentVoucher,
@@ -76,14 +74,11 @@ export function CustomerAdvancesTab() {
       .finally(() => setSaving(false));
   };
 
-  const runAdvanceAction = (advance: PaymentVoucher, action: "post" | "reverse") => {
+  const runAdvanceAction = (advance: PaymentVoucher) => {
     setActioningId(advance.id);
     setError(null);
-    const req = action === "post"
-      ? postCustomerAdvanceApi(advance.id)
-      : reverseCustomerAdvanceApi(advance.id, { reason: `Reverse đặt cọc ${todayIsoDate()}` });
-    req.then(load)
-      .catch((e) => setError(extractApiError(e, action === "post" ? "Không post được đặt cọc" : "Không reverse được đặt cọc")))
+    postCustomerAdvanceApi(advance.id).then(load)
+      .catch((e) => setError(extractApiError(e, "Không post được đặt cọc")))
       .finally(() => setActioningId(null));
   };
 
@@ -165,23 +160,14 @@ export function CustomerAdvancesTab() {
                         {advance.status === "DRAFT" && (
                           <button
                             disabled={actioningId === advance.id}
-                            onClick={() => runAdvanceAction(advance, "post")}
+                            onClick={() => runAdvanceAction(advance)}
                             className="flex items-center gap-1 rounded bg-approve-bg px-2 py-0.5 text-xs font-medium text-approve-fg hover:opacity-80 disabled:opacity-50"
                           >
                             {actioningId === advance.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
                             Post
                           </button>
                         )}
-                        {advance.status === "POSTED" && Number(advance.ar_advance_applied_amount ?? 0) === 0 && (
-                          <button
-                            disabled={actioningId === advance.id}
-                            onClick={() => runAdvanceAction(advance, "reverse")}
-                            className="flex items-center gap-1 rounded bg-error-bg px-2 py-0.5 text-xs font-medium text-error-fg hover:opacity-80 disabled:opacity-50"
-                          >
-                            {actioningId === advance.id ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                            Reverse
-                          </button>
-                        )}
+
                       </div>
                     </td>
                   </tr>
