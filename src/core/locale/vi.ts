@@ -1040,6 +1040,9 @@ export const vi = {
         level: "Cấp",
         cashAccount: "Tiền mặt",
         parentAccount: "TK cha",
+        accountingAccount: "TK kế toán",
+        currency: "Tiền tệ",
+        status: "Trạng thái",
       },
     },
     nh: {

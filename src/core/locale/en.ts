@@ -1050,6 +1050,9 @@ export const en: Dict = {
         level: "Level",
         cashAccount: "Cash",
         parentAccount: "Parent account",
+        accountingAccount: "Accounting Account",
+        currency: "Currency",
+        status: "Status",
       },
     },
     nh: {
