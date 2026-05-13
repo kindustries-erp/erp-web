@@ -3,6 +3,7 @@ import type {
   CounterpartyRole,
   CounterpartySource,
   VoucherStatus,
+  CashBankRelatedDocumentInput,
 } from "@/modules/finance/api/financeApi";
 
 // ── Voucher form shape ────────────────────────────────────────────────────────
@@ -28,6 +29,8 @@ export interface CashVoucherForm {
   amount_in_words: string;
   description: string;
   cancel_reason: string;
+  cash_bank_tag_preset_id: string;
+  related_documents: CashBankRelatedDocumentInput[];
 }
 
 export interface BankVoucherForm {
@@ -52,6 +55,8 @@ export interface BankVoucherForm {
   amount_in_words: string;
   description: string;
   cancel_reason: string;
+  cash_bank_tag_preset_id: string;
+  related_documents: CashBankRelatedDocumentInput[];
 }
 
 // ── Shared option lists ───────────────────────────────────────────────────────

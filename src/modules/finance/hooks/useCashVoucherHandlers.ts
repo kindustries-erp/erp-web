@@ -6,6 +6,7 @@ import {
   createPaymentVoucherApi,
   createVoucherAttachmentApi,
   deletePaymentVoucherApi,
+  getCashBankTagPresetsApi,
   getPaymentVouchersPagedApi,
   submitPaymentVoucherApi,
   updatePaymentVoucherApi,
@@ -18,6 +19,7 @@ import {
   type VoucherStatus,
   type VoucherType,
   type AttachmentType,
+  type CashBankTagPreset,
 } from "@/modules/finance/api/financeApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { Employee } from "@/modules/auth/api/auth";
@@ -156,6 +158,7 @@ export function useCashVoucherHandlers({
   const [form, setForm] = useState<CashVoucherForm>(emptyForm("CASH_RECEIPT"));
   const [postingDateTouched, setPostingDateTouched] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<PaymentVoucher | null>(null);
+  const [tagPresets, setTagPresets] = useState<CashBankTagPreset[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   function currentLoadParams(): LoadVouchersParams {
@@ -216,11 +219,23 @@ export function useCashVoucherHandlers({
     }
   }
 
+  async function loadTagPresets(vtype: "CASH_RECEIPT" | "CASH_PAYMENT") {
+    try {
+      setTagPresets(await getCashBankTagPresetsApi({
+        voucher_channel: "CASH",
+        voucher_direction: vtype === "CASH_RECEIPT" ? "IN" : "OUT",
+      }));
+    } catch {
+      setTagPresets([]);
+    }
+  }
+
   async function openNew(vtype: "CASH_RECEIPT" | "CASH_PAYMENT") {
     const nextForm = emptyForm(vtype);
     nextForm.voucher_no = await generateVoucherNo(vtype);
     setForm(nextForm);
     setPostingDateTouched(false);
+    await loadTagPresets(vtype);
     openDrawerForNew();
   }
 
@@ -228,6 +243,7 @@ export function useCashVoucherHandlers({
     setForm(buildForm(voucher));
     setPostingDateTouched(true);
     openDrawerForEdit(voucher);
+    loadTagPresets(voucher.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT");
   }
 
   const setField = <K extends keyof CashVoucherForm>(
@@ -284,6 +300,16 @@ export function useCashVoucherHandlers({
       counterparty_phone_snapshot: partner?.phone ?? "",
       counterparty_identity_no_snapshot: "",
       counterparty_role: partnerRole(partner),
+    }));
+  }
+
+  function handleTagPresetSelect(preset: CashBankTagPreset) {
+    setForm((current) => ({
+      ...current,
+      cash_bank_tag_preset_id: preset.id,
+      debit_account_id: preset.debit_account_id || current.debit_account_id,
+      credit_account_id: preset.credit_account_id || current.credit_account_id,
+      description: current.description || preset.label,
     }));
   }
 
@@ -370,6 +396,8 @@ export function useCashVoucherHandlers({
         debit_account_id: form.debit_account_id,
         credit_account_id: form.credit_account_id,
         cash_fund_id: form.cash_fund_id,
+        cash_bank_tag_preset_id: form.cash_bank_tag_preset_id || undefined,
+        related_documents: form.related_documents,
         amount: amountValue,
         amount_in_words: form.amount_in_words.trim() || undefined,
         description: form.description.trim() || "-",
@@ -443,6 +471,7 @@ export function useCashVoucherHandlers({
 
   return {
     form,
+    tagPresets,
     deleteTarget,
     deleting,
     setDeleteTarget,
@@ -457,6 +486,7 @@ export function useCashVoucherHandlers({
     handleCashFundChange,
     handlePartnerChange,
     handleEmployeeChange,
+    handleTagPresetSelect,
     handleToggleEditMode,
     handleSave,
     handleDelete,

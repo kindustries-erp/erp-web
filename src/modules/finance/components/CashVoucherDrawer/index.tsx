@@ -16,6 +16,7 @@ import {
   type PaymentVoucherAttachment,
   type VoucherStatus,
   type AttachmentType,
+  type CashBankTagPreset,
 } from "@/modules/finance/api/financeApi";
 import type { ChartOfAccount } from "@/modules/accounting/api/catalogApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
@@ -24,6 +25,8 @@ import type { CashVoucherForm } from "@/modules/finance/types/voucherForm";
 import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_ROLE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
 import { useT } from "@/core/i18n";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
+import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
+import { RelatedDocumentsEditor } from "@/modules/finance/components/RelatedDocumentsEditor";
 
 interface SelectOption {
   value: string;
@@ -47,6 +50,7 @@ export interface CashVoucherDrawerProps {
   coaOpts: SelectOption[];
   debitAccountOpts: SelectOption[];
   creditAccountOpts: SelectOption[];
+  tagPresets: CashBankTagPreset[];
   canUpdateVoucher: boolean;
 
   onClose: () => void;
@@ -60,6 +64,7 @@ export interface CashVoucherDrawerProps {
   onCashFundChange: (fundId: string) => void;
   onPartnerChange: (pid: string) => void;
   onEmployeeChange: (empId: string) => void;
+  onTagPresetSelect: (preset: CashBankTagPreset) => void;
   onSourceChange: (src: CounterpartySource) => void;
   onDeleteAttachment: (item: PaymentVoucherAttachment) => void;
   onAttachmentFilesChange: (files: File[]) => void;
@@ -75,11 +80,11 @@ export interface CashVoucherDrawerProps {
 export function CashVoucherDrawer({
   open, editing, drawerEditMode, form, saving, saveError,
   existingAttachments, attachmentFiles, attachmentType, attachmentNote,
-  fundOpts, partnerOpts, employeeOpts, coaOpts, debitAccountOpts, creditAccountOpts,
+  fundOpts, partnerOpts, employeeOpts, coaOpts, debitAccountOpts, creditAccountOpts, tagPresets,
   canUpdateVoucher,
   onClose, onSave, onStatusTransition, onToggleEditMode,
   onFieldChange, onDocumentDateChange, onPostingDateChange, onAmountChange,
-  onCashFundChange, onPartnerChange, onEmployeeChange, onSourceChange,
+  onCashFundChange, onPartnerChange, onEmployeeChange, onTagPresetSelect, onSourceChange,
   onDeleteAttachment, onAttachmentFilesChange, onAttachmentTypeChange, onAttachmentNoteChange,
 }: CashVoucherDrawerProps) {
   const t = useT();
@@ -292,6 +297,14 @@ export function CashVoucherDrawer({
 
       {/* Section 3: Hạch toán */}
       <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
+        <CashBankTagPresetCards
+          presets={tagPresets}
+          selectedId={form.cash_bank_tag_preset_id}
+          debitAccountOpts={debitAccountOpts}
+          creditAccountOpts={creditAccountOpts}
+          disabled={viewOnly}
+          onSelect={onTagPresetSelect}
+        />
         <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
           <DrawerField label={t("voucher.drawer.debitAcc")} required>
             <Combobox
@@ -343,6 +356,14 @@ export function CashVoucherDrawer({
             placeholder={t("voucher.drawer.descPlaceholder")}
           />
         </DrawerField>
+      </DrawerSection>
+
+      <DrawerSection title="Chứng từ liên quan">
+        <RelatedDocumentsEditor
+          value={form.related_documents}
+          disabled={viewOnly}
+          onChange={(value) => onFieldChange("related_documents", value)}
+        />
       </DrawerSection>
 
       {/* Section 4: Đính kèm */}

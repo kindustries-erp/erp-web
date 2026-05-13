@@ -7,9 +7,11 @@ import { AttachmentRow } from "@/shared/components/AttachmentComponents";
 import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_ROLE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
 import type { AttachmentType, CounterpartySource } from "@/modules/finance/api/financeApi";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
+import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
+import { RelatedDocumentsEditor } from "@/modules/finance/components/RelatedDocumentsEditor";
 
 export function BankVoucherDrawer(props: any) {
-  const { t, drawerOpen, closeDrawer, drawerEditMode, isDirty, viewOnly, editing, form, editToggle, drawerActions, setField, handleDocumentDateChange, handlePostingDateChange, companyBankOpts, handleCompanyBankChange, employeeOpts, handleEmployeeChange, partnerOpts, handlePartnerChange, partnerBankOpts, partnerBankLoading, debitAccountOpts, creditAccountOpts, handleAmountChange, existingAttachments, handleDeleteAttachment, attachmentType, setAttachmentType, attachmentNote, setAttachmentNote, attachmentFiles, setAttachmentFiles, saveError } = props;
+  const { t, drawerOpen, closeDrawer, drawerEditMode, isDirty, viewOnly, editing, form, editToggle, drawerActions, setField, handleDocumentDateChange, handlePostingDateChange, companyBankOpts, handleCompanyBankChange, employeeOpts, handleEmployeeChange, partnerOpts, handlePartnerChange, partnerBankOpts, partnerBankLoading, debitAccountOpts, creditAccountOpts, tagPresets, handleTagPresetSelect, handleAmountChange, existingAttachments, handleDeleteAttachment, attachmentType, setAttachmentType, attachmentNote, setAttachmentNote, attachmentFiles, setAttachmentFiles, saveError } = props;
   return (
     <DrawerModal
       open={drawerOpen}
@@ -32,6 +34,7 @@ export function BankVoucherDrawer(props: any) {
       </DrawerSection>
       <CounterpartySection {...props} />
       <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
+        <CashBankTagPresetCards presets={tagPresets ?? []} selectedId={form.cash_bank_tag_preset_id} debitAccountOpts={debitAccountOpts} creditAccountOpts={creditAccountOpts} disabled={viewOnly} onSelect={handleTagPresetSelect} />
         <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
           <DrawerField label={t("voucher.drawer.debitAcc")} required><Combobox disabled={viewOnly} options={debitAccountOpts} value={form.debit_account_id} onChange={(v) => setField("debit_account_id", v)} placeholder={t("voucher.drawer.accPlaceholder")} /></DrawerField>
           <DrawerField label={t("voucher.drawer.creditAcc")} required><Combobox disabled={viewOnly} options={creditAccountOpts} value={form.credit_account_id} onChange={(v) => setField("credit_account_id", v)} placeholder={t("voucher.drawer.accPlaceholder")} /></DrawerField>
@@ -40,6 +43,7 @@ export function BankVoucherDrawer(props: any) {
         </div>
         <DrawerField label={t("voucher.drawer.desc")}><textarea disabled={viewOnly} className={inputCls} rows={2} value={form.description} onChange={(e) => setField("description", e.target.value)} placeholder={t("voucher.drawer.descPlaceholder")} /></DrawerField>
       </DrawerSection>
+      <DrawerSection title="Chứng từ liên quan"><RelatedDocumentsEditor value={form.related_documents ?? []} disabled={viewOnly} onChange={(value) => setField("related_documents", value)} /></DrawerSection>
       <DrawerSection title={t("voucher.drawer.sectionAttachment")}>
         {existingAttachments.length > 0 && <div className="mb-3 rounded-lg border border-border overflow-hidden">{existingAttachments.map((a: any) => <AttachmentRow key={a.id} item={a} onDelete={viewOnly ? undefined : handleDeleteAttachment} />)}</div>}
         {!viewOnly && <><div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3"><DrawerField label={t("voucher.drawer.attachmentType")}><Combobox options={ATTACHMENT_TYPE_OPTS} value={attachmentType} onChange={(v) => setAttachmentType((v as AttachmentType) || "OTHER")} placeholder={t("voucher.drawer.attachmentTypePlaceholder")} /></DrawerField><DrawerField label={t("voucher.drawer.attachmentNote")}><input type="text" className={inputCls} value={attachmentNote} onChange={(e) => setAttachmentNote(e.target.value)} placeholder={t("voucher.drawer.attachmentNotePlaceholder")} /></DrawerField></div><DrawerField label={t("voucher.drawer.newFile")}><FileUploadBox multiple files={attachmentFiles} onFilesChange={setAttachmentFiles} maxSizeMb={10} /></DrawerField></>}

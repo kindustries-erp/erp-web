@@ -11,6 +11,7 @@ import {
   createVoucherAttachmentApi,
   deletePaymentVoucherApi,
   deleteVoucherAttachmentApi,
+  getCashBankTagPresetsApi,
   getPaymentVoucherLookupBusinessPartnerBankAccountsApi,
   getPaymentVouchersPagedApi,
   getVoucherAttachmentsApi,
@@ -18,6 +19,7 @@ import {
   updatePaymentVoucherApi,
   uploadFileApi,
   type AttachmentType,
+  type CashBankTagPreset,
   type CounterpartyRole,
   type CounterpartySource,
   type CreatePaymentVoucherDto,
@@ -82,6 +84,7 @@ export function useBankVoucherHandlers({
   const [deleting, setDeleting] = useState(false);
   const [partnerBankAccounts, setPartnerBankAccounts] = useState<BusinessPartnerBankAccount[]>([]);
   const [partnerBankLoading, setPartnerBankLoading] = useState(false);
+  const [tagPresets, setTagPresets] = useState<CashBankTagPreset[]>([]);
 
   const dashboardParams: DashboardParams = {
     ...bankDashboardParamsBase,
@@ -198,6 +201,17 @@ export function useBankVoucherHandlers({
     }
   }
 
+  async function loadTagPresets(vtype: "BANK_RECEIPT" | "BANK_PAYMENT") {
+    try {
+      setTagPresets(await getCashBankTagPresetsApi({
+        voucher_channel: "BANK",
+        voucher_direction: vtype === "BANK_RECEIPT" ? "IN" : "OUT",
+      }));
+    } catch {
+      setTagPresets([]);
+    }
+  }
+
   async function openNew(vtype: "BANK_RECEIPT" | "BANK_PAYMENT") {
     const nextForm = emptyBankForm(vtype);
     nextForm.document_date = todayIsoDate();
@@ -210,6 +224,7 @@ export function useBankVoucherHandlers({
     setAttachmentNote("");
     setExistingAttachments([]);
     setEditing(null);
+    await loadTagPresets(vtype);
     setForm(nextForm);
     setPartnerBankAccounts([]);
     setSaveError(null);
@@ -229,6 +244,7 @@ export function useBankVoucherHandlers({
     setExistingAttachments([]);
     loadExistingAttachments(voucher.id);
     if (voucher.counterparty_id) loadPartnerBankAccounts(voucher.counterparty_id);
+    loadTagPresets(voucher.voucher_type as "BANK_RECEIPT" | "BANK_PAYMENT");
   }
 
   const setField = <K extends keyof BankVoucherForm>(
@@ -276,6 +292,16 @@ export function useBankVoucherHandlers({
         bankId,
       ),
     );
+  }
+
+  function handleTagPresetSelect(preset: CashBankTagPreset) {
+    setForm((current) => ({
+      ...current,
+      cash_bank_tag_preset_id: preset.id,
+      debit_account_id: preset.debit_account_id || current.debit_account_id,
+      credit_account_id: preset.credit_account_id || current.credit_account_id,
+      description: current.description || preset.label,
+    }));
   }
 
   function handlePartnerChange(partnerId: string) {
@@ -399,6 +425,8 @@ export function useBankVoucherHandlers({
           form.counterparty_address_snapshot.trim() || undefined,
         counterparty_role: (form.counterparty_role as CounterpartyRole) || undefined,
         company_bank_account_id: form.company_bank_account_id,
+        cash_bank_tag_preset_id: form.cash_bank_tag_preset_id || undefined,
+        related_documents: form.related_documents,
         beneficiary_bank_account_id: form.beneficiary_bank_account_id || undefined,
         debit_account_id: form.debit_account_id,
         credit_account_id: form.credit_account_id,
@@ -477,5 +505,5 @@ export function useBankVoucherHandlers({
     }
   }
 
-  return { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleToggleEditMode, handleDeleteAttachment, handleSave, handleDelete };
+  return { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, tagPresets, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleTagPresetSelect, handleToggleEditMode, handleDeleteAttachment, handleSave, handleDelete };
 }

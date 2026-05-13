@@ -277,6 +277,8 @@ export function emptyForm(vtype: "CASH_RECEIPT" | "CASH_PAYMENT"): CashVoucherFo
     amount_in_words: "",
     description: "",
     cancel_reason: "",
+    cash_bank_tag_preset_id: "",
+    related_documents: [],
   };
 }
 
@@ -306,6 +308,8 @@ export function buildForm(v: PaymentVoucher): CashVoucherForm {
     amount_in_words: v.amount_in_words ?? "",
     description: v.description,
     cancel_reason: v.cancel_reason ?? "",
+    cash_bank_tag_preset_id: v.cash_bank_tag_preset_id ?? "",
+    related_documents: v.related_documents ?? [],
   };
 }
 
@@ -334,6 +338,8 @@ export function emptyBankForm(
     amount_in_words: "",
     description: "",
     cancel_reason: "",
+    cash_bank_tag_preset_id: "",
+    related_documents: [],
   };
 }
 
@@ -364,5 +370,7 @@ export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
     amount_in_words: v.amount_in_words ?? "",
     description: v.description,
     cancel_reason: v.cancel_reason ?? "",
+    cash_bank_tag_preset_id: v.cash_bank_tag_preset_id ?? "",
+    related_documents: v.related_documents ?? [],
   };
 }

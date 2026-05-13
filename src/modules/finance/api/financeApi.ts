@@ -263,6 +263,29 @@ export type CounterpartyRole =
   | "OTHER";
 export type CounterpartySource = "INTERNAL" | "EXTERNAL";
 
+export type CashBankRelatedDocumentType = "payment_vouchers" | "ar_documents" | "ap_documents" | "sales_invoices" | "purchase_invoices" | "manual";
+
+export interface CashBankRelatedDocumentInput {
+  related_type: CashBankRelatedDocumentType | string;
+  related_id: string;
+  related_no?: string | null;
+  related_date?: string | null;
+  amount?: number | null;
+  note?: string | null;
+}
+
+export interface CashBankTagPreset {
+  id: string;
+  code: string;
+  label: string;
+  description?: string | null;
+  voucher_channel?: VoucherChannel | null;
+  voucher_direction?: "IN" | "OUT" | null;
+  debit_account_id?: string | null;
+  credit_account_id?: string | null;
+  sort?: number | null;
+}
+
 export interface PaymentVoucher {
   id: string;
   voucher_no: string;
@@ -318,6 +341,8 @@ export interface PaymentVoucher {
   ar_advance_applied_amount?: number | string | null;
   ar_advance_remaining_amount?: number | string | null;
   ar_advance_status?: "NONE" | "UNAPPLIED" | "PARTIALLY_APPLIED" | "FULLY_APPLIED" | "REVERSED" | null;
+  cash_bank_tag_preset_id?: string | null;
+  related_documents?: CashBankRelatedDocumentInput[];
 }
 
 export interface CreatePaymentVoucherDto {
@@ -353,6 +378,9 @@ export interface CreatePaymentVoucherDto {
   beneficiary_bank_name_snapshot?: string;
   beneficiary_bank_account_snapshot?: string;
   beneficiary_account_holder_snapshot?: string;
+  cash_bank_tag_preset_id?: string;
+  cash_bank_tag_code?: string;
+  related_documents?: CashBankRelatedDocumentInput[];
 }
 
 export type UpdatePaymentVoucherDto = Partial<CreatePaymentVoucherDto>;
@@ -458,6 +486,18 @@ export async function getPaymentVoucherLookupBusinessPartnersApi(
         ...(params.search ? { search: params.search } : {}),
       },
     },
+  );
+  return data.items;
+}
+
+
+export async function getCashBankTagPresetsApi(params: {
+  voucher_channel?: VoucherChannel;
+  voucher_direction?: "IN" | "OUT";
+} = {}): Promise<CashBankTagPreset[]> {
+  const { data } = await axiosInstance.get<PaginatedResponse<CashBankTagPreset>>(
+    "/api/v1/payment-vouchers/lookup/cash-bank-tag-presets",
+    { params: { page: 1, pageSize: 100, ...params } },
   );
   return data.items;
 }
