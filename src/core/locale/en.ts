@@ -88,6 +88,9 @@ export const en: Dict = {
     phanquyen: "Roles & Permissions",
     workflowcanvas: "Workflow Canvas",
     partners: "Partners",
+    catalogFunds: "Cash Funds",
+    catalogBank: "Bank Accounts",
+    catalogAccounts: "Chart of Accounts",
   },
   topbar: {
     search: "Search accounts, vouchers...",
@@ -131,6 +134,9 @@ export const en: Dict = {
     comingSoonStatus: "Under active development — launching soon.",
     confirm: "Confirm",
     processing: "Processing...",
+    active: "Active",
+    note: "Note",
+    selectAccount: "Select account",
   },
   status: {
     approved: "Approved",

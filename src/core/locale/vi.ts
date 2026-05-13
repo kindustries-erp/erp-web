@@ -86,6 +86,9 @@ export const vi = {
     phanquyen: "Phân quyền & Vai trò",
     workflowcanvas: "Sơ đồ quy trình",
     partners: "Đối tác",
+    catalogFunds: "Quỹ tiền mặt",
+    catalogBank: "Tài khoản ngân hàng",
+    catalogAccounts: "Hệ thống tài khoản",
   },
   topbar: {
     search: "Tìm kiếm tài khoản, chứng từ...",
@@ -129,6 +132,9 @@ export const vi = {
     comingSoonStatus: "Đang trong quá trình phát triển — sẽ sớm ra mắt.",
     confirm: "Xác nhận",
     processing: "Đang xử lý...",
+    active: "Hoạt động",
+    note: "Ghi chú",
+    selectAccount: "Chọn tài khoản",
   },
   status: {
     approved: "Đã duyệt",
