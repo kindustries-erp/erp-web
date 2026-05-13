@@ -1026,6 +1026,8 @@ export interface ArDocument {
   document_no: string;
   document_type: ArDocumentType;
   business_partner_id: string | null;
+  business_partner_name_snapshot?: string | null;
+  can_delete?: boolean;
   accounting_account_id: string | null;
   document_date: string;
   posting_date: string;
@@ -1092,6 +1094,8 @@ export interface CreateArSalesInvoiceDto {
   lines: CreateArSalesInvoiceLineDto[];
 }
 
+export type UpdateArDocumentDto = Partial<CreateArDocumentDto>;
+
 export interface ReverseArDocumentDto {
   posting_date?: string;
   reason?: string;
@@ -1155,6 +1159,15 @@ export async function createArDocumentApi(dto: CreateArDocumentDto): Promise<ArD
     dto,
   );
   return data.data;
+}
+
+export async function updateArDocumentApi(id: string, dto: UpdateArDocumentDto): Promise<ArDocument> {
+  const { data } = await axiosInstance.patch<{ message: string; data: ArDocument }>(`/api/v1/ar-workbench/documents/${id}`, dto);
+  return data.data;
+}
+
+export async function deleteArDocumentApi(id: string): Promise<void> {
+  await axiosInstance.delete(`/api/v1/ar-workbench/documents/${id}`);
 }
 
 export async function createArSalesInvoiceApi(

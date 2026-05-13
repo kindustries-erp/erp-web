@@ -12,6 +12,7 @@ import { extractApiError } from "@/shared/utils/apiError";
 import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
   createArDocumentApi,
+  deleteArDocumentApi,
   createArSalesInvoiceApi,
   getArCoverageApi,
   getArDocumentsApi,
@@ -19,6 +20,7 @@ import {
   getPaymentVoucherLookupBusinessPartnersApi,
   postArDocumentApi,
   reverseArDocumentApi,
+  updateArDocumentApi,
   type ArCoverageItem,
   type ArDocument,
   type ArDocumentStatus,
@@ -51,6 +53,8 @@ export function ArWorkbenchPanel() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editDoc, setEditDoc] = useState<ArDocument | null>(null);
+  const [editPaidAmount, setEditPaidAmount] = useState(0);
   const [createMode, setCreateMode] = useState<"INVOICE" | "OTHER">("INVOICE");
   const [form, setForm] = useState<CreateArSalesInvoiceDto>(() => emptySalesInvoiceForm());
   const [saving, setSaving] = useState(false);
@@ -142,6 +146,10 @@ export function ArWorkbenchPanel() {
   };
   const addLine = () => setForm((current) => ({ ...current, lines: [...current.lines, { line_no: current.lines.length + 1, description: "", quantity: 1, unit_price: 0, tax_rate: 10 }] }));
   const removeLine = (index: number) => setForm((current) => ({ ...current, lines: current.lines.length === 1 ? current.lines : current.lines.filter((_, lineIndex) => lineIndex !== index) }));
+  const openEdit = (doc: ArDocument) => { setEditDoc(doc); setEditPaidAmount(Number(doc.settled_amount ?? 0)); setSaveError(null); };
+  const saveEdit = () => { if (!editDoc) return; setSaving(true); setSaveError(null); updateArDocumentApi(editDoc.id, { settled_amount: editPaidAmount } as any).then(() => { setEditDoc(null); load(); }).catch((err) => setSaveError(extractApiError(err, "Không cập nhật được thanh toán"))).finally(() => setSaving(false)); };
+  const deleteDocument = (doc: ArDocument) => { if (!doc.can_delete) return; setActioningId(doc.id); deleteArDocumentApi(doc.id).then(load).catch((err) => setError(extractApiError(err, "Không xóa được chứng từ"))).finally(() => setActioningId(null)); };
+
   const runDocumentAction = (doc: ArDocument, action: "post" | "reverse") => {
     setActioningId(doc.id);
     setError(null);
@@ -175,8 +183,11 @@ export function ArWorkbenchPanel() {
             setPage={setPage}
             setPageSize={setPageSize}
             runDocumentAction={runDocumentAction}
+            onEdit={openEdit}
+            onDelete={deleteDocument}
           />
           <CoveragePreview coverage={coverage} />
+          <EditArDocumentDrawer open={!!editDoc} doc={editDoc} paidAmount={editPaidAmount} setPaidAmount={setEditPaidAmount} saving={saving} saveError={saveError} onClose={() => setEditDoc(null)} onSave={saveEdit} />
           <SalesInvoiceDrawer open={drawerOpen} mode={createMode} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
         </>
       )}
@@ -222,11 +233,11 @@ function Kpi({ label, value, sub, warn }: { label: string; value: string | numbe
 
 interface InvoiceListProps {
   docs: ArDocument[]; loading: boolean; error: string | null; search: string; typeFilter: ArDocumentType | ""; statusFilter: ArDocumentStatus | ""; openOnly: boolean; page: number; pageSize: number; total: number; totalPages: number; actioningId: string | null;
-  setSearch: (value: string) => void; setTypeFilter: (value: ArDocumentType | "") => void; setStatusFilter: (value: ArDocumentStatus | "") => void; setOpenOnly: (value: boolean) => void; setPage: (page: number) => void; setPageSize: (size: number) => void; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void;
+  setSearch: (value: string) => void; setTypeFilter: (value: ArDocumentType | "") => void; setStatusFilter: (value: ArDocumentStatus | "") => void; setOpenOnly: (value: boolean) => void; setPage: (page: number) => void; setPageSize: (size: number) => void; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void;
 }
 
 function InvoiceList(props: InvoiceListProps) {
-  const { docs, loading, error, search, typeFilter, statusFilter, openOnly, page, pageSize, total, totalPages, actioningId, setSearch, setTypeFilter, setStatusFilter, setOpenOnly, setPage, setPageSize, runDocumentAction } = props;
+  const { docs, loading, error, search, typeFilter, statusFilter, openOnly, page, pageSize, total, totalPages, actioningId, onEdit, onDelete, setSearch, setTypeFilter, setStatusFilter, setOpenOnly, setPage, setPageSize, runDocumentAction } = props;
   return <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4">
     <div className="flex flex-wrap items-center gap-2">
       <SearchInput value={search} onChange={setSearch} placeholder="Tìm document / reference" />
@@ -248,21 +259,39 @@ function InvoiceList(props: InvoiceListProps) {
       {loading ? <Loader2 className="h-4 w-4 animate-spin text-[color:var(--muted-fg)]" /> : null}
     </div>
     {error ? <div className="mt-3 rounded-lg bg-warn-bg p-3 text-sm text-warn-fg"><AlertTriangle className="mr-2 inline h-4 w-4" />{error}</div> : null}
-    <div className="mt-4 overflow-x-auto rounded-xl border border-[color:var(--border)]"><InvoiceTable docs={docs} loading={loading} actioningId={actioningId} runDocumentAction={runDocumentAction} /></div>
+    <div className="mt-4 overflow-x-auto rounded-xl border border-[color:var(--border)]"><InvoiceTable docs={docs} loading={loading} actioningId={actioningId} runDocumentAction={runDocumentAction} onEdit={onEdit} onDelete={onDelete} /></div>
     <TablePagination page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={(v: number) => { setPageSize(v); setPage(1); }} />
   </div>;
 }
 
-function InvoiceTable({ docs, loading, actioningId, runDocumentAction }: { docs: ArDocument[]; loading: boolean; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void }) {
-  return <table className="min-w-full text-sm"><thead className="bg-[color:var(--muted)] text-left text-xs uppercase tracking-wide text-[color:var(--muted-fg)]"><tr>{["Số chứng từ", "Loại", "Ngày", "Tổng", "Đã thanh toán", "Còn lại", "Trạng thái", "Thao tác"].map((h, i) => <th key={h} className={cn("px-3 py-2", i === 3 || i === 4 || i === 5 || i === 7 ? "text-right" : "")}>{h}</th>)}</tr></thead><tbody>{docs.length === 0 && !loading ? <tr><td colSpan={8} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">Chưa có AR document. Flow cũ vẫn ở tab Sổ công nợ.</td></tr> : docs.map((doc) => <InvoiceRow key={doc.id} doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} />)}</tbody></table>;
+function InvoiceTable({ docs, loading, actioningId, runDocumentAction, onEdit, onDelete }: { docs: ArDocument[]; loading: boolean; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
+  return <table className="min-w-full text-sm"><thead className="bg-[color:var(--muted)] text-left text-xs uppercase tracking-wide text-[color:var(--muted-fg)]"><tr>{["Số chứng từ", "Đối tượng", "Loại", "Ngày", "Tổng", "Đã thanh toán", "Còn lại", "Trạng thái", "Thao tác"].map((h, i) => <th key={h} className={cn("px-3 py-2", i === 4 || i === 5 || i === 6 || i === 8 ? "text-right" : "")}>{h}</th>)}</tr></thead><tbody>{docs.length === 0 && !loading ? <tr><td colSpan={9} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">Chưa có AR document. Flow cũ vẫn ở tab Sổ công nợ.</td></tr> : docs.map((doc) => <InvoiceRow key={doc.id} doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} onEdit={onEdit} onDelete={onDelete} />)}</tbody></table>;
 }
 
-function InvoiceRow({ doc, actioningId, runDocumentAction }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void }) {
-  return <tr className="border-t border-[color:var(--border)]"><td className="px-3 py-2 font-medium">{doc.document_no}<div className="text-xs text-[color:var(--muted-fg)]">{doc.reference_no || doc.description}</div></td><td className="px-3 py-2">{doc.document_type}</td><td className="px-3 py-2">{doc.posting_date}</td><td className="px-3 py-2 text-right">{money(doc.total_amount)}</td><td className="px-3 py-2 text-right text-approve-fg">{money(doc.settled_amount)}</td><td className="px-3 py-2 text-right font-semibold">{money(doc.open_amount)}</td><td className="px-3 py-2"><span className={cn("rounded-full px-2 py-1 text-xs", statusCls(doc.status))}>{STATUS_LABELS[doc.status]}</span></td><td className="px-3 py-2 text-right"><InvoiceActions doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} /></td></tr>;
+function InvoiceRow({ doc, actioningId, runDocumentAction, onEdit, onDelete }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
+  return <tr className="border-t border-[color:var(--border)]"><td className="px-3 py-2 font-medium">{doc.document_no}<div className="text-xs text-[color:var(--muted-fg)]">{doc.reference_no || doc.description}</div></td><td className="px-3 py-2">{doc.business_partner_name_snapshot || doc.business_partner_id || "—"}</td><td className="px-3 py-2">{doc.document_type}</td><td className="px-3 py-2">{doc.posting_date}</td><td className="px-3 py-2 text-right">{money(doc.total_amount)}</td><td className="px-3 py-2 text-right text-approve-fg">{money(doc.settled_amount)}</td><td className="px-3 py-2 text-right font-semibold">{money(doc.open_amount)}</td><td className="px-3 py-2"><span className={cn("rounded-full px-2 py-1 text-xs", statusCls(doc.status))}>{STATUS_LABELS[doc.status]}</span></td><td className="px-3 py-2 text-right"><InvoiceActions doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} onEdit={onEdit} onDelete={onDelete} /></td></tr>;
 }
 
-function InvoiceActions({ doc, actioningId, runDocumentAction }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void }) {
-  return <>{doc.status === "DRAFT" && doc.document_type === "INVOICE" && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc, "post")} className="rounded-md bg-[#2a6dd9] px-2.5 py-1 text-xs text-white hover:bg-[#1e5ab8] disabled:opacity-50">{actioningId === doc.id ? "..." : "Ghi sổ"}</button>}{doc.status === "POSTED" && Number(doc.settled_amount ?? 0) === 0 && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc, "reverse")} className="rounded-md border border-[color:var(--border)] px-2.5 py-1 text-xs hover:bg-[color:var(--muted)] disabled:opacity-50">{actioningId === doc.id ? "..." : "Đảo bút toán"}</button>}</>;
+function InvoiceActions({ doc, actioningId, runDocumentAction, onEdit, onDelete }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void; onEdit: (doc: ArDocument) => void; onDelete: (doc: ArDocument) => void }) {
+  return <div className="flex justify-end gap-1"><button onClick={() => onEdit(doc)} className="rounded-md border border-[color:var(--border)] px-2.5 py-1 text-xs hover:bg-[color:var(--muted)]">Sửa</button>{doc.status === "DRAFT" && doc.document_type === "INVOICE" && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc, "post")} className="rounded-md bg-[#2a6dd9] px-2.5 py-1 text-xs text-white hover:bg-[#1e5ab8] disabled:opacity-50">{actioningId === doc.id ? "..." : "Ghi sổ"}</button>}{doc.status === "POSTED" && Number(doc.settled_amount ?? 0) === 0 && <button disabled={actioningId === doc.id} onClick={() => runDocumentAction(doc, "reverse")} className="rounded-md border border-[color:var(--border)] px-2.5 py-1 text-xs hover:bg-[color:var(--muted)] disabled:opacity-50">{actioningId === doc.id ? "..." : "Đảo bút toán"}</button>}{doc.can_delete && <button disabled={actioningId === doc.id} onClick={() => onDelete(doc)} className="rounded-md border border-red-300 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50">Xóa</button>}</div>;
+}
+
+
+function EditArDocumentDrawer({ open, doc, paidAmount, setPaidAmount, saving, saveError, onClose, onSave }: { open: boolean; doc: ArDocument | null; paidAmount: number; setPaidAmount: (value: number) => void; saving: boolean; saveError: string | null; onClose: () => void; onSave: () => void }) {
+  const total = Number(doc?.total_amount ?? 0);
+  const remaining = Math.max(total - (Number(paidAmount) || 0), 0);
+  return <DrawerModal open={open} title="Sửa chứng từ phải thu" onClose={onClose} actions={[{ label: "Hủy", onClick: onClose }, { label: saving ? "Đang lưu..." : "Lưu thanh toán", onClick: onSave, primary: true, loading: saving }]}>
+    <div className="space-y-4">
+      {saveError && <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{saveError}</div>}
+      <DrawerSection title="Bổ sung thanh toán">
+        <DrawerField label="Số chứng từ"><input className={inputCls} value={doc?.document_no || ""} disabled /></DrawerField>
+        <DrawerField label="Đối tượng"><input className={inputCls} value={doc?.business_partner_name_snapshot || doc?.business_partner_id || ""} disabled /></DrawerField>
+        <DrawerField label="Tổng tiền"><input className={inputCls} value={money(total)} disabled /></DrawerField>
+        <DrawerField label="Đã thanh toán/cấn trừ"><input className={inputCls} type="number" min="0" max={total} value={paidAmount} onChange={(e) => setPaidAmount(Number(e.target.value))} /></DrawerField>
+        <DrawerField label="Còn lại"><input className={inputCls} value={money(remaining)} disabled /></DrawerField>
+      </DrawerSection>
+    </div>
+  </DrawerModal>;
 }
 
 function CoveragePreview({ coverage }: { coverage: ArCoverageItem[] }) {
