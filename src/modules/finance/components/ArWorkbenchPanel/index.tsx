@@ -26,18 +26,12 @@ import {
   type CreateArSalesInvoiceDto,
 } from "@/modules/finance/api/financeApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
-import { AdvanceApplicationsTab } from "./AdvanceApplicationsTab";
-import { CustomerAdvancesTab } from "./CustomerAdvancesTab";
-import { PaymentReceiptsTab } from "./PaymentReceiptsTab";
 import { DOC_TYPES, STATUS_LABELS, emptySalesInvoiceForm, money, statusCls } from "./shared";
 
-type ArWorkbenchTab = "invoices" | "receipts" | "advances" | "advanceApplications";
+type ArWorkbenchTab = "invoices";
 
 const TABS: { value: ArWorkbenchTab; label: string; icon: "invoice" | "receipt" | "check" }[] = [
   { value: "invoices", label: "Hóa đơn / Công nợ", icon: "invoice" },
-  { value: "receipts", label: "Phiếu thu", icon: "receipt" },
-  { value: "advances", label: "Đặt cọc", icon: "receipt" },
-  { value: "advanceApplications", label: "Cấn trừ cọc", icon: "check" },
 ];
 
 export function ArWorkbenchPanel() {
@@ -132,9 +126,6 @@ export function ArWorkbenchPanel() {
   return (
     <section className="space-y-4">
       <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreate={openDrawer} />
-      {activeTab === "receipts" && <PaymentReceiptsTab />}
-      {activeTab === "advances" && <CustomerAdvancesTab />}
-      {activeTab === "advanceApplications" && <AdvanceApplicationsTab />}
       {activeTab === "invoices" && (
         <>
           <InvoiceKpis summary={summary} supported={supported} coverageTotal={coverage.length || 40} foundation={foundation} />
@@ -174,7 +165,7 @@ function WorkbenchHeader({ activeTab, onTab, onCreate }: { activeTab: ArWorkbenc
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted-fg)]">AR Workbench mới</p>
           <h2 className="text-lg font-semibold text-[color:var(--fg)]">Phải thu production-grade</h2>
-          <p className="mt-1 max-w-3xl text-sm text-[color:var(--muted-fg)]">Chạy song song với sổ công nợ cũ; thêm document semantics cho invoice, advance, allocation, suspense, credit note, COD, gateway, FX và collection workflow.</p>
+          <p className="mt-1 max-w-3xl text-sm text-[color:var(--muted-fg)]">Phải thu chỉ quản lý hóa đơn/công nợ. Phiếu thu, đặt cọc và cấn trừ cọc được tạo từ một form duy nhất ở Tiền mặt/Tiền gửi và link lại chứng từ công nợ tại đó.</p>
         </div>
         <BtnPrimary onClick={onCreate}><FilePlus2 className="h-4 w-4" /> Tạo sales invoice</BtnPrimary>
       </div>

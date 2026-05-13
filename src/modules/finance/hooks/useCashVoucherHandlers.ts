@@ -198,7 +198,7 @@ export function useCashVoucherHandlers({
   }
 
   function voucherPrefix(vtype: VoucherType) {
-    return vtype === "CASH_RECEIPT" ? "PT" : "PC";
+    return vtype === "CUSTOMER_ADVANCE_RECEIPT" ? "DC" : vtype === "CASH_RECEIPT" ? "PT" : "PC";
   }
 
   async function generateVoucherNo(vtype: VoucherType) {
@@ -219,18 +219,18 @@ export function useCashVoucherHandlers({
     }
   }
 
-  async function loadTagPresets(vtype: "CASH_RECEIPT" | "CASH_PAYMENT") {
+  async function loadTagPresets(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
     try {
       setTagPresets(await getCashBankTagPresetsApi({
         voucher_channel: "CASH",
-        voucher_direction: vtype === "CASH_RECEIPT" ? "IN" : "OUT",
+        voucher_direction: vtype === "CASH_PAYMENT" ? "OUT" : "IN",
       }));
     } catch {
       setTagPresets([]);
     }
   }
 
-  async function openNew(vtype: "CASH_RECEIPT" | "CASH_PAYMENT") {
+  async function openNew(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
     const nextForm = emptyForm(vtype);
     nextForm.voucher_no = await generateVoucherNo(vtype);
     setForm(nextForm);
@@ -243,7 +243,7 @@ export function useCashVoucherHandlers({
     setForm(buildForm(voucher));
     setPostingDateTouched(true);
     openDrawerForEdit(voucher);
-    loadTagPresets(voucher.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT");
+    loadTagPresets(voucher.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT");
   }
 
   const setField = <K extends keyof CashVoucherForm>(
@@ -281,7 +281,7 @@ export function useCashVoucherHandlers({
       ...current,
       cash_fund_id: fundId,
       ...(accountId
-        ? current.voucher_type === "CASH_RECEIPT"
+        ? current.voucher_type !== "CASH_PAYMENT"
           ? { debit_account_id: accountId }
           : { credit_account_id: accountId }
         : {}),
@@ -375,7 +375,7 @@ export function useCashVoucherHandlers({
       const dto: CreatePaymentVoucherDto = {
         voucher_no: form.voucher_no.trim(),
         voucher_channel: "CASH",
-        voucher_direction: form.voucher_type === "CASH_RECEIPT" ? "IN" : "OUT",
+        voucher_direction: form.voucher_type === "CASH_PAYMENT" ? "OUT" : "IN",
         voucher_type: form.voucher_type,
         document_date: form.document_date,
         posting_date: form.posting_date,

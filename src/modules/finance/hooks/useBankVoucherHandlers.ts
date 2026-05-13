@@ -179,7 +179,7 @@ export function useBankVoucherHandlers({
   }, []);
 
   function voucherPrefix(vtype: VoucherType) {
-    return vtype === "BANK_RECEIPT" ? "UNT" : "UNC";
+    return vtype === "CUSTOMER_ADVANCE_RECEIPT" ? "DCNH" : vtype === "BANK_RECEIPT" ? "UNT" : "UNC";
   }
 
   async function generateVoucherNo(vtype: VoucherType) {
@@ -201,18 +201,18 @@ export function useBankVoucherHandlers({
     }
   }
 
-  async function loadTagPresets(vtype: "BANK_RECEIPT" | "BANK_PAYMENT") {
+  async function loadTagPresets(vtype: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
     try {
       setTagPresets(await getCashBankTagPresetsApi({
         voucher_channel: "BANK",
-        voucher_direction: vtype === "BANK_RECEIPT" ? "IN" : "OUT",
+        voucher_direction: vtype === "BANK_PAYMENT" ? "OUT" : "IN",
       }));
     } catch {
       setTagPresets([]);
     }
   }
 
-  async function openNew(vtype: "BANK_RECEIPT" | "BANK_PAYMENT") {
+  async function openNew(vtype: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
     const nextForm = emptyBankForm(vtype);
     nextForm.document_date = todayIsoDate();
     nextForm.posting_date = todayIsoDate();
@@ -244,7 +244,7 @@ export function useBankVoucherHandlers({
     setExistingAttachments([]);
     loadExistingAttachments(voucher.id);
     if (voucher.counterparty_id) loadPartnerBankAccounts(voucher.counterparty_id);
-    loadTagPresets(voucher.voucher_type as "BANK_RECEIPT" | "BANK_PAYMENT");
+    loadTagPresets(voucher.voucher_type as "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT");
   }
 
   const setField = <K extends keyof BankVoucherForm>(
@@ -280,7 +280,7 @@ export function useBankVoucherHandlers({
       companyBankAccounts.find((bank) => bank.id === bankId)
         ?.accounting_account_id ?? "";
     if (!accountId) return current;
-    return current.voucher_type === "BANK_RECEIPT"
+    return current.voucher_type !== "BANK_PAYMENT"
       ? { ...current, debit_account_id: accountId }
       : { ...current, credit_account_id: accountId };
   }
@@ -406,7 +406,7 @@ export function useBankVoucherHandlers({
       const dto: CreatePaymentVoucherDto = {
         voucher_no: form.voucher_no.trim(),
         voucher_channel: "BANK",
-        voucher_direction: form.voucher_type === "BANK_RECEIPT" ? "IN" : "OUT",
+        voucher_direction: form.voucher_type === "BANK_PAYMENT" ? "OUT" : "IN",
         voucher_type: form.voucher_type,
         document_date: form.document_date,
         posting_date: form.posting_date,
