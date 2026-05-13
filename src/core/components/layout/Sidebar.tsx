@@ -23,7 +23,6 @@ export function Sidebar() {
     navigate,
     toggleSidebar,
     setMobileSidebarOpen,
-    settingsActiveTab,
   } = useAppStore();
   const { logoutAction, employee } = useAuthStore();
   const [profileOpen, setProfileOpen] = useState(false);

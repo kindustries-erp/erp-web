@@ -203,10 +203,10 @@ export function QuyTab() {
           <DrawerField label={t("settings.tk.headers.status")}>
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox checked={form.is_active} onCheckedChange={(v) => setField("is_active", v === true)} />
-              <span className="text-xs text-foreground">{t("thietlap.common.activeLabel")}</span>
+              <span className="text-xs text-foreground">{t("common.active")}</span>
             </label>
           </DrawerField>
-          <DrawerField label={t("thietlap.fields.note")}>
+          <DrawerField label={t("common.note")}>
             <textarea className={inputCls} rows={2} value={form.note} onChange={(e) => setField("note", e.target.value)} />
           </DrawerField>
         </DrawerSection>

@@ -21,7 +21,9 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   tienmat: { label: "Tiền mặt", group: "dongtien" },
   tiengui: { label: "UNT / UNC", group: "dongtien" },
   dinhkem: { label: "Tài liệu đính kèm", group: "dongtien" },
-  thietlap: { label: "Thiết lập danh mục", group: "thietlap" },
+  "thietlap-quy": { label: "Quỹ tiền mặt", group: "thietlap" },
+  "thietlap-nh": { label: "Tài khoản ngân hàng", group: "thietlap" },
+  "thietlap-tk": { label: "Hệ thống tài khoản", group: "thietlap" },
   phaithu: { label: "Phải thu", group: "congno" },
   phaittra: { label: "Phải trả", group: "congno" },
   socat: { label: "Sổ cái", group: "baocao" },
@@ -60,7 +62,21 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.cashflow", "dongtien"],
     ["breadcrumb.attachments"],
   ],
-  thietlap: [["breadcrumb.accounting"], ["breadcrumb.catalog"]],
+  "thietlap-quy": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalogFunds"],
+  ],
+  "thietlap-nh": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalogBank"],
+  ],
+  "thietlap-tk": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalogAccounts"],
+  ],
   phaithu: [
     ["breadcrumb.accounting"],
     ["breadcrumb.debt"],
@@ -100,18 +116,16 @@ interface AppState {
   mobileSidebarOpen: boolean;
   appTheme: AppTheme;
   locale: "vi" | "en";
-  settingsActiveTab: string;
   isLoggedIn: boolean;
   forbidden: boolean;
   setForbidden: (value: boolean) => void;
-  navigate: (page: PageKey, settingsTab?: string) => void;
-  syncFromUrl: (page: PageKey, settingsTab?: string) => void;
+  navigate: (page: PageKey) => void;
+  syncFromUrl: (page: PageKey) => void;
   closeTab: (key: PageKey) => void;
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
   toggleAppTheme: () => void;
   toggleLocale: () => void;
-  setSettingsTab: (tab: string) => void;
   login: () => void;
   logout: () => void;
 }
@@ -126,44 +140,11 @@ export const useAppStore = create<AppState>()(
       mobileSidebarOpen: false,
       appTheme: "shell",
       locale: "vi",
-      settingsActiveTab: "quy",
       isLoggedIn: false,
 
       setForbidden: (value) => set({ forbidden: value }),
 
-      navigate: (page, settingsTab) => {
-        const { openTabs } = get();
-        let newTabs = [...openTabs];
-        if (!newTabs.includes(page)) {
-          const group = SECTION_ROOTS[page]?.group;
-          if (group) {
-            let lastIdx = -1;
-            newTabs.forEach((t, i) => {
-              if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
-            });
-            if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
-            else newTabs.push(page);
-          } else {
-            newTabs.push(page);
-          }
-        }
-        const nextState = {
-          currentPage: page,
-          openTabs: newTabs,
-          forbidden: false,
-          mobileSidebarOpen: false,
-          ...(settingsTab ? { settingsActiveTab: settingsTab } : {}),
-        };
-        set(nextState);
-        // Sync URL
-        const path = pageToPath(page, settingsTab);
-        const current = window.location.pathname + window.location.search;
-        if (current !== path) {
-          history.pushState(null, "", path);
-        }
-      },
-
-      syncFromUrl: (page, settingsTab) => {
+      navigate: (page) => {
         const { openTabs } = get();
         let newTabs = [...openTabs];
         if (!newTabs.includes(page)) {
@@ -184,7 +165,33 @@ export const useAppStore = create<AppState>()(
           openTabs: newTabs,
           forbidden: false,
           mobileSidebarOpen: false,
-          ...(settingsTab ? { settingsActiveTab: settingsTab } : {}),
+        });
+        const path = pageToPath(page);
+        const current = window.location.pathname + window.location.search;
+        if (current !== path) history.pushState(null, "", path);
+      },
+
+      syncFromUrl: (page) => {
+        const { openTabs } = get();
+        let newTabs = [...openTabs];
+        if (!newTabs.includes(page)) {
+          const group = SECTION_ROOTS[page]?.group;
+          if (group) {
+            let lastIdx = -1;
+            newTabs.forEach((t, i) => {
+              if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
+            });
+            if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
+            else newTabs.push(page);
+          } else {
+            newTabs.push(page);
+          }
+        }
+        set({
+          currentPage: page,
+          openTabs: newTabs,
+          forbidden: false,
+          mobileSidebarOpen: false,
         });
       },
 
@@ -213,7 +220,6 @@ export const useAppStore = create<AppState>()(
 
       toggleLocale: () =>
         set((s) => ({ locale: s.locale === "vi" ? "en" : "vi" })),
-      setSettingsTab: (tab) => set({ settingsActiveTab: tab }),
       login: () => set({ isLoggedIn: true }),
       logout: () => set({ isLoggedIn: false }),
     }),

@@ -63,7 +63,7 @@ export default function App() {
     const sync = () => {
       const parsed = pathToPage(location.pathname, location.search);
       if (parsed) {
-        syncFromUrl(parsed.page, parsed.tab);
+        syncFromUrl(parsed.page);
       } else {
         // Unknown path → redirect to dashboard
         history.replaceState(null, "", "/");
