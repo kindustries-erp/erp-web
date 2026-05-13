@@ -9,6 +9,7 @@ import {
 interface Props {
   value: CashBankRelatedDocumentInput[];
   disabled?: boolean;
+  counterpartyId?: string;
   onChange: (value: CashBankRelatedDocumentInput[]) => void;
 }
 
@@ -41,16 +42,17 @@ function arDocToRelated(doc: ArDocument): CashBankRelatedDocumentInput {
   };
 }
 
-export function RelatedDocumentsEditor({ value, disabled, onChange }: Props) {
+export function RelatedDocumentsEditor({ value, disabled, counterpartyId, onChange }: Props) {
   const safeValue = Array.isArray(value) ? value : [];
   const [arDocs, setArDocs] = useState<ArDocument[]>([]);
   const [arDocId, setArDocId] = useState("");
 
   useEffect(() => {
-    getArDocumentsApi({ page: 1, pageSize: 100, open_only: true, sort: ["-posting_date"] })
+    setArDocId("");
+    getArDocumentsApi({ page: 1, pageSize: 100, open_only: true, business_partner_id: counterpartyId || undefined, sort: ["-posting_date"] })
       .then((res) => setArDocs(res.items ?? []))
       .catch(() => setArDocs([]));
-  }, []);
+  }, [counterpartyId]);
 
   const arDocOpts = useMemo(
     () => arDocs.map((doc) => ({ value: doc.id, label: `${doc.document_no} · ${doc.document_type} · ${Number(doc.open_amount ?? doc.total_amount ?? 0).toLocaleString("vi-VN")}` })),
@@ -76,7 +78,7 @@ export function RelatedDocumentsEditor({ value, disabled, onChange }: Props) {
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3 max-[760px]:flex-col max-[760px]:items-stretch">
         <div className="text-xs text-muted-fg">
-          Liên kết 1-nhiều tới chứng từ công nợ/voucher liên quan. Chứng từ công nợ chọn ở đây được tạo trong Phải thu.
+          Liên kết 1-nhiều tới chứng từ công nợ/voucher liên quan. Khi đã chọn đối tượng, danh sách chỉ hiện chứng từ công nợ của đối tượng đó.
         </div>
         {!disabled && (
           <div className="flex flex-wrap items-center gap-2">

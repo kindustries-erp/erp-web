@@ -362,6 +362,7 @@ export function CashVoucherDrawer({
         <RelatedDocumentsEditor
           value={form.related_documents}
           disabled={viewOnly}
+          counterpartyId={form.counterparty_id}
           onChange={(value) => onFieldChange("related_documents", value)}
         />
       </DrawerSection>

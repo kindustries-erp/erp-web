@@ -38,9 +38,10 @@ interface PartnerLedgerPageProps {
   itemType: PartnerLedgerItemType;
   title: string;
   desc: string;
+  compact?: boolean;
 }
 
-export function PartnerLedgerPage({ itemType, title, desc }: PartnerLedgerPageProps) {
+export function PartnerLedgerPage({ itemType, title, desc, compact = false }: PartnerLedgerPageProps) {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
   const canCreate = useHasPermission("partner_ledger_items", "create");
@@ -218,12 +219,15 @@ export function PartnerLedgerPage({ itemType, title, desc }: PartnerLedgerPagePr
 
   return (
     <div>
-      <PageHeader title={title} desc={desc} icon={<FileText className="h-4 w-4" />} actions={canCreate ? <BtnPrimary onClick={openNew}>+ {t("ledger.actions.create")}</BtnPrimary> : undefined} className="mb-4" />
+      {!compact && <PageHeader title={title} desc={desc} icon={<FileText className="h-4 w-4" />} actions={canCreate ? <BtnPrimary onClick={openNew}>+ {t("ledger.actions.create")}</BtnPrimary> : undefined} className="mb-4" />}
+      <div className={compact ? "rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4" : ""}>
+        {compact && <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="font-semibold text-[color:var(--fg)]">{title}</h3><p className="text-sm text-[color:var(--muted-fg)]">{desc}</p></div>{canCreate ? <BtnPrimary onClick={openNew}>+ {t("ledger.actions.create")}</BtnPrimary> : null}</div>}
       <PartnerLedgerKpis summary={summary} loading={summaryLoading} t={t} />
       <PartnerLedgerFilters searchInput={searchInput} setSearchInput={setSearchInput} partnerOpts={partnerOpts} partnerFilter={partnerFilter} setPartnerFilter={setPartnerFilter} accountOpts={accountOptsDisplay} accountFilter={accountFilter} setAccountFilter={setAccountFilter} statusFilter={statusFilter} setStatusFilter={setStatusFilter} dueFrom={dueFrom} setDueFrom={setDueFrom} dueTo={dueTo} setDueTo={setDueTo} overdueOnly={overdueOnly} setOverdueOnly={setOverdueOnly} resetFilters={resetFilters} applyFilter={applyFilter} t={t} />
       <PartnerLedgerTable items={items} loading={loading} fetchError={fetchError} total={total} page={page} pageSize={pageSize} totalPages={totalPages} onPage={setPage} onPageSize={(s) => { setPageSize(s); setPage(1); }} partnerName={partnerName} accountCode={accountCode} actions={{ canUpdate, canDelete, canSettle, onEdit: openEdit, onSettle: openSettle, onCancel: setCancelTarget }} t={t} />
       <PartnerLedgerDrawer open={drawerOpen} onClose={closeDrawer} editingItem={editingItem} form={form} setField={setField} partnerOpts={partnerOpts} accountOpts={accountOptsDisplay} saving={saving} saveError={saveError} onSave={handleSave} t={t} />
       <SettlementDrawer open={settleOpen} onClose={closeSettle} settleItem={settleItem} vouchers={voucherOpts} voucherOpts={voucherSelectOpts} vouchersLoading={vouchersLoading} selectedVoucher={selectedVoucher} form={settleForm} setForm={setSettleForm} onVoucherSelect={handleVoucherSelect} loading={settleLoading} error={settleError} onSave={handleSettle} t={t} />
+      </div>
       <ConfirmModal open={!!cancelTarget} title={t("ledger.cancel.title")} message={cancelTarget ? t("ledger.cancel.message").replace("{0}", cancelTarget.item_no) : ""} confirmLabel={t("ledger.cancel.confirm")} loading={cancelling} onConfirm={handleCancel} onCancel={() => setCancelTarget(null)} />
     </div>
   );

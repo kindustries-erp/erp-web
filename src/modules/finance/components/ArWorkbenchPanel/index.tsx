@@ -27,6 +27,7 @@ import {
 } from "@/modules/finance/api/financeApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { DOC_TYPES, STATUS_LABELS, emptySalesInvoiceForm, money, statusCls } from "./shared";
+import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPage";
 
 type ArWorkbenchTab = "invoices";
 
@@ -150,6 +151,12 @@ export function ArWorkbenchPanel() {
             setPageSize={setPageSize}
             runDocumentAction={runDocumentAction}
           />
+          <PartnerLedgerPage
+            itemType="RECEIVABLE"
+            title="Sổ công nợ phải thu"
+            desc="Sổ công nợ hiện tại được gộp vào cùng flow AR Workbench. Chọn đối tượng để xem công nợ, bù trừ bằng cash/bank voucher và đối chiếu open amount."
+            compact
+          />
           <CoveragePreview coverage={coverage} />
           <SalesInvoiceDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
         </>
@@ -164,8 +171,8 @@ function WorkbenchHeader({ activeTab, onTab, onCreate }: { activeTab: ArWorkbenc
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted-fg)]">AR Workbench mới</p>
-          <h2 className="text-lg font-semibold text-[color:var(--fg)]">Phải thu production-grade</h2>
-          <p className="mt-1 max-w-3xl text-sm text-[color:var(--muted-fg)]">Phải thu chỉ quản lý hóa đơn/công nợ. Phiếu thu, đặt cọc và cấn trừ cọc được tạo từ một form duy nhất ở Tiền mặt/Tiền gửi và link lại chứng từ công nợ tại đó.</p>
+          <h2 className="text-lg font-semibold text-[color:var(--fg)]">Phải thu: Invoice + Sổ công nợ</h2>
+          <p className="mt-1 max-w-3xl text-sm text-[color:var(--muted-fg)]">Một flow duy nhất cho AR Workbench và Sổ công nợ. Hóa đơn/công nợ có thể đối chiếu với cash/bank voucher; cash/bank chỉ hiển thị chứng từ theo đúng đối tượng đã chọn.</p>
         </div>
         <BtnPrimary onClick={onCreate}><FilePlus2 className="h-4 w-4" /> Tạo sales invoice</BtnPrimary>
       </div>
