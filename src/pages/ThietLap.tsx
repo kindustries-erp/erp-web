@@ -8,8 +8,8 @@ export function ThietLap() {
   return (
     <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
       {settingsActiveTab === "quy" && <QuyTab />}
-      {settingsActiveTab === "ngan-hang" && <NHTab />}
-      {settingsActiveTab === "tai-khoan" && <TKTab />}
+      {settingsActiveTab === "nh" && <NHTab />}
+      {settingsActiveTab === "tk" && <TKTab />}
     </div>
   );
 }
