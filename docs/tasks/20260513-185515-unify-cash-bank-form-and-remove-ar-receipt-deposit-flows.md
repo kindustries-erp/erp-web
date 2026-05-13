@@ -19,7 +19,7 @@ ENHANCE
 - [x] UI: remove Phiếu thu, Đặt cọc, Cấn trừ cọc tabs from Phải thu.
 - [x] UI: link open AR documents from Cash/Bank related documents editor.
 - [x] Web build passes.
-- [ ] Deploy + smoke verify.
+- [x] Deploy + smoke verify.
 
 ## Gate validations
 - Build: `npm run build`.
