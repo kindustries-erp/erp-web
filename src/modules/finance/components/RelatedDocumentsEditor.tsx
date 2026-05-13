@@ -49,13 +49,17 @@ export function RelatedDocumentsEditor({ value, disabled, counterpartyId, onChan
 
   useEffect(() => {
     setArDocId("");
-    getArDocumentsApi({ page: 1, pageSize: 100, open_only: true, business_partner_id: counterpartyId || undefined, sort: ["-posting_date"] })
+    if (!counterpartyId) {
+      setArDocs([]);
+      return;
+    }
+    getArDocumentsApi({ page: 1, pageSize: 100, open_only: true, business_partner_id: counterpartyId, sort: ["-posting_date"] })
       .then((res) => setArDocs(res.items ?? []))
       .catch(() => setArDocs([]));
   }, [counterpartyId]);
 
   const arDocOpts = useMemo(
-    () => arDocs.map((doc) => ({ value: doc.id, label: `${doc.document_no} · ${doc.document_type} · ${Number(doc.open_amount ?? doc.total_amount ?? 0).toLocaleString("vi-VN")}` })),
+    () => arDocs.map((doc) => ({ value: doc.id, label: `${doc.document_no} · ${doc.document_type} · Tổng ${Number(doc.total_amount ?? 0).toLocaleString("vi-VN")} · Đã TT ${Number(doc.settled_amount ?? 0).toLocaleString("vi-VN")} · Còn ${Number(doc.open_amount ?? 0).toLocaleString("vi-VN")}` })),
     [arDocs],
   );
 
@@ -78,15 +82,15 @@ export function RelatedDocumentsEditor({ value, disabled, counterpartyId, onChan
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3 max-[760px]:flex-col max-[760px]:items-stretch">
         <div className="text-xs text-muted-fg">
-          Liên kết 1-nhiều tới chứng từ công nợ/voucher liên quan. Khi đã chọn đối tượng, danh sách chỉ hiện chứng từ công nợ của đối tượng đó.
+          Liên kết 1-nhiều tới chứng từ công nợ/voucher liên quan. Bắt buộc chọn đối tượng trước; danh sách chỉ hiện chứng từ công nợ của đúng đối tượng đó. Khi lưu Cash/Bank, số tiền link sẽ tự cập nhật Đã thanh toán/Còn lại trên chứng từ công nợ.
         </div>
         {!disabled && (
           <div className="flex flex-wrap items-center gap-2">
-            <select className={inputCls} value={arDocId} onChange={(e) => setArDocId(e.target.value)}>
-              <option value="">Chọn chứng từ công nợ...</option>
+            <select className={inputCls} value={arDocId} disabled={!counterpartyId} onChange={(e) => setArDocId(e.target.value)}>
+              <option value="">{counterpartyId ? "Chọn chứng từ công nợ..." : "Chọn đối tượng trước"}</option>
               {arDocOpts.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
-            <button type="button" className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted" onClick={addArDoc} disabled={!arDocId}>
+            <button type="button" className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted" onClick={addArDoc} disabled={!arDocId || !counterpartyId}>
               + Link công nợ
             </button>
             <button type="button" className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted" onClick={() => onChange([...safeValue, emptyDoc()])}>
@@ -95,9 +99,10 @@ export function RelatedDocumentsEditor({ value, disabled, counterpartyId, onChan
           </div>
         )}
       </div>
-      {safeValue.length === 0 && <div className="text-xs text-muted-fg">Chưa có chứng từ liên quan.</div>}
+      {safeValue.length === 0 && <div className="text-xs text-muted-fg">{counterpartyId ? "Chưa có chứng từ liên quan." : "Chọn đối tượng để tải chứng từ công nợ liên quan."}</div>}
       {safeValue.map((doc, index) => (
         <div key={`${doc.related_id}-${index}`} className="rounded-xl border border-border p-3">
+          {doc.related_type === "ar_documents" && <div className="mb-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-fg">Số tiền nhập ở dòng này sẽ được cấn trừ vào chứng từ; sau khi lưu sẽ cập nhật cột Đã thanh toán và Còn lại trong Phải thu.</div>}
           <div className="grid grid-cols-3 max-[760px]:grid-cols-1 gap-x-3">
             <DrawerField label="Loại">
               <select className={inputCls} disabled={disabled} value={doc.related_type} onChange={(e) => update(index, { related_type: e.target.value })}>

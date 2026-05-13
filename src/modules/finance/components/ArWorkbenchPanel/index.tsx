@@ -11,6 +11,7 @@ import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
 import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import {
+  createArDocumentApi,
   createArSalesInvoiceApi,
   getArCoverageApi,
   getArDocumentsApi,
@@ -27,7 +28,6 @@ import {
 } from "@/modules/finance/api/financeApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { DOC_TYPES, STATUS_LABELS, emptySalesInvoiceForm, money, statusCls } from "./shared";
-import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPage";
 
 type ArWorkbenchTab = "invoices";
 
@@ -51,6 +51,7 @@ export function ArWorkbenchPanel() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [createMode, setCreateMode] = useState<"INVOICE" | "OTHER">("INVOICE");
   const [form, setForm] = useState<CreateArSalesInvoiceDto>(() => emptySalesInvoiceForm());
   const [saving, setSaving] = useState(false);
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -85,7 +86,11 @@ export function ArWorkbenchPanel() {
 
   useEffect(() => { load(); }, [load]);
 
-  const openDrawer = () => {
+  const openDrawer = (mode: "INVOICE" | "OTHER" = "INVOICE") => {
+    setCreateMode(mode);
+    const next = emptySalesInvoiceForm();
+    if (mode === "OTHER") { next.document_no = `THU-KHAC-${Date.now().toString(36).toUpperCase()}`; next.description = "Thu chứng từ khác"; next.lines = [{ line_no: 1, description: "Thu chứng từ khác", quantity: 1, unit_price: 0, tax_rate: 0 }]; }
+    setForm(next);
     setDrawerOpen(true);
     setPartnersLoading(true);
     getPaymentVoucherLookupBusinessPartnersApi({ pageSize: 200 })
@@ -100,15 +105,35 @@ export function ArWorkbenchPanel() {
   const saveDocument = () => {
     setSaving(true);
     setSaveError(null);
-    createArSalesInvoiceApi({
-      ...form,
-      business_partner_id: form.business_partner_id.trim(),
-      due_date: form.due_date || undefined,
-      reference_no: form.reference_no || undefined,
-      lines: form.lines.map((line, index) => ({ ...line, line_no: index + 1 })),
-    })
+    const totalAmount = form.lines.reduce((sum, line) => sum + line.quantity * line.unit_price * (1 + (line.tax_rate ?? 0) / 100), 0);
+    const request = createMode === "INVOICE"
+      ? createArSalesInvoiceApi({
+          ...form,
+          business_partner_id: form.business_partner_id.trim(),
+          due_date: form.due_date || undefined,
+          reference_no: form.reference_no || undefined,
+          metadata: { ...(form.metadata ?? {}), entry_type: "INVOICE" },
+          lines: form.lines.map((line, index) => ({ ...line, line_no: index + 1 })),
+        })
+      : createArDocumentApi({
+          document_no: form.document_no,
+          document_type: "ADJUSTMENT",
+          business_partner_id: form.business_partner_id.trim(),
+          accounting_account_id: form.accounting_account_id,
+          document_date: form.document_date,
+          posting_date: form.posting_date,
+          due_date: form.due_date || undefined,
+          currency: form.currency,
+          exchange_rate: form.exchange_rate,
+          total_amount: totalAmount,
+          status: "POSTED",
+          reference_no: form.reference_no || undefined,
+          description: form.description || "Thu chứng từ khác",
+          metadata: { ...(form.metadata ?? {}), entry_type: "OTHER_RECEIVABLE" },
+        });
+    request
       .then(() => { setDrawerOpen(false); setForm(emptySalesInvoiceForm()); load(); })
-      .catch((err) => setSaveError(extractApiError(err, "Không tạo được sales invoice")))
+      .catch((err) => setSaveError(extractApiError(err, createMode === "INVOICE" ? "Không tạo được hóa đơn" : "Không tạo được thu khác")))
       .finally(() => setSaving(false));
   };
 
@@ -126,7 +151,7 @@ export function ArWorkbenchPanel() {
 
   return (
     <section className="space-y-4">
-      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreate={openDrawer} />
+      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreateInvoice={() => openDrawer("INVOICE")} onCreateOther={() => openDrawer("OTHER")} />
       {activeTab === "invoices" && (
         <>
           <InvoiceKpis summary={summary} supported={supported} coverageTotal={coverage.length || 40} foundation={foundation} />
@@ -151,21 +176,15 @@ export function ArWorkbenchPanel() {
             setPageSize={setPageSize}
             runDocumentAction={runDocumentAction}
           />
-          <PartnerLedgerPage
-            itemType="RECEIVABLE"
-            title="Sổ công nợ phải thu"
-            desc="Sổ công nợ hiện tại được gộp vào cùng flow AR Workbench. Chọn đối tượng để xem công nợ, bù trừ bằng cash/bank voucher và đối chiếu open amount."
-            compact
-          />
           <CoveragePreview coverage={coverage} />
-          <SalesInvoiceDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
+          <SalesInvoiceDrawer open={drawerOpen} mode={createMode} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
         </>
       )}
     </section>
   );
 }
 
-function WorkbenchHeader({ activeTab, onTab, onCreate }: { activeTab: ArWorkbenchTab; onTab: (tab: ArWorkbenchTab) => void; onCreate: () => void }) {
+function WorkbenchHeader({ activeTab, onTab, onCreateInvoice, onCreateOther }: { activeTab: ArWorkbenchTab; onTab: (tab: ArWorkbenchTab) => void; onCreateInvoice: () => void; onCreateOther: () => void }) {
   return (
     <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -174,7 +193,7 @@ function WorkbenchHeader({ activeTab, onTab, onCreate }: { activeTab: ArWorkbenc
           <h2 className="text-lg font-semibold text-[color:var(--fg)]">Phải thu: Invoice + Sổ công nợ</h2>
           <p className="mt-1 max-w-3xl text-sm text-[color:var(--muted-fg)]">Một flow duy nhất cho AR Workbench và Sổ công nợ. Hóa đơn/công nợ có thể đối chiếu với cash/bank voucher; cash/bank chỉ hiển thị chứng từ theo đúng đối tượng đã chọn.</p>
         </div>
-        <BtnPrimary onClick={onCreate}><FilePlus2 className="h-4 w-4" /> Tạo sales invoice</BtnPrimary>
+        <div className="flex flex-wrap gap-2"><BtnPrimary onClick={onCreateInvoice}><FilePlus2 className="h-4 w-4" /> Tạo hóa đơn</BtnPrimary><button onClick={onCreateOther} className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm font-medium hover:bg-[color:var(--muted)]"><Receipt className="mr-1 inline h-4 w-4" /> Thu khác</button></div>
       </div>
       <div className="mt-3 flex gap-1 border-b border-[color:var(--border)]">
         {TABS.map((tab) => <TabButton key={tab.value} tab={tab} active={activeTab === tab.value} onClick={() => onTab(tab.value)} />)}
@@ -235,11 +254,11 @@ function InvoiceList(props: InvoiceListProps) {
 }
 
 function InvoiceTable({ docs, loading, actioningId, runDocumentAction }: { docs: ArDocument[]; loading: boolean; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void }) {
-  return <table className="min-w-full text-sm"><thead className="bg-[color:var(--muted)] text-left text-xs uppercase tracking-wide text-[color:var(--muted-fg)]"><tr>{["Số chứng từ", "Loại", "Ngày", "Tổng", "Còn phải thu", "Trạng thái", "Thao tác"].map((h, i) => <th key={h} className={cn("px-3 py-2", i === 3 || i === 4 || i === 6 ? "text-right" : "")}>{h}</th>)}</tr></thead><tbody>{docs.length === 0 && !loading ? <tr><td colSpan={7} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">Chưa có AR document. Flow cũ vẫn ở tab Sổ công nợ.</td></tr> : docs.map((doc) => <InvoiceRow key={doc.id} doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} />)}</tbody></table>;
+  return <table className="min-w-full text-sm"><thead className="bg-[color:var(--muted)] text-left text-xs uppercase tracking-wide text-[color:var(--muted-fg)]"><tr>{["Số chứng từ", "Loại", "Ngày", "Tổng", "Đã thanh toán", "Còn lại", "Trạng thái", "Thao tác"].map((h, i) => <th key={h} className={cn("px-3 py-2", i === 3 || i === 4 || i === 5 || i === 7 ? "text-right" : "")}>{h}</th>)}</tr></thead><tbody>{docs.length === 0 && !loading ? <tr><td colSpan={8} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">Chưa có AR document. Flow cũ vẫn ở tab Sổ công nợ.</td></tr> : docs.map((doc) => <InvoiceRow key={doc.id} doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} />)}</tbody></table>;
 }
 
 function InvoiceRow({ doc, actioningId, runDocumentAction }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void }) {
-  return <tr className="border-t border-[color:var(--border)]"><td className="px-3 py-2 font-medium">{doc.document_no}<div className="text-xs text-[color:var(--muted-fg)]">{doc.reference_no || doc.description}</div></td><td className="px-3 py-2">{doc.document_type}</td><td className="px-3 py-2">{doc.posting_date}</td><td className="px-3 py-2 text-right">{money(doc.total_amount)}</td><td className="px-3 py-2 text-right font-semibold">{money(doc.open_amount)}</td><td className="px-3 py-2"><span className={cn("rounded-full px-2 py-1 text-xs", statusCls(doc.status))}>{STATUS_LABELS[doc.status]}</span></td><td className="px-3 py-2 text-right"><InvoiceActions doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} /></td></tr>;
+  return <tr className="border-t border-[color:var(--border)]"><td className="px-3 py-2 font-medium">{doc.document_no}<div className="text-xs text-[color:var(--muted-fg)]">{doc.reference_no || doc.description}</div></td><td className="px-3 py-2">{doc.document_type}</td><td className="px-3 py-2">{doc.posting_date}</td><td className="px-3 py-2 text-right">{money(doc.total_amount)}</td><td className="px-3 py-2 text-right text-approve-fg">{money(doc.settled_amount)}</td><td className="px-3 py-2 text-right font-semibold">{money(doc.open_amount)}</td><td className="px-3 py-2"><span className={cn("rounded-full px-2 py-1 text-xs", statusCls(doc.status))}>{STATUS_LABELS[doc.status]}</span></td><td className="px-3 py-2 text-right"><InvoiceActions doc={doc} actioningId={actioningId} runDocumentAction={runDocumentAction} /></td></tr>;
 }
 
 function InvoiceActions({ doc, actioningId, runDocumentAction }: { doc: ArDocument; actioningId: string | null; runDocumentAction: (doc: ArDocument, action: "post" | "reverse") => void }) {
@@ -250,9 +269,9 @@ function CoveragePreview({ coverage }: { coverage: ArCoverageItem[] }) {
   return <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--card)] p-4"><div className="mb-3 flex items-center gap-2 font-semibold"><CheckCircle2 className="h-4 w-4 text-approve-fg" /> Đối chiếu 40 use case</div><div className="grid gap-2 md:grid-cols-2">{coverage.slice(0, 12).map((item) => <div key={item.id} className="rounded-lg border border-[color:var(--border)] p-3 text-sm"><div className="font-medium">#{item.id} {item.use_case}</div><div className="mt-1 text-xs text-[color:var(--muted-fg)]">{item.route}</div></div>)}</div></div>;
 }
 
-function SalesInvoiceDrawer({ open, onClose, form, setForm, saving, saveError, saveDocument, updateLine, addLine, removeLine, partners, partnersLoading }: { open: boolean; onClose: () => void; form: CreateArSalesInvoiceDto; setForm: React.Dispatch<React.SetStateAction<CreateArSalesInvoiceDto>>; saving: boolean; saveError: string | null; saveDocument: () => void; updateLine: (index: number, patch: Partial<CreateArSalesInvoiceDto["lines"][number]>) => void; addLine: () => void; removeLine: (index: number) => void; partners: BusinessPartner[]; partnersLoading: boolean }) {
+function SalesInvoiceDrawer({ open, mode, onClose, form, setForm, saving, saveError, saveDocument, updateLine, addLine, removeLine, partners, partnersLoading }: { open: boolean; mode: "INVOICE" | "OTHER"; onClose: () => void; form: CreateArSalesInvoiceDto; setForm: React.Dispatch<React.SetStateAction<CreateArSalesInvoiceDto>>; saving: boolean; saveError: string | null; saveDocument: () => void; updateLine: (index: number, patch: Partial<CreateArSalesInvoiceDto["lines"][number]>) => void; addLine: () => void; removeLine: (index: number) => void; partners: BusinessPartner[]; partnersLoading: boolean }) {
   const total = form.lines.reduce((acc, l) => acc + l.quantity * l.unit_price * (1 + (l.tax_rate ?? 0) / 100), 0);
-  return <DrawerModal open={open} title="Tạo sales invoice" onClose={onClose} actions={[{ label: "Hủy", onClick: onClose }, { label: saving ? "Đang lưu..." : "Lưu nháp", onClick: saveDocument, primary: true, loading: saving }]}><div className="space-y-4"><DrawerSection title="Thông tin chính"><DrawerField label="Số chứng từ"><input className={inputCls} value={form.document_no} onChange={(e) => setForm({ ...form, document_no: e.target.value })} required /></DrawerField><DrawerField label="Khách hàng *">{partnersLoading ? <div className="flex items-center gap-2 text-sm text-[color:var(--muted-fg)]"><Loader2 className="h-4 w-4 animate-spin" /> Đang tải...</div> : <Combobox options={partners.map((p) => ({ value: p.id, label: p.display_name ?? p.name }))} value={form.business_partner_id} onChange={(v) => setForm({ ...form, business_partner_id: v ?? "" })} placeholder="Tìm và chọn khách hàng..." className="w-full" />}</DrawerField><DateInput label="Ngày chứng từ" value={form.document_date} onChange={(v) => setForm({ ...form, document_date: v })} /><DateInput label="Ngày hạch toán" value={form.posting_date} onChange={(v) => setForm({ ...form, posting_date: v })} /><DateInput label="Ngày đến hạn" value={form.due_date || ""} onChange={(v) => setForm({ ...form, due_date: v })} /><DrawerField label="Tiền tệ"><input className={inputCls} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="VND" /></DrawerField><DrawerField label="Tỷ giá"><input className={inputCls} type="number" min="1" value={form.exchange_rate} onChange={(e) => setForm({ ...form, exchange_rate: Number(e.target.value) })} /></DrawerField><DrawerField label="Số tham chiếu"><input className={inputCls} value={form.reference_no || ""} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} placeholder="Số hợp đồng / PO / hoá đơn VAT" /></DrawerField><DrawerField label="Diễn giải"><textarea className={inputCls} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></DrawerField></DrawerSection><InvoiceLinesTable form={form} updateLine={updateLine} removeLine={removeLine} /><button onClick={addLine} className="mt-2 rounded-md border border-dashed border-[color:var(--border)] px-3 py-1.5 text-xs text-[color:var(--muted-fg)] hover:border-[color:var(--primary)] hover:text-[color:var(--primary)]">+ Thêm dòng</button><div className="mt-2 text-right text-sm font-semibold">Tổng: {money(total)}</div>{saveError ? <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{saveError}</div> : null}</div></DrawerModal>;
+  return <DrawerModal open={open} title={mode === "INVOICE" ? "Tạo hóa đơn" : "Thu khác"} onClose={onClose} actions={[{ label: "Hủy", onClick: onClose }, { label: saving ? "Đang lưu..." : "Lưu nháp", onClick: saveDocument, primary: true, loading: saving }]}><div className="space-y-4"><DrawerSection title="Thông tin chính"><DrawerField label="Số chứng từ"><input className={inputCls} value={form.document_no} onChange={(e) => setForm({ ...form, document_no: e.target.value })} required /></DrawerField><DrawerField label="Khách hàng *">{partnersLoading ? <div className="flex items-center gap-2 text-sm text-[color:var(--muted-fg)]"><Loader2 className="h-4 w-4 animate-spin" /> Đang tải...</div> : <Combobox options={partners.map((p) => ({ value: p.id, label: p.display_name ?? p.name }))} value={form.business_partner_id} onChange={(v) => setForm({ ...form, business_partner_id: v ?? "" })} placeholder="Tìm và chọn khách hàng..." className="w-full" />}</DrawerField><DateInput label="Ngày chứng từ" value={form.document_date} onChange={(v) => setForm({ ...form, document_date: v })} /><DateInput label="Ngày hạch toán" value={form.posting_date} onChange={(v) => setForm({ ...form, posting_date: v })} /><DateInput label="Ngày đến hạn" value={form.due_date || ""} onChange={(v) => setForm({ ...form, due_date: v })} /><DrawerField label="Tiền tệ"><input className={inputCls} value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} placeholder="VND" /></DrawerField><DrawerField label="Tỷ giá"><input className={inputCls} type="number" min="1" value={form.exchange_rate} onChange={(e) => setForm({ ...form, exchange_rate: Number(e.target.value) })} /></DrawerField><DrawerField label="Số tham chiếu"><input className={inputCls} value={form.reference_no || ""} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} placeholder="Số hợp đồng / PO / hoá đơn VAT" /></DrawerField><DrawerField label="Diễn giải"><textarea className={inputCls} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></DrawerField></DrawerSection>{mode === "INVOICE" ? <InvoiceLinesTable form={form} updateLine={updateLine} removeLine={removeLine} /> : <DrawerSection title="Thông tin khoản thu"><DrawerField label="Số tiền"><input className={inputCls} type="number" min="0" value={form.lines[0]?.unit_price ?? 0} onChange={(e) => updateLine(0, { unit_price: Number(e.target.value), quantity: 1, tax_rate: 0 })} /></DrawerField></DrawerSection>}<button onClick={addLine} className="mt-2 rounded-md border border-dashed border-[color:var(--border)] px-3 py-1.5 text-xs text-[color:var(--muted-fg)] hover:border-[color:var(--primary)] hover:text-[color:var(--primary)]">+ Thêm dòng</button><div className="mt-2 text-right text-sm font-semibold">Tổng: {money(total)}</div>{saveError ? <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{saveError}</div> : null}</div></DrawerModal>;
 }
 
 function DateInput({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
