@@ -27,14 +27,17 @@ export function CashBankTagPresetCards({
   disabled,
   onSelect,
 }: Props) {
-  if (!presets.length) return null;
+  const safePresets = Array.isArray(presets) ? presets : [];
+  const safeDebitOpts = Array.isArray(debitAccountOpts) ? debitAccountOpts : [];
+  const safeCreditOpts = Array.isArray(creditAccountOpts) ? creditAccountOpts : [];
+  if (!safePresets.length) return null;
   return (
     <div className="mb-3">
       <div className="mb-2 text-xs font-medium text-muted-fg">
         Chọn nghiệp vụ nhanh để tự điền tài khoản
       </div>
       <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-2">
-        {presets.map((preset) => {
+        {safePresets.map((preset) => {
           const active = selectedId === preset.id;
           return (
             <button
@@ -55,8 +58,8 @@ export function CashBankTagPresetCards({
                 <div className="mt-1 text-xs text-muted-fg">{preset.description}</div>
               )}
               <div className="mt-1 text-[11px] text-muted-fg">
-                Nợ: {accountLabel(debitAccountOpts, preset.debit_account_id)} · Có:{" "}
-                {accountLabel(creditAccountOpts, preset.credit_account_id)}
+                Nợ: {accountLabel(safeDebitOpts, preset.debit_account_id)} · Có:{" "}
+                {accountLabel(safeCreditOpts, preset.credit_account_id)}
               </div>
             </button>
           );

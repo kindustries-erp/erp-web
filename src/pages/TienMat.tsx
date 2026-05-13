@@ -153,6 +153,8 @@ export function TienMat() {
     handleCashFundChange,
     handlePartnerChange,
     handleEmployeeChange,
+    handleTagPresetSelect,
+    tagPresets,
     handleToggleEditMode,
     handleSave,
     handleDelete,

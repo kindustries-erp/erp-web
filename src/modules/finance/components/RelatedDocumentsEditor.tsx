@@ -26,8 +26,9 @@ const emptyDoc = (): CashBankRelatedDocumentInput => ({
 });
 
 export function RelatedDocumentsEditor({ value, disabled, onChange }: Props) {
+  const safeValue = Array.isArray(value) ? value : [];
   function update(index: number, patch: Partial<CashBankRelatedDocumentInput>) {
-    onChange(value.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
+    onChange(safeValue.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
   }
   return (
     <div className="space-y-2">
@@ -39,14 +40,14 @@ export function RelatedDocumentsEditor({ value, disabled, onChange }: Props) {
           <button
             type="button"
             className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted"
-            onClick={() => onChange([...value, emptyDoc()])}
+            onClick={() => onChange([...safeValue, emptyDoc()])}
           >
             + Thêm chứng từ
           </button>
         )}
       </div>
-      {value.length === 0 && <div className="text-xs text-muted-fg">Chưa có chứng từ liên quan.</div>}
-      {value.map((doc, index) => (
+      {safeValue.length === 0 && <div className="text-xs text-muted-fg">Chưa có chứng từ liên quan.</div>}
+      {safeValue.map((doc, index) => (
         <div key={`${doc.related_id}-${index}`} className="rounded-xl border border-border p-3">
           <div className="grid grid-cols-3 max-[760px]:grid-cols-1 gap-x-3">
             <DrawerField label="Loại">
@@ -75,7 +76,7 @@ export function RelatedDocumentsEditor({ value, disabled, onChange }: Props) {
             </DrawerField>
           </div>
           {!disabled && (
-            <button type="button" className="text-xs text-destructive" onClick={() => onChange(value.filter((_, idx) => idx !== index))}>
+            <button type="button" className="text-xs text-destructive" onClick={() => onChange(safeValue.filter((_, idx) => idx !== index))}>
               Xóa dòng liên quan
             </button>
           )}
