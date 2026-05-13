@@ -117,7 +117,7 @@ export function TKTab() {
       setTotal(res.total);
       setTotalPages(res.totalPages);
     } catch {
-      setFetchError(t("thietlap.coa.fetchError"));
+      setFetchError(t("settings.tk.fetchError"));
     } finally {
       setLoading(false);
     }
@@ -140,7 +140,7 @@ export function TKTab() {
 
   async function handleSave() {
     if (!form.account_code.trim() || !form.account_name.trim()) {
-      setSaveError(t("thietlap.coa.requiredError"));
+      setSaveError(t("settings.tk.requiredError"));
       return;
     }
     setSaving(true);
@@ -165,7 +165,7 @@ export function TKTab() {
       if (!editing && page !== 1) setPage(1);
       else loadItems(page, pageSize, search);
     } catch (e: unknown) {
-      setSaveError(extractApiError(e, t("thietlap.common.unknownError")));
+      setSaveError(extractApiError(e, t("settings.tk.unknownError")));
     } finally {
       setSaving(false);
     }
@@ -188,12 +188,12 @@ export function TKTab() {
 
   const isDirty = !!form.account_code.trim() || !!form.account_name.trim();
   const columns: DataTableColumn<ChartOfAccount>[] = [
-    { key: "account_code", header: t("thietlap.headers.accountCode"), cell: (c) => c.account_code, className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
-    { key: "account_name", header: t("thietlap.headers.accountName"), cell: (c) => c.account_name, className: "font-medium", skeletonClassName: "w-40" },
-    { key: "account_type", header: t("thietlap.headers.accountType"), cell: (c) => ACC_TYPES.find((a) => a.value === c.account_type)?.label ?? c.account_type, skeletonClassName: "w-24" },
-    { key: "normal_balance", header: t("thietlap.headers.normalBalance"), cell: (c) => NORMAL_BALANCE_OPTS.find((o) => o.value === c.normal_balance)?.label ?? c.normal_balance ?? "—", className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-20" },
-    { key: "level", header: t("thietlap.headers.level"), cell: (c) => String(c.level ?? "—"), className: "text-center", skeletonClassName: "w-8" },
-    { key: "is_cash_account", header: t("thietlap.headers.cashAccount"), cell: (c) => <TagCell active={!!c.is_cash_account} />, skeletonClassName: "w-16" },
+    { key: "account_code", header: t("settings.tk.headers.accountCode"), cell: (c) => c.account_code, className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
+    { key: "account_name", header: t("settings.tk.headers.accountName"), cell: (c) => c.account_name, className: "font-medium", skeletonClassName: "w-40" },
+    { key: "account_type", header: t("settings.tk.headers.accountType"), cell: (c) => ACC_TYPES.find((a) => a.value === c.account_type)?.label ?? c.account_type, skeletonClassName: "w-24" },
+    { key: "normal_balance", header: t("settings.tk.headers.normalBalance"), cell: (c) => NORMAL_BALANCE_OPTS.find((o) => o.value === c.normal_balance)?.label ?? c.normal_balance ?? "—", className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-20" },
+    { key: "level", header: t("settings.tk.headers.level"), cell: (c) => String(c.level ?? "—"), className: "text-center", skeletonClassName: "w-8" },
+    { key: "is_cash_account", header: t("settings.tk.headers.cashAccount"), cell: (c) => <TagCell active={!!c.is_cash_account} />, skeletonClassName: "w-16" },
     {
       key: "actions", header: "", headerClassName: "w-[80px]", skeletonClassName: "",
       cell: (c) => (
@@ -207,9 +207,9 @@ export function TKTab() {
 
   return (
     <div>
-      <SectionHeader title={t("thietlap.coa.title")} desc={t("thietlap.coa.desc")} icon={<Settings className="h-4 w-4" />} onAdd={openNew} />
+      <SectionHeader title={t("settings.tk.title")} desc={t("settings.tk.desc")} icon={<Settings className="h-4 w-4" />} onAdd={openNew} />
       <div className="mb-3">
-        <SearchInput value={search} onChange={handleSearch} placeholder={t("thietlap.coa.searchPlaceholder")} />
+        <SearchInput value={search} onChange={handleSearch} placeholder={t("settings.tk.searchPlaceholder")} />
       </div>
       <DataTable items={items} columns={columns} getRowKey={(c) => c.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={700} loadingRows={4} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
 
@@ -217,45 +217,45 @@ export function TKTab() {
         open={drawerOpen}
         onClose={closeDrawer}
         confirmOnClose={isDirty && !editing}
-        title={editing ? t("thietlap.coa.editTitle") : t("thietlap.coa.createTitle")}
-        subtitle={editing ? editing.account_name : t("thietlap.common.subtitle")}
+        title={editing ? t("settings.tk.editTitle") : t("settings.tk.createTitle")}
+        subtitle={editing ? editing.account_name : t("settings.tk.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
           { label: editing ? t("common.saveChanges") : t("common.addNew"), primary: true, loading: saving, disabled: saving, onClick: handleSave },
         ]}
       >
-        <DrawerSection title={t("thietlap.coa.sectionInfo")}>
-          <DrawerField label={t("thietlap.headers.accountCode")} required>
-            <input type="text" className={inputCls} value={form.account_code} onChange={(e) => setField("account_code", e.target.value)} placeholder={t("thietlap.coa.codePlaceholder")} />
+        <DrawerSection title={t("settings.tk.sectionInfo")}>
+          <DrawerField label={t("settings.tk.headers.accountCode")} required>
+            <input type="text" className={inputCls} value={form.account_code} onChange={(e) => setField("account_code", e.target.value)} placeholder={t("settings.tk.codePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.accountName")} required>
-            <input type="text" className={inputCls} value={form.account_name} onChange={(e) => setField("account_name", e.target.value)} placeholder={t("thietlap.coa.namePlaceholder")} />
+          <DrawerField label={t("settings.tk.headers.accountName")} required>
+            <input type="text" className={inputCls} value={form.account_name} onChange={(e) => setField("account_name", e.target.value)} placeholder={t("settings.tk.namePlaceholder")} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.accountType")}>
+          <DrawerField label={t("settings.tk.headers.accountType")}>
             <Combobox options={ACC_TYPES} value={form.account_type} onChange={(v) => setField("account_type", v || "asset")} allowClear={false} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.normalBalance")}>
+          <DrawerField label={t("settings.tk.headers.normalBalance")}>
             <Combobox options={NORMAL_BALANCE_OPTS} value={form.normal_balance} onChange={(v) => setField("normal_balance", v || "debit")} allowClear={false} />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.parentAccount")}>
+          <DrawerField label={t("settings.tk.headers.parentAccount")}>
             <Combobox
               options={allItems
                 .filter((c) => !editing || c.id !== editing.id)
                 .map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))}
               value={form.parent_account_id}
               onChange={(v) => setField("parent_account_id", v)}
-              placeholder={t("thietlap.coa.parentPlaceholder")}
+              placeholder={t("settings.tk.parentPlaceholder")}
             />
           </DrawerField>
-          <DrawerField label={t("thietlap.headers.level")}>
+          <DrawerField label={t("settings.tk.headers.level")}>
             <input type="number" min={1} max={9} className={inputCls} value={form.level} onChange={(e) => setField("level", e.target.value)} />
           </DrawerField>
         </DrawerSection>
-        <DrawerSection title={t("thietlap.coa.sectionFlags")}>
+        <DrawerSection title={t("settings.tk.sectionFlags")}>
           {([
-            ["is_cash_account", t("thietlap.coa.isCashAccount")],
-            ["is_receivable_account", t("thietlap.coa.isReceivable")],
-            ["is_payable_account", t("thietlap.coa.isPayable")],
+            ["is_cash_account", t("settings.tk.isCashAccount")],
+            ["is_receivable_account", t("settings.tk.isReceivable")],
+            ["is_payable_account", t("settings.tk.isPayable")],
           ] as [keyof CoaForm, string][]).map(([key, label]) => (
             <DrawerField key={key} label={label}>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -271,7 +271,7 @@ export function TKTab() {
       <ConfirmModal
         open={!!deleteTarget}
         title={t("confirmModal.defaultTitle")}
-        message={t("thietlap.coa.deleteMessage").replace("{0}", deleteTarget?.account_name ?? "")}
+        message={t("settings.tk.deleteMessage").replace("{0}", deleteTarget?.account_name ?? "")}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}
         onConfirm={handleDelete}
