@@ -16,7 +16,17 @@ ENHANCE
 - [x] 3.2 UI: Cash/Bank related documents selector filters AR documents by selected `counterparty_id`
 - [x] 3.3 UI: Copy/in-flow navigation clarified as bi-directional AR ledger <-> Cash/Bank linkage
 - [x] 4.0 Build validation: `npm run build` passes
-- [ ] 5.0 Commit/push/deploy/verify
+- [x] 5.0 Commit/push/deploy/verify
+
+## Close-out Evidence
+- Web commit pushed: `ab18e19 feat: unify ar workbench ledger flow`.
+- API docs commit pushed: `ed751a8 docs: plan ar workbench ledger unification`.
+- Infra docs commit pushed: `c547ebb docs: record ar workbench ledger unification`.
+- Deploy: `/opt/stacks/liouni-erp-web` rebuilt with no cache and `docker compose up -d` recreated `liouni-erp-web`.
+- Runtime: `liouni-erp-web` Up, local HTTP `/` returned 200.
+- Bundle markers found in deployed container:
+  - `/usr/share/nginx/html/assets/index-Cc1Rrygy.js` contains `Invoice + Sổ công nợ`.
+  - `/usr/share/nginx/html/assets/index-Cc1Rrygy.js` contains `danh sách chỉ hiện chứng từ công nợ`.
 
 ## Evidence to collect
 - Web build output.
