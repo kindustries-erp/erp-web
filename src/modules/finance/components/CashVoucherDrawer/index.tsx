@@ -170,49 +170,53 @@ export function CashVoucherDrawer({
       title={title}
       subtitle={editing ? editing.voucher_no : t("voucher.drawer.subtitleEdit")}
       headerExtra={editToggle}
-      panelClassName="w-[860px] max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
+      panelClassName="w-[calc(100vw/3)] max-[1200px]:w-1/2 max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
       bodyClassName="p-4"
       actions={actions}
     >
       {/* Section 1: Thông tin chứng từ */}
       <DrawerSection title={t("voucher.drawer.sectionInfo")}>
-        <div className="grid grid-cols-3 max-[760px]:grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-          <DrawerField label={t("voucher.drawer.voucherNo")} required>
-            <input
-              type="text"
-              disabled={viewOnly}
-              className={inputCls}
-              value={form.voucher_no}
-              onChange={(e) => onFieldChange("voucher_no", e.target.value)}
-              placeholder={t("voucher.drawer.voucherNoPlaceholder")}
-            />
-          </DrawerField>
-          <DrawerField label={t("voucher.drawer.docDate")} required>
-            <DatePicker
-              value={form.document_date}
-              disabled={viewOnly}
-              onChange={onDocumentDateChange}
-              className="w-full min-w-0"
-            />
-          </DrawerField>
-          <DrawerField label={t("voucher.drawer.postDate")} required>
-            <DatePicker
-              value={form.posting_date}
-              disabled={viewOnly}
-              onChange={onPostingDateChange}
-              className="w-full min-w-0"
-            />
-          </DrawerField>
+        <div className="grid grid-cols-1 gap-y-1">
+          <div className="grid grid-cols-2 gap-x-3">
+            <DrawerField label={t("voucher.drawer.voucherNo")} required>
+              <input
+                type="text"
+                disabled={viewOnly}
+                className={inputCls}
+                value={form.voucher_no}
+                onChange={(e) => onFieldChange("voucher_no", e.target.value)}
+                placeholder={t("voucher.drawer.voucherNoPlaceholder")}
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.docDate")} required>
+              <DatePicker
+                value={form.document_date}
+                disabled={viewOnly}
+                onChange={onDocumentDateChange}
+                className="w-full min-w-0"
+              />
+            </DrawerField>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3">
+            <DrawerField label={t("voucher.drawer.postDate")} required>
+              <DatePicker
+                value={form.posting_date}
+                disabled={viewOnly}
+                onChange={onPostingDateChange}
+                className="w-full min-w-0"
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.cashFund")} required>
+              <Combobox
+                options={fundOpts}
+                value={form.cash_fund_id}
+                onChange={onCashFundChange}
+                placeholder={t("voucher.drawer.cashFundPlaceholder")}
+                disabled={viewOnly}
+              />
+            </DrawerField>
+          </div>
         </div>
-        <DrawerField label={t("voucher.drawer.cashFund")} required>
-          <Combobox
-            options={fundOpts}
-            value={form.cash_fund_id}
-            onChange={onCashFundChange}
-            placeholder={t("voucher.drawer.cashFundPlaceholder")}
-            disabled={viewOnly}
-          />
-        </DrawerField>
       </DrawerSection>
 
       {/* Section 2: Đối tượng */}
@@ -237,36 +241,36 @@ export function CashVoucherDrawer({
             />
           </DrawerField>
         ) : (
-          <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-            <div className="col-span-2 max-[560px]:col-span-1">
-              <DrawerField label={t("voucher.drawer.partner")} required>
+          <div className="grid grid-cols-1 gap-y-1">
+            <DrawerField label={t("voucher.drawer.partner")} required>
+              <Combobox
+                options={partnerOpts}
+                value={form.counterparty_id}
+                onChange={onPartnerChange}
+                placeholder={t("voucher.drawer.partnerPlaceholder")}
+                disabled={viewOnly}
+              />
+            </DrawerField>
+            <div className="grid grid-cols-2 gap-x-3">
+              <DrawerField label={t("voucher.drawer.role")}>
                 <Combobox
-                  options={partnerOpts}
-                  value={form.counterparty_id}
-                  onChange={onPartnerChange}
-                  placeholder={t("voucher.drawer.partnerPlaceholder")}
-                  disabled={viewOnly}
+                  options={COUNTERPARTY_ROLE_OPTS}
+                  value={form.counterparty_role}
+                  onChange={(v) => onFieldChange("counterparty_role", v)}
+                  placeholder={t("voucher.drawer.rolePlaceholder")}
+                  disabled
+                />
+              </DrawerField>
+              <DrawerField label={t("voucher.drawer.taxCode")}>
+                <input
+                  type="text"
+                  disabled
+                  className={inputCls}
+                  value={form.counterparty_tax_code_snapshot}
+                  readOnly
                 />
               </DrawerField>
             </div>
-            <DrawerField label={t("voucher.drawer.role")}>
-              <Combobox
-                options={COUNTERPARTY_ROLE_OPTS}
-                value={form.counterparty_role}
-                onChange={(v) => onFieldChange("counterparty_role", v)}
-                placeholder={t("voucher.drawer.rolePlaceholder")}
-                disabled
-              />
-            </DrawerField>
-            <DrawerField label={t("voucher.drawer.taxCode")}>
-              <input
-                type="text"
-                disabled
-                className={inputCls}
-                value={form.counterparty_tax_code_snapshot}
-                readOnly
-              />
-            </DrawerField>
             <div className="col-span-2 max-[560px]:col-span-1">
               <DrawerField label={t("voucher.drawer.address")}>
                 <input
@@ -309,121 +313,131 @@ export function CashVoucherDrawer({
           disabled={viewOnly}
           onSelect={onTagPresetSelect}
         />
-        <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-          <DrawerField label={t("voucher.drawer.debitAcc")} required>
-            <Combobox
-              options={debitAccountOpts}
-              value={form.debit_account_id}
-              onChange={(v) => onFieldChange("debit_account_id", v)}
-              placeholder={t("voucher.drawer.accPlaceholder")}
-              disabled={viewOnly}
-            />
-          </DrawerField>
-          <DrawerField label={t("voucher.drawer.creditAcc")} required>
-            <Combobox
-              options={creditAccountOpts}
-              value={form.credit_account_id}
-              onChange={(v) => onFieldChange("credit_account_id", v)}
-              placeholder={t("voucher.drawer.accPlaceholder")}
-              disabled={viewOnly}
-            />
-          </DrawerField>
-          <DrawerField label={t("voucher.drawer.amount")} required>
-            <input
-              type="text"
-              inputMode="numeric"
-              disabled={viewOnly}
+        <div className="grid grid-cols-1 gap-y-1">
+          <div className="grid grid-cols-2 gap-x-3">
+            <DrawerField label={t("voucher.drawer.debitAcc")} required>
+              <Combobox
+                options={debitAccountOpts}
+                value={form.debit_account_id}
+                onChange={(v) => onFieldChange("debit_account_id", v)}
+                placeholder={t("voucher.drawer.accPlaceholder")}
+                disabled={viewOnly}
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.creditAcc")} required>
+              <Combobox
+                options={creditAccountOpts}
+                value={form.credit_account_id}
+                onChange={(v) => onFieldChange("credit_account_id", v)}
+                placeholder={t("voucher.drawer.accPlaceholder")}
+                disabled={viewOnly}
+              />
+            </DrawerField>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3">
+            <DrawerField label={t("voucher.drawer.amount")} required>
+              <input
+                type="text"
+                inputMode="numeric"
+                disabled={viewOnly}
+                className={inputCls}
+                value={form.amount}
+                onChange={(e) => onAmountChange(e.target.value)}
+                placeholder={t("voucher.drawer.amountPlaceholder")}
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.amountWords")}>
+              <input
+                type="text"
+                disabled={viewOnly}
+                className={inputCls}
+                value={form.amount_in_words}
+                onChange={(e) => onFieldChange("amount_in_words", e.target.value)}
+                placeholder={t("voucher.drawer.amountWordsPlaceholder")}
+              />
+            </DrawerField>
+          </div>
+          <DrawerField label={t("voucher.drawer.desc")}>
+            <textarea
               className={inputCls}
-              value={form.amount}
-              onChange={(e) => onAmountChange(e.target.value)}
-              placeholder={t("voucher.drawer.amountPlaceholder")}
-            />
-          </DrawerField>
-          <DrawerField label={t("voucher.drawer.amountWords")}>
-            <input
-              type="text"
               disabled={viewOnly}
-              className={inputCls}
-              value={form.amount_in_words}
-              onChange={(e) => onFieldChange("amount_in_words", e.target.value)}
-              placeholder={t("voucher.drawer.amountWordsPlaceholder")}
+              rows={2}
+              value={form.description}
+              onChange={(e) => onFieldChange("description", e.target.value)}
+              placeholder={t("voucher.drawer.descPlaceholder")}
             />
           </DrawerField>
         </div>
-        <DrawerField label={t("voucher.drawer.desc")}>
-          <textarea
-            className={inputCls}
-            disabled={viewOnly}
-            rows={2}
-            value={form.description}
-            onChange={(e) => onFieldChange("description", e.target.value)}
-            placeholder={t("voucher.drawer.descPlaceholder")}
-          />
-        </DrawerField>
       </DrawerSection>
 
-      <DrawerSection title="Chứng từ liên quan">
-        <RelatedDocumentsEditor
-          value={form.related_documents}
-          disabled={relatedDocumentsReadOnly}
-          counterpartyId={form.counterparty_id}
-          maxSettlementAmount={Number(form.amount) || undefined}
-          onChange={(value) => onFieldChange("related_documents", value)}
-        />
-      </DrawerSection>
+      <div className="grid grid-cols-3 gap-6 mt-2 pt-4 border-t border-border">
+        <div className="col-span-2 space-y-6">
+          <DrawerSection title="Chứng từ liên quan">
+            <RelatedDocumentsEditor
+              value={form.related_documents}
+              disabled={relatedDocumentsReadOnly}
+              counterpartyId={form.counterparty_id}
+              maxSettlementAmount={Number(form.amount) || undefined}
+              onChange={(value) => onFieldChange("related_documents", value)}
+            />
+          </DrawerSection>
 
-      {/* Section 4: Đính kèm */}
-      <DrawerSection title={t("voucher.drawer.sectionAttachment")}>
-        {existingAttachments.length > 0 && (
-          <div className="mb-3 rounded-lg border border-border overflow-hidden">
-            {existingAttachments.map((a) => (
-              <AttachmentRow
-                key={a.id}
-                item={a}
-                onDelete={viewOnly ? undefined : onDeleteAttachment}
-              />
-            ))}
-          </div>
-        )}
-        {!viewOnly && (
-          <>
-            <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-              <DrawerField label={t("voucher.drawer.attachmentType")}>
-                <Combobox
-                  options={ATTACHMENT_TYPE_OPTS}
-                  value={attachmentType}
-                  onChange={(v) => onAttachmentTypeChange((v as AttachmentType) || "OTHER")}
-                  placeholder={t("voucher.drawer.attachmentTypePlaceholder")}
-                />
-              </DrawerField>
-              <DrawerField label={t("voucher.drawer.attachmentNote")}>
-                <input
-                  type="text"
-                  className={inputCls}
-                  value={attachmentNote}
-                  onChange={(e) => onAttachmentNoteChange(e.target.value)}
-                  placeholder={t("voucher.drawer.attachmentNotePlaceholder")}
-                />
-              </DrawerField>
-            </div>
-            <DrawerField label={t("voucher.drawer.newFile")}>
-              <FileUploadBox
-                multiple
-                files={attachmentFiles}
-                onFilesChange={onAttachmentFilesChange}
-                maxSizeMb={10}
-              />
-            </DrawerField>
-          </>
-        )}
-      </DrawerSection>
+          {/* Section 4: Đính kèm */}
+          <DrawerSection title={t("voucher.drawer.sectionAttachment")}>
+            {existingAttachments.length > 0 && (
+              <div className="mb-3 rounded-lg border border-border overflow-hidden">
+                {existingAttachments.map((a) => (
+                  <AttachmentRow
+                    key={a.id}
+                    item={a}
+                    onDelete={viewOnly ? undefined : onDeleteAttachment}
+                  />
+                ))}
+              </div>
+            )}
+            {!viewOnly && (
+              <>
+                <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
+                  <DrawerField label={t("voucher.drawer.attachmentType")}>
+                    <Combobox
+                      options={ATTACHMENT_TYPE_OPTS}
+                      value={attachmentType}
+                      onChange={(v) => onAttachmentTypeChange((v as AttachmentType) || "OTHER")}
+                      placeholder={t("voucher.drawer.attachmentTypePlaceholder")}
+                    />
+                  </DrawerField>
+                  <DrawerField label={t("voucher.drawer.attachmentNote")}>
+                    <input
+                      type="text"
+                      className={inputCls}
+                      value={attachmentNote}
+                      onChange={(e) => onAttachmentNoteChange(e.target.value)}
+                      placeholder={t("voucher.drawer.attachmentNotePlaceholder")}
+                    />
+                  </DrawerField>
+                </div>
+                <DrawerField label={t("voucher.drawer.newFile")}>
+                  <FileUploadBox
+                    multiple
+                    files={attachmentFiles}
+                    onFilesChange={onAttachmentFilesChange}
+                    maxSizeMb={10}
+                  />
+                </DrawerField>
+              </>
+            )}
+          </DrawerSection>
+        </div>
 
-      {/* Section 5: Lịch sử duyệt — chỉ hiện khi xem, không phải tạo mới */}
-      {editing && (
-        <DrawerSection title="Lịch sử duyệt">
-          <ApprovalHistory voucherId={editing.id} />
-        </DrawerSection>
-      )}
+        <div className="col-span-1 border-l border-border pl-6">
+          {/* Section 5: Lịch sử duyệt — chỉ hiện khi xem, không phải tạo mới */}
+          {editing && (
+            <DrawerSection title="Lịch sử duyệt">
+              <ApprovalHistory voucherId={editing.id} />
+            </DrawerSection>
+          )}
+        </div>
+      </div>
 
       {saveError && (
         <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">

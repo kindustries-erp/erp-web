@@ -20,6 +20,15 @@ const ACTION_COLORS: Record<string, string> = {
   CANCEL: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Bản nháp",
+  PENDING_APPROVAL: "Chờ duyệt",
+  APPROVED: "Đã duyệt",
+  POSTED: "Đã hạch toán",
+  REJECTED: "Từ chối",
+  CANCELLED: "Đã hủy",
+};
+
 interface ApprovalHistoryProps {
   voucherId: string;
 }
@@ -70,13 +79,17 @@ export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
               </span>
               {log.from_status && log.to_status && (
                 <span className="text-muted-fg">
-                  {log.from_status} → {log.to_status}
+                  {STATUS_LABELS[log.from_status] ?? log.from_status} → {STATUS_LABELS[log.to_status] ?? log.to_status}
                 </span>
               )}
             </div>
             <div className="text-muted-fg mt-0.5">
               {new Date(log.action_at).toLocaleString("vi-VN")}
-              {(log.action_by_name || log.action_by) && ` · ${log.action_by_name || log.action_by}`}
+              {(log.action_by_name || log.action_by) && (
+                <span className="ml-1">
+                  · {log.action_by_name || (log.action_by?.length === 36 ? "Hệ thống" : log.action_by)}
+                </span>
+              )}
             </div>
             {log.note && (
               <div className="mt-0.5 text-foreground italic">"{log.note}"</div>
