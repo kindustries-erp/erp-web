@@ -188,6 +188,17 @@ export function CashVoucherDrawer({
                 placeholder={t("voucher.drawer.voucherNoPlaceholder")}
               />
             </DrawerField>
+            <DrawerField label={t("voucher.drawer.cashFund")} required>
+              <Combobox
+                options={fundOpts}
+                value={form.cash_fund_id}
+                onChange={onCashFundChange}
+                placeholder={t("voucher.drawer.cashFundPlaceholder")}
+                disabled={viewOnly}
+              />
+            </DrawerField>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3">
             <DrawerField label={t("voucher.drawer.docDate")} required>
               <DatePicker
                 value={form.document_date}
@@ -196,23 +207,12 @@ export function CashVoucherDrawer({
                 className="w-full min-w-0"
               />
             </DrawerField>
-          </div>
-          <div className="grid grid-cols-2 gap-x-3">
             <DrawerField label={t("voucher.drawer.postDate")} required>
               <DatePicker
                 value={form.posting_date}
                 disabled={viewOnly}
                 onChange={onPostingDateChange}
                 className="w-full min-w-0"
-              />
-            </DrawerField>
-            <DrawerField label={t("voucher.drawer.cashFund")} required>
-              <Combobox
-                options={fundOpts}
-                value={form.cash_fund_id}
-                onChange={onCashFundChange}
-                placeholder={t("voucher.drawer.cashFundPlaceholder")}
-                disabled={viewOnly}
               />
             </DrawerField>
           </div>
@@ -251,7 +251,7 @@ export function CashVoucherDrawer({
                 disabled={viewOnly}
               />
             </DrawerField>
-            <div className="grid grid-cols-2 gap-x-3">
+            <div className="grid grid-cols-1">
               <DrawerField label={t("voucher.drawer.role")}>
                 <Combobox
                   options={COUNTERPARTY_ROLE_OPTS}
@@ -259,15 +259,6 @@ export function CashVoucherDrawer({
                   onChange={(v) => onFieldChange("counterparty_role", v)}
                   placeholder={t("voucher.drawer.rolePlaceholder")}
                   disabled
-                />
-              </DrawerField>
-              <DrawerField label={t("voucher.drawer.taxCode")}>
-                <input
-                  type="text"
-                  disabled
-                  className={inputCls}
-                  value={form.counterparty_tax_code_snapshot}
-                  readOnly
                 />
               </DrawerField>
             </div>

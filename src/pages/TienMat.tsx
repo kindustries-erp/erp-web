@@ -328,7 +328,7 @@ export function TienMat() {
         const partnerName = p.name || p.display_name || partnerCode || p.id;
         return {
           value: p.id,
-          label: partnerCode ? `${partnerCode} — ${partnerName}` : partnerName,
+          label: `${partnerCode ? `${partnerCode} — ` : ""}${partnerName}${p.tax_code ? ` — MST: ${p.tax_code}` : ""}`,
         };
       }),
     [partners],
