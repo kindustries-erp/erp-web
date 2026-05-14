@@ -6,7 +6,6 @@ import {
   submitPaymentVoucherApi,
   approvePaymentVoucherApi,
   rejectPaymentVoucherApi,
-  postPaymentVoucherApi,
   cancelPaymentVoucherApi,
   type PaymentVoucher,
   type PaymentVoucherAttachment,
@@ -123,7 +122,7 @@ export function useVoucherDrawer() {
           await rejectPaymentVoucherApi(editing.id, opts?.note);
           break;
         case "POST":
-          await postPaymentVoucherApi(editing.id);
+          await approvePaymentVoucherApi(editing.id);
           break;
         case "CANCEL":
           await cancelPaymentVoucherApi(editing.id, opts?.cancel_reason);
@@ -131,9 +130,9 @@ export function useVoucherDrawer() {
       }
       const ACTION_LABELS: Record<string, string> = {
         SUBMIT: "Đã gửi duyệt",
-        APPROVE: "Đã duyệt",
+        APPROVE: "Đã duyệt và hạch toán",
         REJECT: "Đã từ chối",
-        POST: "Đã hạch toán",
+        POST: "Đã duyệt và hạch toán",
         CANCEL: "Đã hủy",
       };
       showToast({

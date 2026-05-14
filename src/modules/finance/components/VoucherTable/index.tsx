@@ -190,13 +190,15 @@ export function VoucherTable({
           >
             <IconEdit />
           </button>
-          <button
-            title={t("voucher.table.btnDelete")}
-            onClick={() => onDelete(v)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
-          >
-            <IconTrash />
-          </button>
+          {v.status === "DRAFT" && (
+            <button
+              title={t("voucher.table.btnDelete")}
+              onClick={() => onDelete(v)}
+              className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
+            >
+              <IconTrash />
+            </button>
+          )}
         </div>
       ),
       headerClassName: "w-[72px]",

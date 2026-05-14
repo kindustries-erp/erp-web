@@ -124,12 +124,12 @@ export function CashVoucherDrawer({
             : []),
         ];
       case "APPROVED":
+      case "POSTED":
         return [
           { label: "Đóng", onClick: onClose },
           ...(canUpdateVoucher
             ? [
                 { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-                { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("POST") },
               ]
             : []),
         ];

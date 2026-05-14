@@ -129,6 +129,6 @@ function buildDrawerActions(args: any): DrawerAction[] {
   if (!canUpdateVoucher) return [{ label: "Đóng", onClick: closeDrawer }];
   if (editing.status === "DRAFT") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }, { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData) }];
   if (editing.status === "PENDING_APPROVAL") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }, { label: "Từ chối", disabled: saving, onClick: () => handleStatusTransition("REJECT", reloadCurrentData) }, { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("APPROVE", reloadCurrentData) }];
-  if (editing.status === "APPROVED") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }, { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("POST", reloadCurrentData) }];
+  if (editing.status === "APPROVED" || editing.status === "POSTED") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }];
   return [{ label: "Đóng", onClick: closeDrawer }];
 }
