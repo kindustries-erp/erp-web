@@ -1,6 +1,5 @@
 import type {
   AttachmentType,
-  CounterpartyRole,
   CounterpartySource,
   VoucherStatus,
   CashBankRelatedDocumentInput,
