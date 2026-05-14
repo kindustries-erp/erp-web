@@ -53,11 +53,11 @@ Thiết kế thay đổi thống nhất DB -> API -> UI để đảm bảo:
 - [ ] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
   - [x] 4.2 API/Web build
-  - [ ] 4.3 Smoke test flow liên quan
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+  - [x] 4.3 Smoke test flow liên quan
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue)
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## EXECUTE Status
 - Đã sửa API/Web theo acceptance.
@@ -143,14 +143,15 @@ Thiết kế thay đổi thống nhất DB -> API -> UI để đảm bảo:
 - API `npm run build`: pass.
 - Web `npx tsc --noEmit`: pass.
 - Web `npm run build`: pass (Vite warnings only: existing dynamic/static import chunking + large chunk warning).
-- Smoke test: pending deploy/runtime verification.
+- Deploy: API/Web docker compose build `--no-cache` + up -d pass.
+- Runtime smoke: `api_docs:200`, `api_v1_payment_vouchers_unauth:401`, `web_local:200`; containers `liouni-erp-api` và `liouni-erp-web` Up; API startup logs map `/api/v1/payment-vouchers/:id/approve`, `/post`, `/cancel`.
 
 ## Lessons Learned
 - Không có issue mới.
 
 ## Commit/Push Status
-- Web repo: pending commit/push.
-- API repo: pending commit/push.
+- Web repo: committed/pushed `74fd889 Enhance cash bank voucher approval workflow`.
+- API repo: committed/pushed `8ba1847 Enhance cash bank voucher approval workflow`.
 - DB/directus staging: no DB change needed.
 
 ## Sẵn sàng thực thi
