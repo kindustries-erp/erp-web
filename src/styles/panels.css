@@ -26,7 +26,6 @@
   bottom: 18px;
   width: 420px;
   max-width: calc(100vw - 44px);
-  height: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
