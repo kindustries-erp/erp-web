@@ -31,6 +31,7 @@ import { PhanQuyen } from "@/pages/PhanQuyen";
 import { NotFound } from "@/pages/NotFound";
 import WorkflowCanvas from "@/pages/WorkflowCanvas";
 import { ErrorPage } from "@/shared/components/ErrorPage";
+import { TooltipProvider } from "@/core/components/ui/Tooltip";
 
 /**
  * Wrap a page with an optional access guard.
@@ -91,79 +92,81 @@ export default function App() {
   if (!isLoggedIn) return <Login />;
 
   return (
-    <div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
-      <Sidebar />
-      {/* Right panel: single rounded window — topbar + scrolling content + tabbar */}
-      <div className="right-panel">
-        <Topbar />
-        <div
-          ref={contentRef}
-          onScroll={keepContentXLocked}
-          className="app-content flex-1 overflow-x-hidden overflow-y-auto"
-        >
-          {forbidden ? (
-            <ErrorPage code="403" />
-          ) : (
-            <>
-              {currentPage === "dashboard" && <Dashboard />}
-              {currentPage === "dongtien" && <DongTien />}
-              {currentPage === "tienmat" && <TienMat />}
-              {currentPage === "tiengui" && <TienGui />}
-              {currentPage === "dinhkem" && <DinhKemChungTu />}
-              {currentPage === "thietlap-quy" && <ThietLapQuy />}
-              {currentPage === "thietlap-nh" && <ThietLapNganHang />}
-              {currentPage === "thietlap-tk" && <ThietLapTaiKhoan />}
-              {currentPage === "nhansu" && <NhanSu />}
-              {currentPage === "phongban" && <PhongBan />}
-              {currentPage === "chucvu" && <ChucVu />}
-              {currentPage === "phaithu" && <PhaiThu />}
-              {currentPage === "phaittra" && <PhaiTra />}
-              {currentPage === "nhatkyechung" && <NhatKyChung />}
-              {(currentPage === "socat" ||
-                currentPage === "banhang" ||
-                currentPage === "khachhang" ||
-                currentPage === "muahang" ||
-                currentPage === "nhacungcap") && <ComingSoon />}
-              {currentPage === "phanquyen" && <PhanQuyen />}
-              {/* {currentPage === "phanquyen" && <ActivityLog />} */}
-              {currentPage === "activitylog" && <ActivityLog />}
-              {currentPage === "doitac" && <DoiTac />}
-              {currentPage === "workflowcanvas" && <WorkflowCanvas />}
-              {/* Catch-all — unknown page keys (e.g. from stale persisted state) */}
-              {![
-                "dashboard",
-                "dongtien",
-                "tienmat",
-                "tiengui",
-                "dinhkem",
-                "thietlap-quy",
-                "thietlap-nh",
-                "thietlap-tk",
-                "nhansu",
-                "phongban",
-                "chucvu",
-                "phaithu",
-                "phaittra",
-                "socat",
-                "nhatkyechung",
-                "banhang",
-                "khachhang",
-                "muahang",
-                "nhacungcap",
-                "phanquyen",
-                "activitylog",
-                "doitac",
-                "workflowcanvas",
-              ].includes(currentPage) && <NotFound />}
-            </>
-          )}
+    <TooltipProvider>
+      <div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
+        <Sidebar />
+        {/* Right panel: single rounded window — topbar + scrolling content + tabbar */}
+        <div className="right-panel">
+          <Topbar />
+          <div
+            ref={contentRef}
+            onScroll={keepContentXLocked}
+            className="app-content flex-1 overflow-x-hidden overflow-y-auto"
+          >
+            {forbidden ? (
+              <ErrorPage code="403" />
+            ) : (
+              <>
+                {currentPage === "dashboard" && <Dashboard />}
+                {currentPage === "dongtien" && <DongTien />}
+                {currentPage === "tienmat" && <TienMat />}
+                {currentPage === "tiengui" && <TienGui />}
+                {currentPage === "dinhkem" && <DinhKemChungTu />}
+                {currentPage === "thietlap-quy" && <ThietLapQuy />}
+                {currentPage === "thietlap-nh" && <ThietLapNganHang />}
+                {currentPage === "thietlap-tk" && <ThietLapTaiKhoan />}
+                {currentPage === "nhansu" && <NhanSu />}
+                {currentPage === "phongban" && <PhongBan />}
+                {currentPage === "chucvu" && <ChucVu />}
+                {currentPage === "phaithu" && <PhaiThu />}
+                {currentPage === "phaittra" && <PhaiTra />}
+                {currentPage === "nhatkyechung" && <NhatKyChung />}
+                {(currentPage === "socat" ||
+                  currentPage === "banhang" ||
+                  currentPage === "khachhang" ||
+                  currentPage === "muahang" ||
+                  currentPage === "nhacungcap") && <ComingSoon />}
+                {currentPage === "phanquyen" && <PhanQuyen />}
+                {/* {currentPage === "phanquyen" && <ActivityLog />} */}
+                {currentPage === "activitylog" && <ActivityLog />}
+                {currentPage === "doitac" && <DoiTac />}
+                {currentPage === "workflowcanvas" && <WorkflowCanvas />}
+                {/* Catch-all — unknown page keys (e.g. from stale persisted state) */}
+                {![
+                  "dashboard",
+                  "dongtien",
+                  "tienmat",
+                  "tiengui",
+                  "dinhkem",
+                  "thietlap-quy",
+                  "thietlap-nh",
+                  "thietlap-tk",
+                  "nhansu",
+                  "phongban",
+                  "chucvu",
+                  "phaithu",
+                  "phaittra",
+                  "socat",
+                  "nhatkyechung",
+                  "banhang",
+                  "khachhang",
+                  "muahang",
+                  "nhacungcap",
+                  "phanquyen",
+                  "activitylog",
+                  "doitac",
+                  "workflowcanvas",
+                ].includes(currentPage) && <NotFound />}
+              </>
+            )}
+          </div>
+          <TabBar />
         </div>
-        <TabBar />
+        <SlidePanel />
+        <ImportModal />
+        <Toast />
+        <AppContextMenu />
       </div>
-      <SlidePanel />
-      <ImportModal />
-      <Toast />
-      <AppContextMenu />
-    </div>
+    </TooltipProvider>
   );
 }
