@@ -370,73 +370,69 @@ export function CashVoucherDrawer({
         </div>
       </DrawerSection>
 
-      <div className="grid grid-cols-3 gap-6 mt-2 pt-4 border-t border-border">
-        <div className="col-span-2 space-y-6">
-          <DrawerSection title="Chứng từ liên quan">
-            <RelatedDocumentsEditor
-              value={form.related_documents}
-              disabled={relatedDocumentsReadOnly}
-              counterpartyId={form.counterparty_id}
-              maxSettlementAmount={Number(form.amount) || undefined}
-              onChange={(value) => onFieldChange("related_documents", value)}
-            />
-          </DrawerSection>
+      <div className="mt-2 pt-4 border-t border-border space-y-6">
+        <DrawerSection title="Chứng từ liên quan">
+          <RelatedDocumentsEditor
+            value={form.related_documents}
+            disabled={relatedDocumentsReadOnly}
+            counterpartyId={form.counterparty_id}
+            maxSettlementAmount={Number(form.amount) || undefined}
+            onChange={(value) => onFieldChange("related_documents", value)}
+          />
+        </DrawerSection>
 
-          {/* Section 4: Đính kèm */}
-          <DrawerSection title={t("voucher.drawer.sectionAttachment")}>
-            {existingAttachments.length > 0 && (
-              <div className="mb-3 rounded-lg border border-border overflow-hidden">
-                {existingAttachments.map((a) => (
-                  <AttachmentRow
-                    key={a.id}
-                    item={a}
-                    onDelete={viewOnly ? undefined : onDeleteAttachment}
-                  />
-                ))}
-              </div>
-            )}
-            {!viewOnly && (
-              <>
-                <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-                  <DrawerField label={t("voucher.drawer.attachmentType")}>
-                    <Combobox
-                      options={ATTACHMENT_TYPE_OPTS}
-                      value={attachmentType}
-                      onChange={(v) => onAttachmentTypeChange((v as AttachmentType) || "OTHER")}
-                      placeholder={t("voucher.drawer.attachmentTypePlaceholder")}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("voucher.drawer.attachmentNote")}>
-                    <input
-                      type="text"
-                      className={inputCls}
-                      value={attachmentNote}
-                      onChange={(e) => onAttachmentNoteChange(e.target.value)}
-                      placeholder={t("voucher.drawer.attachmentNotePlaceholder")}
-                    />
-                  </DrawerField>
-                </div>
-                <DrawerField label={t("voucher.drawer.newFile")}>
-                  <FileUploadBox
-                    multiple
-                    files={attachmentFiles}
-                    onFilesChange={onAttachmentFilesChange}
-                    maxSizeMb={10}
+        {/* Section 4: Đính kèm */}
+        <DrawerSection title={t("voucher.drawer.sectionAttachment")}>
+          {existingAttachments.length > 0 && (
+            <div className="mb-3 rounded-lg border border-border overflow-hidden">
+              {existingAttachments.map((a) => (
+                <AttachmentRow
+                  key={a.id}
+                  item={a}
+                  onDelete={viewOnly ? undefined : onDeleteAttachment}
+                />
+              ))}
+            </div>
+          )}
+          {!viewOnly && (
+            <>
+              <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
+                <DrawerField label={t("voucher.drawer.attachmentType")}>
+                  <Combobox
+                    options={ATTACHMENT_TYPE_OPTS}
+                    value={attachmentType}
+                    onChange={(v) => onAttachmentTypeChange((v as AttachmentType) || "OTHER")}
+                    placeholder={t("voucher.drawer.attachmentTypePlaceholder")}
                   />
                 </DrawerField>
-              </>
-            )}
-          </DrawerSection>
-        </div>
-
-        <div className="col-span-1 border-l border-border pl-6">
-          {/* Section 5: Lịch sử duyệt — chỉ hiện khi xem, không phải tạo mới */}
-          {editing && (
-            <DrawerSection title="Lịch sử duyệt">
-              <ApprovalHistory voucherId={editing.id} />
-            </DrawerSection>
+                <DrawerField label={t("voucher.drawer.attachmentNote")}>
+                  <input
+                    type="text"
+                    className={inputCls}
+                    value={attachmentNote}
+                    onChange={(e) => onAttachmentNoteChange(e.target.value)}
+                    placeholder={t("voucher.drawer.attachmentNotePlaceholder")}
+                  />
+                </DrawerField>
+              </div>
+              <DrawerField label={t("voucher.drawer.newFile")}>
+                <FileUploadBox
+                  multiple
+                  files={attachmentFiles}
+                  onFilesChange={onAttachmentFilesChange}
+                  maxSizeMb={10}
+                />
+              </DrawerField>
+            </>
           )}
-        </div>
+        </DrawerSection>
+
+        {/* Section 5: Lịch sử duyệt — chỉ hiện khi xem, không phải tạo mới */}
+        {editing && (
+          <DrawerSection title="Lịch sử duyệt">
+            <ApprovalHistory voucherId={editing.id} />
+          </DrawerSection>
+        )}
       </div>
 
       {saveError && (

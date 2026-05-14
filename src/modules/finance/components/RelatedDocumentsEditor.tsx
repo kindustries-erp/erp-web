@@ -5,6 +5,8 @@ import {
   type ArDocument,
   type CashBankRelatedDocumentInput,
 } from "@/modules/finance/api/financeApi";
+import { Check, X } from "lucide-react";
+import { MultiSelect } from "@/shared/components/MultiSelect";
 
 interface Props {
   value: CashBankRelatedDocumentInput[];
@@ -48,10 +50,8 @@ function arDocToRelated(doc: ArDocument, maxSettlementAmount?: number): CashBank
 export function RelatedDocumentsEditor({ value, disabled, counterpartyId, maxSettlementAmount, onChange }: Props) {
   const safeValue = Array.isArray(value) ? value : [];
   const [arDocs, setArDocs] = useState<ArDocument[]>([]);
-  const [arDocId, setArDocId] = useState("");
 
   useEffect(() => {
-    setArDocId("");
     if (!counterpartyId) {
       setArDocs([]);
       return;
@@ -62,78 +62,121 @@ export function RelatedDocumentsEditor({ value, disabled, counterpartyId, maxSet
   }, [counterpartyId]);
 
   const arDocOpts = useMemo(
-    () => arDocs.map((doc) => ({ value: doc.id, label: `${doc.document_no} · ${doc.document_type} · Tổng ${Number(doc.total_amount ?? 0).toLocaleString("vi-VN")} · Đã TT ${Number(doc.settled_amount ?? 0).toLocaleString("vi-VN")} · Còn ${Number(doc.open_amount ?? 0).toLocaleString("vi-VN")}` })),
+    () => arDocs.map((doc) => ({
+      value: doc.id,
+      label: `${doc.document_no} · ${doc.document_type} · Còn ${Number(doc.open_amount ?? 0).toLocaleString("vi-VN")}`,
+      description: `Tổng ${Number(doc.total_amount ?? 0).toLocaleString("vi-VN")}`
+    })),
     [arDocs],
+  );
+
+  const selectedArIds = useMemo(
+    () => safeValue.filter(i => i.related_type === 'ar_documents').map(i => i.related_id),
+    [safeValue]
   );
 
   function update(index: number, patch: Partial<CashBankRelatedDocumentInput>) {
     onChange(safeValue.map((item, idx) => (idx === index ? { ...item, ...patch } : item)));
   }
 
-  function addArDoc() {
-    const doc = arDocs.find((item) => item.id === arDocId);
-    if (!doc) return;
-    if (safeValue.some((item) => item.related_type === "ar_documents" && item.related_id === doc.id)) {
-      setArDocId("");
-      return;
-    }
-    onChange([...safeValue, arDocToRelated(doc, maxSettlementAmount)]);
-    setArDocId("");
+  function handleMultiSelectChange(selectedIds: string[]) {
+    const currentArItems = safeValue.filter(item => item.related_type === 'ar_documents');
+    const currentManualItems = safeValue.filter(item => item.related_type !== 'ar_documents');
+
+    const newArItems = selectedIds.map(id => {
+       const existing = currentArItems.find(item => item.related_id === id);
+       if (existing) return existing;
+       const doc = arDocs.find(d => d.id === id);
+       return doc ? arDocToRelated(doc, maxSettlementAmount) : null;
+    }).filter(Boolean) as CashBankRelatedDocumentInput[];
+
+    onChange([...newArItems, ...currentManualItems]);
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-3 max-[760px]:flex-col max-[760px]:items-stretch">
-        <div className="text-xs text-muted-fg">
-          Liên kết 1-nhiều tới chứng từ công nợ/voucher liên quan. Bắt buộc chọn đối tượng trước; danh sách chỉ hiện chứng từ công nợ của đúng đối tượng đó. Khi lưu Cash/Bank, số tiền link sẽ tự cập nhật Đã thanh toán/Còn lại trên chứng từ công nợ.
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-y-3">
+        <div className="text-xs text-muted-fg leading-relaxed">
+          Liên kết tới các chứng từ công nợ của đối tượng. Khi lưu, số tiền sẽ được cấn trừ tương ứng.
         </div>
         {!disabled && (
-          <div className="flex flex-wrap items-center gap-2">
-            <select className={inputCls} value={arDocId} disabled={!counterpartyId} onChange={(e) => setArDocId(e.target.value)}>
-              <option value="">{counterpartyId ? "Chọn chứng từ công nợ..." : "Chọn đối tượng trước"}</option>
-              {arDocOpts.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
-            <button type="button" className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted" onClick={addArDoc} disabled={!arDocId || !counterpartyId}>
-              + Link công nợ
-            </button>
-            <button type="button" className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted" onClick={() => onChange([...safeValue, emptyDoc()])}>
-              + Thêm thủ công
-            </button>
+          <div className="flex flex-col gap-3">
+            <DrawerField label="Chọn chứng từ công nợ">
+              <MultiSelect
+                options={arDocOpts}
+                value={selectedArIds}
+                onChange={handleMultiSelectChange}
+                disabled={!counterpartyId}
+                placeholder={counterpartyId ? "Tìm và chọn chứng từ..." : "Vui lòng chọn đối tượng trước"}
+              />
+            </DrawerField>
+            <div className="flex justify-start">
+              <button
+                type="button"
+                className="text-xs font-medium text-primary hover:underline"
+                onClick={() => onChange([...safeValue, emptyDoc()])}
+              >
+                + Thêm chứng từ thủ công
+              </button>
+            </div>
           </div>
         )}
       </div>
-      {safeValue.length === 0 && <div className="text-xs text-muted-fg">{counterpartyId ? "Chưa có chứng từ liên quan." : "Chọn đối tượng để tải chứng từ công nợ liên quan."}</div>}
-      {safeValue.map((doc, index) => (
-        <div key={`${doc.related_id}-${index}`} className="rounded-xl border border-border p-3">
-          {doc.related_type === "ar_documents" && <div className="mb-2 rounded-lg bg-muted px-3 py-2 text-xs text-muted-fg">Số tiền nhập ở dòng này sẽ được cấn trừ vào chứng từ; sau khi lưu sẽ cập nhật cột Đã thanh toán và Còn lại trong Phải thu.</div>}
-          <div className="grid grid-cols-3 max-[760px]:grid-cols-1 gap-x-3">
-            <DrawerField label="Loại">
-              <select className={inputCls} disabled={disabled} value={doc.related_type} onChange={(e) => update(index, { related_type: e.target.value })}>
-                {TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
-            </DrawerField>
-            <DrawerField label="Số chứng từ">
-              <input className={inputCls} disabled={disabled} value={doc.related_no ?? ""} onChange={(e) => update(index, { related_no: e.target.value })} />
-            </DrawerField>
-            <DrawerField label="Ngày">
-              <input type="date" className={inputCls} disabled={disabled} value={doc.related_date ?? ""} onChange={(e) => update(index, { related_date: e.target.value })} />
-            </DrawerField>
-          </div>
-          <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-            <DrawerField label="Số tiền">
-              <input className={inputCls} disabled={disabled} value={doc.amount ?? ""} onChange={(e) => update(index, { amount: e.target.value ? Number(e.target.value) : undefined })} />
-            </DrawerField>
-            <DrawerField label="Ghi chú">
-              <input className={inputCls} disabled={disabled} value={doc.note ?? ""} onChange={(e) => update(index, { note: e.target.value })} />
-            </DrawerField>
-          </div>
-          {!disabled && (
-            <button type="button" className="text-xs text-destructive" onClick={() => onChange(safeValue.filter((_, idx) => idx !== index))}>
-              Xóa dòng liên quan
-            </button>
-          )}
+
+      {safeValue.length === 0 && (
+        <div className="text-xs text-muted-fg py-4 border-2 border-dashed border-border rounded-xl text-center">
+          {counterpartyId ? "Chưa có chứng từ liên quan." : "Chọn đối tượng để tải chứng từ công nợ."}
         </div>
-      ))}
+      )}
+
+      <div className="space-y-3">
+        {safeValue.map((doc, index) => (
+          <div key={`${doc.related_id}-${index}`} className="relative rounded-xl border border-border bg-surface p-4 pt-8">
+            <button
+              type="button"
+              className="absolute top-3 right-3 p-1 rounded-md text-muted-fg hover:text-destructive hover:bg-destructive/5 transition-colors"
+              onClick={() => onChange(safeValue.filter((_, idx) => idx !== index))}
+              title="Gỡ bỏ"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {doc.related_type === "ar_documents" && (
+              <div className="mb-3 rounded-lg bg-primary/5 px-3 py-2 text-[11px] text-primary font-medium">
+                Chứng từ công nợ hệ thống - Số tiền sẽ được cấn trừ tự động.
+              </div>
+            )}
+
+            <div className="grid grid-cols-3 max-[760px]:grid-cols-1 gap-x-3">
+              <DrawerField label="Loại">
+                <select className={inputCls} disabled={disabled} value={doc.related_type} onChange={(e) => update(index, { related_type: e.target.value })}>
+                  {TYPE_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </DrawerField>
+              <DrawerField label="Số chứng từ">
+                <input className={inputCls} disabled={disabled} value={doc.related_no ?? ""} onChange={(e) => update(index, { related_no: e.target.value })} />
+              </DrawerField>
+              <DrawerField label="Ngày">
+                <input type="date" className={inputCls} disabled={disabled} value={doc.related_date ?? ""} onChange={(e) => update(index, { related_date: e.target.value })} />
+              </DrawerField>
+            </div>
+            <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
+              <DrawerField label="Số tiền">
+                <input
+                  type="number"
+                  className={inputCls}
+                  disabled={disabled}
+                  value={doc.amount ?? ""}
+                  onChange={(e) => update(index, { amount: e.target.value ? Number(e.target.value) : undefined })}
+                />
+              </DrawerField>
+              <DrawerField label="Ghi chú">
+                <input className={inputCls} disabled={disabled} value={doc.note ?? ""} onChange={(e) => update(index, { note: e.target.value })} />
+              </DrawerField>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

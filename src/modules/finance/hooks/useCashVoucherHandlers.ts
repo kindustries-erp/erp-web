@@ -231,12 +231,14 @@ export function useCashVoucherHandlers({
   }
 
   async function openNew(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
-    const nextForm = emptyForm(vtype);
-    nextForm.voucher_no = await generateVoucherNo(vtype);
-    setForm(nextForm);
+    setForm(emptyForm(vtype));
     setPostingDateTouched(false);
+    openDrawerForNew(); // Open immediately
+
+    // Background load
+    const vno = await generateVoucherNo(vtype);
+    setForm((f) => ({ ...f, voucher_no: vno }));
     await loadTagPresets(vtype);
-    openDrawerForNew();
   }
 
   function openEdit(voucher: PaymentVoucher) {
