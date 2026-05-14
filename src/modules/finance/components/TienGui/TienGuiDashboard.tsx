@@ -16,7 +16,7 @@ export function TienGuiDashboard(props: any) {
         title={t("tiengui.title")}
         desc={t("tiengui.desc")}
         icon={<Landmark className="h-4 w-4" />}
-        actions={canCreateVoucher ? <><BtnPrimary onClick={() => openNew("BANK_RECEIPT")}><IconPlus /> {t("tiengui.createUNT")}</BtnPrimary><BtnPrimary onClick={() => openNew("CUSTOMER_ADVANCE_RECEIPT")}><IconPlus /> Đặt cọc</BtnPrimary><BtnPrimary onClick={() => openNew("BANK_PAYMENT")}><IconPlus /> {t("tiengui.createUNC")}</BtnPrimary></> : undefined}
+        actions={canCreateVoucher ? <><BtnPrimary onClick={() => openNew("BANK_RECEIPT")}><IconPlus /> {t("tiengui.createUNT")}</BtnPrimary><BtnPrimary onClick={() => openNew("CUSTOMER_RECEIPT_BANK")}><IconPlus /> Thu KH</BtnPrimary><BtnPrimary onClick={() => openNew("CUSTOMER_ADVANCE_RECEIPT")}><IconPlus /> Đặt cọc</BtnPrimary><BtnPrimary onClick={() => openNew("PAYMENT_BANK")}><IconPlus /> Trả NCC</BtnPrimary><BtnPrimary onClick={() => openNew("BANK_PAYMENT")}><IconPlus /> {t("tiengui.createUNC")}</BtnPrimary></> : undefined}
       />
       <VoucherFilterBar period={period} dateFrom={dateFrom} dateTo={dateTo} channelFilter={bankFilter} channelOpts={bankFilterOpts} channelLabel={t("voucher.filter.bank")} channelPlaceholder={t("voucher.filter.bankPlaceholder")} hasActiveFilter={hasActiveFilter} onPeriodChange={handlePeriodChange} onDateFrom={handleDateFrom} onDateTo={handleDateTo} onChannelChange={handleBankFilter} onReset={handleReset} />
       <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4">

@@ -296,7 +296,6 @@ export interface PaymentVoucher {
   document_date: string;
   posting_date: string;
   counterparty_id: string | null;
-  counterparty_role: CounterpartyRole | null;
   actual_person_name: string | null;
   actual_person_id_no: string | null;
   actual_person_phone: string | null;
@@ -359,7 +358,6 @@ export interface CreatePaymentVoucherDto {
   credit_account_id: string;
   amount: number;
   counterparty_name_snapshot: string;
-  counterparty_role?: CounterpartyRole;
   actual_person_name?: string;
   actual_person_id_no?: string;
   actual_person_phone?: string;

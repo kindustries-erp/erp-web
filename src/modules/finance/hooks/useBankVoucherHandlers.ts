@@ -42,7 +42,7 @@ import {
   voucherNoFromToday,
 } from "@/modules/finance/utils/financeHelpers";
 
-import { bankDashboardParamsBase, partnerRole, type DashboardParams, type LoadVouchersParams, type UseBankVoucherHandlersParams } from "./useBankVoucherHandlersSupport";
+import { bankDashboardParamsBase, type DashboardParams, type LoadVouchersParams, type UseBankVoucherHandlersParams } from "./useBankVoucherHandlersSupport";
 
 export function useBankVoucherHandlers({
   companyBankAccounts,
@@ -332,7 +332,6 @@ export function useBankVoucherHandlers({
       counterparty_address_snapshot: partner?.address ?? "",
       counterparty_phone_snapshot: partner?.phone ?? "",
       counterparty_identity_no_snapshot: "",
-      counterparty_role: partnerRole(partner),
       beneficiary_bank_account_id: "",
     }));
     loadPartnerBankAccounts(partnerId);
@@ -349,7 +348,6 @@ export function useBankVoucherHandlers({
       counterparty_identity_no_snapshot: "",
       counterparty_tax_code_snapshot: "",
       counterparty_address_snapshot: "",
-      counterparty_role: "EMPLOYEE",
       beneficiary_bank_account_id: "",
     }));
   }
@@ -440,7 +438,6 @@ export function useBankVoucherHandlers({
           form.counterparty_tax_code_snapshot.trim() || undefined,
         counterparty_address_snapshot:
           form.counterparty_address_snapshot.trim() || undefined,
-        counterparty_role: (form.counterparty_role as CounterpartyRole) || undefined,
         company_bank_account_id: form.company_bank_account_id,
         cash_bank_tag_preset_id: form.cash_bank_tag_preset_id || undefined,
         related_documents: form.related_documents,

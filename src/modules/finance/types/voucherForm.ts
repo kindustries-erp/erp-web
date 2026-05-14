@@ -22,7 +22,6 @@ export interface CashVoucherForm {
   counterparty_address_snapshot: string;
   counterparty_phone_snapshot: string;
   counterparty_identity_no_snapshot: string;
-  counterparty_role: string;
   debit_account_id: string;
   credit_account_id: string;
   amount: string;
@@ -47,7 +46,6 @@ export interface BankVoucherForm {
   counterparty_address_snapshot: string;
   counterparty_phone_snapshot: string;
   counterparty_identity_no_snapshot: string;
-  counterparty_role: string;
   beneficiary_bank_account_id: string;
   debit_account_id: string;
   credit_account_id: string;

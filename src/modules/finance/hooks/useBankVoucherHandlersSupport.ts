@@ -59,8 +59,3 @@ export const bankDashboardParamsBase = {
   paymentType: "BANK_PAYMENT",
 } as const;
 
-export function partnerRole(partner: BusinessPartner | undefined): CounterpartyRole | "" {
-  const value = (partner as (BusinessPartner & { counterparty_role?: string | null }))?.counterparty_role ?? (partner as (BusinessPartner & { role?: string | null }))?.role ?? "";
-  if (value === "SERVICE_PROVIDER") return "VENDOR";
-  return (value as CounterpartyRole) || "";
-}

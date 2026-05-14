@@ -108,15 +108,6 @@ const cashDashboardParams: DashboardParams = {
   paymentType: "CASH_PAYMENT",
 };
 
-function partnerRole(partner: BusinessPartner | undefined): CounterpartyRole | "" {
-  const value =
-    (partner as (BusinessPartner & { counterparty_role?: string | null }))?.counterparty_role ??
-    (partner as (BusinessPartner & { role?: string | null }))?.role ??
-    "";
-  if (value === "SERVICE_PROVIDER") return "VENDOR";
-  return (value as CounterpartyRole) || "";
-}
-
 export function useCashVoucherHandlers({
   cashFunds,
   partners,
@@ -301,7 +292,6 @@ export function useCashVoucherHandlers({
       counterparty_address_snapshot: partner?.address ?? "",
       counterparty_phone_snapshot: partner?.phone ?? "",
       counterparty_identity_no_snapshot: "",
-      counterparty_role: partnerRole(partner),
     }));
   }
 
@@ -326,7 +316,6 @@ export function useCashVoucherHandlers({
       counterparty_identity_no_snapshot: "",
       counterparty_tax_code_snapshot: "",
       counterparty_address_snapshot: "",
-      counterparty_role: "EMPLOYEE",
     }));
   }
 
@@ -394,7 +383,6 @@ export function useCashVoucherHandlers({
           form.counterparty_tax_code_snapshot.trim() || undefined,
         counterparty_address_snapshot:
           form.counterparty_address_snapshot.trim() || undefined,
-        counterparty_role: (form.counterparty_role as CounterpartyRole) || undefined,
         debit_account_id: form.debit_account_id,
         credit_account_id: form.credit_account_id,
         cash_fund_id: form.cash_fund_id,

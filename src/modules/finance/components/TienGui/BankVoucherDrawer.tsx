@@ -131,15 +131,6 @@ function ExternalCounterpartyFields(props: any) {
             disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
           />
         </DrawerField>
-        <DrawerField label={t("voucher.drawer.role")}>
-          <Combobox
-            disabled={viewOnly}
-            options={COUNTERPARTY_ROLE_OPTS}
-            value={form.counterparty_role}
-            onChange={(v) => setField("counterparty_role", v)}
-            placeholder={t("voucher.drawer.rolePlaceholder")}
-          />
-        </DrawerField>
       </div>
       <div className="col-span-2 max-[560px]:col-span-1">
         <DrawerField label={t("voucher.drawer.address")}>

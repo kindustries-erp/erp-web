@@ -22,7 +22,7 @@ import type { ChartOfAccount } from "@/modules/accounting/api/catalogApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { CashFund } from "@/modules/finance/api/financeApi";
 import type { CashVoucherForm } from "@/modules/finance/types/voucherForm";
-import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_ROLE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
+import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
 import { useT } from "@/core/i18n";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
@@ -251,17 +251,6 @@ export function CashVoucherDrawer({
                 disabled={viewOnly}
               />
             </DrawerField>
-            <div className="grid grid-cols-1">
-              <DrawerField label={t("voucher.drawer.role")}>
-                <Combobox
-                  options={COUNTERPARTY_ROLE_OPTS}
-                  value={form.counterparty_role}
-                  onChange={(v) => onFieldChange("counterparty_role", v)}
-                  placeholder={t("voucher.drawer.rolePlaceholder")}
-                  disabled={viewOnly}
-                />
-              </DrawerField>
-            </div>
             <div className="col-span-2 max-[560px]:col-span-1">
               <DrawerField label={t("voucher.drawer.address")}>
                 <input
