@@ -19,7 +19,7 @@
   animation-duration: 0.15s;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform, opacity;
-  z-index: 9999;
+  z-index: 10001;
 }
 .tooltip-content[data-state="delayed-open"][data-side="right"] {
   animation-name: slideLeftAndFade;

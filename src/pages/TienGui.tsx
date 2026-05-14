@@ -115,7 +115,14 @@ function buildOptionSets(coaItems: ChartOfAccount[], partners: BusinessPartner[]
     coaOpts,
     debitAccountOpts: voucherType === "BANK_RECEIPT" ? bankAccountOpts : coaOpts,
     creditAccountOpts: voucherType === "BANK_PAYMENT" ? bankAccountOpts : coaOpts,
-    partnerOpts: partners.map((p) => { const partnerCode = p.code ?? (p as BusinessPartner & { partner_code?: string | null }).partner_code ?? p.tax_code ?? ""; const partnerName = p.name || p.display_name || partnerCode || p.id; return { value: p.id, label: partnerCode ? `${partnerCode} — ${partnerName}` : partnerName }; }),
+    partnerOpts: partners.map((p) => {
+      const partnerCode = p.code ?? (p as BusinessPartner & { partner_code?: string | null }).partner_code ?? p.tax_code ?? "";
+      const partnerName = p.name || p.display_name || partnerCode || p.id;
+      return {
+        value: p.id,
+        label: `${partnerCode ? `${partnerCode} — ` : ""}${partnerName}${p.tax_code ? ` — MST: ${p.tax_code}` : ""}`,
+      };
+    }),
     employeeOpts: employees.map((e) => ({ value: e.id, label: `${e.employee_code ?? ""} — ${e.full_name}`.trim().replace(/^— /, "") })),
     companyBankOpts: companyBankAccounts.map((b) => ({ value: b.id, label: `${b.bank_name} — ${b.account_number}` })),
     bankFilterOpts: companyBankAccounts.map((b) => ({ value: b.id, label: b.bank_name })),

@@ -54,24 +54,28 @@ export function Combobox({
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
+    <Tooltip content={selected ? selected.label : ""} side="top" disabled={!selected || open}>
       <Popover.Trigger asChild>
         <button
           type="button"
           disabled={disabled}
+          onClick={() => !disabled && setOpen(!open)}
           className={cn(
-            "flex items-center justify-between w-full px-3 py-[7px] text-xs rounded-lg border border-[color:var(--border)] glass-trigger text-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--primary)]/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-            !value && "text-[color:var(--muted-fg)]",
+            "flex items-center justify-between w-full px-3 py-2 text-xs border rounded-xl transition-all outline-none",
+            open
+              ? "border-primary ring-2 ring-primary/10 bg-surface"
+              : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
+            disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
             className,
           )}
         >
           <span className="truncate flex-1 text-left">
-            <Tooltip content={selected ? selected.label : ""} side="top" disabled={!selected}>
-              <span>{selected ? selected.label : placeholder}</span>
-            </Tooltip>
+            {selected ? selected.label : placeholder}
           </span>
           <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
         </button>
       </Popover.Trigger>
+    </Tooltip>
 
       <Popover.Portal>
         <Popover.Content
@@ -138,8 +142,8 @@ export function Combobox({
               </div>
             ) : (
               filtered.map((o) => (
+              <Tooltip key={o.value} content={o.label} side="right">
                 <button
-                  key={o.value}
                   type="button"
                   onClick={() => {
                     onChange(o.value);
@@ -158,10 +162,9 @@ export function Combobox({
                       o.value === value ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  <Tooltip content={o.label} side="right">
-                    <span className="truncate">{o.label}</span>
-                  </Tooltip>
+                  <span className="truncate">{o.label}</span>
                 </button>
+              </Tooltip>
               ))
             )}
           </div>

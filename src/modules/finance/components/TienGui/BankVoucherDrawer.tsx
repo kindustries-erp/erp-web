@@ -27,12 +27,47 @@ export function BankVoucherDrawer(props: any) {
       actions={drawerActions}
     >
       <DrawerSection title={t("voucher.drawer.sectionOrder")}>
-        <div className="grid grid-cols-3 max-[760px]:grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-          <DrawerField label={t("voucher.drawer.voucherNo")} required><input type="text" disabled={viewOnly} className={inputCls} value={form.voucher_no} onChange={(e) => setField("voucher_no", e.target.value)} placeholder={t("voucher.drawer.voucherNoPlaceholder")} /></DrawerField>
-          <DrawerField label={t("voucher.drawer.docDate")} required><DatePicker disabled={viewOnly} value={form.document_date} onChange={handleDocumentDateChange} className="w-full min-w-0" /></DrawerField>
-          <DrawerField label={t("voucher.drawer.postDate")} required><DatePicker disabled={viewOnly} value={form.posting_date} onChange={handlePostingDateChange} className="w-full min-w-0" /></DrawerField>
+        <div className="grid grid-cols-1 gap-y-1">
+          <div className="grid grid-cols-2 gap-x-3">
+            <DrawerField label={t("voucher.drawer.voucherNo")} required>
+              <input
+                type="text"
+                disabled={viewOnly}
+                className={inputCls}
+                value={form.voucher_no}
+                onChange={(e) => setField("voucher_no", e.target.value)}
+                placeholder={t("voucher.drawer.voucherNoPlaceholder")}
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.bankAccount")} required>
+              <Combobox
+                disabled={viewOnly}
+                options={companyBankOpts}
+                value={form.company_bank_account_id}
+                onChange={handleCompanyBankChange}
+                placeholder={t("voucher.drawer.bankAccountPlaceholder")}
+              />
+            </DrawerField>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3">
+            <DrawerField label={t("voucher.drawer.docDate")} required>
+              <DatePicker
+                disabled={viewOnly}
+                value={form.document_date}
+                onChange={handleDocumentDateChange}
+                className="w-full min-w-0"
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.postDate")} required>
+              <DatePicker
+                disabled={viewOnly}
+                value={form.posting_date}
+                onChange={handlePostingDateChange}
+                className="w-full min-w-0"
+              />
+            </DrawerField>
+          </div>
         </div>
-        <DrawerField label={t("voucher.drawer.bankAccount")} required><Combobox disabled={viewOnly} options={companyBankOpts} value={form.company_bank_account_id} onChange={handleCompanyBankChange} placeholder={t("voucher.drawer.bankAccountPlaceholder")} /></DrawerField>
       </DrawerSection>
       <CounterpartySection {...props} />
       <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
@@ -69,5 +104,54 @@ function CounterpartySection(props: any) {
 
 function ExternalCounterpartyFields(props: any) {
   const { t, form, setField, viewOnly, partnerOpts, handlePartnerChange, partnerBankOpts, partnerBankLoading } = props;
-  return <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3"><div className="col-span-2 max-[560px]:col-span-1"><DrawerField label={t("voucher.drawer.partner")} required><Combobox disabled={viewOnly} options={partnerOpts} value={form.counterparty_id} onChange={handlePartnerChange} placeholder={t("voucher.drawer.partnerPlaceholder")} /></DrawerField></div><DrawerField label={t("voucher.drawer.partnerBank")}><Combobox options={partnerBankOpts} value={form.beneficiary_bank_account_id} onChange={(v) => setField("beneficiary_bank_account_id", v)} placeholder={partnerBankLoading ? t("voucher.drawer.partnerBankLoading") : form.counterparty_id ? t("voucher.drawer.partnerBankPlaceholder") : t("voucher.drawer.partnerBankNoPartner")} disabled={viewOnly || !form.counterparty_id || partnerBankLoading} /></DrawerField><DrawerField label={t("voucher.drawer.taxCode")}><input type="text" disabled className={inputCls} value={form.counterparty_tax_code_snapshot} readOnly /></DrawerField><DrawerField label={t("voucher.drawer.role")}><Combobox disabled options={COUNTERPARTY_ROLE_OPTS} value={form.counterparty_role} onChange={(v) => setField("counterparty_role", v)} placeholder={t("voucher.drawer.rolePlaceholder")} /></DrawerField><div className="col-span-2 max-[560px]:col-span-1"><DrawerField label={t("voucher.drawer.address")}><input type="text" disabled className={inputCls} value={form.counterparty_address_snapshot} readOnly /></DrawerField></div></div>;
+  return (
+    <div className="grid grid-cols-1 gap-y-1">
+      <DrawerField label={t("voucher.drawer.partner")} required>
+        <Combobox
+          disabled={viewOnly}
+          options={partnerOpts}
+          value={form.counterparty_id}
+          onChange={handlePartnerChange}
+          placeholder={t("voucher.drawer.partnerPlaceholder")}
+        />
+      </DrawerField>
+      <div className="grid grid-cols-2 gap-x-3">
+        <DrawerField label={t("voucher.drawer.partnerBank")}>
+          <Combobox
+            options={partnerBankOpts}
+            value={form.beneficiary_bank_account_id}
+            onChange={(v) => setField("beneficiary_bank_account_id", v)}
+            placeholder={
+              partnerBankLoading
+                ? t("voucher.drawer.partnerBankLoading")
+                : form.counterparty_id
+                  ? t("voucher.drawer.partnerBankPlaceholder")
+                  : t("voucher.drawer.partnerBankNoPartner")
+            }
+            disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
+          />
+        </DrawerField>
+        <DrawerField label={t("voucher.drawer.role")}>
+          <Combobox
+            disabled={viewOnly}
+            options={COUNTERPARTY_ROLE_OPTS}
+            value={form.counterparty_role}
+            onChange={(v) => setField("counterparty_role", v)}
+            placeholder={t("voucher.drawer.rolePlaceholder")}
+          />
+        </DrawerField>
+      </div>
+      <div className="col-span-2 max-[560px]:col-span-1">
+        <DrawerField label={t("voucher.drawer.address")}>
+          <input
+            type="text"
+            disabled
+            className={inputCls}
+            value={form.counterparty_address_snapshot}
+            readOnly
+          />
+        </DrawerField>
+      </div>
+    </div>
+  );
 }
