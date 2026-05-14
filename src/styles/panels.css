@@ -24,6 +24,7 @@
   top: 18px;
   right: 20px;
   bottom: 18px;
+  height: calc(100vh - 36px) !important;
   width: 420px;
   max-width: calc(100vw - 44px);
   background: var(--surface);
@@ -47,6 +48,7 @@
     top: 0;
     right: 0;
     bottom: 0;
+    height: 100vh !important;
     width: 100vw;
     max-width: 100vw;
     border-radius: 0;
