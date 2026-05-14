@@ -213,22 +213,39 @@ export function useBankVoucherHandlers({
   }
 
   async function openNew(vtype: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
-    const nextForm = emptyBankForm(vtype);
-    nextForm.document_date = todayIsoDate();
-    nextForm.posting_date = todayIsoDate();
-    nextForm.voucher_no = await generateVoucherNo(vtype);
-    setPostingDateTouched(false);
+    // 1. Reset state & Open drawer immediately
+    setDrawerOpen(true);
+    setEditing(null);
     setDrawerEditMode(true);
+    setSaveError(null);
     setAttachmentFiles([]);
     setAttachmentType("INVOICE");
     setAttachmentNote("");
     setExistingAttachments([]);
-    setEditing(null);
-    await loadTagPresets(vtype);
-    setForm(nextForm);
     setPartnerBankAccounts([]);
-    setSaveError(null);
-    setDrawerOpen(true);
+    setPostingDateTouched(false);
+
+    // 2. Initial form state (placeholder)
+    const nextForm = emptyBankForm(vtype);
+    nextForm.document_date = todayIsoDate();
+    nextForm.posting_date = todayIsoDate();
+    nextForm.voucher_no = "...";
+    setForm(nextForm);
+
+    // 3. Async load in background
+    try {
+      const [vNo, presets] = await Promise.all([
+        generateVoucherNo(vtype),
+        getCashBankTagPresetsApi({
+          voucher_channel: "BANK",
+          voucher_direction: vtype === "BANK_PAYMENT" ? "OUT" : "IN",
+        }).catch(() => []),
+      ]);
+      setTagPresets(presets as CashBankTagPreset[]);
+      setForm((prev) => ({ ...prev, voucher_no: vNo }));
+    } catch {
+      // fallback
+    }
   }
 
   function openEdit(voucher: PaymentVoucher) {
