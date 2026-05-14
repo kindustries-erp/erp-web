@@ -51,6 +51,7 @@ export function Sidebar() {
   const isPartners = currentPage === "doitac";
   const isInCongNoGroup = ["phaithu", "phaittra"].includes(currentPage);
   const isInBaoCaoGroup = ["socat", "nhatkyechung"].includes(currentPage);
+  const isHoaDonDienTu = currentPage === "hoadondientu";
   const [dongtienOpen, setDongtienOpen] = useState(isInDongTienGroup);
   const [thietlapOpen, setThietlapOpen] = useState(isThietLapGroup);
   const [congnoOpen, setCongnoOpen] = useState(isInCongNoGroup);
@@ -196,6 +197,15 @@ export function Sidebar() {
                   onClick={() => navTo("dinhkem")}
                 />
               </SubNav>
+
+              <NavItem
+                collapsed={c}
+                icon={<IconFileText />}
+                label={t("nav.items.hoadondientu")}
+                active={isHoaDonDienTu}
+                onClick={() => navTo("hoadondientu")}
+                contextPage="hoadondientu"
+              />
               </>}
 
               {canCongNo && <>

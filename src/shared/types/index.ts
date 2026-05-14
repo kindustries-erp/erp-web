@@ -21,6 +21,7 @@ export type PageKey =
   | "activitylog"
   | "doitac"
   | "phanquyen"
+  | "hoadondientu"
   | "workflowcanvas";
 export type TxSource = "tienmat" | "tiengui";
 

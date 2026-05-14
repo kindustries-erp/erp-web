@@ -24,6 +24,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "activitylog",
   "doitac",
   "phanquyen",
+  "hoadondientu",
 ];
 
 /** PageKey → hyphenated URL slug */
@@ -49,6 +50,7 @@ const PAGE_SLUG: Partial<Record<PageKey, string>> = {
   activitylog: "activity-log",
   doitac: "doi-tac",
   phanquyen: "phan-quyen",
+  hoadondientu: "hoa-don-dien-tu",
 };
 
 /** Slug → PageKey (reverse of PAGE_SLUG) */

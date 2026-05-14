@@ -38,6 +38,7 @@ export const vi = {
       phanquyen: "Phân quyền & Vai trò",
       workflowcanvas: "Sơ đồ quy trình",
       partners: "Đối tác",
+      hoadondientu: "Hóa đơn điện tử",
       catalogRoles: "Vai trò đối tác",
       catalogOpeningBalance: "Số dư đầu kỳ",
       catalogVoucherNumbering: "Số thứ tự CT",
