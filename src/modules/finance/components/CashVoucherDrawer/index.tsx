@@ -258,7 +258,7 @@ export function CashVoucherDrawer({
                   value={form.counterparty_role}
                   onChange={(v) => onFieldChange("counterparty_role", v)}
                   placeholder={t("voucher.drawer.rolePlaceholder")}
-                  disabled
+                  disabled={viewOnly}
                 />
               </DrawerField>
             </div>

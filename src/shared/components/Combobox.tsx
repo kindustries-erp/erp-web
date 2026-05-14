@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 export interface ComboboxOption {
   value: string;
@@ -63,8 +64,10 @@ export function Combobox({
             className,
           )}
         >
-          <span className="truncate">
-            {selected ? selected.label : placeholder}
+          <span className="truncate flex-1 text-left">
+            <Tooltip content={selected ? selected.label : ""} side="top" disabled={!selected}>
+              <span>{selected ? selected.label : placeholder}</span>
+            </Tooltip>
           </span>
           <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
         </button>
@@ -155,7 +158,9 @@ export function Combobox({
                       o.value === value ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  <span className="truncate">{o.label}</span>
+                  <Tooltip content={o.label} side="right">
+                    <span className="truncate">{o.label}</span>
+                  </Tooltip>
                 </button>
               ))
             )}
