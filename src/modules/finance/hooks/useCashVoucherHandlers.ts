@@ -443,6 +443,34 @@ export function useCashVoucherHandlers({
     }
   }
 
+  async function handleSaveRelatedDocuments() {
+    if (!editing) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const saved = await updatePaymentVoucherApi(editing.id, {
+        related_documents: form.related_documents,
+      });
+      showToast({
+        title: "Đã cập nhật chứng từ liên quan",
+        description: saved.voucher_no,
+        variant: "success",
+      });
+      closeDrawer();
+      reloadAll();
+    } catch (error) {
+      const reason = extractApiError(error);
+      setSaveError(reason);
+      showToast({
+        title: "Cập nhật chứng từ liên quan thất bại",
+        description: reason,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -489,6 +517,7 @@ export function useCashVoucherHandlers({
     handleTagPresetSelect,
     handleToggleEditMode,
     handleSave,
+    handleSaveRelatedDocuments,
     handleDelete,
   };
 }

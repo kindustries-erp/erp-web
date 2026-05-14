@@ -137,28 +137,7 @@ export function TienMat() {
     [fundFilter],
   );
 
-  const {
-    form,
-    deleteTarget,
-    deleting,
-    setDeleteTarget,
-    reloadAll,
-    handleReset,
-    openNew,
-    openEdit,
-    setField,
-    handleDocumentDateChange,
-    handlePostingDateChange,
-    handleAmountChange,
-    handleCashFundChange,
-    handlePartnerChange,
-    handleEmployeeChange,
-    handleTagPresetSelect,
-    tagPresets,
-    handleToggleEditMode,
-    handleSave,
-    handleDelete,
-  } = useCashVoucherHandlers({
+  const handlers = useCashVoucherHandlers({
     cashFunds,
     partners,
     employees,
@@ -194,6 +173,30 @@ export function TienMat() {
     loadSummary,
     loadOpeningBalanceAndChart,
   });
+
+  const {
+    form,
+    deleteTarget,
+    deleting,
+    setDeleteTarget,
+    reloadAll,
+    handleReset,
+    openNew,
+    openEdit,
+    setField,
+    handleDocumentDateChange,
+    handlePostingDateChange,
+    handleAmountChange,
+    handleCashFundChange,
+    handlePartnerChange,
+    handleEmployeeChange,
+    handleTagPresetSelect,
+    tagPresets,
+    handleToggleEditMode,
+    handleSave,
+    handleSaveRelatedDocuments,
+    handleDelete,
+  } = handlers;
 
   // Load dropdown data once
   useEffect(() => {
@@ -425,6 +428,7 @@ export function TienMat() {
         creditAccountOpts,
         closeDrawer,
         handleSave,
+        handleSaveRelatedDocuments,
         handleStatusTransition,
         reloadAll,
         handleToggleEditMode,

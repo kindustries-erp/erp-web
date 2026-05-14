@@ -55,6 +55,7 @@ export interface CashVoucherDrawerProps {
 
   onClose: () => void;
   onSave: (status?: VoucherStatus) => void;
+  onSaveRelatedDocuments: () => void;
   onStatusTransition: (action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL") => void;
   onToggleEditMode: () => void;
   onFieldChange: <K extends keyof CashVoucherForm>(k: K, v: CashVoucherForm[K]) => void;
@@ -82,7 +83,7 @@ export function CashVoucherDrawer({
   existingAttachments, attachmentFiles, attachmentType, attachmentNote,
   fundOpts, partnerOpts, employeeOpts, coaOpts, debitAccountOpts, creditAccountOpts, tagPresets,
   canUpdateVoucher,
-  onClose, onSave, onStatusTransition, onToggleEditMode,
+  onClose, onSave, onSaveRelatedDocuments, onStatusTransition, onToggleEditMode,
   onFieldChange, onDocumentDateChange, onPostingDateChange, onAmountChange,
   onCashFundChange, onPartnerChange, onEmployeeChange, onTagPresetSelect, onSourceChange,
   onDeleteAttachment, onAttachmentFilesChange, onAttachmentTypeChange, onAttachmentNoteChange,
@@ -90,6 +91,8 @@ export function CashVoucherDrawer({
   const t = useT();
   const viewOnly = !!editing && !drawerEditMode;
   const canEdit = !editing || editing.status === "DRAFT";
+  const relatedDocumentsEditable = !!editing && ["APPROVED", "POSTED"].includes(editing.status) && canUpdateVoucher;
+  const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
   const isDirty = !!form.voucher_no.trim() || !!form.amount;
 
   // ── Actions по статусу ────────────────────────────────────────────────────
@@ -129,6 +132,7 @@ export function CashVoucherDrawer({
           { label: "Đóng", onClick: onClose },
           ...(canUpdateVoucher
             ? [
+                { label: "Lưu chứng từ liên quan", primary: true, loading: saving, disabled: saving, onClick: onSaveRelatedDocuments },
                 { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
               ]
             : []),
@@ -361,7 +365,7 @@ export function CashVoucherDrawer({
       <DrawerSection title="Chứng từ liên quan">
         <RelatedDocumentsEditor
           value={form.related_documents}
-          disabled={viewOnly}
+          disabled={relatedDocumentsReadOnly}
           counterpartyId={form.counterparty_id}
           maxSettlementAmount={Number(form.amount) || undefined}
           onChange={(value) => onFieldChange("related_documents", value)}

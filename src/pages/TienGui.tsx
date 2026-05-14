@@ -52,7 +52,7 @@ export function TienGui() {
 
   const reloadDonutData = useCallback(() => loadDonutData(bankFilter, coaItems, bankDashboardParams, dateFrom, dateTo), [bankDashboardParams, bankFilter, coaItems, dateFrom, dateTo, loadDonutData]);
   const handlers = useBankVoucherHandlers({ companyBankAccounts, partners, employees, vouchers, page, pageSize, search, statusFilter, bankFilter, sortCol, dateFrom, dateTo, amountMin, amountMax, coaItemsLength: coaItems.length, attachmentFileName, setPage, loadVouchers, loadVoucherAttachments, loadSummary, loadOpeningBalanceAndChart, reloadDonutData });
-  const { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, tagPresets, handleTagPresetSelect, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleToggleEditMode, handleDeleteAttachment, handleSave, handleDelete } = handlers;
+  const { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, tagPresets, handleTagPresetSelect, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleToggleEditMode, handleDeleteAttachment, handleSave, handleSaveRelatedDocuments, handleDelete } = handlers;
 
   async function handleStatusTransition(action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL", onSuccess: () => void) {
     if (!editing) return;
@@ -94,7 +94,7 @@ export function TienGui() {
   const viewOnly = !!editing && !drawerEditMode;
   const canEditVoucher = !editing || editing.status === "DRAFT";
   const editToggle = editing && canEditVoucher && canUpdateVoucher ? <button onClick={handleToggleEditMode} className={cn("px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors", drawerEditMode ? "border-[color:var(--border)] text-[color:var(--muted-fg)] bg-[color:var(--muted)] hover:bg-surface-hover" : "border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg")}>{drawerEditMode ? t("voucher.drawer.cancel") : t("voucher.drawer.edit")}</button> : null;
-  const drawerActions = buildDrawerActions({ editing, drawerEditMode, saving, canUpdateVoucher, closeDrawer, handleSave, handleStatusTransition, reloadCurrentData });
+  const drawerActions = buildDrawerActions({ editing, drawerEditMode, saving, canUpdateVoucher, closeDrawer, handleSave, handleSaveRelatedDocuments, handleStatusTransition, reloadCurrentData });
   const bankName = useCallback((id: string | null) => { if (!id) return "—"; const b = companyBankAccounts.find((x) => x.id === id); return b ? `${b.bank_name} — ${b.account_number.slice(-4)}` : "—"; }, [companyBankAccounts]);
   const currentClosing = useMemo(() => (openingBal ?? 0) + (summary?.receipt ?? 0) - (summary?.payment ?? 0), [openingBal, summary]);
   const pendingCount = useMemo(() => vouchers.filter((v) => v.status === "DRAFT" || v.status === "PENDING_APPROVAL").length, [vouchers]);
@@ -124,11 +124,11 @@ function buildOptionSets(coaItems: ChartOfAccount[], partners: BusinessPartner[]
 }
 
 function buildDrawerActions(args: any): DrawerAction[] {
-  const { editing, drawerEditMode, saving, canUpdateVoucher, closeDrawer, handleSave, handleStatusTransition, reloadCurrentData } = args;
+  const { editing, drawerEditMode, saving, canUpdateVoucher, closeDrawer, handleSave, handleSaveRelatedDocuments, handleStatusTransition, reloadCurrentData } = args;
   if (!editing || drawerEditMode) return [{ label: "Hủy bỏ", onClick: closeDrawer }, { label: "Lưu nháp", disabled: saving, onClick: () => handleSave("DRAFT") }, { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleSave("PENDING_APPROVAL") }];
   if (!canUpdateVoucher) return [{ label: "Đóng", onClick: closeDrawer }];
   if (editing.status === "DRAFT") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }, { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData) }];
   if (editing.status === "PENDING_APPROVAL") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }, { label: "Từ chối", disabled: saving, onClick: () => handleStatusTransition("REJECT", reloadCurrentData) }, { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("APPROVE", reloadCurrentData) }];
-  if (editing.status === "APPROVED" || editing.status === "POSTED") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }];
+  if (editing.status === "APPROVED" || editing.status === "POSTED") return [{ label: "Đóng", onClick: closeDrawer }, { label: "Lưu chứng từ liên quan", primary: true, loading: saving, disabled: saving, onClick: handleSaveRelatedDocuments }, { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) }];
   return [{ label: "Đóng", onClick: closeDrawer }];
 }

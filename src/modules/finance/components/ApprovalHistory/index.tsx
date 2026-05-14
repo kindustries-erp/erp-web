@@ -76,7 +76,7 @@ export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
             </div>
             <div className="text-muted-fg mt-0.5">
               {new Date(log.action_at).toLocaleString("vi-VN")}
-              {log.action_by && ` · ${log.action_by}`}
+              {(log.action_by_name || log.action_by) && ` · ${log.action_by_name || log.action_by}`}
             </div>
             {log.note && (
               <div className="mt-0.5 text-foreground italic">"{log.note}"</div>

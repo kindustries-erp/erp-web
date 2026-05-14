@@ -768,6 +768,7 @@ export interface PaymentVoucherApprovalLog {
   payment_voucher_id: string;
   action: ApprovalAction;
   action_by: string | null;
+  action_by_name?: string | null;
   action_at: string;
   note: string | null;
   from_status: string | null;

@@ -475,6 +475,26 @@ export function useBankVoucherHandlers({
     }
   }
 
+  async function handleSaveRelatedDocuments() {
+    if (!editing) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const saved = await updatePaymentVoucherApi(editing.id, {
+        related_documents: form.related_documents,
+      });
+      showToast({ title: "Đã cập nhật chứng từ liên quan", description: saved.voucher_no, variant: "success" });
+      closeDrawer();
+      reloadCurrentData();
+    } catch (error) {
+      const reason = extractApiError(error);
+      setSaveError(reason);
+      showToast({ title: "Cập nhật chứng từ liên quan thất bại", description: reason, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -505,5 +525,5 @@ export function useBankVoucherHandlers({
     }
   }
 
-  return { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, tagPresets, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleTagPresetSelect, handleToggleEditMode, handleDeleteAttachment, handleSave, handleDelete };
+  return { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, tagPresets, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleTagPresetSelect, handleToggleEditMode, handleDeleteAttachment, handleSave, handleSaveRelatedDocuments, handleDelete };
 }
