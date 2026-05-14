@@ -87,6 +87,7 @@ export const vi = {
     phanquyen: "Phân quyền & Vai trò",
     workflowcanvas: "Sơ đồ quy trình",
     partners: "Đối tác",
+    hoadondientu: "Hóa đơn điện tử",
     catalogFunds: "Quỹ tiền mặt",
     catalogBank: "Tài khoản ngân hàng",
     catalogAccounts: "Hệ thống tài khoản",

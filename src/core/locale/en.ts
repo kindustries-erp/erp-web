@@ -89,6 +89,7 @@ export const en: Dict = {
     phanquyen: "Roles & Permissions",
     workflowcanvas: "Workflow Canvas",
     partners: "Partners",
+    hoadondientu: "E-Invoices",
     catalogFunds: "Cash Funds",
     catalogBank: "Bank Accounts",
     catalogAccounts: "Chart of Accounts",

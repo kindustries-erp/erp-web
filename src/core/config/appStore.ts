@@ -37,6 +37,7 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   nhacungcap: { label: "Nhà cung cấp", group: "purchasing" },
   activitylog: { label: "Nhật ký hoạt động", group: "system" },
   doitac: { label: "Đối tác", group: "partners" },
+  hoadondientu: { label: "Hóa đơn điện tử", group: "dongtien" },
   phanquyen: { label: "Phân quyền & Vai trò", group: "system" },
 };
 
@@ -61,6 +62,11 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.accounting"],
     ["breadcrumb.cashflow", "dongtien"],
     ["breadcrumb.attachments"],
+  ],
+  hoadondientu: [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.cashflow", "dongtien"],
+    ["breadcrumb.hoadondientu"],
   ],
   "thietlap-quy": [
     ["breadcrumb.accounting"],
