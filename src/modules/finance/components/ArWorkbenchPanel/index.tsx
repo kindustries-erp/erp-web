@@ -274,6 +274,22 @@ function InvoiceActions({ doc, actioningId, runDocumentAction, onEdit, onDelete 
 }
 
 
+function relatedVoucherLabel(item: any) {
+  const voucher = item?.payment_voucher_id;
+  if (voucher && typeof voucher === "object") {
+    const channel = voucher.voucher_channel === "BANK" ? "Tiền gửi" : "Tiền mặt";
+    const direction = voucher.voucher_direction === "IN" ? "Thu" : "Chi";
+    return `${voucher.voucher_no || "Phiếu liên quan"} · ${channel} · ${direction} · ${STATUS_LABELS[voucher.status as ArDocumentStatus] || voucher.status || "—"}`;
+  }
+  return item?.related_no || voucher || "Phiếu liên quan";
+}
+
+function relatedVoucherSubLabel(item: any) {
+  const voucher = item?.payment_voucher_id;
+  const voucherDate = voucher && typeof voucher === "object" ? voucher.document_date : null;
+  return `Ngày ${item?.related_date || voucherDate || "—"} · Số tiền cấn trừ ${money(item?.amount)} · ${item?.note || "Cấn trừ công nợ"}`;
+}
+
 function EditArDocumentDrawer({ open, doc, paidAmount, setPaidAmount, saving, saveError, onClose, onSave }: { open: boolean; doc: ArDocument | null; paidAmount: number; setPaidAmount: (value: number) => void; saving: boolean; saveError: string | null; onClose: () => void; onSave: () => void }) {
   const total = Number(doc?.total_amount ?? 0);
   const remaining = Math.max(total - (Number(paidAmount) || 0), 0);
@@ -288,7 +304,7 @@ function EditArDocumentDrawer({ open, doc, paidAmount, setPaidAmount, saving, sa
         <DrawerField label="Còn lại"><input className={inputCls} value={money(remaining)} disabled /></DrawerField>
       </DrawerSection>
       <DrawerSection title="Phiếu tiền mặt/tiền gửi đã cấn trừ">
-        {(doc?.related_documents?.length ?? 0) === 0 ? <div className="text-xs text-[color:var(--muted-fg)]">Chưa có phiếu tiền mặt/tiền gửi cấn trừ chứng từ này.</div> : <div className="space-y-2">{doc?.related_documents?.map((item, idx) => <div key={`${item.related_id}-${idx}`} className="rounded-lg border border-[color:var(--border)] p-3 text-sm"><div className="font-medium">{item.related_no || item.payment_voucher_id || "Phiếu liên quan"}</div><div className="text-xs text-[color:var(--muted-fg)]">Ngày {item.related_date || "—"} · Số tiền {money(item.amount)} · {item.note || "Cấn trừ công nợ"}</div></div>)}</div>}
+        {(doc?.related_documents?.length ?? 0) === 0 ? <div className="text-xs text-[color:var(--muted-fg)]">Chưa có phiếu tiền mặt/tiền gửi cấn trừ chứng từ này.</div> : <div className="space-y-2">{doc?.related_documents?.map((item, idx) => <div key={`${item.related_id}-${idx}`} className="rounded-lg border border-[color:var(--border)] p-3 text-sm"><div className="font-medium">{relatedVoucherLabel(item)}</div><div className="text-xs text-[color:var(--muted-fg)]">{relatedVoucherSubLabel(item)}</div></div>)}</div>}
       </DrawerSection>
     </div>
   </DrawerModal>;
