@@ -22,7 +22,7 @@ export function BankVoucherDrawer(props: any) {
       title={editing ? (form.voucher_type === "BANK_RECEIPT" ? t("voucher.drawer.titleEditUNT") : t("voucher.drawer.titleEditUNC")).replace("{0}", form.voucher_no) : form.voucher_type === "BANK_RECEIPT" ? t("voucher.drawer.titleCreateUNT") : t("voucher.drawer.titleCreateUNC")}
       subtitle={editing ? editing.voucher_no : t("voucher.drawer.subtitleEdit")}
       headerExtra={editToggle}
-      panelClassName="w-[860px] max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
+      panelClassName="w-[calc(100vw/3)] max-[1200px]:w-1/2 max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
       bodyClassName="p-4"
       actions={drawerActions}
     >

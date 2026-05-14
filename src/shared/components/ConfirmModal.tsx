@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 
@@ -30,7 +31,7 @@ export function ConfirmModal({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 transition-all duration-300"
       style={{
@@ -83,6 +84,7 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
