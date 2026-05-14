@@ -426,6 +426,8 @@ export function TienMat() {
         coaOpts,
         debitAccountOpts,
         creditAccountOpts,
+        tagPresets,
+        handleTagPresetSelect,
         closeDrawer,
         handleSave,
         handleSaveRelatedDocuments,
