@@ -4,7 +4,7 @@ import { Combobox } from "@/shared/components/Combobox";
 import { FileUploadBox } from "@/shared/components/FileUploadBox";
 import { cn } from "@/shared/utils";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
-import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_ROLE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
+import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
 import type { AttachmentType, CounterpartySource } from "@/modules/finance/api/financeApi";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";

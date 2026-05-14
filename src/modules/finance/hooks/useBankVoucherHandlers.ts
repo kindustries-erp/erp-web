@@ -312,12 +312,15 @@ export function useBankVoucherHandlers({
   }
 
   function handleTagPresetSelect(preset: CashBankTagPreset) {
+    // Preset codes có chứa CUSTOMER hoặc PAYMENT => đối tượng là đối tác ngoài (EXTERNAL)
+    const needsExternal = /CUSTOMER|PAYMENT/.test(preset.code ?? "");
     setForm((current) => ({
       ...current,
       cash_bank_tag_preset_id: preset.id,
       debit_account_id: preset.debit_account_id || current.debit_account_id,
       credit_account_id: preset.credit_account_id || current.credit_account_id,
       description: current.description || preset.label,
+      ...(needsExternal ? { counterparty_source: "EXTERNAL" as const } : {}),
     }));
   }
 

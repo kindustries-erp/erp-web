@@ -85,16 +85,6 @@ export const ATTACHMENT_TYPE_OPTS: { value: AttachmentType; label: string }[] = 
   { value: "OTHER", label: "Khác" },
 ];
 
-export const COUNTERPARTY_ROLE_OPTS: { value: CounterpartyRole; label: string }[] = [
-  { value: "CUSTOMER", label: "Khách hàng" },
-  { value: "VENDOR", label: "Nhà cung cấp" },
-  { value: "EMPLOYEE", label: "Nhân viên" },
-  { value: "BANK", label: "Ngân hàng" },
-  { value: "GOVERNMENT", label: "Cơ quan nhà nước" },
-  { value: "INTERNAL", label: "Nội bộ" },
-  { value: "SHAREHOLDER", label: "Cổ đông" },
-  { value: "OTHER", label: "Khác" },
-];
 
 export const COUNTERPARTY_SOURCE_OPTS: { value: CounterpartySource; label: string }[] = [
   { value: "EXTERNAL", label: "Bên ngoài (đối tác)" },
