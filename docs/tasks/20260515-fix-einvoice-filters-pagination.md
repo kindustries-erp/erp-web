@@ -20,8 +20,8 @@
 - [x] 6.0 Validate
   - [x] 6.1 `npm run build`
   - [x] 6.2 Test filter, pagination trên UI (tsc pass; backend pagination/filter response verified)
-- [ ] 7.0 Close
-  - [ ] 7.1 Commit + push code
+- [x] 7.0 Close
+  - [x] 7.1 Commit + push code
 
 ## Execution Note
 - Chỉ xóa bản ghi demo/stub nội bộ (`source = SINVOICE` hoặc `source = null`). Giữ nguyên toàn bộ hóa đơn `source = TAX_PORTAL` làm source of truth.

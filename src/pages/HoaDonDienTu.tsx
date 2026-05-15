@@ -85,6 +85,8 @@ const HoaDonDienTu: React.FC = () => {
     pageSize: 15,
     total: 0,
     totalPages: 1,
+    sumTotalAmount: 0,
+    sumVatAmount: 0,
   });
   const [inputFilters, setInputFilters] = useState({
     search: "",
@@ -94,6 +96,8 @@ const HoaDonDienTu: React.FC = () => {
     pageSize: 15,
     total: 0,
     totalPages: 1,
+    sumTotalAmount: 0,
+    sumVatAmount: 0,
   });
   const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [sinvoiceForm, setSinvoiceForm] = useState({
@@ -170,6 +174,8 @@ const HoaDonDienTu: React.FC = () => {
       ...prev,
       total: result.meta.total,
       totalPages: result.meta.totalPages,
+      sumTotalAmount: result.meta.sum_total_amount ?? 0,
+      sumVatAmount: result.meta.sum_vat_amount ?? 0,
     }));
   }, [outputFilters.search, outputFilters.startDate, outputFilters.endDate, outputFilters.page, outputFilters.pageSize]);
 
@@ -188,6 +194,8 @@ const HoaDonDienTu: React.FC = () => {
       ...prev,
       total: result.meta.total,
       totalPages: result.meta.totalPages,
+      sumTotalAmount: result.meta.sum_total_amount ?? 0,
+      sumVatAmount: result.meta.sum_vat_amount ?? 0,
     }));
   }, [inputFilters.search, inputFilters.startDate, inputFilters.endDate, inputFilters.page, inputFilters.pageSize]);
 
@@ -427,6 +435,19 @@ const HoaDonDienTu: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ))}
+              {showFilters && invoices.length > 0 && (
+                <TableRow className="bg-surface-hover/30 font-semibold">
+                  <TableCell colSpan={6} className="pl-6 text-right py-3">
+                    Tổng cộng:
+                  </TableCell>
+                  <TableCell className="text-right font-mono">
+                    {formatMoney(state.sumTotalAmount)}
+                  </TableCell>
+                  <TableCell colSpan={2} className="text-xs text-muted-foreground pr-6">
+                    (Thuế: {formatMoney(state.sumVatAmount)})
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>

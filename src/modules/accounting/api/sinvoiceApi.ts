@@ -60,6 +60,8 @@ export interface EinvoiceListResponse {
     pageSize: number;
     total: number;
     totalPages: number;
+    sum_total_amount?: number;
+    sum_vat_amount?: number;
   };
 }
 
