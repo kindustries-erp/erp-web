@@ -28,6 +28,7 @@ import {
 } from "@/modules/finance/api/financeApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { DOC_TYPES, STATUS_LABELS, emptySalesInvoiceForm, money, statusCls } from "./shared";
+import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 
 type ArWorkbenchTab = "invoices";
 
@@ -51,6 +52,7 @@ export function ArWorkbenchPanel() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [editDoc, setEditDoc] = useState<ArDocument | null>(null);
   const [editPaidAmount, setEditPaidAmount] = useState(0);
   const [createMode, setCreateMode] = useState<"INVOICE" | "OTHER">("INVOICE");
@@ -156,7 +158,7 @@ export function ArWorkbenchPanel() {
 
   return (
     <section className="space-y-4">
-      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreateInvoice={() => openDrawer("INVOICE")} onCreateOther={() => openDrawer("OTHER")} />
+      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreateInvoice={() => setDraftModalOpen(true)} onCreateOther={() => openDrawer("OTHER")} />
       {activeTab === "invoices" && (
         <>
           <InvoiceKpis summary={summary} supported={supported} coverageTotal={coverage.length || 40} foundation={foundation} />
@@ -186,6 +188,15 @@ export function ArWorkbenchPanel() {
           <CoveragePreview coverage={coverage} />
           <EditArDocumentDrawer open={!!editDoc} doc={editDoc} paidAmount={editPaidAmount} setPaidAmount={setEditPaidAmount} saving={saving} saveError={saveError} onClose={() => setEditDoc(null)} onSave={saveEdit} />
           <SalesInvoiceDrawer open={drawerOpen} mode={createMode} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
+          <SinvoiceDraftModal
+            open={draftModalOpen}
+            onClose={() => setDraftModalOpen(false)}
+            title="Xuất hóa đơn nháp từ Công nợ"
+            subtitle="Dùng cùng form nháp như trang Hóa đơn điện tử để tránh duplicate UI"
+            onSaved={async () => {
+              setError(null);
+            }}
+          />
         </>
       )}
     </section>

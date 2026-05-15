@@ -14,14 +14,12 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { useT } from "@/core/i18n";
 import {
-  createSinvoiceApi,
   getConfigApi,
   getSinvoiceHealthApi,
   getTaxPortalConfigApi,
   listLocalEinvoicesApi,
   resetConfigApi,
   resetTaxPortalConfigApi,
-  runSinvoiceDemoFlowApi,
   saveConfigApi,
   saveTaxPortalConfigApi,
   syncSinvoiceApi,
@@ -30,6 +28,7 @@ import {
   type SinvoiceConfig,
   type TaxPortalConfig,
 } from "@/modules/accounting/api/sinvoiceApi";
+import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 
 type TaxTabKey = "issue" | "output" | "input" | "config";
 
@@ -73,6 +72,7 @@ const HoaDonDienTu: React.FC = () => {
   const [allInvoices, setAllInvoices] = useState<Einvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [sinvoiceForm, setSinvoiceForm] = useState({
     supplierTaxCode: "",
     username: "",
@@ -161,20 +161,10 @@ const HoaDonDienTu: React.FC = () => {
     );
   }, [allInvoices]);
 
-  async function handleCreateDemo() {
-    setLoading(true);
-    setMessage("Đang phát hành hóa đơn demo tới Viettel SInvoice...");
-    try {
-      await createSinvoiceApi({});
-      setMessage("Đã gọi API tạo hóa đơn demo. Kiểm tra danh sách để xem log lưu mới nhất.");
-      await loadData();
-      setActiveTab("issue");
-    } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Tạo hóa đơn demo thất bại");
-      await loadData();
-    } finally {
-      setLoading(false);
-    }
+  async function handleDraftSaved(result: any) {
+    setMessage(result?.response?.message ?? "Đã lưu hóa đơn nháp nội bộ thành công.");
+    await loadData();
+    setActiveTab("issue");
   }
 
   async function handleSyncSinvoice() {
@@ -191,21 +181,6 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
-  async function handleFullDemoFlow() {
-    setLoading(true);
-    setMessage("Đang chạy full demo flow: health -> create -> sync...");
-    try {
-      const result = await runSinvoiceDemoFlowApi();
-      setMessage(result?.create?.ok === false ? `Demo flow hoàn tất một phần: ${result.create.message}` : "Demo flow hoàn tất.");
-      await loadData();
-      setActiveTab("issue");
-    } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Full demo flow thất bại");
-      await loadData();
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function handleSyncTax(direction: "IN" | "OUT") {
     setLoading(true);
@@ -390,24 +365,27 @@ const HoaDonDienTu: React.FC = () => {
 
       {activeTab === "issue" && (
         <div className="space-y-6">
-          <div className="flex flex-wrap gap-2">
-            <button
-              className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60"
-              onClick={handleSyncSinvoice}
-              disabled={loading}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ SInvoice
-            </button>
-            <button
-              className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60"
-              onClick={handleFullDemoFlow}
-              disabled={loading}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" /> Test full demo flow
-            </button>
-            <BtnPrimary onClick={handleCreateDemo} disabled={loading}>
-              <Send className="mr-2 h-4 w-4" /> Phát hành demo
-            </BtnPrimary>
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-base font-semibold">Xuất hóa đơn điện tử nháp</h3>
+                <p className="text-sm text-muted-foreground">
+                  Luồng hiện tại chỉ cho phép lưu nháp nội bộ để kiểm tra trước. Tính năng ký/phát hành đang tạm ẩn.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60"
+                  onClick={handleSyncSinvoice}
+                  disabled={loading}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ SInvoice
+                </button>
+                <BtnPrimary onClick={() => setDraftModalOpen(true)} disabled={loading}>
+                  <Send className="mr-2 h-4 w-4" /> Tạo hóa đơn nháp mới
+                </BtnPrimary>
+              </div>
+            </div>
           </div>
           {renderTable(issueInvoices, "issue")}
         </div>
@@ -514,6 +492,11 @@ const HoaDonDienTu: React.FC = () => {
           </div>
         </div>
       )}
+      <SinvoiceDraftModal
+        open={draftModalOpen}
+        onClose={() => setDraftModalOpen(false)}
+        onSaved={handleDraftSaved}
+      />
     </div>
   );
 };

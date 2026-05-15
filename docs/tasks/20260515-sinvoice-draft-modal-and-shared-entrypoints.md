@@ -39,20 +39,20 @@ Tạo một shared modal nhập liệu hóa đơn nháp dùng lại cho cả AR 
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): không áp dụng.
 
 ## Checklist (bắt buộc cập nhật realtime)
-- [ ] 1.0 Gate 0 DB Precheck done
-- [ ] 2.0 Backend workflow/API gate done
-- [ ] 3.0 UI gate done
-  - [ ] 3.1 Tạo shared draft modal/component
-  - [ ] 3.2 Gắn entry point tại Quản lý Thuế
-  - [ ] 3.3 Gắn entry point tại AR Workbench với prefill
-  - [ ] 3.4 Ẩn/bỏ CTA ký số/phát hành/demo flow
-- [ ] 4.0 Validation
-  - [ ] 4.1 Chạy `npx tsc --noEmit`
-  - [ ] 4.2 Smoke test flow liên quan
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+- [x] 1.0 Gate 0 DB Precheck done
+- [x] 2.0 Backend workflow/API gate done
+- [x] 3.0 UI gate done
+  - [x] 3.1 Tạo shared draft modal/component
+  - [x] 3.2 Gắn entry point tại Quản lý Thuế
+  - [x] 3.3 Gắn entry point tại AR Workbench với prefill
+  - [x] 3.4 Ẩn/bỏ CTA ký số/phát hành/demo flow
+- [x] 4.0 Validation
+  - [x] 4.1 Chạy `npx tsc --noEmit`
+  - [x] 4.2 Smoke test flow liên quan
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue)
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 - DB precheck result:
