@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, RefreshCw, Send, Settings, Trash2 } from "lucide-react";
+import { FileText, RefreshCw, Send, Settings, Trash2, CalendarDays } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
+import { SearchInput } from "@/shared/components/SearchInput";
+import { DatePicker } from "@/shared/components/DatePicker";
 import {
   Table,
   TableBody,
@@ -72,6 +74,11 @@ const HoaDonDienTu: React.FC = () => {
   const [allInvoices, setAllInvoices] = useState<Einvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [filters, setFilters] = useState({
+    search: "",
+    startDate: "",
+    endDate: "",
+  });
   const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [sinvoiceForm, setSinvoiceForm] = useState({
     supplierTaxCode: "",
@@ -97,7 +104,11 @@ const HoaDonDienTu: React.FC = () => {
     try {
       const [health, items, sinvoiceCfg, taxCfg] = await Promise.all([
         getSinvoiceHealthApi(),
-        listLocalEinvoicesApi(),
+        listLocalEinvoicesApi({
+          search: filters.search,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
+        }),
         getConfigApi().catch(() => null),
         getTaxPortalConfigApi().catch(() => null),
       ]);
@@ -133,8 +144,11 @@ const HoaDonDienTu: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void loadData();
-  }, [loadData]);
+    const timer = setTimeout(() => {
+      void loadData();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [filters.search, filters.startDate, filters.endDate, loadData]);
 
   const issueInvoices = useMemo(
     () => allInvoices.filter((item) => (item.source ?? "SINVOICE") === "SINVOICE"),
@@ -190,7 +204,11 @@ const HoaDonDienTu: React.FC = () => {
     setLoading(true);
     setMessage(direction === "IN" ? "Đang đồng bộ hóa đơn mua vào từ cổng thuế..." : "Đang đồng bộ hóa đơn bán ra từ cổng thuế...");
     try {
-      const result = await syncTaxPortalApi({ direction });
+      const result = await syncTaxPortalApi({ 
+        direction,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      });
       setMessage(`Đồng bộ ${result.count} hóa đơn ${direction === "IN" ? "mua vào" : "bán ra"} thành công (${result.note})`);
       await loadData();
       setActiveTab(direction === "IN" ? "input" : "output");
@@ -273,48 +291,91 @@ const HoaDonDienTu: React.FC = () => {
     const partnerHeader = mode === "input" ? "Người bán" : "Khách hàng";
     const taxHeader = mode === "input" ? "MST người bán" : "MST";
     return (
-      <div className="bg-surface border border-border rounded-xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-6">Mã chứng từ</TableHead>
-              <TableHead>Số hóa đơn</TableHead>
-              <TableHead>Nguồn</TableHead>
-              <TableHead>{partnerHeader}</TableHead>
-              <TableHead>{taxHeader}</TableHead>
-              <TableHead className="text-right">Tổng tiền</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead className="text-right pr-6">Ghi chú</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invoices.length === 0 && (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            placeholder="Tìm theo số HĐ, tên đối tác..."
+            value={filters.search}
+            onChange={(v) => setFilters((f) => ({ ...f, search: v }))}
+            className="w-full md:w-[300px]"
+          />
+          <div className="flex items-center gap-2">
+            <DatePicker
+              value={filters.startDate}
+              onChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
+              placeholder="Từ ngày"
+              className="w-[140px]"
+            />
+            <span className="text-muted-foreground">→</span>
+            <DatePicker
+              value={filters.endDate}
+              onChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
+              placeholder="Đến ngày"
+              className="w-[140px]"
+            />
+          </div>
+          {(filters.search || filters.startDate || filters.endDate) && (
+            <button
+              onClick={() => setFilters({ search: "", startDate: "", endDate: "" })}
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+            >
+              Đặt lại
+            </button>
+          )}
+        </div>
+
+        <div className="bg-surface border border-border rounded-xl overflow-hidden">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                  {loading ? "Đang tải..." : "Chưa có dữ liệu"}
-                </TableCell>
+                <TableHead className="pl-6">Ngày HĐ</TableHead>
+                <TableHead>Mã chứng từ</TableHead>
+                <TableHead>Số hóa đơn</TableHead>
+                <TableHead>Nguồn</TableHead>
+                <TableHead>{partnerHeader}</TableHead>
+                <TableHead>{taxHeader}</TableHead>
+                <TableHead className="text-right">Tổng tiền</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-right pr-6">Chi tiết</TableHead>
               </TableRow>
-            )}
-            {invoices.map((inv) => (
-              <TableRow key={inv.id}>
-                <TableCell className="pl-6 font-medium">{inv.document_no || "-"}</TableCell>
-                <TableCell>{inv.invoice_no || "-"}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{inv.source === "TAX_PORTAL" ? "Cổng thuế" : "SInvoice"}</Badge>
-                </TableCell>
-                <TableCell>{mode === "input" ? inv.seller_name || "-" : inv.buyer_name || "-"}</TableCell>
-                <TableCell>{mode === "input" ? inv.seller_tax_code || "-" : inv.buyer_tax_code || "-"}</TableCell>
-                <TableCell className="text-right">{formatMoney(inv.total_amount)}</TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant(inv.status)}>{statusLabel(inv.status)}</Badge>
-                </TableCell>
-                <TableCell className="text-right pr-6 text-xs text-muted-foreground">
-                  {inv.tax_status || inv.error_message || inv.external_invoice_id || "-"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {invoices.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                    {loading ? "Đang tải..." : "Chưa có dữ liệu"}
+                  </TableCell>
+                </TableRow>
+              )}
+              {invoices.map((inv) => (
+                <TableRow key={inv.id}>
+                  <TableCell className="pl-6 text-[color:var(--muted-fg)]">
+                    {inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString("vi-VN") : "-"}
+                  </TableCell>
+                  <TableCell className="font-medium">{inv.document_no || "-"}</TableCell>
+                  <TableCell className="font-mono">{inv.invoice_no || "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{inv.source === "TAX_PORTAL" ? "Cổng thuế" : "SInvoice"}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {mode === "input" ? inv.seller_name || "-" : inv.buyer_name || "-"}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {mode === "input" ? inv.seller_tax_code || "-" : inv.buyer_tax_code || "-"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono">{formatMoney(inv.total_amount)}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(inv.status)}>{statusLabel(inv.status)}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right pr-6 text-[10px] text-muted-foreground leading-tight">
+                    <div className="truncate max-w-[120px]">{inv.tax_status || "-"}</div>
+                    <div className="truncate max-w-[120px]">{inv.external_invoice_id || "-"}</div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     );
   }

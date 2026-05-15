@@ -56,6 +56,9 @@ export async function getSinvoiceHealthApi(): Promise<SinvoiceConfig> {
 export async function listLocalEinvoicesApi(params?: {
   source?: "SINVOICE" | "TAX_PORTAL";
   direction?: "IN" | "OUT";
+  search?: string;
+  startDate?: string;
+  endDate?: string;
 }): Promise<Einvoice[]> {
   const res = await axiosInstance.get("/api/v1/sinvoice/local", { params });
   return res.data;
