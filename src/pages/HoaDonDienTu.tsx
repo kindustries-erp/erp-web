@@ -5,6 +5,7 @@ import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { TablePagination } from "@/shared/components/TablePagination";
 import {
   Table,
   TableBody,
@@ -71,13 +72,28 @@ const HoaDonDienTu: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TaxTabKey>("issue");
   const [config, setConfig] = useState<SinvoiceConfig | null>(null);
   const [taxPortalConfig, setTaxPortalConfig] = useState<TaxPortalConfig | null>(null);
-  const [allInvoices, setAllInvoices] = useState<Einvoice[]>([]);
+  const [issueInvoices, setIssueInvoices] = useState<Einvoice[]>([]);
+  const [outputInvoices, setOutputInvoices] = useState<Einvoice[]>([]);
+  const [inputInvoices, setInputInvoices] = useState<Einvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [filters, setFilters] = useState({
+  const [outputFilters, setOutputFilters] = useState({
     search: "",
     startDate: "",
     endDate: "",
+    page: 1,
+    pageSize: 15,
+    total: 0,
+    totalPages: 1,
+  });
+  const [inputFilters, setInputFilters] = useState({
+    search: "",
+    startDate: "",
+    endDate: "",
+    page: 1,
+    pageSize: 15,
+    total: 0,
+    totalPages: 1,
   });
   const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [sinvoiceForm, setSinvoiceForm] = useState({
@@ -98,72 +114,102 @@ const HoaDonDienTu: React.FC = () => {
     isActive: true,
   });
 
+  const loadBaseData = useCallback(async () => {
+    const [health, sinvoiceCfg, taxCfg] = await Promise.all([
+      getSinvoiceHealthApi(),
+      getConfigApi().catch(() => null),
+      getTaxPortalConfigApi().catch(() => null),
+    ]);
+    setConfig(health);
+    if (sinvoiceCfg) {
+      setSinvoiceForm({
+        supplierTaxCode: sinvoiceCfg.supplierTaxCode || "",
+        username: sinvoiceCfg.username || "",
+        password: sinvoiceCfg.password || "",
+        apiUrl: sinvoiceCfg.apiUrl || "https://demo-sinvoice.viettel.vn:8443/InvoiceAPI",
+        environment: sinvoiceCfg.environment || "demo",
+      });
+    }
+    setTaxPortalConfig(taxCfg);
+    if (taxCfg) {
+      setTaxPortalForm({
+        taxCode: taxCfg.taxCode || "",
+        username: taxCfg.username || "",
+        password: taxCfg.password || "",
+        providerName: taxCfg.providerName || "VIETTEL_TAX_PORTAL",
+        apiUrl: taxCfg.apiUrl || "",
+        gdtJwt: taxCfg.gdtJwt || "",
+        gdtCookie: taxCfg.gdtCookie || "",
+        isActive: taxCfg.isActive ?? true,
+      });
+    }
+  }, []);
+
+  const loadIssueData = useCallback(async () => {
+    const result = await listLocalEinvoicesApi({
+      source: "SINVOICE",
+      direction: "OUT",
+      page: 1,
+      pageSize: 15,
+    });
+    setIssueInvoices(result.data);
+  }, []);
+
+  const loadOutputData = useCallback(async () => {
+    const result = await listLocalEinvoicesApi({
+      source: "TAX_PORTAL",
+      direction: "OUT",
+      search: outputFilters.search,
+      startDate: outputFilters.startDate,
+      endDate: outputFilters.endDate,
+      page: outputFilters.page,
+      pageSize: outputFilters.pageSize,
+    });
+    setOutputInvoices(result.data);
+    setOutputFilters((prev) => ({
+      ...prev,
+      total: result.meta.total,
+      totalPages: result.meta.totalPages,
+    }));
+  }, [outputFilters.search, outputFilters.startDate, outputFilters.endDate, outputFilters.page, outputFilters.pageSize]);
+
+  const loadInputData = useCallback(async () => {
+    const result = await listLocalEinvoicesApi({
+      source: "TAX_PORTAL",
+      direction: "IN",
+      search: inputFilters.search,
+      startDate: inputFilters.startDate,
+      endDate: inputFilters.endDate,
+      page: inputFilters.page,
+      pageSize: inputFilters.pageSize,
+    });
+    setInputInvoices(result.data);
+    setInputFilters((prev) => ({
+      ...prev,
+      total: result.meta.total,
+      totalPages: result.meta.totalPages,
+    }));
+  }, [inputFilters.search, inputFilters.startDate, inputFilters.endDate, inputFilters.page, inputFilters.pageSize]);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setMessage("");
     try {
-      const [health, items, sinvoiceCfg, taxCfg] = await Promise.all([
-        getSinvoiceHealthApi(),
-        listLocalEinvoicesApi({
-          search: filters.search,
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-        }),
-        getConfigApi().catch(() => null),
-        getTaxPortalConfigApi().catch(() => null),
-      ]);
-      setConfig(health);
-      setAllInvoices(items);
-      if (sinvoiceCfg) {
-        setSinvoiceForm({
-          supplierTaxCode: sinvoiceCfg.supplierTaxCode || "",
-          username: sinvoiceCfg.username || "",
-          password: sinvoiceCfg.password || "",
-          apiUrl: sinvoiceCfg.apiUrl || "https://demo-sinvoice.viettel.vn:8443/InvoiceAPI",
-          environment: sinvoiceCfg.environment || "demo",
-        });
-      }
-      setTaxPortalConfig(taxCfg);
-      if (taxCfg) {
-        setTaxPortalForm({
-          taxCode: taxCfg.taxCode || "",
-          username: taxCfg.username || "",
-          password: taxCfg.password || "",
-          providerName: taxCfg.providerName || "VIETTEL_TAX_PORTAL",
-          apiUrl: taxCfg.apiUrl || "",
-          gdtJwt: taxCfg.gdtJwt || "",
-          gdtCookie: taxCfg.gdtCookie || "",
-          isActive: taxCfg.isActive ?? true,
-        });
-      }
+      await loadBaseData();
+      await Promise.all([loadIssueData(), loadOutputData(), loadInputData()]);
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? error.message ?? "Không tải được dữ liệu quản lý thuế");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadBaseData, loadIssueData, loadOutputData, loadInputData]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      void loadData();
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [filters.search, filters.startDate, filters.endDate, loadData]);
-
-  const issueInvoices = useMemo(
-    () => allInvoices.filter((item) => (item.source ?? "SINVOICE") === "SINVOICE"),
-    [allInvoices],
-  );
-  const outputInvoices = useMemo(
-    () => allInvoices.filter((item) => item.direction === "OUT" || (item.source ?? "SINVOICE") === "SINVOICE"),
-    [allInvoices],
-  );
-  const inputInvoices = useMemo(
-    () => allInvoices.filter((item) => item.direction === "IN"),
-    [allInvoices],
-  );
+    void loadData();
+  }, [loadData]);
 
   const stats = useMemo(() => {
+    const allInvoices = [...issueInvoices, ...outputInvoices, ...inputInvoices];
     return allInvoices.reduce(
       (acc, item) => {
         if (item.status === "ISSUED" || item.status === "SYNCED") acc.issued += 1;
@@ -172,12 +218,12 @@ const HoaDonDienTu: React.FC = () => {
         else acc.draft += 1;
         if ((item.source ?? "SINVOICE") === "TAX_PORTAL") acc.taxPortal += 1;
         if (item.direction === "IN") acc.input += 1;
-        if (item.direction === "OUT" || (item.source ?? "SINVOICE") === "SINVOICE") acc.output += 1;
+        if (item.direction === "OUT") acc.output += 1;
         return acc;
       },
       { issued: 0, draft: 0, cancelled: 0, error: 0, taxPortal: 0, input: 0, output: 0 },
     );
-  }, [allInvoices]);
+  }, [issueInvoices, outputInvoices, inputInvoices]);
 
   async function handleDraftSaved(result: any) {
     setMessage(result?.response?.message ?? "Đã lưu hóa đơn nháp nội bộ thành công.");
@@ -204,10 +250,11 @@ const HoaDonDienTu: React.FC = () => {
     setLoading(true);
     setMessage(direction === "IN" ? "Đang đồng bộ hóa đơn mua vào từ cổng thuế..." : "Đang đồng bộ hóa đơn bán ra từ cổng thuế...");
     try {
+      const activeFilters = direction === "IN" ? inputFilters : outputFilters;
       const result = await syncTaxPortalApi({ 
         direction,
-        startDate: filters.startDate,
-        endDate: filters.endDate,
+        startDate: activeFilters.startDate,
+        endDate: activeFilters.endDate,
       });
       setMessage(`Đồng bộ ${result.count} hóa đơn ${direction === "IN" ? "mua vào" : "bán ra"} thành công (${result.note})`);
       await loadData();
@@ -287,42 +334,49 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
-  function renderTable(invoices: Einvoice[], mode: "issue" | "output" | "input") {
+  function renderTable(mode: "issue" | "output" | "input") {
+    const invoices = mode === "issue" ? issueInvoices : mode === "output" ? outputInvoices : inputInvoices;
+    const state = mode === "output" ? outputFilters : inputFilters;
+    const setState = mode === "output" ? setOutputFilters : setInputFilters;
     const partnerHeader = mode === "input" ? "Người bán" : "Khách hàng";
     const taxHeader = mode === "input" ? "MST người bán" : "MST";
+    const showFilters = mode !== "issue";
+
     return (
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <SearchInput
-            placeholder="Tìm theo số HĐ, tên đối tác..."
-            value={filters.search}
-            onChange={(v) => setFilters((f) => ({ ...f, search: v }))}
-            className="w-full md:w-[300px]"
-          />
-          <div className="flex items-center gap-2">
-            <DatePicker
-              value={filters.startDate}
-              onChange={(v) => setFilters((f) => ({ ...f, startDate: v }))}
-              placeholder="Từ ngày"
-              className="w-[140px]"
+        {showFilters && (
+          <div className="flex flex-wrap items-center gap-3">
+            <SearchInput
+              placeholder="Tìm theo số HĐ, tên đối tác..."
+              value={state.search}
+              onChange={(v) => setState((prev) => ({ ...prev, search: v, page: 1 }))}
+              className="w-full md:w-[300px]"
             />
-            <span className="text-muted-foreground">→</span>
-            <DatePicker
-              value={filters.endDate}
-              onChange={(v) => setFilters((f) => ({ ...f, endDate: v }))}
-              placeholder="Đến ngày"
-              className="w-[140px]"
-            />
+            <div className="flex items-center gap-2">
+              <DatePicker
+                value={state.startDate}
+                onChange={(v) => setState((prev) => ({ ...prev, startDate: v, page: 1 }))}
+                placeholder="Từ ngày"
+                className="w-[140px]"
+              />
+              <span className="text-muted-foreground">→</span>
+              <DatePicker
+                value={state.endDate}
+                onChange={(v) => setState((prev) => ({ ...prev, endDate: v, page: 1 }))}
+                placeholder="Đến ngày"
+                className="w-[140px]"
+              />
+            </div>
+            {(state.search || state.startDate || state.endDate) && (
+              <button
+                onClick={() => setState((prev) => ({ ...prev, search: "", startDate: "", endDate: "", page: 1 }))}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+              >
+                Đặt lại
+              </button>
+            )}
           </div>
-          {(filters.search || filters.startDate || filters.endDate) && (
-            <button
-              onClick={() => setFilters({ search: "", startDate: "", endDate: "" })}
-              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
-            >
-              Đặt lại
-            </button>
-          )}
-        </div>
+        )}
 
         <div className="bg-surface border border-border rounded-xl overflow-hidden">
           <Table>
@@ -376,6 +430,16 @@ const HoaDonDienTu: React.FC = () => {
             </TableBody>
           </Table>
         </div>
+        {showFilters && (
+          <TablePagination
+            page={state.page}
+            pageSize={state.pageSize}
+            total={state.total}
+            totalPages={state.totalPages}
+            onPage={(page) => setState((prev) => ({ ...prev, page }))}
+            onPageSize={(pageSize) => setState((prev) => ({ ...prev, pageSize, page: 1 }))}
+          />
+        )}
       </div>
     );
   }
@@ -452,7 +516,7 @@ const HoaDonDienTu: React.FC = () => {
               </div>
             </div>
           </div>
-          {renderTable(issueInvoices, "issue")}
+          {renderTable("issue")}
         </div>
       )}
 
@@ -463,7 +527,7 @@ const HoaDonDienTu: React.FC = () => {
               <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra từ cổng thuế
             </BtnPrimary>
           </div>
-          {renderTable(outputInvoices, "output")}
+          {renderTable("output")}
         </div>
       )}
 
@@ -474,7 +538,7 @@ const HoaDonDienTu: React.FC = () => {
               <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào từ cổng thuế
             </BtnPrimary>
           </div>
-          {renderTable(inputInvoices, "input")}
+          {renderTable("input")}
         </div>
       )}
 
