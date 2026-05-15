@@ -58,6 +58,6 @@ Biến trang `Hóa đơn điện tử` hiện tại thành trung tâm quản lý
 - UI config/save cho tax portal phụ thuộc backend singleton semantics của Directus; khi backend sửa đúng `PATCH /items/tax_portal_configs`, UI hoạt động lại mà không cần đổi contract phía frontend.
 
 ## Commit/Push Status
-- Web repo:
-- API repo:
+- Web repo: pushed `935eb1d` (`feat: add tax management center tabs`)
+- API repo / DB task ref: API pushed `7cd7805` (`feat: add tax portal invoice center flow`); DB task `/opt/repos/liouni-erp-api/docs/tasks/20260515-integration-viettel-sinvoice-in-out.md`
 - DB/directus staging: apply+verify+document (no code push required)
