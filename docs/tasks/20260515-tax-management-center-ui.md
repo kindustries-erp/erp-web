@@ -59,6 +59,6 @@ Biến trang `Hóa đơn điện tử` hiện tại thành trung tâm quản lý
 - Sau khi user bấm Lưu cấu hình, UI phải hiển thị trạng thái hai pha: lưu thành công và kiểm tra kết nối thành công/thất bại. Nếu chỉ báo “lưu thành công” sẽ gây hiểu nhầm là đã kết nối được tới Viettel/CQT.
 
 ## Commit/Push Status
-- Web repo: pushed `935eb1d` (`feat: add tax management center tabs`)
-- API repo / DB task ref: API pushed `7cd7805` (`feat: add tax portal invoice center flow`); DB task `/opt/repos/liouni-erp-api/docs/tasks/20260515-integration-viettel-sinvoice-in-out.md`
+- Web repo: pushed `566d454` (`feat: show config connection status`); trước đó có `935eb1d` (`feat: add tax management center tabs`) và `4e2cca9` (docs evidence)
+- API repo / DB task ref: API pushed `79c633f` (`feat: add config connection checks`); trước đó có `7cd7805` (`feat: add tax portal invoice center flow`) và `c0f239d` (docs evidence); DB task `/opt/repos/liouni-erp-api/docs/tasks/20260515-integration-viettel-sinvoice-in-out.md`
 - DB/directus staging: apply+verify+document (no code push required)
