@@ -43,8 +43,8 @@ export function SinvoiceDraftModal({
   onClose,
   onSaved,
   initialForm,
-  title = "Tạo hóa đơn điện tử nháp",
-  subtitle = "Chỉ lưu nháp nội bộ, không ký và không phát hành",
+  title = "Tạo hóa đơn điện tử nháp Viettel v2.49",
+  subtitle = "Chỉ lưu nháp nội bộ theo surface Viettel v2.49, không ký và không phát hành",
 }: SinvoiceDraftModalProps) {
   const [form, setForm] = useState<CreateArSalesInvoiceDto>(() => ({ ...emptySalesInvoiceForm(), ...initialForm }));
   const [partners, setPartners] = useState<BusinessPartner[]>([]);

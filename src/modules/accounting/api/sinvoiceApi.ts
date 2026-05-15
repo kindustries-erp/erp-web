@@ -10,6 +10,12 @@ export interface SinvoiceConfig {
   taxPortalConfigured?: boolean;
   taxPortalApiUrl?: string | null;
   taxPortalTaxCode?: string | null;
+  provider?: string;
+  draftOnly?: boolean;
+  hasConfig?: boolean;
+  surface?: string;
+  legacyMode?: string;
+  hiddenByDefault?: boolean;
 }
 
 export interface TaxPortalConfig {

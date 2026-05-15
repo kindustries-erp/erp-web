@@ -239,7 +239,7 @@ const HoaDonDienTu: React.FC = () => {
       await loadBaseData();
       await Promise.all([loadIssueData(), loadOutputData(), loadInputData()]);
     } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Không tải được dữ liệu quản lý thuế");
+      setMessage(error?.response?.data?.message ?? error.message ?? "Không tải được dữ liệu hóa đơn điện tử");
     } finally {
       setLoading(false);
     }
@@ -274,13 +274,13 @@ const HoaDonDienTu: React.FC = () => {
 
   async function handleSyncSinvoice() {
     setLoading(true);
-    setMessage("Đang tra cứu danh sách hóa đơn trên Viettel SInvoice...");
+    setMessage("Đang tra cứu danh sách hóa đơn trên Viettel v2.49...");
     try {
       await syncSinvoiceApi();
-      setMessage("Tra cứu SInvoice thành công.");
+      setMessage("Tra cứu Viettel v2.49 thành công.");
       await loadData();
     } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ SInvoice thất bại");
+      setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ Viettel v2.49 thất bại");
     } finally {
       setLoading(false);
     }
@@ -311,33 +311,33 @@ const HoaDonDienTu: React.FC = () => {
 
   async function handleSaveSinvoiceConfig() {
     setLoading(true);
-    setMessage("Đang lưu cấu hình SInvoice...");
+    setMessage("Đang lưu cấu hình Viettel v2.49...");
     try {
       const result = await saveConfigApi(sinvoiceForm);
       const connection = result?.connection;
       setMessage(
         connection?.ok
-          ? `Lưu cấu hình SInvoice thành công. ${connection.message}`
-          : `Lưu cấu hình SInvoice thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
+          ? `Lưu cấu hình Viettel v2.49 thành công. ${connection.message}`
+          : `Lưu cấu hình Viettel v2.49 thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
       );
       await loadData();
     } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Lưu cấu hình SInvoice thất bại");
+      setMessage(error?.response?.data?.message ?? error.message ?? "Lưu cấu hình Viettel v2.49 thất bại");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleResetSinvoiceConfig() {
-    if (!window.confirm("Bạn có chắc muốn xóa cấu hình SInvoice hiện tại?")) return;
+    if (!window.confirm("Bạn có chắc muốn xóa cấu hình Viettel v2.49 hiện tại?")) return;
     setLoading(true);
-    setMessage("Đang xóa cấu hình SInvoice...");
+    setMessage("Đang xóa cấu hình Viettel v2.49...");
     try {
       await resetConfigApi();
-      setMessage("Xóa cấu hình SInvoice thành công.");
+      setMessage("Xóa cấu hình Viettel v2.49 thành công.");
       await loadData();
     } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Xóa cấu hình SInvoice thất bại");
+      setMessage(error?.response?.data?.message ?? error.message ?? "Xóa cấu hình Viettel v2.49 thất bại");
     } finally {
       setLoading(false);
     }
@@ -476,7 +476,7 @@ const HoaDonDienTu: React.FC = () => {
                   <TableCell className="font-medium">{inv.document_no || "-"}</TableCell>
                   <TableCell className="font-mono">{inv.invoice_no || "-"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{inv.source === "TAX_PORTAL" ? "Cổng thuế" : "SInvoice"}</Badge>
+                    <Badge variant="outline">{inv.source === "TAX_PORTAL" ? "Cổng thuế" : "Viettel v2.49"}</Badge>
                   </TableCell>
                   <TableCell className="max-w-[200px] truncate">
                     {mode === "input" ? inv.seller_name || "-" : inv.buyer_name || "-"}
@@ -528,7 +528,7 @@ const HoaDonDienTu: React.FC = () => {
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
         title={t("nav.items.hoadondientu")}
-        desc={config ? `Trung tâm quản lý thuế • SInvoice ${config.environment} • ${config.supplierTaxCode}` : "Quản lý tập trung xuất hóa đơn, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
+        desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 ${config.environment} • ${config.supplierTaxCode}` : "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
         icon={<FileText className="h-4 w-4" />}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -588,7 +588,7 @@ const HoaDonDienTu: React.FC = () => {
                   onClick={handleSyncSinvoice}
                   disabled={loading}
                 >
-                  <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ SInvoice
+                  <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ Viettel v2.49
                 </button>
                 <BtnPrimary onClick={() => setDraftModalOpen(true)} disabled={loading}>
                   <Send className="mr-2 h-4 w-4" /> Tạo hóa đơn nháp mới
@@ -626,8 +626,8 @@ const HoaDonDienTu: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
             <div>
-              <h3 className="text-base font-semibold">Cấu hình SInvoice</h3>
-              <p className="text-sm text-muted-foreground">Dùng để xuất hóa đơn điện tử Viettel SInvoice.</p>
+              <h3 className="text-base font-semibold">Cấu hình Viettel v2.49</h3>
+              <p className="text-sm text-muted-foreground">Dùng cho surface xuất hóa đơn nháp Viettel v2.49 đang được map qua route `sinvoice` hiện tại.</p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Môi trường</label>
@@ -658,7 +658,7 @@ const HoaDonDienTu: React.FC = () => {
             </div>
             <div className="flex justify-between gap-2">
               <button className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium" onClick={handleResetSinvoiceConfig} disabled={loading}>Xóa / Reset</button>
-              <BtnPrimary onClick={handleSaveSinvoiceConfig} disabled={loading}>Lưu cấu hình SInvoice</BtnPrimary>
+              <BtnPrimary onClick={handleSaveSinvoiceConfig} disabled={loading}>Lưu cấu hình Viettel v2.49</BtnPrimary>
             </div>
           </div>
 
