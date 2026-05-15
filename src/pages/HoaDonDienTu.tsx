@@ -86,6 +86,8 @@ const HoaDonDienTu: React.FC = () => {
     password: "",
     providerName: "VIETTEL_TAX_PORTAL",
     apiUrl: "",
+    gdtJwt: "",
+    gdtCookie: "",
     isActive: true,
   });
 
@@ -118,6 +120,8 @@ const HoaDonDienTu: React.FC = () => {
           password: taxCfg.password || "",
           providerName: taxCfg.providerName || "VIETTEL_TAX_PORTAL",
           apiUrl: taxCfg.apiUrl || "",
+          gdtJwt: taxCfg.gdtJwt || "",
+          gdtCookie: taxCfg.gdtCookie || "",
           isActive: taxCfg.isActive ?? true,
         });
       }
@@ -477,6 +481,14 @@ const HoaDonDienTu: React.FC = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">API URL tích hợp</label>
               <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.apiUrl || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, apiUrl: e.target.value })} placeholder="Endpoint tích hợp thực tế nếu có" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">JWT Token từ Tổng cục Thuế</label>
+              <textarea className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]" value={taxPortalForm.gdtJwt || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, gdtJwt: e.target.value })} placeholder="Bearer ey..." />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cookie từ Tổng cục Thuế</label>
+              <textarea className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]" value={taxPortalForm.gdtCookie || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, gdtCookie: e.target.value })} placeholder="_gdt_... " />
             </div>
             <div className="flex items-center gap-2">
               <input id="tax-portal-active" type="checkbox" checked={taxPortalForm.isActive ?? true} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, isActive: e.target.checked })} />

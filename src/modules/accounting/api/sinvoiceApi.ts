@@ -19,6 +19,8 @@ export interface TaxPortalConfig {
   password?: string;
   providerName?: string;
   apiUrl?: string | null;
+  gdtJwt?: string | null;
+  gdtCookie?: string | null;
   isActive?: boolean;
 }
 
