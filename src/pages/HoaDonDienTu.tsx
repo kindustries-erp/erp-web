@@ -226,8 +226,13 @@ const HoaDonDienTu: React.FC = () => {
     setLoading(true);
     setMessage("Đang lưu cấu hình SInvoice...");
     try {
-      await saveConfigApi(sinvoiceForm);
-      setMessage("Lưu cấu hình SInvoice thành công.");
+      const result = await saveConfigApi(sinvoiceForm);
+      const connection = result?.connection;
+      setMessage(
+        connection?.ok
+          ? `Lưu cấu hình SInvoice thành công. ${connection.message}`
+          : `Lưu cấu hình SInvoice thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
+      );
       await loadData();
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? error.message ?? "Lưu cấu hình SInvoice thất bại");
@@ -255,8 +260,13 @@ const HoaDonDienTu: React.FC = () => {
     setLoading(true);
     setMessage("Đang lưu cấu hình cổng thuế...");
     try {
-      await saveTaxPortalConfigApi(taxPortalForm);
-      setMessage("Lưu cấu hình cổng thuế thành công.");
+      const result = await saveTaxPortalConfigApi(taxPortalForm);
+      const connection = result?.connection;
+      setMessage(
+        connection?.ok
+          ? `Lưu cấu hình cổng thuế thành công. ${connection.message}`
+          : `Lưu cấu hình cổng thuế thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
+      );
       await loadData();
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? error.message ?? "Lưu cấu hình cổng thuế thất bại");

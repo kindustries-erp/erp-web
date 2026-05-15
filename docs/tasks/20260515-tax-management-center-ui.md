@@ -46,16 +46,17 @@ Biến trang `Hóa đơn điện tử` hiện tại thành trung tâm quản lý
   - [x] 4.2 Smoke test flow liên quan
 - [ ] 5.0 Close
   - [x] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
+  - [x] 5.2 Commit + push code (web/api)
   - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 - DB precheck result: dùng schema mới `tax_portal_configs` + `einvoices.source/direction/tax_status` từ Gate 0 DB task; có backup và verify Directus fields.
 - `npx tsc --noEmit`: PASS.
-- Smoke test: PASS. Trang `Hóa đơn điện tử` hiển thị đủ 4 tab; KPI cập nhật `Hóa đơn bán ra=3`, `Hóa đơn mua vào=1`, `Nguồn cổng thuế=2`; tab `Hóa đơn bán ra` hiển thị invoice `TOUT-*`; tab `Hóa đơn mua vào` hiển thị invoice `TIN-*`.
+- Smoke test: PASS. Trang `Hóa đơn điện tử` hiển thị đủ 4 tab; KPI cập nhật `Hóa đơn bán ra=3`, `Hóa đơn mua vào=1`, `Nguồn cổng thuế=2`; tab `Hóa đơn bán ra` hiển thị invoice `TOUT-*`; tab `Hóa đơn mua vào` hiển thị invoice `TIN-*`; tab `Cấu hình` render đủ 2 form và web bundle mới chứa marker message `Lưu cấu hình cổng thuế thành công.` / `Lưu cấu hình SInvoice thành công.` sau redeploy.
 
 ## Lessons Learned
 - UI config/save cho tax portal phụ thuộc backend singleton semantics của Directus; khi backend sửa đúng `PATCH /items/tax_portal_configs`, UI hoạt động lại mà không cần đổi contract phía frontend.
+- Sau khi user bấm Lưu cấu hình, UI phải hiển thị trạng thái hai pha: lưu thành công và kiểm tra kết nối thành công/thất bại. Nếu chỉ báo “lưu thành công” sẽ gây hiểu nhầm là đã kết nối được tới Viettel/CQT.
 
 ## Commit/Push Status
 - Web repo: pushed `935eb1d` (`feat: add tax management center tabs`)
