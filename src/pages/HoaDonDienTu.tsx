@@ -35,6 +35,8 @@ import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraf
 
 type TaxTabKey = "issue" | "output" | "input" | "config";
 
+const TAX_PORTAL_PAGE_SIZE_OPTIONS = [15, 30, 50] as const;
+
 const TAB_LABELS: Array<{ key: TaxTabKey; label: string }> = [
   { key: "issue", label: "Xuất hóa đơn" },
   { key: "output", label: "Hóa đơn bán ra" },
@@ -79,6 +81,22 @@ function getDefaultDateRange() {
     startDate: formatDateInput(start),
     endDate: formatDateInput(end),
   };
+}
+
+function normalizeTaxPortalPageSize(pageSize: number): 15 | 30 | 50 {
+  return TAX_PORTAL_PAGE_SIZE_OPTIONS.includes(pageSize as 15 | 30 | 50)
+    ? (pageSize as 15 | 30 | 50)
+    : 15;
+}
+
+function isTaxPortalRangeOverOneMonth(startDate?: string, endDate?: string) {
+  if (!startDate || !endDate) return false;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+  const limit = new Date(start);
+  limit.setMonth(limit.getMonth() + 1);
+  return end > limit;
 }
 
 const HoaDonDienTu: React.FC = () => {
@@ -274,10 +292,12 @@ const HoaDonDienTu: React.FC = () => {
     setMessage(direction === "IN" ? "Đang đồng bộ hóa đơn mua vào từ cổng thuế..." : "Đang đồng bộ hóa đơn bán ra từ cổng thuế...");
     try {
       const activeFilters = direction === "IN" ? inputFilters : outputFilters;
+      const normalizedPageSize = normalizeTaxPortalPageSize(activeFilters.pageSize);
       const result = await syncTaxPortalApi({ 
         direction,
         startDate: activeFilters.startDate,
         endDate: activeFilters.endDate,
+        pageSize: normalizedPageSize,
       });
       setMessage(`Đồng bộ ${result.count} hóa đơn ${direction === "IN" ? "mua vào" : "bán ra"} thành công (${result.note})`);
       await loadData();
@@ -364,11 +384,13 @@ const HoaDonDienTu: React.FC = () => {
     const partnerHeader = mode === "input" ? "Người bán" : "Khách hàng";
     const taxHeader = mode === "input" ? "MST người bán" : "MST";
     const showFilters = mode !== "issue";
+    const overOneMonth = showFilters && isTaxPortalRangeOverOneMonth(state.startDate, state.endDate);
 
     return (
       <div className="space-y-4">
         {showFilters && (
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
             <SearchInput
               placeholder="Tìm theo số HĐ, tên đối tác..."
               value={state.search}
@@ -392,11 +414,33 @@ const HoaDonDienTu: React.FC = () => {
             </div>
             {(state.search || state.startDate || state.endDate) && (
               <button
-                onClick={() => setState((prev) => ({ ...prev, search: "", startDate: "", endDate: "", page: 1 }))}
+                onClick={() => setState((prev) => ({ ...prev, search: "", startDate: defaultDateRange.startDate, endDate: defaultDateRange.endDate, page: 1, pageSize: 15 }))}
                 className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
               >
                 Đặt lại
               </button>
+            )}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span>Page size Tax Portal:</span>
+              <div className="flex items-center gap-2">
+                {TAX_PORTAL_PAGE_SIZE_OPTIONS.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setState((prev) => ({ ...prev, pageSize: size, page: 1 }))}
+                    className={`rounded-md border px-2 py-1 ${state.pageSize === size ? "border-foreground text-foreground" : "border-border hover:border-foreground/40"}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              <span>Chỉ chấp nhận 15 / 30 / 50.</span>
+            </div>
+            {overOneMonth && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Khoảng ngày đang lớn hơn 1 tháng. Khi bấm đồng bộ, hệ thống sẽ tự chia request theo từng tháng và upsert dữ liệu trùng.
+              </div>
             )}
           </div>
         )}

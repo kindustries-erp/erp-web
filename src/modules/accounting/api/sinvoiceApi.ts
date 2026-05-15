@@ -127,6 +127,19 @@ export interface TaxPortalSyncResponse {
   ok: boolean;
   source: "TAX_PORTAL";
   direction: "IN" | "OUT";
+  pageSize?: number;
+  requested_range?: {
+    startDate: string;
+    endDate: string;
+  };
+  chunk_count?: number;
+  chunks?: Array<{
+    index: number;
+    startDate: string;
+    endDate: string;
+    fetched: number;
+    upserted: number;
+  }>;
   count: number;
   synced_at: string;
   invoice_nos?: string[];
@@ -137,6 +150,7 @@ export async function syncTaxPortalApi(params: {
   direction: "IN" | "OUT";
   startDate?: string;
   endDate?: string;
+  pageSize?: 15 | 30 | 50;
 }): Promise<TaxPortalSyncResponse> {
   const res = await axiosInstance.get("/api/v1/sinvoice/tax-portal/sync", {
     params,
