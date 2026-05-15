@@ -604,7 +604,7 @@ const HoaDonDienTu: React.FC = () => {
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
             <BtnPrimary onClick={() => handleSyncTax("OUT")} disabled={loading}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra từ cổng thuế
+                  <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra qua Viettel Tax Portal
             </BtnPrimary>
           </div>
           {renderTable("output")}
@@ -615,7 +615,7 @@ const HoaDonDienTu: React.FC = () => {
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
             <BtnPrimary onClick={() => handleSyncTax("IN")} disabled={loading}>
-              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào từ cổng thuế
+              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào qua Viettel Tax Portal
             </BtnPrimary>
           </div>
           {renderTable("input")}
@@ -636,8 +636,8 @@ const HoaDonDienTu: React.FC = () => {
                 value={sinvoiceForm.environment}
                 onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, environment: e.target.value })}
               >
-                <option value="demo">Demo</option>
                 <option value="production">Production</option>
+                <option value="demo">Demo</option>
               </select>
             </div>
             <div className="space-y-2">
