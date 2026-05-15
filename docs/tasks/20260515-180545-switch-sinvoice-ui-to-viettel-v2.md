@@ -44,24 +44,33 @@
 - [x] 3.0 UI gate done
 - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
-  - [ ] 4.2 Smoke test flow liên quan
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+  - [x] 4.2 Smoke test flow liên quan
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue)
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 - DB precheck result:
   - `DB_READY` theo task API và trạng thái schema/config hiện có
-- `npx tsc --noEmit`:
-  - pending
+- Build:
+  - `npm run build` => exit 0
+  - image build tại `/opt/stacks/liouni-erp-web` bằng `docker compose build --no-cache` => success
 - Smoke test:
-  - pending
+  - container `liouni-erp-web` recreated và `Up`
+  - bundle runtime trong container chứa marker mới:
+    - `Đồng bộ Viettel v2.49`
+    - `Cấu hình Viettel v2.49`
+    - `Trung tâm hóa đơn điện tử`
+  - xác nhận page Hóa đơn điện tử đã đổi wording public-facing sang Viettel v2.49 draft-only, giữ nguyên các tab tax portal
 
 ## Lessons Learned
-- Không có issue
+- API surface remap có thể làm lệch wording UI hàng loạt; giữ tên route/hàm nội bộ để tránh lan phạm vi refactor, chỉ đổi text public-facing và typing cần thiết.
 
 ## Commit/Push Status
-- Web repo: pending
-- API repo: pending
-- DB/directus staging: apply+verify+document (no code push required)
+- Web repo:
+  - commit: `eeb4216` — `Align einvoice UI with Viettel v2 surface`
+  - push: `origin/master` success
+- API repo:
+  - handoff dependency đã push ở API repo riêng
+- DB/directus staging: không đổi schema; chỉ reuse state hiện có
