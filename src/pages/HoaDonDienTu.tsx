@@ -67,7 +67,22 @@ function formatMoney(value?: number) {
   return `${Number(value ?? 0).toLocaleString()} đ`;
 }
 
+function formatDateInput(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function getDefaultDateRange() {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - 30);
+  return {
+    startDate: formatDateInput(start),
+    endDate: formatDateInput(end),
+  };
+}
+
 const HoaDonDienTu: React.FC = () => {
+  const defaultDateRange = useMemo(() => getDefaultDateRange(), []);
   const t = useT();
   const [activeTab, setActiveTab] = useState<TaxTabKey>("issue");
   const [config, setConfig] = useState<SinvoiceConfig | null>(null);
@@ -79,8 +94,8 @@ const HoaDonDienTu: React.FC = () => {
   const [message, setMessage] = useState("");
   const [outputFilters, setOutputFilters] = useState({
     search: "",
-    startDate: "",
-    endDate: "",
+    startDate: defaultDateRange.startDate,
+    endDate: defaultDateRange.endDate,
     page: 1,
     pageSize: 15,
     total: 0,
@@ -90,8 +105,8 @@ const HoaDonDienTu: React.FC = () => {
   });
   const [inputFilters, setInputFilters] = useState({
     search: "",
-    startDate: "",
-    endDate: "",
+    startDate: defaultDateRange.startDate,
+    endDate: defaultDateRange.endDate,
     page: 1,
     pageSize: 15,
     total: 0,
