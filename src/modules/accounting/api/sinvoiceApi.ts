@@ -123,12 +123,25 @@ export async function resetTaxPortalConfigApi(): Promise<any> {
   return res.data;
 }
 
+export interface TaxPortalSyncResponse {
+  ok: boolean;
+  source: "TAX_PORTAL";
+  direction: "IN" | "OUT";
+  count: number;
+  synced_at: string;
+  invoice_nos?: string[];
+  note?: string;
+}
+
 export async function syncTaxPortalApi(params: {
   direction: "IN" | "OUT";
   startDate?: string;
   endDate?: string;
-}): Promise<any> {
-  const res = await axiosInstance.get("/api/v1/sinvoice/tax-portal/sync", { params });
+}): Promise<TaxPortalSyncResponse> {
+  const res = await axiosInstance.get("/api/v1/sinvoice/tax-portal/sync", {
+    params,
+    timeout: 60000,
+  });
   return res.data;
 }
 
