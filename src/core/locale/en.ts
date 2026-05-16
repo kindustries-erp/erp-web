@@ -117,6 +117,37 @@ export const en: Dict = {
     errorEmailFormat: "Invalid email address.",
     errorPasswordRequired: "Please enter your password.",
   },
+  hoadondientuPage: {
+    tabs: {
+      draft: "Draft Invoices",
+      issued: "Issued Invoices",
+      output: "Output Invoices",
+      input: "Input Invoices",
+      config: "Configuration",
+    },
+    descriptions: {
+      draft: "List of draft invoices synced from Viettel.",
+      issued: "List of issued invoices synced from Viettel.",
+      output: "Output invoices from tax portal, supports filtering and subtotal.",
+      input: "Input invoices from tax portal, supports filtering and subtotal.",
+      config: "Manage Viettel and tax portal configurations.",
+    },
+    execSummary: {
+      draft: "Filtered Draft Total",
+      issued: "Filtered Issued Total",
+      output: "Filtered Output Total",
+      input: "Filtered Input Total",
+      config: "Connection Status",
+    },
+    subtotal: "Current Subtotal",
+    kpi: {
+      issued: "Issued/Synced",
+      output: "Output Invoices",
+      input: "Input Invoices",
+      taxPortal: "Tax Portal Source",
+      error: "Error"
+    }
+  },
   common: {
     thisMonth: "This month",
     export: "Export report",
@@ -445,7 +476,38 @@ export const en: Dict = {
     },
   },
   thietlap: {
-    common: {
+    hoadondientuPage: {
+    tabs: {
+      draft: "Draft Invoices",
+      issued: "Issued Invoices",
+      output: "Output Invoices",
+      input: "Input Invoices",
+      config: "Configuration",
+    },
+    descriptions: {
+      draft: "List of draft invoices synced from Viettel.",
+      issued: "List of issued invoices synced from Viettel.",
+      output: "Output invoices from tax portal, supports filtering and subtotal.",
+      input: "Input invoices from tax portal, supports filtering and subtotal.",
+      config: "Manage Viettel and tax portal configurations.",
+    },
+    execSummary: {
+      draft: "Filtered Draft Total",
+      issued: "Filtered Issued Total",
+      output: "Filtered Output Total",
+      input: "Filtered Input Total",
+      config: "Connection Status",
+    },
+    subtotal: "Current Subtotal",
+    kpi: {
+      issued: "Issued/Synced",
+      output: "Output Invoices",
+      input: "Input Invoices",
+      taxPortal: "Tax Portal Source",
+      error: "Error"
+    }
+  },
+  common: {
       subtitle: "Fill in the information below",
       actionEdit: "Edit",
       actionDelete: "Delete",

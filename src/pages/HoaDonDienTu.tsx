@@ -20,29 +20,59 @@ import {
   getConfigApi,
   getSinvoiceHealthApi,
   getTaxPortalConfigApi,
+  listLocalDraftEinvoicesApi,
   listLocalEinvoicesApi,
+  listLocalIssuedEinvoicesApi,
   resetConfigApi,
   resetTaxPortalConfigApi,
   saveConfigApi,
   saveTaxPortalConfigApi,
-  syncSinvoiceApi,
+  syncSinvoiceDraftApi,
+  syncSinvoiceIssuedApi,
   syncTaxPortalApi,
   type Einvoice,
   type SinvoiceConfig,
   type TaxPortalConfig,
 } from "@/modules/accounting/api/sinvoiceApi";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
+import { DrawerModal } from "@/shared/components/DrawerModal";
+import { useDebounce } from "@/shared/hooks/useDebounce";
 
-type TaxTabKey = "issue" | "output" | "input" | "config";
+type TaxTabKey = "draft" | "issued" | "output" | "input" | "config";
 
 const TAX_PORTAL_PAGE_SIZE_OPTIONS = [15, 30, 50] as const;
 
-const TAB_LABELS: Array<{ key: TaxTabKey; label: string }> = [
-  { key: "issue", label: "Xuất hóa đơn" },
-  { key: "output", label: "Hóa đơn bán ra" },
-  { key: "input", label: "Hóa đơn mua vào" },
-  { key: "config", label: "Cấu hình" },
+const TAB_LABELS = (t: any): Array<{ key: TaxTabKey; label: string }> => [
+  { key: "draft", label: t("hoadondientuPage.tabs.draft") },
+  { key: "issued", label: t("hoadondientuPage.tabs.issued") },
+  { key: "output", label: t("hoadondientuPage.tabs.output") },
+  { key: "input", label: t("hoadondientuPage.tabs.input") },
+  { key: "config", label: t("hoadondientuPage.tabs.config") },
 ];
+
+const TAB_DESCRIPTIONS = (t: any): Record<TaxTabKey, string> => ({
+  draft: t("hoadondientuPage.descriptions.draft"),
+  issued: t("hoadondientuPage.descriptions.issued"),
+  output: t("hoadondientuPage.descriptions.output"),
+  input: t("hoadondientuPage.descriptions.input"),
+  config: t("hoadondientuPage.descriptions.config"),
+});
+
+const TAB_ACCENT: Record<TaxTabKey, string> = {
+  draft: "border-l-sky-500",
+  issued: "border-l-emerald-500",
+  output: "border-l-indigo-500",
+  input: "border-l-violet-500",
+  config: "border-l-amber-500",
+};
+
+const EXEC_SUMMARY_LABEL = (t: any): Record<TaxTabKey, string> => ({
+  draft: t("hoadondientuPage.execSummary.draft"),
+  issued: t("hoadondientuPage.execSummary.issued"),
+  output: t("hoadondientuPage.execSummary.output"),
+  input: t("hoadondientuPage.execSummary.input"),
+  config: t("hoadondientuPage.execSummary.config"),
+});
 
 function statusLabel(status: Einvoice["status"]) {
   switch (status) {
@@ -102,14 +132,37 @@ function isTaxPortalRangeOverOneMonth(startDate?: string, endDate?: string) {
 const HoaDonDienTu: React.FC = () => {
   const defaultDateRange = useMemo(() => getDefaultDateRange(), []);
   const t = useT();
-  const [activeTab, setActiveTab] = useState<TaxTabKey>("issue");
+  const [activeTab, setActiveTab] = useState<TaxTabKey>("draft");
   const [config, setConfig] = useState<SinvoiceConfig | null>(null);
   const [taxPortalConfig, setTaxPortalConfig] = useState<TaxPortalConfig | null>(null);
-  const [issueInvoices, setIssueInvoices] = useState<Einvoice[]>([]);
+  const [draftInvoices, setDraftInvoices] = useState<Einvoice[]>([]);
+  const [issuedInvoices, setIssuedInvoices] = useState<Einvoice[]>([]);
   const [outputInvoices, setOutputInvoices] = useState<Einvoice[]>([]);
   const [inputInvoices, setInputInvoices] = useState<Einvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [draftFilters, setDraftFilters] = useState({
+    search: "",
+    startDate: defaultDateRange.startDate,
+    endDate: defaultDateRange.endDate,
+    page: 1,
+    pageSize: 15,
+    total: 0,
+    totalPages: 1,
+    sumTotalAmount: 0,
+    sumVatAmount: 0,
+  });
+  const [issuedFilters, setIssuedFilters] = useState({
+    search: "",
+    startDate: defaultDateRange.startDate,
+    endDate: defaultDateRange.endDate,
+    page: 1,
+    pageSize: 15,
+    total: 0,
+    totalPages: 1,
+    sumTotalAmount: 0,
+    sumVatAmount: 0,
+  });
   const [outputFilters, setOutputFilters] = useState({
     search: "",
     startDate: defaultDateRange.startDate,
@@ -133,12 +186,11 @@ const HoaDonDienTu: React.FC = () => {
     sumVatAmount: 0,
   });
   const [draftModalOpen, setDraftModalOpen] = useState(false);
+  const [issuedDetail, setIssuedDetail] = useState<Einvoice | null>(null);
   const [sinvoiceForm, setSinvoiceForm] = useState({
-    supplierTaxCode: "",
     username: "",
     password: "",
-    apiUrl: "https://demo-sinvoice.viettel.vn:8443/InvoiceAPI",
-    environment: "demo",
+    apiUrl: "https://api-vinvoice.viettel.vn",
   });
   const [taxPortalForm, setTaxPortalForm] = useState<TaxPortalConfig>({
     taxCode: "",
@@ -150,6 +202,10 @@ const HoaDonDienTu: React.FC = () => {
     gdtCookie: "",
     isActive: true,
   });
+  const debouncedDraftSearch = useDebounce(draftFilters.search, 400);
+  const debouncedIssuedSearch = useDebounce(issuedFilters.search, 400);
+  const debouncedOutputSearch = useDebounce(outputFilters.search, 400);
+  const debouncedInputSearch = useDebounce(inputFilters.search, 400);
 
   const loadBaseData = useCallback(async () => {
     const [health, sinvoiceCfg, taxCfg] = await Promise.all([
@@ -160,11 +216,9 @@ const HoaDonDienTu: React.FC = () => {
     setConfig(health);
     if (sinvoiceCfg) {
       setSinvoiceForm({
-        supplierTaxCode: sinvoiceCfg.supplierTaxCode || "",
         username: sinvoiceCfg.username || "",
         password: sinvoiceCfg.password || "",
-        apiUrl: sinvoiceCfg.apiUrl || "https://demo-sinvoice.viettel.vn:8443/InvoiceAPI",
-        environment: sinvoiceCfg.environment || "demo",
+        apiUrl: sinvoiceCfg.apiUrl || "https://api-vinvoice.viettel.vn",
       });
     }
     setTaxPortalConfig(taxCfg);
@@ -182,75 +236,103 @@ const HoaDonDienTu: React.FC = () => {
     }
   }, []);
 
-  const loadIssueData = useCallback(async () => {
-    const result = await listLocalEinvoicesApi({
-      source: "SINVOICE",
-      direction: "OUT",
-      page: 1,
-      pageSize: 15,
+  const loadDraftData = useCallback(async () => {
+    const result = await listLocalDraftEinvoicesApi({
+      page: draftFilters.page,
+      pageSize: draftFilters.pageSize,
+      search: debouncedDraftSearch,
+      startDate: draftFilters.startDate,
+      endDate: draftFilters.endDate,
     });
-    setIssueInvoices(result.data);
-  }, []);
+    setDraftInvoices(result.data);
+    const meta = result?.meta ?? { total: 0, totalPages: 1, sum_total_amount: 0, sum_vat_amount: 0 };
+    setDraftFilters((prev) => ({ ...prev, total: meta.total ?? 0, totalPages: meta.totalPages ?? 1, sumTotalAmount: meta.sum_total_amount ?? 0, sumVatAmount: meta.sum_vat_amount ?? 0 }));
+  }, [draftFilters.page, draftFilters.pageSize, debouncedDraftSearch, draftFilters.startDate, draftFilters.endDate]);
+
+  const loadIssuedData = useCallback(async () => {
+    const result = await listLocalIssuedEinvoicesApi({
+      page: issuedFilters.page,
+      pageSize: issuedFilters.pageSize,
+      search: debouncedIssuedSearch,
+      startDate: issuedFilters.startDate,
+      endDate: issuedFilters.endDate,
+    });
+    setIssuedInvoices(result.data);
+    const meta = result?.meta ?? { total: 0, totalPages: 1, sum_total_amount: 0, sum_vat_amount: 0 };
+    setIssuedFilters((prev) => ({ ...prev, total: meta.total ?? 0, totalPages: meta.totalPages ?? 1, sumTotalAmount: meta.sum_total_amount ?? 0, sumVatAmount: meta.sum_vat_amount ?? 0 }));
+  }, [issuedFilters.page, issuedFilters.pageSize, debouncedIssuedSearch, issuedFilters.startDate, issuedFilters.endDate]);
 
   const loadOutputData = useCallback(async () => {
     const result = await listLocalEinvoicesApi({
       source: "TAX_PORTAL",
       direction: "OUT",
-      search: outputFilters.search,
+      search: debouncedOutputSearch,
       startDate: outputFilters.startDate,
       endDate: outputFilters.endDate,
       page: outputFilters.page,
       pageSize: outputFilters.pageSize,
     });
     setOutputInvoices(result.data);
+    const outputMeta = result?.meta ?? { total: 0, totalPages: 1, sum_total_amount: 0, sum_vat_amount: 0 };
     setOutputFilters((prev) => ({
       ...prev,
-      total: result.meta.total,
-      totalPages: result.meta.totalPages,
-      sumTotalAmount: result.meta.sum_total_amount ?? 0,
-      sumVatAmount: result.meta.sum_vat_amount ?? 0,
+      total: outputMeta.total ?? 0,
+      totalPages: outputMeta.totalPages ?? 1,
+      sumTotalAmount: outputMeta.sum_total_amount ?? 0,
+      sumVatAmount: outputMeta.sum_vat_amount ?? 0,
     }));
-  }, [outputFilters.search, outputFilters.startDate, outputFilters.endDate, outputFilters.page, outputFilters.pageSize]);
+  }, [debouncedOutputSearch, outputFilters.startDate, outputFilters.endDate, outputFilters.page, outputFilters.pageSize]);
 
   const loadInputData = useCallback(async () => {
     const result = await listLocalEinvoicesApi({
       source: "TAX_PORTAL",
       direction: "IN",
-      search: inputFilters.search,
+      search: debouncedInputSearch,
       startDate: inputFilters.startDate,
       endDate: inputFilters.endDate,
       page: inputFilters.page,
       pageSize: inputFilters.pageSize,
     });
     setInputInvoices(result.data);
+    const inputMeta = result?.meta ?? { total: 0, totalPages: 1, sum_total_amount: 0, sum_vat_amount: 0 };
     setInputFilters((prev) => ({
       ...prev,
-      total: result.meta.total,
-      totalPages: result.meta.totalPages,
-      sumTotalAmount: result.meta.sum_total_amount ?? 0,
-      sumVatAmount: result.meta.sum_vat_amount ?? 0,
+      total: inputMeta.total ?? 0,
+      totalPages: inputMeta.totalPages ?? 1,
+      sumTotalAmount: inputMeta.sum_total_amount ?? 0,
+      sumVatAmount: inputMeta.sum_vat_amount ?? 0,
     }));
-  }, [inputFilters.search, inputFilters.startDate, inputFilters.endDate, inputFilters.page, inputFilters.pageSize]);
+  }, [debouncedInputSearch, inputFilters.startDate, inputFilters.endDate, inputFilters.page, inputFilters.pageSize]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
     setMessage("");
     try {
       await loadBaseData();
-      await Promise.all([loadIssueData(), loadOutputData(), loadInputData()]);
+      await Promise.all([loadDraftData(), loadIssuedData(), loadOutputData(), loadInputData()]);
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? error.message ?? "Không tải được dữ liệu hóa đơn điện tử");
     } finally {
       setLoading(false);
     }
-  }, [loadBaseData, loadIssueData, loadOutputData, loadInputData]);
+  }, [loadBaseData, loadDraftData, loadIssuedData, loadOutputData, loadInputData]);
 
   useEffect(() => {
+    const tabFromUrl = new URLSearchParams(window.location.search).get("tab") as TaxTabKey | null;
+    if (tabFromUrl && TAB_LABELS(t).some((tab: any) => tab.key === tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
     void loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", activeTab);
+    window.history.replaceState({}, "", url.toString());
+  }, [activeTab]);
+
   const stats = useMemo(() => {
-    const allInvoices = [...issueInvoices, ...outputInvoices, ...inputInvoices];
+    const allInvoices = [...draftInvoices, ...issuedInvoices, ...outputInvoices, ...inputInvoices];
     return allInvoices.reduce(
       (acc, item) => {
         if (item.status === "ISSUED" || item.status === "SYNCED") acc.issued += 1;
@@ -264,28 +346,54 @@ const HoaDonDienTu: React.FC = () => {
       },
       { issued: 0, draft: 0, cancelled: 0, error: 0, taxPortal: 0, input: 0, output: 0 },
     );
-  }, [issueInvoices, outputInvoices, inputInvoices]);
+  }, [draftInvoices, issuedInvoices, outputInvoices, inputInvoices]);
 
   async function handleDraftSaved(result: any) {
     setMessage(result?.response?.message ?? "Đã lưu hóa đơn nháp nội bộ thành công.");
     await loadData();
-    setActiveTab("issue");
+    setActiveTab("draft");
   }
 
-  async function handleSyncSinvoice() {
+  async function handleSyncDraft() {
     setLoading(true);
-    setMessage("Đang tra cứu danh sách hóa đơn trên Viettel v2.49...");
+    setMessage("Đang lấy hóa đơn nháp từ Viettel...");
     try {
-      await syncSinvoiceApi();
-      setMessage("Tra cứu Viettel v2.49 thành công.");
+      await syncSinvoiceDraftApi({ startDate: defaultDateRange.startDate, endDate: defaultDateRange.endDate, size: 50 });
+      setMessage("Đồng bộ hóa đơn nháp thành công.");
       await loadData();
+      setActiveTab("draft");
     } catch (error: any) {
-      setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ Viettel v2.49 thất bại");
+      setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ hóa đơn nháp thất bại");
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleSyncIssued() {
+    setLoading(true);
+    setMessage("Đang lấy hóa đơn đã phát hành từ Viettel...");
+    try {
+      const result = await syncSinvoiceIssuedApi({
+        startDate: defaultDateRange.startDate,
+        endDate: defaultDateRange.endDate,
+        rowPerPage: 50,
+      });
+      setMessage(`Đồng bộ hóa đơn đã phát hành thành công (${result?.count ?? 0} hóa đơn).`);
+      setActiveTab("issued");
+
+      try {
+        await loadData();
+      } catch (reloadError: any) {
+        setMessage(
+          `Đồng bộ hóa đơn đã phát hành thành công (${result?.count ?? 0} hóa đơn) nhưng tải lại danh sách thất bại: ${reloadError?.response?.data?.message ?? reloadError?.message ?? "Lỗi không xác định"}`,
+        );
+      }
+    } catch (error: any) {
+      setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ hóa đơn đã phát hành thất bại");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSyncTax(direction: "IN" | "OUT") {
     setLoading(true);
@@ -377,14 +485,26 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
-  function renderTable(mode: "issue" | "output" | "input") {
-    const invoices = mode === "issue" ? issueInvoices : mode === "output" ? outputInvoices : inputInvoices;
-    const state = mode === "output" ? outputFilters : inputFilters;
-    const setState = mode === "output" ? setOutputFilters : setInputFilters;
+  function renderTable(mode: "draft" | "issued" | "output" | "input") {
+    const invoices = mode === "draft" ? draftInvoices : mode === "issued" ? issuedInvoices : mode === "output" ? outputInvoices : inputInvoices;
+    const state = mode === "draft"
+      ? draftFilters
+      : mode === "issued"
+        ? issuedFilters
+        : mode === "output"
+          ? outputFilters
+          : inputFilters;
+    const setState = mode === "draft"
+      ? setDraftFilters
+      : mode === "issued"
+        ? setIssuedFilters
+        : mode === "output"
+          ? setOutputFilters
+          : setInputFilters;
     const partnerHeader = mode === "input" ? "Người bán" : "Khách hàng";
     const taxHeader = mode === "input" ? "MST người bán" : "MST";
-    const showFilters = mode !== "issue";
-    const overOneMonth = showFilters && isTaxPortalRangeOverOneMonth(state.startDate, state.endDate);
+    const showFilters = mode === "draft" || mode === "issued" || mode === "output" || mode === "input";
+    const overOneMonth = (mode === "output" || mode === "input") && isTaxPortalRangeOverOneMonth(state.startDate, state.endDate);
 
     return (
       <div className="space-y-4">
@@ -420,22 +540,6 @@ const HoaDonDienTu: React.FC = () => {
                 Đặt lại
               </button>
             )}
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span>Page size Tax Portal:</span>
-              <div className="flex items-center gap-2">
-                {TAX_PORTAL_PAGE_SIZE_OPTIONS.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setState((prev) => ({ ...prev, pageSize: size, page: 1 }))}
-                    className={`rounded-md border px-2 py-1 ${state.pageSize === size ? "border-foreground text-foreground" : "border-border hover:border-foreground/40"}`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-              <span>Chỉ chấp nhận 15 / 30 / 50.</span>
             </div>
             {overOneMonth && (
               <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
@@ -489,8 +593,20 @@ const HoaDonDienTu: React.FC = () => {
                     <Badge variant={statusVariant(inv.status)}>{statusLabel(inv.status)}</Badge>
                   </TableCell>
                   <TableCell className="text-right pr-6 text-[10px] text-muted-foreground leading-tight">
-                    <div className="truncate max-w-[120px]">{inv.tax_status || "-"}</div>
-                    <div className="truncate max-w-[120px]">{inv.external_invoice_id || "-"}</div>
+                    {mode === "issued" ? (
+                      <button
+                        type="button"
+                        onClick={() => setIssuedDetail(inv)}
+                        className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover"
+                      >
+                        Xem chi tiết
+                      </button>
+                    ) : (
+                      <>
+                        <div className="truncate max-w-[120px]">{inv.tax_status || "-"}</div>
+                        <div className="truncate max-w-[120px]">{inv.external_invoice_id || "-"}</div>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -528,7 +644,7 @@ const HoaDonDienTu: React.FC = () => {
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
         title={t("nav.items.hoadondientu")}
-        desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 ${config.environment} • ${config.supplierTaxCode}` : "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
+        desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 • ${config.supplierTaxCode || config.username || "-"}` : "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
         icon={<FileText className="h-4 w-4" />}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -549,15 +665,40 @@ const HoaDonDienTu: React.FC = () => {
       {message && <div className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted-foreground">{message}</div>}
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <KpiCard label="Đã phát hành/đồng bộ" value={String(stats.issued)} icon={<FileText />} />
-        <KpiCard label="Hóa đơn bán ra" value={String(stats.output)} icon={<Send />} />
-        <KpiCard label="Hóa đơn mua vào" value={String(stats.input)} icon={<RefreshCw />} />
-        <KpiCard label="Nguồn cổng thuế" value={String(stats.taxPortal)} icon={<Settings />} />
-        <KpiCard label="Lỗi" value={String(stats.error)} icon={<Trash2 />} warn />
+        <KpiCard label={t("hoadondientuPage.kpi.issued")} value={String(stats.issued)} icon={<FileText />} />
+        <KpiCard label={t("hoadondientuPage.kpi.output")} value={String(stats.output)} icon={<Send />} />
+        <KpiCard label={t("hoadondientuPage.kpi.input")} value={String(stats.input)} icon={<RefreshCw />} />
+        <KpiCard label={t("hoadondientuPage.kpi.taxPortal")} value={String(stats.taxPortal)} icon={<Settings />} />
+        <KpiCard label={t("hoadondientuPage.kpi.error")} value={String(stats.error)} icon={<Trash2 />} warn />
+      </div>
+
+      <div className={`rounded-xl border border-border bg-surface p-4 border-l-4 ${TAB_ACCENT[activeTab]}`}>
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">{EXEC_SUMMARY_LABEL(t)[activeTab]}</p>
+            <p className="text-sm text-muted-foreground">{TAB_DESCRIPTIONS(t)[activeTab]}</p>
+          </div>
+          {activeTab !== "config" && (
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">{t("hoadondientuPage.subtotal")}</p>
+              <p className="text-sm font-semibold font-mono">
+                {formatMoney(
+                  activeTab === "draft"
+                    ? draftFilters.sumTotalAmount
+                    : activeTab === "issued"
+                      ? issuedFilters.sumTotalAmount
+                      : activeTab === "output"
+                        ? outputFilters.sumTotalAmount
+                        : inputFilters.sumTotalAmount,
+                )}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-border">
-        {TAB_LABELS.map((tab) => {
+        {TAB_LABELS(t).map((tab) => {
           const active = tab.key === activeTab;
           return (
             <button
@@ -572,23 +713,17 @@ const HoaDonDienTu: React.FC = () => {
         })}
       </div>
 
-      {activeTab === "issue" && (
+      {activeTab === "draft" && (
         <div className="space-y-6">
           <div className="rounded-xl border border-border bg-surface p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="text-base font-semibold">Xuất hóa đơn điện tử nháp</h3>
-                <p className="text-sm text-muted-foreground">
-                  Luồng hiện tại chỉ cho phép lưu nháp nội bộ để kiểm tra trước. Tính năng ký/phát hành đang tạm ẩn.
-                </p>
+                <h3 className="text-base font-semibold">Hóa đơn nháp</h3>
+                <p className="text-sm text-muted-foreground">Danh sách hóa đơn nháp đồng bộ từ Viettel.</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button
-                  className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60"
-                  onClick={handleSyncSinvoice}
-                  disabled={loading}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ Viettel v2.49
+                <button className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60" onClick={handleSyncDraft} disabled={loading}>
+                  <RefreshCw className="mr-2 h-4 w-4" /> Lấy hóa đơn nháp
                 </button>
                 <BtnPrimary onClick={() => setDraftModalOpen(true)} disabled={loading}>
                   <Send className="mr-2 h-4 w-4" /> Tạo hóa đơn nháp mới
@@ -596,7 +731,26 @@ const HoaDonDienTu: React.FC = () => {
               </div>
             </div>
           </div>
-          {renderTable("issue")}
+          {renderTable("draft")}
+        </div>
+      )}
+
+      {activeTab === "issued" && (
+        <div className="space-y-6">
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-base font-semibold">Hóa đơn đã phát hành</h3>
+                <p className="text-sm text-muted-foreground">Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <BtnPrimary onClick={handleSyncIssued} disabled={loading}>
+                  <RefreshCw className="mr-2 h-4 w-4" /> Lấy hóa đơn đã phát hành
+                </BtnPrimary>
+              </div>
+            </div>
+          </div>
+          {renderTable("issued")}
         </div>
       )}
 
@@ -629,21 +783,7 @@ const HoaDonDienTu: React.FC = () => {
               <h3 className="text-base font-semibold">Cấu hình Viettel v2.49</h3>
               <p className="text-sm text-muted-foreground">Dùng cho surface xuất hóa đơn nháp Viettel v2.49 đang được map qua route `sinvoice` hiện tại.</p>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Môi trường</label>
-              <select
-                className="w-full px-3 py-2 bg-background border border-border rounded-md"
-                value={sinvoiceForm.environment}
-                onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, environment: e.target.value })}
-              >
-                <option value="production">Production</option>
-                <option value="demo">Demo</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Mã số thuế</label>
-              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.supplierTaxCode} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, supplierTaxCode: e.target.value })} />
-            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Username</label>
               <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.username} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, username: e.target.value })} />
@@ -709,6 +849,17 @@ const HoaDonDienTu: React.FC = () => {
           </div>
         </div>
       )}
+      <DrawerModal
+        open={!!issuedDetail}
+        onClose={() => setIssuedDetail(null)}
+        title="Chi tiết hóa đơn đã phát hành"
+        subtitle={issuedDetail?.invoice_no || issuedDetail?.external_invoice_id || "-"}
+      >
+        <pre className="text-xs whitespace-pre-wrap break-all rounded-lg bg-muted/40 p-3">
+          {JSON.stringify(issuedDetail?.response_payload ?? issuedDetail ?? {}, null, 2)}
+        </pre>
+      </DrawerModal>
+
       <SinvoiceDraftModal
         open={draftModalOpen}
         onClose={() => setDraftModalOpen(false)}

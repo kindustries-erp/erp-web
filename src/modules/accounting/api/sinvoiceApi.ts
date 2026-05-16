@@ -2,11 +2,10 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 export interface SinvoiceConfig {
   ok?: boolean;
-  supplierTaxCode: string;
+  supplierTaxCode?: string;
   username: string;
   password?: string;
   apiUrl: string;
-  environment: string;
   taxPortalConfigured?: boolean;
   taxPortalApiUrl?: string | null;
   taxPortalTaxCode?: string | null;
@@ -52,6 +51,7 @@ export interface Einvoice {
   error_message?: string;
   created_at?: string;
   synced_at?: string;
+  response_payload?: Record<string, unknown>;
 }
 
 export async function getSinvoiceHealthApi(): Promise<SinvoiceConfig> {
@@ -85,12 +85,47 @@ export async function listLocalEinvoicesApi(params?: {
 }
 
 export async function createSinvoiceApi(data: any = {}): Promise<any> {
-  const res = await axiosInstance.post("/api/v1/sinvoice/create", data);
+  const res = await axiosInstance.post("/api/v1/viettel-v2/draft", data);
   return res.data;
 }
 
 export async function syncSinvoiceApi(): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/sync");
+  return res.data;
+}
+
+export async function syncSinvoiceDraftApi(params?: { startDate?: string; endDate?: string; size?: number }): Promise<any> {
+  const res = await axiosInstance.get("/api/v1/sinvoice/sync-draft", { params });
+  return res.data;
+}
+
+export async function syncSinvoiceIssuedApi(params?: { startDate?: string; endDate?: string; pageNum?: number; rowPerPage?: number }): Promise<any> {
+  const res = await axiosInstance.get("/api/v1/sinvoice/sync-issued", {
+    params,
+    timeout: 120000,
+  });
+  return res.data;
+}
+
+export async function listLocalDraftEinvoicesApi(params?: {
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<EinvoiceListResponse> {
+  const res = await axiosInstance.get("/api/v1/sinvoice/local/draft", { params });
+  return res.data;
+}
+
+export async function listLocalIssuedEinvoicesApi(params?: {
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<EinvoiceListResponse> {
+  const res = await axiosInstance.get("/api/v1/sinvoice/local/issued", { params });
   return res.data;
 }
 
@@ -173,5 +208,10 @@ export async function downloadSinvoiceApi(
   const res = await axiosInstance.get("/api/v1/sinvoice/download", {
     params: { invoiceNo, pattern, fileType },
   });
+  return res.data;
+}
+
+export async function getViettelTemplatesApi(): Promise<any> {
+  const res = await axiosInstance.get("/api/v1/viettel-v2/templates");
   return res.data;
 }

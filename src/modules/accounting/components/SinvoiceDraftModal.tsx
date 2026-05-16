@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { DrawerField, DrawerModal, DrawerSection, inputCls } from "@/shared/components/DrawerModal";
+import { DrawerField, DrawerModal, DrawerSection, inputCls, selectCls } from "@/shared/components/DrawerModal";
 import { extractApiError } from "@/shared/utils/apiError";
-import { createSinvoiceApi } from "@/modules/accounting/api/sinvoiceApi";
+import { createSinvoiceApi, getViettelTemplatesApi } from "@/modules/accounting/api/sinvoiceApi";
 import {
   getPaymentVoucherLookupBusinessPartnersApi,
   type CreateArSalesInvoiceDto,
@@ -12,16 +12,25 @@ import {
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { emptySalesInvoiceForm, money } from "@/modules/finance/components/ArWorkbenchPanel/shared";
 
-function buildDraftPayload(form: CreateArSalesInvoiceDto, partner?: BusinessPartner | null) {
+interface CreateArSalesInvoiceWithViettelDto extends CreateArSalesInvoiceDto {
+    template_code?: string;
+    invoice_series?: string;
+}
+
+function buildDraftPayload(form: CreateArSalesInvoiceWithViettelDto & { buyer_name?: string; buyer_tax_code?: string; buyer_address?: string }, partner?: BusinessPartner | null) {
   return {
-    documentNo: form.document_no,
-    buyerName: partner?.display_name ?? partner?.name ?? form.business_partner_id,
-    buyerTaxCode: partner?.tax_code ?? undefined,
-    buyerAddress: undefined,
+    buyerName: (form.buyer_name || partner?.display_name || partner?.name || form.business_partner_id || "").trim(),
+    buyerTaxCode: (form.buyer_tax_code || partner?.tax_code || "").trim() || undefined,
+    buyerAddress: (form.buyer_address || partner?.address || "").trim(),
+    sellerAddress: "123 Đường Liouni, HCM",
     description: form.description || form.reference_no || "Hóa đơn nháp từ ERP",
     currencyCode: form.currency || "VND",
+    templateCode: form.template_code,
+    invoiceSeries: form.invoice_series,
+    paymentMethod: "6",
     lines: form.lines.map((line) => ({
-      description: line.description,
+      itemName: line.description || "Hàng hóa",
+      unitName: "Cái",
       quantity: Number(line.quantity || 0),
       unitPrice: Number(line.unit_price || 0),
       taxRate: Number(line.tax_rate || 0),
@@ -29,11 +38,16 @@ function buildDraftPayload(form: CreateArSalesInvoiceDto, partner?: BusinessPart
   };
 }
 
+interface ViettelTemplate {
+    templateCode: string;
+    invoiceSeri: string;
+}
+
 export interface SinvoiceDraftModalProps {
   open: boolean;
   onClose: () => void;
   onSaved?: (result: any) => void | Promise<void>;
-  initialForm?: Partial<CreateArSalesInvoiceDto>;
+  initialForm?: Partial<CreateArSalesInvoiceWithViettelDto>;
   title?: string;
   subtitle?: string;
 }
@@ -46,9 +60,11 @@ export function SinvoiceDraftModal({
   title = "Tạo hóa đơn điện tử nháp Viettel v2.49",
   subtitle = "Chỉ lưu nháp nội bộ theo surface Viettel v2.49, không ký và không phát hành",
 }: SinvoiceDraftModalProps) {
-  const [form, setForm] = useState<CreateArSalesInvoiceDto>(() => ({ ...emptySalesInvoiceForm(), ...initialForm }));
+  const [form, setForm] = useState<CreateArSalesInvoiceWithViettelDto>(() => ({ ...emptySalesInvoiceForm(), ...initialForm }));
   const [partners, setPartners] = useState<BusinessPartner[]>([]);
   const [partnersLoading, setPartnersLoading] = useState(false);
+  const [templates, setTemplates] = useState<ViettelTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,6 +77,12 @@ export function SinvoiceDraftModal({
       .then(setPartners)
       .catch(() => setPartners([]))
       .finally(() => setPartnersLoading(false));
+
+    setTemplatesLoading(true);
+    getViettelTemplatesApi()
+      .then(res => setTemplates(res.template || []))
+      .catch(() => setTemplates([]))
+      .finally(() => setTemplatesLoading(false));
   }, [open, initialForm]);
 
   const selectedPartner = useMemo(
@@ -73,7 +95,7 @@ export function SinvoiceDraftModal({
     [form.lines],
   );
 
-  const updateLine = (index: number, patch: Partial<CreateArSalesInvoiceDto["lines"][number]>) => {
+  const updateLine = (index: number, patch: Partial<CreateArSalesInvoiceWithViettelDto["lines"][number]>) => {
     setForm((current) => ({
       ...current,
       lines: current.lines.map((line, lineIndex) => (lineIndex === index ? { ...line, ...patch } : line)),
@@ -95,10 +117,16 @@ export function SinvoiceDraftModal({
   };
 
   const handleSave = async () => {
+    const draftPayload = buildDraftPayload(form, selectedPartner);
+    if (draftPayload.buyerTaxCode && !draftPayload.buyerAddress) {
+      setError("Khách hàng có MST nhưng thiếu địa chỉ. Vui lòng cập nhật địa chỉ khách hàng trước khi lưu nháp.");
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
-      const result = await createSinvoiceApi(buildDraftPayload(form, selectedPartner));
+      const result = await createSinvoiceApi(draftPayload);
       await onSaved?.(result);
       onClose();
     } catch (e) {
@@ -125,6 +153,22 @@ export function SinvoiceDraftModal({
         {error ? <div className="rounded-lg bg-warn-bg p-3 text-sm text-warn-fg">{error}</div> : null}
 
         <DrawerSection title="Thông tin hóa đơn">
+          <DrawerField label="Mẫu hóa đơn *">
+            <select className={selectCls} value={form.template_code || ""} onChange={(e) => setForm({ ...form, template_code: e.target.value })}>
+                <option value="">-- Chọn mẫu hóa đơn --</option>
+                {templates.map(t => (
+                    <option key={t.templateCode} value={t.templateCode}>{t.templateCode} ({t.invoiceSeri})</option>
+                ))}
+            </select>
+          </DrawerField>
+          <DrawerField label="Ký hiệu *">
+            <select className={selectCls} value={form.invoice_series || ""} onChange={(e) => setForm({ ...form, invoice_series: e.target.value })}>
+                <option value="">-- Chọn ký hiệu --</option>
+                {templates.filter(t => t.templateCode === form.template_code).map(t => (
+                    <option key={t.invoiceSeri} value={t.invoiceSeri}>{t.invoiceSeri}</option>
+                ))}
+            </select>
+          </DrawerField>
           <DrawerField label="Mã chứng từ nháp">
             <input className={inputCls} value={form.document_no} onChange={(e) => setForm({ ...form, document_no: e.target.value })} />
           </DrawerField>
@@ -135,7 +179,16 @@ export function SinvoiceDraftModal({
               <Combobox
                 options={partners.map((p) => ({ value: p.id, label: `${p.display_name ?? p.name}${p.tax_code ? ` • ${p.tax_code}` : ""}` }))}
                 value={form.business_partner_id}
-                onChange={(v) => setForm({ ...form, business_partner_id: v ?? "" })}
+                onChange={(v) => {
+                  const partner = partners.find((p) => p.id === (v ?? "")) ?? null;
+                  setForm({
+                    ...form,
+                    business_partner_id: v ?? "",
+                    buyer_name: partner?.display_name ?? partner?.name ?? "",
+                    buyer_tax_code: partner?.tax_code ?? "",
+                    buyer_address: partner?.address ?? "",
+                  } as any);
+                }}
                 placeholder="Tìm và chọn khách hàng..."
                 className="w-full"
               />
@@ -147,8 +200,17 @@ export function SinvoiceDraftModal({
           <DrawerField label="Ngày chứng từ">
             <DatePicker value={form.document_date} onChange={(value) => setForm({ ...form, document_date: value })} className="w-full" />
           </DrawerField>
+          <DrawerField label="Tên người mua (từ khách hàng)">
+            <input className={inputCls} value={(form as any).buyer_name || selectedPartner?.display_name || selectedPartner?.name || ""} onChange={(e) => setForm({ ...(form as any), buyer_name: e.target.value } as any)} />
+          </DrawerField>
+          <DrawerField label="MST người mua">
+            <input className={inputCls} value={(form as any).buyer_tax_code || selectedPartner?.tax_code || ""} onChange={(e) => setForm({ ...(form as any), buyer_tax_code: e.target.value } as any)} />
+          </DrawerField>
+          <DrawerField label="Địa chỉ người mua *">
+            <input className={inputCls} value={(form as any).buyer_address || selectedPartner?.address || ""} onChange={(e) => setForm({ ...(form as any), buyer_address: e.target.value } as any)} placeholder="Bắt buộc nếu có MST" />
+          </DrawerField>
           <DrawerField label="Diễn giải">
-            <textarea className={inputCls} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+            <input className={inputCls} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </DrawerField>
           <DrawerField label="Số tham chiếu">
             <input className={inputCls} value={form.reference_no || ""} onChange={(e) => setForm({ ...form, reference_no: e.target.value })} />

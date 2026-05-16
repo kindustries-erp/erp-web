@@ -115,6 +115,37 @@ export const vi = {
     errorEmailFormat: "Email không hợp lệ.",
     errorPasswordRequired: "Vui lòng nhập mật khẩu.",
   },
+  hoadondientuPage: {
+    tabs: {
+      draft: "Hóa đơn nháp",
+      issued: "Hóa đơn đã phát hành",
+      output: "Hóa đơn bán ra",
+      input: "Hóa đơn mua vào",
+      config: "Cấu hình",
+    },
+    descriptions: {
+      draft: "Danh sách hóa đơn nháp đồng bộ từ Viettel.",
+      issued: "Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.",
+      output: "Hóa đơn bán ra lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+      input: "Hóa đơn mua vào lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+      config: "Quản lý cấu hình Viettel và cổng thuế theo mô hình tách hệ.",
+    },
+    execSummary: {
+      draft: "Tổng nháp theo bộ lọc",
+      issued: "Tổng đã phát hành theo bộ lọc",
+      output: "Tổng bán ra theo bộ lọc",
+      input: "Tổng mua vào theo bộ lọc",
+      config: "Trạng thái kết nối",
+    },
+    subtotal: "Subtotal hiện tại",
+    kpi: {
+      issued: "Đã phát hành/đồng bộ",
+      output: "Hóa đơn bán ra",
+      input: "Hóa đơn mua vào",
+      taxPortal: "Nguồn cổng thuế",
+      error: "Lỗi"
+    }
+  },
   common: {
     thisMonth: "Tháng này",
     export: "Xuất báo cáo",
@@ -436,7 +467,38 @@ export const vi = {
     },
   },
   thietlap: {
-    common: {
+    hoadondientuPage: {
+    tabs: {
+      draft: "Hóa đơn nháp",
+      issued: "Hóa đơn đã phát hành",
+      output: "Hóa đơn bán ra",
+      input: "Hóa đơn mua vào",
+      config: "Cấu hình",
+    },
+    descriptions: {
+      draft: "Danh sách hóa đơn nháp đồng bộ từ Viettel.",
+      issued: "Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.",
+      output: "Hóa đơn bán ra lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+      input: "Hóa đơn mua vào lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+      config: "Quản lý cấu hình Viettel và cổng thuế theo mô hình tách hệ.",
+    },
+    execSummary: {
+      draft: "Tổng nháp theo bộ lọc",
+      issued: "Tổng đã phát hành theo bộ lọc",
+      output: "Tổng bán ra theo bộ lọc",
+      input: "Tổng mua vào theo bộ lọc",
+      config: "Trạng thái kết nối",
+    },
+    subtotal: "Subtotal hiện tại",
+    kpi: {
+      issued: "Đã phát hành/đồng bộ",
+      output: "Hóa đơn bán ra",
+      input: "Hóa đơn mua vào",
+      taxPortal: "Nguồn cổng thuế",
+      error: "Lỗi"
+    }
+  },
+  common: {
       subtitle: "Điền thông tin bên dưới",
       actionEdit: "Chỉnh sửa",
       actionDelete: "Xóa",
