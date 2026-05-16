@@ -24,6 +24,7 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   "thietlap-quy": { label: "Quỹ tiền mặt", group: "thietlap" },
   "thietlap-nh": { label: "Tài khoản ngân hàng", group: "thietlap" },
   "thietlap-tk": { label: "Hệ thống tài khoản", group: "thietlap" },
+  "thietlap-branch": { label: "Chi nhánh", group: "thietlap" },
   phaithu: { label: "Phải thu", group: "congno" },
   phaittra: { label: "Phải trả", group: "congno" },
   socat: { label: "Sổ cái", group: "baocao" },
@@ -82,6 +83,11 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.accounting"],
     ["breadcrumb.catalog", "thietlap-quy"],
     ["breadcrumb.catalogAccounts"],
+  ],
+  "thietlap-branch": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalogBranches"],
   ],
   phaithu: [
     ["breadcrumb.accounting"],

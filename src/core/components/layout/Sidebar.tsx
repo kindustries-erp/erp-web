@@ -48,7 +48,8 @@ export function Sidebar() {
   const isThietLapQuy = currentPage === "thietlap-quy";
   const isThietLapNH = currentPage === "thietlap-nh";
   const isThietLapTK = currentPage === "thietlap-tk";
-  const isThietLapGroup = isThietLapQuy || isThietLapNH || isThietLapTK;
+  const isThietLapBranch = currentPage === "thietlap-branch";
+  const isThietLapGroup = isThietLapQuy || isThietLapNH || isThietLapTK || isThietLapBranch;
   const isPartners = currentPage === "doitac";
   const isInCongNoGroup = ["phaithu", "phaittra"].includes(currentPage);
   const isInBaoCaoGroup = ["socat", "nhatkyechung"].includes(currentPage);

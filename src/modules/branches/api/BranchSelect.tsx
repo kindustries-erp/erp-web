@@ -38,7 +38,7 @@ export function BranchSelect({ value, onChange, placeholder, disabled, className
       options={branches.map((b) => ({ value: b.id, label: `${b.name}${b.code ? ` (${b.code})` : ""}` }))}
       value={value || ""}
       onChange={onChange}
-      placeholder={placeholder || t("Chọn chi nhánh")}
+      placeholder={placeholder || t("settings.branch.namePlaceholder")}
       disabled={disabled || loading}
       className={className}
       allowClear={allowClear}

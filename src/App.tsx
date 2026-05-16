@@ -116,6 +116,7 @@ export default function App() {
                 {currentPage === "thietlap-quy" && <ThietLapQuy />}
                 {currentPage === "thietlap-nh" && <ThietLapNganHang />}
                 {currentPage === "thietlap-tk" && <ThietLapTaiKhoan />}
+                {currentPage === "thietlap-branch" && <ThietLapQuy />}
                 {currentPage === "nhansu" && <NhanSu />}
                 {currentPage === "phongban" && <PhongBan />}
                 {currentPage === "chucvu" && <ChucVu />}
@@ -143,6 +144,7 @@ export default function App() {
                   "thietlap-quy",
                   "thietlap-nh",
                   "thietlap-tk",
+                  "thietlap-branch",
                   "nhansu",
                   "phongban",
                   "chucvu",

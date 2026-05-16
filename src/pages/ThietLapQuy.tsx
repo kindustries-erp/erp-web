@@ -4,6 +4,7 @@ import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import { QuyTab } from "@/modules/settings/components/QuyTab";
 import { NHTab } from "@/modules/settings/components/NHTab";
 import { TKTab } from "@/modules/settings/components/TKTab";
+import { BranchTab } from "@/modules/settings/components/BranchTab";
 
 export function ThietLapQuy() {
   const [activeTab, setActiveTab] = useState("quy");
@@ -11,7 +12,7 @@ export function ThietLapQuy() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["quy", "nh", "tk"].includes(tab)) {
+    if (tab && ["quy", "nh", "tk", "branch"].includes(tab)) {
       setActiveTab(tab);
     } else {
       setActiveTab("quy");
@@ -31,9 +32,10 @@ export function ThietLapQuy() {
     <PageWithTabsLayout
       className="space-y-4"
       title="Thiết lập danh mục"
-      desc="Quản lý danh mục quỹ, ngân hàng, tài khoản"
+      desc="Quản lý danh mục chi nhánh, quỹ, ngân hàng, tài khoản"
       icon={<Wallet className="h-4 w-4" />}
       tabs={[
+        { value: "branch", label: "Danh mục Chi nhánh" },
         { value: "quy", label: "Danh mục Quỹ" },
         { value: "nh", label: "Danh mục Ngân hàng" },
         { value: "tk", label: "Danh mục Tài khoản" },
@@ -41,6 +43,9 @@ export function ThietLapQuy() {
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
+      <div className={activeTab === "branch" ? "" : "hidden"}>
+        <BranchTab />
+      </div>
       <div className={activeTab === "quy" ? "" : "hidden"}>
         <QuyTab />
       </div>
