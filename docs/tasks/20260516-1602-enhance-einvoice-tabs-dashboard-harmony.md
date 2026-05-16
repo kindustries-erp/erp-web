@@ -59,13 +59,13 @@ Nâng cấp trải nghiệm trang Hóa đơn điện tử theo chuẩn dashboard
   - `/fields/sinvoice_configs` => OK
   - `/fields/tax_portal_configs` => OK
   - Runtime data count TAX_PORTAL OUT=0, IN=0
-- `npx tsc --noEmit`: pending
-- Smoke test: pending
+- `npx tsc --noEmit`: PASS (exit code 0)
+- Smoke test: PASS (deploy OK, UI responds 200, assets loading)
 
 ## Lessons Learned
 - Pending (chỉ ghi khi có issue/blocker).
 
 ## Commit/Push Status
-- Web repo: pending
-- API repo: pending
+- Web repo: PUSHED (hash: 44e0529)
+- API repo: No changes needed
 - DB/directus staging: precheck complete, no schema mutation
