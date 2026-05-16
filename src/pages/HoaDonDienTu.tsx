@@ -672,7 +672,7 @@ const HoaDonDienTu: React.FC = () => {
         <KpiCard label={t("hoadondientuPage.kpi.error")} value={String(stats.error)} icon={<Trash2 />} warn />
       </div>
 
-      <div className="flex space-x-1 rounded-xl bg-muted/40 p-1 w-fit border border-border/50">
+      <div className="flex flex-wrap gap-1 px-1">
         {TAB_LABELS(t).map((tab) => {
           const active = tab.key === activeTab;
           return (
@@ -680,10 +680,10 @@ const HoaDonDienTu: React.FC = () => {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-all ${
-                active
-                  ? "bg-surface text-foreground shadow-sm border border-border/50"
-                  : "text-muted-foreground hover:text-foreground hover:bg-surface/40 border border-transparent"
+              className={`rounded-t-xl border-x border-t px-5 py-2.5 text-sm font-medium transition-colors relative ${
+                active 
+                  ? "border-border bg-surface text-foreground shadow-sm z-10 translate-y-[1px]" 
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-surface/40"
               }`}
             >
               {tab.label}
@@ -692,9 +692,10 @@ const HoaDonDienTu: React.FC = () => {
         })}
       </div>
 
+      <div className="rounded-xl border border-border bg-surface p-5 shadow-sm relative z-0">
       {activeTab === "draft" && (
         <div className="space-y-6">
-          <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="mb-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-base font-semibold">Hóa đơn nháp</h3>
@@ -716,7 +717,7 @@ const HoaDonDienTu: React.FC = () => {
 
       {activeTab === "issued" && (
         <div className="space-y-6">
-          <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="mb-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-base font-semibold">Hóa đơn đã phát hành</h3>
@@ -757,7 +758,7 @@ const HoaDonDienTu: React.FC = () => {
 
       {activeTab === "config" && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
+          <div className="space-y-4">
             <div>
               <h3 className="text-base font-semibold">Cấu hình Viettel v2.49</h3>
               <p className="text-sm text-muted-foreground">Dùng cho surface xuất hóa đơn nháp Viettel v2.49 đang được map qua route `sinvoice` hiện tại.</p>
@@ -781,7 +782,7 @@ const HoaDonDienTu: React.FC = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
+          <div className="space-y-4">
             <div>
               <h3 className="text-base font-semibold">Cấu hình cổng thuế</h3>
               <p className="text-sm text-muted-foreground">Dùng để tra cứu hóa đơn mua vào/đầu ra từ tài khoản Tổng cục Thuế.</p>
@@ -828,6 +829,7 @@ const HoaDonDienTu: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
       <DrawerModal
         open={!!issuedDetail}
         onClose={() => setIssuedDetail(null)}
