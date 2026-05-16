@@ -1,20 +1,22 @@
-import { useState } from "react";
 import { PartnersTab } from "@/modules/partners/components/PartnersTab";
 import { ContactsTab } from "@/modules/partners/components/ContactsTab";
 import { PartnerBankTab } from "@/modules/partners/components/PartnerBankTab";
 import { PartnerRolesTab } from "@/modules/partners/components/PartnerRolesTab";
-import { TabHeader } from "@/modules/partners/components/shared";
-import type { ActiveTab } from "@/modules/partners/types";
+import { AppTabs } from "@/shared/components/AppTabs";
 
 export function DoiTac() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("partners");
+  const tabs = [
+    { key: "partners", label: "Đối tác", content: <PartnersTab /> },
+    { key: "contacts", label: "Liên hệ", content: <ContactsTab /> },
+    { key: "bankaccounts", label: "Tài khoản NH", content: <PartnerBankTab /> },
+    { key: "roles", label: "Vai trò", content: <PartnerRolesTab /> },
+  ];
+
   return (
-    <div>
-      <TabHeader active={activeTab} onChange={setActiveTab} />
-      {activeTab === "partners" && <PartnersTab />}
-      {activeTab === "contacts" && <ContactsTab />}
-      {activeTab === "bankaccounts" && <PartnerBankTab />}
-      {activeTab === "roles" && <PartnerRolesTab />}
-    </div>
+    <AppTabs 
+      tabs={tabs} 
+      variant="line" 
+      defaultValue="partners"
+    />
   );
 }
