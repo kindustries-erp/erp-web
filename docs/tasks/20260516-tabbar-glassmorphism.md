@@ -33,19 +33,21 @@
   - [x] 3.1 Thêm hiệu ứng glassmorphism và hỗ trợ scroll ngang cho `TabBar.tsx`
   - [x] 3.2 Kiểm tra/tối ưu mobile cho `HoaDonDienTu.tsx` (nếu cần)
 - [ ] 4.0 Validation
+  - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue) - Không có issue
+  - [x] 5.2 Commit + push code - Done
 
 ## Validation Evidence
 - DB precheck result: `DB_READY`
 - `npx tsc --noEmit`: OK (Exit code: 0)
+- Smoke test: Skipped (No visual environment)
 
 ## Lessons Learned
 - Không có issue
 
 ## Commit/Push Status
-- Web repo:
-- API repo:
+- Web repo: Committed & Pushed (Commit: 0bfee68)
+- API repo: N/A
 - DB/directus staging: N/A

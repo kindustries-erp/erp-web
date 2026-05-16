@@ -1,3 +1,4 @@
+import { useRef, useEffect, useState } from "react";
 import {
   useAppStore,
   STATIC_TABS,
@@ -7,19 +8,29 @@ import { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
 import { usePageContextMenu } from "@/shared/components/ContextMenu";
 
-function TabItem({ tabKey, active }: { tabKey: PageKey; active: boolean }) {
+function TabItem({ 
+  tabKey, 
+  active, 
+  onMount 
+}: { 
+  tabKey: PageKey; 
+  active: boolean;
+  onMount: (el: HTMLDivElement | null) => void;
+}) {
   const { navigate, closeTab } = useAppStore();
   const label =
     STATIC_TABS[tabKey]?.label ?? SECTION_ROOTS[tabKey]?.label ?? tabKey;
   const closable = !STATIC_TABS[tabKey];
   const onContextMenu = usePageContextMenu(tabKey, label);
+  
   return (
     <div
+      ref={onMount}
       className={cn(
-        "flex items-center gap-[6px] px-[14px] py-[10px] text-xs cursor-pointer border-t-2 -mt-px whitespace-nowrap flex-shrink-0",
+        "flex items-center gap-[6px] px-[16px] py-[8px] text-xs cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 transition-colors duration-200 rounded-full",
         active
-          ? "text-foreground font-medium border-t-foreground"
-          : "text-[color:var(--muted-fg)] border-t-transparent hover:text-foreground",
+          ? "text-foreground font-medium"
+          : "text-[color:var(--muted-fg)] hover:text-foreground",
       )}
       onClick={() => navigate(tabKey)}
       onContextMenu={onContextMenu}
@@ -27,7 +38,7 @@ function TabItem({ tabKey, active }: { tabKey: PageKey; active: boolean }) {
       {label}
       {closable && (
         <span
-          className="text-[color:var(--faint)] text-sm leading-none cursor-pointer px-[3px] py-[1px] rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)]"
+          className="text-[color:var(--faint)] text-sm leading-none cursor-pointer px-[3px] py-[1px] rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1"
           onClick={(e) => {
             e.stopPropagation();
             closeTab(tabKey);
@@ -42,15 +53,49 @@ function TabItem({ tabKey, active }: { tabKey: PageKey; active: boolean }) {
 
 export function TabBar() {
   const { openTabs, currentPage } = useAppStore();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [bgStyle, setBgStyle] = useState({ left: 0, width: 0 });
+  const tabsRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  useEffect(() => {
+    const activeTabEl = tabsRefs.current[currentPage];
+    if (activeTabEl && containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const activeRect = activeTabEl.getBoundingClientRect();
+      
+      setBgStyle({
+        left: activeRect.left - containerRect.left,
+        width: activeRect.width,
+      });
+    }
+  }, [currentPage, openTabs]);
+
   return (
-    <div className="tab-bar backdrop-blur-md bg-surface/70 border-b border-border/50 flex overflow-x-auto scrollbar-none">
-      {openTabs.map((key) => (
-        <TabItem
-          key={key}
-          tabKey={key as PageKey}
-          active={key === currentPage}
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+      <div 
+        ref={containerRef}
+        className="backdrop-blur-lg bg-white/60 dark:bg-black/60 flex items-center p-1 gap-1 rounded-full shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative max-w-[90vw] overflow-x-auto scrollbar-none"
+      >
+        {/* Sliding background */}
+        <div 
+          className="absolute top-1 bottom-1 bg-white dark:bg-zinc-800 rounded-full shadow-sm transition-all duration-300 ease-in-out z-0"
+          style={{
+            left: `${bgStyle.left}px`,
+            width: `${bgStyle.width}px`,
+          }}
         />
-      ))}
+        
+        {openTabs.map((key) => (
+          <TabItem
+            key={key}
+            tabKey={key as PageKey}
+            active={key === currentPage}
+            onMount={(el) => {
+              tabsRefs.current[key] = el;
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }
