@@ -43,7 +43,7 @@ function TabItem({ tabKey, active }: { tabKey: PageKey; active: boolean }) {
 export function TabBar() {
   const { openTabs, currentPage } = useAppStore();
   return (
-    <div className="tab-bar">
+    <div className="tab-bar backdrop-blur-md bg-surface/70 border-b border-border/50 flex overflow-x-auto scrollbar-none">
       {openTabs.map((key) => (
         <TabItem
           key={key}

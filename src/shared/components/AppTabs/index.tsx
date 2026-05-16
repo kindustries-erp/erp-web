@@ -41,7 +41,7 @@ export function AppTabs({
       <TabsList
         className={cn(
           isLine
-            ? "bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-4 mb-6 shadow-[0_4px_4px_-4px_rgba(0,0,0,0.15)]"
+            ? "bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-4 mb-6 shadow-[0_4px_4px_-4px_rgba(0,0,0,0.15)] overflow-x-auto scrollbar-none"
             : "mb-4",
           listClassName
         )}
@@ -52,7 +52,7 @@ export function AppTabs({
             value={tab.key}
             className={cn(
               isLine &&
-                "border-b-2 border-transparent rounded-none px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground"
+                "border-b-2 border-transparent rounded-none px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground whitespace-nowrap flex-shrink-0"
             )}
           >
             {tab.label}
