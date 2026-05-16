@@ -45,9 +45,9 @@ Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem d
 - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit` (đạt gián tiếp qua `npm run build`)
   - [x] 4.2 Smoke test flow liên quan
-- [ ] 5.0 Close
+- [x] 5.0 Close
   - [x] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
+  - [x] 5.2 Commit + push code (web/api)
   - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
@@ -59,6 +59,6 @@ Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem d
 - Branch API web client ban đầu gọi sai endpoint legacy `/branches/*`; cần đồng bộ toàn bộ sang `/api/v1/branches` và dùng kiểu `PaginatedResponse<Branch>` cho danh sách/lookup.
 
 ## Commit/Push Status
-- Web repo: pending commit/push
+- Web repo: pushed `master` at commit `48f08f8` (`feat: add branch catalog tab to ERP settings`)
 - API repo: không đổi thêm ở task này
 - DB/directus staging: đã sẵn sàng từ phase 1
