@@ -16,6 +16,7 @@ export interface AppTabsProps {
   className?: string;
   listClassName?: string;
   containerClassName?: string;
+  variant?: "default" | "line";
 }
 
 export function AppTabs({
@@ -26,7 +27,10 @@ export function AppTabs({
   className,
   listClassName,
   containerClassName,
+  variant = "default",
 }: AppTabsProps) {
+  const isLine = variant === "line";
+
   return (
     <Tabs
       defaultValue={defaultValue}
@@ -34,9 +38,23 @@ export function AppTabs({
       onValueChange={onValueChange}
       className={cn("w-full", className)}
     >
-      <TabsList className={cn("mb-4", listClassName)}>
+      <TabsList
+        className={cn(
+          isLine
+            ? "bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-2"
+            : "mb-4",
+          listClassName
+        )}
+      >
         {tabs.map((tab) => (
-          <TabsTrigger key={tab.key} value={tab.key}>
+          <TabsTrigger
+            key={tab.key}
+            value={tab.key}
+            className={cn(
+              isLine &&
+                "border-b-2 border-transparent rounded-none px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground"
+            )}
+          >
             {tab.label}
           </TabsTrigger>
         ))}

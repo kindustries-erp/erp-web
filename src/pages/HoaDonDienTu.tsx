@@ -831,6 +831,7 @@ const HoaDonDienTu: React.FC = () => {
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as TaxTabKey)}
         containerClassName="rounded-xl border border-border bg-surface p-5 shadow-sm relative z-0"
+        variant="line"
       />
       <DrawerModal
         open={!!issuedDetail}

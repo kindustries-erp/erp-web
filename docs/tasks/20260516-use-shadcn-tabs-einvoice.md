@@ -38,12 +38,13 @@
   - [x] 3.2 Tạo `src/shared/components/ui/tabs.tsx`
   - [x] 3.3 Refactor `src/pages/HoaDonDienTu.tsx`
 - [ ] 4.0 Validation
+  - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
-  - [ ] 4.2 Smoke test flow liên quan
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+  - [ ] 4.2 Smoke test flow liên quan (Skipped)
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue) - Không có issue
+  - [x] 5.2 Commit + push code (web/api) - Done
+  - [x] 5.3 Tổng kết evidence - Done
 
 ## Validation Evidence
 - DB precheck result: `DB_READY` (UI task)
@@ -54,6 +55,6 @@
 - Không có issue
 
 ## Commit/Push Status
-- Web repo:
-- API repo:
+- Web repo: Committed & Pushed (Commit: 1811d1c)
+- API repo: N/A
 - DB/directus staging: N/A
