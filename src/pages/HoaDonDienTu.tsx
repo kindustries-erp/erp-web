@@ -672,32 +672,7 @@ const HoaDonDienTu: React.FC = () => {
         <KpiCard label={t("hoadondientuPage.kpi.error")} value={String(stats.error)} icon={<Trash2 />} warn />
       </div>
 
-      <div className={`rounded-xl border border-border bg-surface p-4 border-l-4 ${TAB_ACCENT[activeTab]}`}>
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">{EXEC_SUMMARY_LABEL(t)[activeTab]}</p>
-            <p className="text-sm text-muted-foreground">{TAB_DESCRIPTIONS(t)[activeTab]}</p>
-          </div>
-          {activeTab !== "config" && (
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">{t("hoadondientuPage.subtotal")}</p>
-              <p className="text-sm font-semibold font-mono">
-                {formatMoney(
-                  activeTab === "draft"
-                    ? draftFilters.sumTotalAmount
-                    : activeTab === "issued"
-                      ? issuedFilters.sumTotalAmount
-                      : activeTab === "output"
-                        ? outputFilters.sumTotalAmount
-                        : inputFilters.sumTotalAmount,
-                )}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2 border-b border-border">
+      <div className="flex space-x-1 rounded-xl bg-muted/40 p-1 w-fit border border-border/50">
         {TAB_LABELS(t).map((tab) => {
           const active = tab.key === activeTab;
           return (
@@ -705,7 +680,11 @@ const HoaDonDienTu: React.FC = () => {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-t-lg border px-4 py-2 text-sm font-medium ${active ? "border-border border-b-surface bg-surface text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-all ${
+                active
+                  ? "bg-surface text-foreground shadow-sm border border-border/50"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface/40 border border-transparent"
+              }`}
             >
               {tab.label}
             </button>
