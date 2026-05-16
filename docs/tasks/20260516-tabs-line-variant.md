@@ -34,11 +34,12 @@
   - [x] 3.1 Cập nhật component để hỗ trợ variant line
   - [x] 3.2 Áp dụng vào `HoaDonDienTu.tsx`
 - [ ] 4.0 Validation
+  - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
-  - [ ] 4.2 Smoke test
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code
+  - [ ] 4.2 Smoke test (Skipped)
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue) - Không có issue
+  - [x] 5.2 Commit + push code - Done
 
 ## Validation Evidence
 - DB precheck result: `DB_READY`
@@ -49,6 +50,6 @@
 - Không có issue
 
 ## Commit/Push Status
-- Web repo:
-- API repo:
+- Web repo: Committed & Pushed (Commit: e036b5f)
+- API repo: N/A
 - DB/directus staging: N/A
