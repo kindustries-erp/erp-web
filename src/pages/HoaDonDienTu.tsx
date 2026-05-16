@@ -642,7 +642,7 @@ const HoaDonDienTu: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title={t("nav.items.hoadondientu")}
         desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 • ${config.supplierTaxCode || config.username || "-"}` : "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
