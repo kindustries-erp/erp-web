@@ -15,6 +15,7 @@ export interface EmpForm {
   phone: string;
   department_id: string;
   position_id: string;
+  branch_id: string;
   employment_status: string;
   hire_date: string;
   is_active: boolean;
@@ -29,6 +30,7 @@ export const emptyForm: EmpForm = {
   phone: "",
   department_id: "",
   position_id: "",
+  branch_id: "",
   employment_status: "active",
   hire_date: "",
   is_active: true,
@@ -83,6 +85,7 @@ export function buildForm(e: Employee): EmpForm {
     phone: e.phone ?? "",
     department_id: deptId(e),
     position_id: posId(e),
+    branch_id: e.branch_id ?? "",
     employment_status: e.employment_status ?? "active",
     hire_date: e.hire_date ? e.hire_date.slice(0, 10) : "",
     is_active: e.is_active,

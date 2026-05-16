@@ -100,6 +100,7 @@ export interface Employee {
   manager_employee_id: string | null;
   directus_user_id: string;
   business_partner_id: string | null;
+  branch_id: string | null;
   employment_status: string;
   hire_date: string | null;
   resign_date: string | null;
@@ -122,6 +123,7 @@ export interface UpdateProfileRequest {
   phone?: string | null;
   manager_employee_id?: string | null;
   business_partner_id?: string | null;
+  branch_id?: string | null;
   employment_status?: string;
   hire_date?: string | null;
   resign_date?: string | null;

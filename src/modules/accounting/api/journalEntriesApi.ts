@@ -24,6 +24,7 @@ export async function getJournalEntriesApi(
         ...(params.account_id ? { account_id: params.account_id } : {}),
         ...(params.date_from ? { date_from: params.date_from } : {}),
         ...(params.date_to ? { date_to: params.date_to } : {}),
+        ...(params.branch_id ? { branch_id: params.branch_id } : {}),
       },
     },
   );

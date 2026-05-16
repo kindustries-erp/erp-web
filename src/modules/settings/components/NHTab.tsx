@@ -27,6 +27,8 @@ import {
   IconTrash,
 } from "./shared";
 
+import { BranchSelect } from "@/modules/branches/api/BranchSelect";
+
 interface BankForm {
   bank_account_code: string;
   bank_name: string;
@@ -34,6 +36,7 @@ interface BankForm {
   account_holder: string;
   accounting_account_id: string;
   currency: string;
+  branch_id: string;
 }
 const emptyBankForm: BankForm = {
   bank_account_code: "",
@@ -42,6 +45,7 @@ const emptyBankForm: BankForm = {
   account_holder: "",
   accounting_account_id: "",
   currency: "VND",
+  branch_id: "",
 };
 function buildBankForm(b: CompanyBankAccount): BankForm {
   return {
@@ -51,6 +55,7 @@ function buildBankForm(b: CompanyBankAccount): BankForm {
     account_holder: b.account_holder,
     accounting_account_id: b.accounting_account_id ?? "",
     currency: b.currency ?? "VND",
+    branch_id: b.branch_id ?? "",
   };
 }
 
@@ -117,6 +122,7 @@ export function NHTab() {
         account_holder: form.account_holder.trim(),
         accounting_account_id: form.accounting_account_id || "",
         currency: form.currency || "VND",
+        branch_id: form.branch_id || undefined,
       };
       if (editing) {
         await updateCompanyBankAccountApi(editing.id, dto);
@@ -202,6 +208,9 @@ export function NHTab() {
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
             <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />
+          </DrawerField>
+          <DrawerField label={t("settings.nh.headers.branch")}>
+            <BranchSelect value={form.branch_id} onChange={(v) => setField("branch_id", v)} />
           </DrawerField>
         </DrawerSection>
         {saveError && <ErrorBanner msg={saveError} />}

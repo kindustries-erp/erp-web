@@ -27,6 +27,8 @@ import {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
+import { BranchSelect } from "@/modules/branches/api/BranchSelect";
+
 interface FlatRow {
   entry: JournalEntry;
   debitLine: JournalEntryLine | null;
@@ -191,7 +193,7 @@ export function NhatKyChung() {
         <div className={activeTab === "nhatkyechung" ? "space-y-4" : "hidden"}>
           {/* Filters */}
           <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
               <input
                 value={list.search}
                 onChange={(e) => { list.setSearch(e.target.value); list.setPage(1); }}
@@ -220,6 +222,14 @@ export function NhatKyChung() {
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+              <div className="flex-1 min-w-[150px]">
+                <BranchSelect
+                  value={list.branchId}
+                  onChange={(val) => { list.setBranchId(val); list.setPage(1); }}
+                  placeholder="Chọn chi nhánh"
+                  allowClear
+                />
+              </div>
               <input
                 value={list.dateFrom}
                 onChange={(e) => { list.setDateFrom(e.target.value); list.setPage(1); }}

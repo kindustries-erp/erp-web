@@ -37,6 +37,7 @@ export function useJournalEntries() {
   const [accountId, setAccountId] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [branchId, setBranchId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,8 +52,9 @@ export function useJournalEntries() {
       account_id: accountId,
       date_from: dateFrom,
       date_to: dateTo,
+      branch_id: branchId,
     }),
-    [accountId, dateFrom, dateTo, page, pageSize, periodId, search, status],
+    [page, pageSize, search, status, periodId, accountId, dateFrom, dateTo, branchId],
   );
 
   const load = useCallback(async () => {
@@ -75,13 +77,14 @@ export function useJournalEntries() {
   }, [load]);
 
   const resetFilters = useCallback(() => {
+    setPage(1);
     setSearch("");
     setStatus("");
     setPeriodId("");
     setAccountId("");
     setDateFrom("");
     setDateTo("");
-    setPage(1);
+    setBranchId("");
   }, []);
 
   return {
@@ -104,6 +107,8 @@ export function useJournalEntries() {
     setDateFrom,
     dateTo,
     setDateTo,
+    branchId,
+    setBranchId,
     loading,
     error,
     load,

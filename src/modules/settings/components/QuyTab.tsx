@@ -32,6 +32,8 @@ import {
   extractApiError,
 } from "./shared";
 
+import { BranchSelect } from "@/modules/branches/api/BranchSelect";
+
 interface QuyForm {
   fund_code: string;
   fund_name: string;
@@ -39,6 +41,7 @@ interface QuyForm {
   currency: string;
   is_active: boolean;
   note: string;
+  branch_id: string;
 }
 const emptyQuyForm: QuyForm = {
   fund_code: "",
@@ -47,6 +50,7 @@ const emptyQuyForm: QuyForm = {
   currency: "VND",
   is_active: true,
   note: "",
+  branch_id: "",
 };
 function buildQuyForm(f: CashFund): QuyForm {
   return {
@@ -56,6 +60,7 @@ function buildQuyForm(f: CashFund): QuyForm {
     currency: f.currency ?? "VND",
     is_active: f.is_active,
     note: f.note ?? "",
+    branch_id: f.branch_id ?? "",
   };
 }
 
@@ -122,6 +127,7 @@ export function QuyTab() {
         currency: form.currency || "VND",
         is_active: form.is_active,
         note: form.note.trim() || undefined,
+        branch_id: form.branch_id || undefined,
       };
       if (editing) {
         await updateCashFundApi(editing.id, dto);
@@ -205,6 +211,9 @@ export function QuyTab() {
               <Checkbox checked={form.is_active} onCheckedChange={(v) => setField("is_active", v === true)} />
               <span className="text-xs text-foreground">{t("common.active")}</span>
             </label>
+          </DrawerField>
+          <DrawerField label={t("settings.quy.headers.branch")}>
+            <BranchSelect value={form.branch_id} onChange={(v) => setField("branch_id", v)} />
           </DrawerField>
           <DrawerField label={t("common.note")}>
             <textarea className={inputCls} rows={2} value={form.note} onChange={(e) => setField("note", e.target.value)} />
