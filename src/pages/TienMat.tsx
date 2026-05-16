@@ -30,7 +30,7 @@ import { useAmountRangeFilter } from "@/shared/hooks/useFilterState";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { TienMatView } from "@/modules/finance/components/TienMat/TienMatView";
 
-export function TienMat() {
+export function TienMat(props: { hideHeader?: boolean } = {}) {
 
   const t = useT();
   const canCreateVoucher = useHasPermission("payment_vouchers", "create");
@@ -358,6 +358,7 @@ export function TienMat() {
   return (
     <TienMatView
       {...{
+        hideHeader: props.hideHeader,
         t,
         canCreateVoucher,
         canUpdateVoucher,

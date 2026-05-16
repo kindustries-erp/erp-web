@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { useT } from "@/core/i18n";
+import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import {
   getConfigApi,
   getSinvoiceHealthApi,
@@ -642,8 +643,8 @@ const HoaDonDienTu: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
+    <>
+      <PageWithTabsLayout
         title={t("nav.items.hoadondientu")}
         desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 • ${config.supplierTaxCode || config.username || "-"}` : "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
         icon={<FileText className="h-4 w-4" />}
@@ -661,178 +662,157 @@ const HoaDonDienTu: React.FC = () => {
             </BtnPrimary>
           </div>
         }
-      />
+        middleContent={
+          <>
+            {message && <div className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted-foreground mb-4">{message}</div>}
 
-      {message && <div className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted-foreground">{message}</div>}
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <KpiCard label={t("hoadondientuPage.kpi.issued")} value={String(stats.issued)} icon={<FileText />} />
-        <KpiCard label={t("hoadondientuPage.kpi.output")} value={String(stats.output)} icon={<Send />} />
-        <KpiCard label={t("hoadondientuPage.kpi.input")} value={String(stats.input)} icon={<RefreshCw />} />
-        <KpiCard label={t("hoadondientuPage.kpi.taxPortal")} value={String(stats.taxPortal)} icon={<Settings />} />
-        <KpiCard label={t("hoadondientuPage.kpi.error")} value={String(stats.error)} icon={<Trash2 />} warn />
-      </div>
-
-      <AppTabs
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <KpiCard label={t("hoadondientuPage.kpi.issued")} value={String(stats.issued)} icon={<FileText />} />
+              <KpiCard label={t("hoadondientuPage.kpi.output")} value={String(stats.output)} icon={<Send />} />
+              <KpiCard label={t("hoadondientuPage.kpi.input")} value={String(stats.input)} icon={<RefreshCw />} />
+              <KpiCard label={t("hoadondientuPage.kpi.taxPortal")} value={String(stats.taxPortal)} icon={<Settings />} />
+              <KpiCard label={t("hoadondientuPage.kpi.error")} value={String(stats.error)} icon={<Trash2 />} warn />
+            </div>
+          </>
+        }
         tabs={[
-          {
-            key: "draft",
-            label: t("hoadondientuPage.tabs.draft"),
-            content: (
-              <div className="space-y-6">
-                <div className="mb-4">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h3 className="text-base font-semibold">Hóa đơn nháp</h3>
-                      <p className="text-sm text-muted-foreground">Danh sách hóa đơn nháp đồng bộ từ Viettel.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60" onClick={handleSyncDraft} disabled={loading}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Lấy hóa đơn nháp
-                      </button>
-                      <BtnPrimary onClick={() => setDraftModalOpen(true)} disabled={loading}>
-                        <Send className="mr-2 h-4 w-4" /> Tạo hóa đơn nháp mới
-                      </BtnPrimary>
-                    </div>
-                  </div>
-                </div>
-                {renderTable("draft")}
-              </div>
-            ),
-          },
-          {
-            key: "issued",
-            label: t("hoadondientuPage.tabs.issued"),
-            content: (
-              <div className="space-y-6">
-                <div className="mb-4">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h3 className="text-base font-semibold">Hóa đơn đã phát hành</h3>
-                      <p className="text-sm text-muted-foreground">Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <BtnPrimary onClick={handleSyncIssued} disabled={loading}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Lấy hóa đơn đã phát hành
-                      </BtnPrimary>
-                    </div>
-                  </div>
-                </div>
-                {renderTable("issued")}
-              </div>
-            ),
-          },
-          {
-            key: "output",
-            label: t("hoadondientuPage.tabs.output"),
-            content: (
-              <div className="space-y-6">
-                <div className="flex flex-wrap gap-2">
-                  <BtnPrimary onClick={() => handleSyncTax("OUT")} disabled={loading}>
-                        <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra qua Viettel Tax Portal
-                  </BtnPrimary>
-                </div>
-                {renderTable("output")}
-              </div>
-            ),
-          },
-          {
-            key: "input",
-            label: t("hoadondientuPage.tabs.input"),
-            content: (
-              <div className="space-y-6">
-                <div className="flex flex-wrap gap-2">
-                  <BtnPrimary onClick={() => handleSyncTax("IN")} disabled={loading}>
-                    <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào qua Viettel Tax Portal
-                  </BtnPrimary>
-                </div>
-                {renderTable("input")}
-              </div>
-            ),
-          },
-          {
-            key: "config",
-            label: t("hoadondientuPage.tabs.config"),
-            content: (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-base font-semibold">Cấu hình Viettel v2.49</h3>
-                    <p className="text-sm text-muted-foreground">Dùng cho surface xuất hóa đơn nháp Viettel v2.49 đang được map qua route `sinvoice` hiện tại.</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Username</label>
-                    <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.username} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, username: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Password</label>
-                    <input type="password" className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.password} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, password: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">API URL</label>
-                    <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.apiUrl} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, apiUrl: e.target.value })} />
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <button className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium" onClick={handleResetSinvoiceConfig} disabled={loading}>Xóa / Reset</button>
-                    <BtnPrimary onClick={handleSaveSinvoiceConfig} disabled={loading}>Lưu cấu hình Viettel v2.49</BtnPrimary>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-base font-semibold">Cấu hình cổng thuế</h3>
-                    <p className="text-sm text-muted-foreground">Dùng để tra cứu hóa đơn mua vào/đầu ra từ tài khoản Tổng cục Thuế.</p>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Mã số thuế đăng nhập</label>
-                    <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.taxCode || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, taxCode: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Username</label>
-                    <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.username || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, username: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Password</label>
-                    <input type="password" className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.password || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, password: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Provider</label>
-                    <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.providerName || "VIETTEL_TAX_PORTAL"} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, providerName: e.target.value })} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">API URL tích hợp</label>
-                    <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.apiUrl || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, apiUrl: e.target.value })} placeholder="Endpoint tích hợp thực tế nếu có" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">JWT Token từ Tổng cục Thuế</label>
-                    <textarea className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]" value={taxPortalForm.gdtJwt || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, gdtJwt: e.target.value })} placeholder="Bearer ey..." />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Cookie từ Tổng cục Thuế</label>
-                    <textarea className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]" value={taxPortalForm.gdtCookie || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, gdtCookie: e.target.value })} placeholder="_gdt_... " />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input id="tax-portal-active" type="checkbox" checked={taxPortalForm.isActive ?? true} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, isActive: e.target.checked })} />
-                    <label htmlFor="tax-portal-active" className="text-sm text-muted-foreground">Kích hoạt cấu hình cổng thuế</label>
-                  </div>
-                  <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
-                    {taxPortalConfig?.username ? `Đã có cấu hình cổng thuế cho MST ${taxPortalConfig.taxCode || "-"}.` : "Chưa có cấu hình cổng thuế trong hệ thống."}
-                  </div>
-                  <div className="flex justify-between gap-2">
-                    <button className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium" onClick={handleResetTaxPortalConfig} disabled={loading}>Xóa / Reset</button>
-                    <BtnPrimary onClick={handleSaveTaxPortalConfig} disabled={loading}>Lưu cấu hình cổng thuế</BtnPrimary>
-                  </div>
-                </div>
-              </div>
-            ),
-          },
+          { value: "draft", label: t("hoadondientuPage.tabs.draft") },
+          { value: "issued", label: t("hoadondientuPage.tabs.issued") },
+          { value: "output", label: t("hoadondientuPage.tabs.output") },
+          { value: "input", label: t("hoadondientuPage.tabs.input") },
+          { value: "config", label: t("hoadondientuPage.tabs.config") },
         ]}
-        value={activeTab}
-        onValueChange={(v) => setActiveTab(v as TaxTabKey)}
-        containerClassName="rounded-xl border border-border bg-surface p-5 card-shadow relative z-0"
-        variant="line"
-      />
+        activeTab={activeTab}
+        onTabChange={(v) => setActiveTab(v as TaxTabKey)}
+      >
+        <div className={`${activeTab === 'draft' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+          <div className="mb-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-base font-semibold">Hóa đơn nháp</h3>
+                <p className="text-sm text-muted-foreground">Danh sách hóa đơn nháp đồng bộ từ Viettel.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60" onClick={handleSyncDraft} disabled={loading}>
+                  <RefreshCw className="mr-2 h-4 w-4" /> Lấy hóa đơn nháp
+                </button>
+                <BtnPrimary onClick={() => setDraftModalOpen(true)} disabled={loading}>
+                  <Send className="mr-2 h-4 w-4" /> Tạo hóa đơn nháp mới
+                </BtnPrimary>
+              </div>
+            </div>
+          </div>
+          {renderTable("draft")}
+        </div>
+
+        <div className={`${activeTab === 'issued' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+          <div className="mb-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="text-base font-semibold">Hóa đơn đã phát hành</h3>
+                <p className="text-sm text-muted-foreground">Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <BtnPrimary onClick={handleSyncIssued} disabled={loading}>
+                  <RefreshCw className="mr-2 h-4 w-4" /> Lấy hóa đơn đã phát hành
+                </BtnPrimary>
+              </div>
+            </div>
+          </div>
+          {renderTable("issued")}
+        </div>
+
+        <div className={`${activeTab === 'output' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+          <div className="flex flex-wrap gap-2">
+            <BtnPrimary onClick={() => handleSyncTax("OUT")} disabled={loading}>
+              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra qua Viettel Tax Portal
+            </BtnPrimary>
+          </div>
+          {renderTable("output")}
+        </div>
+
+        <div className={`${activeTab === 'input' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+          <div className="flex flex-wrap gap-2">
+            <BtnPrimary onClick={() => handleSyncTax("IN")} disabled={loading}>
+              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào qua Viettel Tax Portal
+            </BtnPrimary>
+          </div>
+          {renderTable("input")}
+        </div>
+
+        <div className={`${activeTab === 'config' ? 'grid grid-cols-1 xl:grid-cols-2 gap-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-semibold">Cấu hình Viettel v2.49</h3>
+              <p className="text-sm text-muted-foreground">Dùng cho surface xuất hóa đơn nháp Viettel v2.49 đang được map qua route `sinvoice` hiện tại.</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Username</label>
+              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.username} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, username: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Password</label>
+              <input type="password" className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.password} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, password: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">API URL</label>
+              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={sinvoiceForm.apiUrl} onChange={(e) => setSinvoiceForm({ ...sinvoiceForm, apiUrl: e.target.value })} />
+            </div>
+            <div className="flex justify-between gap-2">
+              <button className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium" onClick={handleResetSinvoiceConfig} disabled={loading}>Xóa / Reset</button>
+              <BtnPrimary onClick={handleSaveSinvoiceConfig} disabled={loading}>Lưu cấu hình Viettel v2.49</BtnPrimary>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-semibold">Cấu hình cổng thuế</h3>
+              <p className="text-sm text-muted-foreground">Dùng để tra cứu hóa đơn mua vào/đầu ra từ tài khoản Tổng cục Thuế.</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Mã số thuế đăng nhập</label>
+              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.taxCode || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, taxCode: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Username</label>
+              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.username || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, username: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Password</label>
+              <input type="password" className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.password || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, password: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Provider</label>
+              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.providerName || "VIETTEL_TAX_PORTAL"} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, providerName: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">API URL tích hợp</label>
+              <input className="w-full px-3 py-2 bg-background border border-border rounded-md" value={taxPortalForm.apiUrl || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, apiUrl: e.target.value })} placeholder="Endpoint tích hợp thực tế nếu có" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">JWT Token từ Tổng cục Thuế</label>
+              <textarea className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]" value={taxPortalForm.gdtJwt || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, gdtJwt: e.target.value })} placeholder="Bearer ey..." />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Cookie từ Tổng cục Thuế</label>
+              <textarea className="w-full px-3 py-2 bg-background border border-border rounded-md min-h-[80px]" value={taxPortalForm.gdtCookie || ""} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, gdtCookie: e.target.value })} placeholder="_gdt_... " />
+            </div>
+            <div className="flex items-center gap-2">
+              <input id="tax-portal-active" type="checkbox" checked={taxPortalForm.isActive ?? true} onChange={(e) => setTaxPortalForm({ ...taxPortalForm, isActive: e.target.checked })} />
+              <label htmlFor="tax-portal-active" className="text-sm text-muted-foreground">Kích hoạt cấu hình cổng thuế</label>
+            </div>
+            <div className="rounded-lg border border-dashed border-border p-3 text-sm text-muted-foreground">
+              {taxPortalConfig?.username ? `Đã có cấu hình cổng thuế cho MST ${taxPortalConfig.taxCode || "-"}.` : "Chưa có cấu hình cổng thuế trong hệ thống."}
+            </div>
+            <div className="flex justify-between gap-2">
+              <button className="px-4 py-2 border border-red-200 text-red-600 rounded-md hover:bg-red-50 text-sm font-medium" onClick={handleResetTaxPortalConfig} disabled={loading}>Xóa / Reset</button>
+              <BtnPrimary onClick={handleSaveTaxPortalConfig} disabled={loading}>Lưu cấu hình cổng thuế</BtnPrimary>
+            </div>
+          </div>
+        </div>
+      </PageWithTabsLayout>
+
       <DrawerModal
         open={!!issuedDetail}
         onClose={() => setIssuedDetail(null)}
@@ -849,7 +829,7 @@ const HoaDonDienTu: React.FC = () => {
         onClose={() => setDraftModalOpen(false)}
         onSaved={handleDraftSaved}
       />
-    </div>
+    </>
   );
 };
 

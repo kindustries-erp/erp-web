@@ -9,6 +9,7 @@ import { SearchInput } from "@/shared/components/SearchInput";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
+import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import {
   createArDocumentApi,
   deleteArDocumentApi,
@@ -29,8 +30,9 @@ import {
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import { DOC_TYPES, STATUS_LABELS, emptySalesInvoiceForm, money, statusCls } from "./shared";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
+import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPage";
 
-type ArWorkbenchTab = "invoices";
+type ArWorkbenchTab = "invoices" | "phaittra";
 
 const TABS: { value: ArWorkbenchTab; label: string; icon: "invoice" | "receipt" | "check" }[] = [
   { value: "invoices", label: "Hóa đơn / Công nợ", icon: "invoice" },
@@ -38,6 +40,26 @@ const TABS: { value: ArWorkbenchTab; label: string; icon: "invoice" | "receipt" 
 
 export function ArWorkbenchPanel() {
   const [activeTab, setActiveTab] = useState<ArWorkbenchTab>("invoices");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab && ["invoices", "phaittra"].includes(tab)) {
+      setActiveTab(tab as ArWorkbenchTab);
+    } else {
+      setActiveTab("invoices");
+      params.set("tab", "invoices");
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+    }
+  }, []);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val as ArWorkbenchTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", val);
+    history.pushState(null, "", url.toString());
+  };
+
   const [summary, setSummary] = useState<ArSummary | null>(null);
   const [coverage, setCoverage] = useState<ArCoverageItem[]>([]);
   const [docs, setDocs] = useState<ArDocument[]>([]);
@@ -157,73 +179,80 @@ export function ArWorkbenchPanel() {
   };
 
   return (
-    <section className="space-y-4">
-      <WorkbenchHeader activeTab={activeTab} onTab={setActiveTab} onCreateInvoice={() => setDraftModalOpen(true)} onCreateOther={() => openDrawer("OTHER")} />
-      {activeTab === "invoices" && (
-        <>
-          <InvoiceKpis summary={summary} supported={supported} coverageTotal={coverage.length || 40} foundation={foundation} />
-          <InvoiceList
-            docs={docs}
-            loading={loading}
-            error={error}
-            search={search}
-            typeFilter={typeFilter}
-            statusFilter={statusFilter}
-            openOnly={openOnly}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            actioningId={actioningId}
-            setSearch={(value) => { setPage(1); setSearch(value); }}
-            setTypeFilter={(value) => { setPage(1); setTypeFilter(value); }}
-            setStatusFilter={(value) => { setPage(1); setStatusFilter(value); }}
-            setOpenOnly={(value) => { setPage(1); setOpenOnly(value); }}
-            setPage={setPage}
-            setPageSize={setPageSize}
-            runDocumentAction={runDocumentAction}
-            onEdit={openEdit}
-            onDelete={deleteDocument}
-          />
-          <CoveragePreview coverage={coverage} />
-          <EditArDocumentDrawer open={!!editDoc} doc={editDoc} paidAmount={editPaidAmount} setPaidAmount={setEditPaidAmount} saving={saving} saveError={saveError} onClose={() => setEditDoc(null)} onSave={saveEdit} />
-          <SalesInvoiceDrawer open={drawerOpen} mode={createMode} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
-          <SinvoiceDraftModal
-            open={draftModalOpen}
-            onClose={() => setDraftModalOpen(false)}
-            title="Xuất hóa đơn nháp từ Công nợ"
-            subtitle="Dùng cùng form nháp như trang Hóa đơn điện tử để tránh duplicate UI"
-            onSaved={async () => {
-              setError(null);
-            }}
-          />
-        </>
-      )}
-    </section>
-  );
-}
-
-function WorkbenchHeader({ activeTab, onTab, onCreateInvoice, onCreateOther }: { activeTab: ArWorkbenchTab; onTab: (tab: ArWorkbenchTab) => void; onCreateInvoice: () => void; onCreateOther: () => void }) {
-  return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--card)] p-4 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted-fg)]">AR Workbench mới</p>
-          <h2 className="text-lg font-semibold text-[color:var(--fg)]">Phải thu: Invoice + Sổ công nợ</h2>
-          <p className="mt-1 max-w-3xl text-sm text-[color:var(--muted-fg)]">Một flow duy nhất cho AR Workbench và Sổ công nợ. Hóa đơn/công nợ có thể đối chiếu với cash/bank voucher; cash/bank chỉ hiển thị chứng từ theo đúng đối tượng đã chọn.</p>
-        </div>
-        <div className="flex flex-wrap gap-2"><BtnPrimary onClick={onCreateInvoice}><FilePlus2 className="h-4 w-4" /> Tạo hóa đơn</BtnPrimary><button onClick={onCreateOther} className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm font-medium hover:bg-[color:var(--muted)]"><Receipt className="mr-1 inline h-4 w-4" /> Thu khác</button></div>
+    <PageWithTabsLayout
+      title="Công nợ"
+      desc="Quản lý công nợ phải thu và phải trả"
+      icon={<Receipt className="h-4 w-4" />}
+      actions={
+        activeTab === "invoices" ? (
+          <div className="flex flex-wrap gap-2">
+            <BtnPrimary onClick={() => setDraftModalOpen(true)}>
+              <FilePlus2 className="h-4 w-4" /> Tạo hóa đơn
+            </BtnPrimary>
+            <button
+              onClick={() => openDrawer("OTHER")}
+              className="rounded-xl border border-[color:var(--border)] px-3 py-2 text-sm font-medium hover:bg-[color:var(--muted)]"
+            >
+              <Receipt className="mr-1 inline h-4 w-4" /> Thu khác
+            </button>
+          </div>
+        ) : undefined
+      }
+      tabs={[
+        { value: "invoices", label: "Phải thu" },
+        { value: "phaittra", label: "Phải trả" }
+      ]}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+    >
+      <div className={activeTab === 'invoices' ? 'space-y-4' : 'hidden'}>
+        <InvoiceKpis summary={summary} supported={supported} coverageTotal={coverage.length || 40} foundation={foundation} />
+        <InvoiceList
+          docs={docs}
+          loading={loading}
+          error={error}
+          search={search}
+          typeFilter={typeFilter}
+          statusFilter={statusFilter}
+          openOnly={openOnly}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+          actioningId={actioningId}
+          setSearch={(value) => { setPage(1); setSearch(value); }}
+          setTypeFilter={(value) => { setPage(1); setTypeFilter(value); }}
+          setStatusFilter={(value) => { setPage(1); setStatusFilter(value); }}
+          setOpenOnly={(value) => { setPage(1); setOpenOnly(value); }}
+          setPage={setPage}
+          setPageSize={setPageSize}
+          runDocumentAction={runDocumentAction}
+          onEdit={openEdit}
+          onDelete={deleteDocument}
+        />
+        <CoveragePreview coverage={coverage} />
+        <EditArDocumentDrawer open={!!editDoc} doc={editDoc} paidAmount={editPaidAmount} setPaidAmount={setEditPaidAmount} saving={saving} saveError={saveError} onClose={() => setEditDoc(null)} onSave={saveEdit} />
+        <SalesInvoiceDrawer open={drawerOpen} mode={createMode} onClose={() => setDrawerOpen(false)} form={form} setForm={setForm} saving={saving} saveError={saveError} saveDocument={saveDocument} updateLine={updateLine} addLine={addLine} removeLine={removeLine} partners={partners} partnersLoading={partnersLoading} />
+        <SinvoiceDraftModal
+          open={draftModalOpen}
+          onClose={() => setDraftModalOpen(false)}
+          title="Xuất hóa đơn nháp từ Công nợ"
+          subtitle="Dùng cùng form nháp như trang Hóa đơn điện tử để tránh duplicate UI"
+          onSaved={async () => {
+            setError(null);
+          }}
+        />
       </div>
-      <div className="mt-3 flex gap-1 border-b border-[color:var(--border)]">
-        {TABS.map((tab) => <TabButton key={tab.value} tab={tab} active={activeTab === tab.value} onClick={() => onTab(tab.value)} />)}
+      <div className={activeTab === "phaittra" ? "" : "hidden"}>
+        <PartnerLedgerPage
+          itemType="PAYABLE"
+          title="Phải trả"
+          desc="Quản lý công nợ phải trả"
+          compact={true}
+        />
       </div>
-    </div>
+    </PageWithTabsLayout>
   );
-}
-
-function TabButton({ tab, active, onClick }: { tab: (typeof TABS)[number]; active: boolean; onClick: () => void }) {
-  const Icon = tab.icon === "check" ? CheckCircle2 : tab.icon === "receipt" ? Receipt : FilePlus2;
-  return <button onClick={onClick} className={cn("flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors", active ? "border-b-2 border-[color:var(--primary)] text-[color:var(--primary)]" : "text-[color:var(--muted-fg)] hover:text-[color:var(--fg)]")}><Icon className="h-3.5 w-3.5" /> {tab.label}</button>;
 }
 
 function InvoiceKpis({ summary, supported, coverageTotal, foundation }: { summary: ArSummary | null; supported: number; coverageTotal: number; foundation: number }) {

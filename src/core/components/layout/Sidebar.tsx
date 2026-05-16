@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Paperclip } from "lucide-react";
 import {
   useAppStore,
   SECTION_ROOTS,
@@ -163,40 +164,10 @@ export function Sidebar() {
                 collapsed={c}
                 icon={<IconDollar />}
                 label={t("nav.items.cashflow")}
-                active={isInDongTienGroup}
-                onClick={() => setDongtienOpen((o) => !o)}
-                hasArrow
-                expanded={dongtienOpen || isInDongTienGroup}
+                active={currentPage === "dongtien"}
+                onClick={() => navTo("dongtien")}
+                contextPage="dongtien"
               />
-              <SubNav
-                id="sub-dongtien"
-                expanded={dongtienOpen || isInDongTienGroup}
-              >
-                <SubItem
-                  label={t("nav.items.cashflowOverview")}
-                  pageKey="dongtien"
-                  active={currentPage === "dongtien"}
-                  onClick={() => navTo("dongtien")}
-                />
-                <SubItem
-                  label={t("nav.items.cashflowCash")}
-                  pageKey="tienmat"
-                  active={currentPage === "tienmat"}
-                  onClick={() => navTo("tienmat")}
-                />
-                <SubItem
-                  label={t("nav.items.cashflowBank")}
-                  pageKey="tiengui"
-                  active={currentPage === "tiengui"}
-                  onClick={() => navTo("tiengui")}
-                />
-                <SubItem
-                  label={t("nav.items.cashflowAttachments")}
-                  pageKey="dinhkem"
-                  active={currentPage === "dinhkem"}
-                  onClick={() => navTo("dinhkem")}
-                />
-              </SubNav>
 
               <NavItem
                 collapsed={c}
@@ -213,25 +184,9 @@ export function Sidebar() {
                 collapsed={c}
                 icon={<IconBox />}
                 label={t("nav.items.debt")}
-                hasArrow
                 active={isInCongNoGroup}
-                expanded={congnoOpen || isInCongNoGroup}
-                onClick={() => setCongnoOpen((o) => !o)}
+                onClick={() => navTo("phaithu")}
               />
-              <SubNav id="sub-congno" expanded={congnoOpen || isInCongNoGroup}>
-                <SubItem
-                  label={t("nav.items.debtReceivable")}
-                  pageKey="phaithu"
-                  active={currentPage === "phaithu"}
-                  onClick={() => navTo("phaithu")}
-                />
-                <SubItem
-                  label={t("nav.items.debtPayable")}
-                  pageKey="phaittra"
-                  active={currentPage === "phaittra"}
-                  onClick={() => navTo("phaittra")}
-                />
-              </SubNav>
               </>}
 
               {canFinance && <>
@@ -239,65 +194,16 @@ export function Sidebar() {
                 collapsed={c}
                 icon={<IconFileText />}
                 label={t("nav.items.report")}
-                hasArrow
                 active={isInBaoCaoGroup}
-                expanded={baocaoOpen || isInBaoCaoGroup}
-                onClick={() => setBaocaoOpen((o) => !o)}
+                onClick={() => navTo("nhatkyechung")}
               />
-              <SubNav id="sub-baocao" expanded={baocaoOpen || isInBaoCaoGroup}>
-                <SubItem
-                  label={t("nav.items.reportLedger")}
-                  pageKey="socat"
-                  active={currentPage === "socat"}
-                  onClick={() => navTo("socat")}
-                />
-                <SubItem
-                  label={t("nav.items.reportJournal")}
-                  pageKey="nhatkyechung"
-                  active={currentPage === "nhatkyechung"}
-                  onClick={() => navTo("nhatkyechung")}
-                />
-              </SubNav>
 
               <NavItem
                 icon={<IconList />}
                 label={t("nav.items.catalog")}
                 active={isThietLapGroup}
-                onClick={() => {
-                  setThietlapOpen((o) => !o);
-                }}
-                hasArrow
-                expanded={thietlapOpen || isThietLapGroup}
+                onClick={() => navTo("thietlap-quy")}
               />
-              <SubNav id="sub-thietlap" expanded={thietlapOpen || isThietLapGroup}>
-                <SubItem
-                  label={t("nav.items.catalogFunds")}
-                  pageKey="thietlap-quy"
-                  active={isThietLapQuy}
-                  onClick={() => {
-                    navigate("thietlap-quy");
-                    setMobileSidebarOpen(false);
-                  }}
-                />
-                <SubItem
-                  label={t("nav.items.catalogBank")}
-                  pageKey="thietlap-nh"
-                  active={isThietLapNH}
-                  onClick={() => {
-                    navigate("thietlap-nh");
-                    setMobileSidebarOpen(false);
-                  }}
-                />
-                <SubItem
-                  label={t("nav.items.catalogAccounts")}
-                  pageKey="thietlap-tk"
-                  active={isThietLapTK}
-                  onClick={() => {
-                    navigate("thietlap-tk");
-                    setMobileSidebarOpen(false);
-                  }}
-                />
-              </SubNav>
               </>}
 
               {canPartners && <NavItem
@@ -307,6 +213,15 @@ export function Sidebar() {
                 active={isPartners}
                 onClick={() => navTo("doitac")}
                 contextPage="doitac"
+              />}
+
+              {canFinance && <NavItem
+                collapsed={c}
+                icon={<Paperclip className="h-4 w-4" />}
+                label={t("nav.items.cashflowAttachments")}
+                active={currentPage === "dinhkem"}
+                onClick={() => navTo("dinhkem")}
+                contextPage="dinhkem"
               />}
             </div>
 

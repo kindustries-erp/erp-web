@@ -1,13 +1,8 @@
-import { useT } from "@/core/i18n";
-import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPage";
+import { useEffect } from "react";
 
 export function PhaiTra() {
-  const t = useT();
-  return (
-    <PartnerLedgerPage
-      itemType="PAYABLE"
-      title={t("phaittra.title")}
-      desc={t("phaittra.desc")}
-    />
-  );
+  useEffect(() => {
+    window.location.href = "/phai-thu?tab=phaittra";
+  }, []);
+  return null;
 }

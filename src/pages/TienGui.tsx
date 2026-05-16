@@ -18,7 +18,7 @@ import { useAmountRangeFilter, useSearchFilter } from "@/shared/hooks/useFilterS
 import { useBankVoucherHandlers } from "@/modules/finance/hooks/useBankVoucherHandlers";
 import { submitPaymentVoucherApi, approvePaymentVoucherApi, rejectPaymentVoucherApi, postPaymentVoucherApi, cancelPaymentVoucherApi, getPaymentVoucherLookupBusinessPartnersApi, getPaymentVoucherLookupEmployeesApi, type VoucherStatus, type CounterpartySource } from "@/modules/finance/api/financeApi";
 
-export function TienGui() {
+export function TienGui(props: { hideHeader?: boolean } = {}) {
   const t = useT();
   const canCreateVoucher = useHasPermission("payment_vouchers", "create");
   const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
@@ -101,7 +101,7 @@ export function TienGui() {
 
   return (
     <div>
-      <TienGuiDashboard {...{ t, canCreateVoucher, openNew, period, dateFrom, dateTo, bankFilter, bankFilterOpts: optionSets.bankFilterOpts, hasActiveFilter, handlePeriodChange, handleDateFrom, handleDateTo, handleBankFilter, handleReset, openingLoading, summaryLoading, donutLoading, chartData, chartLabels, chartYMax, chartUnit, receiptDonutItems, paymentDonutItems, currentClosing, summary, pendingCount, fmtAmount, vouchers, loading, fetchError, voucherAttachments, sortCol, page, pageSize, total, totalPages, searchInput, amountMinInput, amountMaxInput, statusFilter, bankName, handleSort, setPage, handlePageSize, openEdit, setDeleteTarget, handleSearchInput, handleAmountRangeInput, handleStatusFilter, counterpartySourceFilter, setCounterpartySourceFilter }} />
+      <TienGuiDashboard hideHeader={props.hideHeader} {...{ t, canCreateVoucher, openNew, period, dateFrom, dateTo, bankFilter, bankFilterOpts: optionSets.bankFilterOpts, hasActiveFilter, handlePeriodChange, handleDateFrom, handleDateTo, handleBankFilter, handleReset, openingLoading, summaryLoading, donutLoading, chartData, chartLabels, chartYMax, chartUnit, receiptDonutItems, paymentDonutItems, currentClosing, summary, pendingCount, fmtAmount, vouchers, loading, fetchError, voucherAttachments, sortCol, page, pageSize, total, totalPages, searchInput, amountMinInput, amountMaxInput, statusFilter, bankName, handleSort, setPage, handlePageSize, openEdit, setDeleteTarget, handleSearchInput, handleAmountRangeInput, handleStatusFilter, counterpartySourceFilter, setCounterpartySourceFilter }} />
       <BankVoucherDrawer {...{ t, drawerOpen, closeDrawer, drawerEditMode, isDirty, viewOnly, editing, form, editToggle, drawerActions, setField, handleDocumentDateChange, handlePostingDateChange, companyBankOpts: optionSets.companyBankOpts, handleCompanyBankChange, employeeOpts: optionSets.employeeOpts, handleEmployeeChange, partnerOpts: optionSets.partnerOpts, handlePartnerChange, partnerBankOpts: optionSets.partnerBankOpts, partnerBankLoading, debitAccountOpts: optionSets.debitAccountOpts, creditAccountOpts: optionSets.creditAccountOpts, tagPresets, handleTagPresetSelect, handleAmountChange, existingAttachments, handleDeleteAttachment, attachmentType, setAttachmentType, attachmentNote, setAttachmentNote, attachmentFiles, setAttachmentFiles, saveError }} />
       <ConfirmModal open={!!deleteTarget} title={t("voucher.actions.deleteConfirmTitle")} message={deleteTarget ? t("voucher.actions.deleteConfirmDesc").replace("{0}", deleteTarget.voucher_no) : ""} confirmLabel={t("voucher.actions.deleteConfirmBtn")} loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
     </div>

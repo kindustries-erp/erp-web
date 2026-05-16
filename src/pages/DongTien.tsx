@@ -6,11 +6,41 @@ import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAppStore } from "@/core/config/appStore";
 import { useT, useDict } from "@/core/i18n";
+import { useState, useEffect } from "react";
+import { cn } from "@/shared/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { TienMat } from "./TienMat";
+import { TienGui } from "./TienGui";
+import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 
 export function DongTien() {
   const { navigate } = useAppStore();
   const t = useT();
   const dict = useDict();
+
+  const [activeTab, setActiveTab] = useState("tonghop");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab && ["tonghop", "tienmat", "tiengui"].includes(tab)) {
+      setActiveTab(tab);
+    } else {
+      setActiveTab("tonghop");
+      params.set("tab", "tonghop");
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+    }
+  }, []);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", val);
+    history.pushState(null, "", url.toString());
+  };
+  
+
+
   const barIn = "#e8e8e4";
   const barOut = "#1a1a1a";
   const CHART_ITEMS_THU = [
@@ -67,171 +97,187 @@ export function DongTien() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title={t("dongtien.title")}
-        desc={t("dongtien.desc")}
-        icon={<BarChart3 className="h-4 w-4" />}
-        actions={
-          <>
+    <PageWithTabsLayout
+      title={t("dongtien.title")}
+      desc={t("dongtien.desc")}
+      icon={<BarChart3 className="h-4 w-4" />}
+      actions={
+        <>
           <Btn>{t("common.thisMonth")}</Btn>
           <BtnPrimary>
             <IconDownload /> {t("common.export")}
           </BtnPrimary>
-          </>
-        }
-      />
+        </>
+      }
+      tabs={[
+        { value: "tonghop", label: "Tổng hợp" },
+        { value: "tienmat", label: "Tiền mặt" },
+        { value: "tiengui", label: "Ủy nhiệm chi" },
+      ]}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+    >
 
-      {/* KPIs */}
-      <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4">
-        <KpiCard
-          label={t("dongtien.kpi.totalBalance")}
-          value="₫ 40.6B"
-          sub={t("dongtien.kpi.totalBalanceSub")}
-          icon={<IconCard />}
-        />
-        <KpiCard
-          label={t("dongtien.kpi.income")}
-          value="₫ 5.3B"
-          icon={<IconUp />}
-          badge={<KpiBadge variant="up">↑ 2.8%</KpiBadge>}
-        />
-        <KpiCard
-          label={t("dongtien.kpi.expense")}
-          value="₫ 3.7B"
-          icon={<IconDown />}
-          badge={<KpiBadge variant="down">↓ -1.2%</KpiBadge>}
-        />
-        <KpiCard
-          label={t("dongtien.kpi.net")}
-          value="₫ 1.6B"
-          icon={<IconUpGreen />}
-          badge={<KpiBadge variant="up">+18.2%</KpiBadge>}
-        />
-      </div>
-
-      {/* Channel cards */}
-      <div className="text-xs font-medium text-[color:var(--muted-fg)] mb-[6px]">
-        {t("dongtien.sources")}
-      </div>
-      <div className="grid grid-cols-3 max-[700px]:grid-cols-2 max-[420px]:grid-cols-1 gap-[10px] mb-4">
-        <ChannelCard
-          title={t("dongtien.channels.cash")}
-          balance="₫ 15.8B"
-          badge={<KpiBadge variant="up">↑ 2.2%</KpiBadge>}
-          onClick={() => navigate("tienmat")}
-        />
-        <ChannelCard
-          title={t("dongtien.channels.vcb")}
-          balance="₫ 18.4B"
-          badge={<KpiBadge variant="up">↑ 4.1%</KpiBadge>}
-          onClick={() => navigate("tiengui")}
-        />
-        <ChannelCard
-          title={t("dongtien.channels.tcb")}
-          balance="₫ 6.4B"
-          badge={<KpiBadge variant="down">↓ -0.8%</KpiBadge>}
-        />
-      </div>
-
-      {/* Charts row */}
-      <div className="grid grid-cols-1 min-[700px]:grid-cols-[2fr_1fr_1fr] gap-3 mb-4">
-        <Panel title={t("dongtien.chart.trend")}>
-          <div className="relative h-[180px]">
-            <BarChart
-              labels={["T1", "T2", "T3", "T4", "T5", "T6"]}
-              datasets={[
-                {
-                  data: [18, 22, 26, 30, 27, 34],
-                  color: barIn,
-                  label: t("dongtien.chart.income"),
-                },
-                {
-                  data: [14, 17, 20, 22, 18, 25],
-                  color: barOut,
-                  label: t("dongtien.chart.expense"),
-                },
-              ]}
-            />
-          </div>
-          <div className="flex gap-4 mt-[10px]">
-            <LegendItem color={barIn} label={t("dongtien.chart.income")} />
-            <LegendItem color={barOut} label={t("dongtien.chart.expense")} />
-          </div>
-        </Panel>
-        <Panel title={t("dongtien.chart.incomeStructure")}>
-          <div className="relative h-[120px]">
-            <DonutChart items={CHART_ITEMS_THU} cutout="60%" />
-          </div>
-          <DonutLegend items={CHART_ITEMS_THU} />
-        </Panel>
-        <Panel title={t("dongtien.chart.expenseStructure")}>
-          <div className="relative h-[120px]">
-            <DonutChart items={CHART_ITEMS_CHI} cutout="60%" />
-          </div>
-          <DonutLegend items={CHART_ITEMS_CHI} />
-        </Panel>
-      </div>
-
-      {/* Summary table */}
-      <Panel title={t("dongtien.summary.title")}>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse" style={{ minWidth: 480 }}>
-            <thead>
-              <tr>
-                {dict.dongtien.summary.headers.map((h, i) => (
-                  <th
-                    key={h}
-                    className={`text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[6px] border-b border-border uppercase tracking-[0.05em] ${i > 0 ? "text-right" : "text-left"}`}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {SUMMARY_ROWS.map((r) => (
-                <tr
-                  key={r.label}
-                  className={`${r.link ? "cursor-pointer hover:[&>td]:bg-[color:var(--muted)]" : ""} ${r.bold ? "bg-[color:var(--muted)]" : ""}`}
-                  onClick={
-                    r.link
-                      ? () => navigate(r.link as "tienmat" | "tiengui")
-                      : undefined
-                  }
-                >
-                  <td
-                    className={`px-[10px] py-[10px] text-xs border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""}`}
-                  >
-                    {r.label}
-                  </td>
-                  <td
-                    className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""}`}
-                  >
-                    {r.open}
-                  </td>
-                  <td
-                    className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""} text-up-fg`}
-                  >
-                    {r.in}
-                  </td>
-                  <td
-                    className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""} text-down-fg`}
-                  >
-                    {r.out}
-                  </td>
-                  <td
-                    className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-bold text-sm" : "font-semibold"}`}
-                  >
-                    {r.close}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className={activeTab === 'tonghop' ? '' : 'hidden'}>
+        {/* KPIs */}
+        <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4 mt-4">
+          <KpiCard
+            label={t("dongtien.kpi.totalBalance")}
+            value="₫ 40.6B"
+            sub={t("dongtien.kpi.totalBalanceSub")}
+            icon={<IconCard />}
+          />
+          <KpiCard
+            label={t("dongtien.kpi.income")}
+            value="₫ 5.3B"
+            icon={<IconUp />}
+            badge={<KpiBadge variant="up">↑ 2.8%</KpiBadge>}
+          />
+          <KpiCard
+            label={t("dongtien.kpi.expense")}
+            value="₫ 3.7B"
+            icon={<IconDown />}
+            badge={<KpiBadge variant="down">↓ -1.2%</KpiBadge>}
+          />
+          <KpiCard
+            label={t("dongtien.kpi.net")}
+            value="₫ 1.6B"
+            icon={<IconUpGreen />}
+            badge={<KpiBadge variant="up">+18.2%</KpiBadge>}
+          />
         </div>
-      </Panel>
-    </div>
+
+        {/* Channel cards */}
+        <div className="text-xs font-medium text-[color:var(--muted-fg)] mb-[6px]">
+          {t("dongtien.sources")}
+        </div>
+        <div className="grid grid-cols-3 max-[700px]:grid-cols-2 max-[420px]:grid-cols-1 gap-[10px] mb-4">
+          <ChannelCard
+            title={t("dongtien.channels.cash")}
+            balance="₫ 15.8B"
+            badge={<KpiBadge variant="up">↑ 2.2%</KpiBadge>}
+            onClick={() => handleTabChange("tienmat")}
+          />
+          <ChannelCard
+            title={t("dongtien.channels.vcb")}
+            balance="₫ 18.4B"
+            badge={<KpiBadge variant="up">↑ 4.1%</KpiBadge>}
+            onClick={() => handleTabChange("tiengui")}
+          />
+          <ChannelCard
+            title={t("dongtien.channels.tcb")}
+            balance="₫ 6.4B"
+            badge={<KpiBadge variant="down">↓ -0.8%</KpiBadge>}
+          />
+        </div>
+
+        {/* Charts row */}
+        <div className="grid grid-cols-1 min-[700px]:grid-cols-[2fr_1fr_1fr] gap-3 mb-4">
+          <Panel title={t("dongtien.chart.trend")}>
+            <div className="relative h-[180px]">
+              <BarChart
+                labels={["T1", "T2", "T3", "T4", "T5", "T6"]}
+                datasets={[
+                  {
+                    data: [18, 22, 26, 30, 27, 34],
+                    color: barIn,
+                    label: t("dongtien.chart.income"),
+                  },
+                  {
+                    data: [14, 17, 20, 22, 18, 25],
+                    color: barOut,
+                    label: t("dongtien.chart.expense"),
+                  },
+                ]}
+              />
+            </div>
+            <div className="flex gap-4 mt-[10px]">
+              <LegendItem color={barIn} label={t("dongtien.chart.income")} />
+              <LegendItem color={barOut} label={t("dongtien.chart.expense")} />
+            </div>
+          </Panel>
+          <Panel title={t("dongtien.chart.incomeStructure")}>
+            <div className="relative h-[120px]">
+              <DonutChart items={CHART_ITEMS_THU} cutout="60%" />
+            </div>
+            <DonutLegend items={CHART_ITEMS_THU} />
+          </Panel>
+          <Panel title={t("dongtien.chart.expenseStructure")}>
+            <div className="relative h-[120px]">
+              <DonutChart items={CHART_ITEMS_CHI} cutout="60%" />
+            </div>
+            <DonutLegend items={CHART_ITEMS_CHI} />
+          </Panel>
+        </div>
+
+        {/* Summary table */}
+        <Panel title={t("dongtien.summary.title")}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse" style={{ minWidth: 480 }}>
+              <thead>
+                <tr>
+                  {dict.dongtien.summary.headers.map((h, i) => (
+                    <th
+                      key={h}
+                      className={`text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[6px] border-b border-border uppercase tracking-[0.05em] ${i > 0 ? "text-right" : "text-left"}`}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {SUMMARY_ROWS.map((r) => (
+                  <tr
+                    key={r.label}
+                    className={`${r.link ? "cursor-pointer hover:[&>td]:bg-[color:var(--muted)]" : ""} ${r.bold ? "bg-[color:var(--muted)]" : ""}`}
+                    onClick={
+                      r.link
+                        ? () => handleTabChange(r.link as string)
+                        : undefined
+                    }
+                  >
+                    <td
+                      className={`px-[10px] py-[10px] text-xs border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""}`}
+                    >
+                      {r.label}
+                    </td>
+                    <td
+                      className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""}`}
+                    >
+                      {r.open}
+                    </td>
+                    <td
+                      className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""} text-up-fg`}
+                    >
+                      {r.in}
+                    </td>
+                    <td
+                      className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-semibold" : ""} text-down-fg`}
+                    >
+                      {r.out}
+                    </td>
+                    <td
+                      className={`px-[10px] py-[10px] text-xs text-right border-b border-[color:var(--border-light)] ${r.bold ? "font-bold text-sm" : "font-semibold"}`}
+                    >
+                      {r.close}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
+
+      <div className={activeTab === 'tienmat' ? '' : 'hidden'}>
+        <TienMat hideHeader />
+      </div>
+
+      <div className={activeTab === 'tiengui' ? '' : 'hidden'}>
+        <TienGui hideHeader />
+      </div>
+    </PageWithTabsLayout>
   );
 }
 
