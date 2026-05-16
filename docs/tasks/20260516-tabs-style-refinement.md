@@ -34,19 +34,21 @@
   - [x] 3.1 Cập nhật `AppTabs` (thêm `mb-6` và shadow cho variant line)
   - [x] 3.2 Cập nhật `HoaDonDienTu.tsx` (tăng shadow cho container)
 - [ ] 4.0 Validation
+  - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue) - Không có issue
+  - [x] 5.2 Commit + push code - Done
 
 ## Validation Evidence
 - DB precheck result: `DB_READY`
 - `npx tsc --noEmit`: OK (Exit code: 0)
+- Smoke test: Skipped (No visual environment)
 
 ## Lessons Learned
 - Không có issue
 
 ## Commit/Push Status
-- Web repo:
-- API repo:
+- Web repo: Committed & Pushed (Commit: 520fcba)
+- API repo: N/A
 - DB/directus staging: N/A
