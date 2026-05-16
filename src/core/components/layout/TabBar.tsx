@@ -59,13 +59,10 @@ export function TabBar() {
 
   useEffect(() => {
     const activeTabEl = tabsRefs.current[currentPage];
-    if (activeTabEl && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const activeRect = activeTabEl.getBoundingClientRect();
-      
+    if (activeTabEl) {
       setBgStyle({
-        left: activeRect.left - containerRect.left,
-        width: activeRect.width,
+        left: activeTabEl.offsetLeft,
+        width: activeTabEl.offsetWidth,
       });
     }
   }, [currentPage, openTabs]);
