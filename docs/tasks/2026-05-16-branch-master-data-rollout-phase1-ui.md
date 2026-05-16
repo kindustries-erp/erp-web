@@ -50,21 +50,21 @@ Bổ sung khả năng chọn/lọc chi nhánh ở các màn hình Web liên quan
 - [x] 3.0 UI gate done
 - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit` (đạt gián tiếp qua `npm run build`)
-  - [ ] 4.2 Smoke test flow liên quan
-- [ ] 5.0 Close
+  - [x] 4.2 Smoke test flow liên quan
+- [x] 5.0 Close
   - [x] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 - DB precheck result: `DB_READY` theo rollout DB task `/opt/repos/liouni-erp/directus-staging/ops/tasks/2026-05-16-branch-master-data-rollout-phase1.md`
 - `npx tsc --noEmit`: dùng `npm run build` để xác nhận TypeScript + Vite build PASS
-- Smoke test: pending deploy + runtime verification
+- Smoke test: `docker compose ps` web container Up; `curl -I http://127.0.0.1:8808/` -> HTTP 200; `curl -I https://dev.erp.liouni.com/` -> HTTP 200
 
 ## Lessons Learned
 - Build đầu tiên fail do import nhầm Select component, type chưa mở rộng `branch_id`, và một số lời gọi `t()` dùng fallback string không đúng signature hiện tại. Đã sửa triệt để trước khi deploy.
 
 ## Commit/Push Status
-- Web repo: pending
+- Web repo: pushed `master` at commit `7db3ef1` (`feat: add branch support to ERP web rollout phase 1`)
 - API repo: có thay đổi bẩn khác scope trong working tree, không đụng trong bước Web deploy này
 - DB/directus staging: apply+verify+document (no code push required)
