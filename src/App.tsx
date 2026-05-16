@@ -97,7 +97,7 @@ export default function App() {
       <div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
         <Sidebar />
         {/* Right panel: single rounded window — topbar + scrolling content + tabbar */}
-        <div className="right-panel">
+        <div className="right-panel relative">
           <Topbar />
           <div
             ref={contentRef}

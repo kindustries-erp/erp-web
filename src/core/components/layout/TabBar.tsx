@@ -71,14 +71,24 @@ export function TabBar() {
   }, [currentPage, openTabs]);
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+    <>
+      <style>{`
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-none {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
       <div 
         ref={containerRef}
         className="backdrop-blur-lg bg-white/60 dark:bg-black/60 flex items-center p-1 gap-1 rounded-full shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative max-w-[90vw] overflow-x-auto scrollbar-none"
       >
         {/* Sliding background */}
         <div 
-          className="absolute top-1 bottom-1 bg-white dark:bg-zinc-800 rounded-full shadow-sm transition-all duration-300 ease-in-out z-0"
+          className="absolute top-1 bottom-1 bg-white dark:bg-zinc-700 shadow-[0_2px_8px_rgba(0,0,0,0.1)] rounded-full transition-all duration-300 ease-in-out z-0"
           style={{
             left: `${bgStyle.left}px`,
             width: `${bgStyle.width}px`,
@@ -97,5 +107,6 @@ export function TabBar() {
         ))}
       </div>
     </div>
+    </>
   );
 }
