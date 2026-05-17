@@ -82,7 +82,6 @@ export function buildCreatePayloadFromSimple(form: {
   voucher_no: string;
   date: string;
   period_id: string;
-  branch_id?: string;
   description: string;
   lines: SimpleJournalEntryFormLine[];
 }): CreateJournalEntryPayload {
@@ -98,7 +97,6 @@ export function buildCreatePayloadFromSimple(form: {
     ...(form.voucher_no.trim() ? { voucher_no: form.voucher_no.trim() } : {}),
     date: form.date,
     ...(form.period_id ? { period_id: form.period_id } : {}),
-    ...(form.branch_id ? { branch_id: form.branch_id } : {}),
     description: form.description.trim(),
     reference_type: "manual",
     lines,

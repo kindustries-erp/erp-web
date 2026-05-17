@@ -13,7 +13,6 @@ import {
 } from "@/modules/accounting/utils/journalEntryUtils";
 import { useT } from "@/core/i18n";
 
-import { BranchSelect } from "@/modules/branches/api/BranchSelect";
 
 interface Props {
   accounts: JournalEntryAccount[];
@@ -32,7 +31,6 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
   const [voucherNo, setVoucherNo] = useState("");
   const [date, setDate] = useState(today());
   const [periodId, setPeriodId] = useState("");
-  const [branchId, setBranchId] = useState("");
   const [description, setDescription] = useState("");
   const [lines, setLines] = useState<SimpleJournalEntryFormLine[]>([emptySimpleLine()]);
   const [localError, setLocalError] = useState("");
@@ -62,7 +60,13 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
       return;
     }
     await onSubmit(
-      buildCreatePayloadFromSimple({ voucher_no: voucherNo, date, period_id: periodId, branch_id: branchId, description, lines }),
+      buildCreatePayloadFromSimple({
+        voucher_no: voucherNo,
+        date,
+        period_id: periodId,
+        description,
+        lines,
+      })
     );
     setVoucherNo("");
     setDescription("");
@@ -108,7 +112,6 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
         </label>
         <label className="space-y-1 text-xs">
           <span className="text-[color:var(--muted-fg)]">Chi nhánh</span>
-          <BranchSelect value={branchId} onChange={setBranchId} placeholder="Chọn chi nhánh" />
         </label>
         <label className="space-y-1 text-xs">
           <span className="text-[color:var(--muted-fg)]">{t("journalEntries.form.description")}</span>

@@ -4,7 +4,6 @@ import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import { QuyTab } from "@/modules/settings/components/QuyTab";
 import { NHTab } from "@/modules/settings/components/NHTab";
 import { TKTab } from "@/modules/settings/components/TKTab";
-import { BranchTab } from "@/modules/settings/components/BranchTab";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 
@@ -57,7 +56,6 @@ export function ThietLapQuy() {
       onTabChange={handleTabChange}
     >
       <div className={activeTab === "chi-nhanh" ? "" : "hidden"}>
-        <BranchTab />
       </div>
       <div className={activeTab === "quy" ? "" : "hidden"}>
         <QuyTab />

@@ -32,7 +32,6 @@ import {
   extractApiError,
 } from "./shared";
 
-import { BranchSelect } from "@/modules/branches/api/BranchSelect";
 
 interface QuyForm {
   fund_code: string;
@@ -211,9 +210,6 @@ export function QuyTab() {
               <Checkbox checked={form.is_active} onCheckedChange={(v) => setField("is_active", v === true)} />
               <span className="text-xs text-foreground">{t("common.active")}</span>
             </label>
-          </DrawerField>
-          <DrawerField label={t("settings.quy.headers.branch")}>
-            <BranchSelect value={form.branch_id} onChange={(v) => setField("branch_id", v)} />
           </DrawerField>
           <DrawerField label={t("common.note")}>
             <textarea className={inputCls} rows={2} value={form.note} onChange={(e) => setField("note", e.target.value)} />

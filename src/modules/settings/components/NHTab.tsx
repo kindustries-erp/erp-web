@@ -27,7 +27,6 @@ import {
   IconTrash,
 } from "./shared";
 
-import { BranchSelect } from "@/modules/branches/api/BranchSelect";
 
 interface BankForm {
   bank_account_code: string;
@@ -208,9 +207,6 @@ export function NHTab() {
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
             <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />
-          </DrawerField>
-          <DrawerField label={t("settings.nh.headers.branch")}>
-            <BranchSelect value={form.branch_id} onChange={(v) => setField("branch_id", v)} />
           </DrawerField>
         </DrawerSection>
         {saveError && <ErrorBanner msg={saveError} />}

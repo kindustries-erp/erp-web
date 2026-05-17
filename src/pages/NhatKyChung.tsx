@@ -28,7 +28,7 @@ import {
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-import { BranchSelect } from "@/modules/branches/api/BranchSelect";
+
 
 interface FlatRow {
   entry: JournalEntry;
@@ -232,14 +232,7 @@ export function NhatKyChung() {
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
-              <div className="flex-1 min-w-[150px]">
-                <BranchSelect
-                  value={list.branchId}
-                  onChange={(val) => { list.setBranchId(val); list.setPage(1); }}
-                  placeholder="Chọn chi nhánh"
-                  allowClear
-                />
-              </div>
+
               <input
                 value={list.dateFrom}
                 onChange={(e) => { list.setDateFrom(e.target.value); list.setPage(1); }}

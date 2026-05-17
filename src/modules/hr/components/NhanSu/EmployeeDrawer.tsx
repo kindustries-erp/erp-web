@@ -9,7 +9,6 @@ import type { Role } from "@/modules/system/types/rbac";
 import type { useT } from "@/core/i18n";
 import { IconUser, type EmpForm } from "./shared";
 
-import { BranchSelect } from "@/modules/branches/api/BranchSelect";
 
 type T = ReturnType<typeof useT>;
 
@@ -63,9 +62,6 @@ export function EmployeeDrawer(props: EmployeeDrawerProps) {
         </DrawerField>
         <DrawerField label={t("nhansu.fields.position")}>
           <Combobox options={positions.map((p) => ({ value: p.id, label: p.position_name }))} value={form.position_id} onChange={(v) => setField("position_id", v)} placeholder={t("nhansu.placeholders.none")} />
-        </DrawerField>
-        <DrawerField label={t("nhansu.fields.branch")}>
-          <BranchSelect value={form.branch_id} onChange={(v) => setField("branch_id", v)} />
         </DrawerField>
       </DrawerSection>
 
