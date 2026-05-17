@@ -114,7 +114,9 @@ export async function listLocalDraftEinvoicesApi(params?: {
   page?: number;
   pageSize?: number;
 }): Promise<EinvoiceListResponse> {
-  const res = await axiosInstance.get("/api/v1/sinvoice/local/draft", { params });
+  const res = await axiosInstance.get("/api/v1/sinvoice/local", {
+    params: { ...params, status: "DRAFT" },
+  });
   return res.data;
 }
 
@@ -125,7 +127,9 @@ export async function listLocalIssuedEinvoicesApi(params?: {
   page?: number;
   pageSize?: number;
 }): Promise<EinvoiceListResponse> {
-  const res = await axiosInstance.get("/api/v1/sinvoice/local/issued", { params });
+  const res = await axiosInstance.get("/api/v1/sinvoice/local", {
+    params: { ...params, status: "ISSUED" },
+  });
   return res.data;
 }
 
