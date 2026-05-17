@@ -29,7 +29,6 @@ export interface PartnerForm {
   contact_is_active: boolean;
   bank_id: string;
   bank_name: string;
-  bank_branch: string;
   bank_account_number: string;
   bank_account_holder: string;
   bank_currency: string;
@@ -62,7 +61,6 @@ export const emptyPartnerForm: PartnerForm = {
   contact_is_active: true,
   bank_id: "",
   bank_name: "",
-  bank_branch: "",
   bank_account_number: "",
   bank_account_holder: "",
   bank_currency: "VND",
@@ -144,7 +142,6 @@ export interface PartnerBankDraft {
   id: string;
   tempId: string;
   bank_name: string;
-  bank_branch: string;
   account_number: string;
   account_holder: string;
   currency: string;
@@ -157,8 +154,7 @@ export function emptyPartnerBankDraft(): PartnerBankDraft {
     id: "",
     tempId: newTempId(),
     bank_name: "",
-    bank_branch: "",
-    account_number: "",
+      account_number: "",
     account_holder: "",
     currency: "VND",
     is_default: true,
@@ -171,7 +167,6 @@ export function bankDraftFromApi(b: BusinessPartnerBankAccount): PartnerBankDraf
     id: b.id,
     tempId: b.id,
     bank_name: b.bank_name,
-    bank_branch: b.bank_branch ?? "",
     account_number: b.account_number,
     account_holder: b.account_holder,
     currency: b.currency ?? "VND",
@@ -181,7 +176,7 @@ export function bankDraftFromApi(b: BusinessPartnerBankAccount): PartnerBankDraf
 }
 
 export function bankHasData(row: PartnerBankDraft): boolean {
-  return !!row.bank_name.trim() || !!row.bank_branch.trim() || !!row.account_number.trim() || !!row.account_holder.trim();
+  return !!row.bank_name.trim() || !!row.account_number.trim() || !!row.account_holder.trim();
 }
 
 // ── Contact form (standalone tab) ─────────────────────────────────────────────
@@ -235,7 +230,6 @@ export function buildContactForm(c: BusinessPartnerContact): ContactForm {
 export interface PartnerBankForm {
   business_partner_id: string;
   bank_name: string;
-  bank_branch: string;
   account_number: string;
   account_holder: string;
   currency: string;
@@ -247,7 +241,6 @@ export interface PartnerBankForm {
 export const emptyBankForm: PartnerBankForm = {
   business_partner_id: "",
   bank_name: "",
-  bank_branch: "",
   account_number: "",
   account_holder: "",
   currency: "VND",
@@ -260,7 +253,6 @@ export function buildBankForm(b: BusinessPartnerBankAccount): PartnerBankForm {
   return {
     business_partner_id: b.business_partner_id,
     bank_name: b.bank_name,
-    bank_branch: b.bank_branch ?? "",
     account_number: b.account_number,
     account_holder: b.account_holder,
     currency: b.currency ?? "VND",

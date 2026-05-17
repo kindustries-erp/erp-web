@@ -51,7 +51,6 @@ interface BankDraft {
   id: string;
   tempId: string;
   bank_name: string;
-  bank_branch: string;
   account_number: string;
   account_holder: string;
   currency: string;
@@ -66,7 +65,7 @@ function emptyContactDraft(): ContactDraft {
 }
 
 function emptyBankDraft(): BankDraft {
-  return { id: "", tempId: newTempId(), bank_name: "", bank_branch: "", account_number: "", account_holder: "", currency: "VND", is_default: true, is_active: true };
+  return { id: "", tempId: newTempId(), bank_name: "", account_number: "", account_holder: "", currency: "VND", is_default: true, is_active: true };
 }
 
 function contactDraftFromApi(c: BusinessPartnerContact): ContactDraft {
@@ -74,7 +73,7 @@ function contactDraftFromApi(c: BusinessPartnerContact): ContactDraft {
 }
 
 function bankDraftFromApi(b: BusinessPartnerBankAccount): BankDraft {
-  return { id: b.id, tempId: b.id, bank_name: b.bank_name, bank_branch: b.bank_branch ?? "", account_number: b.account_number, account_holder: b.account_holder, currency: b.currency ?? "VND", is_default: b.is_default, is_active: b.is_active };
+  return { id: b.id, tempId: b.id, bank_name: b.bank_name, account_number: b.account_number, account_holder: b.account_holder, currency: b.currency ?? "VND", is_default: b.is_default, is_active: b.is_active };
 }
 
 const contactHasData = (r: ContactDraft) => !!r.full_name.trim() || !!r.phone.trim() || !!r.email.trim();
@@ -173,7 +172,7 @@ export function PartnersTab() {
       setForm({
         ...baseForm,
         ...(contact ? { contact_id: contact.id, contact_full_name: contact.full_name, contact_position: contact.position ?? "", contact_phone: contact.phone ?? "", contact_email: contact.email ?? "", contact_is_default_receiver: contact.is_default_receiver, contact_is_default_payer: contact.is_default_payer, contact_is_active: contact.is_active } : {}),
-        ...(bank ? { bank_id: bank.id, bank_name: bank.bank_name, bank_branch: bank.bank_branch ?? "", bank_account_number: bank.account_number, bank_account_holder: bank.account_holder, bank_currency: bank.currency ?? "VND", bank_is_default: bank.is_default, bank_is_active: bank.is_active } : {}),
+        ...(bank ? { bank_id: bank.id, bank_name: bank.bank_name, bank_account_number: bank.account_number, bank_account_holder: bank.account_holder, bank_currency: bank.currency ?? "VND", bank_is_default: bank.is_default, bank_is_active: bank.is_active } : {}),
         ...(role ? { role_id: role.id, role_enabled: true, role: role.role, role_is_active: role.is_active } : {}),
       });
     } catch {
@@ -256,7 +255,6 @@ export function PartnersTab() {
         const bankDto: CreateBusinessPartnerBankAccountDto = {
           business_partner_id: partnerId,
           bank_name: row.bank_name.trim(),
-          bank_branch: row.bank_branch.trim() || undefined,
           account_number: row.account_number.trim(),
           account_holder: row.account_holder.trim(),
           currency: row.currency || "VND",

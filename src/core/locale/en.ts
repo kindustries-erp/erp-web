@@ -29,7 +29,6 @@ export const en: Dict = {
       catalogFunds: "Cash Funds",
       catalogBank: "Bank Accounts",
       catalogAccounts: "Chart of Accounts",
-      catalogBranches: "Branches",
       hr: "Human Resources",
       hrStaff: "Employees",
       hrDepts: "Departments",
@@ -95,7 +94,6 @@ export const en: Dict = {
     catalogFunds: "Cash Funds",
     catalogBank: "Bank Accounts",
     catalogAccounts: "Chart of Accounts",
-    catalogBranches: "Branches",
   },
   topbar: {
     search: "Search accounts, vouchers...",

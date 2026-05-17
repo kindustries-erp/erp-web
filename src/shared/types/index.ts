@@ -7,7 +7,6 @@ export type PageKey =
   | "thietlap-quy"
   | "thietlap-nh"
   | "thietlap-tk"
-  | "thietlap-branch"
   | "phaithu"
   | "phaittra"
   | "socat"

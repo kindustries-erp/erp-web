@@ -186,7 +186,6 @@ export interface BusinessPartnerBankAccount {
   id: string;
   business_partner_id: string;
   bank_name: string;
-  bank_branch: string | null;
   account_number: string;
   account_holder: string;
   currency: string | null;
@@ -201,7 +200,6 @@ export interface CreateBusinessPartnerBankAccountDto {
   bank_name: string;
   account_number: string;
   account_holder: string;
-  bank_branch?: string;
   currency?: string;
   is_default?: boolean;
   is_active?: boolean;

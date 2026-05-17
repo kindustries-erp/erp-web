@@ -27,7 +27,6 @@ export const vi = {
       catalogFunds: "Quỹ tiền mặt",
       catalogBank: "Tài khoản ngân hàng",
       catalogAccounts: "Hệ thống tài khoản",
-      catalogBranches: "Chi nhánh",
       hr: "Nhân sự",
       hrStaff: "Nhân viên",
       hrDepts: "Phòng ban",
@@ -93,7 +92,6 @@ export const vi = {
     catalogFunds: "Quỹ tiền mặt",
     catalogBank: "Tài khoản ngân hàng",
     catalogAccounts: "Hệ thống tài khoản",
-    catalogBranches: "Chi nhánh",
   },
   topbar: {
     search: "Tìm kiếm tài khoản, chứng từ...",

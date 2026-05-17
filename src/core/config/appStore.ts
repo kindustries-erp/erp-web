@@ -24,7 +24,6 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   "thietlap-quy": { labelKey: "nav.items.catalog", group: "thietlap" },
   "thietlap-nh": { labelKey: "nav.items.catalogBank", group: "thietlap" },
   "thietlap-tk": { labelKey: "nav.items.catalogAccounts", group: "thietlap" },
-  "thietlap-branch": { labelKey: "nav.items.catalogBranches", group: "thietlap" },
   phaithu: { labelKey: "nav.items.debt", group: "congno" },
   phaittra: { labelKey: "nav.items.debtPayable", group: "congno" },
   socat: { labelKey: "nav.items.reportLedger", group: "baocao" },
@@ -81,11 +80,6 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.accounting"],
     ["breadcrumb.catalog", "thietlap-quy"],
     ["breadcrumb.catalogAccounts"],
-  ],
-  "thietlap-branch": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "thietlap-quy"],
-    ["breadcrumb.catalogBranches"],
   ],
   phaithu: [
     ["breadcrumb.accounting"],

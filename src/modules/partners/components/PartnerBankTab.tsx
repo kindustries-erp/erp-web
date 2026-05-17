@@ -105,7 +105,6 @@ export function PartnerBankTab() {
       const dto: CreateBusinessPartnerBankAccountDto = {
         business_partner_id: form.business_partner_id,
         bank_name: form.bank_name.trim(),
-        bank_branch: form.bank_branch.trim() || undefined,
         account_number: form.account_number.trim(),
         account_holder: form.account_holder.trim(),
         currency: form.currency || "VND",
@@ -174,7 +173,7 @@ export function PartnerBankTab() {
                 <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">{b.bank_name}</td>
                 <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-mono">{b.account_number}</td>
                 <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">{b.account_holder}</td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">{b.bank_branch || "—"}</td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">—</td>
                 <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">{b.currency ?? "VND"}</td>
                 <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-center">
                   {b.is_default ? <span className="text-[color:var(--approve-fg)] font-bold">✓</span> : <span className="text-[color:var(--faint)]">—</span>}
@@ -204,9 +203,6 @@ export function PartnerBankTab() {
           </DrawerField>
           <DrawerField label="Tên ngân hàng" required>
             <input type="text" className={inputCls} value={form.bank_name} onChange={(e) => setField("bank_name", e.target.value)} placeholder="VD: Vietcombank" />
-          </DrawerField>
-          <DrawerField label="Chi nhánh">
-            <input type="text" className={inputCls} value={form.bank_branch} onChange={(e) => setField("bank_branch", e.target.value)} placeholder="VD: Hà Nội" />
           </DrawerField>
           <DrawerField label="Số tài khoản" required>
             <input type="text" className={inputCls} value={form.account_number} onChange={(e) => setField("account_number", e.target.value)} placeholder="0071001xxx" />
