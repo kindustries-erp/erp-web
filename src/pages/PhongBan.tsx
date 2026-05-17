@@ -253,19 +253,14 @@ export function PhongBan() {
 
   return (
     <div>
-      <PageHeader
-        title={t("phongban.title")}
-        desc={t("phongban.desc")}
-        icon={<Building2 className="h-4 w-4" />}
-        actions={
-          <button
-            onClick={openNew}
-            className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
-          >
-            <IconPlus /> {t("phongban.add")}
-          </button>
-        }
-      />
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={openNew}
+          className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
+        >
+          <IconPlus /> {t("phongban.add")}
+        </button>
+      </div>
 
       {/* ── Search ── */}
       <div className="mb-4">

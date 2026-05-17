@@ -10,29 +10,20 @@ export function extractApiError(e: unknown, fallback: string): string {
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 export function SectionHeader({
-  title,
-  desc,
-  icon,
   onAdd,
 }: {
-  title: string;
-  desc: string;
-  icon: React.ReactNode;
+  title?: string;
+  desc?: string;
+  icon?: React.ReactNode;
   onAdd: () => void;
 }) {
   const t = useT();
   return (
-    <PageHeader
-      title={title}
-      desc={desc}
-      icon={icon}
-      className="mb-4"
-      actions={
-        <BtnPrimary type="button" onClick={onAdd}>
-          <IconPlus /> {t("common.addNew")}
-        </BtnPrimary>
-      }
-    />
+    <div className="flex justify-end mb-4">
+      <BtnPrimary type="button" onClick={onAdd}>
+        <IconPlus /> {t("common.addNew")}
+      </BtnPrimary>
+    </div>
   );
 }
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import {
   useJournalEntries,
   useJournalEntryActions,
@@ -88,16 +89,25 @@ export function NhatKyChung() {
   // Unified detail modal state
   const [detailState, setDetailState] = useState<VoucherDetailState | null>(null);
 
-  const [activeTab, setActiveTab] = useState("nhatkyechung");
+  const [activeTab, setActiveTab] = useState("nhat-ky-chung");
+  const { setCustomBreadcrumbs } = useAppStore();
+
+  useEffect(() => {
+    if (activeTab === "nhat-ky-chung") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.report"], ["breadcrumb.reportJournal"]]);
+    } else if (activeTab === "so-cai") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.report"], ["breadcrumb.reportLedger"]]);
+    }
+  }, [activeTab, setCustomBreadcrumbs]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["nhatkyechung", "socat"].includes(tab)) {
+    if (tab && ["nhat-ky-chung", "so-cai"].includes(tab)) {
       setActiveTab(tab);
     } else {
-      setActiveTab("nhatkyechung");
-      params.set("tab", "nhatkyechung");
+      setActiveTab("nhat-ky-chung");
+      params.set("tab", "nhat-ky-chung");
       window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
     }
   }, []);
@@ -184,13 +194,13 @@ export function NhatKyChung() {
           </button>
         }
         tabs={[
-          { value: "nhatkyechung", label: "Nhật ký chung" },
-          { value: "socat", label: "Sổ cái" }
+          { value: "nhat-ky-chung", label: "Nhật ký chung" },
+          { value: "so-cai", label: "Sổ cái" }
         ]}
         activeTab={activeTab}
         onTabChange={handleTabChange}
       >
-        <div className={activeTab === "nhatkyechung" ? "space-y-4" : "hidden"}>
+        <div className={activeTab === "nhat-ky-chung" ? "space-y-4" : "hidden"}>
           {/* Filters */}
           <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
@@ -330,7 +340,7 @@ export function NhatKyChung() {
             </div>
           </div>
         </div>
-        <div className={activeTab === "socat" ? "" : "hidden"}>
+        <div className={activeTab === "so-cai" ? "" : "hidden"}>
           <ComingSoon />
         </div>
       </PageWithTabsLayout>

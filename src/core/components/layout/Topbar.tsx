@@ -14,12 +14,13 @@ export function Topbar() {
     toggleAppTheme,
     locale,
     toggleLocale,
+    customBreadcrumbs,
   } = useAppStore();
   const impersonation = useAuthStore((s) => s.impersonation);
   const stopImpersonationAction = useAuthStore((s) => s.stopImpersonationAction);
   const employee = useAuthStore((s) => s.employee);
   const t = useT();
-  const crumbs = BREADCRUMBS[currentPage] ?? [[currentPage]];
+  const crumbs = customBreadcrumbs ?? BREADCRUMBS[currentPage] ?? [[currentPage]];
 
   return (
     <div className="topbar h-12 flex items-center gap-[10px] flex-shrink-0">

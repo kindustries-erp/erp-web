@@ -8,6 +8,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { cn } from "@/shared/utils";
+import { useAppStore } from "@/core/config/appStore";
 import { extractApiError } from "@/shared/utils/apiError";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import {
@@ -32,32 +33,45 @@ import { DOC_TYPES, STATUS_LABELS, emptySalesInvoiceForm, money, statusCls } fro
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPage";
 
-type ArWorkbenchTab = "invoices" | "phaittra";
+type ArWorkbenchTab = "phai-thu" | "phai-tra";
 
 const TABS: { value: ArWorkbenchTab; label: string; icon: "invoice" | "receipt" | "check" }[] = [
-  { value: "invoices", label: "Hóa đơn / Công nợ", icon: "invoice" },
+  { value: "phai-thu", label: "Hóa đơn / Công nợ", icon: "invoice" },
 ];
 
 export function ArWorkbenchPanel() {
-  const [activeTab, setActiveTab] = useState<ArWorkbenchTab>("invoices");
+  const [activeTab, setActiveTab] = useState<ArWorkbenchTab>("phai-thu");
+  const { setCustomBreadcrumbs } = useAppStore();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["invoices", "phaittra"].includes(tab)) {
-      setActiveTab(tab as ArWorkbenchTab);
+    const active = (tab && ["phai-thu", "phai-tra"].includes(tab)) ? (tab as ArWorkbenchTab) : "phai-thu";
+    setActiveTab(active);
+    
+    if (active === "phai-thu") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.debt"], ["breadcrumb.debtReceivable"]]);
     } else {
-      setActiveTab("invoices");
-      params.set("tab", "invoices");
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.debt"], ["breadcrumb.debtPayable"]]);
+    }
+
+    if (!tab) {
+      params.set("tab", "phai-thu");
       window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
     }
-  }, []);
+  }, [setCustomBreadcrumbs]);
 
   const handleTabChange = (val: string) => {
     setActiveTab(val as ArWorkbenchTab);
     const url = new URL(window.location.href);
     url.searchParams.set("tab", val);
     history.pushState(null, "", url.toString());
+    
+    if (val === "phai-thu") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.debt"], ["breadcrumb.debtReceivable"]]);
+    } else {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.debt"], ["breadcrumb.debtPayable"]]);
+    }
   };
 
   const [summary, setSummary] = useState<ArSummary | null>(null);
@@ -184,7 +198,7 @@ export function ArWorkbenchPanel() {
       desc="Quản lý công nợ phải thu và phải trả"
       icon={<Receipt className="h-4 w-4" />}
       actions={
-        activeTab === "invoices" ? (
+        activeTab === "phai-thu" ? (
           <div className="flex flex-wrap gap-2">
             <BtnPrimary onClick={() => setDraftModalOpen(true)}>
               <FilePlus2 className="h-4 w-4" /> Tạo hóa đơn
@@ -199,13 +213,13 @@ export function ArWorkbenchPanel() {
         ) : undefined
       }
       tabs={[
-        { value: "invoices", label: "Phải thu" },
-        { value: "phaittra", label: "Phải trả" }
+        { value: "phai-thu", label: "Phải thu" },
+        { value: "phai-tra", label: "Phải trả" }
       ]}
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-      <div className={activeTab === 'invoices' ? 'space-y-4' : 'hidden'}>
+      <div className={activeTab === 'phai-thu' ? 'space-y-4' : 'hidden'}>
         <InvoiceKpis summary={summary} supported={supported} coverageTotal={coverage.length || 40} foundation={foundation} />
         <InvoiceList
           docs={docs}
@@ -243,7 +257,7 @@ export function ArWorkbenchPanel() {
           }}
         />
       </div>
-      <div className={activeTab === "phaittra" ? "" : "hidden"}>
+      <div className={activeTab === "phai-tra" ? "" : "hidden"}>
         <PartnerLedgerPage
           itemType="PAYABLE"
           title="Phải trả"

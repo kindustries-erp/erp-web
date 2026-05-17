@@ -3,6 +3,7 @@ import { ExternalLink, FileText, Eye, Paperclip } from "lucide-react";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { SearchInput } from "@/shared/components/SearchInput";
+import { useT } from "@/core/i18n";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
@@ -212,11 +213,13 @@ export function DinhKemChungTu() {
     },
   ];
 
+  const t = useT();
+
   return (
     <div>
       <PageHeader
-        title="Tài liệu đính kèm"
-        desc="Theo dõi file chứng từ đã gắn với phiếu tiền mặt và UNT/UNC."
+        title={t("dinhkem.title")}
+        desc={t("dinhkem.desc")}
         icon={<Paperclip className="h-4 w-4" />}
       />
 

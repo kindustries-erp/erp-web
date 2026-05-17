@@ -4,7 +4,10 @@ import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SearchInput } from "@/shared/components/SearchInput";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
+import { useAppStore } from "@/core/config/appStore";
+import { PhongBan } from "@/pages/PhongBan";
+import { ChucVu } from "@/pages/ChucVu";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable } from "@/shared/components/DataTable";
 import { getEmployeesPagedApi, createEmployeeApi, deleteEmployeeApi, getDepartmentsApi, getPositionsApi, type Department, type Position, type CreateEmployeeDto } from "@/modules/hr/api/hrApi";
@@ -168,19 +171,88 @@ export function NhanSu() {
 
   const columns = useMemo(() => buildEmployeeColumns({ t, canImpersonate, statusLabel, onImpersonate: setImpersonateTarget, onEdit: openEdit, onDelete: setDeleteTarget }), [t, canImpersonate, statusLabel]);
 
+  const [activeTab, setActiveTab] = useState("nhan-vien");
+  const { setCustomBreadcrumbs } = useAppStore();
+  const tabs = [
+    { value: "nhan-vien", label: t("nav.items.hrStaff") },
+    { value: "phong-ban", label: t("nav.items.hrDepts") },
+    { value: "chuc-danh", label: t("nav.items.hrPositions") },
+  ];
+
+  useEffect(() => {
+    const tabKeyMap: Record<string, string> = {
+      "nhan-vien": "nav.items.hrStaff",
+      "phong-ban": "nav.items.hrDepts",
+      "chuc-danh": "nav.items.hrPositions",
+    };
+    const key = tabKeyMap[activeTab] || "nav.items.hrStaff";
+    setCustomBreadcrumbs([
+      ["breadcrumb.accounting"],
+      ["nav.items.hr"],
+      [key],
+    ]);
+    return () => setCustomBreadcrumbs(null);
+  }, [activeTab, setCustomBreadcrumbs]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab && ["nhan-vien", "phong-ban", "chuc-danh"].includes(tab)) {
+      setActiveTab(tab);
+    } else {
+      setActiveTab("nhan-vien");
+      params.set("tab", "nhan-vien");
+      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+    }
+  }, []);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", val);
+    history.pushState(null, "", url.toString());
+  };
+
+  useEffect(() => {
+    if (activeTab === "nhan-vien") {
+      setCustomBreadcrumbs([["breadcrumb.hr"], ["breadcrumb.hrStaff"]]);
+    } else if (activeTab === "phong-ban") {
+      setCustomBreadcrumbs([["breadcrumb.hr"], ["breadcrumb.hrDepts"]]);
+    } else if (activeTab === "chuc-danh") {
+      setCustomBreadcrumbs([["breadcrumb.hr"], ["breadcrumb.hrPositions"]]);
+    }
+  }, [activeTab, setCustomBreadcrumbs]);
+
   return (
-    <div>
-      <PageHeader title={t("nhansu.title")} desc={t("nhansu.desc")} icon={<Users className="h-4 w-4" />} actions={<HeaderActions onRefresh={() => loadData(page, pageSize, search, statusFilter)} onNew={openNew} t={t} />} />
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <SearchInput placeholder={t("nhansu.searchPlaceholder")} value={searchInput} onChange={handleSearchInput} className="max-w-[280px]" />
-        <Combobox options={statusOptions} value={statusFilter} onChange={handleStatusFilter} placeholder={t("nhansu.status.all")} className="max-w-[180px]" />
+    <PageWithTabsLayout
+      title={t("nav.items.hr")}
+      desc="Quản lý nhân viên, phòng ban và chức danh"
+      icon={<Users className="h-4 w-4" />}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+    >
+      <div className={activeTab === "nhan-vien" ? "" : "hidden"}>
+        <div className="flex justify-end mb-4">
+          <HeaderActions onRefresh={() => loadData(page, pageSize, search, statusFilter)} onNew={openNew} t={t} />
+        </div>
+        <div className="flex gap-3 mb-4 flex-wrap">
+          <SearchInput placeholder={t("nhansu.searchPlaceholder")} value={searchInput} onChange={handleSearchInput} className="max-w-[280px]" />
+          <Combobox options={statusOptions} value={statusFilter} onChange={handleStatusFilter} placeholder={t("nhansu.status.all")} className="max-w-[180px]" />
+        </div>
+        <DataTable items={items} columns={columns} getRowKey={(emp) => emp.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={700} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
+        <EmployeeDrawer open={drawerOpen} editing={editing} form={form} setForm={setForm} depts={depts} positions={positions} allRoles={allRoles} statusOptions={statusOptions} saving={saving} saveError={saveError} isDirty={isDirty} policyDrawerOpen={policyDrawerOpen} onClose={closeDrawer} onSave={handleSave} onOpenPolicyMatrix={openPolicyMatrix} t={t} />
+        <PermissionMatrixDrawer open={policyDrawerOpen} role={policyTarget ? { id: policyTarget.id, name: policyTarget.full_name } : null} permMap={policyEditor.permMap} loading={policyEditor.loading} saving={policyEditor.saving} error={policyEditor.error} onClose={() => { setPolicyDrawerOpen(false); policyEditor.reset(); }} onSave={handleSavePolicyPermissions} onToggle={policyEditor.toggle} onToggleRow={policyEditor.toggleRow} onToggleColumn={policyEditor.toggleColumn} isRowFull={policyEditor.isRowFull} isColumnFull={policyEditor.isColumnFull} onToggleAll={policyEditor.toggleAll} isAllFull={policyEditor.isAllFull} isAnyChecked={policyEditor.isAnyChecked} getPermissionConfig={policyEditor.getPermissionConfig} onPermissionConfigChange={policyEditor.updatePermissionConfig} onLoadCollectionFields={policyEditor.loadCollectionFields} zIndex={410} stackOffset={-56} />
+        <ConfirmModal open={!!deleteTarget} title={t("nhansu.delete.title")} message={t("nhansu.delete.message").replace("{0}", deleteTarget?.full_name ?? "")} confirmLabel={t("nhansu.actions.delete")} loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
+        <ConfirmModal open={!!impersonateTarget} title={t("nhansu.confirm.impersonateTitle")} message={`${t("nhansu.confirm.impersonateBody")} ${impersonateTarget?.full_name ?? ""}`} confirmLabel={t("nhansu.actions.loginAsUser")} onConfirm={handleImpersonate} onCancel={() => setImpersonateTarget(null)} loading={impersonating} danger={false} />
       </div>
-      <DataTable items={items} columns={columns} getRowKey={(emp) => emp.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={700} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
-      <EmployeeDrawer open={drawerOpen} editing={editing} form={form} setForm={setForm} depts={depts} positions={positions} allRoles={allRoles} statusOptions={statusOptions} saving={saving} saveError={saveError} isDirty={isDirty} policyDrawerOpen={policyDrawerOpen} onClose={closeDrawer} onSave={handleSave} onOpenPolicyMatrix={openPolicyMatrix} t={t} />
-      <PermissionMatrixDrawer open={policyDrawerOpen} role={policyTarget ? { id: policyTarget.id, name: policyTarget.full_name } : null} permMap={policyEditor.permMap} loading={policyEditor.loading} saving={policyEditor.saving} error={policyEditor.error} onClose={() => { setPolicyDrawerOpen(false); policyEditor.reset(); }} onSave={handleSavePolicyPermissions} onToggle={policyEditor.toggle} onToggleRow={policyEditor.toggleRow} onToggleColumn={policyEditor.toggleColumn} isRowFull={policyEditor.isRowFull} isColumnFull={policyEditor.isColumnFull} onToggleAll={policyEditor.toggleAll} isAllFull={policyEditor.isAllFull} isAnyChecked={policyEditor.isAnyChecked} getPermissionConfig={policyEditor.getPermissionConfig} onPermissionConfigChange={policyEditor.updatePermissionConfig} onLoadCollectionFields={policyEditor.loadCollectionFields} zIndex={410} stackOffset={-56} />
-      <ConfirmModal open={!!deleteTarget} title={t("nhansu.delete.title")} message={t("nhansu.delete.message").replace("{0}", deleteTarget?.full_name ?? "")} confirmLabel={t("nhansu.actions.delete")} loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
-      <ConfirmModal open={!!impersonateTarget} title={t("nhansu.confirm.impersonateTitle")} message={`${t("nhansu.confirm.impersonateBody")} ${impersonateTarget?.full_name ?? ""}`} confirmLabel={t("nhansu.actions.loginAsUser")} onConfirm={handleImpersonate} onCancel={() => setImpersonateTarget(null)} loading={impersonating} danger={false} />
-    </div>
+      <div className={activeTab === "phong-ban" ? "" : "hidden"}>
+        <PhongBan />
+      </div>
+      <div className={activeTab === "chuc-danh" ? "" : "hidden"}>
+        <ChucVu />
+      </div>
+    </PageWithTabsLayout>
   );
 }
 

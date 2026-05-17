@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Paperclip } from "lucide-react";
+import { Paperclip, Book, Wallet } from "lucide-react";
 import {
   useAppStore,
   SECTION_ROOTS,
@@ -147,10 +147,6 @@ export function Sidebar() {
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap transition-all duration-150">
-                {t("nav.sections.accounting")}
-              </div>
-
               <NavItem
                 collapsed={c}
                 icon={<IconGrid />}
@@ -159,6 +155,12 @@ export function Sidebar() {
                 onClick={() => navTo("dashboard")}
                 contextPage="dashboard"
               />
+            </div>
+
+            <div className="sidebar-nav-section py-2">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap transition-all duration-150">
+                {t("nav.sections.accounting")}
+              </div>
 
               {canFinance && <>
               <NavItem
@@ -168,15 +170,6 @@ export function Sidebar() {
                 active={currentPage === "dongtien"}
                 onClick={() => navTo("dongtien")}
                 contextPage="dongtien"
-              />
-
-              <NavItem
-                collapsed={c}
-                icon={<IconFileText />}
-                label={t("nav.items.hoadondientu")}
-                active={isHoaDonDienTu}
-                onClick={() => navTo("hoadondientu")}
-                contextPage="hoadondientu"
               />
               </>}
 
@@ -194,16 +187,20 @@ export function Sidebar() {
               <NavItem
                 collapsed={c}
                 icon={<IconFileText />}
+                label={t("nav.items.hoadondientu")}
+                active={isHoaDonDienTu}
+                onClick={() => navTo("hoadondientu")}
+                contextPage="hoadondientu"
+              />
+              </>}
+
+              {canFinance && <>
+              <NavItem
+                collapsed={c}
+                icon={<Book className="h-4 w-4" />}
                 label={t("nav.items.report")}
                 active={isInBaoCaoGroup}
                 onClick={() => navTo("nhatkyechung")}
-              />
-
-              <NavItem
-                icon={<IconList />}
-                label={t("nav.items.catalog")}
-                active={isThietLapGroup}
-                onClick={() => navTo("thietlap-quy")}
               />
               </>}
 
@@ -216,6 +213,15 @@ export function Sidebar() {
                 contextPage="doitac"
               />}
 
+              {canHR && <NavItem
+                collapsed={c}
+                icon={<IconUser />}
+                label={t("nav.items.hr")}
+                active={currentPage === "nhansu" || currentPage === "phongban" || currentPage === "chucvu"}
+                onClick={() => navTo("nhansu")}
+                contextPage="nhansu"
+              />}
+
               {canFinance && <NavItem
                 collapsed={c}
                 icon={<Paperclip className="h-4 w-4" />}
@@ -224,37 +230,18 @@ export function Sidebar() {
                 onClick={() => navTo("dinhkem")}
                 contextPage="dinhkem"
               />}
+
+              {canFinance && <>
+              <NavItem
+                icon={<Wallet className="h-4 w-4" />}
+                label={t("nav.items.catalog")}
+                active={isThietLapGroup}
+                onClick={() => navTo("thietlap-quy")}
+              />
+              </>}
             </div>
 
-            {canHR && <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
-                {t("nav.sections.hr")}
-              </div>
-              <NavItem
-                collapsed={c}
-                icon={<IconUser />}
-                label={t("nav.items.hrStaff")}
-                active={currentPage === "nhansu"}
-                onClick={() => navTo("nhansu")}
-                contextPage="nhansu"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconBuilding />}
-                label={t("nav.items.hrDepts")}
-                active={currentPage === "phongban"}
-                onClick={() => navTo("phongban")}
-                contextPage="phongban"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconBriefcase />}
-                label={t("nav.items.hrPositions")}
-                active={currentPage === "chucvu"}
-                onClick={() => navTo("chucvu")}
-                contextPage="chucvu"
-              />
-            </div>}
+
 
             <div className="sidebar-nav-section py-2">
               <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">

@@ -14,29 +14,45 @@ import { TienGui } from "./TienGui";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 
 export function DongTien() {
-  const { navigate } = useAppStore();
+  const { navigate, setCustomBreadcrumbs } = useAppStore();
   const t = useT();
   const dict = useDict();
 
-  const [activeTab, setActiveTab] = useState("tonghop");
+  const [activeTab, setActiveTab] = useState("tong-hop");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["tonghop", "tienmat", "tiengui"].includes(tab)) {
-      setActiveTab(tab);
-    } else {
-      setActiveTab("tonghop");
-      params.set("tab", "tonghop");
+    const active = (tab && ["tong-hop", "tien-mat", "uy-nhiem-chi"].includes(tab)) ? tab : "tong-hop";
+    setActiveTab(active);
+    
+    if (active === "tong-hop") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cashflowOverview"]]);
+    } else if (active === "tien-mat") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cash"]]);
+    } else if (active === "uy-nhiem-chi") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.bank"]]);
+    }
+
+    if (!tab) {
+      params.set("tab", "tong-hop");
       window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
     }
-  }, []);
+  }, [setCustomBreadcrumbs]);
 
   const handleTabChange = (val: string) => {
     setActiveTab(val);
     const url = new URL(window.location.href);
     url.searchParams.set("tab", val);
     history.pushState(null, "", url.toString());
+    
+    if (val === "tong-hop") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cashflowOverview"]]);
+    } else if (val === "tien-mat") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cash"]]);
+    } else if (val === "uy-nhiem-chi") {
+      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.bank"]]);
+    }
   };
   
 
@@ -64,7 +80,7 @@ export function DongTien() {
       in: "+₫ 2.1B",
       out: "-₫ 1.5B",
       close: "₫ 14.3B",
-      link: "tienmat",
+      link: "tien-mat",
       bold: false,
     },
     {
@@ -73,7 +89,7 @@ export function DongTien() {
       in: "+₫ 2.4B",
       out: "-₫ 1.6B",
       close: "₫ 17.0B",
-      link: "tiengui",
+      link: "uy-nhiem-chi",
       bold: false,
     },
     {
@@ -110,15 +126,15 @@ export function DongTien() {
         </>
       }
       tabs={[
-        { value: "tonghop", label: "Tổng hợp" },
-        { value: "tienmat", label: "Tiền mặt" },
-        { value: "tiengui", label: "Ủy nhiệm chi" },
+        { value: "tong-hop", label: "Tổng hợp" },
+        { value: "tien-mat", label: "Tiền mặt" },
+        { value: "uy-nhiem-chi", label: "Ủy nhiệm chi" },
       ]}
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
 
-      <div className={activeTab === 'tonghop' ? '' : 'hidden'}>
+      <div className={activeTab === 'tong-hop' ? '' : 'hidden'}>
         {/* KPIs */}
         <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4 mt-4">
           <KpiCard
@@ -156,13 +172,13 @@ export function DongTien() {
             title={t("dongtien.channels.cash")}
             balance="₫ 15.8B"
             badge={<KpiBadge variant="up">↑ 2.2%</KpiBadge>}
-            onClick={() => handleTabChange("tienmat")}
+            onClick={() => handleTabChange("tien-mat")}
           />
           <ChannelCard
             title={t("dongtien.channels.vcb")}
             balance="₫ 18.4B"
             badge={<KpiBadge variant="up">↑ 4.1%</KpiBadge>}
-            onClick={() => handleTabChange("tiengui")}
+            onClick={() => handleTabChange("uy-nhiem-chi")}
           />
           <ChannelCard
             title={t("dongtien.channels.tcb")}
@@ -270,11 +286,11 @@ export function DongTien() {
         </Panel>
       </div>
 
-      <div className={activeTab === 'tienmat' ? '' : 'hidden'}>
+      <div className={activeTab === 'tien-mat' ? '' : 'hidden'}>
         <TienMat hideHeader />
       </div>
 
-      <div className={activeTab === 'tiengui' ? '' : 'hidden'}>
+      <div className={activeTab === 'uy-nhiem-chi' ? '' : 'hidden'}>
         <TienGui hideHeader />
       </div>
     </PageWithTabsLayout>
@@ -288,7 +304,7 @@ const SUMMARY_ROWS = [
     in: "+₫ 2.1B",
     out: "-₫ 1.5B",
     close: "₫ 14.3B",
-    link: "tienmat",
+    link: "tien-mat",
     bold: false,
   },
   {
@@ -297,7 +313,7 @@ const SUMMARY_ROWS = [
     in: "+₫ 2.4B",
     out: "-₫ 1.6B",
     close: "₫ 17.0B",
-    link: "tiengui",
+    link: "uy-nhiem-chi",
     bold: false,
   },
   {

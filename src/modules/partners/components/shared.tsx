@@ -20,14 +20,10 @@ export function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete:
   );
 }
 
-export function PageHeader({ onAdd, title, desc }: { onAdd: () => void; title: string; desc: string }) {
+export function PageHeader({ onAdd }: { onAdd: () => void; title?: string; desc?: string }) {
   const t = useT();
   return (
-    <div className="flex items-start justify-between gap-3 mb-4 flex-wrap">
-      <div>
-        <div className="text-sm font-semibold text-foreground">{title}</div>
-        <div className="text-xs text-[color:var(--muted-fg)] mt-[2px]">{desc}</div>
-      </div>
+    <div className="flex justify-end mb-4">
       <button
         onClick={onAdd}
         className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"

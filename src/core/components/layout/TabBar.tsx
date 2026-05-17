@@ -7,6 +7,7 @@ import {
 import { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
 import { usePageContextMenu } from "@/shared/components/ContextMenu";
+import { useT } from "@/core/i18n";
 
 function TabItem({ 
   tabKey, 
@@ -18,8 +19,9 @@ function TabItem({
   onMount: (el: HTMLDivElement | null) => void;
 }) {
   const { navigate, closeTab } = useAppStore();
-  const label =
-    STATIC_TABS[tabKey]?.label ?? SECTION_ROOTS[tabKey]?.label ?? tabKey;
+  const t = useT();
+  const labelKey = STATIC_TABS[tabKey]?.labelKey ?? SECTION_ROOTS[tabKey]?.labelKey;
+  const label = labelKey ? t(labelKey) : tabKey;
   const closable = !STATIC_TABS[tabKey];
   const onContextMenu = usePageContextMenu(tabKey, label);
   
@@ -78,10 +80,10 @@ export function TabBar() {
           scrollbar-width: none;
         }
       `}</style>
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 max-w-[90%]">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[90%]">
         <div 
           ref={containerRef}
-          className="backdrop-blur-lg bg-white/60 dark:bg-black/60 flex items-center p-1 gap-1 rounded-full shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-x-auto scrollbar-none w-full"
+          className="backdrop-blur-xl bg-white/50 dark:bg-black/50 flex items-center p-1 gap-1 rounded-full shadow-[0_-2px_10px_rgba(0,0,0,0.05),0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-x-auto scrollbar-none w-full"
         >
         {/* Sliding background */}
         <div 

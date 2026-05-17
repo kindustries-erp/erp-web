@@ -17,7 +17,9 @@ const IconBriefcase = () => <svg width="14" height="14" viewBox="0 0 24 24" fill
 export function ChucVuView(p: any) {
   const { t, openNew, searchInput, handleSearchInput, items, loading, fetchError, deptName, openEdit, setDeleteTarget, page, pageSize, total, totalPages, setPage, handlePageSize, drawerOpen, closeDrawer, isDirty, editing, saving, handleSave, form, setField, depts, saveError, deleteTarget, deleting, handleDelete } = p;
   return <div>
-    <PageHeader title={t("chucvu.title")} desc={t("chucvu.desc")} icon={<Briefcase className="h-4 w-4" />} actions={<button onClick={openNew} className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"><IconPlus /> {t("chucvu.add")}</button>} />
+    <div className="flex justify-end mb-4">
+      <button onClick={openNew} className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"><IconPlus /> {t("chucvu.add")}</button>
+    </div>
     <div className="mb-4"><SearchInput placeholder={t("chucvu.searchPlaceholder")} value={searchInput} onChange={handleSearchInput} className="max-w-[320px]" /></div>
     <PositionTable {...{ t, items, loading, fetchError, deptName, openEdit, setDeleteTarget }} />
     <TablePagination page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />

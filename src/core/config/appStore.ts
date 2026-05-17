@@ -13,37 +13,37 @@ function applyDocumentTheme(appTheme: AppTheme) {
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
-  dashboard: { label: "Bảng điều khiển", closable: false },
+  dashboard: { labelKey: "nav.items.dashboard", closable: false },
 };
 
 export const SECTION_ROOTS: Record<string, SectionRoot> = {
-  dongtien: { label: "Tổng hợp dòng tiền", group: "dongtien" },
-  tienmat: { label: "Tiền mặt", group: "dongtien" },
-  tiengui: { label: "UNT / UNC", group: "dongtien" },
-  dinhkem: { label: "Tài liệu đính kèm", group: "dongtien" },
-  "thietlap-quy": { label: "Quỹ tiền mặt", group: "thietlap" },
-  "thietlap-nh": { label: "Tài khoản ngân hàng", group: "thietlap" },
-  "thietlap-tk": { label: "Hệ thống tài khoản", group: "thietlap" },
-  "thietlap-branch": { label: "Chi nhánh", group: "thietlap" },
-  phaithu: { label: "Phải thu", group: "congno" },
-  phaittra: { label: "Phải trả", group: "congno" },
-  socat: { label: "Sổ cái", group: "baocao" },
-  nhatkyechung: { label: "Nhật ký chung", group: "baocao" },
-  nhansu: { label: "Nhân viên", group: "nhansu" },
-  phongban: { label: "Phòng ban", group: "nhansu" },
-  chucvu: { label: "Chức danh", group: "nhansu" },
-  banhang: { label: "Bán hàng", group: "sales" },
-  khachhang: { label: "Khách hàng", group: "sales" },
-  muahang: { label: "Mua hàng", group: "purchasing" },
-  nhacungcap: { label: "Nhà cung cấp", group: "purchasing" },
-  activitylog: { label: "Nhật ký hoạt động", group: "system" },
-  doitac: { label: "Đối tác", group: "partners" },
-  hoadondientu: { label: "Hóa đơn điện tử", group: "dongtien" },
-  phanquyen: { label: "Phân quyền & Vai trò", group: "system" },
+  dongtien: { labelKey: "nav.items.cashflow", group: "dongtien" },
+  tienmat: { labelKey: "nav.items.cashflowCash", group: "dongtien" },
+  tiengui: { labelKey: "nav.items.cashflowBankShort", group: "dongtien" },
+  dinhkem: { labelKey: "nav.items.cashflowAttachments", group: "dongtien" },
+  "thietlap-quy": { labelKey: "nav.items.catalog", group: "thietlap" },
+  "thietlap-nh": { labelKey: "nav.items.catalogBank", group: "thietlap" },
+  "thietlap-tk": { labelKey: "nav.items.catalogAccounts", group: "thietlap" },
+  "thietlap-branch": { labelKey: "nav.items.catalogBranches", group: "thietlap" },
+  phaithu: { labelKey: "nav.items.debt", group: "congno" },
+  phaittra: { labelKey: "nav.items.debtPayable", group: "congno" },
+  socat: { labelKey: "nav.items.reportLedger", group: "baocao" },
+  nhatkyechung: { labelKey: "nav.items.report", group: "baocao" },
+  nhansu: { labelKey: "nav.items.hr", group: "nhansu" },
+  phongban: { labelKey: "nav.items.hrDepts", group: "nhansu" },
+  chucvu: { labelKey: "nav.items.hrPositions", group: "nhansu" },
+  banhang: { labelKey: "nav.items.sales", group: "sales" },
+  khachhang: { labelKey: "nav.items.customers", group: "sales" },
+  muahang: { labelKey: "nav.items.purchasing", group: "purchasing" },
+  nhacungcap: { labelKey: "nav.items.suppliers", group: "purchasing" },
+  activitylog: { labelKey: "nav.items.activitylog", group: "system" },
+  doitac: { labelKey: "nav.items.partners", group: "partners" },
+  hoadondientu: { labelKey: "nav.items.hoadondientu", group: "dongtien" },
+  phanquyen: { labelKey: "nav.items.phanquyen", group: "system" },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
-  dashboard: [["breadcrumb.accounting"], ["breadcrumb.dashboard"]],
+  dashboard: [["breadcrumb.dashboard"]],
   dongtien: [
     ["breadcrumb.accounting"],
     ["breadcrumb.cashflow"],
@@ -61,12 +61,10 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   ],
   dinhkem: [
     ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "dongtien"],
     ["breadcrumb.attachments"],
   ],
   hoadondientu: [
     ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "dongtien"],
     ["breadcrumb.hoadondientu"],
   ],
   "thietlap-quy": [
@@ -130,6 +128,7 @@ interface AppState {
   locale: "vi" | "en";
   isLoggedIn: boolean;
   forbidden: boolean;
+  customBreadcrumbs: Array<[string, string?]> | null;
   setForbidden: (value: boolean) => void;
   navigate: (page: PageKey) => void;
   syncFromUrl: (page: PageKey) => void;
@@ -140,6 +139,7 @@ interface AppState {
   toggleLocale: () => void;
   login: () => void;
   logout: () => void;
+  setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -153,8 +153,10 @@ export const useAppStore = create<AppState>()(
       appTheme: "shell",
       locale: "vi",
       isLoggedIn: false,
+      customBreadcrumbs: null,
 
       setForbidden: (value) => set({ forbidden: value }),
+      setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
 
       navigate: (page) => {
         const { openTabs } = get();
@@ -177,6 +179,7 @@ export const useAppStore = create<AppState>()(
           openTabs: newTabs,
           forbidden: false,
           mobileSidebarOpen: false,
+          customBreadcrumbs: null,
         });
         const path = pageToPath(page);
         const current = window.location.pathname + window.location.search;

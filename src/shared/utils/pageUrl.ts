@@ -33,15 +33,15 @@ const PAGE_SLUG: Partial<Record<PageKey, string>> = {
   dongtien: "dong-tien",
   tienmat: "tien-mat",
   tiengui: "tien-gui",
-  dinhkem: "dinh-kem",
-  "thietlap-quy": "thiet-lap-quy",
+  dinhkem: "tai-lieu",
+  "thietlap-quy": "thiet-lap",
   "thietlap-nh": "thiet-lap-ngan-hang",
   "thietlap-tk": "thiet-lap-tai-khoan",
   "thietlap-branch": "thiet-lap-chi-nhanh",
-  phaithu: "phai-thu",
+  phaithu: "cong-no",
   phaittra: "phai-tra",
   socat: "so-cat",
-  nhatkyechung: "nhat-ky-chung",
+  nhatkyechung: "bao-cao",
   nhansu: "nhan-su",
   phongban: "phong-ban",
   chucvu: "chuc-vu",
@@ -52,7 +52,7 @@ const PAGE_SLUG: Partial<Record<PageKey, string>> = {
   activitylog: "activity-log",
   doitac: "doi-tac",
   phanquyen: "phan-quyen",
-  hoadondientu: "hoa-don-dien-tu",
+  hoadondientu: "hoa-don",
 };
 
 /** Slug → PageKey (reverse of PAGE_SLUG) */

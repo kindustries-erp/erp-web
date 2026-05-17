@@ -17,7 +17,8 @@ export const en: Dict = {
       cashflowOverview: "Overview",
       cashflowCash: "Cash",
       cashflowBank: "Bank Transfers",
-      cashflowAttachments: "Attachments",
+      cashflowBankShort: "UNT / UNC",
+      cashflowAttachments: "Documents",
       debt: "Receivables",
       debtReceivable: "Accounts Receivable",
       debtPayable: "Accounts Payable",
@@ -41,7 +42,7 @@ export const en: Dict = {
       phanquyen: "Roles & Permissions",
       workflowcanvas: "Workflow Canvas",
       partners: "Partners",
-      hoadondientu: "E-Invoices",
+      hoadondientu: "Invoices",
       catalogRoles: "Partner Roles",
       catalogOpeningBalance: "Opening Balances",
       catalogVoucherNumbering: "Voucher Numbering",
@@ -133,6 +134,7 @@ export const en: Dict = {
       output: "Output invoices from tax portal, supports filtering and subtotal.",
       input: "Input invoices from tax portal, supports filtering and subtotal.",
       config: "Manage Viettel and tax portal configurations.",
+      fallback: "Centralized management of draft invoices, output/input invoices and tax configuration",
     },
     execSummary: {
       draft: "Filtered Draft Total",
@@ -350,6 +352,10 @@ export const en: Dict = {
       fee: "Service Fee",
     },
   },
+  dinhkem: {
+    title: "Attachments",
+    desc: "Track voucher files attached to cash vouchers and UNT/UNC.",
+  },
   nhansu: {
     title: "Employees",
     desc: "Manage the organization's employee list.",
@@ -478,6 +484,14 @@ export const en: Dict = {
     },
   },
   thietlap: {
+    title: "Catalog Settings",
+    desc: "Manage branch, fund, bank, and account catalogs",
+    tabs: {
+      "chi-nhanh": "Branch Catalog",
+      quy: "Fund Catalog",
+      "ngan-hang": "Bank Catalog",
+      "tai-khoan": "Account Catalog",
+    },
     hoadondientuPage: {
     tabs: {
       draft: "Draft Invoices",

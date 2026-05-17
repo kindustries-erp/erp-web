@@ -84,11 +84,11 @@ export type PanelContent =
   | { kind: "detail"; src: TxSource; id: number };
 
 export interface TabInfo {
-  label: string;
+  labelKey: string;
   closable: boolean;
 }
 
 export interface SectionRoot {
-  label: string;
+  labelKey: string;
   group: string;
 }

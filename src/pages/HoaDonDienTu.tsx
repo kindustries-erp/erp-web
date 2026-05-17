@@ -16,6 +16,7 @@ import {
 } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { useT } from "@/core/i18n";
+import { useAppStore } from "@/core/config/appStore";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import {
   getConfigApi,
@@ -40,40 +41,40 @@ import { DrawerModal } from "@/shared/components/DrawerModal";
 import { AppTabs } from "@/shared/components/AppTabs";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 
-type TaxTabKey = "draft" | "issued" | "output" | "input" | "config";
+type TaxTabKey = "hoa-don-nhap" | "hoa-don-da-phat-hanh" | "hoa-don-ban-ra" | "hoa-don-mua-vao" | "cau-hinh";
 
 const TAX_PORTAL_PAGE_SIZE_OPTIONS = [15, 30, 50] as const;
 
 const TAB_LABELS = (t: any): Array<{ key: TaxTabKey; label: string }> => [
-  { key: "draft", label: t("hoadondientuPage.tabs.draft") },
-  { key: "issued", label: t("hoadondientuPage.tabs.issued") },
-  { key: "output", label: t("hoadondientuPage.tabs.output") },
-  { key: "input", label: t("hoadondientuPage.tabs.input") },
-  { key: "config", label: t("hoadondientuPage.tabs.config") },
+  { key: "hoa-don-nhap", label: t("hoadondientuPage.tabs.draft") },
+  { key: "hoa-don-da-phat-hanh", label: t("hoadondientuPage.tabs.issued") },
+  { key: "hoa-don-ban-ra", label: t("hoadondientuPage.tabs.output") },
+  { key: "hoa-don-mua-vao", label: t("hoadondientuPage.tabs.input") },
+  { key: "cau-hinh", label: t("hoadondientuPage.tabs.config") },
 ];
 
 const TAB_DESCRIPTIONS = (t: any): Record<TaxTabKey, string> => ({
-  draft: t("hoadondientuPage.descriptions.draft"),
-  issued: t("hoadondientuPage.descriptions.issued"),
-  output: t("hoadondientuPage.descriptions.output"),
-  input: t("hoadondientuPage.descriptions.input"),
-  config: t("hoadondientuPage.descriptions.config"),
+  "hoa-don-nhap": t("hoadondientuPage.descriptions.draft"),
+  "hoa-don-da-phat-hanh": t("hoadondientuPage.descriptions.issued"),
+  "hoa-don-ban-ra": t("hoadondientuPage.descriptions.output"),
+  "hoa-don-mua-vao": t("hoadondientuPage.descriptions.input"),
+  "cau-hinh": t("hoadondientuPage.descriptions.config"),
 });
 
 const TAB_ACCENT: Record<TaxTabKey, string> = {
-  draft: "border-l-sky-500",
-  issued: "border-l-emerald-500",
-  output: "border-l-indigo-500",
-  input: "border-l-violet-500",
-  config: "border-l-amber-500",
+  "hoa-don-nhap": "border-l-sky-500",
+  "hoa-don-da-phat-hanh": "border-l-emerald-500",
+  "hoa-don-ban-ra": "border-l-indigo-500",
+  "hoa-don-mua-vao": "border-l-violet-500",
+  "cau-hinh": "border-l-amber-500",
 };
 
 const EXEC_SUMMARY_LABEL = (t: any): Record<TaxTabKey, string> => ({
-  draft: t("hoadondientuPage.execSummary.draft"),
-  issued: t("hoadondientuPage.execSummary.issued"),
-  output: t("hoadondientuPage.execSummary.output"),
-  input: t("hoadondientuPage.execSummary.input"),
-  config: t("hoadondientuPage.execSummary.config"),
+  "hoa-don-nhap": t("hoadondientuPage.execSummary.draft"),
+  "hoa-don-da-phat-hanh": t("hoadondientuPage.execSummary.issued"),
+  "hoa-don-ban-ra": t("hoadondientuPage.execSummary.output"),
+  "hoa-don-mua-vao": t("hoadondientuPage.execSummary.input"),
+  "cau-hinh": t("hoadondientuPage.execSummary.config"),
 });
 
 function statusLabel(status: Einvoice["status"]) {
@@ -134,7 +135,7 @@ function isTaxPortalRangeOverOneMonth(startDate?: string, endDate?: string) {
 const HoaDonDienTu: React.FC = () => {
   const defaultDateRange = useMemo(() => getDefaultDateRange(), []);
   const t = useT();
-  const [activeTab, setActiveTab] = useState<TaxTabKey>("draft");
+  const [activeTab, setActiveTab] = useState<TaxTabKey>("hoa-don-nhap");
   const [config, setConfig] = useState<SinvoiceConfig | null>(null);
   const [taxPortalConfig, setTaxPortalConfig] = useState<TaxPortalConfig | null>(null);
   const [draftInvoices, setDraftInvoices] = useState<Einvoice[]>([]);
@@ -333,6 +334,24 @@ const HoaDonDienTu: React.FC = () => {
     window.history.replaceState({}, "", url.toString());
   }, [activeTab]);
 
+  const { setCustomBreadcrumbs } = useAppStore();
+
+  useEffect(() => {
+    const keys: Record<TaxTabKey, string> = {
+      "hoa-don-nhap": "hoadondientuPage.tabs.draft",
+      "hoa-don-da-phat-hanh": "hoadondientuPage.tabs.issued",
+      "hoa-don-ban-ra": "hoadondientuPage.tabs.output",
+      "hoa-don-mua-vao": "hoadondientuPage.tabs.input",
+      "cau-hinh": "hoadondientuPage.tabs.config",
+    };
+    
+    setCustomBreadcrumbs([
+      ["breadcrumb.accounting"],
+      ["breadcrumb.cashflow", "dongtien"],
+      [keys[activeTab]],
+    ]);
+  }, [activeTab, setCustomBreadcrumbs]);
+
   const stats = useMemo(() => {
     const allInvoices = [...draftInvoices, ...issuedInvoices, ...outputInvoices, ...inputInvoices];
     return allInvoices.reduce(
@@ -353,7 +372,7 @@ const HoaDonDienTu: React.FC = () => {
   async function handleDraftSaved(result: any) {
     setMessage(result?.response?.message ?? "Đã lưu hóa đơn nháp nội bộ thành công.");
     await loadData();
-    setActiveTab("draft");
+    setActiveTab("hoa-don-nhap");
   }
 
   async function handleSyncDraft() {
@@ -363,7 +382,7 @@ const HoaDonDienTu: React.FC = () => {
       await syncSinvoiceDraftApi({ startDate: defaultDateRange.startDate, endDate: defaultDateRange.endDate, size: 50 });
       setMessage("Đồng bộ hóa đơn nháp thành công.");
       await loadData();
-      setActiveTab("draft");
+      setActiveTab("hoa-don-nhap");
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ hóa đơn nháp thất bại");
     } finally {
@@ -381,7 +400,7 @@ const HoaDonDienTu: React.FC = () => {
         rowPerPage: 50,
       });
       setMessage(`Đồng bộ hóa đơn đã phát hành thành công (${result?.count ?? 0} hóa đơn).`);
-      setActiveTab("issued");
+      setActiveTab("hoa-don-da-phat-hanh");
 
       try {
         await loadData();
@@ -411,7 +430,7 @@ const HoaDonDienTu: React.FC = () => {
       });
       setMessage(`Đồng bộ ${result.count} hóa đơn ${direction === "IN" ? "mua vào" : "bán ra"} thành công (${result.note})`);
       await loadData();
-      setActiveTab(direction === "IN" ? "input" : "output");
+      setActiveTab(direction === "IN" ? "hoa-don-mua-vao" : "hoa-don-ban-ra");
     } catch (error: any) {
       setMessage(error?.response?.data?.message ?? error.message ?? "Đồng bộ cổng thuế thất bại");
     } finally {
@@ -646,7 +665,7 @@ const HoaDonDienTu: React.FC = () => {
     <>
       <PageWithTabsLayout
         title={t("nav.items.hoadondientu")}
-        desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 • ${config.supplierTaxCode || config.username || "-"}` : "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế"}
+        desc={config ? `Trung tâm hóa đơn điện tử • Viettel v2.49 • ${config.supplierTaxCode || config.username || "-"}` : t("hoadondientuPage.descriptions.fallback")}
         icon={<FileText className="h-4 w-4" />}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -657,7 +676,7 @@ const HoaDonDienTu: React.FC = () => {
             >
               <RefreshCw className="mr-2 h-4 w-4" /> Làm mới
             </button>
-            <BtnPrimary onClick={() => setActiveTab("config")} disabled={loading}>
+            <BtnPrimary onClick={() => setActiveTab("cau-hinh")} disabled={loading}>
               <Settings className="mr-2 h-4 w-4" /> Mở cấu hình
             </BtnPrimary>
           </div>
@@ -676,16 +695,16 @@ const HoaDonDienTu: React.FC = () => {
           </>
         }
         tabs={[
-          { value: "draft", label: t("hoadondientuPage.tabs.draft") },
-          { value: "issued", label: t("hoadondientuPage.tabs.issued") },
-          { value: "output", label: t("hoadondientuPage.tabs.output") },
-          { value: "input", label: t("hoadondientuPage.tabs.input") },
-          { value: "config", label: t("hoadondientuPage.tabs.config") },
+          { value: "hoa-don-nhap", label: t("hoadondientuPage.tabs.draft") },
+          { value: "hoa-don-da-phat-hanh", label: t("hoadondientuPage.tabs.issued") },
+          { value: "hoa-don-ban-ra", label: t("hoadondientuPage.tabs.output") },
+          { value: "hoa-don-mua-vao", label: t("hoadondientuPage.tabs.input") },
+          { value: "cau-hinh", label: t("hoadondientuPage.tabs.config") },
         ]}
         activeTab={activeTab}
         onTabChange={(v) => setActiveTab(v as TaxTabKey)}
       >
-        <div className={`${activeTab === 'draft' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+        <div className={`${activeTab === 'hoa-don-nhap' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
           <div className="mb-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -705,7 +724,7 @@ const HoaDonDienTu: React.FC = () => {
           {renderTable("draft")}
         </div>
 
-        <div className={`${activeTab === 'issued' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+        <div className={`${activeTab === 'hoa-don-da-phat-hanh' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
           <div className="mb-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -722,7 +741,7 @@ const HoaDonDienTu: React.FC = () => {
           {renderTable("issued")}
         </div>
 
-        <div className={`${activeTab === 'output' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+        <div className={`${activeTab === 'hoa-don-ban-ra' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
           <div className="flex flex-wrap gap-2">
             <BtnPrimary onClick={() => handleSyncTax("OUT")} disabled={loading}>
               <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra qua Viettel Tax Portal
@@ -731,7 +750,7 @@ const HoaDonDienTu: React.FC = () => {
           {renderTable("output")}
         </div>
 
-        <div className={`${activeTab === 'input' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+        <div className={`${activeTab === 'hoa-don-mua-vao' ? 'space-y-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
           <div className="flex flex-wrap gap-2">
             <BtnPrimary onClick={() => handleSyncTax("IN")} disabled={loading}>
               <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào qua Viettel Tax Portal
@@ -740,7 +759,7 @@ const HoaDonDienTu: React.FC = () => {
           {renderTable("input")}
         </div>
 
-        <div className={`${activeTab === 'config' ? 'grid grid-cols-1 xl:grid-cols-2 gap-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
+        <div className={`${activeTab === 'cau-hinh' ? 'grid grid-cols-1 xl:grid-cols-2 gap-6' : 'hidden'} rounded-xl border border-border bg-surface p-5 card-shadow relative z-0`}>
           <div className="space-y-4">
             <div>
               <h3 className="text-base font-semibold">Cấu hình Viettel v2.49</h3>
