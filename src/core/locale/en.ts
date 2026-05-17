@@ -392,6 +392,7 @@ export const en: Dict = {
       email: "Email",
       phone: "Phone",
       department: "Department",
+      branch: "Branch",
       position: "Position",
       status: "Status",
       hireDate: "Hire date",
