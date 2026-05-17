@@ -384,7 +384,6 @@ export const vi = {
       email: "Email",
       phone: "Số điện thoại",
       department: "Phòng ban",
-      branch: "Chi nhánh",
       position: "Chức vụ",
       status: "Trạng thái",
       hireDate: "Ngày vào làm",
