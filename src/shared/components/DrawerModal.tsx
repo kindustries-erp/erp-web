@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
@@ -13,6 +13,11 @@ export interface DrawerAction {
   disabled?: boolean;
   loading?: boolean;
 }
+
+const DRAWER_STACK_STEP_PERCENT = 2.5;
+
+let drawerStackSeq = 0;
+const drawerStackOrder = new Map<number, number>();
 
 export interface DrawerModalProps {
   /** Controls open/close */
@@ -106,16 +111,34 @@ export function DrawerModal({
 }: DrawerModalProps) {
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [instanceId] = useState(() => {
+    drawerStackSeq += 1;
+    return drawerStackSeq;
+  });
 
-  function requestClose() {
+  useEffect(() => {
+    if (open && !drawerStackOrder.has(instanceId)) {
+      drawerStackOrder.set(instanceId, drawerStackOrder.size + 1);
+    }
+    if (!open && drawerStackOrder.has(instanceId)) {
+      drawerStackOrder.delete(instanceId);
+    }
+    return () => {
+      drawerStackOrder.delete(instanceId);
+    };
+  }, [instanceId, open]);
+
+  const computedStackOffset = useMemo(() => {
+    if (stackOffset !== 0) return stackOffset;
+    const order = drawerStackOrder.get(instanceId);
+    if (!order || order <= 1) return 0;
+    return -(order - 1) * DRAWER_STACK_STEP_PERCENT;
+  }, [instanceId, stackOffset]);
+
+  const requestClose = useCallback(() => {
     if (confirmOnClose) setShowConfirm(true);
     else onClose();
-  }
-
-  // Reset confirm state when drawer closes
-  useEffect(() => {
-    if (!open) setShowConfirm(false);
-  }, [open]);
+  }, [confirmOnClose, onClose]);
 
   // Close on Escape
   useEffect(() => {
@@ -125,7 +148,7 @@ export function DrawerModal({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
+  }, [open, requestClose]);
 
   return createPortal(
     <div
@@ -142,8 +165,8 @@ export function DrawerModal({
       <div
         className={cn("slide-panel min-h-0", panelClassName)}
         style={
-          open && stackOffset !== 0
-            ? { transform: `translateX(${stackOffset}%)` }
+          open && computedStackOffset !== 0
+            ? { transform: `translateX(${computedStackOffset}%)` }
             : undefined
         }
       >

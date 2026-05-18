@@ -234,7 +234,6 @@ export function BankVoucherDrawer(props: any) {
     <DrawerModal
       open={drawerOpen}
       onClose={closeDrawer}
-      stackOffset={isAccountingOpen || isPartnerOpen ? 52 : 0}
       confirmOnClose={drawerEditMode && isDirty && !viewOnly}
       title={
         editing

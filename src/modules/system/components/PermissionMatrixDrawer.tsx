@@ -191,7 +191,7 @@ export function PermissionMatrixDrawer({
         subtitle={role?.name ?? ""}
         panelClassName="!w-[620px]"
         zIndex={zIndex}
-        stackOffset={fieldConfigOpen ? 52 : stackOffset}
+        stackOffset={fieldConfigOpen ? -2.5 : stackOffset}
         actions={[
           { label: t("permissionMatrix.btnClose"), onClick: onClose },
           {

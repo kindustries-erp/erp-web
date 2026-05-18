@@ -49,7 +49,6 @@ export function EmployeeDrawer(props: EmployeeDrawerProps) {
     saving,
     saveError,
     isDirty,
-    policyDrawerOpen,
     onClose,
     onSave,
     onOpenPolicyMatrix,
@@ -75,7 +74,6 @@ export function EmployeeDrawer(props: EmployeeDrawerProps) {
         editing ? t("nhansu.drawer.editTitle") : t("nhansu.drawer.createTitle")
       }
       subtitle={editing ? editing.full_name : t("nhansu.drawer.subtitle")}
-      stackOffset={policyDrawerOpen ? 22 : 0}
       zIndex={400}
       actions={[
         { label: t("common.cancel"), onClick: onClose },
