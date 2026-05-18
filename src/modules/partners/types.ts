@@ -102,7 +102,8 @@ export interface PartnerContactDraft {
   is_active: boolean;
 }
 
-export const newTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+export const newTempId = () =>
+  `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 export function emptyPartnerContactDraft(): PartnerContactDraft {
   return {
@@ -118,7 +119,9 @@ export function emptyPartnerContactDraft(): PartnerContactDraft {
   };
 }
 
-export function contactDraftFromApi(c: BusinessPartnerContact): PartnerContactDraft {
+export function contactDraftFromApi(
+  c: BusinessPartnerContact,
+): PartnerContactDraft {
   return {
     id: c.id,
     tempId: c.id,
@@ -133,7 +136,12 @@ export function contactDraftFromApi(c: BusinessPartnerContact): PartnerContactDr
 }
 
 export function contactHasData(row: PartnerContactDraft): boolean {
-  return !!row.full_name.trim() || !!row.position.trim() || !!row.phone.trim() || !!row.email.trim();
+  return (
+    !!row.full_name.trim() ||
+    !!row.position.trim() ||
+    !!row.phone.trim() ||
+    !!row.email.trim()
+  );
 }
 
 // ── Bank draft ─────────────────────────────────────────────────────────────────
@@ -154,7 +162,7 @@ export function emptyPartnerBankDraft(): PartnerBankDraft {
     id: "",
     tempId: newTempId(),
     bank_name: "",
-      account_number: "",
+    account_number: "",
     account_holder: "",
     currency: "VND",
     is_default: true,
@@ -162,7 +170,9 @@ export function emptyPartnerBankDraft(): PartnerBankDraft {
   };
 }
 
-export function bankDraftFromApi(b: BusinessPartnerBankAccount): PartnerBankDraft {
+export function bankDraftFromApi(
+  b: BusinessPartnerBankAccount,
+): PartnerBankDraft {
   return {
     id: b.id,
     tempId: b.id,
@@ -176,7 +186,11 @@ export function bankDraftFromApi(b: BusinessPartnerBankAccount): PartnerBankDraf
 }
 
 export function bankHasData(row: PartnerBankDraft): boolean {
-  return !!row.bank_name.trim() || !!row.account_number.trim() || !!row.account_holder.trim();
+  return (
+    !!row.bank_name.trim() ||
+    !!row.account_number.trim() ||
+    !!row.account_holder.trim()
+  );
 }
 
 // ── Contact form (standalone tab) ─────────────────────────────────────────────

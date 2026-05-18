@@ -1,5 +1,10 @@
 import React from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/shared/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/shared/components/ui/tabs";
 import { cn } from "@/shared/utils";
 
 export interface TabItem {
@@ -43,7 +48,7 @@ export function AppTabs({
           isLine
             ? "bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-4 mb-6 shadow-[0_4px_4px_-4px_rgba(0,0,0,0.15)] overflow-x-auto scrollbar-none"
             : "mb-4",
-          listClassName
+          listClassName,
         )}
       >
         {tabs.map((tab) => (
@@ -52,7 +57,7 @@ export function AppTabs({
             value={tab.key}
             className={cn(
               isLine &&
-                "border-b-2 border-transparent rounded-none px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground whitespace-nowrap flex-shrink-0"
+                "border-b-2 border-transparent rounded-none px-4 py-2 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground whitespace-nowrap flex-shrink-0",
             )}
           >
             {tab.label}

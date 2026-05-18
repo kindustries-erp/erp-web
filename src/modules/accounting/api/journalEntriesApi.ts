@@ -31,27 +31,28 @@ export async function getJournalEntriesApi(
 }
 
 export async function getJournalEntryApi(id: string): Promise<JournalEntry> {
-  const { data } = await axiosInstance.get<{ message: string; data: JournalEntry }>(
-    `/api/v1/journal-entries/${id}`,
-  );
+  const { data } = await axiosInstance.get<{
+    message: string;
+    data: JournalEntry;
+  }>(`/api/v1/journal-entries/${id}`);
   return data.data;
 }
 
 export async function createJournalEntryApi(
   payload: CreateJournalEntryPayload,
 ): Promise<JournalEntry> {
-  const { data } = await axiosInstance.post<{ message: string; data: JournalEntry }>(
-    "/api/v1/journal-entries",
-    payload,
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: JournalEntry;
+  }>("/api/v1/journal-entries", payload);
   return data.data;
 }
 
 export async function postJournalEntryApi(id: string): Promise<JournalEntry> {
-  const { data } = await axiosInstance.post<{ message: string; data: JournalEntry }>(
-    `/api/v1/journal-entries/${id}/post`,
-    {},
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: JournalEntry;
+  }>(`/api/v1/journal-entries/${id}/post`, {});
   return data.data;
 }
 

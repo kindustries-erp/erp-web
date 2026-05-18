@@ -94,12 +94,23 @@ export async function syncSinvoiceApi(): Promise<any> {
   return res.data;
 }
 
-export async function syncSinvoiceDraftApi(params?: { startDate?: string; endDate?: string; size?: number }): Promise<any> {
-  const res = await axiosInstance.get("/api/v1/sinvoice/sync-draft", { params });
+export async function syncSinvoiceDraftApi(params?: {
+  startDate?: string;
+  endDate?: string;
+  size?: number;
+}): Promise<any> {
+  const res = await axiosInstance.get("/api/v1/sinvoice/sync-draft", {
+    params,
+  });
   return res.data;
 }
 
-export async function syncSinvoiceIssuedApi(params?: { startDate?: string; endDate?: string; pageNum?: number; rowPerPage?: number }): Promise<any> {
+export async function syncSinvoiceIssuedApi(params?: {
+  startDate?: string;
+  endDate?: string;
+  pageNum?: number;
+  rowPerPage?: number;
+}): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/sync-issued", {
     params,
     timeout: 120000,
@@ -158,8 +169,13 @@ export async function getTaxPortalConfigApi(): Promise<TaxPortalConfig | null> {
   return res.data;
 }
 
-export async function saveTaxPortalConfigApi(data: TaxPortalConfig): Promise<any> {
-  const res = await axiosInstance.post("/api/v1/sinvoice/tax-portal/config", data);
+export async function saveTaxPortalConfigApi(
+  data: TaxPortalConfig,
+): Promise<any> {
+  const res = await axiosInstance.post(
+    "/api/v1/sinvoice/tax-portal/config",
+    data,
+  );
   return res.data;
 }
 

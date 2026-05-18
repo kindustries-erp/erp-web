@@ -79,7 +79,8 @@ export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
               </span>
               {log.from_status && log.to_status && (
                 <span className="text-muted-fg">
-                  {STATUS_LABELS[log.from_status] ?? log.from_status} → {STATUS_LABELS[log.to_status] ?? log.to_status}
+                  {STATUS_LABELS[log.from_status] ?? log.from_status} →{" "}
+                  {STATUS_LABELS[log.to_status] ?? log.to_status}
                 </span>
               )}
             </div>
@@ -87,7 +88,9 @@ export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
               {new Date(log.action_at).toLocaleString("vi-VN")}
               {(log.action_by_name || log.action_by) && (
                 <span className="ml-1">
-                  · {log.action_by_name || (log.action_by?.length === 36 ? "Hệ thống" : log.action_by)}
+                  ·{" "}
+                  {log.action_by_name ||
+                    (log.action_by?.length === 36 ? "Hệ thống" : log.action_by)}
                 </span>
               )}
             </div>

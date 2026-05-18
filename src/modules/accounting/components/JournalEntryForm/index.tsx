@@ -13,30 +13,45 @@ import {
 } from "@/modules/accounting/utils/journalEntryUtils";
 import { useT } from "@/core/i18n";
 
-
 interface Props {
   accounts: JournalEntryAccount[];
   periods: AccountingPeriod[];
   saving: boolean;
   error?: string;
-  onSubmit: (payload: ReturnType<typeof buildCreatePayloadFromSimple>) => Promise<unknown>;
+  onSubmit: (
+    payload: ReturnType<typeof buildCreatePayloadFromSimple>,
+  ) => Promise<unknown>;
 }
 
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }: Props) {
+export function JournalEntryForm({
+  accounts,
+  periods,
+  saving,
+  error,
+  onSubmit,
+}: Props) {
   const t = useT();
   const [voucherNo, setVoucherNo] = useState("");
   const [date, setDate] = useState(today());
   const [periodId, setPeriodId] = useState("");
   const [description, setDescription] = useState("");
-  const [lines, setLines] = useState<SimpleJournalEntryFormLine[]>([emptySimpleLine()]);
+  const [lines, setLines] = useState<SimpleJournalEntryFormLine[]>([
+    emptySimpleLine(),
+  ]);
   const [localError, setLocalError] = useState("");
 
-  function updateLine(i: number, field: keyof SimpleJournalEntryFormLine, value: string) {
-    setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)));
+  function updateLine(
+    i: number,
+    field: keyof SimpleJournalEntryFormLine,
+    value: string,
+  ) {
+    setLines((prev) =>
+      prev.map((l, idx) => (idx === i ? { ...l, [field]: value } : l)),
+    );
   }
 
   function addLine() {
@@ -44,14 +59,18 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
   }
 
   function removeLine(i: number) {
-    setLines((prev) => prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev);
+    setLines((prev) =>
+      prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev,
+    );
   }
 
   const isValid =
     date &&
     description.trim() &&
     lines.length >= 1 &&
-    lines.every((l) => l.debit_account_id && l.credit_account_id && money(l.amount) > 0);
+    lines.every(
+      (l) => l.debit_account_id && l.credit_account_id && money(l.amount) > 0,
+    );
 
   async function submit() {
     setLocalError("");
@@ -66,7 +85,7 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
         period_id: periodId,
         description,
         lines,
-      })
+      }),
     );
     setVoucherNo("");
     setDescription("");
@@ -87,7 +106,9 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
       {/* Header fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <label className="space-y-1 text-xs">
-          <span className="text-[color:var(--muted-fg)]">{t("journalEntries.form.voucherNo")}</span>
+          <span className="text-[color:var(--muted-fg)]">
+            {t("journalEntries.form.voucherNo")}
+          </span>
           <input
             value={voucherNo}
             onChange={(e) => setVoucherNo(e.target.value)}
@@ -96,12 +117,25 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
           />
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-[color:var(--muted-fg)]">{t("journalEntries.form.date")}</span>
-          <input value={date} onChange={(e) => setDate(e.target.value)} type="date" className={cls} />
+          <span className="text-[color:var(--muted-fg)]">
+            {t("journalEntries.form.date")}
+          </span>
+          <input
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            type="date"
+            className={cls}
+          />
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-[color:var(--muted-fg)]">{t("journalEntries.form.period")}</span>
-          <select value={periodId} onChange={(e) => setPeriodId(e.target.value)} className={cls}>
+          <span className="text-[color:var(--muted-fg)]">
+            {t("journalEntries.form.period")}
+          </span>
+          <select
+            value={periodId}
+            onChange={(e) => setPeriodId(e.target.value)}
+            className={cls}
+          >
             <option value="">{t("journalEntries.form.autoPeriod")}</option>
             {periods.map((p) => (
               <option key={p.id} value={p.id}>
@@ -114,8 +148,14 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
           <span className="text-[color:var(--muted-fg)]">Chi nhánh</span>
         </label>
         <label className="space-y-1 text-xs">
-          <span className="text-[color:var(--muted-fg)]">{t("journalEntries.form.description")}</span>
-          <input value={description} onChange={(e) => setDescription(e.target.value)} className={cls} />
+          <span className="text-[color:var(--muted-fg)]">
+            {t("journalEntries.form.description")}
+          </span>
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={cls}
+          />
         </label>
       </div>
 
@@ -124,10 +164,18 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="border-b border-border text-[color:var(--muted-fg)]">
-              <th className="py-2 pr-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
-              <th className="py-2 pr-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
-              <th className="py-2 pr-2 text-right font-medium w-32">{t("journalEntries.form.amount")}</th>
-              <th className="py-2 pr-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
+              <th className="py-2 pr-2 text-left font-medium">
+                {t("journalEntries.form.debitAccount")}
+              </th>
+              <th className="py-2 pr-2 text-left font-medium">
+                {t("journalEntries.form.creditAccount")}
+              </th>
+              <th className="py-2 pr-2 text-right font-medium w-32">
+                {t("journalEntries.form.amount")}
+              </th>
+              <th className="py-2 pr-2 text-left font-medium">
+                {t("journalEntries.form.lineDescription")}
+              </th>
               <th className="py-2 w-8" />
             </tr>
           </thead>
@@ -138,10 +186,14 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
                 <td className="py-1.5 pr-2">
                   <select
                     value={line.debit_account_id}
-                    onChange={(e) => updateLine(i, "debit_account_id", e.target.value)}
+                    onChange={(e) =>
+                      updateLine(i, "debit_account_id", e.target.value)
+                    }
                     className={cls}
                   >
-                    <option value="">{t("journalEntries.form.selectAccount")}</option>
+                    <option value="">
+                      {t("journalEntries.form.selectAccount")}
+                    </option>
                     {accounts.map((a) => (
                       <option key={a.id} value={a.id}>
                         {getAccountLabel(a)}
@@ -153,10 +205,14 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
                 <td className="py-1.5 pr-2">
                   <select
                     value={line.credit_account_id}
-                    onChange={(e) => updateLine(i, "credit_account_id", e.target.value)}
+                    onChange={(e) =>
+                      updateLine(i, "credit_account_id", e.target.value)
+                    }
                     className={cls}
                   >
-                    <option value="">{t("journalEntries.form.selectAccount")}</option>
+                    <option value="">
+                      {t("journalEntries.form.selectAccount")}
+                    </option>
                     {accounts.map((a) => (
                       <option key={a.id} value={a.id}>
                         {getAccountLabel(a)}
@@ -178,7 +234,9 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
                 <td className="py-1.5 pr-2">
                   <input
                     value={line.description}
-                    onChange={(e) => updateLine(i, "description", e.target.value)}
+                    onChange={(e) =>
+                      updateLine(i, "description", e.target.value)
+                    }
                     className={cls}
                   />
                 </td>
@@ -222,7 +280,9 @@ export function JournalEntryForm({ accounts, periods, saving, error, onSubmit }:
           onClick={submit}
           className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-fg disabled:opacity-50"
         >
-          {saving ? t("common.processing") : t("journalEntries.actions.createDraft")}
+          {saving
+            ? t("common.processing")
+            : t("journalEntries.actions.createDraft")}
         </button>
       </div>
     </div>

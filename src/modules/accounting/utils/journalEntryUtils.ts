@@ -22,7 +22,9 @@ export function getAccountId(account: string | JournalEntryAccount): string {
 
 export function getAccountLabel(account: string | JournalEntryAccount): string {
   if (typeof account === "string") return account;
-  return [account.account_code, account.account_name].filter(Boolean).join(" — ");
+  return [account.account_code, account.account_name]
+    .filter(Boolean)
+    .join(" — ");
 }
 
 export function getPeriodLabel(period: JournalEntry["period_id"]): string {
@@ -30,7 +32,9 @@ export function getPeriodLabel(period: JournalEntry["period_id"]): string {
   return typeof period === "string" ? period : period.name;
 }
 
-export function getLineTotals(lines: JournalEntryFormLine[] | JournalEntryLine[]) {
+export function getLineTotals(
+  lines: JournalEntryFormLine[] | JournalEntryLine[],
+) {
   return lines.reduce(
     (acc, line) => {
       acc.debit += money(line.debit);
@@ -74,7 +78,12 @@ export function buildCreatePayload(form: {
 }
 
 export function emptySimpleLine(): SimpleJournalEntryFormLine {
-  return { debit_account_id: "", credit_account_id: "", amount: "0", description: "" };
+  return {
+    debit_account_id: "",
+    credit_account_id: "",
+    amount: "0",
+    description: "",
+  };
 }
 
 /** Build payload from simplified form (1 row → 2 journal lines) */
@@ -89,8 +98,20 @@ export function buildCreatePayloadFromSimple(form: {
   form.lines.forEach((sl, i) => {
     const amt = money(sl.amount);
     lines.push(
-      { account_id: sl.debit_account_id, debit: amt, credit: 0, description: sl.description.trim(), sort: i * 2 },
-      { account_id: sl.credit_account_id, debit: 0, credit: amt, description: sl.description.trim(), sort: i * 2 + 1 },
+      {
+        account_id: sl.debit_account_id,
+        debit: amt,
+        credit: 0,
+        description: sl.description.trim(),
+        sort: i * 2,
+      },
+      {
+        account_id: sl.credit_account_id,
+        debit: 0,
+        credit: amt,
+        description: sl.description.trim(),
+        sort: i * 2 + 1,
+      },
     );
   });
   return {

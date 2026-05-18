@@ -9,7 +9,10 @@ export const CURRENCY_OPTS = [
   { value: "EUR", label: "EUR" },
 ];
 
-export const SOURCE_TYPE_OPTS: { value: PartnerLedgerSourceType; label: string }[] = [
+export const SOURCE_TYPE_OPTS: {
+  value: PartnerLedgerSourceType;
+  label: string;
+}[] = [
   { value: "OPENING", label: "Số dư đầu kỳ" },
   { value: "MANUAL", label: "Thủ công" },
   { value: "SALES_DOC", label: "Bán hàng" },

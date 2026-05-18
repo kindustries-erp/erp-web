@@ -46,17 +46,17 @@ Thông tin cơ bản của Directus user đang đăng nhập.
 }
 ```
 
-| Field | Type | Mô tả |
-|---|---|---|
-| `id` | `string` | Directus user UUID |
-| `email` | `string` | Email đăng nhập |
-| `first_name` | `string` | Họ |
-| `last_name` | `string` | Tên |
-| `role` | `object \| null` | Thông tin Role được gán. `null` nếu user chưa có role |
-| `role.id` | `string` | UUID của Role |
-| `role.name` | `string` | Tên Role |
-| `role.icon` | `string` | Icon Material |
-| `role.description` | `string \| null` | Mô tả Role |
+| Field              | Type             | Mô tả                                                 |
+| ------------------ | ---------------- | ----------------------------------------------------- |
+| `id`               | `string`         | Directus user UUID                                    |
+| `email`            | `string`         | Email đăng nhập                                       |
+| `first_name`       | `string`         | Họ                                                    |
+| `last_name`        | `string`         | Tên                                                   |
+| `role`             | `object \| null` | Thông tin Role được gán. `null` nếu user chưa có role |
+| `role.id`          | `string`         | UUID của Role                                         |
+| `role.name`        | `string`         | Tên Role                                              |
+| `role.icon`        | `string`         | Icon Material                                         |
+| `role.description` | `string \| null` | Mô tả Role                                            |
 
 ---
 
@@ -116,14 +116,14 @@ Danh sách quyền được định nghĩa **cho Role** của user, group theo c
 }
 ```
 
-| Field | Type | Mô tả |
-|---|---|---|
-| `collection` | `string` | Tên collection trong Directus |
-| `actions` | `string[]` | Danh sách các action được phép: `read`, `create`, `update`, `delete`, `share` |
-| `details[].action` | `string` | Tên action |
-| `details[].fields` | `string[] \| null` | Các field được phép truy cập. `["*"]` = tất cả |
-| `details[].permissions` | `object \| null` | Row-level filter (Directus permission filter) |
-| `details[].validation` | `object \| null` | Validation rule khi write |
+| Field                   | Type               | Mô tả                                                                         |
+| ----------------------- | ------------------ | ----------------------------------------------------------------------------- |
+| `collection`            | `string`           | Tên collection trong Directus                                                 |
+| `actions`               | `string[]`         | Danh sách các action được phép: `read`, `create`, `update`, `delete`, `share` |
+| `details[].action`      | `string`           | Tên action                                                                    |
+| `details[].fields`      | `string[] \| null` | Các field được phép truy cập. `["*"]` = tất cả                                |
+| `details[].permissions` | `object \| null`   | Row-level filter (Directus permission filter)                                 |
+| `details[].validation`  | `object \| null`   | Validation rule khi write                                                     |
 
 > Mảng rỗng `[]` nếu Role chưa được cấu hình Policy hoặc user không có Role.
 
@@ -200,20 +200,20 @@ Danh sách quyền được gán **riêng cho cá nhân user** (không phụ thu
 }
 ```
 
-| Field | Type | Mô tả |
-|---|---|---|
-| `collection` | `string` | Tên collection |
-| `actions` | `string[]` | Tất cả actions hiệu lực trên collection này |
-| `details[].source` | `"role" \| "custom"` | Nguồn gốc của quyền này |
+| Field              | Type                 | Mô tả                                       |
+| ------------------ | -------------------- | ------------------------------------------- |
+| `collection`       | `string`             | Tên collection                              |
+| `actions`          | `string[]`           | Tất cả actions hiệu lực trên collection này |
+| `details[].source` | `"role" \| "custom"` | Nguồn gốc của quyền này                     |
 
 #### Luật merge
 
-| Tình huống | Kết quả |
-|---|---|
-| Role có `read`, custom không có `read` | Giữ `read` từ role (`source: "role"`) |
-| Role không có `update`, custom có `update` | Thêm `update` từ custom (`source: "custom"`) |
+| Tình huống                                                                  | Kết quả                                                              |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Role có `read`, custom không có `read`                                      | Giữ `read` từ role (`source: "role"`)                                |
+| Role không có `update`, custom có `update`                                  | Thêm `update` từ custom (`source: "custom"`)                         |
 | Role có `read` với `fields: ["*"]`, custom có `read` với `fields: ["name"]` | **Custom thắng** — `read` với `fields: ["name"]`, `source: "custom"` |
-| Role có `read`, custom có `write` (cùng collection) | Giữ **cả hai** — user có đủ `read` và `write` |
+| Role có `read`, custom có `write` (cùng collection)                         | Giữ **cả hai** — user có đủ `read` và `write`                        |
 
 > Nguyên tắc: key merge là `collection + action`. Cùng key → custom override role. Khác key → cộng dồn.
 
@@ -225,12 +225,14 @@ Danh sách quyền được gán **riêng cho cá nhân user** (không phụ thu
 const { effectivePermissions } = await getProfileApi();
 
 // Kiểm tra nhanh user có quyền read gw_employees không
-const empPerms = effectivePermissions.find(p => p.collection === 'gw_employees');
-const canRead   = empPerms?.actions.includes('read')   ?? false;
-const canCreate = empPerms?.actions.includes('create') ?? false;
+const empPerms = effectivePermissions.find(
+  (p) => p.collection === "gw_employees",
+);
+const canRead = empPerms?.actions.includes("read") ?? false;
+const canCreate = empPerms?.actions.includes("create") ?? false;
 
 // Lấy fields được phép cho action cụ thể
-const updateDetail = empPerms?.details.find(d => d.action === 'update');
+const updateDetail = empPerms?.details.find((d) => d.action === "update");
 const allowedFields = updateDetail?.fields ?? [];
 ```
 
@@ -238,10 +240,10 @@ const allowedFields = updateDetail?.fields ?? [];
 
 ## Error Responses
 
-| HTTP | Mô tả |
-|---|---|
-| `401 Unauthorized` | Thiếu hoặc sai `access_token` |
-| `500 Internal Server Error` | Lỗi kết nối Directus |
+| HTTP                        | Mô tả                         |
+| --------------------------- | ----------------------------- |
+| `401 Unauthorized`          | Thiếu hoặc sai `access_token` |
+| `500 Internal Server Error` | Lỗi kết nối Directus          |
 
 ---
 

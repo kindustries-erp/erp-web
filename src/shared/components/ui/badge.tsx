@@ -16,8 +16,7 @@ const badgeVariants = cva(
           "border-transparent bg-red-500 text-white hover:bg-red-500/90",
         outline:
           "border-[color:var(--border)] bg-[color:var(--surface)] text-foreground",
-        ghost:
-          "border-transparent bg-transparent text-[color:var(--muted-fg)]",
+        ghost: "border-transparent bg-transparent text-[color:var(--muted-fg)]",
       },
     },
     defaultVariants: {
@@ -27,17 +26,13 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
+  extends
+    React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {
   asChild?: boolean;
 }
 
-function Badge({
-  className,
-  variant,
-  asChild = false,
-  ...props
-}: BadgeProps) {
+function Badge({ className, variant, asChild = false, ...props }: BadgeProps) {
   const Comp = asChild ? Slot : "span";
   return (
     <Comp className={cn(badgeVariants({ variant }), className)} {...props} />

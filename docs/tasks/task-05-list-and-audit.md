@@ -57,6 +57,7 @@ interface LoadVouchersParams {
 ```
 
 Thêm import `CounterpartySource`:
+
 ```ts
 import type { CounterpartySource } from "@/modules/finance/api/financeApi";
 ```
@@ -105,7 +106,9 @@ Trong `filters` prop của `DataTable`, thêm sau `<Combobox ... STATUS_FILTER_O
     ...COUNTERPARTY_SOURCE_OPTS,
   ]}
   value={counterpartySourceFilter}
-  onChange={(v) => onCounterpartySourceFilter((v as CounterpartySource | "") ?? "")}
+  onChange={(v) =>
+    onCounterpartySourceFilter((v as CounterpartySource | "") ?? "")
+  }
   placeholder="Loại đối tượng"
   className="w-[180px]"
 />
@@ -258,12 +261,16 @@ import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 ### 4b. Thêm section "Lịch sử duyệt" trong render (sau section Đính kèm)
 
 ```tsx
-{/* Section 5: Lịch sử duyệt — chỉ hiện khi xem, không phải tạo mới */}
-{editing && (
-  <DrawerSection title="Lịch sử duyệt">
-    <ApprovalHistory voucherId={editing.id} />
-  </DrawerSection>
-)}
+{
+  /* Section 5: Lịch sử duyệt — chỉ hiện khi xem, không phải tạo mới */
+}
+{
+  editing && (
+    <DrawerSection title="Lịch sử duyệt">
+      <ApprovalHistory voucherId={editing.id} />
+    </DrawerSection>
+  );
+}
 ```
 
 ---
@@ -273,7 +280,9 @@ import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 ### 5a. Thêm state filter
 
 ```ts
-const [counterpartySourceFilter, setCounterpartySourceFilter] = useState<CounterpartySource | "">("");
+const [counterpartySourceFilter, setCounterpartySourceFilter] = useState<
+  CounterpartySource | ""
+>("");
 ```
 
 ### 5b. Truyền filter mới vào `loadVouchers` trong `useEffect`
@@ -302,11 +311,13 @@ onCounterpartySourceFilter={(v) => {
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 
 // Trong JSX của DrawerModal, sau DrawerSection attachment:
-{editing && (
-  <DrawerSection title="Lịch sử duyệt">
-    <ApprovalHistory voucherId={editing.id} />
-  </DrawerSection>
-)}
+{
+  editing && (
+    <DrawerSection title="Lịch sử duyệt">
+      <ApprovalHistory voucherId={editing.id} />
+    </DrawerSection>
+  );
+}
 ```
 
 ---

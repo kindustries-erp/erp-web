@@ -11,13 +11,11 @@ export type SelectableUser = SystemUserOption;
 
 function userToSelectable(u: RoleUser): SelectableUser {
   const roleName =
-    typeof u.role === "object" && u.role ? u.role.name ?? null : null;
+    typeof u.role === "object" && u.role ? (u.role.name ?? null) : null;
   return {
     id: u.id,
     display:
-      u.email ||
-      [u.first_name, u.last_name].filter(Boolean).join(" ") ||
-      u.id,
+      u.email || [u.first_name, u.last_name].filter(Boolean).join(" ") || u.id,
     roleName,
   };
 }

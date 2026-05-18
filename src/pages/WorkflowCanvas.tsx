@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -6,12 +6,18 @@ import {
   Controls,
   MiniMap,
   type Edge,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { getWorkflowGraphApi } from '../modules/system/api/workflowGraphApi';
-import type { WorkflowNode } from '../modules/system/api/workflowGraphApi';
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { getWorkflowGraphApi } from "../modules/system/api/workflowGraphApi";
+import type { WorkflowNode } from "../modules/system/api/workflowGraphApi";
 
-import { computeLayout, FIT_OPTIONS, FitViewOnMount, NODE_TYPES, type WFNode } from '@/modules/system/components/WorkflowCanvasSupport';
+import {
+  computeLayout,
+  FIT_OPTIONS,
+  FitViewOnMount,
+  NODE_TYPES,
+  type WFNode,
+} from "@/modules/system/components/WorkflowCanvasSupport";
 
 // ─── Canvas ───────────────────────────────────────────────────────────────────
 
@@ -27,18 +33,24 @@ function CanvasInner() {
     setError(null);
     try {
       const graph = await getWorkflowGraphApi();
-      const { rfNodes: n, rfEdges: e } = computeLayout(graph.nodes, graph.edges);
+      const { rfNodes: n, rfEdges: e } = computeLayout(
+        graph.nodes,
+        graph.edges,
+      );
       setRfNodes(n);
       setRfEdges(e);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể tải sơ đồ quy trình';
+      const msg =
+        err instanceof Error ? err.message : "Không thể tải sơ đồ quy trình";
       setError(msg);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   if (loading) {
     return (
@@ -80,7 +92,9 @@ function CanvasInner() {
         maxZoom={2}
         nodesDraggable
         nodesConnectable={false}
-        onNodeClick={(_, node) => setSelected(node.data as unknown as WorkflowNode)}
+        onNodeClick={(_, node) =>
+          setSelected(node.data as unknown as WorkflowNode)
+        }
         onPaneClick={() => setSelected(null)}
       >
         <Background color="#334155" gap={20} />
@@ -88,9 +102,9 @@ function CanvasInner() {
         <MiniMap
           nodeColor={(n) => {
             const d = n.data as unknown as WorkflowNode;
-            return d?.meta?.color ?? '#64748b';
+            return d?.meta?.color ?? "#64748b";
           }}
-          style={{ background: '#0f172a' }}
+          style={{ background: "#0f172a" }}
         />
         <FitViewOnMount />
       </ReactFlow>
@@ -99,14 +113,17 @@ function CanvasInner() {
       <div className="pointer-events-none absolute left-3 top-3 rounded-lg bg-slate-800/90 p-3 text-xs text-slate-200 shadow">
         <div className="mb-1 font-bold text-white">Chú thích</div>
         {[
-          { color: '#1e40af', label: 'Root / Hệ thống' },
-          { color: '#4f46e5', label: 'Ban Giám Đốc' },
-          { color: '#0369a1', label: 'Phòng ban' },
-          { color: '#ec4899', label: 'Quy trình nghiệp vụ' },
-          { color: '#94a3b8', label: 'Trạng thái' },
+          { color: "#1e40af", label: "Root / Hệ thống" },
+          { color: "#4f46e5", label: "Ban Giám Đốc" },
+          { color: "#0369a1", label: "Phòng ban" },
+          { color: "#ec4899", label: "Quy trình nghiệp vụ" },
+          { color: "#94a3b8", label: "Trạng thái" },
         ].map(({ color, label }) => (
           <div key={label} className="mt-0.5 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 flex-shrink-0 rounded-full" style={{ background: color }} />
+            <span
+              className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+              style={{ background: color }}
+            />
             <span>{label}</span>
           </div>
         ))}
@@ -118,14 +135,18 @@ function CanvasInner() {
           <button
             onClick={() => setSelected(null)}
             className="float-right text-base text-slate-400 hover:text-white"
-          >✕</button>
+          >
+            ✕
+          </button>
           <div
             className="mb-1 inline-block rounded px-2 py-0.5 text-[10px] font-bold uppercase text-white"
-            style={{ background: selected.meta?.color ?? '#475569' }}
+            style={{ background: selected.meta?.color ?? "#475569" }}
           >
             {selected.type}
           </div>
-          <h3 className="mt-1 text-base font-bold text-white">{selected.label}</h3>
+          <h3 className="mt-1 text-base font-bold text-white">
+            {selected.label}
+          </h3>
           <p className="mt-1 text-slate-400">{selected.description}</p>
 
           {selected.employees.length > 0 && (
@@ -137,7 +158,11 @@ function CanvasInner() {
                 <div key={e.id} className="mt-0.5 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400" />
                   <span className="font-medium text-white">{e.name}</span>
-                  {e.position && <span className="truncate text-slate-400">— {e.position}</span>}
+                  {e.position && (
+                    <span className="truncate text-slate-400">
+                      — {e.position}
+                    </span>
+                  )}
                 </div>
               ))}
             </section>
@@ -145,10 +170,14 @@ function CanvasInner() {
 
           {selected.rules.length > 0 && (
             <section className="mt-3">
-              <div className="mb-1 font-semibold text-slate-300">📋 Quy tắc nghiệp vụ</div>
+              <div className="mb-1 font-semibold text-slate-300">
+                📋 Quy tắc nghiệp vụ
+              </div>
               <ol className="list-inside list-decimal space-y-1">
                 {selected.rules.map((r, i) => (
-                  <li key={i} className="leading-snug text-slate-300">{r}</li>
+                  <li key={i} className="leading-snug text-slate-300">
+                    {r}
+                  </li>
                 ))}
               </ol>
             </section>
@@ -156,7 +185,9 @@ function CanvasInner() {
 
           {selected.statuses.length > 0 && (
             <section className="mt-3">
-              <div className="mb-1 font-semibold text-slate-300">🔵 Trạng thái</div>
+              <div className="mb-1 font-semibold text-slate-300">
+                🔵 Trạng thái
+              </div>
               <div className="flex flex-wrap gap-1">
                 {selected.statuses.map((s) => (
                   <span
@@ -173,9 +204,16 @@ function CanvasInner() {
 
           {selected.meta?.endpoints && selected.meta.endpoints.length > 0 && (
             <section className="mt-3">
-              <div className="mb-1 font-semibold text-slate-300">🔗 API Endpoints</div>
+              <div className="mb-1 font-semibold text-slate-300">
+                🔗 API Endpoints
+              </div>
               {selected.meta.endpoints.map((ep) => (
-                <code key={ep} className="block font-mono text-[10px] text-slate-400">{ep}</code>
+                <code
+                  key={ep}
+                  className="block font-mono text-[10px] text-slate-400"
+                >
+                  {ep}
+                </code>
               ))}
             </section>
           )}
@@ -194,7 +232,8 @@ export default function WorkflowCanvas() {
         <div>
           <h1 className="text-lg font-bold text-white">Sơ đồ Quy trình ERP</h1>
           <p className="text-xs text-slate-400">
-            BGĐ → Phòng ban → Nghiệp vụ → Trạng thái • Click vào node để xem chi tiết
+            BGĐ → Phòng ban → Nghiệp vụ → Trạng thái • Click vào node để xem chi
+            tiết
           </p>
         </div>
       </div>

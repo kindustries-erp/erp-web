@@ -88,12 +88,15 @@ export function ContactsTab() {
   const [form, setForm] = useState<ContactForm>(emptyContactForm);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<BusinessPartnerContact | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<BusinessPartnerContact | null>(null);
   const [deleting, setDeleting] = useState(false);
   const t = useT();
 
   useEffect(() => {
-    getBusinessPartnersApi().then(setPartners).catch(() => {});
+    getBusinessPartnersApi()
+      .then(setPartners)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -105,11 +108,19 @@ export function ContactsTab() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getBusinessPartnerContactsPagedApi({ page: pid ? 1 : pg, pageSize: pid ? 500 : ps, search: q || undefined });
-      const filtered = pid ? res.items.filter((item) => item.business_partner_id === pid) : res.items;
+      const res = await getBusinessPartnerContactsPagedApi({
+        page: pid ? 1 : pg,
+        pageSize: pid ? 500 : ps,
+        search: q || undefined,
+      });
+      const filtered = pid
+        ? res.items.filter((item) => item.business_partner_id === pid)
+        : res.items;
       setItems(filtered);
       setTotal(pid ? filtered.length : res.total);
-      setTotalPages(pid ? Math.max(1, Math.ceil(filtered.length / ps)) : res.totalPages);
+      setTotalPages(
+        pid ? Math.max(1, Math.ceil(filtered.length / ps)) : res.totalPages,
+      );
     } catch {
       setFetchError("Không thể tải danh sách liên hệ.");
     } finally {
@@ -120,12 +131,25 @@ export function ContactsTab() {
   function handleSearchInput(v: string) {
     setSearchInput(v);
     clearTimeout(searchTimer.current);
-    if (!v) { setSearch(""); setPage(1); return; }
-    searchTimer.current = setTimeout(() => { setSearch(v); setPage(1); }, 400);
+    if (!v) {
+      setSearch("");
+      setPage(1);
+      return;
+    }
+    searchTimer.current = setTimeout(() => {
+      setSearch(v);
+      setPage(1);
+    }, 400);
   }
 
-  function handlePartnerFilter(v: string) { setPartnerFilter(v); setPage(1); }
-  function handlePageSize(ps: number) { setPageSize(ps); setPage(1); }
+  function handlePartnerFilter(v: string) {
+    setPartnerFilter(v);
+    setPage(1);
+  }
+  function handlePageSize(ps: number) {
+    setPageSize(ps);
+    setPage(1);
+  }
 
   function openNew() {
     setEditing(null);
@@ -139,7 +163,11 @@ export function ContactsTab() {
     setSaveError(null);
     setDrawerOpen(true);
   }
-  function closeDrawer() { setDrawerOpen(false); setEditing(null); setSaveError(null); }
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setEditing(null);
+    setSaveError(null);
+  }
   const setField = <K extends keyof ContactForm>(k: K, v: ContactForm[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
@@ -195,46 +223,133 @@ export function ContactsTab() {
   }
 
   const isDirty = !!form.full_name.trim();
-  const partnerName = (id: string) => partners.find((p) => p.id === id)?.name ?? id;
-  const partnerOpts = partners.map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` }));
+  const partnerName = (id: string) =>
+    partners.find((p) => p.id === id)?.name ?? id;
+  const partnerOpts = partners.map((p) => ({
+    value: p.id,
+    label: `${p.code} — ${p.name}`,
+  }));
 
   return (
     <div>
-      <PageHeader title={t("doitac.tabs.contacts")} desc="Danh sách liên hệ của đối tác." onAdd={openNew} />
+      <PageHeader
+        title={t("doitac.tabs.contacts")}
+        desc="Danh sách liên hệ của đối tác."
+        onAdd={openNew}
+      />
       <div className="flex gap-2 mb-3 flex-wrap">
-        <Combobox options={partnerOpts} value={partnerFilter} onChange={(v) => handlePartnerFilter(v)} placeholder="— Lọc theo đối tác —" className="w-[240px]" />
-        <SearchInput placeholder="Tìm tên liên hệ..." value={searchInput} onChange={handleSearchInput} className="max-w-[220px]" />
+        <Combobox
+          options={partnerOpts}
+          value={partnerFilter}
+          onChange={(v) => handlePartnerFilter(v)}
+          placeholder="— Lọc theo đối tác —"
+          className="w-[240px]"
+        />
+        <SearchInput
+          placeholder="Tìm tên liên hệ..."
+          value={searchInput}
+          onChange={handleSearchInput}
+          className="max-w-[220px]"
+        />
       </div>
       <div className="bg-surface border border-border rounded-[10px] overflow-x-auto card-shadow">
         <table className="w-full border-collapse" style={{ minWidth: 680 }}>
           <thead>
             <tr>
-              {[t("doitac.headers.code"), t("doitac.headers.contactName"), t("doitac.headers.position"), t("doitac.headers.phone"), t("doitac.headers.email"), t("doitac.headers.status"), ""].map((h, i) => (
-                <th key={i} className={cn("text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[8px] border-b border-border uppercase tracking-[0.05em]", i === 6 && "w-[80px]")}>{h}</th>
+              {[
+                t("doitac.headers.code"),
+                t("doitac.headers.contactName"),
+                t("doitac.headers.position"),
+                t("doitac.headers.phone"),
+                t("doitac.headers.email"),
+                t("doitac.headers.status"),
+                "",
+              ].map((h, i) => (
+                <th
+                  key={i}
+                  className={cn(
+                    "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[8px] border-b border-border uppercase tracking-[0.05em]",
+                    i === 6 && "w-[80px]",
+                  )}
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading && Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (<td key={j} className="px-[10px] py-[10px] border-b border-[color:var(--border-light)]"><Skeleton className="h-3 w-20" /></td>))}</tr>
-            ))}
-            {!loading && fetchError && <tr><td colSpan={7} className="text-center text-xs text-[color:var(--warn-fg)] py-8">{fetchError}</td></tr>}
-            {!loading && !fetchError && items.length === 0 && <tr><td colSpan={7} className="text-center text-xs text-[color:var(--faint)] py-8">{t("common.noData")}</td></tr>}
+            {loading &&
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i}>
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <td
+                      key={j}
+                      className="px-[10px] py-[10px] border-b border-[color:var(--border-light)]"
+                    >
+                      <Skeleton className="h-3 w-20" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            {!loading && fetchError && (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center text-xs text-[color:var(--warn-fg)] py-8"
+                >
+                  {fetchError}
+                </td>
+              </tr>
+            )}
+            {!loading && !fetchError && items.length === 0 && (
+              <tr>
+                <td
+                  colSpan={7}
+                  className="text-center text-xs text-[color:var(--faint)] py-8"
+                >
+                  {t("common.noData")}
+                </td>
+              </tr>
+            )}
             {items.map((c) => (
               <tr key={c.id} className="hover:bg-surface-hover">
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">{partnerName(c.business_partner_id)}</td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">{c.full_name}</td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">{c.position || "—"}</td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">{c.phone || "—"}</td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">{c.email || "—"}</td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]"><StatusBadge active={c.is_active} /></td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]"><RowActions onEdit={() => openEdit(c)} onDelete={() => setDeleteTarget(c)} /></td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
+                  {partnerName(c.business_partner_id)}
+                </td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">
+                  {c.full_name}
+                </td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
+                  {c.position || "—"}
+                </td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
+                  {c.phone || "—"}
+                </td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
+                  {c.email || "—"}
+                </td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
+                  <StatusBadge active={c.is_active} />
+                </td>
+                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
+                  <RowActions
+                    onEdit={() => openEdit(c)}
+                    onDelete={() => setDeleteTarget(c)}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <TablePagination page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
+      <TablePagination
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={handlePageSize}
+      />
 
       <DrawerModal
         open={drawerOpen}
@@ -244,52 +359,119 @@ export function ContactsTab() {
         subtitle={editing ? editing.full_name : "Điền thông tin bên dưới"}
         actions={[
           { label: "Hủy", onClick: closeDrawer },
-          { label: editing ? "Lưu thay đổi" : "Thêm mới", primary: true, loading: saving, disabled: saving, onClick: handleSave },
+          {
+            label: editing ? "Lưu thay đổi" : "Thêm mới",
+            primary: true,
+            loading: saving,
+            disabled: saving,
+            onClick: handleSave,
+          },
         ]}
       >
         <DrawerSection title="Thông tin liên hệ">
           <DrawerField label="Đối tác" required>
-            <Combobox options={partnerOpts} value={form.business_partner_id} onChange={(v) => setField("business_partner_id", v)} placeholder="— Chọn đối tác —" />
+            <Combobox
+              options={partnerOpts}
+              value={form.business_partner_id}
+              onChange={(v) => setField("business_partner_id", v)}
+              placeholder="— Chọn đối tác —"
+            />
           </DrawerField>
           <DrawerField label="Họ và tên" required>
-            <input type="text" className={inputCls} value={form.full_name} onChange={(e) => setField("full_name", e.target.value)} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.full_name}
+              onChange={(e) => setField("full_name", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="Chức vụ">
-            <input type="text" className={inputCls} value={form.position} onChange={(e) => setField("position", e.target.value)} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.position}
+              onChange={(e) => setField("position", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="Điện thoại">
-            <input type="text" className={inputCls} value={form.phone} onChange={(e) => setField("phone", e.target.value)} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.phone}
+              onChange={(e) => setField("phone", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="Email">
-            <input type="email" className={inputCls} value={form.email} onChange={(e) => setField("email", e.target.value)} />
+            <input
+              type="email"
+              className={inputCls}
+              value={form.email}
+              onChange={(e) => setField("email", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="CMND/CCCD">
-            <input type="text" className={inputCls} value={form.identity_no} onChange={(e) => setField("identity_no", e.target.value)} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.identity_no}
+              onChange={(e) => setField("identity_no", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="Địa chỉ">
-            <input type="text" className={inputCls} value={form.address} onChange={(e) => setField("address", e.target.value)} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.address}
+              onChange={(e) => setField("address", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="Ghi chú">
-            <textarea className={inputCls} rows={2} value={form.note} onChange={(e) => setField("note", e.target.value)} />
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.note}
+              onChange={(e) => setField("note", e.target.value)}
+            />
           </DrawerField>
           <DrawerField label="Cài đặt mặc định">
             <div className="flex flex-col gap-2">
               <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={form.is_default_receiver} onCheckedChange={(v) => setField("is_default_receiver", v === true)} />
-                <span className="text-xs text-foreground">Người nhận mặc định</span>
+                <Checkbox
+                  checked={form.is_default_receiver}
+                  onCheckedChange={(v) =>
+                    setField("is_default_receiver", v === true)
+                  }
+                />
+                <span className="text-xs text-foreground">
+                  Người nhận mặc định
+                </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={form.is_default_payer} onCheckedChange={(v) => setField("is_default_payer", v === true)} />
-                <span className="text-xs text-foreground">Người trả mặc định</span>
+                <Checkbox
+                  checked={form.is_default_payer}
+                  onCheckedChange={(v) =>
+                    setField("is_default_payer", v === true)
+                  }
+                />
+                <span className="text-xs text-foreground">
+                  Người trả mặc định
+                </span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={form.is_active} onCheckedChange={(v) => setField("is_active", v === true)} />
+                <Checkbox
+                  checked={form.is_active}
+                  onCheckedChange={(v) => setField("is_active", v === true)}
+                />
                 <span className="text-xs text-foreground">Đang hoạt động</span>
               </label>
             </div>
           </DrawerField>
         </DrawerSection>
-        {saveError && <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">{saveError}</div>}
+        {saveError && (
+          <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">
+            {saveError}
+          </div>
+        )}
       </DrawerModal>
 
       <ConfirmModal

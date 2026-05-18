@@ -28,14 +28,19 @@ function formatSize(size: number) {
   return `${size} B`;
 }
 
-export function FileUploadBox(props: FileUploadBoxProps | MultiFileUploadBoxProps) {
+export function FileUploadBox(
+  props: FileUploadBoxProps | MultiFileUploadBoxProps,
+) {
   const inputId = useId();
   const maxSizeMb = props.maxSizeMb ?? 10;
   const maxSize = maxSizeMb * 1_048_576;
   const isMulti = props.multiple === true;
   const file = isMulti ? null : props.file;
   const files = isMulti ? props.files : [];
-  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : ""), [file]);
+  const previewUrl = useMemo(
+    () => (file ? URL.createObjectURL(file) : ""),
+    [file],
+  );
 
   useEffect(() => {
     return () => {
@@ -79,7 +84,9 @@ export function FileUploadBox(props: FileUploadBoxProps | MultiFileUploadBoxProp
             htmlFor={inputId}
             className={cn(
               "flex cursor-pointer items-center justify-center rounded-lg border border-border bg-surface text-center hover:bg-surface-hover",
-              files.length ? "min-h-10 gap-2 px-3 py-2" : "min-h-[88px] flex-col gap-2 px-3 py-4",
+              files.length
+                ? "min-h-10 gap-2 px-3 py-2"
+                : "min-h-[88px] flex-col gap-2 px-3 py-4",
             )}
           >
             {!files.length && (
@@ -101,13 +108,20 @@ export function FileUploadBox(props: FileUploadBoxProps | MultiFileUploadBoxProp
           {files.length > 0 && (
             <div className="space-y-2">
               {files.map((item, index) => (
-                <div key={`${item.name}-${item.size}-${index}`} className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2">
+                <div
+                  key={`${item.name}-${item.size}-${index}`}
+                  className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2"
+                >
                   <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[color:var(--muted)] text-[color:var(--muted-fg)]">
                     <FileText className="h-4 w-4" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="max-w-full truncate text-xs font-medium text-foreground">{item.name}</div>
-                    <div className="text-[11px] text-[color:var(--muted-fg)]">{formatSize(item.size)}</div>
+                    <div className="max-w-full truncate text-xs font-medium text-foreground">
+                      {item.name}
+                    </div>
+                    <div className="text-[11px] text-[color:var(--muted-fg)]">
+                      {formatSize(item.size)}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -142,7 +156,9 @@ export function FileUploadBox(props: FileUploadBoxProps | MultiFileUploadBoxProp
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color:var(--muted)] text-[color:var(--muted-fg)]">
             <UploadCloud className="h-4 w-4" />
           </span>
-          <span className="text-xs font-medium text-foreground">Chọn file đính kèm</span>
+          <span className="text-xs font-medium text-foreground">
+            Chọn file đính kèm
+          </span>
           <span className="text-[11px] text-[color:var(--muted-fg)]">
             Không giới hạn định dạng, tối đa {maxSizeMb}MB
           </span>
@@ -163,7 +179,9 @@ export function FileUploadBox(props: FileUploadBoxProps | MultiFileUploadBoxProp
           <button
             type="button"
             title="Xem file"
-            onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}
+            onClick={() =>
+              window.open(previewUrl, "_blank", "noopener,noreferrer")
+            }
             className="rounded-lg border border-border bg-surface p-2 text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground"
           >
             <Eye className="h-4 w-4" />

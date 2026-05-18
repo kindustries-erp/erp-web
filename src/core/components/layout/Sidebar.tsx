@@ -12,9 +12,31 @@ import type { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
 import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
-import { useHasAnyPermission, useHasPermission } from "@/shared/hooks/useHasPermission";
+import {
+  useHasAnyPermission,
+  useHasPermission,
+} from "@/shared/hooks/useHasPermission";
 import { NavItem, SubItem, SubNav } from "./SidebarPrimitives";
-import { IconActivity, IconBox, IconBriefcase, IconBuilding, IconCart, IconChevronLeft, IconDollar, IconFileText, IconGitBranch, IconGrid, IconList, IconPeople, IconPin, IconPkg, IconSettings, IconShield, IconShop, IconUser } from "./sidebarIcons";
+import {
+  IconActivity,
+  IconBox,
+  IconBriefcase,
+  IconBuilding,
+  IconCart,
+  IconChevronLeft,
+  IconDollar,
+  IconFileText,
+  IconGitBranch,
+  IconGrid,
+  IconList,
+  IconPeople,
+  IconPin,
+  IconPkg,
+  IconSettings,
+  IconShield,
+  IconShop,
+  IconUser,
+} from "./sidebarIcons";
 
 export function Sidebar() {
   const {
@@ -65,11 +87,7 @@ export function Sidebar() {
     "chart_of_accounts",
   ]);
   const canCongNo = useHasPermission("partner_ledger_items", "read");
-  const canHR = useHasAnyPermission([
-    "employees",
-    "departments",
-    "positions",
-  ]);
+  const canHR = useHasAnyPermission(["employees", "departments", "positions"]);
   const canPartners = useHasPermission("business_partners");
   const canActivityLog = useHasPermission("directus_activity");
   const canRBAC = useHasPermission("directus_roles");
@@ -158,86 +176,104 @@ export function Sidebar() {
                 {t("nav.sections.accounting")}
               </div>
 
-              {canFinance && <>
-              <NavItem
-                collapsed={c}
-                icon={<IconDollar />}
-                label={t("nav.items.cashflow")}
-                active={currentPage === "dongtien"}
-                onClick={() => navTo("dongtien")}
-                contextPage="dongtien"
-              />
-              </>}
+              {canFinance && (
+                <>
+                  <NavItem
+                    collapsed={c}
+                    icon={<IconDollar />}
+                    label={t("nav.items.cashflow")}
+                    active={currentPage === "dongtien"}
+                    onClick={() => navTo("dongtien")}
+                    contextPage="dongtien"
+                  />
+                </>
+              )}
 
-              {canCongNo && <>
-              <NavItem
-                collapsed={c}
-                icon={<IconBox />}
-                label={t("nav.items.debt")}
-                active={isInCongNoGroup}
-                onClick={() => navTo("phaithu")}
-              />
-              </>}
+              {canCongNo && (
+                <>
+                  <NavItem
+                    collapsed={c}
+                    icon={<IconBox />}
+                    label={t("nav.items.debt")}
+                    active={isInCongNoGroup}
+                    onClick={() => navTo("phaithu")}
+                  />
+                </>
+              )}
 
-              {canFinance && <>
-              <NavItem
-                collapsed={c}
-                icon={<IconFileText />}
-                label={t("nav.items.hoadondientu")}
-                active={isHoaDonDienTu}
-                onClick={() => navTo("hoadondientu")}
-                contextPage="hoadondientu"
-              />
-              </>}
+              {canFinance && (
+                <>
+                  <NavItem
+                    collapsed={c}
+                    icon={<IconFileText />}
+                    label={t("nav.items.hoadondientu")}
+                    active={isHoaDonDienTu}
+                    onClick={() => navTo("hoadondientu")}
+                    contextPage="hoadondientu"
+                  />
+                </>
+              )}
 
-              {canFinance && <>
-              <NavItem
-                collapsed={c}
-                icon={<Book className="h-4 w-4" />}
-                label={t("nav.items.report")}
-                active={isInBaoCaoGroup}
-                onClick={() => navTo("nhatkyechung")}
-              />
-              </>}
+              {canFinance && (
+                <>
+                  <NavItem
+                    collapsed={c}
+                    icon={<Book className="h-4 w-4" />}
+                    label={t("nav.items.report")}
+                    active={isInBaoCaoGroup}
+                    onClick={() => navTo("nhatkyechung")}
+                  />
+                </>
+              )}
 
-              {canPartners && <NavItem
-                collapsed={c}
-                icon={<IconPeople />}
-                label={t("nav.items.partners")}
-                active={isPartners}
-                onClick={() => navTo("doitac")}
-                contextPage="doitac"
-              />}
+              {canPartners && (
+                <NavItem
+                  collapsed={c}
+                  icon={<IconPeople />}
+                  label={t("nav.items.partners")}
+                  active={isPartners}
+                  onClick={() => navTo("doitac")}
+                  contextPage="doitac"
+                />
+              )}
 
-              {canHR && <NavItem
-                collapsed={c}
-                icon={<IconUser />}
-                label={t("nav.items.hr")}
-                active={currentPage === "nhansu" || currentPage === "phongban" || currentPage === "chucvu"}
-                onClick={() => navTo("nhansu")}
-                contextPage="nhansu"
-              />}
+              {canHR && (
+                <NavItem
+                  collapsed={c}
+                  icon={<IconUser />}
+                  label={t("nav.items.hr")}
+                  active={
+                    currentPage === "nhansu" ||
+                    currentPage === "phongban" ||
+                    currentPage === "chucvu"
+                  }
+                  onClick={() => navTo("nhansu")}
+                  contextPage="nhansu"
+                />
+              )}
 
-              {canFinance && <NavItem
-                collapsed={c}
-                icon={<Paperclip className="h-4 w-4" />}
-                label={t("nav.items.cashflowAttachments")}
-                active={currentPage === "dinhkem"}
-                onClick={() => navTo("dinhkem")}
-                contextPage="dinhkem"
-              />}
+              {canFinance && (
+                <NavItem
+                  collapsed={c}
+                  icon={<Paperclip className="h-4 w-4" />}
+                  label={t("nav.items.cashflowAttachments")}
+                  active={currentPage === "dinhkem"}
+                  onClick={() => navTo("dinhkem")}
+                  contextPage="dinhkem"
+                />
+              )}
 
-              {canFinance && <>
-              <NavItem
-                icon={<Wallet className="h-4 w-4" />}
-                label={t("nav.items.catalog")}
-                active={isThietLapGroup}
-                onClick={() => navTo("thietlap-quy")}
-              />
-              </>}
+              {canFinance && (
+                <>
+                  <NavItem
+                    icon={<Wallet className="h-4 w-4" />}
+                    label={t("nav.items.catalog")}
+                    active={isThietLapGroup}
+                    onClick={() => navTo("thietlap-quy")}
+                  />
+                </>
+              )}
             </div>
-
-
 
             <div className="sidebar-nav-section py-2">
               <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
@@ -283,35 +319,41 @@ export function Sidebar() {
               />
             </div>
 
-            {(canActivityLog || canRBAC) && <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
-                {t("nav.sections.system")}
+            {(canActivityLog || canRBAC) && (
+              <div className="sidebar-nav-section py-2">
+                <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
+                  {t("nav.sections.system")}
+                </div>
+                {canActivityLog && (
+                  <NavItem
+                    collapsed={c}
+                    icon={<IconActivity />}
+                    label={t("nav.items.activitylog")}
+                    active={currentPage === "activitylog"}
+                    onClick={() => navTo("activitylog")}
+                    contextPage="activitylog"
+                  />
+                )}
+                {canRBAC && (
+                  <NavItem
+                    collapsed={c}
+                    icon={<IconShield />}
+                    label={t("nav.items.phanquyen")}
+                    active={currentPage === "phanquyen"}
+                    onClick={() => navTo("phanquyen")}
+                    contextPage="phanquyen"
+                  />
+                )}
+                <NavItem
+                  collapsed={c}
+                  icon={<IconGitBranch />}
+                  label={t("nav.items.workflowcanvas")}
+                  active={currentPage === "workflowcanvas"}
+                  onClick={() => navTo("workflowcanvas")}
+                  contextPage="workflowcanvas"
+                />
               </div>
-              {canActivityLog && <NavItem
-                collapsed={c}
-                icon={<IconActivity />}
-                label={t("nav.items.activitylog")}
-                active={currentPage === "activitylog"}
-                onClick={() => navTo("activitylog")}
-                contextPage="activitylog"
-              />}
-              {canRBAC && <NavItem
-                collapsed={c}
-                icon={<IconShield />}
-                label={t("nav.items.phanquyen")}
-                active={currentPage === "phanquyen"}
-                onClick={() => navTo("phanquyen")}
-                contextPage="phanquyen"
-              />}
-              <NavItem
-                collapsed={c}
-                icon={<IconGitBranch />}
-                label={t("nav.items.workflowcanvas")}
-                active={currentPage === "workflowcanvas"}
-                onClick={() => navTo("workflowcanvas")}
-                contextPage="workflowcanvas"
-              />
-            </div>}
+            )}
           </div>
 
           <div className="sidebar-bottom border-t border-border p-[10px] flex-shrink-0 overflow-hidden flex flex-col gap-[2px]">

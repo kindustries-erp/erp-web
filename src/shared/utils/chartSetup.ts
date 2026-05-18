@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
   Filler,
-} from 'chart.js'
+} from "chart.js";
 
 ChartJS.register(
   CategoryScale,
@@ -23,4 +23,4 @@ ChartJS.register(
   Tooltip,
   Legend,
   Filler,
-)
+);

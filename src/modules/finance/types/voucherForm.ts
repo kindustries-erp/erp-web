@@ -76,17 +76,20 @@ export const STATUS_LABELS: Record<VoucherStatus, string> = {
   CANCELLED: "Đã hủy",
 };
 
-export const ATTACHMENT_TYPE_OPTS: { value: AttachmentType; label: string }[] = [
-  { value: "INVOICE", label: "Hóa đơn" },
-  { value: "RECEIPT", label: "Biên lai" },
-  { value: "CONTRACT", label: "Hợp đồng" },
-  { value: "PAYMENT_REQUEST", label: "Đề nghị thanh toán" },
-  { value: "BANK_STATEMENT", label: "Sao kê ngân hàng" },
-  { value: "OTHER", label: "Khác" },
-];
+export const ATTACHMENT_TYPE_OPTS: { value: AttachmentType; label: string }[] =
+  [
+    { value: "INVOICE", label: "Hóa đơn" },
+    { value: "RECEIPT", label: "Biên lai" },
+    { value: "CONTRACT", label: "Hợp đồng" },
+    { value: "PAYMENT_REQUEST", label: "Đề nghị thanh toán" },
+    { value: "BANK_STATEMENT", label: "Sao kê ngân hàng" },
+    { value: "OTHER", label: "Khác" },
+  ];
 
-
-export const COUNTERPARTY_SOURCE_OPTS: { value: CounterpartySource; label: string }[] = [
+export const COUNTERPARTY_SOURCE_OPTS: {
+  value: CounterpartySource;
+  label: string;
+}[] = [
   { value: "EXTERNAL", label: "Bên ngoài (đối tác)" },
   { value: "INTERNAL", label: "Nội bộ (nhân viên)" },
 ];

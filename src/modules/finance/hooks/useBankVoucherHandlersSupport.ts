@@ -2,7 +2,12 @@ import type { Dispatch, SetStateAction } from "react";
 import type { CompanyBankAccount } from "@/modules/accounting/api/catalogApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { Employee } from "@/modules/auth/api/auth";
-import type { CounterpartyRole, PaymentVoucher, PaymentVoucherAttachment, VoucherStatus } from "@/modules/finance/api/financeApi";
+import type {
+  CounterpartyRole,
+  PaymentVoucher,
+  PaymentVoucherAttachment,
+  VoucherStatus,
+} from "@/modules/finance/api/financeApi";
 
 export interface LoadVouchersParams {
   page: number;
@@ -45,10 +50,20 @@ export interface UseBankVoucherHandlersParams {
   coaItemsLength: number;
   attachmentFileName: (item: PaymentVoucherAttachment) => string;
   setPage: Dispatch<SetStateAction<number>>;
-  loadVouchers: (params: LoadVouchersParams) => Promise<PaymentVoucher[] | undefined>;
+  loadVouchers: (
+    params: LoadVouchersParams,
+  ) => Promise<PaymentVoucher[] | undefined>;
   loadVoucherAttachments: (items: PaymentVoucher[]) => Promise<void>;
-  loadSummary: (from: string, to: string, params: DashboardParams) => Promise<void>;
-  loadOpeningBalanceAndChart: (from: string, chartEndDate: string, params: DashboardParams) => Promise<void>;
+  loadSummary: (
+    from: string,
+    to: string,
+    params: DashboardParams,
+  ) => Promise<void>;
+  loadOpeningBalanceAndChart: (
+    from: string,
+    chartEndDate: string,
+    params: DashboardParams,
+  ) => Promise<void>;
   reloadDonutData: () => void;
 }
 
@@ -58,4 +73,3 @@ export const bankDashboardParamsBase = {
   receiptType: "BANK_RECEIPT",
   paymentType: "BANK_PAYMENT",
 } as const;
-

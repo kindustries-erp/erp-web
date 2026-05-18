@@ -71,10 +71,10 @@ export async function getCashFundsPagedApi(
 export async function createCashFundApi(
   dto: CreateCashFundDto,
 ): Promise<CashFund> {
-  const { data } = await axiosInstance.post<{ message: string; data: CashFund }>(
-    "/api/v1/cash-funds",
-    dto,
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: CashFund;
+  }>("/api/v1/cash-funds", dto);
   return data.data;
 }
 
@@ -108,6 +108,7 @@ export interface OpeningBalance {
   note: string | null;
   created_at: string;
   created_by: string | null;
+  is_active: boolean;
 }
 
 export interface CreateOpeningBalanceDto {
@@ -141,7 +142,9 @@ export async function getOpeningBalancesPagedApi(
           pageSize,
           sort,
           ...(params.search ? { search: params.search } : {}),
-          ...(params.fiscal_period ? { fiscal_period: params.fiscal_period } : {}),
+          ...(params.fiscal_period
+            ? { fiscal_period: params.fiscal_period }
+            : {}),
         },
       },
     );
@@ -215,10 +218,9 @@ export type UpdateVoucherNumberingConfigDto =
 export async function getVoucherNumberingConfigsApi(): Promise<
   VoucherNumberingConfig[]
 > {
-  const { data } = await axiosInstance.get<PaginatedResponse<VoucherNumberingConfig>>(
-    "/api/v1/voucher-numbering-configs",
-    { params: { page: 1, pageSize: 50 } },
-  );
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<VoucherNumberingConfig>
+  >("/api/v1/voucher-numbering-configs", { params: { page: 1, pageSize: 50 } });
   return data.items;
 }
 
@@ -265,7 +267,13 @@ export type CounterpartyRole =
   | "OTHER";
 export type CounterpartySource = "INTERNAL" | "EXTERNAL";
 
-export type CashBankRelatedDocumentType = "payment_vouchers" | "ar_documents" | "ap_documents" | "sales_invoices" | "purchase_invoices" | "manual";
+export type CashBankRelatedDocumentType =
+  | "payment_vouchers"
+  | "ar_documents"
+  | "ap_documents"
+  | "sales_invoices"
+  | "purchase_invoices"
+  | "manual";
 
 export interface CashBankRelatedDocumentInput {
   payment_voucher_id?: string | PaymentVoucher | null;
@@ -342,8 +350,15 @@ export interface PaymentVoucher {
   ar_advance_original_amount?: number | string | null;
   ar_advance_applied_amount?: number | string | null;
   ar_advance_remaining_amount?: number | string | null;
-  ar_advance_status?: "NONE" | "UNAPPLIED" | "PARTIALLY_APPLIED" | "FULLY_APPLIED" | "REVERSED" | null;
+  ar_advance_status?:
+    | "NONE"
+    | "UNAPPLIED"
+    | "PARTIALLY_APPLIED"
+    | "FULLY_APPLIED"
+    | "REVERSED"
+    | null;
   cash_bank_tag_preset_id?: string | null;
+  is_active: boolean;
   related_documents?: CashBankRelatedDocumentInput[];
 }
 
@@ -438,18 +453,34 @@ export async function getPaymentVouchersPagedApi(
           pageSize,
           sort,
           ...(params.search ? { search: params.search } : {}),
-          ...(params.voucher_channel ? { voucher_channel: params.voucher_channel } : {}),
+          ...(params.voucher_channel
+            ? { voucher_channel: params.voucher_channel }
+            : {}),
           ...(params.voucher_type ? { voucher_type: params.voucher_type } : {}),
           ...(params.status ? { status: params.status } : {}),
-          ...(params.posting_date_from ? { posting_date_from: params.posting_date_from } : {}),
-          ...(params.posting_date_to ? { posting_date_to: params.posting_date_to } : {}),
+          ...(params.posting_date_from
+            ? { posting_date_from: params.posting_date_from }
+            : {}),
+          ...(params.posting_date_to
+            ? { posting_date_to: params.posting_date_to }
+            : {}),
           ...(params.amount != null ? { amount: params.amount } : {}),
-          ...(params.amount_min != null ? { amount_min: params.amount_min } : {}),
-          ...(params.amount_max != null ? { amount_max: params.amount_max } : {}),
-          ...(params.counterparty_source ? { counterparty_source: params.counterparty_source } : {}),
+          ...(params.amount_min != null
+            ? { amount_min: params.amount_min }
+            : {}),
+          ...(params.amount_max != null
+            ? { amount_max: params.amount_max }
+            : {}),
+          ...(params.counterparty_source
+            ? { counterparty_source: params.counterparty_source }
+            : {}),
           ...(params.employee_id ? { employee_id: params.employee_id } : {}),
-          ...(params.counterparty_id ? { counterparty_id: params.counterparty_id } : {}),
-          ...(params.voucher_direction ? { voucher_direction: params.voucher_direction } : {}),
+          ...(params.counterparty_id
+            ? { counterparty_id: params.counterparty_id }
+            : {}),
+          ...(params.voucher_direction
+            ? { voucher_direction: params.voucher_direction }
+            : {}),
         },
       },
     );
@@ -491,15 +522,17 @@ export async function getPaymentVoucherLookupBusinessPartnersApi(
   return data.items;
 }
 
-
-export async function getCashBankTagPresetsApi(params: {
-  voucher_channel?: VoucherChannel;
-  voucher_direction?: "IN" | "OUT";
-} = {}): Promise<CashBankTagPreset[]> {
-  const { data } = await axiosInstance.get<PaginatedResponse<CashBankTagPreset>>(
-    "/api/v1/payment-vouchers/lookup/cash-bank-tag-presets",
-    { params: { page: 1, pageSize: 100, ...params } },
-  );
+export async function getCashBankTagPresetsApi(
+  params: {
+    voucher_channel?: VoucherChannel;
+    voucher_direction?: "IN" | "OUT";
+  } = {},
+): Promise<CashBankTagPreset[]> {
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<CashBankTagPreset>
+  >("/api/v1/payment-vouchers/lookup/cash-bank-tag-presets", {
+    params: { page: 1, pageSize: 100, ...params },
+  });
   return data.items;
 }
 
@@ -587,26 +620,37 @@ export async function deletePaymentVoucherApi(id: string): Promise<void> {
   await axiosInstance.delete(`/api/v1/payment-vouchers/${id}`);
 }
 
-export async function getPaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.get<{
-    data?: PaymentVoucher;
-  } | PaymentVoucher>(`/api/v1/payment-vouchers/${id}`);
+export async function getPaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.get<
+    | {
+        data?: PaymentVoucher;
+      }
+    | PaymentVoucher
+  >(`/api/v1/payment-vouchers/${id}`);
   return "data" in data && data.data ? data.data : (data as PaymentVoucher);
 }
 
 // ─── PaymentVoucher Status Transitions ───────────────────────────────────────
 
-export async function submitPaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/submit`,
-  );
+export async function submitPaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/submit`);
   return data.data;
 }
 
-export async function approvePaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/approve`,
-  );
+export async function approvePaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/approve`);
   return data.data;
 }
 
@@ -614,17 +658,20 @@ export async function rejectPaymentVoucherApi(
   id: string,
   note?: string,
 ): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/reject`,
-    note ? { note } : undefined,
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/reject`, note ? { note } : undefined);
   return data.data;
 }
 
-export async function postPaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/post`,
-  );
+export async function postPaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/post`);
   return data.data;
 }
 
@@ -632,7 +679,10 @@ export async function cancelPaymentVoucherApi(
   id: string,
   cancel_reason?: string,
 ): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(
     `/api/v1/payment-vouchers/${id}/cancel`,
     cancel_reason ? { cancel_reason } : undefined,
   );
@@ -652,7 +702,15 @@ export type AttachmentType =
 export interface PaymentVoucherAttachment {
   id: string;
   payment_voucher_id: string | PaymentVoucher;
-  file: string | { id: string; filename_download?: string; filename_disk?: string; type?: string; filesize?: number };
+  file:
+    | string
+    | {
+        id: string;
+        filename_download?: string;
+        filename_disk?: string;
+        type?: string;
+        filesize?: number;
+      };
   attachment_type: AttachmentType | null;
   note: string | null;
   uploaded_at: string;
@@ -707,11 +765,16 @@ export async function getFileBlobApi(fileId: string): Promise<Blob> {
 export async function createVoucherAttachmentApi(
   dto: CreatePaymentVoucherAttachmentDto,
 ): Promise<PaymentVoucherAttachment> {
-  const { data } = await axiosInstance.post<{
-    message?: string;
-    data?: PaymentVoucherAttachment;
-  } | PaymentVoucherAttachment>("/api/v1/payment-voucher-attachments", dto);
-  return "data" in data && data.data ? data.data : (data as PaymentVoucherAttachment);
+  const { data } = await axiosInstance.post<
+    | {
+        message?: string;
+        data?: PaymentVoucherAttachment;
+      }
+    | PaymentVoucherAttachment
+  >("/api/v1/payment-voucher-attachments", dto);
+  return "data" in data && data.data
+    ? data.data
+    : (data as PaymentVoucherAttachment);
 }
 
 export async function deleteVoucherAttachmentApi(id: string): Promise<void> {
@@ -724,23 +787,22 @@ export async function getPaymentVoucherAttachmentsPagedApi(
     attachment_type?: AttachmentType | "";
   } = {},
 ): Promise<PaginatedResponse<PaymentVoucherAttachment>> {
-  const { data } = await axiosInstance.get<PaginatedResponse<PaymentVoucherAttachment>>(
-    "/api/v1/payment-voucher-attachments",
-    {
-      params: {
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        sort: (params.sort ?? ["-uploaded_at"]).join(","),
-        ...(params.search ? { search: params.search } : {}),
-        ...(params.payment_voucher_id
-          ? { payment_voucher_id: params.payment_voucher_id }
-          : {}),
-        ...(params.attachment_type
-          ? { attachment_type: params.attachment_type }
-          : {}),
-      },
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<PaymentVoucherAttachment>
+  >("/api/v1/payment-voucher-attachments", {
+    params: {
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+      sort: (params.sort ?? ["-uploaded_at"]).join(","),
+      ...(params.search ? { search: params.search } : {}),
+      ...(params.payment_voucher_id
+        ? { payment_voucher_id: params.payment_voucher_id }
+        : {}),
+      ...(params.attachment_type
+        ? { attachment_type: params.attachment_type }
+        : {}),
     },
-  );
+  });
   return data;
 }
 
@@ -761,7 +823,12 @@ export async function getVoucherAttachmentsApi(
 
 // ─── PaymentVoucherApprovalLog (read-only) ────────────────────────────────────
 
-export type ApprovalAction = "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL";
+export type ApprovalAction =
+  | "SUBMIT"
+  | "APPROVE"
+  | "REJECT"
+  | "POST"
+  | "CANCEL";
 
 export interface PaymentVoucherApprovalLog {
   id: string;
@@ -887,24 +954,27 @@ export interface PartnerLedgerSettlementListParams extends ListParams {
 export async function getPartnerLedgerItemsApi(
   params: PartnerLedgerListParams = {},
 ): Promise<PaginatedResponse<PartnerLedgerItem>> {
-  const { data } = await axiosInstance.get<PaginatedResponse<PartnerLedgerItem>>(
-    "/api/v1/partner-ledger-items",
-    {
-      params: {
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        sort: (params.sort ?? ["-document_date"]).join(","),
-        ...(params.search ? { search: params.search } : {}),
-        ...(params.item_type ? { item_type: params.item_type } : {}),
-        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
-        ...(params.accounting_account_id ? { accounting_account_id: params.accounting_account_id } : {}),
-        ...(params.status ? { status: params.status } : {}),
-        ...(params.due_from ? { due_from: params.due_from } : {}),
-        ...(params.due_to ? { due_to: params.due_to } : {}),
-        ...(params.overdue ? { overdue: true } : {}),
-      },
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<PartnerLedgerItem>
+  >("/api/v1/partner-ledger-items", {
+    params: {
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+      sort: (params.sort ?? ["-document_date"]).join(","),
+      ...(params.search ? { search: params.search } : {}),
+      ...(params.item_type ? { item_type: params.item_type } : {}),
+      ...(params.business_partner_id
+        ? { business_partner_id: params.business_partner_id }
+        : {}),
+      ...(params.accounting_account_id
+        ? { accounting_account_id: params.accounting_account_id }
+        : {}),
+      ...(params.status ? { status: params.status } : {}),
+      ...(params.due_from ? { due_from: params.due_from } : {}),
+      ...(params.due_to ? { due_to: params.due_to } : {}),
+      ...(params.overdue ? { overdue: true } : {}),
     },
-  );
+  });
   return data;
 }
 
@@ -959,22 +1029,21 @@ export async function deletePartnerLedgerItemApi(id: string): Promise<void> {
 export async function getPartnerLedgerSettlementsApi(
   params: PartnerLedgerSettlementListParams = {},
 ): Promise<PaginatedResponse<PartnerLedgerSettlement>> {
-  const { data } = await axiosInstance.get<PaginatedResponse<PartnerLedgerSettlement>>(
-    "/api/v1/partner-ledger-settlements",
-    {
-      params: {
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        sort: (params.sort ?? ["-settlement_date"]).join(","),
-        ...(params.partner_ledger_item_id
-          ? { partner_ledger_item_id: params.partner_ledger_item_id }
-          : {}),
-        ...(params.payment_voucher_id
-          ? { payment_voucher_id: params.payment_voucher_id }
-          : {}),
-      },
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<PartnerLedgerSettlement>
+  >("/api/v1/partner-ledger-settlements", {
+    params: {
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+      sort: (params.sort ?? ["-settlement_date"]).join(","),
+      ...(params.partner_ledger_item_id
+        ? { partner_ledger_item_id: params.partner_ledger_item_id }
+        : {}),
+      ...(params.payment_voucher_id
+        ? { payment_voucher_id: params.payment_voucher_id }
+        : {}),
     },
-  );
+  });
   return data;
 }
 
@@ -993,7 +1062,6 @@ export async function deletePartnerLedgerSettlementApi(
 ): Promise<void> {
   await axiosInstance.delete(`/api/v1/partner-ledger-settlements/${id}`);
 }
-
 
 // ─── AR Workbench ─────────────────────────────────────────────────────────────
 
@@ -1047,7 +1115,12 @@ export interface ArDocument {
   description: string;
   risk_status: "NORMAL" | "OVERDUE" | "BAD_DEBT_RISK" | "LEGAL";
   dispute_status: "NONE" | "DISPUTED" | "RESOLVED";
-  collection_status: "NOT_STARTED" | "REMINDER_SENT" | "PROMISED" | "ESCALATED" | "LEGAL";
+  collection_status:
+    | "NOT_STARTED"
+    | "REMINDER_SENT"
+    | "PROMISED"
+    | "ESCALATED"
+    | "LEGAL";
   promise_to_pay_date: string | null;
   created_at: string;
   updated_at: string | null;
@@ -1099,11 +1172,14 @@ export interface CreateArSalesInvoiceDto {
 
 export type UpdateArDocumentDto = Partial<CreateArDocumentDto>;
 
-
 export interface ArCoverageItem {
   id: number;
   use_case: string;
-  status: "phase1_supported" | "phase1_foundation" | "phase2a_supported" | "existing_supported";
+  status:
+    | "phase1_supported"
+    | "phase1_foundation"
+    | "phase2a_supported"
+    | "existing_supported";
   route: string;
 }
 
@@ -1115,7 +1191,10 @@ export interface ArSummary {
     open_amount: number;
     overdue_amount: number;
   };
-  by_type: Record<string, { count: number; open_amount: number; total_amount: number }>;
+  by_type: Record<
+    string,
+    { count: number; open_amount: number; total_amount: number }
+  >;
   coverage: ArCoverageItem[];
 }
 
@@ -1139,8 +1218,12 @@ export async function getArDocumentsApi(
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
         sort: (params.sort ?? ["-posting_date"]).join(","),
         ...(params.search ? { search: params.search } : {}),
-        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
-        ...(params.document_type ? { document_type: params.document_type } : {}),
+        ...(params.business_partner_id
+          ? { business_partner_id: params.business_partner_id }
+          : {}),
+        ...(params.document_type
+          ? { document_type: params.document_type }
+          : {}),
         ...(params.status ? { status: params.status } : {}),
         ...(params.risk_status ? { risk_status: params.risk_status } : {}),
         ...(params.open_only ? { open_only: true } : {}),
@@ -1151,16 +1234,24 @@ export async function getArDocumentsApi(
   return data;
 }
 
-export async function createArDocumentApi(dto: CreateArDocumentDto): Promise<ArDocument> {
-  const { data } = await axiosInstance.post<{ message: string; data: ArDocument }>(
-    "/api/v1/ar-workbench/documents",
-    dto,
-  );
+export async function createArDocumentApi(
+  dto: CreateArDocumentDto,
+): Promise<ArDocument> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: ArDocument;
+  }>("/api/v1/ar-workbench/documents", dto);
   return data.data;
 }
 
-export async function updateArDocumentApi(id: string, dto: UpdateArDocumentDto): Promise<ArDocument> {
-  const { data } = await axiosInstance.patch<{ message: string; data: ArDocument }>(`/api/v1/ar-workbench/documents/${id}`, dto);
+export async function updateArDocumentApi(
+  id: string,
+  dto: UpdateArDocumentDto,
+): Promise<ArDocument> {
+  const { data } = await axiosInstance.patch<{
+    message: string;
+    data: ArDocument;
+  }>(`/api/v1/ar-workbench/documents/${id}`, dto);
   return data.data;
 }
 
@@ -1188,26 +1279,36 @@ export async function postArDocumentApi(
   return data.data;
 }
 
-
 export async function getArSummaryApi(
   params: ArDocumentListParams = {},
 ): Promise<ArSummary> {
-  const { data } = await axiosInstance.get<ArSummary>("/api/v1/ar-workbench/summary", {
-    params: {
-      ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
-      ...(params.document_type ? { document_type: params.document_type } : {}),
-      ...(params.status ? { status: params.status } : {}),
-      ...(params.open_only ? { open_only: true } : {}),
-      ...(params.overdue ? { overdue: true } : {}),
+  const { data } = await axiosInstance.get<ArSummary>(
+    "/api/v1/ar-workbench/summary",
+    {
+      params: {
+        ...(params.business_partner_id
+          ? { business_partner_id: params.business_partner_id }
+          : {}),
+        ...(params.document_type
+          ? { document_type: params.document_type }
+          : {}),
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.open_only ? { open_only: true } : {}),
+        ...(params.overdue ? { overdue: true } : {}),
+      },
     },
-  });
+  );
   return data;
 }
 
-export async function getArCoverageApi(): Promise<{ items: ArCoverageItem[]; total: number }> {
-  const { data } = await axiosInstance.get<{ items: ArCoverageItem[]; total: number }>(
-    "/api/v1/ar-workbench/coverage",
-  );
+export async function getArCoverageApi(): Promise<{
+  items: ArCoverageItem[];
+  total: number;
+}> {
+  const { data } = await axiosInstance.get<{
+    items: ArCoverageItem[];
+    total: number;
+  }>("/api/v1/ar-workbench/coverage");
   return data;
 }
 
@@ -1261,7 +1362,9 @@ export async function getPaymentVouchersApi(
       params: {
         page: params.page ?? 1,
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+        ...(params.business_partner_id
+          ? { business_partner_id: params.business_partner_id }
+          : {}),
         ...(params.status ? { status: params.status } : {}),
       },
     },
@@ -1293,13 +1396,14 @@ export async function allocatePaymentApi(
   voucherId: string,
   allocations: PaymentAllocationLine[],
 ): Promise<unknown[]> {
-  const { data } = await axiosInstance.post<{ message: string; data: unknown[] }>(
-    `/api/v1/ar-workbench/payment-vouchers/${voucherId}/allocate`,
-    { allocations },
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: unknown[];
+  }>(`/api/v1/ar-workbench/payment-vouchers/${voucherId}/allocate`, {
+    allocations,
+  });
   return data.data;
 }
-
 
 export async function getCustomerAdvancesApi(
   params: ArDocumentListParams = {},
@@ -1310,7 +1414,9 @@ export async function getCustomerAdvancesApi(
       params: {
         page: params.page ?? 1,
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        ...(params.business_partner_id ? { business_partner_id: params.business_partner_id } : {}),
+        ...(params.business_partner_id
+          ? { business_partner_id: params.business_partner_id }
+          : {}),
         ...(params.status ? { status: params.status } : {}),
       },
     },
@@ -1321,10 +1427,10 @@ export async function getCustomerAdvancesApi(
 export async function createCustomerAdvanceApi(
   dto: CreateCustomerAdvanceDto,
 ): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    "/api/v1/ar-workbench/customer-advances",
-    dto,
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>("/api/v1/ar-workbench/customer-advances", dto);
   return data.data;
 }
 
@@ -1337,7 +1443,6 @@ export async function postCustomerAdvanceApi(
   }>(`/api/v1/ar-workbench/customer-advances/${id}/post`);
   return data.data;
 }
-
 
 // ─── UC#4 Apply Advance to Invoice / Cấn trừ cọc ────────────────────────────
 
@@ -1388,21 +1493,18 @@ export async function getAdvanceApplicationsApi(params: {
   page?: number;
   pageSize?: number;
 }): Promise<PaginatedResponse<AdvanceApplication>> {
-  const { data } = await axiosInstance.get<PaginatedResponse<AdvanceApplication>>(
-    "/api/v1/ar-workbench/advance-applications",
-    { params },
-  );
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<AdvanceApplication>
+  >("/api/v1/ar-workbench/advance-applications", { params });
   return data;
 }
 
 export async function applyAdvanceToInvoiceApi(
   dto: ApplyAdvanceToInvoiceDto,
 ): Promise<ApplyAdvanceResult> {
-  const { data } = await axiosInstance.post<{ message: string; data: ApplyAdvanceResult }>(
-    "/api/v1/ar-workbench/advance-applications",
-    dto,
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: ApplyAdvanceResult;
+  }>("/api/v1/ar-workbench/advance-applications", dto);
   return data.data;
 }
-
-

@@ -5,10 +5,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
  * When effectivePermissions is empty (loading), returns true to avoid
  * hiding items before data is available.
  */
-export function useHasPermission(
-  collection: string,
-  action = "read",
-): boolean {
+export function useHasPermission(collection: string, action = "read"): boolean {
   return useAuthStore((s) => {
     if (s.effectivePermissions.length === 0) return true;
     return s.effectivePermissions.some(

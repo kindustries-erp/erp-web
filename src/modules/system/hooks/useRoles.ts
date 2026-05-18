@@ -6,7 +6,11 @@ import {
   deleteRoleApi,
   getUserEmailsMapApi,
 } from "@/modules/system/api/rbacApi";
-import type { Role, CreateRoleDto, UpdateRoleDto } from "@/modules/system/types/rbac";
+import type {
+  Role,
+  CreateRoleDto,
+  UpdateRoleDto,
+} from "@/modules/system/types/rbac";
 import { extractApiError } from "@/shared/utils/apiError";
 
 export function useRoles() {
@@ -72,7 +76,10 @@ export function useRoles() {
     }
   }
 
-  async function updateRole(id: string, dto: UpdateRoleDto): Promise<Role | null> {
+  async function updateRole(
+    id: string,
+    dto: UpdateRoleDto,
+  ): Promise<Role | null> {
     try {
       const role = await updateRoleApi(id, dto);
       setRoles((prev) => prev.map((r) => (r.id === id ? role : r)));

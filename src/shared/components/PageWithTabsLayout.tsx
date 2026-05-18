@@ -66,9 +66,7 @@ export function PageWithTabsLayout({
         </TabsList>
       </Tabs>
 
-      <div className="tab-content-container">
-        {children}
-      </div>
+      <div className="tab-content-container">{children}</div>
     </div>
   );
 }

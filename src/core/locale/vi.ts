@@ -128,10 +128,13 @@ export const vi = {
     descriptions: {
       draft: "Danh sách hóa đơn nháp đồng bộ từ Viettel.",
       issued: "Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.",
-      output: "Hóa đơn bán ra lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
-      input: "Hóa đơn mua vào lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+      output:
+        "Hóa đơn bán ra lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+      input:
+        "Hóa đơn mua vào lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
       config: "Quản lý cấu hình Viettel và cổng thuế theo mô hình tách hệ.",
-      fallback: "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế",
+      fallback:
+        "Quản lý tập trung xuất hóa đơn nháp, hóa đơn đầu ra/đầu vào và cấu hình thuế",
     },
     execSummary: {
       draft: "Tổng nháp theo bộ lọc",
@@ -146,8 +149,8 @@ export const vi = {
       output: "Hóa đơn bán ra",
       input: "Hóa đơn mua vào",
       taxPortal: "Nguồn cổng thuế",
-      error: "Lỗi"
-    }
+      error: "Lỗi",
+    },
   },
   common: {
     thisMonth: "Tháng này",
@@ -294,7 +297,8 @@ export const vi = {
       unbalanced: "Chưa cân",
       addLine: "Thêm dòng",
       difference: "Chênh lệch",
-      validationError: "Vui lòng nhập đủ thông tin và đảm bảo tổng Nợ bằng tổng Có.",
+      validationError:
+        "Vui lòng nhập đủ thông tin và đảm bảo tổng Nợ bằng tổng Có.",
     },
   },
   tienmat: {
@@ -412,7 +416,8 @@ export const vi = {
     },
     confirm: {
       impersonateTitle: "Đăng nhập hộ người dùng này?",
-      impersonateBody: "Bạn sẽ đăng nhập với quyền của. Nhấn nút trong topbar để quay lại:",
+      impersonateBody:
+        "Bạn sẽ đăng nhập với quyền của. Nhấn nút trong topbar để quay lại:",
     },
     toast: {
       permissionsSaved: "Lưu quyền riêng thành công",
@@ -475,45 +480,47 @@ export const vi = {
   },
   thietlap: {
     hoadondientuPage: {
+      tabs: {
+        draft: "Hóa đơn nháp",
+        issued: "Hóa đơn đã phát hành",
+        output: "Hóa đơn bán ra",
+        input: "Hóa đơn mua vào",
+        config: "Cấu hình",
+      },
+      descriptions: {
+        draft: "Danh sách hóa đơn nháp đồng bộ từ Viettel.",
+        issued: "Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.",
+        output:
+          "Hóa đơn bán ra lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+        input:
+          "Hóa đơn mua vào lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
+        config: "Quản lý cấu hình Viettel và cổng thuế theo mô hình tách hệ.",
+      },
+      execSummary: {
+        draft: "Tổng nháp theo bộ lọc",
+        issued: "Tổng đã phát hành theo bộ lọc",
+        output: "Tổng bán ra theo bộ lọc",
+        input: "Tổng mua vào theo bộ lọc",
+        config: "Trạng thái kết nối",
+      },
+      subtotal: "Subtotal hiện tại",
+      kpi: {
+        issued: "Đã phát hành/đồng bộ",
+        output: "Hóa đơn bán ra",
+        input: "Hóa đơn mua vào",
+        taxPortal: "Nguồn cổng thuế",
+        error: "Lỗi",
+      },
+    },
+    title: "Thiết lập danh mục",
+    desc: "Quản lý danh mục chi nhánh, quỹ, ngân hàng, tài khoản",
     tabs: {
-      draft: "Hóa đơn nháp",
-      issued: "Hóa đơn đã phát hành",
-      output: "Hóa đơn bán ra",
-      input: "Hóa đơn mua vào",
-      config: "Cấu hình",
+      "chi-nhanh": "Danh mục Chi nhánh",
+      quy: "Danh mục Quỹ",
+      "ngan-hang": "Danh mục Ngân hàng",
+      "tai-khoan": "Danh mục Tài khoản",
     },
-    descriptions: {
-      draft: "Danh sách hóa đơn nháp đồng bộ từ Viettel.",
-      issued: "Danh sách hóa đơn đã phát hành đồng bộ từ Viettel.",
-      output: "Hóa đơn bán ra lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
-      input: "Hóa đơn mua vào lấy từ cổng thuế, hỗ trợ lọc và subtotal theo điều kiện hiện tại.",
-      config: "Quản lý cấu hình Viettel và cổng thuế theo mô hình tách hệ.",
-    },
-    execSummary: {
-      draft: "Tổng nháp theo bộ lọc",
-      issued: "Tổng đã phát hành theo bộ lọc",
-      output: "Tổng bán ra theo bộ lọc",
-      input: "Tổng mua vào theo bộ lọc",
-      config: "Trạng thái kết nối",
-    },
-    subtotal: "Subtotal hiện tại",
-    kpi: {
-      issued: "Đã phát hành/đồng bộ",
-      output: "Hóa đơn bán ra",
-      input: "Hóa đơn mua vào",
-      taxPortal: "Nguồn cổng thuế",
-      error: "Lỗi"
-    }
-  },
-  title: "Thiết lập danh mục",
-  desc: "Quản lý danh mục chi nhánh, quỹ, ngân hàng, tài khoản",
-  tabs: {
-    "chi-nhanh": "Danh mục Chi nhánh",
-    quy: "Danh mục Quỹ",
-    "ngan-hang": "Danh mục Ngân hàng",
-    "tai-khoan": "Danh mục Tài khoản",
-  },
-  common: {
+    common: {
       subtitle: "Điền thông tin bên dưới",
       actionEdit: "Chỉnh sửa",
       actionDelete: "Xóa",
@@ -533,7 +540,8 @@ export const vi = {
       sectionInfo: "Thông tin quỹ",
       codePlaceholder: "VD: TM001",
       namePlaceholder: "VD: Quỹ tiền mặt chính",
-      deleteMessage: 'Bạn có chắc muốn ẩn quỹ "{0}"? Bản ghi sẽ chuyển sang không hoạt động.',
+      deleteMessage:
+        'Bạn có chắc muốn ẩn quỹ "{0}"? Bản ghi sẽ chuyển sang không hoạt động.',
     },
     bank: {
       title: "Tài khoản ngân hàng",
@@ -1115,7 +1123,8 @@ export const vi = {
       isCashAccount: "Là tài khoản tiền mặt",
       isReceivable: "Là tài khoản phải thu",
       isPayable: "Là tài khoản phải trả",
-      deleteMessage: "Bạn có chắc muốn xóa tài khoản \"{0}\"? Hành động này không thể hoàn tác.",
+      deleteMessage:
+        'Bạn có chắc muốn xóa tài khoản "{0}"? Hành động này không thể hoàn tác.',
       unknownError: "Đã có lỗi xảy ra.",
       headers: {
         accountCode: "Số hiệu TK",
@@ -1135,7 +1144,8 @@ export const vi = {
       desc: "Tài khoản ngân hàng liên kết với doanh nghiệp.",
       searchPlaceholder: "Tìm kiếm tài khoản ngân hàng...",
       fetchError: "Không thể tải dữ liệu ngân hàng.",
-      requiredError: "Tên ngân hàng, số tài khoản và chủ tài khoản là bắt buộc.",
+      requiredError:
+        "Tên ngân hàng, số tài khoản và chủ tài khoản là bắt buộc.",
       editTitle: "Chỉnh sửa tài khoản ngân hàng",
       createTitle: "Thêm tài khoản ngân hàng",
       subtitle: "Điền thông tin bên dưới",
@@ -1144,7 +1154,8 @@ export const vi = {
       bankNamePlaceholder: "VD: MB Bank",
       accountNumberPlaceholder: "VD: 0123456789",
       accountHolderPlaceholder: "VD: CONG TY TNHH ABC",
-      deleteMessage: "Bạn có chắc muốn xóa tài khoản \"{0}\"? Hành động này không thể hoàn tác.",
+      deleteMessage:
+        'Bạn có chắc muốn xóa tài khoản "{0}"? Hành động này không thể hoàn tác.',
       headers: {
         bankAccountCode: "Mã tài khoản",
         bankName: "Ngân hàng",
@@ -1166,7 +1177,7 @@ export const vi = {
       namePlaceholder: "VD: Chi nhánh Hà Nội",
       addressPlaceholder: "VD: 123 Nguyễn Trãi, Hà Nội",
       notePlaceholder: "Ghi chú thêm về chi nhánh",
-      deleteMessage: "Bạn có chắc muốn xóa chi nhánh \"{0}\"?",
+      deleteMessage: 'Bạn có chắc muốn xóa chi nhánh "{0}"?',
       headers: {
         code: "Mã chi nhánh",
         name: "Tên chi nhánh",
@@ -1187,7 +1198,7 @@ export const vi = {
       sectionInfo: "Thông tin quỹ",
       codePlaceholder: "VD: TM001",
       namePlaceholder: "VD: Quỹ tiền mặt chính",
-      deleteMessage: "Bạn có chắc muốn xóa quỹ \"{0}\"?",
+      deleteMessage: 'Bạn có chắc muốn xóa quỹ "{0}"?',
       headers: {
         fundCode: "Mã quỹ",
         fundName: "Tên quỹ",
@@ -1323,7 +1334,8 @@ export const vi = {
     },
     cancel: {
       title: "Hủy phiếu công nợ?",
-      message: 'Bạn có chắc muốn hủy phiếu "{0}"? Hành động này không thể hoàn tác.',
+      message:
+        'Bạn có chắc muốn hủy phiếu "{0}"? Hành động này không thể hoàn tác.',
       confirm: "Xác nhận hủy",
       fail: "Hủy thất bại. Vui lòng thử lại.",
     },

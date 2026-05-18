@@ -42,7 +42,7 @@ export function VoucherKpiRow({
   closingLabel,
 }: VoucherKpiRowProps) {
   const t = useT();
-  
+
   const finalOpeningLabel = openingLabel ?? t("voucher.kpi.opening");
   const finalReceiptLabel = receiptLabel ?? t("voucher.kpi.receipt");
   const finalPaymentLabel = paymentLabel ?? t("voucher.kpi.payment");
@@ -53,17 +53,35 @@ export function VoucherKpiRow({
     <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4">
       <KpiCard
         label={finalOpeningLabel}
-        value={openingLoading ? loading : openingBal !== null ? fmtAmount(openingBal) : "—"}
+        value={
+          openingLoading
+            ? loading
+            : openingBal !== null
+              ? fmtAmount(openingBal)
+              : "—"
+        }
         icon={openingIcon}
       />
       <KpiCard
         label={finalReceiptLabel}
-        value={summaryLoading ? loading : receiptTotal !== null ? fmtAmount(receiptTotal) : "—"}
+        value={
+          summaryLoading
+            ? loading
+            : receiptTotal !== null
+              ? fmtAmount(receiptTotal)
+              : "—"
+        }
         icon={receiptIcon}
       />
       <KpiCard
         label={finalPaymentLabel}
-        value={summaryLoading ? loading : paymentTotal !== null ? fmtAmount(paymentTotal) : "—"}
+        value={
+          summaryLoading
+            ? loading
+            : paymentTotal !== null
+              ? fmtAmount(paymentTotal)
+              : "—"
+        }
         icon={paymentIcon}
       />
       <KpiCard

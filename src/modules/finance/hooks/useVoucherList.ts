@@ -50,12 +50,24 @@ export function useVoucherList() {
     setPage(1);
   }
 
-  const loadVouchers = useCallback(async function loadVouchers(params: LoadVouchersParams) {
+  const loadVouchers = useCallback(async function loadVouchers(
+    params: LoadVouchersParams,
+  ) {
     const {
-      page: pg, pageSize: ps, search: q, statusFilter: st,
-      channelFilter, channelParam, voucherChannel, sortCol: sc,
-      dateFrom: from, dateTo: to, amountMin, amountMax,
-      counterpartySourceFilter, employeeIdFilter,
+      page: pg,
+      pageSize: ps,
+      search: q,
+      statusFilter: st,
+      channelFilter,
+      channelParam,
+      voucherChannel,
+      sortCol: sc,
+      dateFrom: from,
+      dateTo: to,
+      amountMin,
+      amountMax,
+      counterpartySourceFilter,
+      employeeIdFilter,
     } = params;
 
     setLoading(true);
@@ -81,13 +93,17 @@ export function useVoucherList() {
         status: st || undefined,
         ...(from ? { posting_date_from: from } : {}),
         ...(to ? { posting_date_to: to } : {}),
-        ...(counterpartySourceFilter ? { counterparty_source: counterpartySourceFilter } : {}),
+        ...(counterpartySourceFilter
+          ? { counterparty_source: counterpartySourceFilter }
+          : {}),
         ...(employeeIdFilter ? { employee_id: employeeIdFilter } : {}),
       });
 
       if (needsClientFilter) {
         const filtered = res.items.filter(
-          (v) => (v as unknown as Record<string, unknown>)[channelParam] === channelFilter,
+          (v) =>
+            (v as unknown as Record<string, unknown>)[channelParam] ===
+            channelFilter,
         );
         const start = (pg - 1) * ps;
         const pageItems = filtered.slice(start, start + ps);
@@ -138,20 +154,23 @@ export function useVoucherAttachments() {
     Record<string, PaymentVoucherAttachment[]>
   >({});
 
-  const loadVoucherAttachments = useCallback(async function loadVoucherAttachments(items: PaymentVoucher[]) {
-    if (!items.length) {
-      setVoucherAttachments({});
-      return;
-    }
-    const pairs = await Promise.all(
-      items.map((v) =>
-        getVoucherAttachmentsApi(v.id)
-          .then((attachments) => [v.id, attachments] as const)
-          .catch(() => [v.id, []] as const),
-      ),
-    );
-    setVoucherAttachments(Object.fromEntries(pairs));
-  }, []);
+  const loadVoucherAttachments = useCallback(
+    async function loadVoucherAttachments(items: PaymentVoucher[]) {
+      if (!items.length) {
+        setVoucherAttachments({});
+        return;
+      }
+      const pairs = await Promise.all(
+        items.map((v) =>
+          getVoucherAttachmentsApi(v.id)
+            .then((attachments) => [v.id, attachments] as const)
+            .catch(() => [v.id, []] as const),
+        ),
+      );
+      setVoucherAttachments(Object.fromEntries(pairs));
+    },
+    [],
+  );
 
   return { voucherAttachments, loadVoucherAttachments };
 }

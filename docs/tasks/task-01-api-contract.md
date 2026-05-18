@@ -110,17 +110,23 @@ Thêm sau hàm `deletePaymentVoucherApi` (cuối block PaymentVoucher, trước 
 ```ts
 // ─── PaymentVoucher Status Transitions ───────────────────────────────────────
 
-export async function submitPaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/submit`,
-  );
+export async function submitPaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/submit`);
   return data.data;
 }
 
-export async function approvePaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/approve`,
-  );
+export async function approvePaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/approve`);
   return data.data;
 }
 
@@ -128,17 +134,20 @@ export async function rejectPaymentVoucherApi(
   id: string,
   note?: string,
 ): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/reject`,
-    note ? { note } : undefined,
-  );
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/reject`, note ? { note } : undefined);
   return data.data;
 }
 
-export async function postPaymentVoucherApi(id: string): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
-    `/api/v1/payment-vouchers/${id}/post`,
-  );
+export async function postPaymentVoucherApi(
+  id: string,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(`/api/v1/payment-vouchers/${id}/post`);
   return data.data;
 }
 
@@ -146,7 +155,10 @@ export async function cancelPaymentVoucherApi(
   id: string,
   cancel_reason?: string,
 ): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{ message: string; data: PaymentVoucher }>(
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+  }>(
     `/api/v1/payment-vouchers/${id}/cancel`,
     cancel_reason ? { cancel_reason } : undefined,
   );

@@ -283,19 +283,17 @@ export function PhongBan() {
                 t("phongban.headers.description"),
                 t("phongban.headers.status"),
                 "",
-              ].map(
-                (h, i) => (
-                  <th
-                    key={i}
-                    className={cn(
-                      "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-3 py-[9px] border-b border-border uppercase tracking-[0.05em]",
-                      i === 4 && "w-[80px]",
-                    )}
-                  >
-                    {h}
-                  </th>
-                ),
-              )}
+              ].map((h, i) => (
+                <th
+                  key={i}
+                  className={cn(
+                    "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-3 py-[9px] border-b border-border uppercase tracking-[0.05em]",
+                    i === 4 && "w-[80px]",
+                  )}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -398,8 +396,14 @@ export function PhongBan() {
         onClose={closeDrawer}
         confirmOnClose={isDirty && !editing}
         icon={<IconBuilding />}
-        title={editing ? t("phongban.drawer.editTitle") : t("phongban.drawer.createTitle")}
-        subtitle={editing ? editing.department_name : t("phongban.drawer.subtitle")}
+        title={
+          editing
+            ? t("phongban.drawer.editTitle")
+            : t("phongban.drawer.createTitle")
+        }
+        subtitle={
+          editing ? editing.department_name : t("phongban.drawer.subtitle")
+        }
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
           {
@@ -445,7 +449,9 @@ export function PhongBan() {
                 checked={form.is_active}
                 onCheckedChange={(v) => setField("is_active", v === true)}
               />
-              <span className="text-xs text-foreground">{t("status.active")}</span>
+              <span className="text-xs text-foreground">
+                {t("status.active")}
+              </span>
             </label>
           </DrawerField>
         </DrawerSection>
@@ -460,7 +466,10 @@ export function PhongBan() {
       <ConfirmModal
         open={!!deleteTarget}
         title={t("phongban.delete.title")}
-        message={t("phongban.delete.message").replace("{0}", deleteTarget?.department_name ?? "")}
+        message={t("phongban.delete.message").replace(
+          "{0}",
+          deleteTarget?.department_name ?? "",
+        )}
         confirmLabel={t("common.delete")}
         loading={deleting}
         onConfirm={handleDelete}

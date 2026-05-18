@@ -1,13 +1,16 @@
 # Kế hoạch: Sắp xếp Docs + Instructions để reuse tốt và scale dài hạn
 
 ## Goal
+
 Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
+
 - AI agents/model khác nhau vẫn theo cùng 1 bộ rule
 - Dễ tái sử dụng giữa feature
 - Dễ mở rộng khi team và scope lớn hơn
 - Giảm trùng lặp/mâu thuẫn giữa docs
 
 ## Current context / assumptions
+
 - Repo đã có nhiều docs rời rạc: `docs/app-structure.md`, `docs/tasks/*`, `docs/guidelines/*`, workflow docs theo feature.
 - `docs/app-structure.md` đã chứa nhiều rule quan trọng (Atomic Design, reuse-first, hook/page responsibilities, Tailwind structure, i18n).
 - Chưa có “instruction architecture” thống nhất cho nhiều agent entrypoint.
@@ -16,16 +19,19 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 ## Proposed architecture (đề xuất đích)
 
 ### 1) Một nguồn chuẩn cho kỹ thuật AI
+
 - Canonical technical rules: `docs/ai/technical-instructions.md`
 - Mục tiêu: tất cả adapter files chỉ trỏ về đây, không duplicate rule dài.
 
 ### 2) Tách docs theo 4 lớp trách nhiệm
+
 - `docs/ai/` → rules cho AI execution
 - `docs/architecture/` → kiến trúc hệ thống/FE patterns
 - `docs/workflows/` → quy trình thực thi theo loại việc (tasking, PRD, review)
 - `docs/features/` → docs theo domain/feature (finance, auth, system...)
 
 ### 3) Adapter entrypoints mỏng cho từng agent
+
 - Root: `AGENTS.md` (bắt buộc)
 - Tool-specific:
   - `.github/copilot-instructions.md`
@@ -34,6 +40,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Nội dung chỉ gồm: scope + pointer đến canonical + checklist bắt buộc ngắn.
 
 ### 4) Versioning + governance
+
 - `docs/ai/CHANGELOG.md` ghi thay đổi rules
 - Rule thay đổi phải có “effective date” + “migration note”
 - Có “deprecated docs” section để tránh dùng nhầm file cũ
@@ -41,6 +48,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 ## Step-by-step plan
 
 ### Bước 1: Thiết kế cây thư mục docs mới (không xoá vội)
+
 - Tạo cấu trúc mục tiêu:
   - `docs/ai/`
   - `docs/architecture/`
@@ -49,6 +57,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Giữ backward compatibility bằng cách để alias/redirect note ở file cũ trong giai đoạn chuyển tiếp.
 
 ### Bước 2: Đóng gói canonical technical instructions
+
 - Tạo `docs/ai/technical-instructions.md` với các section:
   1. Scope áp dụng (mọi model/agent)
   2. Non-negotiable rules
@@ -60,6 +69,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Nạp các rule cốt lõi từ `docs/app-structure.md` để tránh tồn tại 2 bộ luật mâu thuẫn.
 
 ### Bước 3: Chuẩn hoá bộ rule bạn yêu cầu
+
 - Atomic Design:
   - `shared/components` = atoms/molecules generic
   - `modules/<domain>/components` = organisms domain-specific
@@ -75,6 +85,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
   - Tránh business logic inline ở page
 
 ### Bước 4: Thiết kế doc index để scale
+
 - Tạo `docs/README.md` làm navigation hub:
   - Where to read first
   - Theo vai trò (AI agent, FE dev, reviewer)
@@ -82,6 +93,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Mỗi thư mục con có 1 `README.md` mô tả scope + file ưu tiên đọc.
 
 ### Bước 5: Chuẩn hóa workflow docs
+
 - Chuyển/chuẩn hóa:
   - `docs/guidelines/create-prd.md` → `docs/workflows/prd.md`
   - `docs/guidelines/generate-tasks.md` → `docs/workflows/task-generation.md`
@@ -89,6 +101,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Bổ sung mapping “workflow nào dùng khi nào”.
 
 ### Bước 6: Feature-doc strategy để reuse
+
 - Tạo chuẩn cho docs theo feature:
   - `docs/features/<feature>/overview.md`
   - `docs/features/<feature>/api-contract.md`
@@ -96,12 +109,14 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Với finance: quy chiếu các pattern từ `TienMat`/`TienGui` thành reusable guideline.
 
 ### Bước 7: Adapter files cho nhiều agent
+
 - `AGENTS.md` (root): entrypoint chính, ngắn gọn, trỏ canonical
 - `.github/copilot-instructions.md`: mirror tối giản
 - `CLAUDE.md`, `GEMINI.md` (nếu dùng): chỉ chứa pointer + hard constraints ngắn
 - Nguyên tắc: adapter tuyệt đối không chứa full rules dài.
 
 ### Bước 8: Chống drift (không đồng bộ)
+
 - Tạo checklist review docs:
   - canonical còn đúng?
   - adapter còn trỏ đúng?
@@ -109,11 +124,13 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - (Tuỳ chọn) thêm script CI nhẹ kiểm tra các pointer path.
 
 ### Bước 9: Rollout theo pha
+
 - Pha 1: publish structure + canonical + AGENTS
 - Pha 2: migrate workflow docs + update links
 - Pha 3: thêm CI/checks và governance cadence
 
 ## Files likely to change
+
 - `/opt/repos/liouni-erp-web/docs/README.md` (new)
 - `/opt/repos/liouni-erp-web/docs/ai/technical-instructions.md` (new, canonical)
 - `/opt/repos/liouni-erp-web/docs/ai/CHANGELOG.md` (new)
@@ -130,6 +147,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - `/opt/repos/liouni-erp-web/docs/guidelines/generate-tasks.md` (migrate or add deprecation note)
 
 ## Tests / validation
+
 - Navigation validation:
   - Từ `docs/README.md` truy cập được tất cả mục chính
 - Consistency validation:
@@ -139,6 +157,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
   - Chạy thử 2–3 prompt task với agent khác nhau để xác nhận rule được áp dụng nhất quán
 
 ## Risks & tradeoffs
+
 - Rủi ro migration làm đứt link tài liệu cũ
   - Giải pháp: deprecation notes + forward links
 - Rủi ro canonical quá dài, agent bỏ sót
@@ -146,6 +165,7 @@ Thiết kế lại cấu trúc tài liệu trong `liouni-erp-web` để:
 - Tradeoff: tốn công chuẩn hóa ban đầu, đổi lại giảm rất mạnh sai lệch khi scale team/agent
 
 ## Open questions cần bạn chốt
+
 1. Bạn muốn đặt mức ưu tiên đọc: `AGENTS.md` trước rồi `docs/ai/technical-instructions.md`, hay ngược lại?
 2. Có muốn bắt buộc CI check cho adapter pointer ngay từ phase 1 không?
 3. Có cần tách thêm `docs/features/finance/` ngay đợt đầu để chuẩn hóa pattern TienMat/TienGui luôn không?

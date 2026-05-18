@@ -19,7 +19,11 @@ Hai file cần sửa:
 
 ```ts
 // BEFORE (dòng 1):
-import type { AttachmentType, CounterpartyRole, VoucherStatus } from "@/modules/finance/api/financeApi";
+import type {
+  AttachmentType,
+  CounterpartyRole,
+  VoucherStatus,
+} from "@/modules/finance/api/financeApi";
 
 // AFTER:
 import type {
@@ -132,7 +136,10 @@ export interface BankVoucherForm {
 Thêm vào cuối file, sau `COUNTERPARTY_ROLE_OPTS`:
 
 ```ts
-export const COUNTERPARTY_SOURCE_OPTS: { value: CounterpartySource; label: string }[] = [
+export const COUNTERPARTY_SOURCE_OPTS: {
+  value: CounterpartySource;
+  label: string;
+}[] = [
   { value: "EXTERNAL", label: "Bên ngoài (đối tác)" },
   { value: "INTERNAL", label: "Nội bộ (nhân viên)" },
 ];
@@ -146,7 +153,9 @@ export const COUNTERPARTY_SOURCE_OPTS: { value: CounterpartySource; label: strin
 
 ```ts
 // BEFORE:
-export function emptyForm(vtype: "CASH_RECEIPT" | "CASH_PAYMENT"): CashVoucherForm {
+export function emptyForm(
+  vtype: "CASH_RECEIPT" | "CASH_PAYMENT",
+): CashVoucherForm {
   return {
     voucher_no: "",
     voucher_type: vtype,
@@ -168,7 +177,9 @@ export function emptyForm(vtype: "CASH_RECEIPT" | "CASH_PAYMENT"): CashVoucherFo
 }
 
 // AFTER — thêm 4 field mới với default EXTERNAL:
-export function emptyForm(vtype: "CASH_RECEIPT" | "CASH_PAYMENT"): CashVoucherForm {
+export function emptyForm(
+  vtype: "CASH_RECEIPT" | "CASH_PAYMENT",
+): CashVoucherForm {
   return {
     voucher_no: "",
     voucher_type: vtype,
@@ -223,7 +234,7 @@ export function buildForm(v: PaymentVoucher): CashVoucherForm {
 export function buildForm(v: PaymentVoucher): CashVoucherForm {
   const employeeId =
     typeof v.employee_id === "object" && v.employee_id !== null
-      ? v.employee_id.id ?? ""
+      ? (v.employee_id.id ?? "")
       : (v.employee_id ?? "");
   return {
     voucher_no: v.voucher_no,
@@ -238,7 +249,8 @@ export function buildForm(v: PaymentVoucher): CashVoucherForm {
     counterparty_tax_code_snapshot: v.counterparty_tax_code_snapshot ?? "",
     counterparty_address_snapshot: v.counterparty_address_snapshot ?? "",
     counterparty_phone_snapshot: v.counterparty_phone_snapshot ?? "",
-    counterparty_identity_no_snapshot: v.counterparty_identity_no_snapshot ?? "",
+    counterparty_identity_no_snapshot:
+      v.counterparty_identity_no_snapshot ?? "",
     counterparty_role: v.counterparty_role ?? "",
     debit_account_id: v.debit_account_id,
     credit_account_id: v.credit_account_id,
@@ -336,7 +348,7 @@ export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
 export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
   const employeeId =
     typeof v.employee_id === "object" && v.employee_id !== null
-      ? v.employee_id.id ?? ""
+      ? (v.employee_id.id ?? "")
       : (v.employee_id ?? "");
   return {
     voucher_no: v.voucher_no,
@@ -351,7 +363,8 @@ export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
     counterparty_tax_code_snapshot: v.counterparty_tax_code_snapshot ?? "",
     counterparty_address_snapshot: v.counterparty_address_snapshot ?? "",
     counterparty_phone_snapshot: v.counterparty_phone_snapshot ?? "",
-    counterparty_identity_no_snapshot: v.counterparty_identity_no_snapshot ?? "",
+    counterparty_identity_no_snapshot:
+      v.counterparty_identity_no_snapshot ?? "",
     counterparty_role: v.counterparty_role ?? "",
     beneficiary_bank_account_id: v.beneficiary_bank_account_id ?? "",
     debit_account_id: v.debit_account_id,

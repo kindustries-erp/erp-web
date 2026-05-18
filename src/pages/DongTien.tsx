@@ -25,20 +25,39 @@ export function DongTien() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    const active = (tab && ["tong-hop", "tien-mat", "uy-nhiem-chi"].includes(tab)) ? tab : "tong-hop";
+    const active =
+      tab && ["tong-hop", "tien-mat", "uy-nhiem-chi"].includes(tab)
+        ? tab
+        : "tong-hop";
     setActiveTab(active);
-    
+
     if (active === "tong-hop") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cashflowOverview"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.cashflow"],
+        ["breadcrumb.cashflowOverview"],
+      ]);
     } else if (active === "tien-mat") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cash"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.cashflow"],
+        ["breadcrumb.cash"],
+      ]);
     } else if (active === "uy-nhiem-chi") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.bank"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.cashflow"],
+        ["breadcrumb.bank"],
+      ]);
     }
 
     if (!tab) {
       params.set("tab", "tong-hop");
-      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?${params.toString()}`,
+      );
     }
   }, [setCustomBreadcrumbs]);
 
@@ -47,17 +66,27 @@ export function DongTien() {
     const url = new URL(window.location.href);
     url.searchParams.set("tab", val);
     history.pushState(null, "", url.toString());
-    
+
     if (val === "tong-hop") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cashflowOverview"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.cashflow"],
+        ["breadcrumb.cashflowOverview"],
+      ]);
     } else if (val === "tien-mat") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.cash"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.cashflow"],
+        ["breadcrumb.cash"],
+      ]);
     } else if (val === "uy-nhiem-chi") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.cashflow"], ["breadcrumb.bank"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.cashflow"],
+        ["breadcrumb.bank"],
+      ]);
     }
   };
-  
-
 
   const barIn = "#e8e8e4";
   const barOut = "#1a1a1a";
@@ -126,24 +155,80 @@ export function DongTien() {
           </BtnPrimary>
           {activeTab === "tien-mat" && (
             <>
-              <BtnPrimary onClick={() => tienMatRef.current?.openNew("CASH_RECEIPT")}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              <BtnPrimary
+                onClick={() => tienMatRef.current?.openNew("CASH_RECEIPT")}
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
                 {t("tienmat.createReceipt")}
               </BtnPrimary>
-              <BtnPrimary onClick={() => tienMatRef.current?.openNew("CASH_PAYMENT")}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              <BtnPrimary
+                onClick={() => tienMatRef.current?.openNew("CASH_PAYMENT")}
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
                 {t("tienmat.createPayment")}
               </BtnPrimary>
             </>
           )}
           {activeTab === "uy-nhiem-chi" && (
             <>
-              <BtnPrimary onClick={() => tienGuiRef.current?.openNew("BANK_RECEIPT")}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              <BtnPrimary
+                onClick={() => tienGuiRef.current?.openNew("BANK_RECEIPT")}
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
                 {t("tiengui.createUNT")}
               </BtnPrimary>
-              <BtnPrimary onClick={() => tienGuiRef.current?.openNew("BANK_PAYMENT")}>
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              <BtnPrimary
+                onClick={() => tienGuiRef.current?.openNew("BANK_PAYMENT")}
+              >
+                <svg
+                  className="w-3.5 h-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
                 {t("tiengui.createUNC")}
               </BtnPrimary>
             </>
@@ -158,8 +243,7 @@ export function DongTien() {
       activeTab={activeTab}
       onTabChange={handleTabChange}
     >
-
-      <div className={activeTab === 'tong-hop' ? '' : 'hidden'}>
+      <div className={activeTab === "tong-hop" ? "" : "hidden"}>
         {/* KPIs */}
         <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4 mt-4">
           <KpiCard
@@ -311,11 +395,11 @@ export function DongTien() {
         </Panel>
       </div>
 
-      <div className={activeTab === 'tien-mat' ? '' : 'hidden'}>
+      <div className={activeTab === "tien-mat" ? "" : "hidden"}>
         <TienMat ref={tienMatRef} hideHeader />
       </div>
 
-      <div className={activeTab === 'uy-nhiem-chi' ? '' : 'hidden'}>
+      <div className={activeTab === "uy-nhiem-chi" ? "" : "hidden"}>
         <TienGui ref={tienGuiRef} hideHeader />
       </div>
     </PageWithTabsLayout>
@@ -418,9 +502,18 @@ function Btn({ children }: { children: React.ReactNode }) {
     </button>
   );
 }
-function BtnPrimary({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+function BtnPrimary({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
   return (
-    <button onClick={onClick} className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap">
+    <button
+      onClick={onClick}
+      className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
+    >
       {children}
     </button>
   );

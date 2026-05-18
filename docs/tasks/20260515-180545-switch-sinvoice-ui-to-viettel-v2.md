@@ -1,14 +1,17 @@
 # Task: Switch SInvoice UI surface to Viettel v2.49
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: ENHANCE
 - Mục tiêu: Chuyển hẳn UI Hóa đơn điện tử sang dùng surface `sinvoice` mới đã được remap sang Viettel v2.49, không cần toggle; giữ legacy v1 chỉ để backend tham chiếu/comment lại.
 - Bối cảnh/ngữ cảnh: User đã duyệt thực thi. API scope đi kèm là đổi default route `sinvoice` sang Viettel v2.49. UI phải phản ánh đúng draft-only safety, không thêm toggle, không mở actions phát hành/ký số.
 
 ## Goal
+
 Đảm bảo ERP Web dùng đúng contract sau khi backend `sinvoice` chuyển hẳn sang Viettel v2.49, đồng thời giữ UX an toàn draft-only và không làm hỏng các tab tax portal hiện có.
 
 ## Scope
+
 - In-scope:
   - Rà `HoaDonDienTu.tsx`, `SinvoiceDraftModal`, `sinvoiceApi.ts`
   - Cập nhật text/flow để surface `sinvoice` thể hiện là Viettel v2 draft-only
@@ -20,11 +23,13 @@
   - Đổi schema DB/directus
 
 ## Relevant Files
+
 - `src/pages/HoaDonDienTu.tsx` - page orchestration Hóa đơn điện tử
 - `src/modules/accounting/api/sinvoiceApi.ts` - API contract client
 - `src/modules/accounting/components/SinvoiceDraftModal.tsx` - shared modal draft-only
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `einvoices`
   - `sinvoice_configs`
@@ -39,6 +44,7 @@
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): N/A
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done
 - [x] 3.0 UI gate done
@@ -55,6 +61,7 @@
   - [x] 6.3 Build + deploy + smoke runtime lại
 
 ## Validation Evidence
+
 - DB precheck result:
   - `DB_READY` theo task API và trạng thái schema/config hiện có
 - Build:
@@ -71,9 +78,11 @@
   - xác nhận page Hóa đơn điện tử đã đổi wording public-facing sang Viettel v2.49 draft-only, giữ nguyên tab tax portal và wording IN/OUT đã tách rõ khỏi luồng draft-only
 
 ## Lessons Learned
+
 - API surface remap có thể làm lệch wording UI hàng loạt; giữ tên route/hàm nội bộ để tránh lan phạm vi refactor, chỉ đổi text public-facing và typing cần thiết.
 
 ## Commit/Push Status
+
 - Web repo:
   - commit: `eeb4216` — `Align einvoice UI with Viettel v2 surface`
   - push: `origin/master` success

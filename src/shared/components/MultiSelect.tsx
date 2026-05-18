@@ -81,7 +81,9 @@ export function MultiSelect({
         >
           <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
             {selected.length === 0 ? (
-              <span className="text-[color:var(--muted-fg)]">{placeholder}</span>
+              <span className="text-[color:var(--muted-fg)]">
+                {placeholder}
+              </span>
             ) : (
               selected.map((o) => (
                 <Badge

@@ -1,12 +1,13 @@
 # Task: FIX settings pages i18n + URL slug + breadcrumb + layout consistency
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: FIX
 - Mục tiêu:
-  1) Fix bug i18n translation cho 2 page `thietlap-quy` và `thietlap-nh`.
-  2) Đổi URL page thành slug chuẩn: `thiet-lap-quy`, `thiet-lap-ngan-hang`, `thiet-lap-tai-khoan`.
-  3) Fix breadcrumb cho các page trên, tham khảo pattern page `tien-mat`.
-  4) Căn layout tổng thể 3 page mới theo pattern `tien-mat`: bỏ `max-width`, nhưng phải đảm bảo responsive.
+  1. Fix bug i18n translation cho 2 page `thietlap-quy` và `thietlap-nh`.
+  2. Đổi URL page thành slug chuẩn: `thiet-lap-quy`, `thiet-lap-ngan-hang`, `thiet-lap-tai-khoan`.
+  3. Fix breadcrumb cho các page trên, tham khảo pattern page `tien-mat`.
+  4. Căn layout tổng thể 3 page mới theo pattern `tien-mat`: bỏ `max-width`, nhưng phải đảm bảo responsive.
 - Bối cảnh/ngữ cảnh:
   - Hiện tại route key nội bộ là `thietlap-quy|thietlap-nh|thietlap-tk`, URL slug public chưa theo chuẩn gạch nối đầy đủ.
   - 2 page `Quỹ` và `Ngân hàng` còn lỗi/thiếu i18n key hiển thị.
@@ -14,9 +15,11 @@
   - 3 page mới đang dùng wrapper `max-w-[1400px]`, user muốn full-width theo shell hiện có.
 
 ## Goal
+
 Hoàn tất kế hoạch chi tiết theo gate DB -> API -> UI để sửa i18n + slug URL + breadcrumb + layout cho các page Thiết lập, không làm thay đổi DB schema/API contract và không gây regression điều hướng.
 
 ## Scope
+
 - In-scope:
   - `src/core/locale/{vi,en}.ts`
   - `src/modules/settings/components/{QuyTab,NHTab,TKTab}.tsx`
@@ -32,8 +35,9 @@ Hoàn tất kế hoạch chi tiết theo gate DB -> API -> UI để sửa i18n +
   - Refactor module ngoài phạm vi Thiết lập & cơ chế breadcrumb liên quan.
 
 ## Relevant Files
-- `src/core/locale/vi.ts` - nguồn i18n tiếng Việt cho settings.*
-- `src/core/locale/en.ts` - nguồn i18n tiếng Anh cho settings.*
+
+- `src/core/locale/vi.ts` - nguồn i18n tiếng Việt cho settings.\*
+- `src/core/locale/en.ts` - nguồn i18n tiếng Anh cho settings.\*
 - `src/modules/settings/components/QuyTab.tsx` - text/label/table cho Quỹ
 - `src/modules/settings/components/NHTab.tsx` - text/label/table cho Ngân hàng
 - `src/modules/settings/components/TKTab.tsx` - tham chiếu namespace settings.tk để đồng bộ
@@ -47,6 +51,7 @@ Hoàn tất kế hoạch chi tiết theo gate DB -> API -> UI để sửa i18n +
 - Files breadcrumb của page `tien-mat` - chuẩn tham chiếu hành vi UI/UX
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `cash_funds`
   - `bank_accounts`
@@ -61,18 +66,21 @@ Hoàn tất kế hoạch chi tiết theo gate DB -> API -> UI để sửa i18n +
 ## Phân rã kế hoạch theo thứ tự DB -> API -> UI
 
 ### Gate 1 — DB (read-only verification)
+
 1. Verify 3 collection nêu trên vẫn tồn tại và các field chính không đổi so với contract UI đang dùng.
 2. Xác nhận task này không cần migration, không cần seed bắt buộc.
 3. Chốt Gate 1 = `DB_READY`.
-Deliverable: ghi evidence DB precheck vào task.
+   Deliverable: ghi evidence DB precheck vào task.
 
 ### Gate 2 — API/workflow gate
+
 1. Kiểm tra các API call trong `QuyTab/NHTab/TKTab` không phụ thuộc URL slug, chỉ phụ thuộc API endpoint/domain service.
 2. Xác nhận việc đổi slug URL chỉ tác động layer routing (`pageUrl`, sidebar navigate, parse URL), không đổi request payload/response.
 3. Chốt no-impact với backend workflow.
-Deliverable: ghi rõ "API contract unchanged" + file evidence.
+   Deliverable: ghi rõ "API contract unchanged" + file evidence.
 
 ### Gate 3 — UI gate
+
 1. i18n fix:
    - Rà toàn bộ key đang hiển thị tại `QuyTab` và `NHTab`, đảm bảo dùng namespace `settings.quy.*` và `settings.nh.*` nhất quán.
    - Bổ sung key thiếu ở `vi.ts` và `en.ts` (title, desc, table headers, placeholders, errors...).
@@ -92,6 +100,7 @@ Deliverable: ghi rõ "API contract unchanged" + file evidence.
    - Verify responsive ở breakpoint mobile/tablet/desktop: không vỡ table/drawer/header.
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [ ] 2.0 Backend workflow/API gate done
 - [ ] 3.0 UI gate done
@@ -104,6 +113,7 @@ Deliverable: ghi rõ "API contract unchanged" + file evidence.
   - [ ] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result:
   - `DB_READY` (task không yêu cầu thay đổi schema/data).
 - `npx tsc --noEmit`:
@@ -112,6 +122,7 @@ Deliverable: ghi rõ "API contract unchanged" + file evidence.
   - Sẽ bổ sung sau khi thực thi.
 
 ## Risk + Rollback
+
 - Risk 1: Đổi slug URL có thể làm mismatch giữa `pathToPage` và `pageToPath`, gây lỗi refresh/deep-link.
 - Risk 2: Breadcrumb fix có thể ảnh hưởng các page dùng chung component breadcrumb.
 - Risk 3: Bỏ `max-width` có thể gây tràn ngang ở table trên màn hình nhỏ.
@@ -120,6 +131,7 @@ Deliverable: ghi rõ "API contract unchanged" + file evidence.
   - Nếu regression nghiêm trọng: revert toàn bộ commit task để quay về trạng thái ổn định trước đó.
 
 ## Danh sách evidence cần thu thập
+
 1. Diff i18n (`vi.ts`, `en.ts`) thể hiện fix key cho `settings.quy` và `settings.nh`.
 2. Diff routing URL (`pageUrl.ts`, nếu có file liên quan) thể hiện slug mới `thiet-lap-*`.
 3. Diff breadcrumb implementation và ảnh hưởng sang 3 page Thiết lập.
@@ -133,5 +145,6 @@ Deliverable: ghi rõ "API contract unchanged" + file evidence.
 7. Commit hash + push status + evidence deploy (khi được phép thực thi/deploy).
 
 ## San sang thuc thi
+
 Ke hoach da du chi tiet theo ERP PLAN mode (DB -> API -> UI), da co Gate 0 = `DB_READY`, checklist realtime, gate validations, risk/rollback va danh sach evidence.
 Cho ban xac nhan "Thuc thi" de bat dau sua code/test/deploy.

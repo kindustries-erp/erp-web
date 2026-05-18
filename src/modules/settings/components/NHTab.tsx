@@ -21,13 +21,7 @@ import {
   type ChartOfAccount,
 } from "@/modules/accounting/api/catalogApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import {
-  SectionHeader,
-  ErrorBanner,
-  IconEdit,
-  IconTrash,
-} from "./shared";
-
+import { SectionHeader, ErrorBanner, IconEdit, IconTrash } from "./shared";
 
 interface BankForm {
   bank_account_code: string;
@@ -62,7 +56,9 @@ function buildBankForm(b: CompanyBankAccount): BankForm {
 export function NHTab() {
   const [items, setItems] = useState<CompanyBankAccount[]>([]);
   const [coaItems, setCoaItems] = useState<ChartOfAccount[]>([]);
-  const [branchOptions, setBranchOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [branchOptions, setBranchOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -74,13 +70,19 @@ export function NHTab() {
   const [form, setForm] = useState<BankForm>(emptyBankForm);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CompanyBankAccount | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CompanyBankAccount | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState(false);
   const t = useT();
 
   useEffect(() => {
-    getChartOfAccountsApi().then(setCoaItems).catch(() => {});
-    getBranchOptionsApi().then(setBranchOptions).catch(() => {});
+    getChartOfAccountsApi()
+      .then(setCoaItems)
+      .catch(() => {});
+    getBranchOptionsApi()
+      .then(setBranchOptions)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -92,7 +94,10 @@ export function NHTab() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getCompanyBankAccountsPagedApi({ page: pg, pageSize: ps });
+      const res = await getCompanyBankAccountsPagedApi({
+        page: pg,
+        pageSize: ps,
+      });
       setItems(res.items);
       setTotal(res.total);
       setTotalPages(res.totalPages);
@@ -103,14 +108,36 @@ export function NHTab() {
     }
   }
 
-  function handlePageSize(ps: number) { setPageSize(ps); setPage(1); }
-  function openNew() { setEditing(null); setForm(emptyBankForm); setSaveError(null); setDrawerOpen(true); }
-  function openEdit(item: CompanyBankAccount) { setEditing(item); setForm(buildBankForm(item)); setSaveError(null); setDrawerOpen(true); }
-  function closeDrawer() { setDrawerOpen(false); setEditing(null); setSaveError(null); }
-  const setField = <K extends keyof BankForm>(k: K, v: BankForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  function handlePageSize(ps: number) {
+    setPageSize(ps);
+    setPage(1);
+  }
+  function openNew() {
+    setEditing(null);
+    setForm(emptyBankForm);
+    setSaveError(null);
+    setDrawerOpen(true);
+  }
+  function openEdit(item: CompanyBankAccount) {
+    setEditing(item);
+    setForm(buildBankForm(item));
+    setSaveError(null);
+    setDrawerOpen(true);
+  }
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setEditing(null);
+    setSaveError(null);
+  }
+  const setField = <K extends keyof BankForm>(k: K, v: BankForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function handleSave() {
-    if (!form.bank_name.trim() || !form.account_number.trim() || !form.account_holder.trim()) {
+    if (
+      !form.bank_name.trim() ||
+      !form.account_number.trim() ||
+      !form.account_holder.trim()
+    ) {
       setSaveError(t("settings.nh.requiredError"));
       return;
     }
@@ -135,8 +162,15 @@ export function NHTab() {
       if (!editing && page !== 1) setPage(1);
       else loadItems(page, pageSize);
     } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } }; message?: string };
-      setSaveError(err?.response?.data?.message || err?.message || t("settings.tk.unknownError"));
+      const err = e as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      setSaveError(
+        err?.response?.data?.message ||
+          err?.message ||
+          t("settings.tk.unknownError"),
+      );
     } finally {
       setSaving(false);
     }
@@ -159,18 +193,68 @@ export function NHTab() {
 
   const isDirty = !!form.bank_name.trim() || !!form.account_number.trim();
   const columns: DataTableColumn<CompanyBankAccount>[] = [
-    { key: "bank_account_code", header: t("settings.nh.headers.bankAccountCode"), cell: (b) => b.bank_account_code || "—", className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
-    { key: "bank_name", header: t("settings.nh.headers.bankName"), cell: (b) => b.bank_name, className: "font-medium", skeletonClassName: "w-32" },
-    { key: "account_number", header: t("settings.nh.headers.accountNumber"), cell: (b) => b.account_number, skeletonClassName: "w-28" },
-    { key: "account_holder", header: t("settings.nh.headers.accountHolder"), cell: (b) => b.account_holder, skeletonClassName: "w-28" },
-    { key: "accounting_account_id", header: t("settings.tk.headers.accountingAccount"), cell: (b) => coaItems.find((c) => c.id === b.accounting_account_id)?.account_code || "—", skeletonClassName: "w-20" },
-    { key: "currency", header: t("settings.tk.headers.currency"), cell: (b) => b.currency, className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-12" },
     {
-      key: "actions", header: "", headerClassName: "w-[80px]", skeletonClassName: "",
+      key: "bank_account_code",
+      header: t("settings.nh.headers.bankAccountCode"),
+      cell: (b) => b.bank_account_code || "—",
+      className: "font-mono text-[color:var(--muted-fg)]",
+      skeletonClassName: "w-16",
+    },
+    {
+      key: "bank_name",
+      header: t("settings.nh.headers.bankName"),
+      cell: (b) => b.bank_name,
+      className: "font-medium",
+      skeletonClassName: "w-32",
+    },
+    {
+      key: "account_number",
+      header: t("settings.nh.headers.accountNumber"),
+      cell: (b) => b.account_number,
+      skeletonClassName: "w-28",
+    },
+    {
+      key: "account_holder",
+      header: t("settings.nh.headers.accountHolder"),
+      cell: (b) => b.account_holder,
+      skeletonClassName: "w-28",
+    },
+    {
+      key: "accounting_account_id",
+      header: t("settings.tk.headers.accountingAccount"),
+      cell: (b) =>
+        coaItems.find((c) => c.id === b.accounting_account_id)?.account_code ||
+        "—",
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "currency",
+      header: t("settings.tk.headers.currency"),
+      cell: (b) => b.currency,
+      className: "text-[color:var(--muted-fg)]",
+      skeletonClassName: "w-12",
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-[80px]",
+      skeletonClassName: "",
       cell: (b) => (
         <div className="flex gap-[5px] justify-end">
-          <button title={t("common.edit")} onClick={() => openEdit(b)} className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"><IconEdit /></button>
-          <button title={t("common.delete")} onClick={() => setDeleteTarget(b)} className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"><IconTrash /></button>
+          <button
+            title={t("common.edit")}
+            onClick={() => openEdit(b)}
+            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
+          >
+            <IconEdit />
+          </button>
+          <button
+            title={t("common.delete")}
+            onClick={() => setDeleteTarget(b)}
+            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
+          >
+            <IconTrash />
+          </button>
         </div>
       ),
     },
@@ -178,41 +262,115 @@ export function NHTab() {
 
   return (
     <div>
-      <SectionHeader title={t("settings.nh.title")} desc={t("settings.nh.desc")} icon={<Landmark className="h-4 w-4" />} onAdd={openNew} />
-      <DataTable items={items} columns={columns} getRowKey={(b) => b.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={750} loadingRows={4} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
+      <SectionHeader
+        title={t("settings.nh.title")}
+        desc={t("settings.nh.desc")}
+        icon={<Landmark className="h-4 w-4" />}
+        onAdd={openNew}
+      />
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(b) => b.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        minWidth={750}
+        loadingRows={4}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={handlePageSize}
+      />
 
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
         confirmOnClose={isDirty && !editing}
-        title={editing ? t("settings.nh.editTitle") : t("settings.nh.createTitle")}
+        title={
+          editing ? t("settings.nh.editTitle") : t("settings.nh.createTitle")
+        }
         subtitle={editing ? editing.bank_name : t("settings.nh.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
-          { label: editing ? t("common.saveChanges") : t("common.addNew"), primary: true, loading: saving, disabled: saving, onClick: handleSave },
+          {
+            label: editing ? t("common.saveChanges") : t("common.addNew"),
+            primary: true,
+            loading: saving,
+            disabled: saving,
+            onClick: handleSave,
+          },
         ]}
       >
         <DrawerSection title={t("settings.nh.sectionInfo")}>
           <DrawerField label={t("settings.nh.headers.bankAccountCode")}>
-            <input type="text" className={inputCls} value={form.bank_account_code} onChange={(e) => setField("bank_account_code", e.target.value)} placeholder={t("settings.nh.codePlaceholder")} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.bank_account_code}
+              onChange={(e) => setField("bank_account_code", e.target.value)}
+              placeholder={t("settings.nh.codePlaceholder")}
+            />
           </DrawerField>
           <DrawerField label={t("settings.nh.headers.bankName")} required>
-            <input type="text" className={inputCls} value={form.bank_name} onChange={(e) => setField("bank_name", e.target.value)} placeholder={t("settings.nh.bankNamePlaceholder")} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.bank_name}
+              onChange={(e) => setField("bank_name", e.target.value)}
+              placeholder={t("settings.nh.bankNamePlaceholder")}
+            />
           </DrawerField>
           <DrawerField label={t("settings.nh.headers.accountNumber")} required>
-            <input type="text" className={inputCls} value={form.account_number} onChange={(e) => setField("account_number", e.target.value)} placeholder={t("settings.nh.accountNumberPlaceholder")} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.account_number}
+              onChange={(e) => setField("account_number", e.target.value)}
+              placeholder={t("settings.nh.accountNumberPlaceholder")}
+            />
           </DrawerField>
           <DrawerField label={t("settings.nh.headers.accountHolder")} required>
-            <input type="text" className={inputCls} value={form.account_holder} onChange={(e) => setField("account_holder", e.target.value)} placeholder={t("settings.nh.accountHolderPlaceholder")} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.account_holder}
+              onChange={(e) => setField("account_holder", e.target.value)}
+              placeholder={t("settings.nh.accountHolderPlaceholder")}
+            />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.accountingAccount")}>
-            <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("common.selectAccount")} />
+            <Combobox
+              options={coaItems.map((c) => ({
+                value: c.id,
+                label: `${c.account_code} — ${c.account_name}`,
+              }))}
+              value={form.accounting_account_id}
+              onChange={(v) => setField("accounting_account_id", v)}
+              placeholder={t("common.selectAccount")}
+            />
           </DrawerField>
           <DrawerField label="Chi nhánh">
-            <Combobox options={branchOptions} value={form.branch_id} onChange={(v) => setField("branch_id", v)} placeholder="Tất cả chi nhánh" allowClear={true} />
+            <Combobox
+              options={branchOptions}
+              value={form.branch_id}
+              onChange={(v) => setField("branch_id", v)}
+              placeholder="Tất cả chi nhánh"
+              allowClear={true}
+            />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
-            <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />
+            <Combobox
+              options={[
+                { value: "VND", label: "VND" },
+                { value: "USD", label: "USD" },
+              ]}
+              value={form.currency}
+              onChange={(v) => setField("currency", v || "VND")}
+              allowClear={false}
+            />
           </DrawerField>
         </DrawerSection>
         {saveError && <ErrorBanner msg={saveError} />}
@@ -221,7 +379,10 @@ export function NHTab() {
       <ConfirmModal
         open={!!deleteTarget}
         title={t("confirmModal.defaultTitle")}
-        message={t("settings.nh.deleteMessage").replace("{0}", deleteTarget?.bank_name ?? "")}
+        message={t("settings.nh.deleteMessage").replace(
+          "{0}",
+          deleteTarget?.bank_name ?? "",
+        )}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}
         onConfirm={handleDelete}

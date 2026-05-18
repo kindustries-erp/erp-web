@@ -100,7 +100,9 @@ export function TKTab() {
   const t = useT();
 
   useEffect(() => {
-    getChartOfAccountsApi().then(setAllItems).catch(() => {});
+    getChartOfAccountsApi()
+      .then(setAllItems)
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -112,7 +114,11 @@ export function TKTab() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getChartOfAccountsPagedApi({ page: pg, pageSize: ps, search: q || undefined });
+      const res = await getChartOfAccountsPagedApi({
+        page: pg,
+        pageSize: ps,
+        search: q || undefined,
+      });
       setItems(res.items);
       setTotal(res.total);
       setTotalPages(res.totalPages);
@@ -132,11 +138,29 @@ export function TKTab() {
     }, 400);
   }
 
-  function handlePageSize(ps: number) { setPageSize(ps); setPage(1); }
-  function openNew() { setEditing(null); setForm(emptyCoaForm); setSaveError(null); setDrawerOpen(true); }
-  function openEdit(item: ChartOfAccount) { setEditing(item); setForm(buildCoaForm(item)); setSaveError(null); setDrawerOpen(true); }
-  function closeDrawer() { setDrawerOpen(false); setEditing(null); setSaveError(null); }
-  const setField = <K extends keyof CoaForm>(k: K, v: CoaForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  function handlePageSize(ps: number) {
+    setPageSize(ps);
+    setPage(1);
+  }
+  function openNew() {
+    setEditing(null);
+    setForm(emptyCoaForm);
+    setSaveError(null);
+    setDrawerOpen(true);
+  }
+  function openEdit(item: ChartOfAccount) {
+    setEditing(item);
+    setForm(buildCoaForm(item));
+    setSaveError(null);
+    setDrawerOpen(true);
+  }
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setEditing(null);
+    setSaveError(null);
+  }
+  const setField = <K extends keyof CoaForm>(k: K, v: CoaForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
 
   async function handleSave() {
     if (!form.account_code.trim() || !form.account_name.trim()) {
@@ -160,7 +184,9 @@ export function TKTab() {
       } else {
         await createChartOfAccountApi(dto);
       }
-      getChartOfAccountsApi().then(setAllItems).catch(() => {});
+      getChartOfAccountsApi()
+        .then(setAllItems)
+        .catch(() => {});
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else loadItems(page, pageSize, search);
@@ -188,18 +214,72 @@ export function TKTab() {
 
   const isDirty = !!form.account_code.trim() || !!form.account_name.trim();
   const columns: DataTableColumn<ChartOfAccount>[] = [
-    { key: "account_code", header: t("settings.tk.headers.accountCode"), cell: (c) => c.account_code, className: "font-mono text-[color:var(--muted-fg)]", skeletonClassName: "w-16" },
-    { key: "account_name", header: t("settings.tk.headers.accountName"), cell: (c) => c.account_name, className: "font-medium", skeletonClassName: "w-40" },
-    { key: "account_type", header: t("settings.tk.headers.accountType"), cell: (c) => ACC_TYPES.find((a) => a.value === c.account_type)?.label ?? c.account_type, skeletonClassName: "w-24" },
-    { key: "normal_balance", header: t("settings.tk.headers.normalBalance"), cell: (c) => NORMAL_BALANCE_OPTS.find((o) => o.value === c.normal_balance)?.label ?? c.normal_balance ?? "—", className: "text-[color:var(--muted-fg)]", skeletonClassName: "w-20" },
-    { key: "level", header: t("settings.tk.headers.level"), cell: (c) => String(c.level ?? "—"), className: "text-center", skeletonClassName: "w-8" },
-    { key: "is_cash_account", header: t("settings.tk.headers.cashAccount"), cell: (c) => <TagCell active={!!c.is_cash_account} />, skeletonClassName: "w-16" },
     {
-      key: "actions", header: "", headerClassName: "w-[80px]", skeletonClassName: "",
+      key: "account_code",
+      header: t("settings.tk.headers.accountCode"),
+      cell: (c) => c.account_code,
+      className: "font-mono text-[color:var(--muted-fg)]",
+      skeletonClassName: "w-16",
+    },
+    {
+      key: "account_name",
+      header: t("settings.tk.headers.accountName"),
+      cell: (c) => c.account_name,
+      className: "font-medium",
+      skeletonClassName: "w-40",
+    },
+    {
+      key: "account_type",
+      header: t("settings.tk.headers.accountType"),
+      cell: (c) =>
+        ACC_TYPES.find((a) => a.value === c.account_type)?.label ??
+        c.account_type,
+      skeletonClassName: "w-24",
+    },
+    {
+      key: "normal_balance",
+      header: t("settings.tk.headers.normalBalance"),
+      cell: (c) =>
+        NORMAL_BALANCE_OPTS.find((o) => o.value === c.normal_balance)?.label ??
+        c.normal_balance ??
+        "—",
+      className: "text-[color:var(--muted-fg)]",
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "level",
+      header: t("settings.tk.headers.level"),
+      cell: (c) => String(c.level ?? "—"),
+      className: "text-center",
+      skeletonClassName: "w-8",
+    },
+    {
+      key: "is_cash_account",
+      header: t("settings.tk.headers.cashAccount"),
+      cell: (c) => <TagCell active={!!c.is_cash_account} />,
+      skeletonClassName: "w-16",
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "w-[80px]",
+      skeletonClassName: "",
       cell: (c) => (
         <div className="flex gap-[5px] justify-end">
-          <button title={t("common.edit")} onClick={() => openEdit(c)} className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"><IconEdit /></button>
-          <button title={t("common.delete")} onClick={() => setDeleteTarget(c)} className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"><IconTrash /></button>
+          <button
+            title={t("common.edit")}
+            onClick={() => openEdit(c)}
+            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
+          >
+            <IconEdit />
+          </button>
+          <button
+            title={t("common.delete")}
+            onClick={() => setDeleteTarget(c)}
+            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
+          >
+            <IconTrash />
+          </button>
         </div>
       ),
     },
@@ -207,59 +287,128 @@ export function TKTab() {
 
   return (
     <div>
-      <SectionHeader title={t("settings.tk.title")} desc={t("settings.tk.desc")} icon={<Settings className="h-4 w-4" />} onAdd={openNew} />
+      <SectionHeader
+        title={t("settings.tk.title")}
+        desc={t("settings.tk.desc")}
+        icon={<Settings className="h-4 w-4" />}
+        onAdd={openNew}
+      />
       <div className="mb-3">
-        <SearchInput value={search} onChange={handleSearch} placeholder={t("settings.tk.searchPlaceholder")} />
+        <SearchInput
+          value={search}
+          onChange={handleSearch}
+          placeholder={t("settings.tk.searchPlaceholder")}
+        />
       </div>
-      <DataTable items={items} columns={columns} getRowKey={(c) => c.id} loading={loading} error={fetchError} emptyLabel={t("common.noData")} minWidth={700} loadingRows={4} page={page} pageSize={pageSize} total={total} totalPages={totalPages} onPage={setPage} onPageSize={handlePageSize} />
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(c) => c.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        minWidth={700}
+        loadingRows={4}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={handlePageSize}
+      />
 
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
         confirmOnClose={isDirty && !editing}
-        title={editing ? t("settings.tk.editTitle") : t("settings.tk.createTitle")}
+        title={
+          editing ? t("settings.tk.editTitle") : t("settings.tk.createTitle")
+        }
         subtitle={editing ? editing.account_name : t("settings.tk.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
-          { label: editing ? t("common.saveChanges") : t("common.addNew"), primary: true, loading: saving, disabled: saving, onClick: handleSave },
+          {
+            label: editing ? t("common.saveChanges") : t("common.addNew"),
+            primary: true,
+            loading: saving,
+            disabled: saving,
+            onClick: handleSave,
+          },
         ]}
       >
         <DrawerSection title={t("settings.tk.sectionInfo")}>
           <DrawerField label={t("settings.tk.headers.accountCode")} required>
-            <input type="text" className={inputCls} value={form.account_code} onChange={(e) => setField("account_code", e.target.value)} placeholder={t("settings.tk.codePlaceholder")} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.account_code}
+              onChange={(e) => setField("account_code", e.target.value)}
+              placeholder={t("settings.tk.codePlaceholder")}
+            />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.accountName")} required>
-            <input type="text" className={inputCls} value={form.account_name} onChange={(e) => setField("account_name", e.target.value)} placeholder={t("settings.tk.namePlaceholder")} />
+            <input
+              type="text"
+              className={inputCls}
+              value={form.account_name}
+              onChange={(e) => setField("account_name", e.target.value)}
+              placeholder={t("settings.tk.namePlaceholder")}
+            />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.accountType")}>
-            <Combobox options={ACC_TYPES} value={form.account_type} onChange={(v) => setField("account_type", v || "asset")} allowClear={false} />
+            <Combobox
+              options={ACC_TYPES}
+              value={form.account_type}
+              onChange={(v) => setField("account_type", v || "asset")}
+              allowClear={false}
+            />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.normalBalance")}>
-            <Combobox options={NORMAL_BALANCE_OPTS} value={form.normal_balance} onChange={(v) => setField("normal_balance", v || "debit")} allowClear={false} />
+            <Combobox
+              options={NORMAL_BALANCE_OPTS}
+              value={form.normal_balance}
+              onChange={(v) => setField("normal_balance", v || "debit")}
+              allowClear={false}
+            />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.parentAccount")}>
             <Combobox
               options={allItems
                 .filter((c) => !editing || c.id !== editing.id)
-                .map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))}
+                .map((c) => ({
+                  value: c.id,
+                  label: `${c.account_code} — ${c.account_name}`,
+                }))}
               value={form.parent_account_id}
               onChange={(v) => setField("parent_account_id", v)}
               placeholder={t("settings.tk.parentPlaceholder")}
             />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.level")}>
-            <input type="number" min={1} max={9} className={inputCls} value={form.level} onChange={(e) => setField("level", e.target.value)} />
+            <input
+              type="number"
+              min={1}
+              max={9}
+              className={inputCls}
+              value={form.level}
+              onChange={(e) => setField("level", e.target.value)}
+            />
           </DrawerField>
         </DrawerSection>
         <DrawerSection title={t("settings.tk.sectionFlags")}>
-          {([
-            ["is_cash_account", t("settings.tk.isCashAccount")],
-            ["is_receivable_account", t("settings.tk.isReceivable")],
-            ["is_payable_account", t("settings.tk.isPayable")],
-          ] as [keyof CoaForm, string][]).map(([key, label]) => (
+          {(
+            [
+              ["is_cash_account", t("settings.tk.isCashAccount")],
+              ["is_receivable_account", t("settings.tk.isReceivable")],
+              ["is_payable_account", t("settings.tk.isPayable")],
+            ] as [keyof CoaForm, string][]
+          ).map(([key, label]) => (
             <DrawerField key={key} label={label}>
               <label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={form[key] as boolean} onCheckedChange={(v) => setField(key, v === true)} />
+                <Checkbox
+                  checked={form[key] as boolean}
+                  onCheckedChange={(v) => setField(key, v === true)}
+                />
                 <span className="text-xs text-foreground">{label}</span>
               </label>
             </DrawerField>
@@ -271,7 +420,10 @@ export function TKTab() {
       <ConfirmModal
         open={!!deleteTarget}
         title={t("confirmModal.defaultTitle")}
-        message={t("settings.tk.deleteMessage").replace("{0}", deleteTarget?.account_name ?? "")}
+        message={t("settings.tk.deleteMessage").replace(
+          "{0}",
+          deleteTarget?.account_name ?? "",
+        )}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}
         onConfirm={handleDelete}

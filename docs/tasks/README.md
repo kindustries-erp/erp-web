@@ -3,28 +3,34 @@
 ## Quy tắc bắt buộc cho mọi task mới
 
 ### 1) No code without task
+
 - Không bắt đầu sửa code khi chưa có task file trong `docs/tasks/`.
 - Task mới nên khởi tạo từ template: `docs/tasks/_template.md`.
 
 ### 2) Universal DB-first (FEATURE/ENHANCE/FIX)
+
 - Mọi task đều phải làm Gate 0 DB precheck trước.
 - Nếu `DB_GAP_FOUND` thì bổ sung từ DB/directus staging trước, rồi mới tới API/UI.
 - Thứ tự bắt buộc: DB -> API workflow -> UI.
 
 ### 3) Tick done realtime
+
 - Mỗi sub-task hoàn thành phải đổi ngay `- [ ]` -> `- [x]`.
 - Không để dồn tick vào cuối task.
 
 ### 4) Lessons learned khi có issue
+
 - Nếu gặp lỗi/blocker/sai hướng triển khai, bắt buộc ghi lessons learned trước khi đóng task.
 - Dùng template: `docs/lessons-learned/_template.md`.
 - Link lessons entry vào cuối task file để dễ tra cứu.
 
 ### 5) Task closing rule
+
 - Sau khi hoàn tất task: commit + push code (web/api).
 - Riêng DB/directus staging: không bắt buộc commit/push code DB repo, nhưng phải có evidence apply+verify+document.
 
 ### 6) Thứ tự đọc trước khi làm task
+
 1. `AGENTS.md`
 2. `docs/ai/technical-instructions.md`
 3. `docs/app-structure.md`

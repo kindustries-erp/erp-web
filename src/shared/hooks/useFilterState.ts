@@ -53,7 +53,11 @@ export function useAmountRangeFilter() {
   const [amountMax, setAmountMax] = useState("");
   const { debounce } = useDebounceInput(400);
 
-  function handleAmountRangeInput(kind: "min" | "max", value: string, onPageReset?: () => void) {
+  function handleAmountRangeInput(
+    kind: "min" | "max",
+    value: string,
+    onPageReset?: () => void,
+  ) {
     if (kind === "min") setAmountMinInput(value);
     else setAmountMaxInput(value);
     debounce(() => {
@@ -70,5 +74,12 @@ export function useAmountRangeFilter() {
     setAmountMax("");
   }
 
-  return { amountMinInput, amountMaxInput, amountMin, amountMax, handleAmountRangeInput, resetAmounts };
+  return {
+    amountMinInput,
+    amountMaxInput,
+    amountMin,
+    amountMax,
+    handleAmountRangeInput,
+    resetAmounts,
+  };
 }

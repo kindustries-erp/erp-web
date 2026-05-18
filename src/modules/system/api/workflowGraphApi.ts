@@ -1,4 +1,4 @@
-import axiosInstance from '../../../core/api/axiosInstance';
+import axiosInstance from "../../../core/api/axiosInstance";
 
 export interface EmployeeSnippet {
   id: string;
@@ -24,7 +24,7 @@ export interface NodeMeta {
 
 export interface WorkflowNode extends Record<string, unknown> {
   id: string;
-  type: 'root' | 'admin' | 'department' | 'process' | 'status';
+  type: "root" | "admin" | "department" | "process" | "status";
   level: number;
   label: string;
   description: string;
@@ -41,7 +41,7 @@ export interface WorkflowEdge {
   source: string;
   target: string;
   label: string;
-  type: 'hierarchy' | 'manages' | 'process_step' | 'workflow_transition';
+  type: "hierarchy" | "manages" | "process_step" | "workflow_transition";
   rule?: string;
   actor?: string;
   meta: { description: string };
@@ -53,13 +53,13 @@ export interface WorkflowGraph {
   meta: {
     version: string;
     generatedAt: string;
-    layout: 'vertical';
+    layout: "vertical";
     totalNodes: number;
     totalEdges: number;
   };
 }
 
 export async function getWorkflowGraphApi(): Promise<WorkflowGraph> {
-  const res = await axiosInstance.get<WorkflowGraph>('/api/v1/workflow-graph');
+  const res = await axiosInstance.get<WorkflowGraph>("/api/v1/workflow-graph");
   return res.data;
 }

@@ -1,22 +1,25 @@
 # Task: FIX - Cash/Bank approval history hiển thị tên người duyệt + khóa chỉnh sửa sau duyệt/post (giữ editable chứng từ liên quan)
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: FIX
 - Mục tiêu:
-  1) Revert lại flow ERP PLAN mode: chỉ plan, chờ duyệt rồi mới thực thi/post.
-  2) Trong UI lịch sử duyệt đang hiện id, cần hiển thị tên người duyệt.
-  3) Khi phiếu đã duyệt hoặc đã post thì không cho edit phiếu tiền mặt/tiền gửi.
-  4) Riêng field chọn chứng từ liên quan vẫn cho phép edit.
+  1. Revert lại flow ERP PLAN mode: chỉ plan, chờ duyệt rồi mới thực thi/post.
+  2. Trong UI lịch sử duyệt đang hiện id, cần hiển thị tên người duyệt.
+  3. Khi phiếu đã duyệt hoặc đã post thì không cho edit phiếu tiền mặt/tiền gửi.
+  4. Riêng field chọn chứng từ liên quan vẫn cho phép edit.
 - Bối cảnh/ngữ cảnh:
   - Scope thuộc ERP Web (TienMat/TienGui + shared panel/history hiển thị approver).
   - Yêu cầu ưu tiên consistency với luồng kiểm soát hiện tại và policy cash/bank đã áp dụng.
 
 ## Goal
+
 - Chuẩn hóa lại contract PLAN mode theo đúng guardrail: chỉ lập kế hoạch, không sửa code/DB/deploy trước khi user xác nhận.
 - Sửa UI history/chi tiết để người dùng thấy tên người duyệt thay vì UUID/id.
 - Áp dụng rule khóa chỉnh sửa sau APPROVED/POSTED cho phiếu cash/bank nhưng vẫn mở chỉnh sửa nhóm `related_documents`.
 
 ## Scope
+
 - In-scope:
   - Tài liệu task + plan thực thi DB -> API -> UI cho yêu cầu trên.
   - ERP Web: logic hiển thị approver name, rule editable theo status và ngoại lệ `related_documents`.
@@ -26,6 +29,7 @@
   - Không đổi business flow ngoài cash/bank voucher + approval history surface liên quan.
 
 ## Relevant Files
+
 - `src/modules/finance/api/financeApi.ts` - xác nhận field status/approved_by/related_documents trong contract.
 - `src/modules/finance/components/CashVoucherDrawer/index.tsx` - vùng disabled/editable của form cash.
 - `src/modules/finance/components/TienGui/BankVoucherDrawer.tsx` - vùng disabled/editable của form bank.
@@ -35,6 +39,7 @@
 - `src/core/locale/vi.ts`, `src/core/locale/en.ts` - i18n key cho nhãn history/approver nếu cần.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `payment_vouchers.status`
   - `payment_vouchers.approved_by`
@@ -56,6 +61,7 @@
 ## Plan thực thi theo gate (DB -> API -> UI)
 
 ### Gate 1 - DB/Directus verification (read-only, không migrate)
+
 - [ ] Verify qua precheck script/API rằng các field nêu trên tồn tại runtime thật (không chỉ type FE).
 - [ ] Lấy mẫu 1-2 voucher đã approved/posted để xác nhận dữ liệu `approved_by` và `related_documents`.
 - Gate validation:
@@ -63,6 +69,7 @@
   - Nếu thiếu dữ liệu tên người duyệt từ nguồn API -> chuyển `DB_GAP_FOUND` và dừng trước Gate 2.
 
 ### Gate 2 - API contract handling
+
 - [ ] Inspect endpoint list/detail voucher ở ERP API: xác định field trả về cho approver display (ví dụ `approved_by_name` hoặc qua join user).
 - [ ] Nếu API đã có approver name: chuẩn hóa mapper FE để ưu tiên name, fallback an toàn.
 - [ ] Nếu API chưa có approver name: lập sub-plan API bổ sung response field (không thực thi trong plan này).
@@ -70,6 +77,7 @@
   - Có contract rõ ràng “UI không hiển thị id trần nếu có tên”.
 
 ### Gate 3 - UI implementation plan
+
 - [ ] Approval history/slide panel: thay render id bằng display name (fallback theo thứ tự: full_name -> username -> id).
 - [ ] Lock rule: khi voucher `APPROVED` hoặc `POSTED`:
   - Toàn bộ field phiếu (core voucher data) readonly.
@@ -86,6 +94,7 @@
   - History hiển thị tên người duyệt thay vì UUID/id.
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done (PLAN-only precheck bằng evidence code/contracts)
 - [x] 2.0 Backend workflow/API gate done
 - [x] 3.0 UI gate done
@@ -99,6 +108,7 @@
   - [ ] 5.4 Tổng kết evidence
 
 ## Realtime checklist khi EXECUTE (dự kiến)
+
 - [ ] E1: Verify DB/runtime fields bằng script/API
 - [ ] E2: Chốt source approver name từ API response
 - [ ] E3: Sửa render approval history dùng name fallback chain
@@ -109,6 +119,7 @@
 - [ ] E8: Deploy stack và verify container/log/smoke
 
 ## Risk + Rollback
+
 - Risks:
   - Mapping tên người duyệt không nhất quán giữa cash và bank khiến chỗ hiện tên, chỗ còn id.
   - Granular unlock cho `related_documents` có thể vô tình mở thêm field khác nếu control disabled dùng chung.
@@ -118,6 +129,7 @@
   - Nếu lỗi runtime sau deploy: revert commit web, rebuild/redeploy stack web, xác nhận route smoke về trạng thái trước.
 
 ## Evidence cần thu thập khi EXECUTE
+
 - DB/API evidence:
   - Kết quả Gate 0 runtime precheck (field tồn tại).
   - JSON sample response có approver name hoặc mapping fallback.
@@ -130,18 +142,22 @@
   - Deploy logs + container status + startup logs.
 
 ## Validation Evidence
+
 - DB precheck result: PLAN-only evidence từ contract source đã đọc (`financeApi.ts` có `approved_by/status/related_documents`) và sẽ verify runtime ở bước E1 khi được duyệt thực thi.
 - `npx tsc --noEmit`: Chưa chạy (PLAN mode).
 - Smoke test: Chưa chạy (PLAN mode).
 
 ## Lessons Learned
+
 - Chưa phát sinh (PLAN mode, chưa execute).
 
 ## Commit/Push Status
+
 - Web repo: Chưa thực hiện (PLAN mode).
 - API repo: Chưa thực hiện (PLAN mode).
 - DB/directus staging: Chưa thực hiện (PLAN mode).
 
 ## Sẵn sàng thực thi
+
 - PLAN ONLY đã hoàn tất, chưa chạm code/DB/deploy.
 - Chờ user xác nhận để chuyển sang EXECUTE theo đúng gate DB -> API -> UI.

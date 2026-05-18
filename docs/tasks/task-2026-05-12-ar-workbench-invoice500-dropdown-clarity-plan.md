@@ -1,20 +1,23 @@
 # Task: AR Workbench invoice 500 + dropdown counterparty + clarify Workbench vs Sổ công nợ (ERP PLAN mode)
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: FIX + ENHANCE
 - Mục tiêu:
-  1) Tạo invoice trong AR Workbench bị 500 error.
-  2) Trong AR Workbench, modal Phiếu thu và modal Phiếu đặt cọc phải dùng dropdown list thay vì nhập tay counterparty_id.
-  3) Làm rõ AR Workbench và tab Sổ công nợ là cùng hay khác vì gây nhầm.
+  1. Tạo invoice trong AR Workbench bị 500 error.
+  2. Trong AR Workbench, modal Phiếu thu và modal Phiếu đặt cọc phải dùng dropdown list thay vì nhập tay counterparty_id.
+  3. Làm rõ AR Workbench và tab Sổ công nợ là cùng hay khác vì gây nhầm.
 - Bối cảnh/ngữ cảnh:
   - User báo lỗi runtime khi tạo invoice.
   - UX hiện tại còn nhập UUID tay ở một số modal AR Workbench.
   - Cần rõ ràng về ranh giới chức năng giữa flow mới và flow legacy.
 
 ## Goal
+
 Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI chọn đối tác theo pattern Tiền mặt, và làm rõ chức năng Workbench vs Legacy mà không phá flow dữ liệu hiện có.
 
 ## Scope
+
 - In-scope:
   - Điều tra nguyên nhân 500 tại flow `POST /api/v1/ar-workbench/sales-invoices`.
   - Chuẩn hóa 2 modal AR Workbench (Phiếu thu, Đặt cọc) sang dropdown đối tác.
@@ -26,6 +29,7 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - Migrate/xóa dữ liệu lịch sử tab legacy.
 
 ## Relevant Files
+
 - Web
   - `src/pages/PhaiThu.tsx` - hiện có 2 tab và copy “Flow mới chạy song song...”.
   - `src/modules/finance/components/ArWorkbenchPanel/index.tsx` - UI tab invoice + sales-invoice drawer.
@@ -39,6 +43,7 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - `src/ar-workbench/dto/create-ar-sales-invoice.dto.ts` - validate input hóa đơn.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `ar_documents`, `ar_document_lines`, `payment_vouchers`, `ar_applications`, `business_partners`, `chart_of_accounts`, `journal_entries`, `journal_entry_lines`.
 - Data nền cần có:
@@ -54,6 +59,7 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - N/A
 
 ## UI consistency mandate mapping (Cash -> AR/AP)
+
 - Partner picker:
   - Hiện tại
     - AR Workbench Phiếu thu: `input` tay `counterparty_id`.
@@ -66,6 +72,7 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - Chỉ thay UX chọn đối tác (ID vẫn là source-of-truth payload), không đổi schema payload lõi.
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [ ] 2.0 Backend workflow/API gate done
   - [ ] 2.1 Reproduce 500 với payload tối thiểu và capture directus/api error chi tiết
@@ -85,6 +92,7 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - [ ] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result:
   - `ar_documents, ar_document_lines, payment_vouchers, ar_applications, business_partners, chart_of_accounts, journal_entries, journal_entry_lines: EXISTS`.
 - `npx tsc --noEmit`:
@@ -93,6 +101,7 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - PLAN mode: chưa chạy (chưa code).
 
 ## Risk + Rollback
+
 - Risk:
   - Thay input -> dropdown có thể ảnh hưởng flow nhập nhanh khi chưa load options.
   - Fix 500 có thể động vào mapping fields bắt buộc của Directus.
@@ -101,19 +110,23 @@ Lập kế hoạch DB-first để sửa lỗi tạo invoice, chuẩn hóa UI ch�
   - Không có thay đổi schema ở scope hiện tại; nếu phát hiện DB gap sẽ tách DB task riêng theo gate.
 
 ## Lessons Learned
+
 - Chưa phát sinh (PLAN mode).
 
 ## Commit/Push Status
+
 - Web repo: PLAN mode, chưa thay đổi code.
 - API repo: PLAN mode, chưa thay đổi code.
 - DB/directus staging: precheck read-only, không apply schema/data.
 
 ## Kế hoạch thực thi ngắn (DB -> API -> UI)
-1) API gate: reproduce 500 + bắt lỗi chi tiết + sửa root cause create invoice.
-2) UI gate: thay 2 modal sang dropdown counterparty theo pattern Cash.
-3) UI clarity gate: làm rõ “Workbench mới” vs “Sổ công nợ hiện tại” bằng copy/tooltip trạng thái use-case.
-4) Validation gate: build/typecheck/smoke route + smoke create invoice/receipt/advance.
-5) Close gate: lessons (nếu có), commit/push web+api, cập nhật evidence task.
+
+1. API gate: reproduce 500 + bắt lỗi chi tiết + sửa root cause create invoice.
+2. UI gate: thay 2 modal sang dropdown counterparty theo pattern Cash.
+3. UI clarity gate: làm rõ “Workbench mới” vs “Sổ công nợ hiện tại” bằng copy/tooltip trạng thái use-case.
+4. Validation gate: build/typecheck/smoke route + smoke create invoice/receipt/advance.
+5. Close gate: lessons (nếu có), commit/push web+api, cập nhật evidence task.
 
 ## Sẵn sàng thực thi
+
 Đã có plan + Gate 0 = DB_READY. Nếu bạn xác nhận, mình sẽ chuyển sang execution theo đúng gate DB -> API -> UI và update checklist realtime.

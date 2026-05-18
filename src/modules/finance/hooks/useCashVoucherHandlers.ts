@@ -90,9 +90,15 @@ interface UseCashVoucherHandlersParams {
   resetPeriod: () => void;
   resetAmounts: () => void;
   setPage: Dispatch<SetStateAction<number>>;
-  loadVouchers: (params: LoadVouchersParams) => Promise<PaymentVoucher[] | undefined>;
+  loadVouchers: (
+    params: LoadVouchersParams,
+  ) => Promise<PaymentVoucher[] | undefined>;
   loadVoucherAttachments: (items: PaymentVoucher[]) => Promise<void>;
-  loadSummary: (from: string, to: string, params: DashboardParams) => Promise<void>;
+  loadSummary: (
+    from: string,
+    to: string,
+    params: DashboardParams,
+  ) => Promise<void>;
   loadOpeningBalanceAndChart: (
     from: string,
     chartEndDate: string,
@@ -189,7 +195,11 @@ export function useCashVoucherHandlers({
   }
 
   function voucherPrefix(vtype: VoucherType) {
-    return vtype === "CUSTOMER_ADVANCE_RECEIPT" ? "DC" : vtype === "CASH_RECEIPT" ? "PT" : "PC";
+    return vtype === "CUSTOMER_ADVANCE_RECEIPT"
+      ? "DC"
+      : vtype === "CASH_RECEIPT"
+        ? "PT"
+        : "PC";
   }
 
   async function generateVoucherNo(vtype: VoucherType) {
@@ -210,18 +220,24 @@ export function useCashVoucherHandlers({
     }
   }
 
-  async function loadTagPresets(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
+  async function loadTagPresets(
+    vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+  ) {
     try {
-      setTagPresets(await getCashBankTagPresetsApi({
-        voucher_channel: "CASH",
-        voucher_direction: vtype === "CASH_PAYMENT" ? "OUT" : "IN",
-      }));
+      setTagPresets(
+        await getCashBankTagPresetsApi({
+          voucher_channel: "CASH",
+          voucher_direction: vtype === "CASH_PAYMENT" ? "OUT" : "IN",
+        }),
+      );
     } catch {
       setTagPresets([]);
     }
   }
 
-  async function openNew(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT") {
+  async function openNew(
+    vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+  ) {
     setForm(emptyForm(vtype));
     setPostingDateTouched(false);
     openDrawerForNew(); // Open immediately
@@ -236,7 +252,12 @@ export function useCashVoucherHandlers({
     setForm(buildForm(voucher));
     setPostingDateTouched(true);
     openDrawerForEdit(voucher);
-    loadTagPresets(voucher.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT");
+    loadTagPresets(
+      voucher.voucher_type as
+        | "CASH_RECEIPT"
+        | "CASH_PAYMENT"
+        | "CUSTOMER_ADVANCE_RECEIPT",
+    );
   }
 
   const setField = <K extends keyof CashVoucherForm>(
@@ -380,8 +401,10 @@ export function useCashVoucherHandlers({
         counterparty_name_snapshot:
           form.counterparty_name_snapshot.trim() ||
           (form.counterparty_source === "INTERNAL"
-            ? (employees.find((e) => e.id === form.employee_id)?.full_name ?? "")
-            : (partners.find((p) => p.id === form.counterparty_id)?.name ?? "")),
+            ? (employees.find((e) => e.id === form.employee_id)?.full_name ??
+              "")
+            : (partners.find((p) => p.id === form.counterparty_id)?.name ??
+              "")),
         counterparty_tax_code_snapshot:
           form.counterparty_tax_code_snapshot.trim() || undefined,
         counterparty_address_snapshot:
@@ -394,7 +417,9 @@ export function useCashVoucherHandlers({
         amount: amountValue,
         amount_in_words: form.amount_in_words.trim() || undefined,
         description: form.description.trim() || "-",
-        status: shouldSubmit ? "DRAFT" : statusAction || editing?.status || "DRAFT",
+        status: shouldSubmit
+          ? "DRAFT"
+          : statusAction || editing?.status || "DRAFT",
       };
       const saved = editing
         ? await updatePaymentVoucherApi(editing.id, dto)

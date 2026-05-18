@@ -3,14 +3,17 @@
 ## PLAN ONLY (không sửa code/DB/deploy ở bước này)
 
 ## Type
+
 ENHANCE + DATA RESET (destructive)
 
 ## Yêu cầu người dùng
-1) Trong phần công nợ phải thu, thêm form edit để bổ sung chứng từ thanh toán sau khi đã tạo phiếu/hóa đơn.
-2) Bảng công nợ phải thu thêm cột Đối tượng; các phiếu có nút Xóa nếu chưa link với chứng từ thanh toán nào.
-3) Xóa toàn bộ chứng từ trong phần công nợ phải thu để test lại từ đầu.
+
+1. Trong phần công nợ phải thu, thêm form edit để bổ sung chứng từ thanh toán sau khi đã tạo phiếu/hóa đơn.
+2. Bảng công nợ phải thu thêm cột Đối tượng; các phiếu có nút Xóa nếu chưa link với chứng từ thanh toán nào.
+3. Xóa toàn bộ chứng từ trong phần công nợ phải thu để test lại từ đầu.
 
 ## In-scope / Out-of-scope
+
 - In-scope:
   - AR Workbench UI/API cho edit bổ sung payment links.
   - AR list UI: thêm cột đối tượng + nút xóa có điều kiện.
@@ -20,6 +23,7 @@ ENHANCE + DATA RESET (destructive)
   - Không xóa dữ liệu ngoài phạm vi AR-related collections đã xác định.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Hiện trạng snapshot (staging):
   - `ar_documents=11`
   - `cash_bank_related_documents=0`
@@ -34,6 +38,7 @@ ENHANCE + DATA RESET (destructive)
 ## Kế hoạch triển khai theo thứ tự DB -> API -> UI
 
 ### 1) DB gate
+
 - 1.1 Pre-reset backup (bắt buộc): export các bảng liên quan AR để rollback nhanh.
 - 1.2 Reset script transaction-safe (chỉ khi ACT):
   - Xóa theo thứ tự phụ thuộc: `ar_applications` -> `cash_bank_related_documents` -> `ar_documents` (hoặc soft-reset status theo quyết định cuối).
@@ -43,6 +48,7 @@ ENHANCE + DATA RESET (destructive)
   - Không phát sinh FK violation.
 
 ### 2) API gate
+
 - 2.1 Bổ sung endpoint/service update AR document để attach/bổ sung payment chứng từ sau tạo.
   - Mục tiêu: edit form lưu được payment links sau khi tạo phiếu/hóa đơn.
 - 2.2 Bổ sung delete guard:
@@ -53,6 +59,7 @@ ENHANCE + DATA RESET (destructive)
   - Trả cờ `can_delete` (hoặc equivalent) để UI render nút xóa đúng rule.
 
 ### 3) UI gate
+
 - 3.1 AR table:
   - Thêm cột `Đối tượng`.
   - Thêm action `Xóa` chỉ hiển thị/enable khi `can_delete=true`.
@@ -64,6 +71,7 @@ ENHANCE + DATA RESET (destructive)
   - Phiếu chưa linked payment xóa được.
 
 ## Checklist realtime
+
 - [ ] 1.0 Backup dữ liệu AR trước reset — BLOCKED: terminal guard denied destructive command in this session
 - [ ] 1.1 Reset dữ liệu AR theo transaction + verify count — BLOCKED: chưa xóa data
 - [x] 2.0 API edit bổ sung payment links
@@ -76,6 +84,7 @@ ENHANCE + DATA RESET (destructive)
 - [x] 5.0 Commit/push + deploy + verify
 
 ## Gate validations
+
 - Gate DB:
   - Có backup artifact + bản ghi count before/after reset.
   - Reset không lỗi FK/constraint.
@@ -88,6 +97,7 @@ ENHANCE + DATA RESET (destructive)
   - Form edit bổ sung payment chạy end-to-end.
 
 ## Risk + rollback
+
 - Risk 1: Reset nhầm phạm vi dữ liệu.
   - Mitigation: whitelist bảng reset + backup trước + transaction.
 - Risk 2: Xóa AR docs gây orphan liên kết.
@@ -97,20 +107,23 @@ ENHANCE + DATA RESET (destructive)
   - Revert commit API/Web nếu phát sinh regression.
 
 ## Evidence cần thu thập khi ACT
+
 - Output backup + count before/after reset.
 - API request/response cho edit payment links và delete guard.
 - Ảnh/video ngắn UI: cột Đối tượng, nút Xóa conditional, edit form.
 - Build logs API/Web + runtime container verify sau deploy.
 
 ## Sẵn sàng thực thi
+
 Chờ bạn xác nhận để chuyển ACT mode và thực hiện (bao gồm bước reset dữ liệu destructive theo đúng backup/rollback).
 
 ## ACT note — reset data blocked
+
 - User approved execution, but terminal safety guard blocked the combined backup/delete command with `BLOCKED: User denied. Do NOT retry.`
 - Per safety instruction, data reset was not retried in this session. API/UI work proceeded; AR test data remains unchanged until reset is explicitly run through an approved channel.
 
-
 ## Close-out evidence
+
 - API build passed: `npm run build`.
 - Web build passed: `npm run build`.
 - API commit pushed: `4f310b0 feat: guard and edit ar documents`.

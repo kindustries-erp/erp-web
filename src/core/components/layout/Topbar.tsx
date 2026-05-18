@@ -17,10 +17,13 @@ export function Topbar() {
     customBreadcrumbs,
   } = useAppStore();
   const impersonation = useAuthStore((s) => s.impersonation);
-  const stopImpersonationAction = useAuthStore((s) => s.stopImpersonationAction);
+  const stopImpersonationAction = useAuthStore(
+    (s) => s.stopImpersonationAction,
+  );
   const employee = useAuthStore((s) => s.employee);
   const t = useT();
-  const crumbs = customBreadcrumbs ?? BREADCRUMBS[currentPage] ?? [[currentPage]];
+  const crumbs = customBreadcrumbs ??
+    BREADCRUMBS[currentPage] ?? [[currentPage]];
 
   return (
     <div className="topbar h-12 flex items-center gap-[10px] flex-shrink-0">
@@ -99,10 +102,13 @@ export function Topbar() {
             <circle cx="12" cy="7" r="4" />
           </svg>
           <span className="font-medium">
-            {employee?.full_name ?? impersonation.actor?.email ?? t("topbar.impersonation.unknownUser")}
+            {employee?.full_name ??
+              impersonation.actor?.email ??
+              t("topbar.impersonation.unknownUser")}
           </span>
           <span className="text-[color:var(--warn-fg)]/70">
-            ({t("topbar.impersonation.actorLabel")}: {impersonation.actor?.email ?? "—"})
+            ({t("topbar.impersonation.actorLabel")}:{" "}
+            {impersonation.actor?.email ?? "—"})
           </span>
           <button
             onClick={() => stopImpersonationAction("manual")}

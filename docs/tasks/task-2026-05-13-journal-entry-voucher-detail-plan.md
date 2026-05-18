@@ -1,22 +1,26 @@
 # Task Template
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: ENHANCE
 - Mục tiêu:
-  1) 1 voucher phải hiển thị toàn bộ journal lines ngay trong bảng danh sách tổng hợp (list), không chỉ ở detail.
-  2) Click 1 journal entry phải xem được chi tiết chứng từ liên quan và toàn bộ lines trong modal.
-  3) Journal entry modal chỉ còn: Debit account, Credit account, Amount, Description.
-  4) Bỏ status field khỏi form tạo bút toán (chỉ entry đã post mới xuất hiện trong journal).
-  5) Tất cả yêu cầu UI phải áp dụng đồng thời ở cả list danh sách và modal chi tiết/tạo mới.
+  1. 1 voucher phải hiển thị toàn bộ journal lines ngay trong bảng danh sách tổng hợp (list), không chỉ ở detail.
+  2. Click 1 journal entry phải xem được chi tiết chứng từ liên quan và toàn bộ lines trong modal.
+  3. Journal entry modal chỉ còn: Debit account, Credit account, Amount, Description.
+  4. Bỏ status field khỏi form tạo bút toán (chỉ entry đã post mới xuất hiện trong journal).
+  5. Tất cả yêu cầu UI phải áp dụng đồng thời ở cả list danh sách và modal chi tiết/tạo mới.
 - Bối cảnh/ngữ cảnh: Nâng cấp UX + accounting flow cho màn NhatKyChung, đồng bộ với logic “journal chỉ gồm posted entries”.
 
 ## Goal
+
 Thiết kế và triển khai thay đổi theo DB-first để:
+
 - Journal list/detail phản ánh đúng quan hệ 1 voucher -> nhiều journal lines.
 - UX thao tác nhanh theo cặp tài khoản Nợ/Có + số tiền, không nhập debit/credit amount tách rời.
 - Detail drawer có phần “Related Voucher Detail” theo `reference_type/reference_id`.
 
 ## Scope
+
 - In-scope:
   - API + UI module Journal Entries.
   - Mapping detail từ journal entry sang chứng từ nguồn qua `reference_type/reference_id`.
@@ -26,6 +30,7 @@ Thiết kế và triển khai thay đổi theo DB-first để:
   - Refactor toàn bộ AR/AP Workbench ngoài phần liên quan trực tiếp data hiển thị journal detail.
 
 ## Relevant Files
+
 - `src/pages/NhatKyChung.tsx` - list/detail drawer, hành vi click entry.
 - `src/modules/accounting/components/JournalEntryForm/index.tsx` - đổi form còn 4 trường.
 - `src/modules/accounting/components/JournalEntryLineTable/index.tsx` - bỏ input debit/credit amount tách rời.
@@ -35,6 +40,7 @@ Thiết kế và triển khai thay đổi theo DB-first để:
 - `/opt/repos/liouni-erp/liouni-erp-api/src/journal-entries/journal-entries.service.ts` - enrich response detail từ reference.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `journal_entries`: `id,voucher_no,date,description,status,reference_type,reference_id,total_debit,total_credit`
   - `journal_entry_lines`: `journal_entry_id,account_id,debit,credit,description,sort`
@@ -51,19 +57,23 @@ Thiết kế và triển khai thay đổi theo DB-first để:
 - Nếu `DB_GAP_FOUND`: N/A (hiện tại chưa bắt buộc schema change)
 
 ## Coordination Impact
+
 - [ ] Directus staging schema affected
 - [x] ERP Web contract affected
 - [x] ERP API contract affected
 - [ ] No cross-system impact
 
 ## Plan thực thi (DB -> API -> UI)
-1) DB gate (read-only verify)
+
+1. DB gate (read-only verify)
+
 - Xác nhận lại coverage `reference_type/reference_id` trên dữ liệu posted entries.
 - Chốt mapping nguồn chứng từ theo loại reference (journal self-reverse, payment voucher, AR document).
 - Gate validation:
   - Có sample data ít nhất 3 case: posted thường, posted có reverse, posted có reference sang voucher/document.
 
-2) API gate
+2. API gate
+
 - Mở rộng `GET /journal-entries/:id` trả thêm `related_voucher` (nullable), shape tối thiểu:
   - `source_type`, `source_id`, `source_no`, `source_date`, `description`, `lines[]` (nếu có), `summary_amount`.
 - Chuẩn hóa “chỉ posted entry xuất hiện ở journal list” ở service layer nếu chưa enforce triệt để.
@@ -76,7 +86,8 @@ Thiết kế và triển khai thay đổi theo DB-first để:
   - Smoke: create manual entry -> DB có đúng 2 lines cân bằng.
   - Smoke: get detail entry có related voucher payload đúng theo reference.
 
-3) UI gate
+3. UI gate
+
 - NhatKyChung list:
   - Click row mở drawer chi tiết có block “Chứng từ liên quan”.
   - Mặc định chỉ hiển thị entry posted/reversed theo contract mới.
@@ -92,6 +103,7 @@ Thiết kế và triển khai thay đổi theo DB-first để:
   - Smoke route `/nhat-ky-chung`: create -> list -> open detail -> verify related voucher block.
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [ ] 2.0 Backend workflow/API gate done
 - [ ] 3.0 UI gate done
@@ -104,11 +116,13 @@ Thiết kế và triển khai thay đổi theo DB-first để:
   - [ ] 5.3 Tổng kết evidence
 
 ## Gate validations (tiêu chí pass/fail)
+
 - Gate 0 pass: DB precheck `DB_READY`, không thiếu field cốt lõi.
 - API pass: detail endpoint trả `related_voucher` đúng shape, create mới tạo 2 lines cân bằng.
 - UI pass: modal đúng 4 trường nghiệp vụ, không còn debit/credit amount tách rời, click entry xem được voucher detail.
 
 ## Risk + Rollback
+
 - Risk 1: mismatch contract FE/API khi đổi payload create.
   - Rollback: giữ parser payload cũ ở API; FE feature-flag theo branch release.
 - Risk 2: một số `reference_type` không có bảng line-detail tương ứng.
@@ -117,6 +131,7 @@ Thiết kế và triển khai thay đổi theo DB-first để:
   - Rollback: UI hiển thị “Không có chứng từ liên quan”, không fail page.
 
 ## Evidence cần thu thập
+
 - Gate 0:
   - Output precheck collections/fields.
   - Ảnh/chứng cứ query 3 sample entry có/không có reference.
@@ -129,6 +144,7 @@ Thiết kế và triển khai thay đổi theo DB-first để:
   - Kết quả `npx tsc --noEmit`.
 
 ## Validation Evidence
+
 - DB precheck result:
   - `journal_entries` EXISTS
   - `journal_entry_lines` EXISTS
@@ -139,9 +155,11 @@ Thiết kế và triển khai thay đổi theo DB-first để:
 - Smoke test: pending
 
 ## Lessons Learned
+
 - Chưa phát sinh issue trong pha PLAN.
 
 ## Commit/Push Status
+
 - Web repo: chưa thực thi (PLAN mode)
 - API repo: chưa thực thi (PLAN mode)
 - DB/directus staging: chưa apply thay đổi schema (PLAN mode, read-only)
@@ -149,6 +167,7 @@ Thiết kế và triển khai thay đổi theo DB-first để:
 ## Kết quả thực thi (2026-05-13)
 
 DONE. Evidence:
+
 - API: `journal-entries.service.ts` filter posted/reversed + embed lines trong findAll
 - Web Form: `JournalEntryForm` rewritten — 4 fields (debit account, credit account, amount, description), bỏ status
 - Web List: `NhatKyChung.tsx` list expand 1 row per line pair; modal 4 cột; bỏ status column + filter

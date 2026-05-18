@@ -112,7 +112,8 @@ export function parseMoneyInput(value: string) {
   );
   const decimalLength =
     lastSeparator >= 0 ? cleaned.length - lastSeparator - 1 : 0;
-  const hasDecimal = lastSeparator >= 0 && decimalLength > 0 && decimalLength <= 2;
+  const hasDecimal =
+    lastSeparator >= 0 && decimalLength > 0 && decimalLength <= 2;
 
   const normalized = hasDecimal
     ? `${cleaned.slice(0, lastSeparator).replace(/[.,]/g, "")}.${cleaned
@@ -255,7 +256,9 @@ export function buildDonutItems(
   return items.length ? items : DONUT_EMPTY;
 }
 
-export function emptyForm(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT"): CashVoucherForm {
+export function emptyForm(
+  vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+): CashVoucherForm {
   return {
     voucher_no: "",
     voucher_type: vtype,
@@ -284,11 +287,14 @@ export function emptyForm(vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADV
 export function buildForm(v: PaymentVoucher): CashVoucherForm {
   const employeeId =
     typeof v.employee_id === "object" && v.employee_id !== null
-      ? v.employee_id.id ?? ""
+      ? (v.employee_id.id ?? "")
       : (v.employee_id ?? "");
   return {
     voucher_no: v.voucher_no,
-    voucher_type: v.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+    voucher_type: v.voucher_type as
+      | "CASH_RECEIPT"
+      | "CASH_PAYMENT"
+      | "CUSTOMER_ADVANCE_RECEIPT",
     document_date: v.document_date,
     posting_date: v.posting_date,
     cash_fund_id: v.cash_fund_id ?? "",
@@ -299,7 +305,8 @@ export function buildForm(v: PaymentVoucher): CashVoucherForm {
     counterparty_tax_code_snapshot: v.counterparty_tax_code_snapshot ?? "",
     counterparty_address_snapshot: v.counterparty_address_snapshot ?? "",
     counterparty_phone_snapshot: v.counterparty_phone_snapshot ?? "",
-    counterparty_identity_no_snapshot: v.counterparty_identity_no_snapshot ?? "",
+    counterparty_identity_no_snapshot:
+      v.counterparty_identity_no_snapshot ?? "",
     debit_account_id: v.debit_account_id,
     credit_account_id: v.credit_account_id,
     amount: formatMoneyInput(v.amount),
@@ -343,11 +350,14 @@ export function emptyBankForm(
 export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
   const employeeId =
     typeof v.employee_id === "object" && v.employee_id !== null
-      ? v.employee_id.id ?? ""
+      ? (v.employee_id.id ?? "")
       : (v.employee_id ?? "");
   return {
     voucher_no: v.voucher_no,
-    voucher_type: v.voucher_type as "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+    voucher_type: v.voucher_type as
+      | "BANK_RECEIPT"
+      | "BANK_PAYMENT"
+      | "CUSTOMER_ADVANCE_RECEIPT",
     document_date: v.document_date,
     posting_date: v.posting_date,
     company_bank_account_id: v.company_bank_account_id ?? "",
@@ -358,7 +368,8 @@ export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
     counterparty_tax_code_snapshot: v.counterparty_tax_code_snapshot ?? "",
     counterparty_address_snapshot: v.counterparty_address_snapshot ?? "",
     counterparty_phone_snapshot: v.counterparty_phone_snapshot ?? "",
-    counterparty_identity_no_snapshot: v.counterparty_identity_no_snapshot ?? "",
+    counterparty_identity_no_snapshot:
+      v.counterparty_identity_no_snapshot ?? "",
     beneficiary_bank_account_id: v.beneficiary_bank_account_id ?? "",
     debit_account_id: v.debit_account_id,
     credit_account_id: v.credit_account_id,

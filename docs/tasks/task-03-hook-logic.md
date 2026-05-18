@@ -52,95 +52,95 @@ import {
 Thêm sau dòng `const [saveError, setSaveError] = useState<string | null>(null);`:
 
 ```ts
-  const [cancelReason, setCancelReason] = useState("");
+const [cancelReason, setCancelReason] = useState("");
 ```
 
 ### 1c. Thay toàn bộ hàm `handleStatusTransition`
 
 ```ts
 // BEFORE:
-  async function handleStatusTransition(
-    nextStatus: VoucherStatus,
-    onSuccess: () => void,
-  ) {
-    if (!editing) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      await updatePaymentVoucherApi(editing.id, { status: nextStatus });
-      showToast({
-        title: "Cập nhật trạng thái thành công",
-        description: `${editing.voucher_no}: ${STATUS_LABELS[nextStatus]}`,
-        variant: "success",
-      });
-      closeDrawer();
-      onSuccess();
-    } catch (e) {
-      const reason = extractApiError(e);
-      setSaveError(reason);
-      showToast({
-        title: "Cập nhật trạng thái thất bại",
-        description: reason,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
-    }
+async function handleStatusTransition(
+  nextStatus: VoucherStatus,
+  onSuccess: () => void,
+) {
+  if (!editing) return;
+  setSaving(true);
+  setSaveError(null);
+  try {
+    await updatePaymentVoucherApi(editing.id, { status: nextStatus });
+    showToast({
+      title: "Cập nhật trạng thái thành công",
+      description: `${editing.voucher_no}: ${STATUS_LABELS[nextStatus]}`,
+      variant: "success",
+    });
+    closeDrawer();
+    onSuccess();
+  } catch (e) {
+    const reason = extractApiError(e);
+    setSaveError(reason);
+    showToast({
+      title: "Cập nhật trạng thái thất bại",
+      description: reason,
+      variant: "destructive",
+    });
+  } finally {
+    setSaving(false);
   }
+}
 
 // AFTER — gọi đúng endpoint transition:
-  async function handleStatusTransition(
-    action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL",
-    onSuccess: () => void,
-    opts?: { note?: string; cancel_reason?: string },
-  ) {
-    if (!editing) return;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      switch (action) {
-        case "SUBMIT":
-          await submitPaymentVoucherApi(editing.id);
-          break;
-        case "APPROVE":
-          await approvePaymentVoucherApi(editing.id);
-          break;
-        case "REJECT":
-          await rejectPaymentVoucherApi(editing.id, opts?.note);
-          break;
-        case "POST":
-          await postPaymentVoucherApi(editing.id);
-          break;
-        case "CANCEL":
-          await cancelPaymentVoucherApi(editing.id, opts?.cancel_reason);
-          break;
-      }
-      const ACTION_LABELS: Record<string, string> = {
-        SUBMIT: "Đã gửi duyệt",
-        APPROVE: "Đã duyệt",
-        REJECT: "Đã từ chối",
-        POST: "Đã hạch toán",
-        CANCEL: "Đã hủy",
-      };
-      showToast({
-        title: ACTION_LABELS[action] ?? "Thành công",
-        description: editing.voucher_no,
-        variant: "success",
-      });
-      closeDrawer();
-      onSuccess();
-    } catch (e) {
-      const reason = extractApiError(e);
-      setSaveError(reason);
-      showToast({
-        title: "Thao tác thất bại",
-        description: reason,
-        variant: "destructive",
-      });
-    } finally {
-      setSaving(false);
+async function handleStatusTransition(
+  action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL",
+  onSuccess: () => void,
+  opts?: { note?: string; cancel_reason?: string },
+) {
+  if (!editing) return;
+  setSaving(true);
+  setSaveError(null);
+  try {
+    switch (action) {
+      case "SUBMIT":
+        await submitPaymentVoucherApi(editing.id);
+        break;
+      case "APPROVE":
+        await approvePaymentVoucherApi(editing.id);
+        break;
+      case "REJECT":
+        await rejectPaymentVoucherApi(editing.id, opts?.note);
+        break;
+      case "POST":
+        await postPaymentVoucherApi(editing.id);
+        break;
+      case "CANCEL":
+        await cancelPaymentVoucherApi(editing.id, opts?.cancel_reason);
+        break;
     }
+    const ACTION_LABELS: Record<string, string> = {
+      SUBMIT: "Đã gửi duyệt",
+      APPROVE: "Đã duyệt",
+      REJECT: "Đã từ chối",
+      POST: "Đã hạch toán",
+      CANCEL: "Đã hủy",
+    };
+    showToast({
+      title: ACTION_LABELS[action] ?? "Thành công",
+      description: editing.voucher_no,
+      variant: "success",
+    });
+    closeDrawer();
+    onSuccess();
+  } catch (e) {
+    const reason = extractApiError(e);
+    setSaveError(reason);
+    showToast({
+      title: "Thao tác thất bại",
+      description: reason,
+      variant: "destructive",
+    });
+  } finally {
+    setSaving(false);
   }
+}
 ```
 
 ### 1d. Cập nhật return value — thêm `cancelReason`, `setCancelReason`
@@ -178,70 +178,70 @@ import type { Employee } from "@/modules/auth/api/auth";
 Thêm sau hàm `handlePartnerChange`:
 
 ```ts
-  function handleEmployeeChange(employeeId: string) {
-    const emp = employees.find((e) => e.id === employeeId);
-    setForm((current) => ({
-      ...current,
-      employee_id: employeeId,
-      counterparty_id: "",
-      counterparty_name_snapshot: emp?.full_name ?? "",
-      counterparty_phone_snapshot: emp?.phone ?? "",
-      counterparty_identity_no_snapshot: emp?.identity_no ?? "",
-      counterparty_tax_code_snapshot: "",
-      counterparty_address_snapshot: "",
-    }));
-  }
+function handleEmployeeChange(employeeId: string) {
+  const emp = employees.find((e) => e.id === employeeId);
+  setForm((current) => ({
+    ...current,
+    employee_id: employeeId,
+    counterparty_id: "",
+    counterparty_name_snapshot: emp?.full_name ?? "",
+    counterparty_phone_snapshot: emp?.phone ?? "",
+    counterparty_identity_no_snapshot: emp?.identity_no ?? "",
+    counterparty_tax_code_snapshot: "",
+    counterparty_address_snapshot: "",
+  }));
+}
 ```
 
 ### 2d. Cập nhật `handlePartnerChange` — clear employee khi chọn partner
 
 ```ts
 // BEFORE:
-  function handlePartnerChange(partnerId: string) {
-    const partner = partners.find((item) => item.id === partnerId);
-    setForm((current) => ({
-      ...current,
-      counterparty_id: partnerId,
-      counterparty_name_snapshot: partner?.name ?? "",
-      counterparty_tax_code_snapshot: partner?.tax_code ?? "",
-      counterparty_address_snapshot: partner?.address ?? "",
-    }));
-  }
+function handlePartnerChange(partnerId: string) {
+  const partner = partners.find((item) => item.id === partnerId);
+  setForm((current) => ({
+    ...current,
+    counterparty_id: partnerId,
+    counterparty_name_snapshot: partner?.name ?? "",
+    counterparty_tax_code_snapshot: partner?.tax_code ?? "",
+    counterparty_address_snapshot: partner?.address ?? "",
+  }));
+}
 
 // AFTER — thêm clear employee fields:
-  function handlePartnerChange(partnerId: string) {
-    const partner = partners.find((item) => item.id === partnerId);
-    setForm((current) => ({
-      ...current,
-      counterparty_id: partnerId,
-      employee_id: "",
-      counterparty_name_snapshot: partner?.name ?? "",
-      counterparty_tax_code_snapshot: partner?.tax_code ?? "",
-      counterparty_address_snapshot: partner?.address ?? "",
-      counterparty_phone_snapshot: partner?.phone ?? "",
-      counterparty_identity_no_snapshot: "",
-    }));
-  }
+function handlePartnerChange(partnerId: string) {
+  const partner = partners.find((item) => item.id === partnerId);
+  setForm((current) => ({
+    ...current,
+    counterparty_id: partnerId,
+    employee_id: "",
+    counterparty_name_snapshot: partner?.name ?? "",
+    counterparty_tax_code_snapshot: partner?.tax_code ?? "",
+    counterparty_address_snapshot: partner?.address ?? "",
+    counterparty_phone_snapshot: partner?.phone ?? "",
+    counterparty_identity_no_snapshot: "",
+  }));
+}
 ```
 
 ### 2e. Cập nhật validation trong `handleSave`
 
 ```ts
 // BEFORE — dòng validate counterparty:
-    if (!form.counterparty_id) {
-      setSaveError("Vui lòng chọn đối tác.");
-      return;
-    }
+if (!form.counterparty_id) {
+  setSaveError("Vui lòng chọn đối tác.");
+  return;
+}
 
 // AFTER — validate theo source:
-    if (form.counterparty_source === "INTERNAL" && !form.employee_id) {
-      setSaveError("Vui lòng chọn nhân viên.");
-      return;
-    }
-    if (form.counterparty_source === "EXTERNAL" && !form.counterparty_id) {
-      setSaveError("Vui lòng chọn đối tác.");
-      return;
-    }
+if (form.counterparty_source === "INTERNAL" && !form.employee_id) {
+  setSaveError("Vui lòng chọn nhân viên.");
+  return;
+}
+if (form.counterparty_source === "EXTERNAL" && !form.counterparty_id) {
+  setSaveError("Vui lòng chọn đối tác.");
+  return;
+}
 ```
 
 ### 2f. Cập nhật DTO trong `handleSave`

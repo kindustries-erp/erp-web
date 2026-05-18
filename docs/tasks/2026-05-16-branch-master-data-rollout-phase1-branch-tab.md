@@ -1,14 +1,17 @@
 # Task — Branch master data rollout phase 1 branch tab
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: ENHANCE
 - Mục tiêu: Bổ sung tab cấu hình Chi nhánh trong Thiết lập danh mục để CRUD branch master data.
 - Bối cảnh/ngữ cảnh: BranchSelect đã được nhúng vào form nghiệp vụ nhưng chưa có màn hình riêng để tạo/sửa chi nhánh trên UI.
 
 ## Goal
+
 Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem danh sách, tạo mới, sửa, bật/tắt trạng thái chi nhánh bằng API `/api/v1/branches` đã có sẵn.
 
 ## Scope
+
 - In-scope:
   - Tạo tab/màn hình quản lý chi nhánh trong Thiết lập danh mục
   - List branches + drawer tạo/sửa
@@ -21,6 +24,7 @@ Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem d
   - Phase 2 required branch_id
 
 ## Relevant Files
+
 - `src/modules/branches/api/branchApi.ts`
 - `src/modules/branches/api/BranchSelect.tsx`
 - `src/modules/settings/components/*`
@@ -28,6 +32,7 @@ Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem d
 - i18n locale files nếu cần
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `branches`
 - Data nền cần có:
@@ -39,6 +44,7 @@ Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem d
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): N/A
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done
 - [x] 3.0 UI gate done
@@ -51,14 +57,17 @@ Thêm tab "Chi nhánh" trong khu vực Thiết lập danh mục, cho phép xem d
   - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result: `DB_READY`
 - `npx tsc --noEmit`: đạt gián tiếp qua `npm run build` PASS
 - Smoke test: `curl -I http://127.0.0.1:8808/thiet-lap-quy?tab=branch` -> 200, `curl -I https://dev.erp.liouni.com/thiet-lap-quy?tab=branch` -> 200
 
 ## Lessons Learned
+
 - Branch API web client ban đầu gọi sai endpoint legacy `/branches/*`; cần đồng bộ toàn bộ sang `/api/v1/branches` và dùng kiểu `PaginatedResponse<Branch>` cho danh sách/lookup.
 
 ## Commit/Push Status
+
 - Web repo: pushed `master` at commit `48f08f8` (`feat: add branch catalog tab to ERP settings`)
 - API repo: không đổi thêm ở task này
 - DB/directus staging: đã sẵn sàng từ phase 1

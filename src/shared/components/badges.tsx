@@ -34,7 +34,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const label = STATUS_LABELS[s] ?? status;
   const cls = STATUS_CLS[s] ?? "";
   return (
-    <span className={cn("text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium whitespace-nowrap", cls)}>
+    <span
+      className={cn(
+        "text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium whitespace-nowrap",
+        cls,
+      )}
+    >
       {label}
     </span>
   );
@@ -91,7 +96,9 @@ export function TagCell({ active, isDefault }: TagCellProps) {
       )}
       <span
         className={`text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium ${
-          active ? "bg-approve-bg text-approve-fg" : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]"
+          active
+            ? "bg-approve-bg text-approve-fg"
+            : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]"
         }`}
       >
         {active ? "Hoạt động" : "Tắt"}

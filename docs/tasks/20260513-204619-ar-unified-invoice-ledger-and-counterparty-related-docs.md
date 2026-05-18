@@ -3,15 +3,18 @@
 ## PLAN ONLY (không sửa code/DB/deploy ở bước này)
 
 ## Type
+
 ENHANCE
 
 ## Yêu cầu người dùng
-1) Trong form tiền-gửi/tiền-mặt, khu vực chứng từ liên quan chỉ hiện chứng từ theo đúng đối tác đã chọn.
-2) Trong công nợ phải thu có 2 nút tạo form riêng: "Tạo hóa đơn" và "Thu khác"; tuy nhiên cả hai phải ghi vào cùng một DB/bảng nghiệp vụ, chỉ phân biệt bằng field/type.
-3) Danh sách invoice và danh sách công nợ gộp chung, dùng chung 1 DB.
-4) Khi chọn chứng từ thanh toán hoặc ở trang ngân hàng/tiền mặt chọn hóa đơn để cấn trừ, hệ thống phải tự động trừ và hiển thị rõ: số đã thanh toán, số còn lại trên chứng từ/hóa đơn tương ứng.
+
+1. Trong form tiền-gửi/tiền-mặt, khu vực chứng từ liên quan chỉ hiện chứng từ theo đúng đối tác đã chọn.
+2. Trong công nợ phải thu có 2 nút tạo form riêng: "Tạo hóa đơn" và "Thu khác"; tuy nhiên cả hai phải ghi vào cùng một DB/bảng nghiệp vụ, chỉ phân biệt bằng field/type.
+3. Danh sách invoice và danh sách công nợ gộp chung, dùng chung 1 DB.
+4. Khi chọn chứng từ thanh toán hoặc ở trang ngân hàng/tiền mặt chọn hóa đơn để cấn trừ, hệ thống phải tự động trừ và hiển thị rõ: số đã thanh toán, số còn lại trên chứng từ/hóa đơn tương ứng.
 
 ## In-scope / Out-of-scope
+
 - In-scope:
   - UI/flow hợp nhất trong Phải thu: 1 màn hình, 2 nút tạo (Tạo hóa đơn / Thu khác) nhưng dùng chung 1 backend data model.
   - Filter chứng từ liên quan theo đối tác trong Cash/Bank.
@@ -20,6 +23,7 @@ ENHANCE
   - Tách DB mới cho invoice/ledger (không làm). Mục tiêu là tiếp tục dùng DB hiện tại.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections tồn tại:
   - `ar_documents`
   - `partner_ledger_items`
@@ -33,6 +37,7 @@ ENHANCE
 ## Kế hoạch triển khai theo thứ tự DB -> API -> UI
 
 ### 1) DB gate (read-only trong phase này)
+
 - Không đổi schema ở phase đầu.
 - Xác nhận mapping nghiệp vụ:
   - invoice source: `ar_documents`
@@ -41,6 +46,7 @@ ENHANCE
 - Nếu trong lúc ACT phát hiện thiếu ràng buộc quan trọng cho unified form (ví dụ cần enum/type mới), sẽ tách sub-task DB riêng trước khi qua API/UI.
 
 ### 2) API gate
+
 - Chuẩn hóa contract cho AR create từ 2 nút:
   - `POST` từ nút "Tạo hóa đơn" và nút "Thu khác" đều ghi vào cùng collection/table nghiệp vụ AR.
   - Phân biệt nghiệp vụ bằng field/type (`entry_type` hoặc map tương đương) thay vì tách DB.
@@ -52,6 +58,7 @@ ENHANCE
   - Gọi API với counterparty A không được trả chứng từ của counterparty B.
 
 ### 3) UI gate
+
 - Cash/Bank drawer:
   - Related documents selector chỉ hiện chứng từ theo đối tác đã chọn.
   - Nếu chưa chọn đối tác: disable selector + hint yêu cầu chọn đối tác trước.
@@ -64,12 +71,14 @@ ENHANCE
   - Cột amount thống nhất hiển thị: tổng, đã thu/đã bù trừ, còn lại.
 
 ## Mapping component tái sử dụng (UI consistency)
+
 - Drawer shell: tái dùng `DrawerModal`, `DrawerSection`, `DrawerField`.
 - Select/tag mode: tái dùng pattern card/tag ở Cash/Bank presets.
 - Date/select controls: tái dùng `DatePicker`, `Combobox`.
 - Bảng công nợ: tái dùng/nhúng `PartnerLedgerTable` trong flow AR Workbench.
 
 ## Checklist realtime
+
 - [x] 1.0 Gate 0 DB precheck ghi nhận DB_READY
 - [x] 2.0 API: define single-table create contract cho 2 nút (`entry_type`) + response remaining
 - [x] 2.1 API: enforce counterparty filter cho related docs candidates
@@ -81,6 +90,7 @@ ENHANCE
 - [x] 5.0 Commit/push + deploy + verify
 
 ## Close-out evidence
+
 - API build passed: `npm run build`.
 - Web build passed: `npm run build`.
 - API commit pushed: `0ec28a5 feat: auto reconcile ar cash bank links`.
@@ -90,6 +100,7 @@ ENHANCE
 - Runtime verify: `liouni-erp-api` and `liouni-erp-web` containers Up; web local HTTP 200; unauthenticated AR documents endpoint returns 401 as expected.
 
 ## Gate validations
+
 - Gate DB:
   - Có bằng chứng tồn tại collections cốt lõi.
 - Gate API:
@@ -101,6 +112,7 @@ ENHANCE
   - Cash/Bank không hiển thị chứng từ sai đối tác.
 
 ## Risk + rollback
+
 - Risk 1: Gộp 2 form có thể gây nhầm field bắt buộc theo từng mode.
   - Mitigation: mode-driven validation rõ ràng theo `entry_mode`.
 - Risk 2: Dữ liệu list hợp nhất khó đọc nếu trộn nhiều loại.
@@ -110,6 +122,7 @@ ENHANCE
   - Không có thay đổi DB trong phase đầu => rollback nhanh.
 
 ## Evidence cần thu thập khi ACT
+
 - DB precheck output (collections tồn tại).
 - API evidence:
   - Request/response với `business_partner_id=A` chỉ trả docs của A.
@@ -123,4 +136,5 @@ ENHANCE
   - Container status/logs sau deploy.
 
 ## Sẵn sàng thực thi
+
 Chờ bạn xác nhận để chuyển ACT mode và triển khai đúng thứ tự DB -> API -> UI.

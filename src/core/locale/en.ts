@@ -130,10 +130,12 @@ export const en: Dict = {
     descriptions: {
       draft: "List of draft invoices synced from Viettel.",
       issued: "List of issued invoices synced from Viettel.",
-      output: "Output invoices from tax portal, supports filtering and subtotal.",
+      output:
+        "Output invoices from tax portal, supports filtering and subtotal.",
       input: "Input invoices from tax portal, supports filtering and subtotal.",
       config: "Manage Viettel and tax portal configurations.",
-      fallback: "Centralized management of draft invoices, output/input invoices and tax configuration",
+      fallback:
+        "Centralized management of draft invoices, output/input invoices and tax configuration",
     },
     execSummary: {
       draft: "Filtered Draft Total",
@@ -148,8 +150,8 @@ export const en: Dict = {
       output: "Output Invoices",
       input: "Input Invoices",
       taxPortal: "Tax Portal Source",
-      error: "Error"
-    }
+      error: "Error",
+    },
   },
   common: {
     thisMonth: "This month",
@@ -302,7 +304,8 @@ export const en: Dict = {
       unbalanced: "Unbalanced",
       addLine: "Add line",
       difference: "Difference",
-      validationError: "Please complete the form and make sure total debit equals total credit.",
+      validationError:
+        "Please complete the form and make sure total debit equals total credit.",
     },
   },
   tienmat: {
@@ -420,7 +423,8 @@ export const en: Dict = {
     },
     confirm: {
       impersonateTitle: "Login as this user?",
-      impersonateBody: "You will act as. Use the topbar button to return to your account:",
+      impersonateBody:
+        "You will act as. Use the topbar button to return to your account:",
     },
     toast: {
       permissionsSaved: "Custom permissions saved",
@@ -492,37 +496,39 @@ export const en: Dict = {
       "tai-khoan": "Account Catalog",
     },
     hoadondientuPage: {
-    tabs: {
-      draft: "Draft Invoices",
-      issued: "Issued Invoices",
-      output: "Output Invoices",
-      input: "Input Invoices",
-      config: "Configuration",
+      tabs: {
+        draft: "Draft Invoices",
+        issued: "Issued Invoices",
+        output: "Output Invoices",
+        input: "Input Invoices",
+        config: "Configuration",
+      },
+      descriptions: {
+        draft: "List of draft invoices synced from Viettel.",
+        issued: "List of issued invoices synced from Viettel.",
+        output:
+          "Output invoices from tax portal, supports filtering and subtotal.",
+        input:
+          "Input invoices from tax portal, supports filtering and subtotal.",
+        config: "Manage Viettel and tax portal configurations.",
+      },
+      execSummary: {
+        draft: "Filtered Draft Total",
+        issued: "Filtered Issued Total",
+        output: "Filtered Output Total",
+        input: "Filtered Input Total",
+        config: "Connection Status",
+      },
+      subtotal: "Current Subtotal",
+      kpi: {
+        issued: "Issued/Synced",
+        output: "Output Invoices",
+        input: "Input Invoices",
+        taxPortal: "Tax Portal Source",
+        error: "Error",
+      },
     },
-    descriptions: {
-      draft: "List of draft invoices synced from Viettel.",
-      issued: "List of issued invoices synced from Viettel.",
-      output: "Output invoices from tax portal, supports filtering and subtotal.",
-      input: "Input invoices from tax portal, supports filtering and subtotal.",
-      config: "Manage Viettel and tax portal configurations.",
-    },
-    execSummary: {
-      draft: "Filtered Draft Total",
-      issued: "Filtered Issued Total",
-      output: "Filtered Output Total",
-      input: "Filtered Input Total",
-      config: "Connection Status",
-    },
-    subtotal: "Current Subtotal",
-    kpi: {
-      issued: "Issued/Synced",
-      output: "Output Invoices",
-      input: "Input Invoices",
-      taxPortal: "Tax Portal Source",
-      error: "Error"
-    }
-  },
-  common: {
+    common: {
       subtitle: "Fill in the information below",
       actionEdit: "Edit",
       actionDelete: "Delete",
@@ -543,7 +549,8 @@ export const en: Dict = {
       sectionInfo: "Fund information",
       codePlaceholder: "Ex: TM001",
       namePlaceholder: "Ex: Main cash fund",
-      deleteMessage: 'Are you sure you want to hide fund "{0}"? This record will be marked inactive.',
+      deleteMessage:
+        'Are you sure you want to hide fund "{0}"? This record will be marked inactive.',
     },
     bank: {
       title: "Bank Accounts",
@@ -1125,7 +1132,8 @@ export const en: Dict = {
       isCashAccount: "Is cash account",
       isReceivable: "Is receivable account",
       isPayable: "Is payable account",
-      deleteMessage: "Are you sure you want to delete account \"{0}\"? This action cannot be undone.",
+      deleteMessage:
+        'Are you sure you want to delete account "{0}"? This action cannot be undone.',
       unknownError: "An error occurred.",
       headers: {
         accountCode: "Account code",
@@ -1145,7 +1153,8 @@ export const en: Dict = {
       desc: "Bank accounts linked to the enterprise.",
       searchPlaceholder: "Search bank accounts...",
       fetchError: "Could not load bank data.",
-      requiredError: "Bank name, account number, and account holder are required.",
+      requiredError:
+        "Bank name, account number, and account holder are required.",
       editTitle: "Edit bank account",
       createTitle: "Add bank account",
       subtitle: "Fill in the information below",
@@ -1154,7 +1163,8 @@ export const en: Dict = {
       bankNamePlaceholder: "Ex: MB Bank",
       accountNumberPlaceholder: "Ex: 0123456789",
       accountHolderPlaceholder: "Ex: CONG TY TNHH ABC",
-      deleteMessage: "Are you sure you want to delete account \"{0}\"? This action cannot be undone.",
+      deleteMessage:
+        'Are you sure you want to delete account "{0}"? This action cannot be undone.',
       headers: {
         bankAccountCode: "Account code",
         bankName: "Bank",
@@ -1176,7 +1186,7 @@ export const en: Dict = {
       namePlaceholder: "Ex: Hanoi Branch",
       addressPlaceholder: "Ex: 123 Nguyen Trai, Hanoi",
       notePlaceholder: "Additional branch notes",
-      deleteMessage: "Are you sure you want to delete branch \"{0}\"?",
+      deleteMessage: 'Are you sure you want to delete branch "{0}"?',
       headers: {
         code: "Branch Code",
         name: "Branch Name",
@@ -1190,14 +1200,15 @@ export const en: Dict = {
       desc: "List of cash funds in the enterprise.",
       searchPlaceholder: "Search funds...",
       fetchError: "Could not load cash funds.",
-      requiredError: "Fund code, fund name, and accounting account are required.",
+      requiredError:
+        "Fund code, fund name, and accounting account are required.",
       editTitle: "Edit cash fund",
       createTitle: "Add cash fund",
       subtitle: "Fill in the information below",
       sectionInfo: "Fund information",
       codePlaceholder: "Ex: TM001",
       namePlaceholder: "Ex: Main cash fund",
-      deleteMessage: "Are you sure you want to delete fund \"{0}\"?",
+      deleteMessage: 'Are you sure you want to delete fund "{0}"?',
       headers: {
         fundCode: "Fund Code",
         fundName: "Fund Name",
@@ -1333,7 +1344,8 @@ export const en: Dict = {
     },
     cancel: {
       title: "Cancel Ledger Item?",
-      message: 'Are you sure you want to cancel item "{0}"? This cannot be undone.',
+      message:
+        'Are you sure you want to cancel item "{0}"? This cannot be undone.',
       confirm: "Confirm Cancel",
       fail: "Cancel failed. Please try again.",
     },

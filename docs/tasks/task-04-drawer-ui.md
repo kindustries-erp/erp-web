@@ -49,86 +49,162 @@ Hai file cần sửa:
 
 ```ts
 // BEFORE:
-  const canEdit = !editing || editing.status === "DRAFT" || editing.status === "REJECTED";
+const canEdit =
+  !editing || editing.status === "DRAFT" || editing.status === "REJECTED";
 
 // AFTER — backend chặn PATCH nếu không phải DRAFT:
-  const canEdit = !editing || editing.status === "DRAFT";
+const canEdit = !editing || editing.status === "DRAFT";
 ```
 
 ### 1e. Cập nhật `actions` — đổi sang Action mới theo state machine
 
 ```ts
 // BEFORE (đoạn actions trong component):
-  const actions: DrawerAction[] = (() => {
-    if (!editing || drawerEditMode) {
-      return [
-        { label: t("voucher.drawer.cancel"), onClick: onClose },
-        { label: t("voucher.drawer.saveDraft"), disabled: saving, onClick: () => onSave("DRAFT") },
-        { label: t("voucher.drawer.submitApprove"), primary: true, loading: saving, disabled: saving, onClick: () => onSave("PENDING_APPROVAL") },
-      ];
-    }
-    if (editing.status === "PENDING_APPROVAL") {
-      return [
-        { label: t("voucher.drawer.close"), onClick: onClose },
-        { label: t("voucher.drawer.reject"), disabled: saving, onClick: () => onStatusTransition("REJECTED") },
-        { label: t("voucher.drawer.approve"), primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("APPROVED") },
-      ];
-    }
-    if (editing.status === "APPROVED") {
-      return [
-        { label: t("voucher.drawer.close"), onClick: onClose },
-        { label: t("voucher.drawer.post"), primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("POSTED") },
-      ];
-    }
-    if (editing.status === "DRAFT" || editing.status === "REJECTED") {
-      return [
-        { label: t("voucher.drawer.close"), onClick: onClose },
-        { label: t("voucher.drawer.submitApprove"), primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("PENDING_APPROVAL") },
-      ];
-    }
-    return [{ label: t("voucher.drawer.close"), onClick: onClose }];
-  })();
+const actions: DrawerAction[] = (() => {
+  if (!editing || drawerEditMode) {
+    return [
+      { label: t("voucher.drawer.cancel"), onClick: onClose },
+      {
+        label: t("voucher.drawer.saveDraft"),
+        disabled: saving,
+        onClick: () => onSave("DRAFT"),
+      },
+      {
+        label: t("voucher.drawer.submitApprove"),
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => onSave("PENDING_APPROVAL"),
+      },
+    ];
+  }
+  if (editing.status === "PENDING_APPROVAL") {
+    return [
+      { label: t("voucher.drawer.close"), onClick: onClose },
+      {
+        label: t("voucher.drawer.reject"),
+        disabled: saving,
+        onClick: () => onStatusTransition("REJECTED"),
+      },
+      {
+        label: t("voucher.drawer.approve"),
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => onStatusTransition("APPROVED"),
+      },
+    ];
+  }
+  if (editing.status === "APPROVED") {
+    return [
+      { label: t("voucher.drawer.close"), onClick: onClose },
+      {
+        label: t("voucher.drawer.post"),
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => onStatusTransition("POSTED"),
+      },
+    ];
+  }
+  if (editing.status === "DRAFT" || editing.status === "REJECTED") {
+    return [
+      { label: t("voucher.drawer.close"), onClick: onClose },
+      {
+        label: t("voucher.drawer.submitApprove"),
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => onStatusTransition("PENDING_APPROVAL"),
+      },
+    ];
+  }
+  return [{ label: t("voucher.drawer.close"), onClick: onClose }];
+})();
 
 // AFTER — gọi action đúng tên:
-  const actions: DrawerAction[] = (() => {
-    if (!editing || drawerEditMode) {
+const actions: DrawerAction[] = (() => {
+  if (!editing || drawerEditMode) {
+    return [
+      { label: "Hủy bỏ", onClick: onClose },
+      { label: "Lưu nháp", disabled: saving, onClick: () => onSave("DRAFT") },
+      {
+        label: "Gửi duyệt",
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => onStatusTransition("SUBMIT"),
+      },
+    ];
+  }
+  switch (editing.status) {
+    case "DRAFT":
       return [
-        { label: "Hủy bỏ", onClick: onClose },
-        { label: "Lưu nháp", disabled: saving, onClick: () => onSave("DRAFT") },
-        { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("SUBMIT") },
+        { label: "Đóng", onClick: onClose },
+        {
+          label: "Hủy phiếu",
+          disabled: saving,
+          onClick: () => onStatusTransition("CANCEL"),
+        },
+        {
+          label: "Gửi duyệt",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => onStatusTransition("SUBMIT"),
+        },
       ];
-    }
-    switch (editing.status) {
-      case "DRAFT":
-        return [
-          { label: "Đóng", onClick: onClose },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-          { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("SUBMIT") },
-        ];
-      case "PENDING_APPROVAL":
-        return [
-          { label: "Đóng", onClick: onClose },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-          { label: "Từ chối", disabled: saving, onClick: () => onStatusTransition("REJECT") },
-          { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("APPROVE") },
-        ];
-      case "APPROVED":
-        return [
-          { label: "Đóng", onClick: onClose },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-          { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("POST") },
-        ];
-      default:
-        return [{ label: "Đóng", onClick: onClose }];
-    }
-  })();
+    case "PENDING_APPROVAL":
+      return [
+        { label: "Đóng", onClick: onClose },
+        {
+          label: "Hủy phiếu",
+          disabled: saving,
+          onClick: () => onStatusTransition("CANCEL"),
+        },
+        {
+          label: "Từ chối",
+          disabled: saving,
+          onClick: () => onStatusTransition("REJECT"),
+        },
+        {
+          label: "Duyệt",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => onStatusTransition("APPROVE"),
+        },
+      ];
+    case "APPROVED":
+      return [
+        { label: "Đóng", onClick: onClose },
+        {
+          label: "Hủy phiếu",
+          disabled: saving,
+          onClick: () => onStatusTransition("CANCEL"),
+        },
+        {
+          label: "Hạch toán",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => onStatusTransition("POST"),
+        },
+      ];
+    default:
+      return [{ label: "Đóng", onClick: onClose }];
+  }
+})();
 ```
 
 **Quan trọng**: Cập nhật prop `onStatusTransition` của `CashVoucherDrawerProps` từ:
+
 ```ts
   onStatusTransition: (nextStatus: VoucherStatus) => void;
 ```
+
 thành:
+
 ```ts
   onStatusTransition: (action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL") => void;
 ```
@@ -138,7 +214,9 @@ thành:
 Thay thế toàn bộ `<DrawerSection title={t("voucher.drawer.sectionPartner")}>` bằng:
 
 ```tsx
-{/* Section 2: Đối tượng */}
+{
+  /* Section 2: Đối tượng */
+}
 <DrawerSection title={t("voucher.drawer.sectionPartner")}>
   <DrawerField label="Loại đối tượng" required>
     <Combobox
@@ -209,19 +287,36 @@ Thay thế toàn bộ `<DrawerSection title={t("voucher.drawer.sectionPartner")}
     form.counterparty_phone_snapshot ||
     form.counterparty_identity_no_snapshot) && (
     <div className="mt-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-fg space-y-1">
-      <p className="font-medium text-foreground">Thông tin sẽ được chốt khi lưu:</p>
+      <p className="font-medium text-foreground">
+        Thông tin sẽ được chốt khi lưu:
+      </p>
       {form.counterparty_name_snapshot && (
-        <p>Tên: <span className="text-foreground">{form.counterparty_name_snapshot}</span></p>
+        <p>
+          Tên:{" "}
+          <span className="text-foreground">
+            {form.counterparty_name_snapshot}
+          </span>
+        </p>
       )}
       {form.counterparty_phone_snapshot && (
-        <p>SĐT: <span className="text-foreground">{form.counterparty_phone_snapshot}</span></p>
+        <p>
+          SĐT:{" "}
+          <span className="text-foreground">
+            {form.counterparty_phone_snapshot}
+          </span>
+        </p>
       )}
       {form.counterparty_identity_no_snapshot && (
-        <p>CMND/CCCD: <span className="text-foreground">{form.counterparty_identity_no_snapshot}</span></p>
+        <p>
+          CMND/CCCD:{" "}
+          <span className="text-foreground">
+            {form.counterparty_identity_no_snapshot}
+          </span>
+        </p>
       )}
     </div>
   )}
-</DrawerSection>
+</DrawerSection>;
 ```
 
 ---
@@ -234,60 +329,101 @@ Tìm đoạn `const drawerActions: DrawerAction[] = (() => {` và thay toàn b�
 
 ```ts
 // AFTER — đồng bộ với CashVoucherDrawer:
-  const drawerActions: DrawerAction[] = (() => {
-    if (!editing || drawerEditMode) {
+const drawerActions: DrawerAction[] = (() => {
+  if (!editing || drawerEditMode) {
+    return [
+      { label: "Hủy bỏ", onClick: closeDrawer },
+      {
+        label: "Lưu nháp",
+        disabled: saving,
+        onClick: () => handleSave("DRAFT"),
+      },
+      {
+        label: "Gửi duyệt",
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData),
+      },
+    ];
+  }
+  switch (editing.status) {
+    case "DRAFT":
       return [
-        { label: "Hủy bỏ", onClick: closeDrawer },
-        { label: "Lưu nháp", disabled: saving, onClick: () => handleSave("DRAFT") },
-        { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData) },
+        { label: "Đóng", onClick: closeDrawer },
+        {
+          label: "Hủy phiếu",
+          disabled: saving,
+          onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
+        },
+        {
+          label: "Gửi duyệt",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData),
+        },
       ];
-    }
-    switch (editing.status) {
-      case "DRAFT":
-        return [
-          { label: "Đóng", onClick: closeDrawer },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
-          { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("SUBMIT", reloadCurrentData) },
-        ];
-      case "PENDING_APPROVAL":
-        return [
-          { label: "Đóng", onClick: closeDrawer },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
-          { label: "Từ chối", disabled: saving, onClick: () => handleStatusTransition("REJECT", reloadCurrentData) },
-          { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("APPROVE", reloadCurrentData) },
-        ];
-      case "APPROVED":
-        return [
-          { label: "Đóng", onClick: closeDrawer },
-          { label: "Hủy phiếu", disabled: saving, onClick: () => handleStatusTransition("CANCEL", reloadCurrentData) },
-          { label: "Hạch toán", primary: true, loading: saving, disabled: saving, onClick: () => handleStatusTransition("POST", reloadCurrentData) },
-        ];
-      default:
-        return [{ label: "Đóng", onClick: closeDrawer }];
-    }
-  })();
+    case "PENDING_APPROVAL":
+      return [
+        { label: "Đóng", onClick: closeDrawer },
+        {
+          label: "Hủy phiếu",
+          disabled: saving,
+          onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
+        },
+        {
+          label: "Từ chối",
+          disabled: saving,
+          onClick: () => handleStatusTransition("REJECT", reloadCurrentData),
+        },
+        {
+          label: "Duyệt",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => handleStatusTransition("APPROVE", reloadCurrentData),
+        },
+      ];
+    case "APPROVED":
+      return [
+        { label: "Đóng", onClick: closeDrawer },
+        {
+          label: "Hủy phiếu",
+          disabled: saving,
+          onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
+        },
+        {
+          label: "Hạch toán",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => handleStatusTransition("POST", reloadCurrentData),
+        },
+      ];
+    default:
+      return [{ label: "Đóng", onClick: closeDrawer }];
+  }
+})();
 ```
 
 **Lưu ý**: `handleStatusTransition` lúc này là từ `useVoucherDrawer` (không phải từ `useBankVoucherHandlers`). Bỏ dòng destructure `handleStatusTransition` từ `useBankVoucherHandlers`. Thêm destructure từ `useVoucherDrawer`:
 
 ```ts
 // Trong TienGui.tsx, sau khi gọi useVoucherDrawer():
-const {
-  ...
-  cancelReason,
-  setCancelReason,
-  handleStatusTransition,
-} = useVoucherDrawer();
+const { ...cancelReason, setCancelReason, handleStatusTransition } =
+  useVoucherDrawer();
 ```
 
 ### 2b. Cập nhật `canEditVoucher`
 
 ```ts
 // BEFORE:
-  const canEditVoucher = !editing || editing.status === "DRAFT" || editing.status === "REJECTED";
+const canEditVoucher =
+  !editing || editing.status === "DRAFT" || editing.status === "REJECTED";
 
 // AFTER:
-  const canEditVoucher = !editing || editing.status === "DRAFT";
+const canEditVoucher = !editing || editing.status === "DRAFT";
 ```
 
 ### 2c. Load danh sách nhân viên
@@ -305,14 +441,13 @@ Promise.all([
   getCompanyBankAccountsApi(),
   getChartOfAccountsApi(),
   getBusinessPartnersApi(),
-  getEmployeesApi(),           // thêm dòng này
-])
-  .then(([banks, coa, bps, emps]) => {
-    setCompanyBankAccounts(banks ?? []);
-    setCoaItems(coa ?? []);
-    setPartners(bps ?? []);
-    setEmployees(emps ?? []);  // thêm dòng này
-  })
+  getEmployeesApi(), // thêm dòng này
+]).then(([banks, coa, bps, emps]) => {
+  setCompanyBankAccounts(banks ?? []);
+  setCoaItems(coa ?? []);
+  setPartners(bps ?? []);
+  setEmployees(emps ?? []); // thêm dòng này
+});
 ```
 
 ### 2d. Thêm `employeeOpts`
@@ -322,7 +457,9 @@ const employeeOpts = useMemo(
   () =>
     employees.map((e) => ({
       value: e.id,
-      label: `${e.employee_code ?? ""} — ${e.full_name}`.trim().replace(/^— /, ""),
+      label: `${e.employee_code ?? ""} — ${e.full_name}`
+        .trim()
+        .replace(/^— /, ""),
     })),
   [employees],
 );
@@ -333,23 +470,25 @@ const employeeOpts = useMemo(
 Thay thế `<DrawerSection title={t("voucher.drawer.sectionPartner")}>` trong TienGui.tsx theo pattern tương tự CashVoucherDrawer (File 1, mục 1f), nhưng thêm thêm block beneficiary bank khi `counterparty_source === "EXTERNAL"`:
 
 ```tsx
-{form.counterparty_source === "EXTERNAL" && (
-  <DrawerField label={t("voucher.drawer.partnerBank")}>
-    <Combobox
-      options={partnerBankOpts}
-      value={form.beneficiary_bank_account_id}
-      onChange={(v) => setField("beneficiary_bank_account_id", v)}
-      placeholder={
-        partnerBankLoading
-          ? t("voucher.drawer.partnerBankLoading")
-          : form.counterparty_id
-            ? t("voucher.drawer.partnerBankPlaceholder")
-            : t("voucher.drawer.partnerBankNoPartner")
-      }
-      disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
-    />
-  </DrawerField>
-)}
+{
+  form.counterparty_source === "EXTERNAL" && (
+    <DrawerField label={t("voucher.drawer.partnerBank")}>
+      <Combobox
+        options={partnerBankOpts}
+        value={form.beneficiary_bank_account_id}
+        onChange={(v) => setField("beneficiary_bank_account_id", v)}
+        placeholder={
+          partnerBankLoading
+            ? t("voucher.drawer.partnerBankLoading")
+            : form.counterparty_id
+              ? t("voucher.drawer.partnerBankPlaceholder")
+              : t("voucher.drawer.partnerBankNoPartner")
+        }
+        disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
+      />
+    </DrawerField>
+  );
+}
 ```
 
 ---

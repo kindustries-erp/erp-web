@@ -58,26 +58,69 @@ interface BankDraft {
   is_active: boolean;
 }
 
-const newTempId = () => `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const newTempId = () =>
+  `tmp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 function emptyContactDraft(): ContactDraft {
-  return { id: "", tempId: newTempId(), full_name: "", position: "", phone: "", email: "", is_default_receiver: true, is_default_payer: false, is_active: true };
+  return {
+    id: "",
+    tempId: newTempId(),
+    full_name: "",
+    position: "",
+    phone: "",
+    email: "",
+    is_default_receiver: true,
+    is_default_payer: false,
+    is_active: true,
+  };
 }
 
 function emptyBankDraft(): BankDraft {
-  return { id: "", tempId: newTempId(), bank_name: "", account_number: "", account_holder: "", currency: "VND", is_default: true, is_active: true };
+  return {
+    id: "",
+    tempId: newTempId(),
+    bank_name: "",
+    account_number: "",
+    account_holder: "",
+    currency: "VND",
+    is_default: true,
+    is_active: true,
+  };
 }
 
 function contactDraftFromApi(c: BusinessPartnerContact): ContactDraft {
-  return { id: c.id, tempId: c.id, full_name: c.full_name, position: c.position ?? "", phone: c.phone ?? "", email: c.email ?? "", is_default_receiver: c.is_default_receiver, is_default_payer: c.is_default_payer, is_active: c.is_active };
+  return {
+    id: c.id,
+    tempId: c.id,
+    full_name: c.full_name,
+    position: c.position ?? "",
+    phone: c.phone ?? "",
+    email: c.email ?? "",
+    is_default_receiver: c.is_default_receiver,
+    is_default_payer: c.is_default_payer,
+    is_active: c.is_active,
+  };
 }
 
 function bankDraftFromApi(b: BusinessPartnerBankAccount): BankDraft {
-  return { id: b.id, tempId: b.id, bank_name: b.bank_name, account_number: b.account_number, account_holder: b.account_holder, currency: b.currency ?? "VND", is_default: b.is_default, is_active: b.is_active };
+  return {
+    id: b.id,
+    tempId: b.id,
+    bank_name: b.bank_name,
+    account_number: b.account_number,
+    account_holder: b.account_holder,
+    currency: b.currency ?? "VND",
+    is_default: b.is_default,
+    is_active: b.is_active,
+  };
 }
 
-const contactHasData = (r: ContactDraft) => !!r.full_name.trim() || !!r.phone.trim() || !!r.email.trim();
-const bankHasData = (r: BankDraft) => !!r.bank_name.trim() || !!r.account_number.trim() || !!r.account_holder.trim();
+const contactHasData = (r: ContactDraft) =>
+  !!r.full_name.trim() || !!r.phone.trim() || !!r.email.trim();
+const bankHasData = (r: BankDraft) =>
+  !!r.bank_name.trim() ||
+  !!r.account_number.trim() ||
+  !!r.account_holder.trim();
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -95,13 +138,17 @@ export function PartnersTab() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessPartner | null>(null);
   const [form, setForm] = useState<PartnerForm>(emptyPartnerForm);
-  const [contactRows, setContactRows] = useState<ContactDraft[]>([emptyContactDraft()]);
+  const [contactRows, setContactRows] = useState<ContactDraft[]>([
+    emptyContactDraft(),
+  ]);
   const [bankRows, setBankRows] = useState<BankDraft[]>([emptyBankDraft()]);
   const [deletedContactIds, setDeletedContactIds] = useState<string[]>([]);
   const [deletedBankIds, setDeletedBankIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<BusinessPartner | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<BusinessPartner | null>(
+    null,
+  );
   const [deleting, setDeleting] = useState(false);
   const t = useT();
 
@@ -114,7 +161,11 @@ export function PartnersTab() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getBusinessPartnersPagedApi({ page: pg, pageSize: ps, search: q || undefined });
+      const res = await getBusinessPartnersPagedApi({
+        page: pg,
+        pageSize: ps,
+        search: q || undefined,
+      });
       setItems(res.items);
       setTotal(res.total);
       setTotalPages(res.totalPages);
@@ -128,11 +179,21 @@ export function PartnersTab() {
   function handleSearchInput(v: string) {
     setSearchInput(v);
     clearTimeout(searchTimer.current);
-    if (!v) { setSearch(""); setPage(1); return; }
-    searchTimer.current = setTimeout(() => { setSearch(v); setPage(1); }, 400);
+    if (!v) {
+      setSearch("");
+      setPage(1);
+      return;
+    }
+    searchTimer.current = setTimeout(() => {
+      setSearch(v);
+      setPage(1);
+    }, 400);
   }
 
-  function handlePageSize(ps: number) { setPageSize(ps); setPage(1); }
+  function handlePageSize(ps: number) {
+    setPageSize(ps);
+    setPage(1);
+  }
 
   function openNew() {
     setEditing(null);
@@ -161,31 +222,93 @@ export function PartnersTab() {
         getBusinessPartnerBankAccountsPagedApi({ page: 1, pageSize: 500 }),
         getBusinessPartnerRolesPagedApi({ page: 1, pageSize: 500 }),
       ]);
-      const partnerContacts = contactRes.items.filter((c) => c.business_partner_id === item.id);
-      const partnerBanks = bankRes.items.filter((b) => b.business_partner_id === item.id);
-      const partnerRoles = roleRes.items.filter((r) => r.business_partner_id === item.id);
-      const contact = partnerContacts.find((c) => c.is_default_receiver || c.is_default_payer) ?? partnerContacts[0];
+      const partnerContacts = contactRes.items.filter(
+        (c) => c.business_partner_id === item.id,
+      );
+      const partnerBanks = bankRes.items.filter(
+        (b) => b.business_partner_id === item.id,
+      );
+      const partnerRoles = roleRes.items.filter(
+        (r) => r.business_partner_id === item.id,
+      );
+      const contact =
+        partnerContacts.find(
+          (c) => c.is_default_receiver || c.is_default_payer,
+        ) ?? partnerContacts[0];
       const bank = partnerBanks.find((b) => b.is_default) ?? partnerBanks[0];
       const role = partnerRoles.find((r) => r.is_active) ?? partnerRoles[0];
-      setContactRows(partnerContacts.length ? partnerContacts.map(contactDraftFromApi) : [emptyContactDraft()]);
-      setBankRows(partnerBanks.length ? partnerBanks.map(bankDraftFromApi) : [emptyBankDraft()]);
+      setContactRows(
+        partnerContacts.length
+          ? partnerContacts.map(contactDraftFromApi)
+          : [emptyContactDraft()],
+      );
+      setBankRows(
+        partnerBanks.length
+          ? partnerBanks.map(bankDraftFromApi)
+          : [emptyBankDraft()],
+      );
       setForm({
         ...baseForm,
-        ...(contact ? { contact_id: contact.id, contact_full_name: contact.full_name, contact_position: contact.position ?? "", contact_phone: contact.phone ?? "", contact_email: contact.email ?? "", contact_is_default_receiver: contact.is_default_receiver, contact_is_default_payer: contact.is_default_payer, contact_is_active: contact.is_active } : {}),
-        ...(bank ? { bank_id: bank.id, bank_name: bank.bank_name, bank_account_number: bank.account_number, bank_account_holder: bank.account_holder, bank_currency: bank.currency ?? "VND", bank_is_default: bank.is_default, bank_is_active: bank.is_active } : {}),
-        ...(role ? { role_id: role.id, role_enabled: true, role: role.role, role_is_active: role.is_active } : {}),
+        ...(contact
+          ? {
+              contact_id: contact.id,
+              contact_full_name: contact.full_name,
+              contact_position: contact.position ?? "",
+              contact_phone: contact.phone ?? "",
+              contact_email: contact.email ?? "",
+              contact_is_default_receiver: contact.is_default_receiver,
+              contact_is_default_payer: contact.is_default_payer,
+              contact_is_active: contact.is_active,
+            }
+          : {}),
+        ...(bank
+          ? {
+              bank_id: bank.id,
+              bank_name: bank.bank_name,
+              bank_account_number: bank.account_number,
+              bank_account_holder: bank.account_holder,
+              bank_currency: bank.currency ?? "VND",
+              bank_is_default: bank.is_default,
+              bank_is_active: bank.is_active,
+            }
+          : {}),
+        ...(role
+          ? {
+              role_id: role.id,
+              role_enabled: true,
+              role: role.role,
+              role_is_active: role.is_active,
+            }
+          : {}),
       });
     } catch {
       // Keep drawer usable even if related records fail to preload
     }
   }
 
-  function closeDrawer() { setDrawerOpen(false); setEditing(null); setSaveError(null); }
-  const setField = <K extends keyof PartnerForm>(k: K, v: PartnerForm[K]) => setForm((f) => ({ ...f, [k]: v }));
-  const setContactField = <K extends keyof ContactDraft>(idx: number, k: K, v: ContactDraft[K]) =>
-    setContactRows((rows) => rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)));
-  const setBankField = <K extends keyof BankDraft>(idx: number, k: K, v: BankDraft[K]) =>
-    setBankRows((rows) => rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)));
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setEditing(null);
+    setSaveError(null);
+  }
+  const setField = <K extends keyof PartnerForm>(k: K, v: PartnerForm[K]) =>
+    setForm((f) => ({ ...f, [k]: v }));
+  const setContactField = <K extends keyof ContactDraft>(
+    idx: number,
+    k: K,
+    v: ContactDraft[K],
+  ) =>
+    setContactRows((rows) =>
+      rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)),
+    );
+  const setBankField = <K extends keyof BankDraft>(
+    idx: number,
+    k: K,
+    v: BankDraft[K],
+  ) =>
+    setBankRows((rows) =>
+      rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)),
+    );
 
   function removeContactRow(idx: number) {
     setContactRows((rows) => {
@@ -206,12 +329,31 @@ export function PartnersTab() {
   }
 
   async function handleSave() {
-    if (!form.code.trim() || !form.name.trim()) { setSaveError("Mã đối tác và tên đối tác là bắt buộc."); return; }
+    if (!form.code.trim() || !form.name.trim()) {
+      setSaveError("Mã đối tác và tên đối tác là bắt buộc.");
+      return;
+    }
     const contactsToSave = contactRows.filter(contactHasData);
     const banksToSave = bankRows.filter(bankHasData);
-    if (contactsToSave.some((r) => !r.full_name.trim())) { setSaveError("Tên liên hệ là bắt buộc khi nhập thông tin liên hệ."); return; }
-    if (banksToSave.some((r) => !r.bank_name.trim() || !r.account_number.trim() || !r.account_holder.trim())) { setSaveError("Tên ngân hàng, số tài khoản và chủ tài khoản là bắt buộc."); return; }
-    if (form.role_enabled && !form.role) { setSaveError("Vai trò đối tác là bắt buộc."); return; }
+    if (contactsToSave.some((r) => !r.full_name.trim())) {
+      setSaveError("Tên liên hệ là bắt buộc khi nhập thông tin liên hệ.");
+      return;
+    }
+    if (
+      banksToSave.some(
+        (r) =>
+          !r.bank_name.trim() ||
+          !r.account_number.trim() ||
+          !r.account_holder.trim(),
+      )
+    ) {
+      setSaveError("Tên ngân hàng, số tài khoản và chủ tài khoản là bắt buộc.");
+      return;
+    }
+    if (form.role_enabled && !form.role) {
+      setSaveError("Vai trò đối tác là bắt buộc.");
+      return;
+    }
 
     setSaving(true);
     setSaveError(null);
@@ -233,8 +375,10 @@ export function PartnersTab() {
         : await createBusinessPartnerApi(dto);
       const partnerId = savedPartner.id;
 
-      for (const id of deletedContactIds) await deleteBusinessPartnerContactApi(id);
-      for (const id of deletedBankIds) await deleteBusinessPartnerBankAccountApi(id);
+      for (const id of deletedContactIds)
+        await deleteBusinessPartnerContactApi(id);
+      for (const id of deletedBankIds)
+        await deleteBusinessPartnerBankAccountApi(id);
 
       for (const row of contactsToSave) {
         const contactDto: CreateBusinessPartnerContactDto = {
@@ -271,7 +415,8 @@ export function PartnersTab() {
           role: form.role,
           is_active: form.role_is_active,
         };
-        if (form.role_id) await updateBusinessPartnerRoleApi(form.role_id, roleDto);
+        if (form.role_id)
+          await updateBusinessPartnerRoleApi(form.role_id, roleDto);
         else await createBusinessPartnerRoleApi(roleDto);
       }
 
@@ -300,11 +445,16 @@ export function PartnersTab() {
     }
   }
 
-  function addContactRow() { setContactRows((r) => [...r, emptyContactDraft()]); }
-  function addBankRow() { setBankRows((r) => [...r, emptyBankDraft()]); }
+  function addContactRow() {
+    setContactRows((r) => [...r, emptyContactDraft()]);
+  }
+  function addBankRow() {
+    setBankRows((r) => [...r, emptyBankDraft()]);
+  }
 
   const isDirty = !!form.code.trim() || !!form.name.trim();
-  const kindLabel = (v: string) => PARTNER_KIND_OPTS.find((o) => o.value === v)?.label ?? v;
+  const kindLabel = (v: string) =>
+    PARTNER_KIND_OPTS.find((o) => o.value === v)?.label ?? v;
 
   return (
     <PartnersTabView

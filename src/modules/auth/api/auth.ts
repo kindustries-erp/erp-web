@@ -113,7 +113,10 @@ export interface Employee {
   updated_by: string | null;
   department_id: Department;
   position_id: Position;
-  branch_id?: string | { id?: string; branch_code?: string; branch_name?: string } | null;
+  branch_id?:
+    | string
+    | { id?: string; branch_code?: string; branch_name?: string }
+    | null;
 }
 
 export interface UpdateProfileRequest {
@@ -278,10 +281,10 @@ export async function getProfileApi(): Promise<AuthProfileResponse> {
 export async function selfUpdateProfileApi(
   payload: SelfUpdateProfileRequest,
 ): Promise<SelfUpdateProfileData> {
-  const { data } = await axiosInstance.patch<{ message: string; data: SelfUpdateProfileData }>(
-    "/api/v1/auth/profile",
-    payload,
-  );
+  const { data } = await axiosInstance.patch<{
+    message: string;
+    data: SelfUpdateProfileData;
+  }>("/api/v1/auth/profile", payload);
   return data.data;
 }
 

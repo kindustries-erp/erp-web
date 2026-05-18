@@ -1,26 +1,26 @@
-import { Bar } from 'react-chartjs-2'
-import '@/shared/utils/chartSetup'
-import { useChartTheme } from '@/shared/utils/chartTheme'
+import { Bar } from "react-chartjs-2";
+import "@/shared/utils/chartSetup";
+import { useChartTheme } from "@/shared/utils/chartTheme";
 
 interface BarChartProps {
-  labels: string[]
+  labels: string[];
   datasets: Array<{
-    data: number[]
-    color: string
-    label?: string
-  }>
-  yMax?: number
-  yCallback?: (v: number | string) => string
+    data: number[];
+    color: string;
+    label?: string;
+  }>;
+  yMax?: number;
+  yCallback?: (v: number | string) => string;
 }
 
 export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
-  const { gridColor, tickColor } = useChartTheme()
+  const { gridColor, tickColor } = useChartTheme();
   return (
     <Bar
       data={{
         labels,
         datasets: datasets.map((d) => ({
-          label: d.label ?? '',
+          label: d.label ?? "",
           data: d.data,
           backgroundColor: d.color,
           borderRadius: 4,
@@ -44,11 +44,11 @@ export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
             ticks: {
               font: { size: 11 },
               color: tickColor,
-              callback: yCallback ?? ((v) => v + 'B'),
+              callback: yCallback ?? ((v) => v + "B"),
             },
           },
         },
       }}
     />
-  )
+  );
 }

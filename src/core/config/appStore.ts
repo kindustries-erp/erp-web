@@ -58,14 +58,8 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.cashflow", "dongtien"],
     ["breadcrumb.bank"],
   ],
-  dinhkem: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.attachments"],
-  ],
-  hoadondientu: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.hoadondientu"],
-  ],
+  dinhkem: [["breadcrumb.accounting"], ["breadcrumb.attachments"]],
+  hoadondientu: [["breadcrumb.accounting"], ["breadcrumb.hoadondientu"]],
   "thietlap-quy": [
     ["breadcrumb.accounting"],
     ["breadcrumb.catalog", "thietlap-quy"],

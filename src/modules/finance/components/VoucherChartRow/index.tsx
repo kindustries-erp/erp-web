@@ -11,7 +11,6 @@ interface DonutItem {
 }
 
 interface VoucherChartRowProps {
-
   openingLoading: boolean;
   donutLoading: boolean;
   chartData: number[];
@@ -30,7 +29,6 @@ interface VoucherChartRowProps {
  * Dùng chung cho TienMat và TienGui.
  */
 export function VoucherChartRow({
-
   openingLoading,
   donutLoading,
   chartData,

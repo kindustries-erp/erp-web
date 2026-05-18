@@ -1,19 +1,23 @@
 # Task Plan — FIX mất chứng từ liên quan khi mở lại phiếu tiền mặt/ủy nhiệm thu chi
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: FIX
 - Mục tiêu: Khi tạo phiếu tiền mặt/ủy nhiệm thu chi có chứng từ liên quan và submit, mở lại phiếu vẫn phải thấy chứng từ liên quan; khi mở qua trang công nợ, chứng từ phải phản ánh đã thanh toán đúng.
 - Bối cảnh/ngữ cảnh: Hiện tại sau submit, mở lại phiếu không còn chứng từ liên quan; kéo theo trang công nợ chưa ghi nhận đã thanh toán.
 
 ## PLAN ONLY
+
 - Trạng thái: CHỈ LẬP KẾ HOẠCH.
 - Chưa sửa code/DB/config.
 - Chưa deploy.
 
 ## Goal
+
 Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phiếu và đảm bảo số liệu thanh toán AR (`settled_amount/open_amount/status`) được tính nhất quán, lưu bền vững, hiển thị đúng ở cả Cash/Bank và Công nợ.
 
 ## Scope
+
 - In-scope:
   - Luồng create/update/read chi tiết payment voucher cho CASH/BANK và CUSTOMER_ADVANCE_RECEIPT.
   - Persist + load lại `cash_bank_related_documents` khi mở lại voucher.
@@ -26,12 +30,14 @@ Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phi
   - Đổi schema lớn nếu Gate 0 không yêu cầu.
 
 ## Relevant Files
+
 - `liouni-erp-api/src/payment-vouchers/payment-vouchers.service.ts` - điểm chính sync/load related documents + recompute settlement.
 - `liouni-erp-web/src/modules/finance/utils/financeHelpers.ts` - mapping form build/read liên quan `related_documents`.
 - `liouni-erp-web/src/modules/finance/api/financeApi.ts` - contract request/response của `related_documents` và số liệu settled/open.
 - (sẽ xác nhận thêm sau inspect) component cash/bank modal và AR workbench đọc dữ liệu sau submit.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `payment_vouchers`: `id`, `voucher_type`, `status`.
   - `cash_bank_related_documents`: `payment_voucher_id`, `related_type`, `related_id`, `amount`, `sort`.
@@ -47,6 +53,7 @@ Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phi
 - Nếu `DB_GAP_FOUND`: tạo DB task (directus-staging) trước khi thực thi API/UI.
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB precheck chi tiết bằng Directus/DB script
 - [x] 2.0 DB gate (nếu cần)
   - [x] 2.1 Xác nhận/điều chỉnh constraints/index/trigger cho persist related docs
@@ -72,6 +79,7 @@ Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phi
   - [ ] 6.4 Tổng hợp evidence cuối
 
 ## Gate validations
+
 - Gate DB pass khi có evidence collection/field/constraint đúng và không có automation xóa link bất thường.
 - Gate API pass khi:
   - Tạo/cập nhật voucher giữ nguyên liên kết mong muốn.
@@ -82,6 +90,7 @@ Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phi
   - Trang công nợ cùng chứng từ hiển thị đã thanh toán/partial đúng nghiệp vụ.
 
 ## Risk + rollback
+
 - Risks:
   - Double-count settled amount nếu recompute chạy sai filter.
   - Mất link cũ khi update nếu payload partial bị hiểu là replace-all.
@@ -92,6 +101,7 @@ Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phi
   - Redeploy về image trước đó và xác nhận smoke route.
 
 ## Evidence cần thu thập
+
 - Gate 0:
   - Output precheck collections/fields/constraints.
   - Sample record trước sửa: voucher + related docs + AR status.
@@ -107,4 +117,5 @@ Khóa lỗi mất liên kết `related_documents` sau khi tạo/cập nhật phi
   - Smoke checklist pass đầy đủ.
 
 ## Sẵn sàng thực thi
+
 Chờ bạn xác nhận "Sẵn sàng thực thi" thì tôi mới bắt đầu vào pha thực thi (DB -> API -> UI), tuyệt đối không làm tắt thứ tự gate.

@@ -18,17 +18,17 @@ Authorization: Bearer <access_token>
 
 ## Danh sách endpoint
 
-| Method | Endpoint | Mô tả |
-| --- | --- | --- |
-| `GET` | `/api/v1/rbac/roles-table` | Lấy bảng RBAC đã tổng hợp role + user + policy + permission |
-| `GET` | `/api/v1/rbac/roles` | Lấy danh sách role có phân trang (kèm users) |
-| `POST` | `/api/v1/rbac/roles` | Tạo role mới |
-| `PATCH` | `/api/v1/rbac/roles/:id` | Cập nhật role |
-| `DELETE` | `/api/v1/rbac/roles/:id` | Xóa role |
-| `GET` | `/api/v1/rbac/roles/:roleId/permissions` | Lấy permission theo role |
-| `PATCH` | `/api/v1/rbac/roles/:roleId/permissions` | Cập nhật permission theo role |
-| `GET` | `/api/v1/rbac/roles/:roleId/users` | Lấy danh sách user thuộc role |
-| `PATCH` | `/api/v1/rbac/roles/:roleId/users` | Cập nhật danh sách user thuộc role |
+| Method   | Endpoint                                 | Mô tả                                                       |
+| -------- | ---------------------------------------- | ----------------------------------------------------------- |
+| `GET`    | `/api/v1/rbac/roles-table`               | Lấy bảng RBAC đã tổng hợp role + user + policy + permission |
+| `GET`    | `/api/v1/rbac/roles`                     | Lấy danh sách role có phân trang (kèm users)                |
+| `POST`   | `/api/v1/rbac/roles`                     | Tạo role mới                                                |
+| `PATCH`  | `/api/v1/rbac/roles/:id`                 | Cập nhật role                                               |
+| `DELETE` | `/api/v1/rbac/roles/:id`                 | Xóa role                                                    |
+| `GET`    | `/api/v1/rbac/roles/:roleId/permissions` | Lấy permission theo role                                    |
+| `PATCH`  | `/api/v1/rbac/roles/:roleId/permissions` | Cập nhật permission theo role                               |
+| `GET`    | `/api/v1/rbac/roles/:roleId/users`       | Lấy danh sách user thuộc role                               |
+| `PATCH`  | `/api/v1/rbac/roles/:roleId/users`       | Cập nhật danh sách user thuộc role                          |
 
 ---
 
@@ -94,11 +94,11 @@ Lấy danh sách role có phân trang. Mỗi role bao gồm mảng `users` chứ
 
 ### Query params
 
-| Param | Type | Mặc định | Mô tả |
-| --- | --- | --- | --- |
-| `page` | `number` | `1` | Trang hiện tại |
-| `pageSize` | `number` | `20` | Số bản ghi/trang |
-| `search` | `string` | `undefined` | Từ khóa tìm kiếm |
+| Param      | Type     | Mặc định    | Mô tả            |
+| ---------- | -------- | ----------- | ---------------- |
+| `page`     | `number` | `1`         | Trang hiện tại   |
+| `pageSize` | `number` | `20`        | Số bản ghi/trang |
+| `search`   | `string` | `undefined` | Từ khóa tìm kiếm |
 
 ### Request
 
@@ -173,9 +173,9 @@ Cập nhật role theo `id`. Payload được forward sang Directus `/roles/:id`
 
 ### Path param
 
-| Param | Type | Mô tả |
-| --- | --- | --- |
-| `id` | `string` | UUID role |
+| Param | Type     | Mô tả     |
+| ----- | -------- | --------- |
+| `id`  | `string` | UUID role |
 
 ### Request body (example)
 
@@ -205,9 +205,9 @@ Xóa role theo `id`.
 
 ### Path param
 
-| Param | Type | Mô tả |
-| --- | --- | --- |
-| `id` | `string` | UUID role |
+| Param | Type     | Mô tả     |
+| ----- | -------- | --------- |
+| `id`  | `string` | UUID role |
 
 ### Request
 
@@ -228,8 +228,8 @@ Lấy danh sách permission đang áp dụng cho role thông qua policy đang ma
 
 ### Path param
 
-| Param | Type | Mô tả |
-| --- | --- | --- |
+| Param    | Type     | Mô tả     |
+| -------- | -------- | --------- |
 | `roleId` | `string` | UUID role |
 
 ### Request
@@ -282,8 +282,8 @@ Luồng xử lý hiện tại:
 
 ### Path param
 
-| Param | Type | Mô tả |
-| --- | --- | --- |
+| Param    | Type     | Mô tả     |
+| -------- | -------- | --------- |
 | `roleId` | `string` | UUID role |
 
 ### Request body schema
@@ -305,15 +305,15 @@ Luồng xử lý hiện tại:
 
 ### Validation rules
 
-| Field | Required | Type | Mô tả |
-| --- | --- | --- | --- |
-| `permissions` | Bắt buộc | `array` | Mảng cấu hình permission |
-| `permissions[].collection` | Bắt buộc | `string` | Tên collection |
-| `permissions[].action` | Bắt buộc | `string` | Action (ví dụ: `read`, `create`, `update`, `delete`) |
-| `permissions[].access` | Bắt buộc | `boolean` | `false` để xóa permission; `true` để tạo/cập nhật |
-| `permissions[].fields` | Không | `string[] \| string` | Field whitelist cho action |
-| `permissions[].permissions` | Không | `object` | Điều kiện filter của Directus |
-| `permissions[].validation` | Không | `object` | Validation rule của Directus |
+| Field                       | Required | Type                 | Mô tả                                                |
+| --------------------------- | -------- | -------------------- | ---------------------------------------------------- |
+| `permissions`               | Bắt buộc | `array`              | Mảng cấu hình permission                             |
+| `permissions[].collection`  | Bắt buộc | `string`             | Tên collection                                       |
+| `permissions[].action`      | Bắt buộc | `string`             | Action (ví dụ: `read`, `create`, `update`, `delete`) |
+| `permissions[].access`      | Bắt buộc | `boolean`            | `false` để xóa permission; `true` để tạo/cập nhật    |
+| `permissions[].fields`      | Không    | `string[] \| string` | Field whitelist cho action                           |
+| `permissions[].permissions` | Không    | `object`             | Điều kiện filter của Directus                        |
+| `permissions[].validation`  | Không    | `object`             | Validation rule của Directus                         |
 
 ### Request body (example)
 
@@ -354,8 +354,8 @@ Lấy danh sách user (kèm email) đang thuộc role.
 
 ### Path param
 
-| Param | Type | Mô tả |
-| --- | --- | --- |
+| Param    | Type     | Mô tả     |
+| -------- | -------- | --------- |
 | `roleId` | `string` | UUID role |
 
 ### Request
@@ -409,8 +409,8 @@ Luồng xử lý:
 
 ### Path param
 
-| Param | Type | Mô tả |
-| --- | --- | --- |
+| Param    | Type     | Mô tả     |
+| -------- | -------- | --------- |
 | `roleId` | `string` | UUID role |
 
 ### Request body schema
@@ -423,8 +423,8 @@ Luồng xử lý:
 
 ### Validation rules
 
-| Field | Required | Type | Mô tả |
-| --- | --- | --- | --- |
+| Field     | Required | Type       | Mô tả                                       |
+| --------- | -------- | ---------- | ------------------------------------------- |
 | `userIds` | Bắt buộc | `string[]` | Danh sách UUID của các user muốn thuộc role |
 
 ### Request body (example)
@@ -453,8 +453,8 @@ Ghi chú: gửi `userIds: []` sẽ bỏ toàn bộ user ra khỏi role (set `rol
 
 ## Error responses thường gặp
 
-| HTTP | Khi nào xảy ra |
-| --- | --- |
-| `400 Bad Request` | Payload không qua được `ValidationPipe` (sai kiểu, thiếu field bắt buộc trong DTO) |
-| `401 Unauthorized` | Thiếu hoặc sai Bearer token |
-| `4xx/5xx` | Lỗi từ Directus sẽ được forward lại qua `HttpException` |
+| HTTP               | Khi nào xảy ra                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `400 Bad Request`  | Payload không qua được `ValidationPipe` (sai kiểu, thiếu field bắt buộc trong DTO) |
+| `401 Unauthorized` | Thiếu hoặc sai Bearer token                                                        |
+| `4xx/5xx`          | Lỗi từ Directus sẽ được forward lại qua `HttpException`                            |

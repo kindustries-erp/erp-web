@@ -10,7 +10,10 @@ import {
   useJournalEntryLookups,
 } from "@/modules/accounting/hooks/useJournalEntries";
 import { JournalEntryForm } from "@/modules/accounting/components/JournalEntryForm";
-import type { JournalEntry, JournalEntryLine } from "@/modules/accounting/types/journalEntry";
+import type {
+  JournalEntry,
+  JournalEntryLine,
+} from "@/modules/accounting/types/journalEntry";
 import {
   formatMoney,
   getAccountLabel,
@@ -27,8 +30,6 @@ import {
 } from "@/modules/finance/api/financeApi";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
-
-
 
 interface FlatRow {
   entry: JournalEntry;
@@ -47,7 +48,15 @@ interface FlatRow {
 function flattenEntry(entry: JournalEntry): FlatRow[] {
   const lines = entry.lines ?? [];
   if (lines.length === 0) {
-    return [{ entry, debitLine: null, creditLine: null, amount: 0, description: entry.description || "" }];
+    return [
+      {
+        entry,
+        debitLine: null,
+        creditLine: null,
+        amount: 0,
+        description: entry.description || "",
+      },
+    ];
   }
 
   const sorted = [...lines].sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
@@ -87,16 +96,26 @@ export function NhatKyChung() {
   const [createOpen, setCreateOpen] = useState(false);
 
   // Unified detail modal state
-  const [detailState, setDetailState] = useState<VoucherDetailState | null>(null);
+  const [detailState, setDetailState] = useState<VoucherDetailState | null>(
+    null,
+  );
 
   const [activeTab, setActiveTab] = useState("nhat-ky-chung");
   const { setCustomBreadcrumbs } = useAppStore();
 
   useEffect(() => {
     if (activeTab === "nhat-ky-chung") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.report"], ["breadcrumb.reportJournal"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.report"],
+        ["breadcrumb.reportJournal"],
+      ]);
     } else if (activeTab === "so-cai") {
-      setCustomBreadcrumbs([["breadcrumb.accounting"], ["breadcrumb.report"], ["breadcrumb.reportLedger"]]);
+      setCustomBreadcrumbs([
+        ["breadcrumb.accounting"],
+        ["breadcrumb.report"],
+        ["breadcrumb.reportLedger"],
+      ]);
     }
   }, [activeTab, setCustomBreadcrumbs]);
 
@@ -108,7 +127,11 @@ export function NhatKyChung() {
     } else {
       setActiveTab("nhat-ky-chung");
       params.set("tab", "nhat-ky-chung");
-      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?${params.toString()}`,
+      );
     }
   }, []);
 
@@ -128,16 +151,24 @@ export function NhatKyChung() {
         const v = await getPaymentVoucherApi(entry.reference_id);
         setDetailState({ kind: "payment", voucher: v });
       } catch {
-        setDetailState({ kind: "error", msg: `Không tải được phiếu tiền: ${entry.reference_id}` });
+        setDetailState({
+          kind: "error",
+          msg: `Không tải được phiếu tiền: ${entry.reference_id}`,
+        });
       }
       return;
     }
 
-    if ((refType === "ar_documents" || refType === "ar_documents_reversal") && entry.reference_id) {
+    if (
+      (refType === "ar_documents" || refType === "ar_documents_reversal") &&
+      entry.reference_id
+    ) {
       setDetailState({ kind: "loading" });
       try {
         const res = await getArDocumentsApi({ page: 1, pageSize: 1 });
-        const doc = (res.items as ArDocument[] | undefined)?.find?.((d) => d.id === entry.reference_id);
+        const doc = (res.items as ArDocument[] | undefined)?.find?.(
+          (d) => d.id === entry.reference_id,
+        );
         if (doc) {
           setDetailState({ kind: "ar", doc });
         } else {
@@ -195,7 +226,7 @@ export function NhatKyChung() {
         }
         tabs={[
           { value: "nhat-ky-chung", label: t("nav.items.reportJournal") },
-          { value: "so-cai", label: t("nav.items.reportLedger") }
+          { value: "so-cai", label: t("nav.items.reportLedger") },
         ]}
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -206,56 +237,83 @@ export function NhatKyChung() {
             <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
               <input
                 value={list.search}
-                onChange={(e) => { list.setSearch(e.target.value); list.setPage(1); }}
+                onChange={(e) => {
+                  list.setSearch(e.target.value);
+                  list.setPage(1);
+                }}
                 placeholder={t("journalEntries.filters.search")}
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
               />
               <select
                 value={list.accountId}
-                onChange={(e) => { list.setAccountId(e.target.value); list.setPage(1); }}
+                onChange={(e) => {
+                  list.setAccountId(e.target.value);
+                  list.setPage(1);
+                }}
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
               >
                 <option value="">{t("journalEntries.filters.account")}</option>
                 {lookups.accounts.map((a) => (
                   <option key={a.id} value={a.id}>
-                    {[a.account_code, a.account_name].filter(Boolean).join(" — ")}
+                    {[a.account_code, a.account_name]
+                      .filter(Boolean)
+                      .join(" — ")}
                   </option>
                 ))}
               </select>
               <select
                 value={list.periodId}
-                onChange={(e) => { list.setPeriodId(e.target.value); list.setPage(1); }}
+                onChange={(e) => {
+                  list.setPeriodId(e.target.value);
+                  list.setPage(1);
+                }}
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
               >
                 <option value="">{t("journalEntries.filters.period")}</option>
                 {lookups.periods.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
                 ))}
               </select>
 
               <input
                 value={list.dateFrom}
-                onChange={(e) => { list.setDateFrom(e.target.value); list.setPage(1); }}
+                onChange={(e) => {
+                  list.setDateFrom(e.target.value);
+                  list.setPage(1);
+                }}
                 type="date"
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
               />
               <input
                 value={list.dateTo}
-                onChange={(e) => { list.setDateTo(e.target.value); list.setPage(1); }}
+                onChange={(e) => {
+                  list.setDateTo(e.target.value);
+                  list.setPage(1);
+                }}
                 type="date"
                 className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
               />
             </div>
             <div className="flex items-center justify-between text-xs text-[color:var(--muted-fg)]">
-              <span>{t("journalEntries.total")}: {list.total}</span>
-              <button type="button" onClick={list.resetFilters} className="hover:text-foreground">
+              <span>
+                {t("journalEntries.total")}: {list.total}
+              </span>
+              <button
+                type="button"
+                onClick={list.resetFilters}
+                className="hover:text-foreground"
+              >
                 {t("journalEntries.filters.reset")}
               </button>
             </div>
           </div>
 
           {list.error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">{list.error}</div>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+              {list.error}
+            </div>
           )}
 
           {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
@@ -264,24 +322,42 @@ export function NhatKyChung() {
               <table className="min-w-full text-xs">
                 <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.voucherNo")}</th>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.columns.date")}</th>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
-                    <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.amount")}</th>
-                    <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
+                    <th className="px-3 py-2 text-left font-medium">
+                      {t("journalEntries.columns.voucherNo")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium">
+                      {t("journalEntries.columns.date")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium">
+                      {t("journalEntries.form.debitAccount")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium">
+                      {t("journalEntries.form.creditAccount")}
+                    </th>
+                    <th className="px-3 py-2 text-right font-medium">
+                      {t("journalEntries.form.amount")}
+                    </th>
+                    <th className="px-3 py-2 text-left font-medium">
+                      {t("journalEntries.form.lineDescription")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {list.loading ? (
                     <tr>
-                      <td colSpan={6} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">
+                      <td
+                        colSpan={6}
+                        className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
+                      >
                         {t("journalEntries.loading")}
                       </td>
                     </tr>
                   ) : flatRows.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-3 py-8 text-center text-[color:var(--muted-fg)]">
+                      <td
+                        colSpan={6}
+                        className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
+                      >
                         {t("common.noData")}
                       </td>
                     </tr>
@@ -297,15 +373,21 @@ export function NhatKyChung() {
                         </td>
                         <td className="px-3 py-2">{row.entry.date}</td>
                         <td className="px-3 py-2">
-                          {row.debitLine ? getAccountLabel(row.debitLine.account_id) : "—"}
+                          {row.debitLine
+                            ? getAccountLabel(row.debitLine.account_id)
+                            : "—"}
                         </td>
                         <td className="px-3 py-2">
-                          {row.creditLine ? getAccountLabel(row.creditLine.account_id) : "—"}
+                          {row.creditLine
+                            ? getAccountLabel(row.creditLine.account_id)
+                            : "—"}
                         </td>
                         <td className="px-3 py-2 text-right">
                           {row.amount > 0 ? formatMoney(row.amount) : "—"}
                         </td>
-                        <td className="px-3 py-2 max-w-[200px] truncate">{row.description || "—"}</td>
+                        <td className="px-3 py-2 max-w-[200px] truncate">
+                          {row.description || "—"}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -321,7 +403,9 @@ export function NhatKyChung() {
               >
                 {t("journalEntries.pagination.prev")}
               </button>
-              <span>{list.page} / {Math.max(1, list.totalPages)}</span>
+              <span>
+                {list.page} / {Math.max(1, list.totalPages)}
+              </span>
               <button
                 type="button"
                 disabled={list.page >= Math.max(1, list.totalPages)}
@@ -362,28 +446,35 @@ export function NhatKyChung() {
       <DrawerModal
         open={!!detailState}
         onClose={closeDetail}
-        title={detailState?.kind === "payment"
-          ? `Phiếu tiền ${detailState.voucher.voucher_no}`
-          : detailState?.kind === "ar"
-          ? `Phiếu AR ${detailState.doc.document_no ?? detailState.doc.id}`
-          : detailState?.kind === "journal"
-          ? (detailState.entry.voucher_no || t("journalEntries.detail.title"))
-          : t("journalEntries.detail.title")}
+        title={
+          detailState?.kind === "payment"
+            ? `Phiếu tiền ${detailState.voucher.voucher_no}`
+            : detailState?.kind === "ar"
+              ? `Phiếu AR ${detailState.doc.document_no ?? detailState.doc.id}`
+              : detailState?.kind === "journal"
+                ? detailState.entry.voucher_no ||
+                  t("journalEntries.detail.title")
+                : t("journalEntries.detail.title")
+        }
         subtitle={
           detailState?.kind === "payment"
             ? detailState.voucher.description
             : detailState?.kind === "journal"
-            ? detailState.entry.description ?? undefined
-            : undefined
+              ? (detailState.entry.description ?? undefined)
+              : undefined
         }
         panelClassName="max-w-[860px]"
       >
         {detailState?.kind === "loading" && (
-          <div className="p-6 text-center text-xs text-[color:var(--muted-fg)]">{t("journalEntries.loading")}</div>
+          <div className="p-6 text-center text-xs text-[color:var(--muted-fg)]">
+            {t("journalEntries.loading")}
+          </div>
         )}
 
         {detailState?.kind === "error" && (
-          <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-xs text-red-700">{detailState.msg}</div>
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 text-xs text-red-700">
+            {detailState.msg}
+          </div>
         )}
 
         {/* Payment Voucher (TienMat / TienGui) — read-only summary */}
@@ -397,51 +488,77 @@ export function NhatKyChung() {
         )}
 
         {/* Journal Entry (created in Nhật Ký Chung) */}
-        {detailState?.kind === "journal" && (() => {
-          const entry = detailState.entry;
-          return (
-            <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 rounded-xl border border-border p-3">
-                <div>
-                  <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.date")}</div>
-                  <div>{entry.date}</div>
+        {detailState?.kind === "journal" &&
+          (() => {
+            const entry = detailState.entry;
+            return (
+              <div className="space-y-4 text-xs">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 rounded-xl border border-border p-3">
+                  <div>
+                    <div className="text-[color:var(--muted-fg)]">
+                      {t("journalEntries.columns.date")}
+                    </div>
+                    <div>{entry.date}</div>
+                  </div>
+                  <div>
+                    <div className="text-[color:var(--muted-fg)]">
+                      {t("journalEntries.columns.period")}
+                    </div>
+                    <div>{getPeriodLabel(entry.period_id)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[color:var(--muted-fg)]">
+                      {t("journalEntries.form.total")}
+                    </div>
+                    <div>{formatMoney(entry.total_debit)}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-[color:var(--muted-fg)]">{t("journalEntries.columns.period")}</div>
-                  <div>{getPeriodLabel(entry.period_id)}</div>
-                </div>
-                <div>
-                  <div className="text-[color:var(--muted-fg)]">{t("journalEntries.form.total")}</div>
-                  <div>{formatMoney(entry.total_debit)}</div>
-                </div>
-              </div>
 
-              <div className="rounded-xl border border-border overflow-hidden">
-                <table className="min-w-full">
-                  <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.debitAccount")}</th>
-                      <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.creditAccount")}</th>
-                      <th className="px-3 py-2 text-right font-medium">{t("journalEntries.form.amount")}</th>
-                      <th className="px-3 py-2 text-left font-medium">{t("journalEntries.form.lineDescription")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {flattenEntry(entry).map((row, ri) => (
-                      <tr key={ri} className="border-t border-border">
-                        <td className="px-3 py-2">{row.debitLine ? getAccountLabel(row.debitLine.account_id) : "—"}</td>
-                        <td className="px-3 py-2">{row.creditLine ? getAccountLabel(row.creditLine.account_id) : "—"}</td>
-                        <td className="px-3 py-2 text-right">{row.amount > 0 ? formatMoney(row.amount) : "—"}</td>
-                        <td className="px-3 py-2">{row.description || "—"}</td>
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <table className="min-w-full">
+                    <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">
+                          {t("journalEntries.form.debitAccount")}
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium">
+                          {t("journalEntries.form.creditAccount")}
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          {t("journalEntries.form.amount")}
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium">
+                          {t("journalEntries.form.lineDescription")}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {flattenEntry(entry).map((row, ri) => (
+                        <tr key={ri} className="border-t border-border">
+                          <td className="px-3 py-2">
+                            {row.debitLine
+                              ? getAccountLabel(row.debitLine.account_id)
+                              : "—"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {row.creditLine
+                              ? getAccountLabel(row.creditLine.account_id)
+                              : "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            {row.amount > 0 ? formatMoney(row.amount) : "—"}
+                          </td>
+                          <td className="px-3 py-2">
+                            {row.description || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-
-            </div>
-          );
-        })()}
+            );
+          })()}
       </DrawerModal>
     </>
   );
@@ -458,7 +575,12 @@ function PaymentVoucherReadOnly({ voucher: v }: { voucher: PaymentVoucher }) {
     ["Diễn giải", v.description],
     ["Đối tác", v.counterparty_name_snapshot || "—"],
     ["Người thực thu/chi", v.actual_person_name || "—"],
-    ["Số tiền", v.amount != null ? new Intl.NumberFormat("vi-VN").format(Number(v.amount)) : "—"],
+    [
+      "Số tiền",
+      v.amount != null
+        ? new Intl.NumberFormat("vi-VN").format(Number(v.amount))
+        : "—",
+    ],
     ["Trạng thái", v.status],
   ];
   return (
@@ -482,11 +604,26 @@ function ArDocumentReadOnly({ doc: d }: { doc: ArDocument }) {
   return (
     <div className="space-y-3 text-xs">
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-border p-3">
-        <div><div className="text-[color:var(--muted-fg)]">Số phiếu</div><div>{d.document_no ?? d.id}</div></div>
-        <div><div className="text-[color:var(--muted-fg)]">Ngày hạch toán</div><div>{d.posting_date ?? "—"}</div></div>
-        <div><div className="text-[color:var(--muted-fg)]">Loại</div><div>{d.document_type ?? "—"}</div></div>
-        <div><div className="text-[color:var(--muted-fg)]">Trạng thái</div><div>{d.status ?? "—"}</div></div>
-        <div className="col-span-2"><div className="text-[color:var(--muted-fg)]">Diễn giải</div><div>{d.description ?? "—"}</div></div>
+        <div>
+          <div className="text-[color:var(--muted-fg)]">Số phiếu</div>
+          <div>{d.document_no ?? d.id}</div>
+        </div>
+        <div>
+          <div className="text-[color:var(--muted-fg)]">Ngày hạch toán</div>
+          <div>{d.posting_date ?? "—"}</div>
+        </div>
+        <div>
+          <div className="text-[color:var(--muted-fg)]">Loại</div>
+          <div>{d.document_type ?? "—"}</div>
+        </div>
+        <div>
+          <div className="text-[color:var(--muted-fg)]">Trạng thái</div>
+          <div>{d.status ?? "—"}</div>
+        </div>
+        <div className="col-span-2">
+          <div className="text-[color:var(--muted-fg)]">Diễn giải</div>
+          <div>{d.description ?? "—"}</div>
+        </div>
       </div>
       <p className="text-[color:var(--muted-fg)] italic">
         Xem chi tiết đầy đủ tại mục Phải Thu.

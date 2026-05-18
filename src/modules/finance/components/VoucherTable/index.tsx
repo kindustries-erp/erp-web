@@ -6,8 +6,16 @@ import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { StatusBadge, VoucherTypeBadge } from "@/shared/components/badges";
 import { AttachmentCell } from "@/shared/components/AttachmentComponents";
 import { IconEdit, IconSort, IconTrash } from "@/shared/components/icons";
-import { STATUS_FILTER_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
-import type { CounterpartySource, PaymentVoucher, PaymentVoucherAttachment, VoucherStatus } from "@/modules/finance/api/financeApi";
+import {
+  STATUS_FILTER_OPTS,
+  COUNTERPARTY_SOURCE_OPTS,
+} from "@/modules/finance/types/voucherForm";
+import type {
+  CounterpartySource,
+  PaymentVoucher,
+  PaymentVoucherAttachment,
+  VoucherStatus,
+} from "@/modules/finance/api/financeApi";
 import { useT } from "@/core/i18n";
 
 interface VoucherTableProps {
@@ -74,13 +82,34 @@ function SortHeader({
  * Dùng chung cho TienMat (CASH) và TienGui (BANK).
  */
 export function VoucherTable({
-  title, vouchers, loading, fetchError, voucherAttachments,
-  sortCol, page, pageSize, total, totalPages,
-  searchInput, amountMinInput, amountMaxInput, statusFilter,
-  counterpartySourceFilter, onCounterpartySourceFilter,
-  noDataLabel, channelNameResolver, channelColLabel,
-  onSort, onPage, onPageSize, onEdit, onDelete,
-  onSearchInput, onAmountMin, onAmountMax, onStatusFilter,
+  title,
+  vouchers,
+  loading,
+  fetchError,
+  voucherAttachments,
+  sortCol,
+  page,
+  pageSize,
+  total,
+  totalPages,
+  searchInput,
+  amountMinInput,
+  amountMaxInput,
+  statusFilter,
+  counterpartySourceFilter,
+  onCounterpartySourceFilter,
+  noDataLabel,
+  channelNameResolver,
+  channelColLabel,
+  onSort,
+  onPage,
+  onPageSize,
+  onEdit,
+  onDelete,
+  onSearchInput,
+  onAmountMin,
+  onAmountMax,
+  onStatusFilter,
 }: VoucherTableProps) {
   const t = useT();
   const columns: DataTableColumn<PaymentVoucher>[] = [
@@ -112,7 +141,9 @@ export function VoucherTable({
       key: "channel",
       header: channelColLabel,
       cell: (v) =>
-        channelNameResolver(v.cash_fund_id ?? v.company_bank_account_id ?? null),
+        channelNameResolver(
+          v.cash_fund_id ?? v.company_bank_account_id ?? null,
+        ),
       className: "text-[color:var(--muted-fg)] whitespace-nowrap",
       skeletonClassName: "w-20",
     },
@@ -254,7 +285,9 @@ export function VoucherTable({
                 ...COUNTERPARTY_SOURCE_OPTS,
               ]}
               value={counterpartySourceFilter}
-              onChange={(v) => onCounterpartySourceFilter((v as CounterpartySource | "") ?? "")}
+              onChange={(v) =>
+                onCounterpartySourceFilter((v as CounterpartySource | "") ?? "")
+              }
               placeholder="Loại đối tượng"
               className="w-[180px]"
             />

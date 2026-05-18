@@ -1,14 +1,17 @@
 # Task — ERP Web AR Workbench UI
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: ENHANCE
 - Mục tiêu: Add AR workbench UI on `/phai-thu` with optimized UX while preserving existing partner ledger flow.
 - Bối cảnh/ngữ cảnh: User approved execution of AR coverage plan and explicitly requires reasonable/optimized UI UX plus no conflict with old flows/data.
 
 ## Goal
+
 Provide a backward-compatible AR workbench UI for production AR use-case coverage visibility and core document/application/collection operations.
 
 ## Scope
+
 - In-scope:
   - Add AR workbench tab/section to `/phai-thu` without removing existing ledger UI.
   - Display summary, coverage matrix, document list, quick create drawer/form, collection activities basics.
@@ -19,12 +22,14 @@ Provide a backward-compatible AR workbench UI for production AR use-case coverag
   - No destructive bulk migration UI.
 
 ## Relevant Files
+
 - `src/pages/PhaiThu.tsx` - page composition.
 - `src/modules/finance/api/financeApi.ts` - API contracts.
 - `src/modules/finance/components/*` - AR workbench UI.
 - `src/core/i18n/locales/*` - labels if required.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan: `ar_documents`, `ar_document_lines`, `ar_applications`, `ar_collection_activities` plus existing ledger/payment/journal collections.
 - Data nền cần có: existing partner/account/payment data remains compatible; no seed required.
 - Constraint/index/default cần có: DB/API gates must be verified before UI implementation.
@@ -32,6 +37,7 @@ Provide a backward-compatible AR workbench UI for production AR use-case coverag
 - Nếu `DB_GAP_FOUND`: link DB task: `/opt/repos/liouni-erp/directus-staging/ops/tasks/20260511-ar-use-case-coverage-plan.md`
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done
 - [x] 3.0 UI gate done
@@ -47,6 +53,7 @@ Provide a backward-compatible AR workbench UI for production AR use-case coverag
   - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result: `DB_READY` after Directus phase 1 migration created additive `ar_*` collections and transaction+rollback smoke passed.
 - `npx tsc --noEmit`: passed.
 - `npm run build`: passed; Vite emitted existing chunk-size/dynamic-import warnings only.
@@ -57,9 +64,11 @@ Provide a backward-compatible AR workbench UI for production AR use-case coverag
   - Runtime bundle contains `ar-workbench` in `/usr/share/nginx/html/assets/index-fidIjYmQ.js`, confirming rebuilt UI includes new AR Workbench code.
 
 ## Lessons Learned
+
 - Không có UI-specific issue; DB lesson: `/opt/repos/liouni-erp/directus-staging/ops/lessons-learned/20260511-directus-permission-json-distinct.md`
 
 ## Commit/Push Status
+
 - Web repo: committed and pushed `db83dc4` (`Add AR workbench UI`)
 - API repo: committed and pushed `da06319` (`Add AR workbench API foundation`)
 - DB/directus staging: apply+verify+document complete (no code push required)

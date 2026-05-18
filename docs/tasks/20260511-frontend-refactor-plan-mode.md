@@ -1,14 +1,17 @@
 # Task — ERP Web Frontend Refactor (PLAN MODE)
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: ENHANCE
 - Mục tiêu: Lập kế hoạch refactor frontend để tăng tái sử dụng và đảm bảo mọi file component/page/feature <= 500 lines.
 - Bối cảnh/ngữ cảnh: User bật ERP PLAN mode: chỉ lập kế hoạch, không sửa code/DB/deploy; bắt buộc DB precheck + kế hoạch theo thứ tự DB -> API -> UI.
 
 ## Goal
+
 Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ module rõ ràng, và enforce chuẩn `<= 500 lines/file` cho component/page/feature code trong phạm vi thực thi.
 
 ## Scope
+
 - In-scope:
   - Đánh giá baseline hiện trạng file frontend > 500 lines.
   - Lập kế hoạch refactor theo thứ tự gate DB -> API -> UI.
@@ -20,6 +23,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
   - Không deploy/rebuild container.
 
 ## Relevant Files
+
 - `src/pages/DoiTac.tsx` - 1600 lines, candidate tách mạnh theo page orchestration + organisms.
 - `src/pages/ThietLap.tsx` - 1304 lines, candidate chia feature panels + shared handlers.
 - `src/modules/finance/components/PartnerLedgerPage/index.tsx` - 1181 lines, candidate tách organisms + hooks.
@@ -36,6 +40,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
 - `src/pages/WorkflowCanvas.tsx` - 526 lines, candidate tách canvas controller + toolbars.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - Read-only precheck cho các collection frontend đang phụ thuộc: `business_partners`, `employees`, `departments`, `positions`, `chart_of_accounts`, `payment_vouchers`, `journal_entries`, `journal_entry_lines`, `accounting_periods`.
 - Data nền cần có:
@@ -48,6 +53,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): N/A (không phát hiện gap ở gate planning).
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done
   - [x] 2.1 Lập mapping API contracts dùng chung theo domain (`modules/*/api`, `types`, `utils`)
@@ -70,17 +76,20 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
 ## Kế hoạch thực thi theo Gate (DB -> API -> UI)
 
 ### Gate DB (gating only)
+
 1. Re-run Directus precheck cho collections đang dùng bởi các page refactor.
 2. Xác nhận `DB_READY` trước khi sửa code.
 3. Freeze scope: không thay schema trong task này.
 
 ### Gate API (frontend API layer)
+
 1. Audit `modules/*/api` + `types` + `utils` để xác định điểm duplicate mapper/formatter/DTO.
 2. Tạo kế hoạch tách reusable API helpers theo domain (finance/system/hr/partners/accounting).
 3. Chuẩn hóa luồng: page -> hook -> api/types/utils (không gọi API trực tiếp trong page component lớn).
 4. Giữ nguyên behavior contract với backend (không đổi endpoint semantics).
 
 ### Gate UI (refactor chính)
+
 1. Ưu tiên refactor các file lớn nhất trước (descending by LOC):
    - Batch A: `DoiTac`, `ThietLap`
    - Batch B: `PartnerLedgerPage`, `ArWorkbenchPanel`
@@ -98,6 +107,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
    - mọi file mới phải nêu lý do reuse không đủ.
 
 ## Gate Validations (bắt buộc trước close)
+
 - Type safety: `npx tsc --noEmit` pass.
 - Route smoke pass với các route trọng yếu.
 - Reuse compliance:
@@ -107,6 +117,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
   - target cuối: không còn file > 500 lines trong phạm vi task đã cam kết.
 
 ## Risk + Rollback
+
 - Risks:
   - Refactor lớn dễ phát sinh regression UI/interaction.
   - Tách file hàng loạt có thể làm lệch import graph hoặc circular dependency.
@@ -120,6 +131,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
   - Nếu fail nghiêm trọng: revert batch commit gần nhất, giữ lại batch đã pass validation.
 
 ## Danh sách evidence cần thu thập
+
 1. Baseline line-count trước refactor (đã có danh sách file > 500).
 2. Bảng mapping before/after cho từng file lớn (tách thành file nào).
 3. Kết quả `npx tsc --noEmit`.
@@ -129,6 +141,7 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
 7. Commit log theo batch + trạng thái push.
 
 ## Validation Evidence
+
 - DB precheck result: `DB_READY`.
 - Baseline line-count: đã ghi ở mục Relevant Files (nguồn từ scan `wc -l`).
 - Batch A/B tsc evidence: `./node_modules/.bin/tsc --noEmit` pass sau khi tách `ThietLap`, `PartnerLedgerPage`, `ArWorkbenchPanel`.
@@ -152,9 +165,11 @@ Xây kế hoạch refactor frontend theo hướng reusable-first, tách nhỏ mo
   - Follow-up leftover: `src/modules/partners/components/PartnersTab.tsx`: 353 lines; `PartnersTabView.tsx` under 500.
 
 ## Lessons Learned
+
 - Khi split page lớn, cần chạy line-count toàn `src/**/*.ts(x)` sau mỗi batch để bắt các component mới phát sinh >500 (ví dụ `PartnersTab.tsx` sau Batch A/B) trước khi close.
 
 ## Commit/Push Status
+
 - Web repo: completed in this refactor commit and pushed.
 - API repo: N/A.
 - DB/directus staging: không thay đổi.

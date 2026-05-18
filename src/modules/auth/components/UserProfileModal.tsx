@@ -207,7 +207,10 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                 <code className="font-mono">{employee.employee_code}</code>
               }
             />
-            <DrawerRow label={t("profile.fullName")} value={employee.full_name} />
+            <DrawerRow
+              label={t("profile.fullName")}
+              value={employee.full_name}
+            />
             <DrawerRow label={t("profile.email")} value={employee.email} />
             <DrawerRow label={t("profile.phone")} value={employee.phone} />
             <DrawerRow
@@ -229,8 +232,14 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
           </DrawerSection>
 
           <DrawerSection title={t("profile.workInfo")}>
-            <DrawerRow label={t("profile.department")} value={dept.department_name} />
-            <DrawerRow label={t("profile.position")} value={pos.position_name} />
+            <DrawerRow
+              label={t("profile.department")}
+              value={dept.department_name}
+            />
+            <DrawerRow
+              label={t("profile.position")}
+              value={pos.position_name}
+            />
             <DrawerRow
               label={t("profile.systemRole")}
               value={profile?.role?.name ?? "—"}
@@ -261,7 +270,9 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                       impersonation.actor?.last_name,
                     ]
                       .filter(Boolean)
-                      .join(" ") || impersonation.actor?.email || "—"}
+                      .join(" ") ||
+                      impersonation.actor?.email ||
+                      "—"}
                   </div>
                 </div>
                 <button

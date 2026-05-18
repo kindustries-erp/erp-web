@@ -1,34 +1,39 @@
-import { Line } from 'react-chartjs-2'
-import '@/shared/utils/chartSetup'
-import { useChartTheme } from '@/shared/utils/chartTheme'
+import { Line } from "react-chartjs-2";
+import "@/shared/utils/chartSetup";
+import { useChartTheme } from "@/shared/utils/chartTheme";
 
 interface LineDataset {
-  data: number[]
-  color: string
-  label?: string
-  fill?: boolean
+  data: number[];
+  color: string;
+  label?: string;
+  fill?: boolean;
 }
 
 interface LineChartProps {
-  labels: string[]
-  datasets: LineDataset[]
-  yMax?: number
-  yCallback?: (v: number | string) => string
+  labels: string[];
+  datasets: LineDataset[];
+  yMax?: number;
+  yCallback?: (v: number | string) => string;
 }
 
-export function LineChart({ labels, datasets, yMax, yCallback }: LineChartProps) {
-  const { gridColor, tickColor } = useChartTheme()
+export function LineChart({
+  labels,
+  datasets,
+  yMax,
+  yCallback,
+}: LineChartProps) {
+  const { gridColor, tickColor } = useChartTheme();
   return (
     <Line
       data={{
         labels,
         datasets: datasets.map((d) => ({
-          label: d.label ?? '',
+          label: d.label ?? "",
           data: d.data,
           borderColor: d.color,
-          backgroundColor: d.color.startsWith('#')
-            ? d.color + '20'
-            : d.color.replace('rgb', 'rgba').replace(')', ', 0.12)'),
+          backgroundColor: d.color.startsWith("#")
+            ? d.color + "20"
+            : d.color.replace("rgb", "rgba").replace(")", ", 0.12)"),
           fill: d.fill ?? true,
           tension: 0.4,
           pointRadius: 3,
@@ -53,11 +58,11 @@ export function LineChart({ labels, datasets, yMax, yCallback }: LineChartProps)
             ticks: {
               font: { size: 11 },
               color: tickColor,
-              callback: yCallback ?? ((v) => v + 'B'),
+              callback: yCallback ?? ((v) => v + "B"),
             },
           },
         },
       }}
     />
-  )
+  );
 }

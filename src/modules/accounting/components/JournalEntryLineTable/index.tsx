@@ -2,7 +2,10 @@ import type {
   JournalEntryAccount,
   JournalEntryFormLine,
 } from "@/modules/accounting/types/journalEntry";
-import { formatMoney, getLineTotals } from "@/modules/accounting/utils/journalEntryUtils";
+import {
+  formatMoney,
+  getLineTotals,
+} from "@/modules/accounting/utils/journalEntryUtils";
 import { useT } from "@/core/i18n";
 
 interface Props {
@@ -16,7 +19,9 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
   const totals = getLineTotals(lines);
 
   function update(index: number, patch: Partial<JournalEntryFormLine>) {
-    onChange(lines.map((line, i) => (i === index ? { ...line, ...patch } : line)));
+    onChange(
+      lines.map((line, i) => (i === index ? { ...line, ...patch } : line)),
+    );
   }
 
   function remove(index: number) {
@@ -30,10 +35,18 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
         <table className="min-w-full text-xs">
           <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
             <tr>
-              <th className="text-left font-medium px-3 py-2 w-[30%]">{t("journalEntries.form.account")}</th>
-              <th className="text-right font-medium px-3 py-2 w-[15%]">{t("journalEntries.form.debit")}</th>
-              <th className="text-right font-medium px-3 py-2 w-[15%]">{t("journalEntries.form.credit")}</th>
-              <th className="text-left font-medium px-3 py-2">{t("journalEntries.form.lineDescription")}</th>
+              <th className="text-left font-medium px-3 py-2 w-[30%]">
+                {t("journalEntries.form.account")}
+              </th>
+              <th className="text-right font-medium px-3 py-2 w-[15%]">
+                {t("journalEntries.form.debit")}
+              </th>
+              <th className="text-right font-medium px-3 py-2 w-[15%]">
+                {t("journalEntries.form.credit")}
+              </th>
+              <th className="text-left font-medium px-3 py-2">
+                {t("journalEntries.form.lineDescription")}
+              </th>
               <th className="px-3 py-2 w-12" />
             </tr>
           </thead>
@@ -43,13 +56,19 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
                 <td className="px-3 py-2">
                   <select
                     value={line.account_id}
-                    onChange={(e) => update(index, { account_id: e.target.value })}
+                    onChange={(e) =>
+                      update(index, { account_id: e.target.value })
+                    }
                     className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 outline-none focus:border-primary"
                   >
-                    <option value="">{t("journalEntries.form.selectAccount")}</option>
+                    <option value="">
+                      {t("journalEntries.form.selectAccount")}
+                    </option>
                     {accounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {[account.account_code, account.account_name].filter(Boolean).join(" — ")}
+                        {[account.account_code, account.account_name]
+                          .filter(Boolean)
+                          .join(" — ")}
                       </option>
                     ))}
                   </select>
@@ -57,7 +76,15 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
                 <td className="px-3 py-2">
                   <input
                     value={line.debit}
-                    onChange={(e) => update(index, { debit: e.target.value, credit: e.target.value === "" || Number(e.target.value) === 0 ? line.credit : "0" })}
+                    onChange={(e) =>
+                      update(index, {
+                        debit: e.target.value,
+                        credit:
+                          e.target.value === "" || Number(e.target.value) === 0
+                            ? line.credit
+                            : "0",
+                      })
+                    }
                     inputMode="decimal"
                     className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-right outline-none focus:border-primary"
                   />
@@ -65,7 +92,15 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
                 <td className="px-3 py-2">
                   <input
                     value={line.credit}
-                    onChange={(e) => update(index, { credit: e.target.value, debit: e.target.value === "" || Number(e.target.value) === 0 ? line.debit : "0" })}
+                    onChange={(e) =>
+                      update(index, {
+                        credit: e.target.value,
+                        debit:
+                          e.target.value === "" || Number(e.target.value) === 0
+                            ? line.debit
+                            : "0",
+                      })
+                    }
                     inputMode="decimal"
                     className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-right outline-none focus:border-primary"
                   />
@@ -73,7 +108,9 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
                 <td className="px-3 py-2">
                   <input
                     value={line.description}
-                    onChange={(e) => update(index, { description: e.target.value })}
+                    onChange={(e) =>
+                      update(index, { description: e.target.value })
+                    }
                     className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 outline-none focus:border-primary"
                   />
                 </td>
@@ -92,9 +129,15 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
           </tbody>
           <tfoot className="bg-surface-hover border-t border-border font-semibold">
             <tr>
-              <td className="px-3 py-2 text-right">{t("journalEntries.form.total")}</td>
-              <td className="px-3 py-2 text-right">{formatMoney(totals.debit)}</td>
-              <td className="px-3 py-2 text-right">{formatMoney(totals.credit)}</td>
+              <td className="px-3 py-2 text-right">
+                {t("journalEntries.form.total")}
+              </td>
+              <td className="px-3 py-2 text-right">
+                {formatMoney(totals.debit)}
+              </td>
+              <td className="px-3 py-2 text-right">
+                {formatMoney(totals.credit)}
+              </td>
               <td className="px-3 py-2" colSpan={2}>
                 {Math.abs(totals.debit - totals.credit) < 0.001
                   ? t("journalEntries.form.balanced")
@@ -107,7 +150,12 @@ export function JournalEntryLineTable({ lines, accounts, onChange }: Props) {
       <div className="p-3 border-t border-border">
         <button
           type="button"
-          onClick={() => onChange([...lines, { account_id: "", debit: "0", credit: "0", description: "" }])}
+          onClick={() =>
+            onChange([
+              ...lines,
+              { account_id: "", debit: "0", credit: "0", description: "" },
+            ])
+          }
           className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-surface-hover"
         >
           {t("journalEntries.form.addLine")}

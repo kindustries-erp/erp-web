@@ -154,7 +154,9 @@ export function usePermissionsEditor(options?: PermissionsEditorOptions) {
   const [collectionFieldsMap, setCollectionFieldsMap] = useState<
     Record<string, PermissionFieldDef[]>
   >({});
-  const collectionFieldsCacheRef = useRef<Record<string, PermissionFieldDef[]>>({});
+  const collectionFieldsCacheRef = useRef<Record<string, PermissionFieldDef[]>>(
+    {},
+  );
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -230,7 +232,10 @@ export function usePermissionsEditor(options?: PermissionsEditorOptions) {
       if (cached) return cached;
 
       const fields = await getCollectionFieldsApi(collection);
-      collectionFieldsCacheRef.current = { ...collectionFieldsCacheRef.current, [collection]: fields };
+      collectionFieldsCacheRef.current = {
+        ...collectionFieldsCacheRef.current,
+        [collection]: fields,
+      };
       setCollectionFieldsMap({ ...collectionFieldsCacheRef.current });
       return fields;
     },

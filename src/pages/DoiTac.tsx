@@ -32,12 +32,19 @@ export function DoiTac() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["doi-tac", "lien-he", "tai-khoan-ngan-hang", "vai-tro"].includes(tab)) {
+    if (
+      tab &&
+      ["doi-tac", "lien-he", "tai-khoan-ngan-hang", "vai-tro"].includes(tab)
+    ) {
       setActiveTab(tab);
     } else {
       setActiveTab("doi-tac");
       params.set("tab", "doi-tac");
-      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?${params.toString()}`,
+      );
     }
   }, []);
 

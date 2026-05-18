@@ -10,7 +10,11 @@ interface PartnerLedgerKpisProps {
   t: TFunc;
 }
 
-export function PartnerLedgerKpis({ summary, loading, t }: PartnerLedgerKpisProps) {
+export function PartnerLedgerKpis({
+  summary,
+  loading,
+  t,
+}: PartnerLedgerKpisProps) {
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -35,12 +39,18 @@ export function PartnerLedgerKpis({ summary, loading, t }: PartnerLedgerKpisProp
             <KpiCard
               label={t("ledger.kpi.settled")}
               value={summary ? `₫ ${fmtAmt(summary.total_settled)}` : "—"}
-              icon={<span className="text-approve-fg text-xs font-bold">✓</span>}
+              icon={
+                <span className="text-approve-fg text-xs font-bold">✓</span>
+              }
             />
             <KpiCard
               label={t("ledger.kpi.total")}
               value={summary ? String(summary.total_count) : "—"}
-              icon={<span className="text-[color:var(--muted-fg)] text-xs font-bold">#</span>}
+              icon={
+                <span className="text-[color:var(--muted-fg)] text-xs font-bold">
+                  #
+                </span>
+              }
             />
           </>
         )}
@@ -65,7 +75,9 @@ export function PartnerLedgerKpis({ summary, loading, t }: PartnerLedgerKpisProp
                 <div className="text-[10px] text-[color:var(--muted-fg)]">
                   {t(key as Parameters<typeof t>[0])}
                 </div>
-                <div className="text-sm font-semibold text-foreground">₫ {fmtAmt(val)}</div>
+                <div className="text-sm font-semibold text-foreground">
+                  ₫ {fmtAmt(val)}
+                </div>
               </div>
             ))}
           </div>

@@ -27,24 +27,42 @@ function normalizeBranch(item: any): Branch {
 
 export async function getBranchesApi(): Promise<Branch[]> {
   return dedupeRequest("branches:list", async () => {
-    const { data } = await axiosInstance.get<{ items?: any[]; data?: any[] }>("/api/v1/branches", { params: { page: 1, pageSize: 500, sort: "code" } });
-    const items = Array.isArray(data?.items) ? data.items : Array.isArray(data?.data) ? data.data : [];
+    const { data } = await axiosInstance.get<{ items?: any[]; data?: any[] }>(
+      "/api/v1/branches",
+      { params: { page: 1, pageSize: 500, sort: "code" } },
+    );
+    const items = Array.isArray(data?.items)
+      ? data.items
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
     return items.map(normalizeBranch);
   });
 }
 
-export async function getBranchOptionsApi(): Promise<Array<{ value: string; label: string }>> {
+export async function getBranchOptionsApi(): Promise<
+  Array<{ value: string; label: string }>
+> {
   const branches = await getBranchesApi();
   return branches.map((b) => ({ value: b.id, label: `${b.code} — ${b.name}` }));
 }
 
 export async function createBranchApi(dto: CreateBranchDto): Promise<Branch> {
-  const { data } = await axiosInstance.post<{ message: string; data: any }>("/api/v1/branches", dto);
+  const { data } = await axiosInstance.post<{ message: string; data: any }>(
+    "/api/v1/branches",
+    dto,
+  );
   return normalizeBranch(data.data);
 }
 
-export async function updateBranchApi(id: string, dto: UpdateBranchDto): Promise<Branch> {
-  const { data } = await axiosInstance.patch<{ message: string; data: any }>(`/api/v1/branches/${id}`, dto);
+export async function updateBranchApi(
+  id: string,
+  dto: UpdateBranchDto,
+): Promise<Branch> {
+  const { data } = await axiosInstance.patch<{ message: string; data: any }>(
+    `/api/v1/branches/${id}`,
+    dto,
+  );
   return normalizeBranch(data.data);
 }
 

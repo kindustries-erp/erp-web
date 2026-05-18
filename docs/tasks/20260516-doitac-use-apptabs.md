@@ -1,33 +1,39 @@
 # Task — Refactor trang Đối tác sử dụng AppTabs
 
 ## Request Input
+
 - Type: REFACTOR
 - Mục tiêu: Chuyển đổi trang Đối tác (`DoiTac.tsx`) sang sử dụng component chung `AppTabs` để đồng bộ UI với trang Hóa đơn điện tử.
 - Bối cảnh/ngữ cảnh: User hỏi trang Đối tác và Hóa đơn điện tử có đang dùng chung tab bar không, và muốn reuse nếu chưa. Hiện tại Đối tác đang dùng `TabHeader` riêng.
 
 ## Goal
+
 - Cập nhật `src/pages/DoiTac.tsx`:
   - Loại bỏ `TabHeader` và state `activeTab`.
   - Sử dụng `AppTabs` với `variant="line"`.
   - Truyền mảng `tabs` chứa `PartnersTab`, `ContactsTab`, `PartnerBankTab`, `PartnerRolesTab`.
 
 ## Scope
+
 - In-scope:
   - Refactor `DoiTac.tsx`.
 - Out-of-scope:
   - Không thay đổi logic bên trong các tab con.
 
 ## Relevant Files
+
 - `src/pages/DoiTac.tsx`
 - `src/shared/components/AppTabs/index.tsx`
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan: N/A
 - Data nền cần có: N/A
 - Constraint/index/default cần có: N/A
 - Kết quả: `DB_READY`
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done (N/A)
 - [ ] 3.0 UI gate done
@@ -40,14 +46,17 @@
   - [x] 5.2 Commit + push code - Done
 
 ## Validation Evidence
+
 - DB precheck result: `DB_READY`
 - `npx tsc --noEmit`: OK (Exit code: 0)
 - Smoke test: Skipped (No visual environment)
 
 ## Lessons Learned
+
 - Không có issue
 
 ## Commit/Push Status
+
 - Web repo: Committed & Pushed (Commit: 381d1bf)
 - API repo: N/A
 - DB/directus staging: N/A

@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "format": "prettier --write .",
     "docker:build": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml build",
     "docker:up": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml up -d",
     "docker:deploy": "npm run docker:build && npm run docker:up"
@@ -40,6 +41,7 @@
     "autoprefixer": "^10.4.18",
     "plop": "^4.0.5",
     "postcss": "^8.4.35",
+    "prettier": "3.8.3",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",
     "vite": "^5.1.4"

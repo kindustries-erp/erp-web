@@ -52,10 +52,11 @@ export type UpdateBusinessPartnerDto = Partial<CreateBusinessPartnerDto>;
 
 export async function getBusinessPartnersApi(): Promise<BusinessPartner[]> {
   return dedupeRequest("business-partners:list", async () => {
-    const { data } = await axiosInstance.get<PaginatedResponse<BusinessPartner>>(
-      "/api/v1/business-partners",
-      { params: { page: 1, pageSize: 200, sort: "name" } },
-    );
+    const { data } = await axiosInstance.get<
+      PaginatedResponse<BusinessPartner>
+    >("/api/v1/business-partners", {
+      params: { page: 1, pageSize: 200, sort: "name" },
+    });
     return data.items;
   });
 }

@@ -31,9 +31,12 @@ export function useVoucherDrawer() {
 
   // Attachments
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
-  const [attachmentType, setAttachmentType] = useState<AttachmentType>("INVOICE");
+  const [attachmentType, setAttachmentType] =
+    useState<AttachmentType>("INVOICE");
   const [attachmentNote, setAttachmentNote] = useState("");
-  const [existingAttachments, setExistingAttachments] = useState<PaymentVoucherAttachment[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<
+    PaymentVoucherAttachment[]
+  >([]);
 
   async function loadExistingAttachments(voucherId: string) {
     try {

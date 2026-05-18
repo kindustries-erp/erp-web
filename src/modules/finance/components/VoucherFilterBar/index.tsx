@@ -47,7 +47,9 @@ export function VoucherFilterBar({
   return (
     <div className="flex items-center gap-2 mb-4 flex-wrap">
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">{t("voucher.filter.period")}</span>
+        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">
+          {t("voucher.filter.period")}
+        </span>
         <Combobox
           options={PERIOD_OPTS}
           value={period}
@@ -57,15 +59,29 @@ export function VoucherFilterBar({
         />
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">{t("voucher.filter.from")}</span>
-        <DatePicker value={dateFrom} onChange={onDateFrom} placeholder={t("voucher.filter.fromPlaceholder")} />
+        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">
+          {t("voucher.filter.from")}
+        </span>
+        <DatePicker
+          value={dateFrom}
+          onChange={onDateFrom}
+          placeholder={t("voucher.filter.fromPlaceholder")}
+        />
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">{t("voucher.filter.to")}</span>
-        <DatePicker value={dateTo} onChange={onDateTo} placeholder={t("voucher.filter.toPlaceholder")} />
+        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">
+          {t("voucher.filter.to")}
+        </span>
+        <DatePicker
+          value={dateTo}
+          onChange={onDateTo}
+          placeholder={t("voucher.filter.toPlaceholder")}
+        />
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">{channelLabel}</span>
+        <span className="text-xs text-[color:var(--muted-fg)] shrink-0">
+          {channelLabel}
+        </span>
         <Combobox
           options={channelOpts}
           value={channelFilter}

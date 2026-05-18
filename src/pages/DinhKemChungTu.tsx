@@ -6,10 +6,7 @@ import { SearchInput } from "@/shared/components/SearchInput";
 import { useT } from "@/core/i18n";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import {
-  DrawerModal,
-  DrawerRow,
-} from "@/shared/components/DrawerModal";
+import { DrawerModal, DrawerRow } from "@/shared/components/DrawerModal";
 import {
   getFileViewUrl,
   getPaymentVoucherApi,
@@ -57,7 +54,7 @@ function fileName(a: PaymentVoucherAttachment) {
 }
 
 function fileType(a: PaymentVoucherAttachment) {
-  return a.file && typeof a.file === "object" ? a.file.type ?? "" : "";
+  return a.file && typeof a.file === "object" ? (a.file.type ?? "") : "";
 }
 
 function channelLabel(v: PaymentVoucher | null) {
@@ -66,12 +63,14 @@ function channelLabel(v: PaymentVoucher | null) {
 }
 
 function typeLabel(type: AttachmentType | null) {
-  return type ? TYPE_LABEL[type] ?? type : "Khác";
+  return type ? (TYPE_LABEL[type] ?? type) : "Khác";
 }
 
 export function DinhKemChungTu() {
   const [items, setItems] = useState<PaymentVoucherAttachment[]>([]);
-  const [voucherMap, setVoucherMap] = useState<Record<string, PaymentVoucher>>({});
+  const [voucherMap, setVoucherMap] = useState<Record<string, PaymentVoucher>>(
+    {},
+  );
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -106,11 +105,7 @@ export function DinhKemChungTu() {
       setTotal(res.total);
       setTotalPages(res.totalPages);
       const ids = Array.from(
-        new Set(
-          res.items
-            .map(voucherId)
-            .filter((id) => id && !voucherMap[id]),
-        ),
+        new Set(res.items.map(voucherId).filter((id) => id && !voucherMap[id])),
       );
       if (ids.length) {
         const vouchers = await Promise.all(
@@ -267,7 +262,11 @@ export function DinhKemChungTu() {
 
       <AttachmentDetail
         item={selected}
-        voucher={selected ? getVoucher(selected) ?? voucherMap[voucherId(selected)] : null}
+        voucher={
+          selected
+            ? (getVoucher(selected) ?? voucherMap[voucherId(selected)])
+            : null
+        }
         previewUrl={previewUrl}
         previewType={previewType}
         onOpenFile={selected ? () => openFile(selected) : undefined}
@@ -303,11 +302,21 @@ function AttachmentDetail({
     >
       {item && (
         <div>
-          <DrawerRow label="Loại tài liệu" value={typeLabel(item.attachment_type)} />
+          <DrawerRow
+            label="Loại tài liệu"
+            value={typeLabel(item.attachment_type)}
+          />
           <DrawerRow label="Phân hệ" value={channelLabel(voucher)} />
           <DrawerRow label="Số chứng từ" value={voucher?.voucher_no ?? "—"} />
-          <DrawerRow label="Ngày chứng từ" value={voucher?.document_date ?? "—"} />
-          <DrawerRow label="File ID" value={fileId(item)} cls="font-mono break-all" />
+          <DrawerRow
+            label="Ngày chứng từ"
+            value={voucher?.document_date ?? "—"}
+          />
+          <DrawerRow
+            label="File ID"
+            value={fileId(item)}
+            cls="font-mono break-all"
+          />
           <DrawerRow label="Tên file" value={fileName(item)} cls="break-all" />
           <DrawerRow label="Ghi chú" value={item.note || "—"} />
           <DrawerRow label="Ngày tải" value={item.uploaded_at || "—"} />
@@ -343,7 +352,8 @@ function AttachmentDetail({
               )}
               {!previewUrl && (
                 <div className="flex h-full items-center justify-center px-6 text-center text-xs text-[color:var(--muted-fg)]">
-                  Không thể tải preview. Hãy kiểm tra endpoint xem file ở backend.
+                  Không thể tải preview. Hãy kiểm tra endpoint xem file ở
+                  backend.
                 </div>
               )}
             </div>

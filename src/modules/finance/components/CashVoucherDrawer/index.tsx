@@ -22,7 +22,10 @@ import type { ChartOfAccount } from "@/modules/accounting/api/catalogApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { CashFund } from "@/modules/finance/api/financeApi";
 import type { CashVoucherForm } from "@/modules/finance/types/voucherForm";
-import { ATTACHMENT_TYPE_OPTS, COUNTERPARTY_SOURCE_OPTS } from "@/modules/finance/types/voucherForm";
+import {
+  ATTACHMENT_TYPE_OPTS,
+  COUNTERPARTY_SOURCE_OPTS,
+} from "@/modules/finance/types/voucherForm";
 import { useT } from "@/core/i18n";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
@@ -56,9 +59,15 @@ export interface CashVoucherDrawerProps {
   onClose: () => void;
   onSave: (status?: VoucherStatus) => void;
   onSaveRelatedDocuments: () => void;
-  onStatusTransition: (action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL") => void;
+  onStatusTransition: (
+    action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL",
+    opts?: { cancel_reason?: string },
+  ) => void;
   onToggleEditMode: () => void;
-  onFieldChange: <K extends keyof CashVoucherForm>(k: K, v: CashVoucherForm[K]) => void;
+  onFieldChange: <K extends keyof CashVoucherForm>(
+    k: K,
+    v: CashVoucherForm[K],
+  ) => void;
   onDocumentDateChange: (date: string) => void;
   onPostingDateChange: (date: string) => void;
   onAmountChange: (value: string) => void;
@@ -79,19 +88,50 @@ export interface CashVoucherDrawerProps {
  * Dành riêng cho kênh CASH; TienGui có BankVoucherDrawer tương tự.
  */
 export function CashVoucherDrawer({
-  open, editing, drawerEditMode, form, saving, saveError,
-  existingAttachments, attachmentFiles, attachmentType, attachmentNote,
-  fundOpts, partnerOpts, employeeOpts, coaOpts, debitAccountOpts, creditAccountOpts, tagPresets,
+  open,
+  editing,
+  drawerEditMode,
+  form,
+  saving,
+  saveError,
+  existingAttachments,
+  attachmentFiles,
+  attachmentType,
+  attachmentNote,
+  fundOpts,
+  partnerOpts,
+  employeeOpts,
+  coaOpts,
+  debitAccountOpts,
+  creditAccountOpts,
+  tagPresets,
   canUpdateVoucher,
-  onClose, onSave, onSaveRelatedDocuments, onStatusTransition, onToggleEditMode,
-  onFieldChange, onDocumentDateChange, onPostingDateChange, onAmountChange,
-  onCashFundChange, onPartnerChange, onEmployeeChange, onTagPresetSelect, onSourceChange,
-  onDeleteAttachment, onAttachmentFilesChange, onAttachmentTypeChange, onAttachmentNoteChange,
+  onClose,
+  onSave,
+  onSaveRelatedDocuments,
+  onStatusTransition,
+  onToggleEditMode,
+  onFieldChange,
+  onDocumentDateChange,
+  onPostingDateChange,
+  onAmountChange,
+  onCashFundChange,
+  onPartnerChange,
+  onEmployeeChange,
+  onTagPresetSelect,
+  onSourceChange,
+  onDeleteAttachment,
+  onAttachmentFilesChange,
+  onAttachmentTypeChange,
+  onAttachmentNoteChange,
 }: CashVoucherDrawerProps) {
   const t = useT();
   const viewOnly = !!editing && !drawerEditMode;
   const canEdit = !editing || editing.status === "DRAFT";
-  const relatedDocumentsEditable = !!editing && ["APPROVED", "POSTED"].includes(editing.status) && canUpdateVoucher;
+  const relatedDocumentsEditable =
+    !!editing &&
+    ["APPROVED", "POSTED"].includes(editing.status) &&
+    canUpdateVoucher;
   const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
   const isDirty = !!form.voucher_no.trim() || !!form.amount;
 
@@ -101,7 +141,13 @@ export function CashVoucherDrawer({
       return [
         { label: "Hủy bỏ", onClick: onClose },
         { label: "Lưu nháp", disabled: saving, onClick: () => onSave("DRAFT") },
-        { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onSave("PENDING_APPROVAL") },
+        {
+          label: "Gửi duyệt",
+          primary: true,
+          loading: saving,
+          disabled: saving,
+          onClick: () => onSave("PENDING_APPROVAL"),
+        },
       ];
     }
     switch (editing.status) {
@@ -110,8 +156,21 @@ export function CashVoucherDrawer({
           { label: "Đóng", onClick: onClose },
           ...(canUpdateVoucher
             ? [
-                { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-                { label: "Gửi duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("SUBMIT") },
+                {
+                  label: "Hủy phiếu",
+                  disabled: saving,
+                  onClick: () =>
+                    onStatusTransition("CANCEL", {
+                      cancel_reason: form.cancel_reason,
+                    }),
+                },
+                {
+                  label: "Gửi duyệt",
+                  primary: true,
+                  loading: saving,
+                  disabled: saving,
+                  onClick: () => onStatusTransition("SUBMIT"),
+                },
               ]
             : []),
         ];
@@ -120,9 +179,26 @@ export function CashVoucherDrawer({
           { label: "Đóng", onClick: onClose },
           ...(canUpdateVoucher
             ? [
-                { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
-                { label: "Từ chối", disabled: saving, onClick: () => onStatusTransition("REJECT") },
-                { label: "Duyệt", primary: true, loading: saving, disabled: saving, onClick: () => onStatusTransition("APPROVE") },
+                {
+                  label: "Hủy phiếu",
+                  disabled: saving,
+                  onClick: () =>
+                    onStatusTransition("CANCEL", {
+                      cancel_reason: form.cancel_reason,
+                    }),
+                },
+                {
+                  label: "Từ chối",
+                  disabled: saving,
+                  onClick: () => onStatusTransition("REJECT"),
+                },
+                {
+                  label: "Duyệt",
+                  primary: true,
+                  loading: saving,
+                  disabled: saving,
+                  onClick: () => onStatusTransition("APPROVE"),
+                },
               ]
             : []),
         ];
@@ -132,8 +208,21 @@ export function CashVoucherDrawer({
           { label: "Đóng", onClick: onClose },
           ...(canUpdateVoucher
             ? [
-                { label: "Lưu chứng từ liên quan", primary: true, loading: saving, disabled: saving, onClick: onSaveRelatedDocuments },
-                { label: "Hủy phiếu", disabled: saving, onClick: () => onStatusTransition("CANCEL") },
+                {
+                  label: "Lưu chứng từ liên quan",
+                  primary: true,
+                  loading: saving,
+                  disabled: saving,
+                  onClick: onSaveRelatedDocuments,
+                },
+                {
+                  label: "Hủy phiếu",
+                  disabled: saving,
+                  onClick: () =>
+                    onStatusTransition("CANCEL", {
+                      cancel_reason: form.cancel_reason,
+                    }),
+                },
               ]
             : []),
         ];
@@ -142,22 +231,25 @@ export function CashVoucherDrawer({
     }
   })();
 
-  const editToggle = editing && canEdit && canUpdateVoucher ? (
-    <button
-      onClick={onToggleEditMode}
-      className={cn(
-        "px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors",
-        drawerEditMode
-          ? "border-[color:var(--border)] text-[color:var(--muted-fg)] bg-[color:var(--muted)] hover:bg-surface-hover"
-          : "border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg",
-      )}
-    >
-      {drawerEditMode ? t("voucher.drawer.cancel") : t("voucher.drawer.edit")}
-    </button>
-  ) : null;
+  const editToggle =
+    editing && canEdit && canUpdateVoucher ? (
+      <button
+        onClick={onToggleEditMode}
+        className={cn(
+          "px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors",
+          drawerEditMode
+            ? "border-[color:var(--border)] text-[color:var(--muted-fg)] bg-[color:var(--muted)] hover:bg-surface-hover"
+            : "border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg",
+        )}
+      >
+        {drawerEditMode ? t("voucher.drawer.cancel") : t("voucher.drawer.edit")}
+      </button>
+    ) : null;
 
   const title = editing
-    ? form.voucher_type === "CASH_RECEIPT" ? t("voucher.drawer.titleEditReceipt").replace("{0}", form.voucher_no) : t("voucher.drawer.titleEditPayment").replace("{0}", form.voucher_no)
+    ? form.voucher_type === "CASH_RECEIPT"
+      ? t("voucher.drawer.titleEditReceipt").replace("{0}", form.voucher_no)
+      : t("voucher.drawer.titleEditPayment").replace("{0}", form.voucher_no)
     : form.voucher_type === "CASH_RECEIPT"
       ? t("voucher.drawer.titleCreateReceipt")
       : t("voucher.drawer.titleCreatePayment");
@@ -225,7 +317,9 @@ export function CashVoucherDrawer({
           <Combobox
             options={COUNTERPARTY_SOURCE_OPTS}
             value={form.counterparty_source}
-            onChange={(v) => onSourceChange((v as CounterpartySource) || "EXTERNAL")}
+            onChange={(v) =>
+              onSourceChange((v as CounterpartySource) || "EXTERNAL")
+            }
             disabled={viewOnly}
           />
         </DrawerField>
@@ -269,15 +363,32 @@ export function CashVoucherDrawer({
           form.counterparty_phone_snapshot ||
           form.counterparty_identity_no_snapshot) && (
           <div className="mt-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-fg space-y-1">
-            <p className="font-medium text-foreground">Thông tin sẽ được chốt khi lưu:</p>
+            <p className="font-medium text-foreground">
+              Thông tin sẽ được chốt khi lưu:
+            </p>
             {form.counterparty_name_snapshot && (
-              <p>Tên: <span className="text-foreground">{form.counterparty_name_snapshot}</span></p>
+              <p>
+                Tên:{" "}
+                <span className="text-foreground">
+                  {form.counterparty_name_snapshot}
+                </span>
+              </p>
             )}
             {form.counterparty_phone_snapshot && (
-              <p>SĐT: <span className="text-foreground">{form.counterparty_phone_snapshot}</span></p>
+              <p>
+                SĐT:{" "}
+                <span className="text-foreground">
+                  {form.counterparty_phone_snapshot}
+                </span>
+              </p>
             )}
             {form.counterparty_identity_no_snapshot && (
-              <p>CMND/CCCD: <span className="text-foreground">{form.counterparty_identity_no_snapshot}</span></p>
+              <p>
+                CMND/CCCD:{" "}
+                <span className="text-foreground">
+                  {form.counterparty_identity_no_snapshot}
+                </span>
+              </p>
             )}
           </div>
         )}
@@ -332,7 +443,9 @@ export function CashVoucherDrawer({
                 disabled={viewOnly}
                 className={inputCls}
                 value={form.amount_in_words}
-                onChange={(e) => onFieldChange("amount_in_words", e.target.value)}
+                onChange={(e) =>
+                  onFieldChange("amount_in_words", e.target.value)
+                }
                 placeholder={t("voucher.drawer.amountWordsPlaceholder")}
               />
             </DrawerField>
@@ -347,6 +460,18 @@ export function CashVoucherDrawer({
               placeholder={t("voucher.drawer.descPlaceholder")}
             />
           </DrawerField>
+          {editing && (
+            <DrawerField label="Lý do hủy" required>
+              <input
+                type="text"
+                className={inputCls}
+                value={form.cancel_reason || ""}
+                onChange={(e) => onFieldChange("cancel_reason", e.target.value)}
+                placeholder="Nhập lý do hủy phiếu..."
+                disabled={editing.status === "CANCELLED"}
+              />
+            </DrawerField>
+          )}
         </div>
       </DrawerSection>
 
@@ -381,7 +506,9 @@ export function CashVoucherDrawer({
                   <Combobox
                     options={ATTACHMENT_TYPE_OPTS}
                     value={attachmentType}
-                    onChange={(v) => onAttachmentTypeChange((v as AttachmentType) || "OTHER")}
+                    onChange={(v) =>
+                      onAttachmentTypeChange((v as AttachmentType) || "OTHER")
+                    }
                     placeholder={t("voucher.drawer.attachmentTypePlaceholder")}
                   />
                 </DrawerField>

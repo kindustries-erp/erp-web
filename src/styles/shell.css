@@ -124,7 +124,7 @@
 }
 
 .sidebar.collapsed .sidebar-bottom button,
-.sidebar.collapsed .sidebar-bottom>div {
+.sidebar.collapsed .sidebar-bottom > div {
   padding-left: 0;
   padding-right: 0;
   justify-content: center;
@@ -259,7 +259,7 @@
     margin: 0;
   }
 
-  .right-panel>.flex-1 {
+  .right-panel > .flex-1 {
     width: 100%;
     max-width: 100%;
   }
@@ -380,7 +380,7 @@
   }
 
   .sidebar.collapsed .sidebar-bottom button,
-  .sidebar.collapsed .sidebar-bottom>div {
+  .sidebar.collapsed .sidebar-bottom > div {
     padding-left: 4px !important;
     padding-right: 4px !important;
     justify-content: flex-start !important;

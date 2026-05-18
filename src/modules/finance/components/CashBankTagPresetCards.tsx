@@ -29,7 +29,9 @@ export function CashBankTagPresetCards({
 }: Props) {
   const safePresets = Array.isArray(presets) ? presets : [];
   const safeDebitOpts = Array.isArray(debitAccountOpts) ? debitAccountOpts : [];
-  const safeCreditOpts = Array.isArray(creditAccountOpts) ? creditAccountOpts : [];
+  const safeCreditOpts = Array.isArray(creditAccountOpts)
+    ? creditAccountOpts
+    : [];
   return (
     <div className="mb-3">
       <div className="mb-2 text-xs font-medium text-muted-fg">
@@ -59,11 +61,13 @@ export function CashBankTagPresetCards({
               >
                 <div className="text-sm font-medium">{preset.label}</div>
                 {preset.description && (
-                  <div className="mt-1 text-xs text-muted-fg">{preset.description}</div>
+                  <div className="mt-1 text-xs text-muted-fg">
+                    {preset.description}
+                  </div>
                 )}
                 <div className="mt-1 text-[11px] text-muted-fg">
-                  Nợ: {accountLabel(safeDebitOpts, preset.debit_account_id)} · Có:{" "}
-                  {accountLabel(safeCreditOpts, preset.credit_account_id)}
+                  Nợ: {accountLabel(safeDebitOpts, preset.debit_account_id)} ·
+                  Có: {accountLabel(safeCreditOpts, preset.credit_account_id)}
                 </div>
               </button>
             );

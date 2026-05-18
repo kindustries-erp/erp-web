@@ -142,10 +142,7 @@ export function DataTable<T>({
                       <TableCell key={column.id} className={meta.className}>
                         {meta.skeletonClassName !== "" && (
                           <Skeleton
-                            className={cn(
-                              "h-3 w-24",
-                              meta.skeletonClassName,
-                            )}
+                            className={cn("h-3 w-24", meta.skeletonClassName)}
                           />
                         )}
                       </TableCell>

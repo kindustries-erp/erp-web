@@ -12,7 +12,13 @@ interface BtnPrimaryProps {
  * Primary action button – filled background with primary color.
  * Used consistently across all pages for create/confirm actions.
  */
-export function BtnPrimary({ children, onClick, type = "button", disabled, className }: BtnPrimaryProps) {
+export function BtnPrimary({
+  children,
+  onClick,
+  type = "button",
+  disabled,
+  className,
+}: BtnPrimaryProps) {
   return (
     <button
       type={type}

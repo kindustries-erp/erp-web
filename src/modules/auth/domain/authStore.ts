@@ -95,7 +95,9 @@ export const useAuthStore = create<AuthState>()(
             profile: profileData.profile,
             employee: profileData.employee ?? data.employee,
             effectivePermissions: profileData.effectivePermissions,
-            canImpersonate: hasFullDirectusRolesAccess(profileData.effectivePermissions),
+            canImpersonate: hasFullDirectusRolesAccess(
+              profileData.effectivePermissions,
+            ),
             impersonation: profileData.impersonation ?? { active: false },
             actorAccessToken: null,
             actorRefreshToken: null,
@@ -239,7 +241,9 @@ export const useAuthStore = create<AuthState>()(
             profile: profileData.profile,
             employee: profileData.employee,
             effectivePermissions: profileData.effectivePermissions,
-            canImpersonate: hasFullDirectusRolesAccess(profileData.effectivePermissions),
+            canImpersonate: hasFullDirectusRolesAccess(
+              profileData.effectivePermissions,
+            ),
             impersonation: profileData.impersonation ?? {
               active: true,
               actor: { id: "", email: "" },
@@ -270,11 +274,8 @@ export const useAuthStore = create<AuthState>()(
       stopImpersonationAction: async (
         reason?: "manual" | "expired" | "unauthorized",
       ) => {
-        const {
-          actorAccessToken,
-          actorRefreshToken,
-          actorExpiresAt,
-        } = useAuthStore.getState();
+        const { actorAccessToken, actorRefreshToken, actorExpiresAt } =
+          useAuthStore.getState();
 
         if (!actorAccessToken) {
           useAuthStore.getState().clearAuth();
@@ -297,7 +298,9 @@ export const useAuthStore = create<AuthState>()(
             profile: profileData.profile,
             employee: profileData.employee,
             effectivePermissions: profileData.effectivePermissions,
-            canImpersonate: hasFullDirectusRolesAccess(profileData.effectivePermissions),
+            canImpersonate: hasFullDirectusRolesAccess(
+              profileData.effectivePermissions,
+            ),
             impersonation: profileData.impersonation ?? { active: false },
           });
         } catch {

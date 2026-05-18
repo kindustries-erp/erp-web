@@ -24,13 +24,20 @@ export function StatusBadge({ status }: { status: PartnerLedgerStatus }) {
     CANCELLED: "Đã hủy",
   };
   return (
-    <span className={cn("inline-flex items-center px-2 py-[2px] rounded-full text-[11px] font-medium", cls[status])}>
+    <span
+      className={cn(
+        "inline-flex items-center px-2 py-[2px] rounded-full text-[11px] font-medium",
+        cls[status],
+      )}
+    >
       {labels[status]}
     </span>
   );
 }
 
-export function emptyForm(itemType: PartnerLedgerItemType): CreatePartnerLedgerItemDto {
+export function emptyForm(
+  itemType: PartnerLedgerItemType,
+): CreatePartnerLedgerItemDto {
   const today = todayIsoDate();
   return {
     item_no: "",

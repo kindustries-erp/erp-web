@@ -54,28 +54,32 @@ export function Combobox({
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-    <Tooltip content={selected ? selected.label : ""} side="top" disabled={!selected || open}>
-      <Popover.Trigger asChild>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => !disabled && setOpen(!open)}
-          className={cn(
-            "flex items-center justify-between w-full px-3 py-2 text-xs border rounded-xl transition-all outline-none",
-            open
-              ? "border-primary ring-2 ring-primary/10 bg-surface"
-              : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
-            disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
-            className,
-          )}
-        >
-          <span className="truncate flex-1 text-left">
-            {selected ? selected.label : placeholder}
-          </span>
-          <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
-        </button>
-      </Popover.Trigger>
-    </Tooltip>
+      <Tooltip
+        content={selected ? selected.label : ""}
+        side="top"
+        disabled={!selected || open}
+      >
+        <Popover.Trigger asChild>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => !disabled && setOpen(!open)}
+            className={cn(
+              "flex items-center justify-between w-full px-3 py-2 text-xs border rounded-xl transition-all outline-none",
+              open
+                ? "border-primary ring-2 ring-primary/10 bg-surface"
+                : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
+              disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+              className,
+            )}
+          >
+            <span className="truncate flex-1 text-left">
+              {selected ? selected.label : placeholder}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
+          </button>
+        </Popover.Trigger>
+      </Tooltip>
 
       <Popover.Portal>
         <Popover.Content
@@ -142,29 +146,29 @@ export function Combobox({
               </div>
             ) : (
               filtered.map((o) => (
-              <Tooltip key={o.value} content={o.label} side="right">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange(o.value);
-                    setOpen(false);
-                  }}
-                  className={cn(
-                    "w-full text-left px-3 py-2 text-xs hover:bg-[color:var(--popup-bg-hover)] flex items-center gap-2",
-                    o.value === value
-                      ? "text-[color:var(--primary)] font-medium bg-[color:var(--primary)]/5"
-                      : "text-foreground",
-                  )}
-                >
-                  <Check
+                <Tooltip key={o.value} content={o.label} side="right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(o.value);
+                      setOpen(false);
+                    }}
                     className={cn(
-                      "w-3 h-3 shrink-0 text-[color:var(--primary)]",
-                      o.value === value ? "opacity-100" : "opacity-0",
+                      "w-full text-left px-3 py-2 text-xs hover:bg-[color:var(--popup-bg-hover)] flex items-center gap-2",
+                      o.value === value
+                        ? "text-[color:var(--primary)] font-medium bg-[color:var(--primary)]/5"
+                        : "text-foreground",
                     )}
-                  />
-                  <span className="truncate">{o.label}</span>
-                </button>
-              </Tooltip>
+                  >
+                    <Check
+                      className={cn(
+                        "w-3 h-3 shrink-0 text-[color:var(--primary)]",
+                        o.value === value ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    <span className="truncate">{o.label}</span>
+                  </button>
+                </Tooltip>
               ))
             )}
           </div>

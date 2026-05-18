@@ -30,7 +30,11 @@ export function ThietLapQuy() {
     } else {
       setActiveTab("quy");
       params.set("tab", "quy");
-      window.history.replaceState(null, "", `${window.location.pathname}?${params.toString()}`);
+      window.history.replaceState(
+        null,
+        "",
+        `${window.location.pathname}?${params.toString()}`,
+      );
     }
   }, []);
 

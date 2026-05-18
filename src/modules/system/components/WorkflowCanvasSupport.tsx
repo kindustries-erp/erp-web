@@ -1,6 +1,18 @@
-import { useEffect } from 'react';
-import { Handle, Position, useReactFlow, MarkerType, type NodeProps, type Node, type Edge, type FitViewOptions } from '@xyflow/react';
-import type { WorkflowNode, WorkflowEdge } from '@/modules/system/api/workflowGraphApi';
+import { useEffect } from "react";
+import {
+  Handle,
+  Position,
+  useReactFlow,
+  MarkerType,
+  type NodeProps,
+  type Node,
+  type Edge,
+  type FitViewOptions,
+} from "@xyflow/react";
+import type {
+  WorkflowNode,
+  WorkflowEdge,
+} from "@/modules/system/api/workflowGraphApi";
 
 // ─── ReactFlow node type helpers ──────────────────────────────────────────────
 
@@ -37,7 +49,9 @@ export function computeLayout(
   const lvl0 = byLevel[0] ?? [];
   lvl0.forEach((n, i) => {
     posMap[n.id] = {
-      x: i * (NODE_W + NODE_GAP_X) - ((lvl0.length - 1) * (NODE_W + NODE_GAP_X)) / 2,
+      x:
+        i * (NODE_W + NODE_GAP_X) -
+        ((lvl0.length - 1) * (NODE_W + NODE_GAP_X)) / 2,
       y: LEVEL_Y[0],
     };
   });
@@ -47,12 +61,13 @@ export function computeLayout(
     if (!nodesAtLevel.length) continue;
     const groups: Record<string, WorkflowNode[]> = {};
     for (const n of nodesAtLevel) {
-      const parent = n.meta?.parentId ?? (lvl === 1 ? 'root' : 'admin');
+      const parent = n.meta?.parentId ?? (lvl === 1 ? "root" : "admin");
       (groups[parent] ??= []).push(n);
     }
     for (const [parentId, children] of Object.entries(groups)) {
       const parentPos = posMap[parentId] ?? { x: 0, y: 0 };
-      const totalW = children.length * NODE_W + (children.length - 1) * NODE_GAP_X;
+      const totalW =
+        children.length * NODE_W + (children.length - 1) * NODE_GAP_X;
       const startX = parentPos.x + NODE_W / 2 - totalW / 2;
       children.forEach((child, i) => {
         posMap[child.id] = {
@@ -66,12 +81,13 @@ export function computeLayout(
   const lvl4 = byLevel[4] ?? [];
   const procGroups: Record<string, WorkflowNode[]> = {};
   for (const n of lvl4) {
-    const parent = n.meta?.parentId ?? '';
+    const parent = n.meta?.parentId ?? "";
     (procGroups[parent] ??= []).push(n);
   }
   for (const [procId, statusNodes] of Object.entries(procGroups)) {
     const parentPos = posMap[procId] ?? { x: 0, y: 0 };
-    const totalW = statusNodes.length * STATUS_W + (statusNodes.length - 1) * STATUS_GAP_X;
+    const totalW =
+      statusNodes.length * STATUS_W + (statusNodes.length - 1) * STATUS_GAP_X;
     const startX = parentPos.x + NODE_W / 2 - totalW / 2;
     statusNodes.forEach((n, i) => {
       posMap[n.id] = {
@@ -86,29 +102,29 @@ export function computeLayout(
     type: n.type,
     position: posMap[n.id] ?? { x: 0, y: LEVEL_Y[n.level] },
     data: n,
-    style: { width: n.type === 'status' ? STATUS_W : NODE_W },
+    style: { width: n.type === "status" ? STATUS_W : NODE_W },
   }));
 
   const rfEdges: Edge[] = apiEdges.map((e) => {
-    const isTransition = e.type === 'workflow_transition';
-    const isHierarchy = e.type === 'hierarchy';
+    const isTransition = e.type === "workflow_transition";
+    const isHierarchy = e.type === "hierarchy";
     return {
       id: e.id,
       source: e.source,
       target: e.target,
       label: e.label,
-      type: isTransition ? 'smoothstep' : 'bezier',
+      type: isTransition ? "smoothstep" : "bezier",
       animated: isTransition,
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: isTransition ? '#6366f1' : isHierarchy ? '#1e40af' : '#64748b',
+        color: isTransition ? "#6366f1" : isHierarchy ? "#1e40af" : "#64748b",
       },
       style: {
-        stroke: isTransition ? '#6366f1' : isHierarchy ? '#1e40af' : '#94a3b8',
+        stroke: isTransition ? "#6366f1" : isHierarchy ? "#1e40af" : "#94a3b8",
         strokeWidth: isHierarchy ? 2 : 1.5,
       },
-      labelStyle: { fontSize: 10, fill: '#64748b' },
-      labelBgStyle: { fill: '#f8fafc', fillOpacity: 0.85 },
+      labelStyle: { fontSize: 10, fill: "#64748b" },
+      labelBgStyle: { fill: "#f8fafc", fillOpacity: 0.85 },
     };
   });
 
@@ -117,7 +133,11 @@ export function computeLayout(
 
 // ─── Employee chips ────────────────────────────────────────────────────────────
 
-function EmployeeChips({ employees }: { employees: WorkflowNode['employees'] }) {
+function EmployeeChips({
+  employees,
+}: {
+  employees: WorkflowNode["employees"];
+}) {
   const show = employees.slice(0, 4);
   const rest = employees.length - show.length;
   return (
@@ -149,8 +169,12 @@ function RootNode({ data }: NodeProps<WFNode>) {
       <div className="text-center text-sm font-bold uppercase tracking-widest opacity-60">
         Hệ thống
       </div>
-      <div className="mt-1 text-center text-lg font-extrabold">{data.label}</div>
-      <div className="mt-1 text-center text-xs opacity-75">{data.description}</div>
+      <div className="mt-1 text-center text-lg font-extrabold">
+        {data.label}
+      </div>
+      <div className="mt-1 text-center text-xs opacity-75">
+        {data.description}
+      </div>
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
@@ -167,15 +191,22 @@ function AdminNode({ data }: NodeProps<WFNode>) {
       {data.roles.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {data.roles.map((r) => (
-            <span key={r} className="rounded bg-white/20 px-1.5 py-0.5 text-[10px]">
+            <span
+              key={r}
+              className="rounded bg-white/20 px-1.5 py-0.5 text-[10px]"
+            >
               {r}
             </span>
           ))}
         </div>
       )}
-      {data.employees.length > 0 && <EmployeeChips employees={data.employees} />}
+      {data.employees.length > 0 && (
+        <EmployeeChips employees={data.employees} />
+      )}
       {data.employees.length === 0 && (
-        <p className="mt-2 text-[10px] italic opacity-60">Chưa có dữ liệu người dùng</p>
+        <p className="mt-2 text-[10px] italic opacity-60">
+          Chưa có dữ liệu người dùng
+        </p>
       )}
       <Handle type="source" position={Position.Bottom} />
     </div>
@@ -191,7 +222,9 @@ function DepartmentNode({ data }: NodeProps<WFNode>) {
         <div className="font-semibold leading-tight">{data.label}</div>
       </div>
       {data.description && (
-        <p className="mt-1 text-[10px] opacity-70 line-clamp-2">{data.description}</p>
+        <p className="mt-1 text-[10px] opacity-70 line-clamp-2">
+          {data.description}
+        </p>
       )}
       {data.employees.length > 0 ? (
         <>
@@ -209,19 +242,21 @@ function DepartmentNode({ data }: NodeProps<WFNode>) {
 }
 
 function ProcessNode({ data }: NodeProps<WFNode>) {
-  const color = data.meta?.color ?? '#6366f1';
+  const color = data.meta?.color ?? "#6366f1";
   return (
     <div
       className="rounded-xl border text-white shadow-md"
       style={{
         borderColor: color,
         background: `linear-gradient(135deg, ${color}dd 0%, ${color}99 100%)`,
-        padding: '12px',
+        padding: "12px",
       }}
     >
       <Handle type="target" position={Position.Top} />
       <div className="font-bold">{data.label}</div>
-      <p className="mt-0.5 text-[10px] opacity-75 line-clamp-2">{data.description}</p>
+      <p className="mt-0.5 text-[10px] opacity-75 line-clamp-2">
+        {data.description}
+      </p>
 
       {data.rules.length > 0 && (
         <>
@@ -235,7 +270,9 @@ function ProcessNode({ data }: NodeProps<WFNode>) {
               </li>
             ))}
             {data.rules.length > 4 && (
-              <li className="text-[9px] opacity-50">+{data.rules.length - 4} quy tắc...</li>
+              <li className="text-[9px] opacity-50">
+                +{data.rules.length - 4} quy tắc...
+              </li>
             )}
           </ul>
         </>
@@ -249,7 +286,8 @@ function ProcessNode({ data }: NodeProps<WFNode>) {
               className="rounded-full px-2 py-0.5 text-[9px] font-semibold text-white"
               style={{ backgroundColor: s.color }}
             >
-              {s.label}{s.terminal ? ' ✓' : ''}
+              {s.label}
+              {s.terminal ? " ✓" : ""}
             </span>
           ))}
         </div>
@@ -261,7 +299,10 @@ function ProcessNode({ data }: NodeProps<WFNode>) {
             API
           </div>
           {data.meta.endpoints.slice(0, 3).map((ep) => (
-            <code key={ep} className="block text-[8px] font-mono opacity-70 truncate">
+            <code
+              key={ep}
+              className="block text-[8px] font-mono opacity-70 truncate"
+            >
               {ep}
             </code>
           ))}
@@ -279,16 +320,18 @@ function ProcessNode({ data }: NodeProps<WFNode>) {
 }
 
 function StatusNode({ data }: NodeProps<WFNode>) {
-  const color = data.meta?.color ?? '#94a3b8';
+  const color = data.meta?.color ?? "#94a3b8";
   const terminal = data.meta?.terminal === true;
   return (
     <div
       className="rounded-full border-2 px-3 py-2 text-center text-white shadow"
-      style={{ borderColor: color, backgroundColor: color + 'dd' }}
+      style={{ borderColor: color, backgroundColor: color + "dd" }}
     >
       <Handle type="target" position={Position.Top} />
       <div className="text-[10px] font-bold leading-tight">{data.label}</div>
-      {terminal && <div className="mt-0.5 text-[8px] opacity-70">■ terminal</div>}
+      {terminal && (
+        <div className="mt-0.5 text-[8px] opacity-70">■ terminal</div>
+      )}
       {!terminal && <Handle type="source" position={Position.Bottom} />}
     </div>
   );
@@ -314,4 +357,3 @@ export function FitViewOnMount() {
   }, [fitView]);
   return null;
 }
-

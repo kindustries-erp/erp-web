@@ -1,6 +1,7 @@
 # Task: FIX missing i18n keys (breadcrumb + settings headers + modal labels)
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: FIX
 - Mục tiêu:
   - Fix các key chưa dịch:
@@ -14,9 +15,11 @@
   - Sau refactor settings pages, một số key i18n chưa được khai báo đầy đủ trong locale hoặc component đang tham chiếu sai namespace.
 
 ## Goal
+
 Khôi phục đầy đủ hiển thị i18n cho breadcrumb, table headers và modal labels/messages ở các page Thiết lập liên quan, không còn key thô xuất hiện trên UI.
 
 ## Scope
+
 - In-scope:
   - `src/core/locale/vi.ts`
   - `src/core/locale/en.ts`
@@ -29,6 +32,7 @@ Khôi phục đầy đủ hiển thị i18n cho breadcrumb, table headers và mo
   - API contract changes
 
 ## Relevant Files
+
 - `src/core/locale/vi.ts` - thêm/fix key tiếng Việt
 - `src/core/locale/en.ts` - thêm/fix key tiếng Anh
 - `src/modules/settings/components/QuyTab.tsx` - modal/header labels đang dùng key thiếu
@@ -36,6 +40,7 @@ Khôi phục đầy đủ hiển thị i18n cho breadcrumb, table headers và mo
 - `src/core/config/appStore.ts` - breadcrumb keys tham chiếu
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `cash_funds`, `bank_accounts`, `chart_of_accounts`
 - Data nền cần có:
@@ -46,6 +51,7 @@ Khôi phục đầy đủ hiển thị i18n cho breadcrumb, table headers và mo
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): N/A
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [ ] 2.0 Backend workflow/API gate done
 - [ ] 3.0 UI gate done
@@ -58,15 +64,18 @@ Khôi phục đầy đủ hiển thị i18n cho breadcrumb, table headers và mo
   - [ ] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result: `DB_READY`
 - `npx tsc --noEmit`: pending
 - Smoke test: pending
 
 ## Risk + Rollback
+
 - Risk: sửa key i18n có thể làm mismatch namespace ở component khác.
 - Rollback: revert commit fix i18n nếu phát sinh regression.
 
 ## Danh sách evidence cần thu thập
+
 1. Diff `vi.ts`, `en.ts` có đủ các key thiếu.
 2. Diff các component settings không còn tham chiếu key thiếu.
 3. `npx tsc --noEmit` pass.
@@ -74,4 +83,5 @@ Khôi phục đầy đủ hiển thị i18n cho breadcrumb, table headers và mo
 5. Commit hash + push + deploy logs.
 
 ## San sang thuc thi
+
 Da co plan day du theo ERP PLAN mode. Cho xac nhan "Thuc thi" de bat dau fix code.

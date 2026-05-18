@@ -53,7 +53,12 @@ export function PartnerLedgerFilters({
 }: PartnerLedgerFiltersProps) {
   return (
     <div className="bg-surface border border-border rounded-xl p-3 mb-4 card-shadow flex flex-wrap gap-2 items-end">
-      <SearchInput value={searchInput} onChange={setSearchInput} placeholder={t("ledger.filter.search")} className="w-48" />
+      <SearchInput
+        value={searchInput}
+        onChange={setSearchInput}
+        placeholder={t("ledger.filter.search")}
+        className="w-48"
+      />
       <FilterField label={t("ledger.filter.partner")}>
         <Combobox
           options={partnerOpts}
@@ -76,32 +81,58 @@ export function PartnerLedgerFilters({
         <Combobox
           options={STATUS_OPTS}
           value={statusFilter}
-          onChange={(v) => applyFilter(() => setStatusFilter(v as PartnerLedgerStatus | ""))}
+          onChange={(v) =>
+            applyFilter(() => setStatusFilter(v as PartnerLedgerStatus | ""))
+          }
           placeholder={t("ledger.filter.statusPlaceholder")}
           className="w-36"
         />
       </FilterField>
       <FilterField label={t("ledger.filter.dueFrom")}>
-        <DatePicker value={dueFrom} onChange={(v) => applyFilter(() => setDueFrom(v))} className="w-36" />
+        <DatePicker
+          value={dueFrom}
+          onChange={(v) => applyFilter(() => setDueFrom(v))}
+          className="w-36"
+        />
       </FilterField>
       <FilterField label={t("ledger.filter.dueTo")}>
-        <DatePicker value={dueTo} onChange={(v) => applyFilter(() => setDueTo(v))} className="w-36" />
+        <DatePicker
+          value={dueTo}
+          onChange={(v) => applyFilter(() => setDueTo(v))}
+          className="w-36"
+        />
       </FilterField>
       <label className="flex items-center gap-1 text-sm cursor-pointer mt-4">
-        <Checkbox checked={overdueOnly} onCheckedChange={(checked) => applyFilter(() => setOverdueOnly(!!checked))} />
+        <Checkbox
+          checked={overdueOnly}
+          onCheckedChange={(checked) =>
+            applyFilter(() => setOverdueOnly(!!checked))
+          }
+        />
         {t("ledger.filter.overdueOnly")}
       </label>
-      <button className="ml-auto text-xs text-[color:var(--muted-fg)] hover:text-foreground underline mt-4" onClick={resetFilters}>
+      <button
+        className="ml-auto text-xs text-[color:var(--muted-fg)] hover:text-foreground underline mt-4"
+        onClick={resetFilters}
+      >
         {t("ledger.filter.reset")}
       </button>
     </div>
   );
 }
 
-function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
+function FilterField({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex flex-col gap-[2px]">
-      <label className="text-[10px] text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em]">{label}</label>
+      <label className="text-[10px] text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em]">
+        {label}
+      </label>
       {children}
     </div>
   );

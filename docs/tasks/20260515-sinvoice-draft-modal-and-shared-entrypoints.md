@@ -1,14 +1,17 @@
 # Task: SInvoice Draft Modal và Shared Entry Points
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: FEATURE
 - Mục tiêu: Chỉ cho phép tạo hóa đơn nháp trên UI, ẩn surface ký/phát hành, và tránh duplicate UI giữa Phải thu và Quản lý Thuế bằng shared modal.
 - Bối cảnh/ngữ cảnh: Hiện tab Xuất hóa đơn chưa có form nhập liệu thực tế; user cũng có nút xuất hóa đơn ở trang công nợ nên cần shared UX thay vì 2 form riêng.
 
 ## Goal
+
 Tạo một shared modal nhập liệu hóa đơn nháp dùng lại cho cả AR Workbench và trang Hóa đơn điện tử; tab Xuất hóa đơn chỉ còn surface tạo nháp an toàn.
 
 ## Scope
+
 - In-scope:
   - Tạo shared modal/component cho draft invoice.
   - Gắn shared modal vào trang Hóa đơn điện tử và AR Workbench.
@@ -20,12 +23,14 @@ Tạo một shared modal nhập liệu hóa đơn nháp dùng lại cho cả AR 
   - Đồng bộ hóa đơn đầu vào/đầu ra từ cổng thuế.
 
 ## Relevant Files
+
 - `src/pages/HoaDonDienTu.tsx` - trang trung tâm thuế hiện tại, đang chứa tab Xuất hóa đơn.
 - `src/modules/accounting/api/sinvoiceApi.ts` - API client e-invoice frontend.
 - `src/pages/PhaiThu.tsx` - entry page của AR Workbench.
 - `src/modules/finance/components/ArWorkbenchPanel/index.tsx` - nơi gắn entry point "Xuất hóa đơn nháp" từ công nợ.
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `einvoices.status`
   - `einvoices.direction`
@@ -39,6 +44,7 @@ Tạo một shared modal nhập liệu hóa đơn nháp dùng lại cho cả AR 
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): không áp dụng.
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done
 - [x] 3.0 UI gate done
@@ -55,14 +61,17 @@ Tạo một shared modal nhập liệu hóa đơn nháp dùng lại cho cả AR 
   - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result:
 - `npx tsc --noEmit`:
 - Smoke test:
 
 ## Lessons Learned
+
 - Không có issue / hoặc link entry: `docs/lessons-learned/<file>.md#<anchor>`
 
 ## Commit/Push Status
+
 - Web repo:
 - API repo:
 - DB/directus staging: apply+verify+document (no code push required)

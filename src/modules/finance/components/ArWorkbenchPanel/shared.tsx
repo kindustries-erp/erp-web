@@ -57,14 +57,24 @@ export function money(v?: number | string | null) {
 
 export function statusCls(status: ArDocumentStatus) {
   if (status === "SETTLED") return "bg-approve-bg text-approve-fg";
-  if (status === "PARTIAL" || status === "POSTED") return "bg-[#e8f0fd] text-[#2a6dd9]";
+  if (status === "PARTIAL" || status === "POSTED")
+    return "bg-[#e8f0fd] text-[#2a6dd9]";
   if (status === "DISPUTED") return "bg-warn-bg text-warn-fg";
   return "bg-[color:var(--muted)] text-[color:var(--muted-fg)]";
 }
 
 export function StatusPill({ status }: { status: VoucherStatus }) {
   return (
-    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", status === "POSTED" ? "bg-approve-bg text-approve-fg" : status === "CANCELLED" ? "bg-error-bg text-error-fg" : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]")}>
+    <span
+      className={cn(
+        "rounded-full px-2 py-0.5 text-xs font-medium",
+        status === "POSTED"
+          ? "bg-approve-bg text-approve-fg"
+          : status === "CANCELLED"
+            ? "bg-error-bg text-error-fg"
+            : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
+      )}
+    >
       {VOUCHER_STATUS_LABELS[status]}
     </span>
   );
@@ -82,7 +92,9 @@ export function emptySalesInvoiceForm(): CreateArSalesInvoiceDto {
     exchange_rate: 1,
     reference_no: "",
     description: "",
-    lines: [{ line_no: 1, description: "", quantity: 1, unit_price: 0, tax_rate: 10 }],
+    lines: [
+      { line_no: 1, description: "", quantity: 1, unit_price: 0, tax_rate: 10 },
+    ],
   };
 }
 

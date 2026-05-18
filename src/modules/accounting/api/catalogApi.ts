@@ -91,11 +91,11 @@ export async function getCompanyBankAccountsApi(): Promise<
   CompanyBankAccount[]
 > {
   return dedupeRequest("company-bank-accounts:list", async () => {
-    const { data } =
-      await axiosInstance.get<PaginatedResponse<CompanyBankAccount>>(
-        "/api/v1/company-bank-accounts",
-        { params: { page: 1, pageSize: 200, sort: "bank_account_code" } },
-      );
+    const { data } = await axiosInstance.get<
+      PaginatedResponse<CompanyBankAccount>
+    >("/api/v1/company-bank-accounts", {
+      params: { page: 1, pageSize: 200, sort: "bank_account_code" },
+    });
     return data.items;
   });
 }
