@@ -443,6 +443,7 @@ export function NhanSu() {
           onPermissionConfigChange={policyEditor.updatePermissionConfig}
           onLoadCollectionFields={policyEditor.loadCollectionFields}
           zIndex={410}
+          stackOffset={-2.5}
         />
         <ConfirmModal
           open={!!deleteTarget}

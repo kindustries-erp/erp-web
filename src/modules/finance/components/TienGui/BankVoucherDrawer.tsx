@@ -329,6 +329,7 @@ export function BankVoucherDrawer(props: any) {
           title="Cấu hình hạch toán"
           zIndex={500}
           panelClassName="!w-[420px]"
+          stackOffset={-2.5}
           actions={[
             {
               label: "Xác nhận",
@@ -415,6 +416,7 @@ export function BankVoucherDrawer(props: any) {
           }
           addBankRow={() => setBankRows((r) => [...r, { tempId: Date.now() }])}
           saveError={null}
+          stackOffset={-2.5}
           zIndex={600}
         />
 
