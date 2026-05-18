@@ -1,5 +1,3 @@
-import { useAppStore } from "@/core/config/appStore";
-
 export function useChartTheme() {
   return {
     isDark: false,

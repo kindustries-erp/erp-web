@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Paperclip, Book, Wallet } from "lucide-react";
-import {
-  useAppStore,
-  SECTION_ROOTS,
-  STATIC_TABS,
-} from "@/core/config/appStore";
+import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { ChangePasswordModal } from "@/modules/auth/components/ChangePasswordModal";
@@ -16,19 +12,16 @@ import {
   useHasAnyPermission,
   useHasPermission,
 } from "@/shared/hooks/useHasPermission";
-import { NavItem, SubItem, SubNav } from "./SidebarPrimitives";
+import { NavItem } from "./SidebarPrimitives";
 import {
   IconActivity,
   IconBox,
-  IconBriefcase,
-  IconBuilding,
   IconCart,
   IconChevronLeft,
   IconDollar,
   IconFileText,
   IconGitBranch,
   IconGrid,
-  IconList,
   IconPeople,
   IconPin,
   IconPkg,
@@ -61,12 +54,6 @@ export function Sidebar() {
     .map((w: string) => w[0].toUpperCase())
     .join("");
 
-  const isInDongTienGroup = [
-    "dongtien",
-    "tienmat",
-    "tiengui",
-    "dinhkem",
-  ].includes(currentPage);
   const isThietLapQuy = currentPage === "thietlap-quy";
   const isThietLapNH = currentPage === "thietlap-nh";
   const isThietLapTK = currentPage === "thietlap-tk";
@@ -75,10 +62,6 @@ export function Sidebar() {
   const isInCongNoGroup = ["phaithu", "phaittra"].includes(currentPage);
   const isInBaoCaoGroup = ["socat", "nhatkyechung"].includes(currentPage);
   const isHoaDonDienTu = currentPage === "hoadondientu";
-  const [dongtienOpen, setDongtienOpen] = useState(isInDongTienGroup);
-  const [thietlapOpen, setThietlapOpen] = useState(isThietLapGroup);
-  const [congnoOpen, setCongnoOpen] = useState(isInCongNoGroup);
-  const [baocaoOpen, setBaocaoOpen] = useState(isInBaoCaoGroup);
   // ── Permission gates (hide sections the current session cannot access) ──
   const canFinance = useHasAnyPermission([
     "payment_vouchers",

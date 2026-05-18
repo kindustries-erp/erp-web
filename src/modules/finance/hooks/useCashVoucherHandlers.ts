@@ -12,7 +12,6 @@ import {
   updatePaymentVoucherApi,
   uploadFileApi,
   type CashFund,
-  type CounterpartyRole,
   type CounterpartySource,
   type CreatePaymentVoucherDto,
   type PaymentVoucher,

@@ -1,20 +1,17 @@
 import { BarChart3 } from "lucide-react";
 import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
-import { PageHeader } from "@/shared/components/PageHeader";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAppStore } from "@/core/config/appStore";
 import { useT, useDict } from "@/core/i18n";
 import { useState, useEffect, useRef } from "react";
-import { cn } from "@/shared/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { TienMat } from "./TienMat";
 import { TienGui } from "./TienGui";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 
 export function DongTien() {
-  const { navigate, setCustomBreadcrumbs } = useAppStore();
+  const { setCustomBreadcrumbs } = useAppStore();
   const t = useT();
   const dict = useDict();
 
@@ -405,45 +402,6 @@ export function DongTien() {
     </PageWithTabsLayout>
   );
 }
-
-const SUMMARY_ROWS = [
-  {
-    label: "Tiền mặt (1111)",
-    open: "₫ 13.7B",
-    in: "+₫ 2.1B",
-    out: "-₫ 1.5B",
-    close: "₫ 14.3B",
-    link: "tien-mat",
-    bold: false,
-  },
-  {
-    label: "UNT/UNC – VCB (1121)",
-    open: "₫ 16.2B",
-    in: "+₫ 2.4B",
-    out: "-₫ 1.6B",
-    close: "₫ 17.0B",
-    link: "uy-nhiem-chi",
-    bold: false,
-  },
-  {
-    label: "UNT/UNC – TCB (1122)",
-    open: "₫ 5.8B",
-    in: "+₫ 0.8B",
-    out: "-₫ 0.6B",
-    close: "₫ 6.0B",
-    link: undefined,
-    bold: false,
-  },
-  {
-    label: "Tổng cộng",
-    open: "₫ 35.7B",
-    in: "+₫ 5.3B",
-    out: "-₫ 3.7B",
-    close: "₫ 37.3B",
-    link: undefined,
-    bold: true,
-  },
-];
 
 function ChannelCard({
   title,

@@ -93,7 +93,6 @@ export function SinvoiceDraftModal({
   const [partners, setPartners] = useState<BusinessPartner[]>([]);
   const [partnersLoading, setPartnersLoading] = useState(false);
   const [templates, setTemplates] = useState<ViettelTemplate[]>([]);
-  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,11 +112,9 @@ export function SinvoiceDraftModal({
       .catch(() => setPartners([]))
       .finally(() => setPartnersLoading(false));
 
-    setTemplatesLoading(true);
     getViettelTemplatesApi()
       .then((res) => setTemplates(res.template || []))
-      .catch(() => setTemplates([]))
-      .finally(() => setTemplatesLoading(false));
+      .catch(() => setTemplates([]));
   }, [open, initialForm]);
 
   const selectedPartner = useMemo(

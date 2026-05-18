@@ -1,6 +1,5 @@
 import { BarChart3, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
-import { PageHeader } from "@/shared/components/PageHeader";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";

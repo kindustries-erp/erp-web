@@ -53,12 +53,6 @@ import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPag
 
 type ArWorkbenchTab = "phai-thu" | "phai-tra";
 
-const TABS: {
-  value: ArWorkbenchTab;
-  label: string;
-  icon: "invoice" | "receipt" | "check";
-}[] = [{ value: "phai-thu", label: "Hóa đơn / Công nợ", icon: "invoice" }];
-
 export function ArWorkbenchPanel() {
   const t = useT();
   const [activeTab, setActiveTab] = useState<ArWorkbenchTab>("phai-thu");

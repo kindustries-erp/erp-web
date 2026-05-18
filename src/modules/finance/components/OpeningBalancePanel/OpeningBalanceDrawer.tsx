@@ -10,10 +10,7 @@ import type {
   CashFund,
   OpeningBalance,
 } from "@/modules/finance/api/financeApi";
-import type {
-  ChartOfAccount,
-  CompanyBankAccount,
-} from "@/modules/accounting/api/catalogApi";
+import type { CompanyBankAccount } from "@/modules/accounting/api/catalogApi";
 import { ErrorBanner, type SoDuForm } from "./helpers";
 
 export function OpeningBalanceDrawer(props: any) {

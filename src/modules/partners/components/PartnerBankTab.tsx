@@ -29,7 +29,7 @@ import {
   emptyBankForm,
   buildBankForm,
 } from "@/modules/partners/types";
-import { PageHeader, RowActions, StatusBadge } from "./shared";
+import { PageHeader, RowActions } from "./shared";
 
 export function PartnerBankTab() {
   const [partners, setPartners] = useState<BusinessPartner[]>([]);

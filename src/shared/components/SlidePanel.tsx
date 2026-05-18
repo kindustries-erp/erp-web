@@ -160,7 +160,7 @@ function DetailView() {
 
 function NewTxForm() {
   const { panelContent, closePanel } = useUIStore();
-  const { nhData, quyData } = useSettingsStore();
+  const { nhData } = useSettingsStore();
   const [charCount, setCharCount] = useState(0);
   const [amountRaw, setAmountRaw] = useState("");
   const [bangChuVal, setBangChuVal] = useState("");

@@ -3,7 +3,6 @@ import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Panel, PanelMore, PanelBadge } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 
 const APPROVALS_DATA = [

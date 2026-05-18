@@ -1,11 +1,7 @@
 import { useCallback, useState } from "react";
 import { useUIStore } from "@/core/config/uiStore";
 import { extractApiError } from "@/shared/utils/apiError";
-import type { CompanyBankAccount } from "@/modules/accounting/api/catalogApi";
-import type {
-  BusinessPartner,
-  BusinessPartnerBankAccount,
-} from "@/modules/partners/api/partnerApi";
+import type { BusinessPartnerBankAccount } from "@/modules/partners/api/partnerApi";
 import {
   createPaymentVoucherApi,
   createVoucherAttachmentApi,
@@ -20,7 +16,6 @@ import {
   uploadFileApi,
   type AttachmentType,
   type CashBankTagPreset,
-  type CounterpartyRole,
   type CounterpartySource,
   type CreatePaymentVoucherDto,
   type PaymentVoucher,
@@ -28,7 +23,6 @@ import {
   type VoucherStatus,
   type VoucherType,
 } from "@/modules/finance/api/financeApi";
-import type { Employee } from "@/modules/auth/api/auth";
 import { STATUS_LABELS } from "@/modules/finance/types/voucherForm";
 import type { BankVoucherForm } from "@/modules/finance/types/voucherForm";
 import {

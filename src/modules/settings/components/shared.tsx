@@ -1,6 +1,5 @@
 import React from "react";
 import { useT } from "@/core/i18n";
-import { PageHeader } from "@/shared/components/PageHeader";
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 export function extractApiError(e: unknown, fallback: string): string {

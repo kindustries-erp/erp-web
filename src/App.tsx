@@ -34,22 +34,6 @@ import WorkflowCanvas from "@/pages/WorkflowCanvas";
 import { ErrorPage } from "@/shared/components/ErrorPage";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 
-/**
- * Wrap a page with an optional access guard.
- * When `allowed` is false the 403 ErrorPage is rendered in-place —
- * the tab and URL still show the real page key, no separate 403 tab is created.
- */
-function GuardedPage({
-  allowed = true,
-  children,
-}: {
-  allowed?: boolean;
-  children: React.ReactNode;
-}) {
-  if (!allowed) return <ErrorPage code="403" />;
-  return <>{children}</>;
-}
-
 export default function App() {
   const { currentPage, isLoggedIn, syncFromUrl, forbidden } = useAppStore();
   const { bootstrapAction } = useAuthStore();

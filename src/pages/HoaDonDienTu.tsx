@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  FileText,
-  RefreshCw,
-  Send,
-  Settings,
-  Trash2,
-  CalendarDays,
-} from "lucide-react";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { FileText, RefreshCw, Send, Settings, Trash2 } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -45,7 +37,6 @@ import {
 } from "@/modules/accounting/api/sinvoiceApi";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { DrawerModal } from "@/shared/components/DrawerModal";
-import { AppTabs } from "@/shared/components/AppTabs";
 import { useDebounce } from "@/shared/hooks/useDebounce";
 
 type TaxTabKey =
@@ -64,30 +55,6 @@ const TAB_LABELS = (t: any): Array<{ key: TaxTabKey; label: string }> => [
   { key: "hoa-don-mua-vao", label: t("hoadondientuPage.tabs.input") },
   { key: "cau-hinh", label: t("hoadondientuPage.tabs.config") },
 ];
-
-const TAB_DESCRIPTIONS = (t: any): Record<TaxTabKey, string> => ({
-  "hoa-don-nhap": t("hoadondientuPage.descriptions.draft"),
-  "hoa-don-da-phat-hanh": t("hoadondientuPage.descriptions.issued"),
-  "hoa-don-ban-ra": t("hoadondientuPage.descriptions.output"),
-  "hoa-don-mua-vao": t("hoadondientuPage.descriptions.input"),
-  "cau-hinh": t("hoadondientuPage.descriptions.config"),
-});
-
-const TAB_ACCENT: Record<TaxTabKey, string> = {
-  "hoa-don-nhap": "border-l-sky-500",
-  "hoa-don-da-phat-hanh": "border-l-emerald-500",
-  "hoa-don-ban-ra": "border-l-indigo-500",
-  "hoa-don-mua-vao": "border-l-violet-500",
-  "cau-hinh": "border-l-amber-500",
-};
-
-const EXEC_SUMMARY_LABEL = (t: any): Record<TaxTabKey, string> => ({
-  "hoa-don-nhap": t("hoadondientuPage.execSummary.draft"),
-  "hoa-don-da-phat-hanh": t("hoadondientuPage.execSummary.issued"),
-  "hoa-don-ban-ra": t("hoadondientuPage.execSummary.output"),
-  "hoa-don-mua-vao": t("hoadondientuPage.execSummary.input"),
-  "cau-hinh": t("hoadondientuPage.execSummary.config"),
-});
 
 function statusLabel(status: Einvoice["status"]) {
   switch (status) {

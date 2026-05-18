@@ -5,7 +5,7 @@ import {
   type ArDocument,
   type CashBankRelatedDocumentInput,
 } from "@/modules/finance/api/financeApi";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { MultiSelect } from "@/shared/components/MultiSelect";
 
 interface Props {

@@ -3,7 +3,6 @@ import type { CompanyBankAccount } from "@/modules/accounting/api/catalogApi";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 import type { Employee } from "@/modules/auth/api/auth";
 import type {
-  CounterpartyRole,
   PaymentVoucher,
   PaymentVoucherAttachment,
   VoucherStatus,

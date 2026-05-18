@@ -57,19 +57,6 @@ export function FieldConfigDrawer({
   );
   const [fieldsLoading, setFieldsLoading] = useState(false);
   const [fieldsError, setFieldsError] = useState<string | null>(null);
-  async function loadFieldsForPermission(collection: string) {
-    setFieldsLoading(true);
-    setFieldsError(null);
-    try {
-      const rows = await onLoadCollectionFields(collection);
-      setAvailableFields(rows);
-    } catch {
-      setAvailableFields([]);
-      setFieldsError(t("permissionMatrix.fieldConfig.loadFieldsError"));
-    } finally {
-      setFieldsLoading(false);
-    }
-  }
 
   const fieldOptions: FieldOption[] = availableFields.map((item) => ({
     value: item.field,
