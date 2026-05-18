@@ -354,7 +354,7 @@ export function PermissionMatrixDrawer({
           onClose={() => setFieldConfigOpen(false)}
           subtitle={role?.name ?? ""}
           zIndex={(zIndex ?? 410) + 10}
-          stackOffset={-56}
+          stackOffset={-2.5}
           selectedPermissionKey={selectedPermissionKey}
           activePermissionOptions={activePermissionOptions}
           selectedPermission={selectedPermission}

@@ -295,7 +295,13 @@ export function NhanSu() {
     [t, canImpersonate, statusLabel],
   );
 
-  const [activeTab, setActiveTab] = useState("nhan-vien");
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    return tab && ["nhan-vien", "phong-ban", "chuc-danh"].includes(tab)
+      ? tab
+      : "nhan-vien";
+  });
   const { setCustomBreadcrumbs } = useAppStore();
   const tabs = [
     { value: "nhan-vien", label: t("nav.items.hrStaff") },
@@ -317,10 +323,7 @@ export function NhanSu() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    if (tab && ["nhan-vien", "phong-ban", "chuc-danh"].includes(tab)) {
-      setActiveTab(tab);
-    } else {
-      setActiveTab("nhan-vien");
+    if (!tab || !["nhan-vien", "phong-ban", "chuc-danh"].includes(tab)) {
       params.set("tab", "nhan-vien");
       window.history.replaceState(
         null,
@@ -440,7 +443,6 @@ export function NhanSu() {
           onPermissionConfigChange={policyEditor.updatePermissionConfig}
           onLoadCollectionFields={policyEditor.loadCollectionFields}
           zIndex={410}
-          stackOffset={-56}
         />
         <ConfirmModal
           open={!!deleteTarget}
