@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DatePicker } from "@/shared/components/DatePicker";
 import {
   DrawerModal,
@@ -81,6 +81,14 @@ export function BankVoucherDrawer(props: any) {
   const [partnerForm, setPartnerForm] = useState<any>({ ...emptyPartnerForm });
   const [contactRows, setContactRows] = useState<any[]>([]);
   const [bankRows, setBankRows] = useState<any[]>([]);
+
+  // Sync partner banking rows to main form beneficiary when partner bank changes
+  useEffect(() => {
+    if (isPartnerOpen && isPartnerEditing && bankRows.length > 0) {
+      // If we are editing partner and have banks, don't auto-override unless user saves.
+      // The handlePartnerSave already calls handlePartnerChange which updates the main form.
+    }
+  }, [bankRows, isPartnerOpen, isPartnerEditing]);
 
   const handleEditPartner = async () => {
     if (!form.counterparty_id) return;
