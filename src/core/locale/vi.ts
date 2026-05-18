@@ -533,7 +533,7 @@ export const vi = {
       sectionInfo: "Thông tin quỹ",
       codePlaceholder: "VD: TM001",
       namePlaceholder: "VD: Quỹ tiền mặt chính",
-      deleteMessage: 'Bạn có chắc muốn xóa quỹ "{0}"?',
+      deleteMessage: 'Bạn có chắc muốn ẩn quỹ "{0}"? Bản ghi sẽ chuyển sang không hoạt động.',
     },
     bank: {
       title: "Tài khoản ngân hàng",
@@ -548,7 +548,7 @@ export const vi = {
       accountCodePlaceholder: "VD: MB-001",
       bankNamePlaceholder: "VD: MB Bank",
       deleteMessage:
-        'Bạn có chắc muốn xóa tài khoản "{0}"? Hành động này không thể hoàn tác.',
+        'Bạn có chắc muốn ẩn tài khoản "{0}"? Bản ghi sẽ chuyển sang không hoạt động.',
     },
     accounts: {
       title: "Hệ thống tài khoản",
@@ -566,7 +566,7 @@ export const vi = {
       levelPlaceholder: "VD: 1",
       isCashAccount: "Là tài khoản tiền mặt",
       deleteMessage:
-        'Bạn có chắc muốn xóa tài khoản "{0}"? Hành động này không thể hoàn tác.',
+        'Bạn có chắc muốn ẩn tài khoản "{0}"? Bản ghi sẽ chuyển sang không hoạt động.',
     },
     roles: {
       title: "Vai trò đối tác",

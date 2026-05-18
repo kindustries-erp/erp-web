@@ -543,7 +543,7 @@ export const en: Dict = {
       sectionInfo: "Fund information",
       codePlaceholder: "Ex: TM001",
       namePlaceholder: "Ex: Main cash fund",
-      deleteMessage: 'Are you sure you want to delete fund "{0}"?',
+      deleteMessage: 'Are you sure you want to hide fund "{0}"? This record will be marked inactive.',
     },
     bank: {
       title: "Bank Accounts",
@@ -558,7 +558,7 @@ export const en: Dict = {
       accountCodePlaceholder: "Ex: MB-001",
       bankNamePlaceholder: "Ex: MB Bank",
       deleteMessage:
-        'Are you sure you want to delete account "{0}"? This action cannot be undone.',
+        'Are you sure you want to hide account "{0}"? This record will be marked inactive.',
     },
     accounts: {
       title: "Chart of Accounts",
@@ -576,7 +576,7 @@ export const en: Dict = {
       levelPlaceholder: "Ex: 1",
       isCashAccount: "Is cash account",
       deleteMessage:
-        'Are you sure you want to delete account "{0}"? This action cannot be undone.',
+        'Are you sure you want to hide account "{0}"? This record will be marked inactive.',
     },
     roles: {
       title: "Partner Roles",
