@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { DatePicker } from "@/shared/components/DatePicker";
 import {
   DrawerModal,
@@ -7,12 +8,25 @@ import {
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { FileUploadBox } from "@/shared/components/FileUploadBox";
-import { cn } from "@/shared/utils";
+import { PartnerDrawer } from "@/modules/partners/components/PartnerDrawer";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
 import {
   ATTACHMENT_TYPE_OPTS,
   COUNTERPARTY_SOURCE_OPTS,
 } from "@/modules/finance/types/voucherForm";
+import {
+  emptyPartnerForm,
+  buildPartnerForm,
+  contactDraftFromApi,
+  bankDraftFromApi,
+} from "@/modules/partners/types";
+import {
+  getBusinessPartnerContactsPagedApi,
+  getBusinessPartnerBankAccountsPagedApi,
+  getBusinessPartnerRolesPagedApi,
+  updateBusinessPartnerApi,
+  createBusinessPartnerApi,
+} from "@/modules/partners/api/partnerApi";
 import type {
   AttachmentType,
   CounterpartySource,
@@ -59,13 +73,160 @@ export function BankVoucherDrawer(props: any) {
     setAttachmentFiles,
     saveError,
   } = props;
+  const showToast = props.showToast || (() => {});
+  const [isAccountingOpen, setIsAccountingOpen] = useState(false);
+  const [isPartnerOpen, setIsPartnerOpen] = useState(false);
+  const [isPartnerEditing, setIsPartnerEditing] = useState(false);
+
+  const [partnerForm, setPartnerForm] = useState<any>({ ...emptyPartnerForm });
+  const [contactRows, setContactRows] = useState<any[]>([]);
+  const [bankRows, setBankRows] = useState<any[]>([]);
+
+  const handleEditPartner = async () => {
+    if (!form.counterparty_id) return;
+    const partnerItem = partnerOpts.find(
+      (p: any) => p.value === form.counterparty_id,
+    );
+    if (!partnerItem) return;
+
+    // Use the original business partner object if available in option
+    const partner = partnerItem.original;
+    if (!partner) return;
+
+    setIsPartnerEditing(true);
+    const baseForm = buildPartnerForm(partner);
+    setPartnerForm(baseForm);
+    setContactRows([]);
+    setBankRows([]);
+    setIsPartnerOpen(true);
+
+    try {
+      const [contactRes, bankRes, roleRes] = await Promise.all([
+        getBusinessPartnerContactsPagedApi({ page: 1, pageSize: 500 }),
+        getBusinessPartnerBankAccountsPagedApi({ page: 1, pageSize: 500 }),
+        getBusinessPartnerRolesPagedApi({ page: 1, pageSize: 500 }),
+      ]);
+      const partnerContacts = contactRes.items.filter(
+        (c) => c.business_partner_id === partner.id,
+      );
+      const partnerBanks = bankRes.items.filter(
+        (b) => b.business_partner_id === partner.id,
+      );
+      const partnerRoles = roleRes.items.filter(
+        (r) => r.business_partner_id === partner.id,
+      );
+      const contact =
+        partnerContacts.find(
+          (c) => c.is_default_receiver || c.is_default_payer,
+        ) ?? partnerContacts[0];
+      const bank = partnerBanks.find((b) => b.is_default) ?? partnerBanks[0];
+      const role = partnerRoles.find((r) => r.is_active) ?? partnerRoles[0];
+      setContactRows(
+        partnerContacts.length ? partnerContacts.map(contactDraftFromApi) : [],
+      );
+      setBankRows(
+        partnerBanks.length ? partnerBanks.map(bankDraftFromApi) : [],
+      );
+      setPartnerForm({
+        ...baseForm,
+        ...(contact
+          ? {
+              contact_id: contact.id,
+              contact_full_name: contact.full_name,
+              contact_position: contact.position ?? "",
+              contact_phone: contact.phone ?? "",
+              contact_email: contact.email ?? "",
+              contact_is_default_receiver: contact.is_default_receiver,
+              contact_is_default_payer: contact.is_default_payer,
+              contact_is_active: contact.is_active,
+            }
+          : {}),
+        ...(bank
+          ? {
+              bank_id: bank.id,
+              bank_name: bank.bank_name,
+              bank_account_number: bank.account_number,
+              bank_account_holder: bank.account_holder,
+              bank_currency: bank.currency ?? "VND",
+              bank_is_default: bank.is_default,
+              bank_is_active: bank.is_active,
+            }
+          : {}),
+        ...(role
+          ? {
+              role_id: role.id,
+              role_enabled: true,
+              role: role.role,
+              role_is_active: role.is_active,
+            }
+          : {}),
+      });
+    } catch {
+      // Keep drawer usable
+    }
+  };
+
+  const handleCreatePartner = () => {
+    setIsPartnerEditing(false);
+    setPartnerForm({ ...emptyPartnerForm });
+    setContactRows([]);
+    setBankRows([]);
+    setIsPartnerOpen(true);
+  };
+
+  const setPartnerField = (k: string, v: any) =>
+    setPartnerForm((f: any) => ({ ...f, [k]: v }));
+
+  async function handlePartnerSave() {
+    if (!partnerForm.code.trim() || !partnerForm.name.trim()) return;
+    try {
+      const dto = {
+        code: partnerForm.code.trim(),
+        name: partnerForm.name.trim(),
+        partner_kind: partnerForm.partner_kind,
+        display_name: partnerForm.display_name.trim() || undefined,
+        tax_code: partnerForm.tax_code.trim() || undefined,
+        phone: partnerForm.phone.trim() || undefined,
+        email: partnerForm.email.trim() || undefined,
+        address: partnerForm.address.trim() || undefined,
+        is_active: partnerForm.is_active,
+        note: partnerForm.note.trim() || undefined,
+      };
+      const partner =
+        isPartnerEditing && partnerForm.id
+          ? await updateBusinessPartnerApi(partnerForm.id, dto)
+          : await createBusinessPartnerApi(dto);
+
+      const partnerId = partner.id;
+
+      // Handle contacts and banks if needed, but for simplicity we skip or use partnerApi
+      // Usually the finance drawer just needs the partner created/updated
+      // then updates the main form's counterparty_id.
+
+      setIsPartnerOpen(false);
+      handlePartnerChange(partnerId);
+      showToast({ title: "Đã lưu đối tác", variant: "success" });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const relatedDocumentsEditable =
     !!editing && ["APPROVED", "POSTED"].includes(editing.status);
   const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
+  console.log({
+    employeeOpts,
+    handleEmployeeChange,
+    partnerOpts,
+    handlePartnerChange,
+    partnerBankOpts,
+    partnerBankLoading,
+  });
   return (
     <DrawerModal
       open={drawerOpen}
       onClose={closeDrawer}
+      stackOffset={isAccountingOpen || isPartnerOpen ? 52 : 0}
       confirmOnClose={drawerEditMode && isDirty && !viewOnly}
       title={
         editing
@@ -106,7 +267,7 @@ export function BankVoucherDrawer(props: any) {
               />
             </DrawerField>
           </div>
-          <div className="grid grid-cols-2 gap-x-3">
+          <div className="grid grid-cols-1 gap-x-3">
             <DrawerField label={t("voucher.drawer.docDate")} required>
               <DatePicker
                 disabled={viewOnly}
@@ -115,6 +276,78 @@ export function BankVoucherDrawer(props: any) {
                 className="w-full min-w-0"
               />
             </DrawerField>
+          </div>
+        </div>
+      </DrawerSection>
+      <CounterpartySection
+        {...props}
+        handleCreatePartner={handleCreatePartner}
+        handleEditPartner={handleEditPartner}
+      />
+      <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
+        <div className="flex justify-between items-center mb-4 bg-muted/50 p-3 rounded-lg border border-border">
+          <div>
+            <div className="text-xs text-muted-fg mb-1">
+              Tài khoản hạch toán
+            </div>
+            <div className="text-sm font-medium flex items-center gap-2">
+              <span>
+                {form.debit_account_id
+                  ? debitAccountOpts
+                      .find((o: any) => o.value === form.debit_account_id)
+                      ?.label.split(" — ")[0]
+                  : "—"}
+              </span>
+              <span className="text-muted-fg">→</span>
+              <span>
+                {form.credit_account_id
+                  ? creditAccountOpts
+                      .find((o: any) => o.value === form.credit_account_id)
+                      ?.label.split(" — ")[0]
+                  : "—"}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsAccountingOpen(true)}
+            className="px-3 py-1.5 text-xs font-medium border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
+          >
+            Sửa hạch toán
+          </button>
+        </div>
+
+        <DrawerModal
+          open={isAccountingOpen}
+          onClose={() => setIsAccountingOpen(false)}
+          title="Cấu hình hạch toán"
+          zIndex={500}
+          panelClassName="!w-[420px]"
+          stackOffset={-56}
+          actions={[
+            {
+              label: "Xác nhận",
+              onClick: () => setIsAccountingOpen(false),
+              primary: true,
+            },
+          ]}
+        >
+          <div className="mb-4">
+            <div className="text-[10px] font-semibold text-[color:var(--faint)] uppercase tracking-[0.1em] mb-[10px] pb-[6px] border-b border-[color:var(--border-light)]">
+              Nghiệp vụ nhanh
+            </div>
+            <CashBankTagPresetCards
+              presets={tagPresets ?? []}
+              selectedId={form.cash_bank_tag_preset_id}
+              debitAccountOpts={debitAccountOpts}
+              creditAccountOpts={creditAccountOpts}
+              disabled={viewOnly}
+              onSelect={(preset: any) => {
+                handleTagPresetSelect(preset);
+              }}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-y-1">
             <DrawerField label={t("voucher.drawer.postDate")} required>
               <DatePicker
                 disabled={viewOnly}
@@ -123,38 +356,64 @@ export function BankVoucherDrawer(props: any) {
                 className="w-full min-w-0"
               />
             </DrawerField>
+            <DrawerField label={t("voucher.drawer.debitAcc")}>
+              <Combobox
+                disabled={viewOnly}
+                options={debitAccountOpts}
+                value={form.debit_account_id}
+                onChange={(v) => setField("debit_account_id", v)}
+                placeholder={t("voucher.drawer.accPlaceholder")}
+              />
+            </DrawerField>
+            <DrawerField label={t("voucher.drawer.creditAcc")}>
+              <Combobox
+                disabled={viewOnly}
+                options={creditAccountOpts}
+                value={form.credit_account_id}
+                onChange={(v) => setField("credit_account_id", v)}
+                placeholder={t("voucher.drawer.accPlaceholder")}
+              />
+            </DrawerField>
           </div>
-        </div>
-      </DrawerSection>
-      <CounterpartySection {...props} />
-      <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
-        <CashBankTagPresetCards
-          presets={tagPresets ?? []}
-          selectedId={form.cash_bank_tag_preset_id}
-          debitAccountOpts={debitAccountOpts}
-          creditAccountOpts={creditAccountOpts}
-          disabled={viewOnly}
-          onSelect={handleTagPresetSelect}
+        </DrawerModal>
+
+        <PartnerDrawer
+          drawerOpen={isPartnerOpen}
+          closeDrawer={() => setIsPartnerOpen(false)}
+          isDirty={false}
+          editing={isPartnerEditing ? partnerForm : null}
+          saving={false}
+          handleSave={handlePartnerSave}
+          form={partnerForm}
+          setField={setPartnerField}
+          contactRows={contactRows}
+          setContactField={(idx: number, k: string, v: any) =>
+            setContactRows((rows) =>
+              rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)),
+            )
+          }
+          removeContactRow={(idx: number) =>
+            setContactRows((rows) => rows.filter((_, i) => i !== idx))
+          }
+          addContactRow={() =>
+            setContactRows((r) => [...r, { tempId: Date.now() }])
+          }
+          bankRows={bankRows}
+          setBankField={(idx: number, k: string, v: any) =>
+            setBankRows((rows) =>
+              rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)),
+            )
+          }
+          removeBankRow={(idx: number) =>
+            setBankRows((rows) => rows.filter((_, i) => i !== idx))
+          }
+          addBankRow={() => setBankRows((r) => [...r, { tempId: Date.now() }])}
+          saveError={null}
+          stackOffset={-56}
+          zIndex={600}
         />
+
         <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
-          <DrawerField label={t("voucher.drawer.debitAcc")} required>
-            <Combobox
-              disabled={viewOnly}
-              options={debitAccountOpts}
-              value={form.debit_account_id}
-              onChange={(v) => setField("debit_account_id", v)}
-              placeholder={t("voucher.drawer.accPlaceholder")}
-            />
-          </DrawerField>
-          <DrawerField label={t("voucher.drawer.creditAcc")} required>
-            <Combobox
-              disabled={viewOnly}
-              options={creditAccountOpts}
-              value={form.credit_account_id}
-              onChange={(v) => setField("credit_account_id", v)}
-              placeholder={t("voucher.drawer.accPlaceholder")}
-            />
-          </DrawerField>
           <DrawerField label={t("voucher.drawer.amount")} required>
             <input
               type="text"
@@ -270,6 +529,7 @@ export function BankVoucherDrawer(props: any) {
 }
 
 function CounterpartySection(props: any) {
+  const { handleCreatePartner, handleEditPartner } = props;
   const {
     t,
     form,
@@ -282,6 +542,14 @@ function CounterpartySection(props: any) {
     partnerBankOpts,
     partnerBankLoading,
   } = props;
+  console.log({
+    employeeOpts,
+    handleEmployeeChange,
+    partnerOpts,
+    handlePartnerChange,
+    partnerBankOpts,
+    partnerBankLoading,
+  });
   return (
     <DrawerSection title={t("voucher.drawer.sectionPartner")}>
       <DrawerField label="Loại đối tượng" required>
@@ -308,7 +576,11 @@ function CounterpartySection(props: any) {
           />
         </DrawerField>
       ) : (
-        <ExternalCounterpartyFields {...props} />
+        <ExternalCounterpartyFields
+          {...props}
+          handleCreatePartner={handleCreatePartner}
+          handleEditPartner={handleEditPartner}
+        />
       )}
       {(form.counterparty_name_snapshot ||
         form.counterparty_phone_snapshot ||
@@ -348,6 +620,7 @@ function CounterpartySection(props: any) {
 }
 
 function ExternalCounterpartyFields(props: any) {
+  const { handleCreatePartner, handleEditPartner } = props;
   const {
     t,
     form,
@@ -358,34 +631,61 @@ function ExternalCounterpartyFields(props: any) {
     partnerBankOpts,
     partnerBankLoading,
   } = props;
+  console.log({
+    employeeOpts,
+    handleEmployeeChange,
+    partnerOpts,
+    handlePartnerChange,
+    partnerBankOpts,
+    partnerBankLoading,
+  });
   return (
-    <div className="grid grid-cols-1 gap-y-1">
+    <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3 gap-y-1">
       <DrawerField label={t("voucher.drawer.partner")} required>
+        <div className="flex gap-1">
+          <div className="flex-1 min-w-0">
+            <Combobox
+              disabled={viewOnly}
+              options={partnerOpts}
+              value={form.counterparty_id}
+              onChange={handlePartnerChange}
+              placeholder={t("voucher.drawer.partnerPlaceholder")}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleCreatePartner}
+            className="px-2.5 py-1.5 border border-border rounded-lg text-xs font-medium hover:bg-surface-hover transition-colors flex items-center justify-center"
+            title="Thêm đối tác"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={handleEditPartner}
+            disabled={!form.counterparty_id}
+            className="px-2.5 py-1.5 border border-border rounded-lg text-xs font-medium hover:bg-surface-hover transition-colors flex items-center justify-center disabled:opacity-50"
+            title="Sửa đối tác"
+          >
+            ✎
+          </button>
+        </div>
+      </DrawerField>
+      <DrawerField label={t("voucher.drawer.partnerBank")}>
         <Combobox
-          disabled={viewOnly}
-          options={partnerOpts}
-          value={form.counterparty_id}
-          onChange={handlePartnerChange}
-          placeholder={t("voucher.drawer.partnerPlaceholder")}
+          options={partnerBankOpts}
+          value={form.beneficiary_bank_account_id}
+          onChange={(v) => setField("beneficiary_bank_account_id", v)}
+          placeholder={
+            partnerBankLoading
+              ? t("voucher.drawer.partnerBankLoading")
+              : form.counterparty_id
+                ? t("voucher.drawer.partnerBankPlaceholder")
+                : t("voucher.drawer.partnerBankNoPartner")
+          }
+          disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
         />
       </DrawerField>
-      <div className="grid grid-cols-2 gap-x-3">
-        <DrawerField label={t("voucher.drawer.partnerBank")}>
-          <Combobox
-            options={partnerBankOpts}
-            value={form.beneficiary_bank_account_id}
-            onChange={(v) => setField("beneficiary_bank_account_id", v)}
-            placeholder={
-              partnerBankLoading
-                ? t("voucher.drawer.partnerBankLoading")
-                : form.counterparty_id
-                  ? t("voucher.drawer.partnerBankPlaceholder")
-                  : t("voucher.drawer.partnerBankNoPartner")
-            }
-            disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
-          />
-        </DrawerField>
-      </div>
       <div className="col-span-2 max-[560px]:col-span-1">
         <DrawerField label={t("voucher.drawer.address")}>
           <input
