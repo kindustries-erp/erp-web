@@ -4,6 +4,7 @@ import {
   DrawerSection,
   DrawerField,
   inputCls,
+  DEFAULT_STACK_OFFSET,
 } from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -243,7 +244,7 @@ export function RoleDrawer({
         subtitle={editing ? editing.name : "Vai trò mới trong hệ thống"}
         confirmOnClose={isDirty}
         panelClassName="!w-[620px]"
-        stackOffset={fieldConfigOpen ? -2.5 : 0}
+        stackOffset={fieldConfigOpen ? DEFAULT_STACK_OFFSET : 0}
         actions={[
           { label: "Hủy", onClick: onClose },
           {
@@ -446,7 +447,7 @@ export function RoleDrawer({
         onClose={() => setFieldConfigOpen(false)}
         subtitle={editing?.name ?? ""}
         zIndex={410}
-        stackOffset={-2.5}
+        stackOffset={DEFAULT_STACK_OFFSET}
         selectedPermissionKey={selectedPermissionKey}
         activePermissionOptions={activePermissionOptions}
         selectedPermission={selectedPermission}

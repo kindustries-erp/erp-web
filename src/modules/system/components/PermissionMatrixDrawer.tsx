@@ -1,5 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { DrawerModal } from "@/shared/components/DrawerModal";
+import {
+  DrawerModal,
+  DEFAULT_STACK_OFFSET,
+} from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useT } from "@/core/i18n";
@@ -191,7 +194,7 @@ export function PermissionMatrixDrawer({
         subtitle={role?.name ?? ""}
         panelClassName="!w-[620px]"
         zIndex={zIndex}
-        stackOffset={fieldConfigOpen ? -2.5 : stackOffset}
+        stackOffset={fieldConfigOpen ? DEFAULT_STACK_OFFSET : stackOffset}
         actions={[
           { label: t("permissionMatrix.btnClose"), onClick: onClose },
           {
@@ -354,7 +357,7 @@ export function PermissionMatrixDrawer({
           onClose={() => setFieldConfigOpen(false)}
           subtitle={role?.name ?? ""}
           zIndex={(zIndex ?? 410) + 10}
-          stackOffset={-2.5}
+          stackOffset={DEFAULT_STACK_OFFSET}
           selectedPermissionKey={selectedPermissionKey}
           activePermissionOptions={activePermissionOptions}
           selectedPermission={selectedPermission}

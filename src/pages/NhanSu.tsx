@@ -10,6 +10,7 @@ import { PhongBan } from "@/pages/PhongBan";
 import { ChucVu } from "@/pages/ChucVu";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable } from "@/shared/components/DataTable";
+import { DEFAULT_STACK_OFFSET } from "@/shared/components/DrawerModal";
 import {
   getEmployeesPagedApi,
   createEmployeeApi,
@@ -443,7 +444,7 @@ export function NhanSu() {
           onPermissionConfigChange={policyEditor.updatePermissionConfig}
           onLoadCollectionFields={policyEditor.loadCollectionFields}
           zIndex={410}
-          stackOffset={-2.5}
+          stackOffset={DEFAULT_STACK_OFFSET}
         />
         <ConfirmModal
           open={!!deleteTarget}

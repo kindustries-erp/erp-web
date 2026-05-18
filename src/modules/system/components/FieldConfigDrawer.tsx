@@ -3,6 +3,7 @@ import {
   DrawerModal,
   DrawerField,
   DrawerSection,
+  DEFAULT_STACK_OFFSET,
 } from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -43,7 +44,7 @@ export function FieldConfigDrawer({
   onClose,
   subtitle,
   zIndex = 410,
-  stackOffset = -2.5,
+  stackOffset = DEFAULT_STACK_OFFSET,
   selectedPermissionKey,
   activePermissionOptions,
   selectedPermission,

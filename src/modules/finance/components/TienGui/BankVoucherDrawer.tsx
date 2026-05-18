@@ -5,6 +5,7 @@ import {
   DrawerSection,
   DrawerField,
   inputCls,
+  DEFAULT_STACK_OFFSET,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { FileUploadBox } from "@/shared/components/FileUploadBox";
@@ -329,7 +330,7 @@ export function BankVoucherDrawer(props: any) {
           title="Cấu hình hạch toán"
           zIndex={500}
           panelClassName="!w-[420px]"
-          stackOffset={-2.5}
+          stackOffset={DEFAULT_STACK_OFFSET}
           actions={[
             {
               label: "Xác nhận",
@@ -416,7 +417,7 @@ export function BankVoucherDrawer(props: any) {
           }
           addBankRow={() => setBankRows((r) => [...r, { tempId: Date.now() }])}
           saveError={null}
-          stackOffset={-2.5}
+          stackOffset={DEFAULT_STACK_OFFSET}
           zIndex={600}
         />
 

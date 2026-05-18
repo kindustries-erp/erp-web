@@ -14,7 +14,7 @@ export interface DrawerAction {
   loading?: boolean;
 }
 
-const DRAWER_STACK_STEP_PERCENT = 2.5;
+export const DEFAULT_STACK_OFFSET = -2;
 
 let drawerStackSeq = 0;
 const drawerStackOrder = new Map<number, number>();
@@ -105,7 +105,7 @@ export function DrawerModal({
   confirmOnClose = false,
   children,
   zIndex = 400,
-  stackOffset = 0,
+  stackOffset = 2.5,
   panelClassName,
   bodyClassName,
 }: DrawerModalProps) {
@@ -132,7 +132,7 @@ export function DrawerModal({
     if (stackOffset !== 0) return stackOffset;
     const order = drawerStackOrder.get(instanceId);
     if (!order || order <= 1) return 0;
-    return -(order - 1) * DRAWER_STACK_STEP_PERCENT;
+    return (order - 1) * DEFAULT_STACK_OFFSET;
   }, [instanceId, stackOffset]);
 
   const requestClose = useCallback(() => {

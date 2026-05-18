@@ -5,6 +5,7 @@ import {
   DrawerField,
   inputCls,
   type DrawerAction,
+  DEFAULT_STACK_OFFSET,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
@@ -745,7 +746,7 @@ export function CashVoucherDrawer({
         }
         addBankRow={() => setBankRows((r) => [...r, { tempId: Date.now() }])}
         saveError={null}
-        stackOffset={-2.5}
+        stackOffset={DEFAULT_STACK_OFFSET}
         zIndex={600}
       />
     </DrawerModal>
