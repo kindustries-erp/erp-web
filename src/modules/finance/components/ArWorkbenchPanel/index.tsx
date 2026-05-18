@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, FilePlus2, Loader2, Receipt } from "lucide-react";
+import { useT } from "@/core/i18n";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { Combobox } from "@/shared/components/Combobox";
 import { DrawerField, DrawerModal, DrawerSection, inputCls } from "@/shared/components/DrawerModal";
@@ -40,6 +41,7 @@ const TABS: { value: ArWorkbenchTab; label: string; icon: "invoice" | "receipt" 
 ];
 
 export function ArWorkbenchPanel() {
+  const t = useT();
   const [activeTab, setActiveTab] = useState<ArWorkbenchTab>("phai-thu");
   const { setCustomBreadcrumbs } = useAppStore();
 
@@ -194,8 +196,8 @@ export function ArWorkbenchPanel() {
 
   return (
     <PageWithTabsLayout
-      title="Công nợ"
-      desc="Quản lý công nợ phải thu và phải trả"
+      title={t("nav.items.debt")}
+      desc={t("nav.items.debtDesc")}
       icon={<Receipt className="h-4 w-4" />}
       actions={
         activeTab === "phai-thu" ? (
@@ -213,8 +215,8 @@ export function ArWorkbenchPanel() {
         ) : undefined
       }
       tabs={[
-        { value: "phai-thu", label: "Phải thu" },
-        { value: "phai-tra", label: "Phải trả" }
+        { value: "phai-thu", label: t("nav.items.debtReceivable") },
+        { value: "phai-tra", label: t("nav.items.debtPayable") }
       ]}
       activeTab={activeTab}
       onTabChange={handleTabChange}

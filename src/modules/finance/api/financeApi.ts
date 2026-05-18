@@ -21,9 +21,9 @@ export interface CashFund {
   currency: string | null;
   accounting_account_id: string;
   responsible_user_id: string | null;
+  branch_id?: string | null;
   is_active: boolean;
   note: string | null;
-  branch_id: string | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -34,9 +34,9 @@ export interface CreateCashFundDto {
   accounting_account_id: string;
   currency?: string;
   responsible_user_id?: string;
+  branch_id?: string | null;
   is_active?: boolean;
   note?: string;
-  branch_id?: string;
 }
 
 export type UpdateCashFundDto = Partial<CreateCashFundDto>;

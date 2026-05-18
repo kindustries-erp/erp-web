@@ -19,12 +19,6 @@ export function TienMatView(p: any) {
       <div className="flex-1">
         <VoucherFilterBar period={period} dateFrom={dateFrom} dateTo={dateTo} channelFilter={fundFilter} channelOpts={fundOpts} channelLabel={t("voucher.filter.fund")} channelPlaceholder={t("voucher.filter.fundPlaceholder")} hasActiveFilter={hasActiveFilter} onPeriodChange={handlePeriodChange} onDateFrom={handleDateFrom} onDateTo={handleDateTo} onChannelChange={handleFundFilter} onReset={handleReset} />
       </div>
-      {p.hideHeader && canCreateVoucher && (
-        <div className="flex gap-2 flex-shrink-0">
-          <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}><IconPlus /> {t("tienmat.createReceipt")}</BtnPrimary>
-          <BtnPrimary onClick={() => openNew("CASH_PAYMENT")}><IconPlus /> {t("tienmat.createPayment")}</BtnPrimary>
-        </div>
-      )}
     </div>
     <VoucherKpiRow openingLoading={openingLoading} summaryLoading={summaryLoading} openingBal={openingBal} closingBal={closingBal} receiptTotal={summary?.receipt ?? null} paymentTotal={summary?.payment ?? null} fmtAmount={fmtAmount} openingIcon={<IconCard />} receiptIcon={<IconUp />} paymentIcon={<IconDown />} closingIcon={<IconCard />} openingLabel={t("tienmat.kpi.fund")} receiptLabel={t("tienmat.kpi.income")} paymentLabel={t("tienmat.kpi.expense")} closingLabel={t("tienmat.kpi.fund")} />
     <VoucherChartRow openingLoading={openingLoading} donutLoading={donutLoading} chartData={chartData} chartLabels={chartLabels} chartYMax={chartYMax} chartUnit={chartUnit} receiptDonutItems={receiptDonutItems} paymentDonutItems={paymentDonutItems} balanceTrendTitle={t("tienmat.balanceTrend")} incomeStructureTitle={t("tienmat.incomeStructure")} expenseStructureTitle={t("tienmat.expenseStructure")} />

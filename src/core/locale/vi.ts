@@ -18,6 +18,7 @@ export const vi = {
       cashflowBankShort: "UNT / UNC",
       cashflowAttachments: "Tài liệu",
       debt: "Công nợ",
+      debtDesc: "Quản lý công nợ phải thu và phải trả",
       debtReceivable: "Phải thu",
       debtPayable: "Phải trả",
       report: "Báo cáo",
@@ -239,7 +240,7 @@ export const vi = {
   },
   journalEntries: {
     title: "Nhật ký chung",
-    desc: "Xem toàn bộ bút toán đã hạch toán và tạo bút toán thủ công.",
+    desc: "Xem báo cáo nhật ký chung và sổ cái",
     total: "Tổng số bút toán",
     loading: "Đang tải dữ liệu...",
     filters: {

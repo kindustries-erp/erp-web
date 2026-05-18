@@ -1,4 +1,4 @@
-import { BookOpen, Plus } from "lucide-react";
+import { BarChart3, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { DrawerModal } from "@/shared/components/DrawerModal";
@@ -181,9 +181,9 @@ export function NhatKyChung() {
     <>
       <PageWithTabsLayout
         className="space-y-4"
-        title={t("journalEntries.title")}
+        title={t("nav.items.report")}
         desc={t("journalEntries.desc")}
-        icon={<BookOpen className="w-5 h-5" />}
+        icon={<BarChart3 className="w-5 h-5" />}
         actions={
           <button
             type="button"
@@ -194,8 +194,8 @@ export function NhatKyChung() {
           </button>
         }
         tabs={[
-          { value: "nhat-ky-chung", label: "Nhật ký chung" },
-          { value: "so-cai", label: "Sổ cái" }
+          { value: "nhat-ky-chung", label: t("nav.items.reportJournal") },
+          { value: "so-cai", label: t("nav.items.reportLedger") }
         ]}
         activeTab={activeTab}
         onTabChange={handleTabChange}

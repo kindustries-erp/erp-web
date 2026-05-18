@@ -100,7 +100,6 @@ export interface Employee {
   manager_employee_id: string | null;
   directus_user_id: string;
   business_partner_id: string | null;
-  branch_id: string | null;
   employment_status: string;
   hire_date: string | null;
   resign_date: string | null;
@@ -114,6 +113,7 @@ export interface Employee {
   updated_by: string | null;
   department_id: Department;
   position_id: Position;
+  branch_id?: string | { id?: string; branch_code?: string; branch_name?: string } | null;
 }
 
 export interface UpdateProfileRequest {
@@ -123,7 +123,6 @@ export interface UpdateProfileRequest {
   phone?: string | null;
   manager_employee_id?: string | null;
   business_partner_id?: string | null;
-  branch_id?: string | null;
   employment_status?: string;
   hire_date?: string | null;
   resign_date?: string | null;
@@ -132,6 +131,7 @@ export interface UpdateProfileRequest {
   is_active?: boolean;
   department_id?: string;
   position_id?: string;
+  branch_id?: string | null;
   role_id?: string | null;
   policy_id?: string | null;
 }

@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { DrawerModal, DrawerSection, DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -8,6 +8,7 @@ import type { Employee } from "@/modules/auth/api/auth";
 import type { Role } from "@/modules/system/types/rbac";
 import type { useT } from "@/core/i18n";
 import { IconUser, type EmpForm } from "./shared";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 
 
 type T = ReturnType<typeof useT>;
@@ -34,6 +35,8 @@ interface EmployeeDrawerProps {
 export function EmployeeDrawer(props: EmployeeDrawerProps) {
   const { open, editing, form, setForm, depts, positions, allRoles, statusOptions, saving, saveError, isDirty, policyDrawerOpen, onClose, onSave, onOpenPolicyMatrix, t } = props;
   const setField = <K extends keyof EmpForm>(k: K, v: EmpForm[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const [branchOptions, setBranchOptions] = useState<Array<{ value: string; label: string }>>([]);
+  useEffect(() => { getBranchOptionsApi().then(setBranchOptions).catch(() => {}); }, []);
   return (
     <DrawerModal
       open={open}
@@ -57,6 +60,9 @@ export function EmployeeDrawer(props: EmployeeDrawerProps) {
       </DrawerSection>
 
       <DrawerSection title={t("nhansu.drawer.departmentPosition")}>
+        <DrawerField label="Chi nhánh">
+          <Combobox options={branchOptions} value={form.branch_id} onChange={(v) => setField("branch_id", v)} placeholder="Tất cả chi nhánh" allowClear={true} />
+        </DrawerField>
         <DrawerField label={t("nhansu.fields.department")}>
           <Combobox options={depts.map((d) => ({ value: d.id, label: d.department_name }))} value={form.department_id} onChange={(v) => setField("department_id", v)} placeholder={t("nhansu.placeholders.none")} />
         </DrawerField>

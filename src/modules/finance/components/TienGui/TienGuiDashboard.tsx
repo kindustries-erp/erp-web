@@ -22,12 +22,6 @@ export function TienGuiDashboard(props: any) {
         <div className="flex-1">
           <VoucherFilterBar period={period} dateFrom={dateFrom} dateTo={dateTo} channelFilter={bankFilter} channelOpts={bankFilterOpts} channelLabel={t("voucher.filter.bank")} channelPlaceholder={t("voucher.filter.bankPlaceholder")} hasActiveFilter={hasActiveFilter} onPeriodChange={handlePeriodChange} onDateFrom={handleDateFrom} onDateTo={handleDateTo} onChannelChange={handleBankFilter} onReset={handleReset} />
         </div>
-        {props.hideHeader && canCreateVoucher && (
-          <div className="flex gap-2 flex-shrink-0">
-            <BtnPrimary onClick={() => openNew("BANK_RECEIPT")}><IconPlus /> {t("tiengui.createUNT")}</BtnPrimary>
-            <BtnPrimary onClick={() => openNew("BANK_PAYMENT")}><IconPlus /> {t("tiengui.createUNC")}</BtnPrimary>
-          </div>
-        )}
       </div>
       <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4">
         <KpiCard label={t("tiengui.kpi.balance")} value={openingLoading ? "..." : fmtAmount(currentClosing)} icon={<IconBank />} />

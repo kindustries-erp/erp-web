@@ -226,7 +226,7 @@ export function NhanSu() {
   return (
     <PageWithTabsLayout
       title={t("nav.items.hr")}
-      desc="Quản lý nhân viên, phòng ban và chức danh"
+      desc={t("nhansu.desc")}
       icon={<Users className="h-4 w-4" />}
       tabs={tabs}
       activeTab={activeTab}
@@ -261,7 +261,7 @@ function HeaderActions({ onRefresh, onNew, t }: { onRefresh: () => void; onNew: 
 }
 
 function buildUpdateDto(form: EmpForm): UpdateProfileRequest {
-  return { employee_code: form.employee_code.trim() || undefined, full_name: form.full_name.trim(), email: form.email.trim(), phone: form.phone.trim() || null, department_id: form.department_id || undefined, position_id: form.position_id || undefined, employment_status: form.employment_status, hire_date: form.hire_date || null, is_active: form.is_active, notes: form.notes.trim() || null, role_id: form.role_id || null };
+  return { employee_code: form.employee_code.trim() || undefined, full_name: form.full_name.trim(), email: form.email.trim(), phone: form.phone.trim() || null, department_id: form.department_id || undefined, position_id: form.position_id || undefined, branch_id: form.branch_id || null, employment_status: form.employment_status, hire_date: form.hire_date || null, is_active: form.is_active, notes: form.notes.trim() || null, role_id: form.role_id || null };
 }
 function buildCreateDto(form: EmpForm): CreateEmployeeDto {
   return { employee_code: form.employee_code.trim() || undefined, full_name: form.full_name.trim(), email: form.email.trim(), phone: form.phone.trim() || null, department_id: form.department_id || null, position_id: form.position_id || null, employment_status: form.employment_status, hire_date: form.hire_date || null, is_active: form.is_active, notes: form.notes.trim() || null };

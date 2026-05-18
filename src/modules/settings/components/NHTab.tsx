@@ -20,6 +20,7 @@ import {
   type CreateCompanyBankAccountDto,
   type ChartOfAccount,
 } from "@/modules/accounting/api/catalogApi";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import {
   SectionHeader,
   ErrorBanner,
@@ -61,6 +62,7 @@ function buildBankForm(b: CompanyBankAccount): BankForm {
 export function NHTab() {
   const [items, setItems] = useState<CompanyBankAccount[]>([]);
   const [coaItems, setCoaItems] = useState<ChartOfAccount[]>([]);
+  const [branchOptions, setBranchOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -78,6 +80,7 @@ export function NHTab() {
 
   useEffect(() => {
     getChartOfAccountsApi().then(setCoaItems).catch(() => {});
+    getBranchOptionsApi().then(setBranchOptions).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -121,7 +124,7 @@ export function NHTab() {
         account_holder: form.account_holder.trim(),
         accounting_account_id: form.accounting_account_id || "",
         currency: form.currency || "VND",
-        branch_id: form.branch_id || undefined,
+        branch_id: form.branch_id || null,
       };
       if (editing) {
         await updateCompanyBankAccountApi(editing.id, dto);
@@ -204,6 +207,9 @@ export function NHTab() {
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.accountingAccount")}>
             <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("common.selectAccount")} />
+          </DrawerField>
+          <DrawerField label="Chi nhánh">
+            <Combobox options={branchOptions} value={form.branch_id} onChange={(v) => setField("branch_id", v)} placeholder="Tất cả chi nhánh" allowClear={true} />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
             <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />

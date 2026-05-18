@@ -15,12 +15,12 @@ export interface EmpForm {
   phone: string;
   department_id: string;
   position_id: string;
-  branch_id: string;
   employment_status: string;
   hire_date: string;
   is_active: boolean;
   notes: string;
   role_id: string;
+  branch_id: string;
 }
 
 export const emptyForm: EmpForm = {
@@ -30,12 +30,12 @@ export const emptyForm: EmpForm = {
   phone: "",
   department_id: "",
   position_id: "",
-  branch_id: "",
   employment_status: "active",
   hire_date: "",
   is_active: true,
   notes: "",
   role_id: "",
+  branch_id: "",
 };
 
 export function initials(name: string) {
@@ -85,12 +85,14 @@ export function buildForm(e: Employee): EmpForm {
     phone: e.phone ?? "",
     department_id: deptId(e),
     position_id: posId(e),
-    branch_id: e.branch_id ?? "",
     employment_status: e.employment_status ?? "active",
     hire_date: e.hire_date ? e.hire_date.slice(0, 10) : "",
     is_active: e.is_active,
     notes: e.notes ?? "",
     role_id: getEmployeeRoleId(e),
+    branch_id: typeof (e as Employee & { branch_id?: string | { id?: string } | null }).branch_id === "object"
+      ? ((e as Employee & { branch_id?: { id?: string } | null }).branch_id?.id ?? "")
+      : String((e as Employee & { branch_id?: string | null }).branch_id ?? ""),
   };
 }
 export const IconPlus = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>;

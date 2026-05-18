@@ -115,9 +115,6 @@ export function Sidebar() {
                 <p className="font-semibold text-sm leading-tight whitespace-nowrap text-foreground">
                   {t("nav.appName")}
                 </p>
-                <span className="text-xs text-[color:var(--muted-fg)] whitespace-nowrap">
-                  {t("nav.appSubtitle")}
-                </span>
               </div>
             </div>
             <button

@@ -19,6 +19,7 @@ import {
   type CashFund,
   type CreateCashFundDto,
 } from "@/modules/finance/api/financeApi";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import {
   getChartOfAccountsApi,
   type ChartOfAccount,
@@ -38,18 +39,18 @@ interface QuyForm {
   fund_name: string;
   accounting_account_id: string;
   currency: string;
+  branch_id: string;
   is_active: boolean;
   note: string;
-  branch_id: string;
 }
 const emptyQuyForm: QuyForm = {
   fund_code: "",
   fund_name: "",
   accounting_account_id: "",
   currency: "VND",
+  branch_id: "",
   is_active: true,
   note: "",
-  branch_id: "",
 };
 function buildQuyForm(f: CashFund): QuyForm {
   return {
@@ -57,15 +58,16 @@ function buildQuyForm(f: CashFund): QuyForm {
     fund_name: f.fund_name,
     accounting_account_id: f.accounting_account_id ?? "",
     currency: f.currency ?? "VND",
+    branch_id: f.branch_id ?? "",
     is_active: f.is_active,
     note: f.note ?? "",
-    branch_id: f.branch_id ?? "",
   };
 }
 
 export function QuyTab() {
   const [items, setItems] = useState<CashFund[]>([]);
   const [coaItems, setCoaItems] = useState<ChartOfAccount[]>([]);
+  const [branchOptions, setBranchOptions] = useState<Array<{ value: string; label: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -83,6 +85,7 @@ export function QuyTab() {
 
   useEffect(() => {
     getChartOfAccountsApi().then(setCoaItems).catch(() => {});
+    getBranchOptionsApi().then(setBranchOptions).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -124,9 +127,9 @@ export function QuyTab() {
         fund_name: form.fund_name.trim(),
         accounting_account_id: form.accounting_account_id,
         currency: form.currency || "VND",
+        branch_id: form.branch_id || null,
         is_active: form.is_active,
         note: form.note.trim() || undefined,
-        branch_id: form.branch_id || undefined,
       };
       if (editing) {
         await updateCashFundApi(editing.id, dto);
@@ -201,6 +204,9 @@ export function QuyTab() {
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.accountingAccount")} required>
             <Combobox options={coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }))} value={form.accounting_account_id} onChange={(v) => setField("accounting_account_id", v)} placeholder={t("common.selectAccount")} />
+          </DrawerField>
+          <DrawerField label="Chi nhánh">
+            <Combobox options={branchOptions} value={form.branch_id} onChange={(v) => setField("branch_id", v)} placeholder="Tất cả chi nhánh" allowClear={true} />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
             <Combobox options={[{ value: "VND", label: "VND" }, { value: "USD", label: "USD" }]} value={form.currency} onChange={(v) => setField("currency", v || "VND")} allowClear={false} />

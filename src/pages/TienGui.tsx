@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, forwardRef, useImperativeHandle } from "react";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
@@ -18,7 +18,7 @@ import { useAmountRangeFilter, useSearchFilter } from "@/shared/hooks/useFilterS
 import { useBankVoucherHandlers } from "@/modules/finance/hooks/useBankVoucherHandlers";
 import { submitPaymentVoucherApi, approvePaymentVoucherApi, rejectPaymentVoucherApi, postPaymentVoucherApi, cancelPaymentVoucherApi, getPaymentVoucherLookupBusinessPartnersApi, getPaymentVoucherLookupEmployeesApi, type VoucherStatus, type CounterpartySource } from "@/modules/finance/api/financeApi";
 
-export function TienGui(props: { hideHeader?: boolean } = {}) {
+export const TienGui = forwardRef((props: { hideHeader?: boolean } = {}, ref) => {
   const t = useT();
   const canCreateVoucher = useHasPermission("payment_vouchers", "create");
   const canUpdateVoucher = useHasPermission("payment_vouchers", "update");
@@ -53,6 +53,10 @@ export function TienGui(props: { hideHeader?: boolean } = {}) {
   const reloadDonutData = useCallback(() => loadDonutData(bankFilter, coaItems, bankDashboardParams, dateFrom, dateTo), [bankDashboardParams, bankFilter, coaItems, dateFrom, dateTo, loadDonutData]);
   const handlers = useBankVoucherHandlers({ companyBankAccounts, partners, employees, vouchers, page, pageSize, search, statusFilter, bankFilter, sortCol, dateFrom, dateTo, amountMin, amountMax, coaItemsLength: coaItems.length, attachmentFileName, setPage, loadVouchers, loadVoucherAttachments, loadSummary, loadOpeningBalanceAndChart, reloadDonutData });
   const { drawerOpen, editing, drawerEditMode, form, saving, saveError, attachmentFiles, attachmentType, attachmentNote, existingAttachments, deleteTarget, deleting, partnerBankAccounts, partnerBankLoading, tagPresets, handleTagPresetSelect, setSaving, setSaveError, reloadCurrentData, closeDrawer, openNew, openEdit, setField, setAttachmentFiles, setAttachmentType, setAttachmentNote, setDeleteTarget, handleDocumentDateChange, handlePostingDateChange, handleAmountChange, handleCompanyBankChange, handlePartnerChange, handleEmployeeChange, handleToggleEditMode, handleDeleteAttachment, handleSave, handleSaveRelatedDocuments, handleDelete } = handlers;
+
+  useImperativeHandle(ref, () => ({
+    openNew: (type: string) => openNew(type as any),
+  }));
 
   async function handleStatusTransition(action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL", onSuccess: () => void) {
     if (!editing) return;
@@ -106,7 +110,7 @@ export function TienGui(props: { hideHeader?: boolean } = {}) {
       <ConfirmModal open={!!deleteTarget} title={t("voucher.actions.deleteConfirmTitle")} message={deleteTarget ? t("voucher.actions.deleteConfirmDesc").replace("{0}", deleteTarget.voucher_no) : ""} confirmLabel={t("voucher.actions.deleteConfirmBtn")} loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} />
     </div>
   );
-}
+});
 
 function buildOptionSets(coaItems: ChartOfAccount[], partners: BusinessPartner[], employees: Employee[], companyBankAccounts: CompanyBankAccount[], partnerBankAccounts: any[], voucherType: string) {
   const coaOpts = coaItems.map((c) => ({ value: c.id, label: `${c.account_code} — ${c.account_name}` }));

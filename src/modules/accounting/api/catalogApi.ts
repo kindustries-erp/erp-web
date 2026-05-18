@@ -17,8 +17,8 @@ export interface CompanyBankAccount {
   account_holder: string;
   accounting_account_id: string;
   currency: string;
+  branch_id?: string | null;
   is_active?: boolean;
-  branch_id?: string;
   created_at: string;
   updated_at: string | null;
 }
@@ -30,7 +30,7 @@ export interface CreateCompanyBankAccountDto {
   account_holder: string;
   accounting_account_id: string;
   currency?: string;
-  branch_id?: string;
+  branch_id?: string | null;
 }
 export type UpdateCompanyBankAccountDto = Partial<CreateCompanyBankAccountDto>;
 

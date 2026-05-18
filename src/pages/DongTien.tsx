@@ -6,7 +6,7 @@ import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAppStore } from "@/core/config/appStore";
 import { useT, useDict } from "@/core/i18n";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/shared/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { TienMat } from "./TienMat";
@@ -19,6 +19,8 @@ export function DongTien() {
   const dict = useDict();
 
   const [activeTab, setActiveTab] = useState("tong-hop");
+  const tienMatRef = useRef<{ openNew: (type: string) => void }>(null);
+  const tienGuiRef = useRef<{ openNew: (type: string) => void }>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -119,16 +121,39 @@ export function DongTien() {
       icon={<BarChart3 className="h-4 w-4" />}
       actions={
         <>
-          <Btn>{t("common.thisMonth")}</Btn>
           <BtnPrimary>
             <IconDownload /> {t("common.export")}
           </BtnPrimary>
+          {activeTab === "tien-mat" && (
+            <>
+              <BtnPrimary onClick={() => tienMatRef.current?.openNew("CASH_RECEIPT")}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                {t("tienmat.createReceipt")}
+              </BtnPrimary>
+              <BtnPrimary onClick={() => tienMatRef.current?.openNew("CASH_PAYMENT")}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                {t("tienmat.createPayment")}
+              </BtnPrimary>
+            </>
+          )}
+          {activeTab === "uy-nhiem-chi" && (
+            <>
+              <BtnPrimary onClick={() => tienGuiRef.current?.openNew("BANK_RECEIPT")}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                {t("tiengui.createUNT")}
+              </BtnPrimary>
+              <BtnPrimary onClick={() => tienGuiRef.current?.openNew("BANK_PAYMENT")}>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                {t("tiengui.createUNC")}
+              </BtnPrimary>
+            </>
+          )}
         </>
       }
       tabs={[
-        { value: "tong-hop", label: "Tổng hợp" },
-        { value: "tien-mat", label: "Tiền mặt" },
-        { value: "uy-nhiem-chi", label: "Ủy nhiệm chi" },
+        { value: "tong-hop", label: t("nav.items.cashflowOverview") },
+        { value: "tien-mat", label: t("nav.items.cashflowCash") },
+        { value: "uy-nhiem-chi", label: t("nav.items.cashflowBankShort") },
       ]}
       activeTab={activeTab}
       onTabChange={handleTabChange}
@@ -287,11 +312,11 @@ export function DongTien() {
       </div>
 
       <div className={activeTab === 'tien-mat' ? '' : 'hidden'}>
-        <TienMat hideHeader />
+        <TienMat ref={tienMatRef} hideHeader />
       </div>
 
       <div className={activeTab === 'uy-nhiem-chi' ? '' : 'hidden'}>
-        <TienGui hideHeader />
+        <TienGui ref={tienGuiRef} hideHeader />
       </div>
     </PageWithTabsLayout>
   );
@@ -393,9 +418,9 @@ function Btn({ children }: { children: React.ReactNode }) {
     </button>
   );
 }
-function BtnPrimary({ children }: { children: React.ReactNode }) {
+function BtnPrimary({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap">
+    <button onClick={onClick} className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap">
       {children}
     </button>
   );

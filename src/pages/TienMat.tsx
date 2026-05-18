@@ -29,8 +29,9 @@ import { useSearchFilter } from "@/shared/hooks/useFilterState";
 import { useAmountRangeFilter } from "@/shared/hooks/useFilterState";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { TienMatView } from "@/modules/finance/components/TienMat/TienMatView";
+import { forwardRef, useImperativeHandle } from "react";
 
-export function TienMat(props: { hideHeader?: boolean } = {}) {
+export const TienMat = forwardRef((props: { hideHeader?: boolean } = {}, ref) => {
 
   const t = useT();
   const canCreateVoucher = useHasPermission("payment_vouchers", "create");
@@ -197,6 +198,10 @@ export function TienMat(props: { hideHeader?: boolean } = {}) {
     handleSaveRelatedDocuments,
     handleDelete,
   } = handlers;
+
+  useImperativeHandle(ref, () => ({
+    openNew: (type: string) => openNew(type as any),
+  }));
 
   // Load dropdown data once
   useEffect(() => {
@@ -453,4 +458,4 @@ export function TienMat(props: { hideHeader?: boolean } = {}) {
       }}
     />
   );
-}
+});

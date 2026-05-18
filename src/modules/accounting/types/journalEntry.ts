@@ -35,7 +35,6 @@ export interface JournalEntry {
   reference_id?: string | null;
   total_debit: number | string | null;
   total_credit: number | string | null;
-  branch_id?: string | null;
   created_by?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -52,7 +51,6 @@ export interface JournalEntryListParams {
   account_id?: string;
   date_from?: string;
   date_to?: string;
-  branch_id?: string;
 }
 
 export interface JournalEntryListResponse {
@@ -85,7 +83,6 @@ export interface CreateJournalEntryPayload {
   description?: string | null;
   reference_type?: string | null;
   reference_id?: string | null;
-  branch_id?: string | null;
   lines: Array<{
     account_id: string;
     debit: number;
