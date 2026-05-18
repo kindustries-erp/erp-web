@@ -530,26 +530,8 @@ export function BankVoucherDrawer(props: any) {
 
 function CounterpartySection(props: any) {
   const { handleCreatePartner, handleEditPartner } = props;
-  const {
-    t,
-    form,
-    setField,
-    viewOnly,
-    employeeOpts,
-    handleEmployeeChange,
-    partnerOpts,
-    handlePartnerChange,
-    partnerBankOpts,
-    partnerBankLoading,
-  } = props;
-  console.log({
-    employeeOpts,
-    handleEmployeeChange,
-    partnerOpts,
-    handlePartnerChange,
-    partnerBankOpts,
-    partnerBankLoading,
-  });
+  const { t, form, setField, viewOnly, employeeOpts, handleEmployeeChange } =
+    props;
   return (
     <DrawerSection title={t("voucher.drawer.sectionPartner")}>
       <DrawerField label="Loại đối tượng" required>
@@ -631,14 +613,6 @@ function ExternalCounterpartyFields(props: any) {
     partnerBankOpts,
     partnerBankLoading,
   } = props;
-  console.log({
-    employeeOpts,
-    handleEmployeeChange,
-    partnerOpts,
-    handlePartnerChange,
-    partnerBankOpts,
-    partnerBankLoading,
-  });
   return (
     <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3 gap-y-1">
       <DrawerField label={t("voucher.drawer.partner")} required>

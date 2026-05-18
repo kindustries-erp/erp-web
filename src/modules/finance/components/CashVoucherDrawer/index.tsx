@@ -10,6 +10,20 @@ import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { FileUploadBox } from "@/shared/components/FileUploadBox";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
+import { PartnerDrawer } from "@/modules/partners/components/PartnerDrawer";
+import {
+  emptyPartnerForm,
+  buildPartnerForm,
+  contactDraftFromApi,
+  bankDraftFromApi,
+} from "@/modules/partners/types";
+import {
+  getBusinessPartnerContactsPagedApi,
+  getBusinessPartnerBankAccountsPagedApi,
+  getBusinessPartnerRolesPagedApi,
+  updateBusinessPartnerApi,
+  createBusinessPartnerApi,
+} from "@/modules/partners/api/partnerApi";
 import {
   type CounterpartySource,
   type PaymentVoucher,
@@ -18,14 +32,13 @@ import {
   type AttachmentType,
   type CashBankTagPreset,
 } from "@/modules/finance/api/financeApi";
-import type { ChartOfAccount } from "@/modules/accounting/api/catalogApi";
-import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
-import type { CashFund } from "@/modules/finance/api/financeApi";
 import type { CashVoucherForm } from "@/modules/finance/types/voucherForm";
 import {
   ATTACHMENT_TYPE_OPTS,
   COUNTERPARTY_SOURCE_OPTS,
 } from "@/modules/finance/types/voucherForm";
+import { useUIStore } from "@/core/config/uiStore";
+import { useState } from "react";
 import { useT } from "@/core/i18n";
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
@@ -34,6 +47,7 @@ import { RelatedDocumentsEditor } from "@/modules/finance/components/RelatedDocu
 interface SelectOption {
   value: string;
   label: string;
+  original?: any;
 }
 
 export interface CashVoucherDrawerProps {
@@ -101,7 +115,6 @@ export function CashVoucherDrawer({
   fundOpts,
   partnerOpts,
   employeeOpts,
-  coaOpts,
   debitAccountOpts,
   creditAccountOpts,
   tagPresets,
@@ -125,6 +138,7 @@ export function CashVoucherDrawer({
   onAttachmentTypeChange,
   onAttachmentNoteChange,
 }: CashVoucherDrawerProps) {
+  const showToast = useUIStore((s) => s.showToast);
   const t = useT();
   const viewOnly = !!editing && !drawerEditMode;
   const canEdit = !editing || editing.status === "DRAFT";
@@ -134,6 +148,136 @@ export function CashVoucherDrawer({
     canUpdateVoucher;
   const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
   const isDirty = !!form.voucher_no.trim() || !!form.amount;
+
+  const [isPartnerOpen, setIsPartnerOpen] = useState(false);
+  const [isPartnerEditing, setIsPartnerEditing] = useState(false);
+  const [partnerForm, setPartnerForm] = useState<any>({ ...emptyPartnerForm });
+  const [contactRows, setContactRows] = useState<any[]>([]);
+  const [bankRows, setBankRows] = useState<any[]>([]);
+
+  const handleEditPartner = async () => {
+    if (!form.counterparty_id) return;
+    const partnerItem = partnerOpts.find(
+      (p: any) => p.value === form.counterparty_id,
+    );
+    if (!partnerItem) return;
+
+    const partner = partnerItem.original;
+    if (!partner) return;
+
+    setIsPartnerEditing(true);
+    const baseForm = buildPartnerForm(partner);
+    setPartnerForm(baseForm);
+    setContactRows([]);
+    setBankRows([]);
+    setIsPartnerOpen(true);
+
+    try {
+      const [contactRes, bankRes, roleRes] = await Promise.all([
+        getBusinessPartnerContactsPagedApi({ page: 1, pageSize: 500 }),
+        getBusinessPartnerBankAccountsPagedApi({ page: 1, pageSize: 500 }),
+        getBusinessPartnerRolesPagedApi({ page: 1, pageSize: 500 }),
+      ]);
+      const partnerContacts = contactRes.items.filter(
+        (c) => c.business_partner_id === partner.id,
+      );
+      const partnerBanks = bankRes.items.filter(
+        (b) => b.business_partner_id === partner.id,
+      );
+      const partnerRoles = roleRes.items.filter(
+        (r) => r.business_partner_id === partner.id,
+      );
+      const contact =
+        partnerContacts.find(
+          (c) => c.is_default_receiver || c.is_default_payer,
+        ) ?? partnerContacts[0];
+      const bank = partnerBanks.find((b) => b.is_default) ?? partnerBanks[0];
+      const role = partnerRoles.find((r) => r.is_active) ?? partnerRoles[0];
+      setContactRows(
+        partnerContacts.length ? partnerContacts.map(contactDraftFromApi) : [],
+      );
+      setBankRows(
+        partnerBanks.length ? partnerBanks.map(bankDraftFromApi) : [],
+      );
+      setPartnerForm({
+        ...baseForm,
+        ...(contact
+          ? {
+              contact_id: contact.id,
+              contact_full_name: contact.full_name,
+              contact_position: contact.position ?? "",
+              contact_phone: contact.phone ?? "",
+              contact_email: contact.email ?? "",
+              contact_is_default_receiver: contact.is_default_receiver,
+              contact_is_default_payer: contact.is_default_payer,
+              contact_is_active: contact.is_active,
+            }
+          : {}),
+        ...(bank
+          ? {
+              bank_id: bank.id,
+              bank_name: bank.bank_name,
+              bank_account_number: bank.account_number,
+              bank_account_holder: bank.account_holder,
+              bank_currency: bank.currency ?? "VND",
+              bank_is_default: bank.is_default,
+              bank_is_active: bank.is_active,
+            }
+          : {}),
+        ...(role
+          ? {
+              role_id: role.id,
+              role_enabled: true,
+              role: role.role,
+              role_is_active: role.is_active,
+            }
+          : {}),
+      });
+    } catch {
+      // Keep drawer usable
+    }
+  };
+
+  const handleCreatePartner = () => {
+    setIsPartnerEditing(false);
+    setPartnerForm({ ...emptyPartnerForm });
+    setContactRows([]);
+    setBankRows([]);
+    setIsPartnerOpen(true);
+  };
+
+  const setPartnerField = (k: string, v: any) =>
+    setPartnerForm((f: any) => ({ ...f, [k]: v }));
+
+  async function handlePartnerSave() {
+    if (!partnerForm.code.trim() || !partnerForm.name.trim()) return;
+    try {
+      const dto = {
+        code: partnerForm.code.trim(),
+        name: partnerForm.name.trim(),
+        partner_kind: partnerForm.partner_kind,
+        display_name: partnerForm.display_name.trim() || undefined,
+        tax_code: partnerForm.tax_code.trim() || undefined,
+        phone: partnerForm.phone.trim() || undefined,
+        email: partnerForm.email.trim() || undefined,
+        address: partnerForm.address.trim() || undefined,
+        is_active: partnerForm.is_active,
+        note: partnerForm.note.trim() || undefined,
+      };
+      const partner =
+        isPartnerEditing && partnerForm.id
+          ? await updateBusinessPartnerApi(partnerForm.id, dto)
+          : await createBusinessPartnerApi(dto);
+
+      const partnerId = partner.id;
+
+      setIsPartnerOpen(false);
+      onPartnerChange(partnerId);
+      showToast({ title: "Đã lưu đối tác", variant: "success" });
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   // ── Actions по статусу ────────────────────────────────────────────────────
   const actions: DrawerAction[] = (() => {
@@ -337,13 +481,34 @@ export function CashVoucherDrawer({
         ) : (
           <div className="grid grid-cols-1 gap-y-1">
             <DrawerField label={t("voucher.drawer.partner")} required>
-              <Combobox
-                options={partnerOpts}
-                value={form.counterparty_id}
-                onChange={onPartnerChange}
-                placeholder={t("voucher.drawer.partnerPlaceholder")}
-                disabled={viewOnly}
-              />
+              <div className="flex gap-1">
+                <div className="flex-1 min-w-0">
+                  <Combobox
+                    options={partnerOpts}
+                    value={form.counterparty_id}
+                    onChange={onPartnerChange}
+                    placeholder={t("voucher.drawer.partnerPlaceholder")}
+                    disabled={viewOnly}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCreatePartner}
+                  className="px-2.5 py-1.5 border border-border rounded-lg text-xs font-medium hover:bg-surface-hover transition-colors flex items-center justify-center"
+                  title="Thêm đối tác"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEditPartner}
+                  disabled={!form.counterparty_id}
+                  className="px-2.5 py-1.5 border border-border rounded-lg text-xs font-medium hover:bg-surface-hover transition-colors flex items-center justify-center disabled:opacity-50"
+                  title="Sửa đối tác"
+                >
+                  ✎
+                </button>
+              </div>
             </DrawerField>
             <div className="col-span-2 max-[560px]:col-span-1">
               <DrawerField label={t("voucher.drawer.address")}>
@@ -547,6 +712,42 @@ export function CashVoucherDrawer({
           {saveError}
         </div>
       )}
+
+      <PartnerDrawer
+        drawerOpen={isPartnerOpen}
+        closeDrawer={() => setIsPartnerOpen(false)}
+        isDirty={false}
+        editing={isPartnerEditing ? partnerForm : null}
+        saving={false}
+        handleSave={handlePartnerSave}
+        form={partnerForm}
+        setField={setPartnerField}
+        contactRows={contactRows}
+        setContactField={(idx: number, k: string, v: any) =>
+          setContactRows((rows) =>
+            rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)),
+          )
+        }
+        removeContactRow={(idx: number) =>
+          setContactRows((rows) => rows.filter((_, i) => i !== idx))
+        }
+        addContactRow={() =>
+          setContactRows((r) => [...r, { tempId: Date.now() }])
+        }
+        bankRows={bankRows}
+        setBankField={(idx: number, k: string, v: any) =>
+          setBankRows((rows) =>
+            rows.map((row, i) => (i === idx ? { ...row, [k]: v } : row)),
+          )
+        }
+        removeBankRow={(idx: number) =>
+          setBankRows((rows) => rows.filter((_, i) => i !== idx))
+        }
+        addBankRow={() => setBankRows((r) => [...r, { tempId: Date.now() }])}
+        saveError={null}
+        stackOffset={-56}
+        zIndex={600}
+      />
     </DrawerModal>
   );
 }
