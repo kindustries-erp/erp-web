@@ -95,7 +95,6 @@ export function QuyTab() {
 
   useEffect(() => {
     loadFunds(page, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
   async function loadFunds(pg: number, ps: number) {

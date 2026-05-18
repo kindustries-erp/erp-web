@@ -101,7 +101,6 @@ export function ContactsTab() {
 
   useEffect(() => {
     load(page, pageSize, search, partnerFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, search, partnerFilter]);
 
   async function load(pg: number, ps: number, q: string, pid: string) {

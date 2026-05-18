@@ -85,12 +85,7 @@ export function DinhKemChungTu() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewType, setPreviewType] = useState("");
 
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, typeFilter, search]);
-
-  async function loadData() {
+  const loadData = async () => {
     setLoading(true);
     setFetchError(null);
     try {
@@ -123,7 +118,11 @@ export function DinhKemChungTu() {
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    void loadData();
+  }, [page, pageSize, typeFilter, search]);
 
   function handlePageSize(size: number) {
     setPageSize(size);

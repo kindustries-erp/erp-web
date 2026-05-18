@@ -745,7 +745,7 @@ export function CashVoucherDrawer({
         }
         addBankRow={() => setBankRows((r) => [...r, { tempId: Date.now() }])}
         saveError={null}
-        stackOffset={-56}
+        stackOffset={-2.5}
         zIndex={600}
       />
     </DrawerModal>

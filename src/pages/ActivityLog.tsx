@@ -130,7 +130,6 @@ export function ActivityLog() {
 
   useEffect(() => {
     loadData(page, pageSize, search, actionFilter, dateFrom, dateTo);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, search, actionFilter, dateFrom, dateTo]);
 
   async function loadData(

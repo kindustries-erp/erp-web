@@ -243,7 +243,7 @@ export function RoleDrawer({
         subtitle={editing ? editing.name : "Vai trò mới trong hệ thống"}
         confirmOnClose={isDirty}
         panelClassName="!w-[620px]"
-        stackOffset={fieldConfigOpen ? 52 : 0}
+        stackOffset={fieldConfigOpen ? -2.5 : 0}
         actions={[
           { label: "Hủy", onClick: onClose },
           {
@@ -446,7 +446,7 @@ export function RoleDrawer({
         onClose={() => setFieldConfigOpen(false)}
         subtitle={editing?.name ?? ""}
         zIndex={410}
-        stackOffset={-56}
+        stackOffset={-2.5}
         selectedPermissionKey={selectedPermissionKey}
         activePermissionOptions={activePermissionOptions}
         selectedPermission={selectedPermission}

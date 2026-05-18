@@ -28,7 +28,7 @@ export function TablePagination({
 
   const maxShow = 5;
   let start = Math.max(1, page - Math.floor(maxShow / 2));
-  let end = Math.min(totalPages, start + maxShow - 1);
+  const end = Math.min(totalPages, start + maxShow - 1);
   if (end - start < maxShow - 1) start = Math.max(1, end - maxShow + 1);
 
   const btn = (active = false, disabled = false) =>

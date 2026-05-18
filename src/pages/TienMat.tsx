@@ -226,7 +226,6 @@ export const TienMat = forwardRef(
     // Load KPI summary when date range or fund changes
     useEffect(() => {
       loadSummary(dateFrom, dateTo, cashDashboardParams);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateFrom, dateTo, cashDashboardParams]);
 
     // Load opening balance + chart when date range or fund changes
@@ -236,7 +235,6 @@ export const TienMat = forwardRef(
         dateTo || TODAY,
         cashDashboardParams,
       );
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dateFrom, dateTo, cashDashboardParams]);
 
     // Load donuts when coaItems ready, fund, or date range changes
@@ -251,8 +249,6 @@ export const TienMat = forwardRef(
         dateFrom,
         dateTo,
       );
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       catalogLoaded,
       fundFilter,
@@ -282,8 +278,6 @@ export const TienMat = forwardRef(
       loadVouchers(p).then((items) => {
         if (items) loadVoucherAttachments(items);
       });
-
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       page,
       pageSize,

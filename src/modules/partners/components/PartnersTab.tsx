@@ -154,7 +154,6 @@ export function PartnersTab() {
 
   useEffect(() => {
     load(page, pageSize, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, search]);
 
   async function load(pg: number, ps: number, q: string) {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   DrawerModal,
   DrawerField,
@@ -43,7 +43,7 @@ export function FieldConfigDrawer({
   onClose,
   subtitle,
   zIndex = 410,
-  stackOffset = -56,
+  stackOffset = -2.5,
   selectedPermissionKey,
   activePermissionOptions,
   selectedPermission,
@@ -57,32 +57,19 @@ export function FieldConfigDrawer({
   );
   const [fieldsLoading, setFieldsLoading] = useState(false);
   const [fieldsError, setFieldsError] = useState<string | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    if (!selectedPermission) {
-      setAvailableFields([]);
-      setFieldsError(null);
-      return;
-    }
+  async function loadFieldsForPermission(collection: string) {
     setFieldsLoading(true);
     setFieldsError(null);
-    onLoadCollectionFields(selectedPermission.collection)
-      .then((rows) => {
-        if (!cancelled) setAvailableFields(rows);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setAvailableFields([]);
-          setFieldsError(t("permissionMatrix.fieldConfig.loadFieldsError"));
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setFieldsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedPermission, onLoadCollectionFields, t]);
+    try {
+      const rows = await onLoadCollectionFields(collection);
+      setAvailableFields(rows);
+    } catch {
+      setAvailableFields([]);
+      setFieldsError(t("permissionMatrix.fieldConfig.loadFieldsError"));
+    } finally {
+      setFieldsLoading(false);
+    }
+  }
 
   const fieldOptions: FieldOption[] = availableFields.map((item) => ({
     value: item.field,

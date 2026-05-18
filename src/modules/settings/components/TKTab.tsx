@@ -107,7 +107,6 @@ export function TKTab() {
 
   useEffect(() => {
     loadItems(page, pageSize, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
   async function loadItems(pg: number, ps: number, q: string) {

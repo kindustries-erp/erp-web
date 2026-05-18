@@ -163,7 +163,10 @@ export function DrawerModal({
       }}
     >
       <div
-        className={cn("slide-panel min-h-0", panelClassName)}
+        className={cn(
+          "slide-panel min-h-0 min-[1024px]:min-w-[450px]",
+          panelClassName,
+        )}
         style={
           open && computedStackOffset !== 0
             ? { transform: `translateX(${computedStackOffset}%)` }

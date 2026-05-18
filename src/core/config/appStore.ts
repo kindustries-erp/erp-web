@@ -148,7 +148,7 @@ export const useAppStore = create<AppState>()(
 
       navigate: (page) => {
         const { openTabs } = get();
-        let newTabs = [...openTabs];
+        const newTabs = [...openTabs];
         if (!newTabs.includes(page)) {
           const group = SECTION_ROOTS[page]?.group;
           if (group) {
@@ -176,7 +176,7 @@ export const useAppStore = create<AppState>()(
 
       syncFromUrl: (page) => {
         const { openTabs } = get();
-        let newTabs = [...openTabs];
+        const newTabs = [...openTabs];
         if (!newTabs.includes(page)) {
           const group = SECTION_ROOTS[page]?.group;
           if (group) {

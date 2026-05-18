@@ -87,7 +87,6 @@ export function NHTab() {
 
   useEffect(() => {
     loadItems(page, pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
   async function loadItems(pg: number, ps: number) {

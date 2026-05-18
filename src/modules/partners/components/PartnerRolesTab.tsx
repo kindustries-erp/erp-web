@@ -63,7 +63,6 @@ export function PartnerRolesTab() {
 
   useEffect(() => {
     load(page, pageSize, partnerFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, partnerFilter]);
 
   async function load(pg: number, ps: number, pid: string) {

@@ -129,7 +129,6 @@ export function PhongBan() {
 
   useEffect(() => {
     loadData(page, pageSize, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize, search]);
 
   async function loadData(pg: number, ps: number, q: string) {

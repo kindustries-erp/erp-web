@@ -57,7 +57,6 @@ export default function App() {
 
   useEffect(() => {
     bootstrapAction();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Sync URL → store on mount and browser back/forward
@@ -75,7 +74,6 @@ export default function App() {
     sync(); // initial read
     window.addEventListener("popstate", sync);
     return () => window.removeEventListener("popstate", sync);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
