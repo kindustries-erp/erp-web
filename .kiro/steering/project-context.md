@@ -7,6 +7,7 @@ inclusion: auto
 ## System Overview
 
 Liouni ERP is a Vietnamese enterprise resource planning system with three tiers:
+
 1. **Directus Staging** (PostgreSQL + Directus CMS) — schema & data
 2. **ERP API** (NestJS) — business logic, auth proxy, Directus SDK
 3. **ERP Web** (this repo) — React SPA frontend
@@ -52,52 +53,60 @@ src/
 ## Critical Rules
 
 ### 1. Thin Pages
+
 - Pages < 100 lines JSX
 - Only compose hooks + organisms via props
 - NO inline business logic, API calls, or large JSX blocks
 
 ### 2. Hooks Own the State
+
 - Extract ALL `useState` + `useEffect` + API logic into custom hooks
 - Hooks live in `modules/<domain>/hooks/`
 - Pages receive state and callbacks from hooks only
 
 ### 3. Reuse First
+
 - Check `shared/components/` and `modules/<domain>/components/` before creating new
 - Prefer extending existing components with generic props
 - shadcn/ui pattern: use `cn()` utility for class composition
 
 ### 4. i18n Always
+
 - All user-visible strings use `useT()` hook
 - Keys defined in `src/core/locale/vi.ts` and `en.ts`
 - Never hardcode Vietnamese text in shared components
 
 ### 5. No Domain Types in Shared
+
 - `shared/components/` must NOT import from `modules/`
 - Pass data as generic props
 
 ### 6. Constants in Types Files
+
 - Option arrays and label maps go in `modules/<domain>/types/`
 - Not inside components or pages
 
 ### 7. DrawerModal Stacking
+
 - Use `stackOffset` (negative = front, positive = back) + `zIndex` (increment by 10)
 - Mobile: CSS auto-resets to full-width overlay
 
 ## Routing
 
 No React Router. Custom page-key system:
+
 - `appStore.navigate(pageKey)` → updates URL via `history.pushState`
 - `pathToPage()` / `pageToPath()` for URL ↔ page key mapping
 - `popstate` listener syncs browser back/forward
 
 ## State Stores (Zustand)
 
-| Store | Purpose |
-|-------|---------|
-| `appStore` | Navigation, tabs, theme, locale, login flag |
-| `authStore` | Tokens, employee, profile, permissions, impersonation |
-| `uiStore` | Toasts, modals, slide panels |
-| `settingsStore` | User preferences |
+| Store           | Purpose                                               |
+| --------------- | ----------------------------------------------------- |
+| `appStore`      | Navigation, tabs, theme, locale, login flag           |
+| `authStore`     | Tokens, employee, profile, permissions, impersonation |
+| `uiStore`       | Toasts, modals, slide panels                          |
+| `settingsStore` | User preferences                                      |
 
 All persisted to localStorage via Zustand `persist` middleware.
 

@@ -41,7 +41,10 @@ export async function createItemApi(dto: CreateDto): Promise<MyItem> {
 }
 
 // Update
-export async function updateItemApi(id: string, dto: UpdateDto): Promise<MyItem> {
+export async function updateItemApi(
+  id: string,
+  dto: UpdateDto,
+): Promise<MyItem> {
   const { data } = await axiosInstance.patch<{ message: string; data: MyItem }>(
     `/api/v1/my-domain/${id}`,
     dto,
@@ -95,7 +98,9 @@ export function useItemList() {
     }
   }, []);
 
-  useEffect(() => { fetchItems(); }, []);
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   return { items, loading, meta, search, setSearch, fetchItems };
 }
@@ -139,7 +144,16 @@ export function useItemDrawer(onSaved: () => void) {
     }
   }, [form, onSaved]);
 
-  return { open, setOpen, form, setForm, saving, openCreate, openEdit, handleSave };
+  return {
+    open,
+    setOpen,
+    form,
+    setForm,
+    saving,
+    openCreate,
+    openEdit,
+    handleSave,
+  };
 }
 ```
 

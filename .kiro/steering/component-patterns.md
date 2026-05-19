@@ -8,6 +8,7 @@ fileMatchPattern: "src/**/*.tsx"
 ## Component Creation Checklist
 
 Before creating a new component:
+
 1. Search `shared/components/` — is there a generic version?
 2. Search `modules/<domain>/components/` — is there a domain version?
 3. Can an existing component be extended with props?
@@ -55,17 +56,17 @@ export function useDomainFeature(params: Params) {
 
 ## Key Shared Components Available
 
-| Component | Purpose |
-|-----------|---------|
-| `DrawerModal` | Slide-in panel (supports stacking) |
-| `DataTable` | @tanstack/react-table wrapper |
-| `Combobox` | Searchable single-select (Radix Popover) |
-| `MultiSelect` | Multi-select with tag chips |
-| `BtnPrimary` | Primary action button |
-| `StatusBadge` | Status pill |
-| `ErrorBanner` | Form error display |
-| `Pagination` | Page navigation |
-| `SortTh` | Sortable table header |
+| Component     | Purpose                                  |
+| ------------- | ---------------------------------------- |
+| `DrawerModal` | Slide-in panel (supports stacking)       |
+| `DataTable`   | @tanstack/react-table wrapper            |
+| `Combobox`    | Searchable single-select (Radix Popover) |
+| `MultiSelect` | Multi-select with tag chips              |
+| `BtnPrimary`  | Primary action button                    |
+| `StatusBadge` | Status pill                              |
+| `ErrorBanner` | Form error display                       |
+| `Pagination`  | Page navigation                          |
+| `SortTh`      | Sortable table header                    |
 
 ## Toast Pattern
 
