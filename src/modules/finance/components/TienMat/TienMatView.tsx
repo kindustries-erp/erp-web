@@ -274,36 +274,36 @@ export function TienMatView(p: any) {
         onAttachmentTypeChange={setAttachmentType}
         onAttachmentNoteChange={setAttachmentNote}
       />
-        <ConfirmModal
-          open={!!deleteTarget}
-          title={t("voucher.actions.deleteConfirmTitle")}
-          message={
-            deleteTarget
-              ? t("voucher.actions.deleteConfirmDesc").replace(
-                  "{0}",
-                  deleteTarget.voucher_no,
-                )
-              : ""
-          }
-          confirmLabel={t("voucher.actions.deleteConfirmBtn")}
-          loading={deleting}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-        />
-        <PaymentVoucherAccountingModal
-          open={accountingModalOpen}
-          onClose={() => {
-            setAccountingModalOpen(false);
-            setAccountingVoucher(null);
-          }}
-          voucher={accountingVoucher}
-          accounts={coaItems || []}
-          tagPresets={tagPresets || []}
-          onSuccess={() => {
-            closeDrawer();
-            if (typeof reloadAll === "function") reloadAll();
-          }}
-        />
-      </div>
-    );
-  }
+      <ConfirmModal
+        open={!!deleteTarget}
+        title={t("voucher.actions.deleteConfirmTitle")}
+        message={
+          deleteTarget
+            ? t("voucher.actions.deleteConfirmDesc").replace(
+                "{0}",
+                deleteTarget.voucher_no,
+              )
+            : ""
+        }
+        confirmLabel={t("voucher.actions.deleteConfirmBtn")}
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
+      <PaymentVoucherAccountingModal
+        open={accountingModalOpen}
+        onClose={() => {
+          setAccountingModalOpen(false);
+          setAccountingVoucher(null);
+        }}
+        voucher={accountingVoucher}
+        accounts={coaItems || []}
+        tagPresets={tagPresets || []}
+        onSuccess={() => {
+          closeDrawer();
+          if (typeof reloadAll === "function") reloadAll();
+        }}
+      />
+    </div>
+  );
+}

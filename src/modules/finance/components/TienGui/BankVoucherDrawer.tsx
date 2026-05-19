@@ -287,20 +287,6 @@ export function BankVoucherDrawer(props: any) {
           handleEditPartner={handleEditPartner}
         />
         <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
-          <div className="mb-4">
-            <div className="text-[10px] font-semibold text-[color:var(--faint)] uppercase tracking-[0.1em] mb-[10px] pb-[6px] border-b border-[color:var(--border-light)]">
-              Nghiệp vụ nhanh
-            </div>
-            <CashBankTagPresetCards
-              presets={tagPresets ?? []}
-              selectedId={form.cash_bank_tag_preset_id}
-              disabled={viewOnly}
-              onSelect={(preset: any) => {
-                handleTagPresetSelect(preset);
-              }}
-            />
-          </div>
-
           <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
             <DrawerField label={t("voucher.drawer.amount")} required>
               <input

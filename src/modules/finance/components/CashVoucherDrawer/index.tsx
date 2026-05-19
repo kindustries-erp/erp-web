@@ -573,14 +573,6 @@ export function CashVoucherDrawer({
 
       {/* Section 3: Hạch toán */}
       <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
-        <CashBankTagPresetCards
-          presets={tagPresets}
-          selectedId={form.cash_bank_tag_preset_id}
-          debitAccountOpts={debitAccountOpts}
-          creditAccountOpts={creditAccountOpts}
-          disabled={viewOnly}
-          onSelect={onTagPresetSelect}
-        />
         <div className="grid grid-cols-1 gap-y-1">
           <div className="grid grid-cols-2 gap-x-3">
             <DrawerField label={t("voucher.drawer.debitAcc")} required>

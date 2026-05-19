@@ -52,7 +52,8 @@ export function PaymentVoucherAccountingModal({
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [selectedPresetId, setSelectedPresetId] = useState("");
-  const [line, setLine] = useState<SimpleJournalEntryFormLine>(emptySimpleLine());
+  const [line, setLine] =
+    useState<SimpleJournalEntryFormLine>(emptySimpleLine());
 
   useEffect(() => {
     if (!open || !voucher) return;
@@ -60,15 +61,26 @@ export function PaymentVoucherAccountingModal({
     setError("");
     setSelectedPresetId("");
     setDate(defaultDate || new Date().toISOString().slice(0, 10));
-    setDescription(defaultDescription || voucher.description || voucher.voucher_no);
+    setDescription(
+      defaultDescription || voucher.description || voucher.voucher_no,
+    );
     setLine({
       ...emptySimpleLine(),
       debit_account_id: defaultDebitAccountId,
       credit_account_id: defaultCreditAccountId,
       amount: String(defaultAmount || Number(voucher.amount || 0) || 0),
-      description: defaultDescription || voucher.description || voucher.voucher_no,
+      description:
+        defaultDescription || voucher.description || voucher.voucher_no,
     });
-  }, [open, voucher, defaultDebitAccountId, defaultCreditAccountId, defaultDescription, defaultDate, defaultAmount]);
+  }, [
+    open,
+    voucher,
+    defaultDebitAccountId,
+    defaultCreditAccountId,
+    defaultDescription,
+    defaultDate,
+    defaultAmount,
+  ]);
 
   const accountOptions = useMemo(
     () =>
@@ -100,7 +112,9 @@ export function PaymentVoucherAccountingModal({
   async function handleSubmit() {
     if (!voucher) return;
     if (!valid) {
-      setError("Vui lòng nhập đủ ngày hạch toán, TK Nợ, TK Có và số tiền hợp lệ");
+      setError(
+        "Vui lòng nhập đủ ngày hạch toán, TK Nợ, TK Có và số tiền hợp lệ",
+      );
       return;
     }
     setSaving(true);
@@ -114,7 +128,10 @@ export function PaymentVoucherAccountingModal({
         lines: [
           {
             ...line,
-            description: line.description.trim() || description.trim() || voucher.voucher_no,
+            description:
+              line.description.trim() ||
+              description.trim() ||
+              voucher.voucher_no,
           },
         ],
       });

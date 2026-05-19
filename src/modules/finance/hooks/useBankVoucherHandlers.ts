@@ -519,7 +519,6 @@ export function useBankVoucherHandlers({
     }
   }
 
-
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
