@@ -1099,7 +1099,7 @@ export interface ArDocument {
   business_partner_name_snapshot?: string | null;
   can_delete?: boolean;
   related_documents?: CashBankRelatedDocumentInput[];
-  accounting_account_id: string | null;
+  journal_entry_id?: number | null;
   document_date: string;
   posting_date: string;
   due_date: string | null;
@@ -1130,7 +1130,7 @@ export interface CreateArDocumentDto {
   document_no: string;
   document_type: ArDocumentType;
   business_partner_id?: string;
-  accounting_account_id?: string;
+  journal_entry_id?: number;
   document_date: string;
   posting_date: string;
   due_date?: string;
@@ -1158,7 +1158,7 @@ export interface CreateArSalesInvoiceLineDto {
 export interface CreateArSalesInvoiceDto {
   document_no: string;
   business_partner_id: string;
-  accounting_account_id?: string;
+  journal_entry_id?: number;
   document_date: string;
   posting_date: string;
   due_date?: string;

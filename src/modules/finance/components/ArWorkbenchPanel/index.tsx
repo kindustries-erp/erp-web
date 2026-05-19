@@ -231,7 +231,6 @@ export function ArWorkbenchPanel() {
             document_no: form.document_no,
             document_type: "ADJUSTMENT",
             business_partner_id: form.business_partner_id.trim(),
-            accounting_account_id: form.accounting_account_id,
             document_date: form.document_date,
             posting_date: form.posting_date,
             due_date: form.due_date || undefined,
