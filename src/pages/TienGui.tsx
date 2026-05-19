@@ -229,6 +229,7 @@ export const TienGui = forwardRef(
       handleDeleteAttachment,
       handleSave,
       handleSaveRelatedDocuments,
+      handleSaveAccounting,
       handleDelete,
     } = handlers;
 
@@ -535,6 +536,7 @@ export const TienGui = forwardRef(
             attachmentFiles,
             setAttachmentFiles,
             saveError,
+            handleSaveAccounting,
           }}
         />
         <ConfirmModal

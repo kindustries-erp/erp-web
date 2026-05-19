@@ -550,6 +550,36 @@ export function useBankVoucherHandlers({
     }
   }
 
+  async function handleSaveAccounting() {
+    if (!editing) return false;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const saved = await updatePaymentVoucherApi(editing.id, {
+        debit_account_id: form.debit_account_id,
+        credit_account_id: form.credit_account_id,
+      });
+      showToast({
+        title: "Đã cập nhật hạch toán",
+        description: saved.voucher_no,
+        variant: "success",
+      });
+      reloadCurrentData();
+      return true;
+    } catch (error) {
+      const reason = extractApiError(error);
+      setSaveError(reason);
+      showToast({
+        title: "Cập nhật hạch toán thất bại",
+        description: reason,
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -618,6 +648,7 @@ export function useBankVoucherHandlers({
     handleDeleteAttachment,
     handleSave,
     handleSaveRelatedDocuments,
+    handleSaveAccounting,
     handleDelete,
   };
 }

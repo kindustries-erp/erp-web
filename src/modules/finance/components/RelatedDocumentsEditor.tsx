@@ -147,15 +147,6 @@ export function RelatedDocumentsEditor({
                 }
               />
             </DrawerField>
-            <div className="flex justify-start">
-              <button
-                type="button"
-                className="text-xs font-medium text-primary hover:underline"
-                onClick={() => onChange([...safeValue, emptyDoc()])}
-              >
-                + Thêm chứng từ thủ công
-              </button>
-            </div>
           </div>
         )}
       </div>

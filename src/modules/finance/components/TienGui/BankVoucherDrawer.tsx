@@ -73,6 +73,7 @@ export function BankVoucherDrawer(props: any) {
     attachmentFiles,
     setAttachmentFiles,
     saveError,
+    handleSaveAccounting,
   } = props;
   const showToast = props.showToast || (() => {});
   const [isAccountingOpen, setIsAccountingOpen] = useState(false);
@@ -250,7 +251,19 @@ export function BankVoucherDrawer(props: any) {
       headerExtra={editToggle}
       panelClassName="w-[calc(100vw/3)] max-[1200px]:w-1/2 max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
       bodyClassName="p-4"
-      actions={drawerActions}
+      actions={[
+        ...(editing &&
+        (editing.status === "APPROVED" || editing.status === "POSTED")
+          ? [
+              {
+                label: "Ghi sổ",
+                onClick: () => setIsAccountingOpen(true),
+                primary: false,
+              },
+            ]
+          : []),
+        ...drawerActions,
+      ]}
     >
       <DrawerSection title={t("voucher.drawer.sectionOrder")}>
         <div className="grid grid-cols-1 gap-y-1">
@@ -316,12 +329,6 @@ export function BankVoucherDrawer(props: any) {
               </span>
             </div>
           </div>
-          <button
-            onClick={() => setIsAccountingOpen(true)}
-            className="px-3 py-1.5 text-xs font-medium border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
-          >
-            Sửa hạch toán
-          </button>
         </div>
 
         <DrawerModal
@@ -333,8 +340,11 @@ export function BankVoucherDrawer(props: any) {
           stackOffset={DEFAULT_STACK_OFFSET}
           actions={[
             {
-              label: "Xác nhận",
-              onClick: () => setIsAccountingOpen(false),
+              label: "Hạch toán",
+              onClick: async () => {
+                const ok = await handleSaveAccounting();
+                if (ok) setIsAccountingOpen(false);
+              },
               primary: true,
             },
           ]}
@@ -467,15 +477,6 @@ export function BankVoucherDrawer(props: any) {
           </DrawerField>
         )}
       </DrawerSection>
-      <DrawerSection title="Chứng từ liên quan">
-        <RelatedDocumentsEditor
-          value={form.related_documents ?? []}
-          disabled={relatedDocumentsReadOnly}
-          counterpartyId={form.counterparty_id}
-          maxSettlementAmount={Number(form.amount) || undefined}
-          onChange={(value) => setField("related_documents", value)}
-        />
-      </DrawerSection>
       <DrawerSection title={t("voucher.drawer.sectionAttachment")}>
         {existingAttachments.length > 0 && (
           <div className="mb-3 rounded-lg border border-border overflow-hidden">
@@ -521,6 +522,15 @@ export function BankVoucherDrawer(props: any) {
             </DrawerField>
           </>
         )}
+      </DrawerSection>
+      <DrawerSection title="Chứng từ công nợ">
+        <RelatedDocumentsEditor
+          value={form.related_documents ?? []}
+          disabled={relatedDocumentsReadOnly}
+          counterpartyId={form.counterparty_id}
+          maxSettlementAmount={Number(form.amount) || undefined}
+          onChange={(value) => setField("related_documents", value)}
+        />
       </DrawerSection>
       {editing && (
         <DrawerSection title="Lịch sử duyệt">
