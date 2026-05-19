@@ -8,6 +8,7 @@ import { SlidePanel } from "@/shared/components/SlidePanel";
 import { ImportModal } from "@/shared/components/ImportModal";
 import { Toast } from "@/shared/components/Toast";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
+import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
 import { DongTien } from "@/pages/DongTien";
@@ -150,6 +151,7 @@ export default function App() {
         <SlidePanel />
         <ImportModal />
         <Toast />
+        <ReloadPrompt />
         <AppContextMenu />
       </div>
     </TooltipProvider>

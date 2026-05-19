@@ -1,6 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <rect x="3" y="3" width="7" height="7" rx="1" fill="#171717"/>
-  <rect x="14" y="3" width="7" height="7" rx="1" fill="#171717"/>
-  <rect x="3" y="14" width="7" height="7" rx="1" fill="#171717"/>
-  <rect x="14" y="14" width="7" height="7" rx="1" fill="#171717"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Solid background -->
+  <rect width="512" height="512" rx="0" fill="#1e1e1e"/>
+  <!-- Grid icon (4 rounded squares) centered in maskable safe zone (inner 80% = 51.2 to 460.8) -->
+  <!-- Safe zone center: 256, safe radius: 204.8 -->
+  <!-- Grid positioned within safe zone with good padding -->
+  <rect x="148" y="148" width="92" height="92" rx="16" fill="#ffffff"/>
+  <rect x="272" y="148" width="92" height="92" rx="16" fill="#ffffff"/>
+  <rect x="148" y="272" width="92" height="92" rx="16" fill="#ffffff"/>
+  <rect x="272" y="272" width="92" height="92" rx="16" fill="#ffffff"/>
 </svg>
