@@ -11,6 +11,7 @@ import {
   type PaginatedResponse,
 } from "@/shared/types/pagination";
 import { dedupeRequest } from "@/shared/utils/requestCache";
+import type { CreateJournalEntryPayload } from "@/modules/accounting/types/journalEntry";
 
 // ─── CashFund ─────────────────────────────────────────────────────────────────
 
@@ -253,6 +254,7 @@ export type VoucherStatus =
   | "DRAFT"
   | "PENDING_APPROVAL"
   | "APPROVED"
+  | "CONFIRMED"
   | "POSTED"
   | "REJECTED"
   | "CANCELLED";
@@ -310,18 +312,14 @@ export interface PaymentVoucher {
   actual_person_id_no: string | null;
   actual_person_phone: string | null;
   description: string;
-  debit_account_id: string;
-  credit_account_id: string;
   cash_fund_id: string | null;
   company_bank_account_id: string | null;
-  beneficiary_bank_account_id: string | null;
   amount: number;
   currency: string | null;
   amount_in_words: string | null;
   status: VoucherStatus;
   counterparty_name_snapshot: string;
   counterparty_tax_code_snapshot: string | null;
-  counterparty_address_snapshot: string | null;
   created_by: string | null;
   approved_by: string | null;
   approved_at: string | null;
@@ -371,8 +369,6 @@ export interface CreatePaymentVoucherDto {
   posting_date: string;
   counterparty_id?: string;
   description: string;
-  debit_account_id: string;
-  credit_account_id: string;
   amount: number;
   counterparty_name_snapshot: string;
   actual_person_name?: string;
@@ -380,11 +376,9 @@ export interface CreatePaymentVoucherDto {
   actual_person_phone?: string;
   cash_fund_id?: string;
   company_bank_account_id?: string;
-  beneficiary_bank_account_id?: string;
   currency?: string;
   amount_in_words?: string;
   counterparty_tax_code_snapshot?: string;
-  counterparty_address_snapshot?: string;
   status?: VoucherStatus;
   // --- Fields mới ---
   counterparty_source?: CounterpartySource;
@@ -672,6 +666,18 @@ export async function postPaymentVoucherApi(
     message: string;
     data: PaymentVoucher;
   }>(`/api/v1/payment-vouchers/${id}/post`);
+  return data.data;
+}
+
+export async function postPaymentVoucherToJournalApi(
+  id: string,
+  payload: CreateJournalEntryPayload,
+): Promise<PaymentVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: PaymentVoucher;
+    journal_entry_id?: string | number;
+  }>(`/api/v1/payment-vouchers/${id}/post-to-journal`, payload);
   return data.data;
 }
 

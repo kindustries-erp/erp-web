@@ -314,26 +314,11 @@ export function useBankVoucherHandlers({
     }));
   }
 
-  function setCompanyBankAccountFields(
-    current: BankVoucherForm,
-    bankId: string,
-  ) {
-    const accountId =
-      companyBankAccounts.find((bank) => bank.id === bankId)
-        ?.accounting_account_id ?? "";
-    if (!accountId) return current;
-    return current.voucher_type !== "BANK_PAYMENT"
-      ? { ...current, debit_account_id: accountId }
-      : { ...current, credit_account_id: accountId };
-  }
-
   function handleCompanyBankChange(bankId: string) {
-    setForm((current) =>
-      setCompanyBankAccountFields(
-        { ...current, company_bank_account_id: bankId },
-        bankId,
-      ),
-    );
+    setForm((current) => ({
+      ...current,
+      company_bank_account_id: bankId,
+    }));
   }
 
   function handleTagPresetSelect(preset: CashBankTagPreset) {
@@ -342,8 +327,6 @@ export function useBankVoucherHandlers({
     setForm((current) => ({
       ...current,
       cash_bank_tag_preset_id: preset.id,
-      debit_account_id: preset.debit_account_id || current.debit_account_id,
-      credit_account_id: preset.credit_account_id || current.credit_account_id,
       description: current.description || preset.label,
       ...(needsExternal ? { counterparty_source: "EXTERNAL" as const } : {}),
     }));
@@ -357,10 +340,8 @@ export function useBankVoucherHandlers({
       employee_id: "",
       counterparty_name_snapshot: partner?.name ?? "",
       counterparty_tax_code_snapshot: partner?.tax_code ?? "",
-      counterparty_address_snapshot: partner?.address ?? "",
       counterparty_phone_snapshot: partner?.phone ?? "",
       counterparty_identity_no_snapshot: "",
-      beneficiary_bank_account_id: "",
     }));
     loadPartnerBankAccounts(partnerId);
   }
@@ -375,8 +356,6 @@ export function useBankVoucherHandlers({
       counterparty_phone_snapshot: emp?.phone ?? "",
       counterparty_identity_no_snapshot: "",
       counterparty_tax_code_snapshot: "",
-      counterparty_address_snapshot: "",
-      beneficiary_bank_account_id: "",
     }));
   }
 
@@ -433,10 +412,6 @@ export function useBankVoucherHandlers({
       setSaveError("Vui lòng chọn tài khoản ngân hàng công ty.");
       return;
     }
-    if (!form.debit_account_id || !form.credit_account_id) {
-      setSaveError("Tài khoản nợ và có là bắt buộc.");
-      return;
-    }
     const amountValue = parseMoneyInput(form.amount);
     if (!form.amount || amountValue <= 0) {
       setSaveError("Số tiền không hợp lệ.");
@@ -466,15 +441,9 @@ export function useBankVoucherHandlers({
               "")),
         counterparty_tax_code_snapshot:
           form.counterparty_tax_code_snapshot.trim() || undefined,
-        counterparty_address_snapshot:
-          form.counterparty_address_snapshot.trim() || undefined,
         company_bank_account_id: form.company_bank_account_id,
         cash_bank_tag_preset_id: form.cash_bank_tag_preset_id || undefined,
         related_documents: form.related_documents,
-        beneficiary_bank_account_id:
-          form.beneficiary_bank_account_id || undefined,
-        debit_account_id: form.debit_account_id,
-        credit_account_id: form.credit_account_id,
         amount: amountValue,
         amount_in_words: form.amount_in_words.trim() || undefined,
         description: form.description.trim() || "-",
@@ -550,35 +519,6 @@ export function useBankVoucherHandlers({
     }
   }
 
-  async function handleSaveAccounting() {
-    if (!editing) return false;
-    setSaving(true);
-    setSaveError(null);
-    try {
-      const saved = await updatePaymentVoucherApi(editing.id, {
-        debit_account_id: form.debit_account_id,
-        credit_account_id: form.credit_account_id,
-      });
-      showToast({
-        title: "Đã cập nhật hạch toán",
-        description: saved.voucher_no,
-        variant: "success",
-      });
-      reloadCurrentData();
-      return true;
-    } catch (error) {
-      const reason = extractApiError(error);
-      setSaveError(reason);
-      showToast({
-        title: "Cập nhật hạch toán thất bại",
-        description: reason,
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -648,7 +588,6 @@ export function useBankVoucherHandlers({
     handleDeleteAttachment,
     handleSave,
     handleSaveRelatedDocuments,
-    handleSaveAccounting,
     handleDelete,
   };
 }

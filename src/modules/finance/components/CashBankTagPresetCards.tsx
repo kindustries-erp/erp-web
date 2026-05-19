@@ -8,8 +8,8 @@ interface AccountOption {
 interface Props {
   presets: CashBankTagPreset[];
   selectedId?: string;
-  debitAccountOpts: AccountOption[];
-  creditAccountOpts: AccountOption[];
+  debitAccountOpts?: AccountOption[];
+  creditAccountOpts?: AccountOption[];
   disabled?: boolean;
   onSelect: (preset: CashBankTagPreset) => void;
 }

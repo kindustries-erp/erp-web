@@ -1,4 +1,5 @@
 import { Wallet } from "lucide-react";
+import { useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { OpeningBalancePanel } from "@/modules/finance/components/OpeningBalancePanel";
@@ -15,6 +16,7 @@ import { VoucherKpiRow } from "@/modules/finance/components/VoucherKpiRow";
 import { VoucherChartRow } from "@/modules/finance/components/VoucherChartRow";
 import { VoucherTable } from "@/modules/finance/components/VoucherTable";
 import { CashVoucherDrawer } from "@/modules/finance/components/CashVoucherDrawer";
+import { PaymentVoucherAccountingModal } from "../PaymentVoucherAccountingModal";
 
 export function TienMatView(p: any) {
   const {
@@ -109,7 +111,11 @@ export function TienMatView(p: any) {
     deleteTarget,
     deleting,
     handleDelete,
+    coaItems,
   } = p;
+  const [accountingModalOpen, setAccountingModalOpen] = useState(false);
+  const [accountingVoucher, setAccountingVoucher] = useState<any | null>(null);
+
   return (
     <div>
       {!p.hideHeader && (
@@ -239,9 +245,14 @@ export function TienMatView(p: any) {
         onClose={closeDrawer}
         onSave={handleSave}
         onSaveRelatedDocuments={handleSaveRelatedDocuments}
-        onStatusTransition={(action, opts) =>
-          handleStatusTransition(action, reloadAll, opts)
-        }
+        onStatusTransition={(action, opts) => {
+          if (action === "POST") {
+            setAccountingVoucher(editing);
+            setAccountingModalOpen(true);
+            return;
+          }
+          handleStatusTransition(action, reloadAll, opts);
+        }}
         onToggleEditMode={handleToggleEditMode}
         onFieldChange={setField}
         onDocumentDateChange={handleDocumentDateChange}
@@ -263,22 +274,36 @@ export function TienMatView(p: any) {
         onAttachmentTypeChange={setAttachmentType}
         onAttachmentNoteChange={setAttachmentNote}
       />
-      <ConfirmModal
-        open={!!deleteTarget}
-        title={t("voucher.actions.deleteConfirmTitle")}
-        message={
-          deleteTarget
-            ? t("voucher.actions.deleteConfirmDesc").replace(
-                "{0}",
-                deleteTarget.voucher_no,
-              )
-            : ""
-        }
-        confirmLabel={t("voucher.actions.deleteConfirmBtn")}
-        loading={deleting}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
-    </div>
-  );
-}
+        <ConfirmModal
+          open={!!deleteTarget}
+          title={t("voucher.actions.deleteConfirmTitle")}
+          message={
+            deleteTarget
+              ? t("voucher.actions.deleteConfirmDesc").replace(
+                  "{0}",
+                  deleteTarget.voucher_no,
+                )
+              : ""
+          }
+          confirmLabel={t("voucher.actions.deleteConfirmBtn")}
+          loading={deleting}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+        <PaymentVoucherAccountingModal
+          open={accountingModalOpen}
+          onClose={() => {
+            setAccountingModalOpen(false);
+            setAccountingVoucher(null);
+          }}
+          voucher={accountingVoucher}
+          accounts={coaItems || []}
+          tagPresets={tagPresets || []}
+          onSuccess={() => {
+            closeDrawer();
+            if (typeof reloadAll === "function") reloadAll();
+          }}
+        />
+      </div>
+    );
+  }

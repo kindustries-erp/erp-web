@@ -59,8 +59,6 @@ export function BankVoucherDrawer(props: any) {
     handlePartnerChange,
     partnerBankOpts,
     partnerBankLoading,
-    debitAccountOpts,
-    creditAccountOpts,
     tagPresets,
     handleTagPresetSelect,
     handleAmountChange,
@@ -73,13 +71,11 @@ export function BankVoucherDrawer(props: any) {
     attachmentFiles,
     setAttachmentFiles,
     saveError,
-    handleSaveAccounting,
   } = props;
   const reloadPartners = props.reloadPartners as
     | (() => Promise<any[]>)
     | undefined;
   const showToast = props.showToast || (() => {});
-  const [isAccountingOpen, setIsAccountingOpen] = useState(false);
   const [isPartnerOpen, setIsPartnerOpen] = useState(false);
   const [isPartnerEditing, setIsPartnerEditing] = useState(false);
 
@@ -248,19 +244,7 @@ export function BankVoucherDrawer(props: any) {
         headerExtra={editToggle}
         panelClassName="w-[calc(100vw/3)] max-[1200px]:w-1/2 max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
         bodyClassName="p-4"
-        actions={[
-          ...(editing &&
-          (editing.status === "APPROVED" || editing.status === "POSTED")
-            ? [
-                {
-                  label: "Ghi sổ",
-                  onClick: () => setIsAccountingOpen(true),
-                  primary: false,
-                },
-              ]
-            : []),
-          ...drawerActions,
-        ]}
+        actions={drawerActions}
       >
         <DrawerSection title={t("voucher.drawer.sectionOrder")}>
           <div className="grid grid-cols-1 gap-y-1">
@@ -303,94 +287,19 @@ export function BankVoucherDrawer(props: any) {
           handleEditPartner={handleEditPartner}
         />
         <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
-          <div className="flex justify-between items-center mb-4 bg-muted/50 p-3 rounded-lg border border-border">
-            <div>
-              <div className="text-xs text-muted-fg mb-1">
-                Tài khoản hạch toán
-              </div>
-              <div className="text-sm font-medium flex items-center gap-2">
-                <span>
-                  {form.debit_account_id
-                    ? debitAccountOpts
-                        .find((o: any) => o.value === form.debit_account_id)
-                        ?.label.split(" — ")[0]
-                    : "—"}
-                </span>
-                <span className="text-muted-fg">→</span>
-                <span>
-                  {form.credit_account_id
-                    ? creditAccountOpts
-                        .find((o: any) => o.value === form.credit_account_id)
-                        ?.label.split(" — ")[0]
-                    : "—"}
-                </span>
-              </div>
+          <div className="mb-4">
+            <div className="text-[10px] font-semibold text-[color:var(--faint)] uppercase tracking-[0.1em] mb-[10px] pb-[6px] border-b border-[color:var(--border-light)]">
+              Nghiệp vụ nhanh
             </div>
+            <CashBankTagPresetCards
+              presets={tagPresets ?? []}
+              selectedId={form.cash_bank_tag_preset_id}
+              disabled={viewOnly}
+              onSelect={(preset: any) => {
+                handleTagPresetSelect(preset);
+              }}
+            />
           </div>
-
-          <DrawerModal
-            open={isAccountingOpen}
-            onClose={() => setIsAccountingOpen(false)}
-            title="Cấu hình hạch toán"
-            zIndex={500}
-            panelClassName="!w-[420px]"
-            stackOffset={DEFAULT_STACK_OFFSET}
-            actions={[
-              {
-                label: "Hạch toán",
-                onClick: async () => {
-                  const ok = await handleSaveAccounting();
-                  if (ok) setIsAccountingOpen(false);
-                },
-                primary: true,
-              },
-            ]}
-          >
-            <div className="mb-4">
-              <div className="text-[10px] font-semibold text-[color:var(--faint)] uppercase tracking-[0.1em] mb-[10px] pb-[6px] border-b border-[color:var(--border-light)]">
-                Nghiệp vụ nhanh
-              </div>
-              <CashBankTagPresetCards
-                presets={tagPresets ?? []}
-                selectedId={form.cash_bank_tag_preset_id}
-                debitAccountOpts={debitAccountOpts}
-                creditAccountOpts={creditAccountOpts}
-                disabled={viewOnly}
-                onSelect={(preset: any) => {
-                  handleTagPresetSelect(preset);
-                }}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-y-1">
-              <DrawerField label={t("voucher.drawer.postDate")} required>
-                <DatePicker
-                  disabled={viewOnly}
-                  value={form.posting_date}
-                  onChange={handlePostingDateChange}
-                  className="w-full min-w-0"
-                />
-              </DrawerField>
-              <DrawerField label={t("voucher.drawer.debitAcc")}>
-                <Combobox
-                  disabled={viewOnly}
-                  options={debitAccountOpts}
-                  value={form.debit_account_id}
-                  onChange={(v) => setField("debit_account_id", v)}
-                  placeholder={t("voucher.drawer.accPlaceholder")}
-                />
-              </DrawerField>
-              <DrawerField label={t("voucher.drawer.creditAcc")}>
-                <Combobox
-                  disabled={viewOnly}
-                  options={creditAccountOpts}
-                  value={form.credit_account_id}
-                  onChange={(v) => setField("credit_account_id", v)}
-                  placeholder={t("voucher.drawer.accPlaceholder")}
-                />
-              </DrawerField>
-            </div>
-          </DrawerModal>
 
           <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
             <DrawerField label={t("voucher.drawer.amount")} required>
@@ -664,32 +573,6 @@ function ExternalCounterpartyFields(props: any) {
           placeholder={t("voucher.drawer.partnerPlaceholder")}
         />
       </DrawerField>
-      <DrawerField label={t("voucher.drawer.partnerBank")}>
-        <Combobox
-          options={partnerBankOpts}
-          value={form.beneficiary_bank_account_id}
-          onChange={(v) => setField("beneficiary_bank_account_id", v)}
-          placeholder={
-            partnerBankLoading
-              ? t("voucher.drawer.partnerBankLoading")
-              : form.counterparty_id
-                ? t("voucher.drawer.partnerBankPlaceholder")
-                : t("voucher.drawer.partnerBankNoPartner")
-          }
-          disabled={viewOnly || !form.counterparty_id || partnerBankLoading}
-        />
-      </DrawerField>
-      <div className="col-span-2 max-[560px]:col-span-1">
-        <DrawerField label={t("voucher.drawer.address")}>
-          <input
-            type="text"
-            disabled
-            className={inputCls}
-            value={form.counterparty_address_snapshot}
-            readOnly
-          />
-        </DrawerField>
-      </div>
     </div>
   );
 }

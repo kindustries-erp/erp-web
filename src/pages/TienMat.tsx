@@ -472,9 +472,10 @@ export const TienMat = forwardRef(
           setAttachmentNote,
           deleteTarget,
           deleting,
-          handleDelete,
-        }}
-      />
+        handleDelete,
+        coaItems,
+      }}
+    />
     );
   },
 );

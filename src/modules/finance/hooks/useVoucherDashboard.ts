@@ -279,19 +279,10 @@ export function useVoucherDashboard() {
           )
         : res.items;
 
-      const receiptByAccount: Record<string, number> = {};
-      const paymentByAccount: Record<string, number> = {};
-      for (const v of items) {
-        if (v.voucher_type === params.receiptType) {
-          receiptByAccount[v.credit_account_id] =
-            (receiptByAccount[v.credit_account_id] ?? 0) + Number(v.amount);
-        } else if (v.voucher_type === params.paymentType) {
-          paymentByAccount[v.debit_account_id] =
-            (paymentByAccount[v.debit_account_id] ?? 0) + Number(v.amount);
-        }
-      }
-      setReceiptDonutItems(buildDonutItems(receiptByAccount, coa));
-      setPaymentDonutItems(buildDonutItems(paymentByAccount, coa));
+      void items;
+      void coa;
+      setReceiptDonutItems(DONUT_EMPTY);
+      setPaymentDonutItems(DONUT_EMPTY);
     } catch {
       setReceiptDonutItems(DONUT_EMPTY);
       setPaymentDonutItems(DONUT_EMPTY);

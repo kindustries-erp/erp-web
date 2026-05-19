@@ -309,7 +309,6 @@ export function useCashVoucherHandlers({
       employee_id: "",
       counterparty_name_snapshot: partner?.name ?? "",
       counterparty_tax_code_snapshot: partner?.tax_code ?? "",
-      counterparty_address_snapshot: partner?.address ?? "",
       counterparty_phone_snapshot: partner?.phone ?? "",
       counterparty_identity_no_snapshot: "",
     }));
@@ -338,7 +337,6 @@ export function useCashVoucherHandlers({
       counterparty_phone_snapshot: emp?.phone ?? "",
       counterparty_identity_no_snapshot: "",
       counterparty_tax_code_snapshot: "",
-      counterparty_address_snapshot: "",
     }));
   }
 
@@ -406,10 +404,6 @@ export function useCashVoucherHandlers({
               "")),
         counterparty_tax_code_snapshot:
           form.counterparty_tax_code_snapshot.trim() || undefined,
-        counterparty_address_snapshot:
-          form.counterparty_address_snapshot.trim() || undefined,
-        debit_account_id: form.debit_account_id,
-        credit_account_id: form.credit_account_id,
         cash_fund_id: form.cash_fund_id,
         cash_bank_tag_preset_id: form.cash_bank_tag_preset_id || undefined,
         related_documents: form.related_documents,

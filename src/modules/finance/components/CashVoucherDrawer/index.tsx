@@ -70,7 +70,6 @@ export interface CashVoucherDrawerProps {
   creditAccountOpts: SelectOption[];
   tagPresets: CashBankTagPreset[];
   canUpdateVoucher: boolean;
-
   onClose: () => void;
   onSave: (status?: VoucherStatus) => void;
   onSaveRelatedDocuments: () => void;
@@ -348,6 +347,29 @@ export function CashVoucherDrawer({
             : []),
         ];
       case "APPROVED":
+      case "CONFIRMED":
+        return [
+          { label: "Đóng", onClick: onClose },
+          ...(canUpdateVoucher
+            ? [
+                {
+                  label: "Ghi sổ",
+                  primary: true,
+                  loading: saving,
+                  disabled: saving,
+                  onClick: () => onStatusTransition("POST"),
+                },
+                {
+                  label: "Hủy phiếu",
+                  disabled: saving,
+                  onClick: () =>
+                    onStatusTransition("CANCEL", {
+                      cancel_reason: form.cancel_reason,
+                    }),
+                },
+              ]
+            : []),
+        ];
       case "POSTED":
         return [
           { label: "Đóng", onClick: onClose },
@@ -511,17 +533,6 @@ export function CashVoucherDrawer({
                 </button>
               </div>
             </DrawerField>
-            <div className="col-span-2 max-[560px]:col-span-1">
-              <DrawerField label={t("voucher.drawer.address")}>
-                <input
-                  type="text"
-                  disabled
-                  className={inputCls}
-                  value={form.counterparty_address_snapshot}
-                  readOnly
-                />
-              </DrawerField>
-            </div>
           </div>
         )}
 
@@ -575,7 +586,7 @@ export function CashVoucherDrawer({
             <DrawerField label={t("voucher.drawer.debitAcc")} required>
               <Combobox
                 options={debitAccountOpts}
-                value={form.debit_account_id}
+                value={form.debit_account_id ?? ""}
                 onChange={(v) => onFieldChange("debit_account_id", v)}
                 placeholder={t("voucher.drawer.accPlaceholder")}
                 disabled={viewOnly}
@@ -584,7 +595,7 @@ export function CashVoucherDrawer({
             <DrawerField label={t("voucher.drawer.creditAcc")} required>
               <Combobox
                 options={creditAccountOpts}
-                value={form.credit_account_id}
+                value={form.credit_account_id ?? ""}
                 onChange={(v) => onFieldChange("credit_account_id", v)}
                 placeholder={t("voucher.drawer.accPlaceholder")}
                 disabled={viewOnly}

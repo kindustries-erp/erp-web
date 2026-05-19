@@ -20,9 +20,16 @@ import {
   type CompanyBankAccount,
 } from "@/modules/accounting/api/catalogApi";
 import { attachmentFileName } from "@/shared/components/AttachmentComponents";
-import { type DrawerAction } from "@/shared/components/DrawerModal";
+import {
+  DrawerModal,
+  DrawerField,
+  inputCls,
+  type DrawerAction,
+} from "@/shared/components/DrawerModal";
+import { Combobox } from "@/shared/components/Combobox";
 import { BankVoucherDrawer } from "@/modules/finance/components/TienGui/BankVoucherDrawer";
 import { TienGuiDashboard } from "@/modules/finance/components/TienGui/TienGuiDashboard";
+import { PaymentVoucherAccountingModal } from "@/modules/finance/components/PaymentVoucherAccountingModal";
 import { usePeriodFilter } from "@/modules/finance/hooks/usePeriodFilter";
 import { useVoucherDashboard } from "@/modules/finance/hooks/useVoucherDashboard";
 import {
@@ -34,16 +41,22 @@ import {
   useSearchFilter,
 } from "@/shared/hooks/useFilterState";
 import { useBankVoucherHandlers } from "@/modules/finance/hooks/useBankVoucherHandlers";
+import type { SimpleJournalEntryFormLine } from "@/modules/accounting/types/journalEntry";
+import {
+  buildCreatePayloadFromSimple,
+  emptySimpleLine,
+} from "@/modules/accounting/utils/journalEntryUtils";
 import {
   submitPaymentVoucherApi,
   approvePaymentVoucherApi,
   rejectPaymentVoucherApi,
-  postPaymentVoucherApi,
+  postPaymentVoucherToJournalApi,
   cancelPaymentVoucherApi,
   getPaymentVoucherLookupBusinessPartnersApi,
   getPaymentVoucherLookupEmployeesApi,
   type VoucherStatus,
   type CounterpartySource,
+  type PaymentVoucher,
 } from "@/modules/finance/api/financeApi";
 
 export const TienGui = forwardRef(
@@ -59,6 +72,8 @@ export const TienGui = forwardRef(
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [catalogLoaded, setCatalogLoaded] = useState(false);
     const [statusFilter, setStatusFilter] = useState<VoucherStatus | "">("");
+    const [accountingModalOpen, setAccountingModalOpen] = useState(false);
+    const [accountingVoucher, setAccountingVoucher] = useState<PaymentVoucher | null>(null);
     const [counterpartySourceFilter, setCounterpartySourceFilter] = useState<
       CounterpartySource | ""
     >("");
@@ -241,7 +256,6 @@ export const TienGui = forwardRef(
       handleDeleteAttachment,
       handleSave,
       handleSaveRelatedDocuments,
-      handleSaveAccounting,
       handleDelete,
     } = handlers;
 
@@ -261,8 +275,11 @@ export const TienGui = forwardRef(
         else if (action === "APPROVE")
           await approvePaymentVoucherApi(editing.id);
         else if (action === "REJECT") await rejectPaymentVoucherApi(editing.id);
-        else if (action === "POST") await postPaymentVoucherApi(editing.id);
-        else if (action === "CANCEL")
+        else if (action === "POST") {
+          setAccountingVoucher(editing);
+          setAccountingModalOpen(true);
+          return;
+        } else if (action === "CANCEL")
           await cancelPaymentVoucherApi(editing.id, form.cancel_reason);
         closeDrawer();
         onSuccess();
@@ -548,7 +565,6 @@ export const TienGui = forwardRef(
             attachmentFiles,
             setAttachmentFiles,
             saveError,
-            handleSaveAccounting,
             reloadPartners,
           }}
         />
@@ -567,10 +583,25 @@ export const TienGui = forwardRef(
           loading={deleting}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
-        />
-      </div>
-    );
-  },
+      />
+
+      <PaymentVoucherAccountingModal
+        open={accountingModalOpen}
+        onClose={() => {
+          setAccountingModalOpen(false);
+          setAccountingVoucher(null);
+        }}
+        voucher={accountingVoucher}
+        accounts={coaItems}
+        tagPresets={tagPresets}
+        onSuccess={() => {
+          closeDrawer();
+          reloadCurrentData();
+        }}
+      />
+    </div>
+  );
+}
 );
 
 function buildOptionSets(
@@ -698,7 +729,23 @@ function buildDrawerActions(args: any): DrawerAction[] {
         onClick: () => handleStatusTransition("APPROVE", reloadCurrentData),
       },
     ];
-  if (editing.status === "APPROVED" || editing.status === "POSTED")
+  if (editing.status === "APPROVED" || editing.status === "CONFIRMED")
+    return [
+      { label: "Đóng", onClick: closeDrawer },
+      {
+        label: "Ghi sổ",
+        primary: true,
+        loading: saving,
+        disabled: saving,
+        onClick: () => handleStatusTransition("POST", reloadCurrentData),
+      },
+      {
+        label: "Hủy phiếu",
+        disabled: saving,
+        onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
+      },
+    ];
+  if (editing.status === "POSTED")
     return [
       { label: "Đóng", onClick: closeDrawer },
       {
@@ -707,11 +754,6 @@ function buildDrawerActions(args: any): DrawerAction[] {
         loading: saving,
         disabled: saving,
         onClick: handleSaveRelatedDocuments,
-      },
-      {
-        label: "Hủy phiếu",
-        disabled: saving,
-        onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
       },
     ];
   return [{ label: "Đóng", onClick: closeDrawer }];

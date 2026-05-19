@@ -18,11 +18,10 @@ export interface CashVoucherForm {
   employee_id: string;
   counterparty_name_snapshot: string;
   counterparty_tax_code_snapshot: string;
-  counterparty_address_snapshot: string;
   counterparty_phone_snapshot: string;
   counterparty_identity_no_snapshot: string;
-  debit_account_id: string;
-  credit_account_id: string;
+  debit_account_id?: string;
+  credit_account_id?: string;
   amount: string;
   amount_in_words: string;
   description: string;
@@ -42,12 +41,8 @@ export interface BankVoucherForm {
   employee_id: string;
   counterparty_name_snapshot: string;
   counterparty_tax_code_snapshot: string;
-  counterparty_address_snapshot: string;
   counterparty_phone_snapshot: string;
   counterparty_identity_no_snapshot: string;
-  beneficiary_bank_account_id: string;
-  debit_account_id: string;
-  credit_account_id: string;
   amount: string;
   amount_in_words: string;
   description: string;
@@ -71,6 +66,7 @@ export const STATUS_LABELS: Record<VoucherStatus, string> = {
   DRAFT: "Nháp",
   PENDING_APPROVAL: "Chờ duyệt",
   APPROVED: "Đã duyệt",
+  CONFIRMED: "Đã duyệt",
   POSTED: "Đã hạch toán",
   REJECTED: "Từ chối",
   CANCELLED: "Đã hủy",
