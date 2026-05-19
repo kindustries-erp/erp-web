@@ -40,17 +40,8 @@ export interface DrawerModalProps {
   children: React.ReactNode;
 
   /** z-index tier — defaults to 400 (same as SlidePanel) */
-  zIndex?: number;
-
-  /**
-   * Percentage of this panel's own width to translate when stacked.
-   * Negative = shift left (front panel peeks left, revealing the back panel on the right).
-   * Positive = shift right (back panel slides right, showing its left edge peeking).
-   * Uses CSS translateX(N%) — percentage is relative to the panel's own width.
-   * CSS transition animates this automatically.
-   * e.g. front=-42, back=+42 → ~16px gap between 420px/620px panels.
-   */
   stackOffset?: number;
+  zIndex?: number;
 
   /** Optional classes for special drawer layouts */
   panelClassName?: string;
@@ -105,12 +96,13 @@ export function DrawerModal({
   confirmOnClose = false,
   children,
   zIndex = 400,
-  stackOffset = 2.5,
+  stackOffset,
   panelClassName,
   bodyClassName,
 }: DrawerModalProps) {
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
+
   const [instanceId] = useState(() => {
     drawerStackSeq += 1;
     return drawerStackSeq;
@@ -129,7 +121,7 @@ export function DrawerModal({
   }, [instanceId, open]);
 
   const computedStackOffset = useMemo(() => {
-    if (stackOffset !== 0) return stackOffset;
+    if (stackOffset !== undefined) return stackOffset;
     const order = drawerStackOrder.get(instanceId);
     if (!order || order <= 1) return 0;
     return (order - 1) * DEFAULT_STACK_OFFSET;

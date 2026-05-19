@@ -3,6 +3,7 @@ import {
   DrawerModal,
   DrawerField,
   inputCls,
+  DEFAULT_STACK_OFFSET,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
@@ -167,6 +168,8 @@ export function PaymentVoucherAccountingModal({
       panelClassName="w-[560px] max-w-[calc(100vw-24px)]"
       bodyClassName="p-4"
       actions={actions}
+      stackOffset={-2.5}
+      zIndex={500}
     >
       <div className="space-y-3">
         {error ? (
