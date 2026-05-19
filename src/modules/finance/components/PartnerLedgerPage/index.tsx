@@ -191,7 +191,7 @@ export function PartnerLedgerPage({
     Promise.all(
       voucherTypes.map((vt) =>
         getPaymentVouchersPagedApi({
-          status: "POSTED",
+          status: "APPROVED",
           counterparty_id: settleItem.business_partner_id,
           voucher_type: vt,
           pageSize: 100,

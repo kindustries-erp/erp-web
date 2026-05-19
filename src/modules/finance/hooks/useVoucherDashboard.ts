@@ -69,7 +69,7 @@ export function useVoucherDashboard() {
     try {
       const res = await getPaymentVouchersSummaryApi({
         voucher_channel: params.voucherChannel,
-        status: "POSTED",
+        status: "APPROVED",
         ...(params.channelFilter
           ? { [params.channelParam]: params.channelFilter }
           : {}),
@@ -99,7 +99,7 @@ export function useVoucherDashboard() {
             months.map((mo) =>
               getPaymentVouchersSummaryApi({
                 voucher_channel: params.voucherChannel,
-                status: "POSTED",
+                status: "APPROVED",
                 ...(params.channelFilter
                   ? { [params.channelParam]: params.channelFilter }
                   : {}),
@@ -175,7 +175,7 @@ export function useVoucherDashboard() {
             if (anchorStart <= beforeChartStart) {
               const preChartSummary = await getPaymentVouchersSummaryApi({
                 voucher_channel: params.voucherChannel,
-                status: "POSTED",
+                status: "APPROVED",
                 ...(params.channelFilter
                   ? { [params.channelParam]: params.channelFilter }
                   : {}),
@@ -211,7 +211,7 @@ export function useVoucherDashboard() {
             if (anchorStart <= beforeFrom) {
               const preFilterSummary = await getPaymentVouchersSummaryApi({
                 voucher_channel: params.voucherChannel,
-                status: "POSTED",
+                status: "APPROVED",
                 ...(params.channelFilter
                   ? { [params.channelParam]: params.channelFilter }
                   : {}),
@@ -265,7 +265,7 @@ export function useVoucherDashboard() {
         page: 1,
         pageSize: 500,
         voucher_channel: params.voucherChannel,
-        status: "POSTED",
+        status: "APPROVED",
         ...(channelFilter ? { [params.channelParam]: channelFilter } : {}),
         ...(from ? { posting_date_from: from } : {}),
         ...(to ? { posting_date_to: to } : {}),

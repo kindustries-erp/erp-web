@@ -210,7 +210,7 @@ export function CustomerAdvancesTab() {
                         <span
                           className={cn(
                             "rounded-full px-2 py-0.5 text-xs font-medium",
-                            advance.status === "POSTED"
+                            advance.status === "APPROVED"
                               ? "bg-approve-bg text-approve-fg"
                               : advance.status === "CANCELLED"
                                 ? "bg-error-bg text-error-fg"

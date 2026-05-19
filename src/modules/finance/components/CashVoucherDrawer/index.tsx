@@ -141,11 +141,10 @@ export function CashVoucherDrawer({
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
   const viewOnly = !!editing && !drawerEditMode;
-  const canEdit = !editing || editing.status === "DRAFT";
+  const canEdit =
+    !editing || editing.status === "DRAFT" || editing.status === "APPROVED";
   const relatedDocumentsEditable =
-    !!editing &&
-    ["APPROVED", "POSTED"].includes(editing.status) &&
-    canUpdateVoucher;
+    !!editing && editing.status === "APPROVED" && canUpdateVoucher;
   const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
   const isDirty = !!form.voucher_no.trim() || !!form.amount;
 
@@ -347,41 +346,27 @@ export function CashVoucherDrawer({
             : []),
         ];
       case "APPROVED":
-      case "CONFIRMED":
         return [
           { label: "Đóng", onClick: onClose },
           ...(canUpdateVoucher
             ? [
                 {
-                  label: "Ghi sổ",
+                  label: editing?.journal_entry_id ? "Sửa hạch toán" : "Ghi sổ",
                   primary: true,
                   loading: saving,
                   disabled: saving,
                   onClick: () => onStatusTransition("POST"),
                 },
-                {
-                  label: "Hủy phiếu",
-                  disabled: saving,
-                  onClick: () =>
-                    onStatusTransition("CANCEL", {
-                      cancel_reason: form.cancel_reason,
-                    }),
-                },
-              ]
-            : []),
-        ];
-      case "POSTED":
-        return [
-          { label: "Đóng", onClick: onClose },
-          ...(canUpdateVoucher
-            ? [
-                {
-                  label: "Lưu chứng từ liên quan",
-                  primary: true,
-                  loading: saving,
-                  disabled: saving,
-                  onClick: onSaveRelatedDocuments,
-                },
+                ...(editing?.journal_entry_id
+                  ? [
+                      {
+                        label: "Lưu chứng từ liên quan",
+                        loading: saving,
+                        disabled: saving,
+                        onClick: onSaveRelatedDocuments,
+                      },
+                    ]
+                  : []),
                 {
                   label: "Hủy phiếu",
                   disabled: saving,

@@ -219,8 +219,7 @@ export function BankVoucherDrawer(props: any) {
     }
   }
 
-  const relatedDocumentsEditable =
-    !!editing && ["APPROVED", "POSTED"].includes(editing.status);
+  const relatedDocumentsEditable = !!editing && editing.status === "APPROVED";
   const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
   return (
     <>

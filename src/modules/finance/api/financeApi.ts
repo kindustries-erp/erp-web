@@ -254,8 +254,6 @@ export type VoucherStatus =
   | "DRAFT"
   | "PENDING_APPROVAL"
   | "APPROVED"
-  | "CONFIRMED"
-  | "POSTED"
   | "REJECTED"
   | "CANCELLED";
 export type CounterpartyRole =
@@ -358,6 +356,7 @@ export interface PaymentVoucher {
   cash_bank_tag_preset_id?: string | null;
   is_active: boolean;
   related_documents?: CashBankRelatedDocumentInput[];
+  journal_entry_id?: number | null;
 }
 
 export interface CreatePaymentVoucherDto {

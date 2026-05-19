@@ -19,6 +19,7 @@ import {
   money,
 } from "@/modules/accounting/utils/journalEntryUtils";
 import { postPaymentVoucherToJournalApi } from "@/modules/finance/api/financeApi";
+import { getJournalEntryApi } from "@/modules/accounting/api/journalEntriesApi";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
 
 interface Props {
@@ -61,6 +62,56 @@ export function PaymentVoucherAccountingModal({
     setSaving(false);
     setError("");
     setSelectedPresetId("");
+
+    // Nếu đã có journal_entry_id, load dữ liệu cũ để sửa
+    if (voucher.journal_entry_id) {
+      setDate(defaultDate || new Date().toISOString().slice(0, 10));
+      setDescription(
+        defaultDescription || voucher.description || voucher.voucher_no,
+      );
+      setLine({
+        ...emptySimpleLine(),
+        debit_account_id: defaultDebitAccountId,
+        credit_account_id: defaultCreditAccountId,
+        amount: String(defaultAmount || Number(voucher.amount || 0) || 0),
+        description:
+          defaultDescription || voucher.description || voucher.voucher_no,
+      });
+      // Fetch journal entry cũ để pre-populate
+      getJournalEntryApi(String(voucher.journal_entry_id))
+        .then((je) => {
+          if (je.date) setDate(je.date);
+          if (je.description) setDescription(je.description);
+          const debitLine = je.lines?.find((l) => Number(l.debit) > 0);
+          const creditLine = je.lines?.find((l) => Number(l.credit) > 0);
+          if (debitLine || creditLine) {
+            const amount = debitLine
+              ? String(Number(debitLine.debit) || 0)
+              : String(Number(creditLine?.credit) || 0);
+            const debitAccountId =
+              typeof debitLine?.account_id === "string"
+                ? debitLine.account_id
+                : ((debitLine?.account_id as { id: string })?.id ?? "");
+            const creditAccountId =
+              typeof creditLine?.account_id === "string"
+                ? creditLine.account_id
+                : ((creditLine?.account_id as { id: string })?.id ?? "");
+            setLine((prev) => ({
+              ...prev,
+              debit_account_id: debitAccountId || prev.debit_account_id,
+              credit_account_id: creditAccountId || prev.credit_account_id,
+              amount,
+              description:
+                debitLine?.description ?? je.description ?? prev.description,
+            }));
+          }
+        })
+        .catch(() => {
+          // Không load được cũ → giữ default
+        });
+      return;
+    }
+
     setDate(defaultDate || new Date().toISOString().slice(0, 10));
     setDescription(
       defaultDescription || voucher.description || voucher.voucher_no,
@@ -151,7 +202,7 @@ export function PaymentVoucherAccountingModal({
   const actions: DrawerAction[] = [
     { label: "Đóng", onClick: onClose, disabled: saving },
     {
-      label: "Ghi sổ",
+      label: voucher.journal_entry_id ? "Lưu hạch toán" : "Ghi sổ",
       primary: true,
       onClick: handleSubmit,
       loading: saving,
@@ -163,7 +214,11 @@ export function PaymentVoucherAccountingModal({
     <DrawerModal
       open={open}
       onClose={onClose}
-      title="Hạch toán chứng từ"
+      title={
+        voucher.journal_entry_id
+          ? "Sửa hạch toán chứng từ"
+          : "Hạch toán chứng từ"
+      }
       subtitle={voucher.voucher_no}
       panelClassName="w-[560px] max-w-[calc(100vw-24px)]"
       bodyClassName="p-4"

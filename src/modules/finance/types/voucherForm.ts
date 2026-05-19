@@ -57,7 +57,6 @@ export const STATUS_FILTER_OPTS: { value: VoucherStatus; label: string }[] = [
   { value: "DRAFT", label: "Nháp" },
   { value: "PENDING_APPROVAL", label: "Chờ duyệt" },
   { value: "APPROVED", label: "Đã duyệt" },
-  { value: "POSTED", label: "Đã hạch toán" },
   { value: "REJECTED", label: "Từ chối" },
   { value: "CANCELLED", label: "Đã hủy" },
 ];
@@ -66,8 +65,6 @@ export const STATUS_LABELS: Record<VoucherStatus, string> = {
   DRAFT: "Nháp",
   PENDING_APPROVAL: "Chờ duyệt",
   APPROVED: "Đã duyệt",
-  CONFIRMED: "Đã duyệt",
-  POSTED: "Đã hạch toán",
   REJECTED: "Từ chối",
   CANCELLED: "Đã hủy",
 };

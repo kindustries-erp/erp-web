@@ -733,27 +733,26 @@ function buildDrawerActions(args: any): DrawerAction[] {
     return [
       { label: "Đóng", onClick: closeDrawer },
       {
-        label: "Ghi sổ",
+        label: editing.journal_entry_id ? "Sửa hạch toán" : "Ghi sổ",
         primary: true,
         loading: saving,
         disabled: saving,
         onClick: () => handleStatusTransition("POST", reloadCurrentData),
       },
+      ...(editing.journal_entry_id
+        ? [
+            {
+              label: "Lưu chứng từ liên quan",
+              loading: saving,
+              disabled: saving,
+              onClick: handleSaveRelatedDocuments,
+            },
+          ]
+        : []),
       {
         label: "Hủy phiếu",
         disabled: saving,
         onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
-      },
-    ];
-  if (editing.status === "POSTED")
-    return [
-      { label: "Đóng", onClick: closeDrawer },
-      {
-        label: "Lưu chứng từ liên quan",
-        primary: true,
-        loading: saving,
-        disabled: saving,
-        onClick: handleSaveRelatedDocuments,
       },
     ];
   return [{ label: "Đóng", onClick: closeDrawer }];

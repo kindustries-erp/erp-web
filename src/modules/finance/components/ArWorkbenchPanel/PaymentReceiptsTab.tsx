@@ -170,7 +170,7 @@ export function PaymentReceiptsTab() {
                         <span
                           className={cn(
                             "rounded-full px-2 py-0.5 text-xs font-medium",
-                            v.status === "POSTED"
+                            v.status === "APPROVED"
                               ? "bg-approve-bg text-approve-fg"
                               : v.status === "CANCELLED"
                                 ? "bg-error-bg text-error-fg"

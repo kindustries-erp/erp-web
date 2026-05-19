@@ -46,8 +46,6 @@ export const VOUCHER_STATUS_LABELS: Record<VoucherStatus, string> = {
   DRAFT: "Nháp",
   PENDING_APPROVAL: "Chờ duyệt",
   APPROVED: "Đã duyệt",
-  CONFIRMED: "Đã duyệt",
-  POSTED: "Đã ghi nhận",
   REJECTED: "Bị từ chối",
   CANCELLED: "Đã hủy",
 };
@@ -69,7 +67,7 @@ export function StatusPill({ status }: { status: VoucherStatus }) {
     <span
       className={cn(
         "rounded-full px-2 py-0.5 text-xs font-medium",
-        status === "POSTED"
+        status === "APPROVED"
           ? "bg-approve-bg text-approve-fg"
           : status === "CANCELLED"
             ? "bg-error-bg text-error-fg"
