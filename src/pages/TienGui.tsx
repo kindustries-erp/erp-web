@@ -149,6 +149,18 @@ export const TienGui = forwardRef(
         .finally(() => setCatalogLoaded(true));
     }, []);
 
+    const reloadPartners = useCallback(async (): Promise<BusinessPartner[]> => {
+      try {
+        const bps = await getPaymentVoucherLookupBusinessPartnersApi();
+        const list = bps ?? [];
+        setPartners(list);
+        return list;
+      } catch {
+        return partners;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const reloadDonutData = useCallback(
       () =>
         loadDonutData(
@@ -537,6 +549,7 @@ export const TienGui = forwardRef(
             setAttachmentFiles,
             saveError,
             handleSaveAccounting,
+            reloadPartners,
           }}
         />
         <ConfirmModal
@@ -595,6 +608,7 @@ function buildOptionSets(
       return {
         value: p.id,
         label: `${partnerCode ? `${partnerCode} — ` : ""}${partnerName}${p.tax_code ? ` — MST: ${p.tax_code}` : ""}`,
+        original: p,
       };
     }),
     employeeOpts: employees.map((e) => ({

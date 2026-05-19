@@ -66,5 +66,7 @@
 - DB/directus staging: N/A.
 
 ---
+
 ## Sẵn sàng thực thi
+
 A/C vui lòng xác nhận kế hoạch trên để em bắt đầu triển khai code.

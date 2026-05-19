@@ -290,17 +290,23 @@ export function DrawerRow({
 export function DrawerField({
   label,
   required,
+  labelExtra,
   children,
 }: {
   label: string;
   required?: boolean;
+  /** Optional node rendered at the right side of the label row (e.g. action buttons) */
+  labelExtra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="mb-[10px]">
       <div className="text-[11px] font-medium text-[color:var(--muted-fg)] mb-1 flex items-center gap-[3px]">
-        {label}
-        {required && <span className="text-[#e24b4a]">*</span>}
+        <span className="flex items-center gap-[3px] flex-1 min-w-0">
+          {label}
+          {required && <span className="text-[#e24b4a]">*</span>}
+        </span>
+        {labelExtra}
       </div>
       {children}
     </div>
