@@ -73,7 +73,8 @@ export const TienGui = forwardRef(
     const [catalogLoaded, setCatalogLoaded] = useState(false);
     const [statusFilter, setStatusFilter] = useState<VoucherStatus | "">("");
     const [accountingModalOpen, setAccountingModalOpen] = useState(false);
-    const [accountingVoucher, setAccountingVoucher] = useState<PaymentVoucher | null>(null);
+    const [accountingVoucher, setAccountingVoucher] =
+      useState<PaymentVoucher | null>(null);
     const [counterpartySourceFilter, setCounterpartySourceFilter] = useState<
       CounterpartySource | ""
     >("");
@@ -173,7 +174,6 @@ export const TienGui = forwardRef(
       } catch {
         return partners;
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const reloadDonutData = useCallback(
@@ -583,25 +583,25 @@ export const TienGui = forwardRef(
           loading={deleting}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
-      />
+        />
 
-      <PaymentVoucherAccountingModal
-        open={accountingModalOpen}
-        onClose={() => {
-          setAccountingModalOpen(false);
-          setAccountingVoucher(null);
-        }}
-        voucher={accountingVoucher}
-        accounts={coaItems}
-        tagPresets={tagPresets}
-        onSuccess={() => {
-          closeDrawer();
-          reloadCurrentData();
-        }}
-      />
-    </div>
-  );
-}
+        <PaymentVoucherAccountingModal
+          open={accountingModalOpen}
+          onClose={() => {
+            setAccountingModalOpen(false);
+            setAccountingVoucher(null);
+          }}
+          voucher={accountingVoucher}
+          accounts={coaItems}
+          tagPresets={tagPresets}
+          onSuccess={() => {
+            closeDrawer();
+            reloadCurrentData();
+          }}
+        />
+      </div>
+    );
+  },
 );
 
 function buildOptionSets(
