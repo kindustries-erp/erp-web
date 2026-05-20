@@ -7,6 +7,7 @@ import {
   useImperativeHandle,
 } from "react";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { ReasonConfirmModal } from "@/shared/components/ReasonConfirmModal";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -75,6 +76,12 @@ export const TienGui = forwardRef(
     const [accountingModalOpen, setAccountingModalOpen] = useState(false);
     const [accountingVoucher, setAccountingVoucher] =
       useState<PaymentVoucher | null>(null);
+    const [reasonModal, setReasonModal] = useState<{
+      open: boolean;
+      action: "CANCEL" | "REJECT";
+      title: string;
+      placeholder: string;
+    }>({ open: false, action: "CANCEL", title: "", placeholder: "" });
     const [counterpartySourceFilter, setCounterpartySourceFilter] = useState<
       CounterpartySource | ""
     >("");
@@ -268,23 +275,58 @@ export const TienGui = forwardRef(
       onSuccess: () => void,
     ) {
       if (!editing) return;
+      if (action === "CANCEL") {
+        setReasonModal({
+          open: true,
+          action: "CANCEL",
+          title: "Hủy phiếu",
+          placeholder: "Nhập lý do hủy phiếu...",
+        });
+        return;
+      }
+      if (action === "REJECT") {
+        setReasonModal({
+          open: true,
+          action: "REJECT",
+          title: "Từ chối phiếu",
+          placeholder: "Nhập lý do từ chối...",
+        });
+        return;
+      }
       setSaving(true);
       setSaveError(null);
       try {
         if (action === "SUBMIT") await submitPaymentVoucherApi(editing.id);
         else if (action === "APPROVE")
           await approvePaymentVoucherApi(editing.id);
-        else if (action === "REJECT") await rejectPaymentVoucherApi(editing.id);
         else if (action === "POST") {
           setAccountingVoucher(editing);
           setAccountingModalOpen(true);
           return;
-        } else if (action === "CANCEL")
-          await cancelPaymentVoucherApi(editing.id, form.cancel_reason);
+        }
         closeDrawer();
         onSuccess();
       } catch (e) {
         setSaveError((e as Error)?.message ?? "Lỗi không xác định");
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    async function handleReasonConfirm(reason: string) {
+      if (!editing) return;
+      setSaving(true);
+      setSaveError(null);
+      try {
+        if (reasonModal.action === "REJECT")
+          await rejectPaymentVoucherApi(editing.id, reason);
+        else await cancelPaymentVoucherApi(editing.id, reason);
+        setReasonModal((s) => ({ ...s, open: false }));
+        closeDrawer();
+        reloadCurrentData();
+      } catch (e) {
+        setSaveError((e as Error)?.message ?? "Lỗi không xác định");
+        setReasonModal((s) => ({ ...s, open: false }));
       } finally {
         setSaving(false);
       }
@@ -599,6 +641,20 @@ export const TienGui = forwardRef(
             reloadCurrentData();
           }}
         />
+
+        <ReasonConfirmModal
+          open={reasonModal.open}
+          title={reasonModal.title}
+          message="Vui lòng nhập lý do bên dưới."
+          placeholder={reasonModal.placeholder}
+          confirmLabel={
+            reasonModal.action === "REJECT" ? "Từ chối" : "Hủy phiếu"
+          }
+          onConfirm={handleReasonConfirm}
+          onCancel={() => setReasonModal((s) => ({ ...s, open: false }))}
+          loading={saving}
+          danger
+        />
       </div>
     );
   },
@@ -712,6 +768,12 @@ function buildDrawerActions(args: any): DrawerAction[] {
     return [
       { label: "Đóng", onClick: closeDrawer },
       {
+        label: "Cập nhật",
+        loading: saving,
+        disabled: saving,
+        onClick: handleSaveRelatedDocuments,
+      },
+      {
         label: "Hủy phiếu",
         disabled: saving,
         onClick: () => handleStatusTransition("CANCEL", reloadCurrentData),
@@ -739,16 +801,12 @@ function buildDrawerActions(args: any): DrawerAction[] {
         disabled: saving,
         onClick: () => handleStatusTransition("POST", reloadCurrentData),
       },
-      ...(editing.journal_entry_id
-        ? [
-            {
-              label: "Lưu chứng từ liên quan",
-              loading: saving,
-              disabled: saving,
-              onClick: handleSaveRelatedDocuments,
-            },
-          ]
-        : []),
+      {
+        label: "Cập nhật",
+        loading: saving,
+        disabled: saving,
+        onClick: handleSaveRelatedDocuments,
+      },
       {
         label: "Hủy phiếu",
         disabled: saving,

@@ -497,10 +497,25 @@ export function useBankVoucherHandlers({
     setSaveError(null);
     try {
       const saved = await updatePaymentVoucherApi(editing.id, {
+        description: form.description,
         related_documents: form.related_documents,
       });
+      // Upload new attachments if any
+      if (attachmentFiles.length) {
+        for (const file of attachmentFiles) {
+          const uploaded = await uploadFileApi(file);
+          await createVoucherAttachmentApi({
+            payment_voucher_id: editing.id,
+            file: uploaded.id,
+            attachment_type: attachmentType,
+            note: attachmentNote.trim() || undefined,
+          });
+        }
+        setAttachmentFiles([]);
+        setAttachmentNote("");
+      }
       showToast({
-        title: "Đã cập nhật chứng từ liên quan",
+        title: "Đã cập nhật phiếu",
         description: saved.voucher_no,
         variant: "success",
       });
@@ -510,7 +525,7 @@ export function useBankVoucherHandlers({
       const reason = extractApiError(error);
       setSaveError(reason);
       showToast({
-        title: "Cập nhật chứng từ liên quan thất bại",
+        title: "Cập nhật thất bại",
         description: reason,
         variant: "destructive",
       });

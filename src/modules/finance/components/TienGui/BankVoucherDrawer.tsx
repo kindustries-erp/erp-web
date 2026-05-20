@@ -219,8 +219,13 @@ export function BankVoucherDrawer(props: any) {
     }
   }
 
-  const relatedDocumentsEditable = !!editing && editing.status === "APPROVED";
-  const relatedDocumentsReadOnly = viewOnly && !relatedDocumentsEditable;
+  const relatedDocumentsReadOnly =
+    !!editing &&
+    (editing.status === "CANCELLED" || editing.status === "REJECTED");
+  const canAddAttachment =
+    !editing ||
+    (editing.status !== "CANCELLED" && editing.status !== "REJECTED");
+  const canDeleteAttachment = !viewOnly;
   return (
     <>
       <DrawerModal
@@ -311,7 +316,13 @@ export function BankVoucherDrawer(props: any) {
           </div>
           <DrawerField label={t("voucher.drawer.desc")}>
             <textarea
-              disabled={viewOnly}
+              disabled={
+                viewOnly &&
+                !(
+                  editing?.status === "APPROVED" ||
+                  editing?.status === "CONFIRMED"
+                )
+              }
               className={inputCls}
               rows={2}
               value={form.description}
@@ -319,15 +330,13 @@ export function BankVoucherDrawer(props: any) {
               placeholder={t("voucher.drawer.descPlaceholder")}
             />
           </DrawerField>
-          {editing && (
-            <DrawerField label="Lý do hủy" required>
+          {editing?.status === "CANCELLED" && form.cancel_reason && (
+            <DrawerField label="Lý do hủy">
               <input
                 type="text"
                 className={inputCls}
-                value={form.cancel_reason || ""}
-                onChange={(e) => setField("cancel_reason", e.target.value)}
-                placeholder="Nhập lý do hủy phiếu..."
-                disabled={editing.status === "CANCELLED"}
+                value={form.cancel_reason}
+                disabled
               />
             </DrawerField>
           )}
@@ -339,12 +348,14 @@ export function BankVoucherDrawer(props: any) {
                 <AttachmentRow
                   key={a.id}
                   item={a}
-                  onDelete={viewOnly ? undefined : handleDeleteAttachment}
+                  onDelete={
+                    canDeleteAttachment ? handleDeleteAttachment : undefined
+                  }
                 />
               ))}
             </div>
           )}
-          {!viewOnly && (
+          {canAddAttachment && (
             <>
               <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
                 <DrawerField label={t("voucher.drawer.attachmentType")}>
@@ -444,36 +455,42 @@ function CounterpartySection(props: any) {
     props;
   return (
     <DrawerSection title={t("voucher.drawer.sectionPartner")}>
-      <DrawerField label="Loại đối tượng" required>
-        <Combobox
-          options={COUNTERPARTY_SOURCE_OPTS}
-          value={form.counterparty_source}
-          onChange={(v) =>
-            setField(
-              "counterparty_source",
-              (v as CounterpartySource) || "EXTERNAL",
-            )
-          }
-          disabled={viewOnly}
-        />
-      </DrawerField>
-      {form.counterparty_source === "INTERNAL" ? (
-        <DrawerField label="Nhân viên" required>
+      <div className="grid grid-cols-3 max-[560px]:grid-cols-1 gap-x-3 gap-y-1">
+        <DrawerField label="Loại đối tượng" required>
           <Combobox
-            options={employeeOpts}
-            value={form.employee_id}
-            onChange={handleEmployeeChange}
-            placeholder="Chọn nhân viên..."
+            options={COUNTERPARTY_SOURCE_OPTS}
+            value={form.counterparty_source}
+            onChange={(v) =>
+              setField(
+                "counterparty_source",
+                (v as CounterpartySource) || "EXTERNAL",
+              )
+            }
             disabled={viewOnly}
           />
         </DrawerField>
-      ) : (
-        <ExternalCounterpartyFields
-          {...props}
-          handleCreatePartner={handleCreatePartner}
-          handleEditPartner={handleEditPartner}
-        />
-      )}
+        {form.counterparty_source === "INTERNAL" ? (
+          <div className="col-span-2 max-[560px]:col-span-1">
+            <DrawerField label="Nhân viên" required>
+              <Combobox
+                options={employeeOpts}
+                value={form.employee_id}
+                onChange={handleEmployeeChange}
+                placeholder="Chọn nhân viên..."
+                disabled={viewOnly}
+              />
+            </DrawerField>
+          </div>
+        ) : (
+          <div className="col-span-2 max-[560px]:col-span-1">
+            <ExternalCounterpartyFields
+              {...props}
+              handleCreatePartner={handleCreatePartner}
+              handleEditPartner={handleEditPartner}
+            />
+          </div>
+        )}
+      </div>
       {(form.counterparty_name_snapshot ||
         form.counterparty_phone_snapshot ||
         form.counterparty_identity_no_snapshot) && (
@@ -524,40 +541,39 @@ function ExternalCounterpartyFields(props: any) {
     partnerBankLoading,
   } = props;
   return (
-    <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3 gap-y-1">
-      <DrawerField
-        label={t("voucher.drawer.partner")}
-        required
-        labelExtra={
-          <div className="flex gap-1 ml-1">
-            <button
-              type="button"
-              onClick={handleCreatePartner}
-              className="w-[22px] h-[22px] border border-border rounded-md text-xs font-bold hover:bg-surface-hover transition-colors flex items-center justify-center leading-none"
-              title="Thêm đối tác"
-            >
-              +
-            </button>
-            <button
-              type="button"
-              onClick={handleEditPartner}
-              disabled={!form.counterparty_id}
-              className="w-[22px] h-[22px] border border-border rounded-md text-xs font-medium hover:bg-surface-hover transition-colors flex items-center justify-center disabled:opacity-40"
-              title="Sửa đối tác"
-            >
-              ✎
-            </button>
-          </div>
-        }
-      >
-        <Combobox
-          disabled={viewOnly}
-          options={partnerOpts}
-          value={form.counterparty_id}
-          onChange={handlePartnerChange}
-          placeholder={t("voucher.drawer.partnerPlaceholder")}
-        />
-      </DrawerField>
-    </div>
+    <DrawerField label={t("voucher.drawer.partner")} required>
+      <div className="flex items-center rounded-xl border border-border has-[button:focus]:border-primary has-[button:focus]:ring-2 has-[button:focus]:ring-primary/10 transition-all">
+        <div className="flex-1 min-w-0 [&_button]:border-0 [&_button]:rounded-none [&_button]:rounded-l-xl [&_button]:ring-0">
+          <Combobox
+            disabled={viewOnly}
+            options={partnerOpts}
+            value={form.counterparty_id}
+            onChange={handlePartnerChange}
+            placeholder={t("voucher.drawer.partnerPlaceholder")}
+            className="!border-0 !ring-0 !rounded-l-xl !rounded-r-none"
+          />
+        </div>
+        <div className="flex items-center gap-px border-l border-border px-1 shrink-0">
+          <button
+            type="button"
+            onClick={handleCreatePartner}
+            disabled={viewOnly}
+            className="w-[24px] h-[24px] rounded-md text-xs font-bold text-muted-fg hover:text-foreground hover:bg-surface-hover transition-colors flex items-center justify-center leading-none disabled:opacity-40"
+            title="Thêm đối tác"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={handleEditPartner}
+            disabled={viewOnly || !form.counterparty_id}
+            className="w-[24px] h-[24px] rounded-md text-xs font-medium text-muted-fg hover:text-foreground hover:bg-surface-hover transition-colors flex items-center justify-center disabled:opacity-40"
+            title="Sửa đối tác"
+          >
+            ✎
+          </button>
+        </div>
+      </div>
+    </DrawerField>
   );
 }

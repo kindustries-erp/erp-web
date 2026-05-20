@@ -40,7 +40,13 @@ export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
   useEffect(() => {
     setLoading(true);
     getVoucherApprovalLogsApi(voucherId)
-      .then(setLogs)
+      .then((data) => {
+        const sorted = [...data].sort(
+          (a, b) =>
+            new Date(a.action_at).getTime() - new Date(b.action_at).getTime(),
+        );
+        setLogs(sorted);
+      })
       .catch(() => setLogs([]))
       .finally(() => setLoading(false));
   }, [voucherId]);
