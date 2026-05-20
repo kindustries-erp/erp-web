@@ -30,7 +30,7 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.catalogAccounts",
     group: "settings",
   },
-  receivables: { labelKey: "nav.items.debt", group: "debt" },
+  receivables: { labelKey: "nav.items.debtReceivable", group: "debt" },
   payables: { labelKey: "nav.items.debtPayable", group: "debt" },
   ledger: { labelKey: "nav.items.reportLedger", group: "reports" },
   journal: { labelKey: "nav.items.report", group: "reports" },
