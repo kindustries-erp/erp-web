@@ -26,6 +26,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "permissions",
   "e-invoice",
   "workflow",
+  "settings-branch",
 ];
 
 /**
@@ -36,6 +37,7 @@ const PAGE_SLUG: Partial<Record<PageKey, string>> = {
   "settings-cash-fund": "settings/cash-fund",
   "settings-bank": "settings/bank",
   "settings-accounts": "settings/accounts",
+  "settings-branch": "settings/branch",
 };
 
 /** Slug → PageKey (reverse of PAGE_SLUG) */

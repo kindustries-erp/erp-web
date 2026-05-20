@@ -346,6 +346,7 @@ export function ArWorkbenchPanel({ defaultTab }: ArWorkbenchPanelProps = {}) {
       title={t("nav.items.debt")}
       desc={t("nav.items.debtDesc")}
       icon={<Receipt className="h-4 w-4" />}
+      hideTabs={!!defaultTab}
       actions={
         activeTab === "phai-thu" ? (
           <div className="flex flex-wrap gap-2">

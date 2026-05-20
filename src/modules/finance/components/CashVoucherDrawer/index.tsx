@@ -609,12 +609,7 @@ export function CashVoucherDrawer({
           <DrawerField label={t("voucher.drawer.desc")}>
             <textarea
               className={inputCls}
-              disabled={
-                viewOnly ||
-                editing?.status === "APPROVED" ||
-                editing?.status === "CONFIRMED" ||
-                editing?.status === "POSTED"
-              }
+              disabled={viewOnly || editing?.status === "APPROVED"}
               rows={2}
               value={form.description}
               onChange={(e) => onFieldChange("description", e.target.value)}

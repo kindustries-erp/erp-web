@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Users } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { useAppStore } from "@/core/config/appStore";
+import { PageHeader } from "@/shared/components/PageHeader";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable } from "@/shared/components/DataTable";
 import { DEFAULT_STACK_OFFSET } from "@/shared/components/DrawerModal";
@@ -301,6 +303,11 @@ export function NhanSu() {
 
   return (
     <div className="p-4 md:p-6 space-y-4">
+      <PageHeader
+        title={t("nav.items.hrStaff")}
+        desc={t("nhansu.desc")}
+        icon={<Users className="h-4 w-4" />}
+      />
       <div className="flex justify-end mb-4">
         <HeaderActions
           onRefresh={() => loadData(page, pageSize, search, statusFilter)}

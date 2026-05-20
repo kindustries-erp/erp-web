@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
+import { PageHeader } from "@/shared/components/PageHeader";
 import {
   useJournalEntries,
   useJournalEntryActions,
@@ -178,10 +179,12 @@ export function NhatKyChung() {
     <>
       <div className="p-4 md:p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            <h1 className="text-lg font-semibold">{t("nav.items.report")}</h1>
-          </div>
+          <PageHeader
+            title={t("journalEntries.title")}
+            desc={t("journalEntries.desc")}
+            icon={<BarChart3 className="h-4 w-4" />}
+            className="mb-0"
+          />
           <button
             type="button"
             onClick={() => setCreateOpen(true)}

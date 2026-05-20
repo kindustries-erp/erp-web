@@ -25,6 +25,7 @@ import { PhaiThu } from "@/pages/Receivables";
 import { PhaiTra } from "@/pages/Payables";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { NhatKyChung } from "@/pages/GeneralJournal";
+import { SettingsBranch } from "@/pages/SettingsBranch";
 import { Login } from "@/pages/Login";
 import { ActivityLog } from "@/pages/ActivityLog";
 import { DoiTac } from "@/pages/Partners";
@@ -105,6 +106,7 @@ export default function App() {
                 {currentPage === "receivables" && <PhaiThu />}
                 {currentPage === "payables" && <PhaiTra />}
                 {currentPage === "journal" && <NhatKyChung />}
+                {currentPage === "settings-branch" && <SettingsBranch />}
                 {(currentPage === "ledger" ||
                   currentPage === "sales" ||
                   currentPage === "customers" ||
@@ -142,6 +144,7 @@ export default function App() {
                   "partners",
                   "e-invoice",
                   "workflow",
+                  "settings-branch",
                 ].includes(currentPage) && <NotFound />}
               </>
             )}

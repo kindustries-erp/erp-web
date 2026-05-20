@@ -22,7 +22,8 @@ export type PageKey =
   | "partners"
   | "permissions"
   | "e-invoice"
-  | "workflow";
+  | "workflow"
+  | "settings-branch";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

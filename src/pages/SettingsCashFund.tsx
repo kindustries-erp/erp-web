@@ -1,9 +1,13 @@
 import { useEffect } from "react";
+import { Wallet } from "lucide-react";
 import { QuyTab } from "@/modules/settings/components/CashFundTab";
 import { useAppStore } from "@/core/config/appStore";
+import { useT } from "@/core/i18n";
+import { PageHeader } from "@/shared/components/PageHeader";
 
 export function ThietLapQuy() {
   const { setCustomBreadcrumbs } = useAppStore();
+  const t = useT();
 
   useEffect(() => {
     setCustomBreadcrumbs([
@@ -15,7 +19,12 @@ export function ThietLapQuy() {
   }, [setCustomBreadcrumbs]);
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 space-y-4">
+      <PageHeader
+        title={t("thietlap.tabs.quy")}
+        desc={t("thietlap.desc")}
+        icon={<Wallet className="h-4 w-4" />}
+      />
       <QuyTab />
     </div>
   );

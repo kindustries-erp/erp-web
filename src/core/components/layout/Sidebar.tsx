@@ -57,7 +57,9 @@ export function Sidebar() {
   const isThietLapQuy = currentPage === "settings-cash-fund";
   const isThietLapNH = currentPage === "settings-bank";
   const isThietLapTK = currentPage === "settings-accounts";
-  const isThietLapGroup = isThietLapQuy || isThietLapNH || isThietLapTK;
+  const isThietLapBranch = currentPage === "settings-branch";
+  const isThietLapGroup =
+    isThietLapQuy || isThietLapNH || isThietLapTK || isThietLapBranch;
   const isPartners = currentPage === "partners";
   const isInCongNoGroup = ["receivables", "payables"].includes(currentPage);
   const isInBaoCaoGroup = ["ledger", "journal"].includes(currentPage);
@@ -223,14 +225,25 @@ export function Sidebar() {
               )}
 
               {canFinance && (
-                <NavItem
-                  collapsed={c}
+                <NavGroup
                   icon={<Book className="h-4 w-4" />}
                   label={t("nav.items.report")}
                   active={isInBaoCaoGroup}
-                  onClick={() => navTo("journal")}
-                  contextPage="journal"
-                />
+                  collapsed={c}
+                >
+                  <NavGroupItem
+                    label={t("nav.items.reportJournal")}
+                    active={currentPage === "journal"}
+                    onClick={() => navTo("journal")}
+                    contextPage="journal"
+                  />
+                  <NavGroupItem
+                    label={t("nav.items.reportLedger")}
+                    active={currentPage === "ledger"}
+                    onClick={() => navTo("ledger")}
+                    contextPage="ledger"
+                  />
+                </NavGroup>
               )}
 
               {canPartners && (
@@ -292,6 +305,12 @@ export function Sidebar() {
                   active={isThietLapGroup}
                   collapsed={c}
                 >
+                  <NavGroupItem
+                    label={t("thietlap.tabs.chi-nhanh")}
+                    active={currentPage === "settings-branch"}
+                    onClick={() => navTo("settings-branch")}
+                    contextPage="settings-branch"
+                  />
                   <NavGroupItem
                     label={t("nav.items.catalogFunds")}
                     active={isThietLapQuy}
