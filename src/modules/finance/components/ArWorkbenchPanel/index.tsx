@@ -53,16 +53,23 @@ import { PartnerLedgerPage } from "@/modules/finance/components/PartnerLedgerPag
 
 type ArWorkbenchTab = "phai-thu" | "phai-tra";
 
-export function ArWorkbenchPanel() {
+interface ArWorkbenchPanelProps {
+  defaultTab?: ArWorkbenchTab;
+}
+
+export function ArWorkbenchPanel({ defaultTab }: ArWorkbenchPanelProps = {}) {
   const t = useT();
-  const [activeTab, setActiveTab] = useState<ArWorkbenchTab>("phai-thu");
+  const [activeTab, setActiveTab] = useState<ArWorkbenchTab>(
+    defaultTab ?? "phai-thu",
+  );
   const { setCustomBreadcrumbs } = useAppStore();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    const active =
-      tab && ["phai-thu", "phai-tra"].includes(tab)
+    const active = defaultTab
+      ? defaultTab
+      : tab && ["phai-thu", "phai-tra"].includes(tab)
         ? (tab as ArWorkbenchTab)
         : "phai-thu";
     setActiveTab(active);

@@ -19,8 +19,6 @@ import {
   money,
   getPeriodLabel,
 } from "@/modules/accounting/utils/journalEntryUtils";
-import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
-import { ComingSoon } from "@/pages/ComingSoon";
 import {
   getPaymentVoucherApi,
   type PaymentVoucher,
@@ -99,47 +97,16 @@ export function NhatKyChung() {
     null,
   );
 
-  const [activeTab, setActiveTab] = useState("nhat-ky-chung");
   const { setCustomBreadcrumbs } = useAppStore();
 
   useEffect(() => {
-    if (activeTab === "nhat-ky-chung") {
-      setCustomBreadcrumbs([
-        ["breadcrumb.accounting"],
-        ["breadcrumb.report"],
-        ["breadcrumb.reportJournal"],
-      ]);
-    } else if (activeTab === "so-cai") {
-      setCustomBreadcrumbs([
-        ["breadcrumb.accounting"],
-        ["breadcrumb.report"],
-        ["breadcrumb.reportLedger"],
-      ]);
-    }
-  }, [activeTab, setCustomBreadcrumbs]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = params.get("tab");
-    if (tab && ["nhat-ky-chung", "so-cai"].includes(tab)) {
-      setActiveTab(tab);
-    } else {
-      setActiveTab("nhat-ky-chung");
-      params.set("tab", "nhat-ky-chung");
-      window.history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}?${params.toString()}`,
-      );
-    }
-  }, []);
-
-  const handleTabChange = (val: string) => {
-    setActiveTab(val);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", val);
-    history.pushState(null, "", url.toString());
-  };
+    setCustomBreadcrumbs([
+      ["breadcrumb.accounting"],
+      ["breadcrumb.report"],
+      ["breadcrumb.reportJournal"],
+    ]);
+    return () => setCustomBreadcrumbs(null);
+  }, [setCustomBreadcrumbs]);
 
   async function handleRowClick(entry: JournalEntry) {
     const refType = entry.reference_type;
@@ -209,12 +176,12 @@ export function NhatKyChung() {
 
   return (
     <>
-      <PageWithTabsLayout
-        className="space-y-4"
-        title={t("nav.items.report")}
-        desc={t("journalEntries.desc")}
-        icon={<BarChart3 className="w-5 h-5" />}
-        actions={
+      <div className="p-4 md:p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5" />
+            <h1 className="text-lg font-semibold">{t("nav.items.report")}</h1>
+          </div>
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
@@ -222,204 +189,191 @@ export function NhatKyChung() {
           >
             <Plus className="w-4 h-4" /> {t("journalEntries.actions.new")}
           </button>
-        }
-        tabs={[
-          { value: "nhat-ky-chung", label: t("nav.items.reportJournal") },
-          { value: "so-cai", label: t("nav.items.reportLedger") },
-        ]}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      >
-        <div className={activeTab === "nhat-ky-chung" ? "space-y-4" : "hidden"}>
-          {/* Filters */}
-          <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
-              <input
-                value={list.search}
-                onChange={(e) => {
-                  list.setSearch(e.target.value);
-                  list.setPage(1);
-                }}
-                placeholder={t("journalEntries.filters.search")}
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-              />
-              <select
-                value={list.accountId}
-                onChange={(e) => {
-                  list.setAccountId(e.target.value);
-                  list.setPage(1);
-                }}
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-              >
-                <option value="">{t("journalEntries.filters.account")}</option>
-                {lookups.accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {[a.account_code, a.account_name]
-                      .filter(Boolean)
-                      .join(" — ")}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={list.periodId}
-                onChange={(e) => {
-                  list.setPeriodId(e.target.value);
-                  list.setPage(1);
-                }}
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-              >
-                <option value="">{t("journalEntries.filters.period")}</option>
-                {lookups.periods.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+        </div>
 
-              <input
-                value={list.dateFrom}
-                onChange={(e) => {
-                  list.setDateFrom(e.target.value);
-                  list.setPage(1);
-                }}
-                type="date"
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-              />
-              <input
-                value={list.dateTo}
-                onChange={(e) => {
-                  list.setDateTo(e.target.value);
-                  list.setPage(1);
-                }}
-                type="date"
-                className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-              />
-            </div>
-            <div className="flex items-center justify-between text-xs text-[color:var(--muted-fg)]">
-              <span>
-                {t("journalEntries.total")}: {list.total}
-              </span>
-              <button
-                type="button"
-                onClick={list.resetFilters}
-                className="hover:text-foreground"
-              >
-                {t("journalEntries.filters.reset")}
-              </button>
-            </div>
+        {/* Filters */}
+        <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
+            <input
+              value={list.search}
+              onChange={(e) => {
+                list.setSearch(e.target.value);
+                list.setPage(1);
+              }}
+              placeholder={t("journalEntries.filters.search")}
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
+            />
+            <select
+              value={list.accountId}
+              onChange={(e) => {
+                list.setAccountId(e.target.value);
+                list.setPage(1);
+              }}
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
+            >
+              <option value="">{t("journalEntries.filters.account")}</option>
+              {lookups.accounts.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {[a.account_code, a.account_name].filter(Boolean).join(" — ")}
+                </option>
+              ))}
+            </select>
+            <select
+              value={list.periodId}
+              onChange={(e) => {
+                list.setPeriodId(e.target.value);
+                list.setPage(1);
+              }}
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
+            >
+              <option value="">{t("journalEntries.filters.period")}</option>
+              {lookups.periods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+
+            <input
+              value={list.dateFrom}
+              onChange={(e) => {
+                list.setDateFrom(e.target.value);
+                list.setPage(1);
+              }}
+              type="date"
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
+            />
+            <input
+              value={list.dateTo}
+              onChange={(e) => {
+                list.setDateTo(e.target.value);
+                list.setPage(1);
+              }}
+              type="date"
+              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
+            />
           </div>
+          <div className="flex items-center justify-between text-xs text-[color:var(--muted-fg)]">
+            <span>
+              {t("journalEntries.total")}: {list.total}
+            </span>
+            <button
+              type="button"
+              onClick={list.resetFilters}
+              className="hover:text-foreground"
+            >
+              {t("journalEntries.filters.reset")}
+            </button>
+          </div>
+        </div>
 
-          {list.error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-              {list.error}
-            </div>
-          )}
+        {list.error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+            {list.error}
+          </div>
+        )}
 
-          {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
-          <div className="rounded-2xl border border-border bg-surface overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-xs">
-                <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
+        {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
+        <div className="rounded-2xl border border-border bg-surface overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-xs">
+              <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
+                <tr>
+                  <th className="px-3 py-2 text-left font-medium">
+                    {t("journalEntries.columns.voucherNo")}
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium">
+                    {t("journalEntries.columns.date")}
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium">
+                    {t("journalEntries.form.debitAccount")}
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium">
+                    {t("journalEntries.form.creditAccount")}
+                  </th>
+                  <th className="px-3 py-2 text-right font-medium">
+                    {t("journalEntries.form.amount")}
+                  </th>
+                  <th className="px-3 py-2 text-left font-medium">
+                    {t("journalEntries.form.lineDescription")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {list.loading ? (
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium">
-                      {t("journalEntries.columns.voucherNo")}
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium">
-                      {t("journalEntries.columns.date")}
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium">
-                      {t("journalEntries.form.debitAccount")}
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium">
-                      {t("journalEntries.form.creditAccount")}
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      {t("journalEntries.form.amount")}
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium">
-                      {t("journalEntries.form.lineDescription")}
-                    </th>
+                    <td
+                      colSpan={6}
+                      className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
+                    >
+                      {t("journalEntries.loading")}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {list.loading ? (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
-                      >
-                        {t("journalEntries.loading")}
+                ) : flatRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
+                    >
+                      {t("common.noData")}
+                    </td>
+                  </tr>
+                ) : (
+                  flatRows.map((row, idx) => (
+                    <tr
+                      key={`${row.entry.id}-${idx}`}
+                      onClick={() => handleRowClick(row.entry)}
+                      className="border-t border-border cursor-pointer hover:bg-surface-hover"
+                    >
+                      <td className="px-3 py-2 font-medium">
+                        {row.entry.voucher_no || row.entry.id.slice(0, 8)}
+                      </td>
+                      <td className="px-3 py-2">{row.entry.date}</td>
+                      <td className="px-3 py-2">
+                        {row.debitLine
+                          ? getAccountLabel(row.debitLine.account_id)
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2">
+                        {row.creditLine
+                          ? getAccountLabel(row.creditLine.account_id)
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {row.amount > 0 ? formatMoney(row.amount) : "—"}
+                      </td>
+                      <td className="px-3 py-2 max-w-[200px] truncate">
+                        {row.description || "—"}
                       </td>
                     </tr>
-                  ) : flatRows.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
-                      >
-                        {t("common.noData")}
-                      </td>
-                    </tr>
-                  ) : (
-                    flatRows.map((row, idx) => (
-                      <tr
-                        key={`${row.entry.id}-${idx}`}
-                        onClick={() => handleRowClick(row.entry)}
-                        className="border-t border-border cursor-pointer hover:bg-surface-hover"
-                      >
-                        <td className="px-3 py-2 font-medium">
-                          {row.entry.voucher_no || row.entry.id.slice(0, 8)}
-                        </td>
-                        <td className="px-3 py-2">{row.entry.date}</td>
-                        <td className="px-3 py-2">
-                          {row.debitLine
-                            ? getAccountLabel(row.debitLine.account_id)
-                            : "—"}
-                        </td>
-                        <td className="px-3 py-2">
-                          {row.creditLine
-                            ? getAccountLabel(row.creditLine.account_id)
-                            : "—"}
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          {row.amount > 0 ? formatMoney(row.amount) : "—"}
-                        </td>
-                        <td className="px-3 py-2 max-w-[200px] truncate">
-                          {row.description || "—"}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2 text-xs">
-              <button
-                type="button"
-                disabled={list.page <= 1}
-                onClick={() => list.setPage(Math.max(1, list.page - 1))}
-                className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
-              >
-                {t("journalEntries.pagination.prev")}
-              </button>
-              <span>
-                {list.page} / {Math.max(1, list.totalPages)}
-              </span>
-              <button
-                type="button"
-                disabled={list.page >= Math.max(1, list.totalPages)}
-                onClick={() => list.setPage(list.page + 1)}
-                className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
-              >
-                {t("journalEntries.pagination.next")}
-              </button>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2 text-xs">
+            <button
+              type="button"
+              disabled={list.page <= 1}
+              onClick={() => list.setPage(Math.max(1, list.page - 1))}
+              className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
+            >
+              {t("journalEntries.pagination.prev")}
+            </button>
+            <span>
+              {list.page} / {Math.max(1, list.totalPages)}
+            </span>
+            <button
+              type="button"
+              disabled={list.page >= Math.max(1, list.totalPages)}
+              onClick={() => list.setPage(list.page + 1)}
+              className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
+            >
+              {t("journalEntries.pagination.next")}
+            </button>
           </div>
         </div>
-        <div className={activeTab === "so-cai" ? "" : "hidden"}>
-          <ComingSoon />
-        </div>
-      </PageWithTabsLayout>
+      </div>
 
       {/* Create modal */}
       <DrawerModal
