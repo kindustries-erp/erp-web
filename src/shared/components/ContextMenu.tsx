@@ -25,6 +25,20 @@ export function triggerContextMenu(
   _setState?.({ x, y, page, tab, label });
 }
 
+export function openPageContextMenu(
+  page: PageKey,
+  label: string,
+  anchor: HTMLElement,
+  tab?: string,
+) {
+  const rect = anchor.getBoundingClientRect();
+  triggerContextMenu(rect.left, rect.bottom + 8, page, label, tab);
+}
+
+export function closePageContextMenu() {
+  _setState?.(null);
+}
+
 // ── Hook for menu items ──────────────────────────────────────────────────────
 export function usePageContextMenu(page: PageKey, label: string, tab?: string) {
   return useCallback(
