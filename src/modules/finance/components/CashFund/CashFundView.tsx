@@ -86,8 +86,6 @@ export function CashFundView(p: any) {
     partnerOpts,
     employeeOpts,
     coaOpts,
-    debitAccountOpts,
-    creditAccountOpts,
     tagPresets,
     handleTagPresetSelect,
     closeDrawer,
@@ -238,8 +236,6 @@ export function CashFundView(p: any) {
         partnerOpts={partnerOpts}
         employeeOpts={employeeOpts}
         coaOpts={coaOpts}
-        debitAccountOpts={debitAccountOpts}
-        creditAccountOpts={creditAccountOpts}
         tagPresets={tagPresets}
         canUpdateVoucher={canUpdateVoucher}
         onClose={closeDrawer}

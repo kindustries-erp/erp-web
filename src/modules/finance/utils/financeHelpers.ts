@@ -272,8 +272,6 @@ export function emptyForm(
     counterparty_tax_code_snapshot: "",
     counterparty_phone_snapshot: "",
     counterparty_identity_no_snapshot: "",
-    debit_account_id: "",
-    credit_account_id: "",
     amount: "",
     amount_in_words: "",
     description: "",

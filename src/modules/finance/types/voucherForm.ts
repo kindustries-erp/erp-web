@@ -20,8 +20,6 @@ export interface CashVoucherForm {
   counterparty_tax_code_snapshot: string;
   counterparty_phone_snapshot: string;
   counterparty_identity_no_snapshot: string;
-  debit_account_id?: string;
-  credit_account_id?: string;
   amount: string;
   amount_in_words: string;
   description: string;

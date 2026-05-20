@@ -320,8 +320,6 @@ export function useCashVoucherHandlers({
     setForm((current) => ({
       ...current,
       cash_bank_tag_preset_id: preset.id,
-      debit_account_id: preset.debit_account_id || current.debit_account_id,
-      credit_account_id: preset.credit_account_id || current.credit_account_id,
       description: current.description || preset.label,
       ...(needsExternal ? { counterparty_source: "EXTERNAL" as const } : {}),
     }));
@@ -365,10 +363,6 @@ export function useCashVoucherHandlers({
     }
     if (form.counterparty_source === "EXTERNAL" && !form.counterparty_id) {
       setSaveError("Vui lòng chọn đối tác.");
-      return;
-    }
-    if (!form.debit_account_id || !form.credit_account_id) {
-      setSaveError("Tài khoản nợ và có là bắt buộc.");
       return;
     }
     const amountValue = parseMoneyInput(form.amount);

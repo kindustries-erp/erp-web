@@ -66,8 +66,6 @@ export interface CashVoucherDrawerProps {
   partnerOpts: SelectOption[];
   employeeOpts: SelectOption[];
   coaOpts: SelectOption[];
-  debitAccountOpts: SelectOption[];
-  creditAccountOpts: SelectOption[];
   tagPresets: CashBankTagPreset[];
   canUpdateVoucher: boolean;
   onClose: () => void;
@@ -115,8 +113,6 @@ export function CashVoucherDrawer({
   fundOpts,
   partnerOpts,
   employeeOpts,
-  debitAccountOpts,
-  creditAccountOpts,
   tagPresets,
   canUpdateVoucher,
   onClose,
@@ -561,26 +557,6 @@ export function CashVoucherDrawer({
       {/* Section 3: Hạch toán */}
       <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
         <div className="grid grid-cols-1 gap-y-1">
-          <div className="grid grid-cols-2 gap-x-3">
-            <DrawerField label={t("voucher.drawer.debitAcc")} required>
-              <Combobox
-                options={debitAccountOpts}
-                value={form.debit_account_id ?? ""}
-                onChange={(v) => onFieldChange("debit_account_id", v)}
-                placeholder={t("voucher.drawer.accPlaceholder")}
-                disabled={viewOnly}
-              />
-            </DrawerField>
-            <DrawerField label={t("voucher.drawer.creditAcc")} required>
-              <Combobox
-                options={creditAccountOpts}
-                value={form.credit_account_id ?? ""}
-                onChange={(v) => onFieldChange("credit_account_id", v)}
-                placeholder={t("voucher.drawer.accPlaceholder")}
-                disabled={viewOnly}
-              />
-            </DrawerField>
-          </div>
           <div className="grid grid-cols-2 gap-x-3">
             <DrawerField label={t("voucher.drawer.amount")} required>
               <input
