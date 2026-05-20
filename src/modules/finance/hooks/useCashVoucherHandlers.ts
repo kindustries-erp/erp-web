@@ -288,16 +288,9 @@ export function useCashVoucherHandlers({
   }
 
   function handleCashFundChange(fundId: string) {
-    const accountId =
-      cashFunds.find((fund) => fund.id === fundId)?.accounting_account_id ?? "";
     setForm((current) => ({
       ...current,
       cash_fund_id: fundId,
-      ...(accountId
-        ? current.voucher_type !== "CASH_PAYMENT"
-          ? { debit_account_id: accountId }
-          : { credit_account_id: accountId }
-        : {}),
     }));
   }
 
