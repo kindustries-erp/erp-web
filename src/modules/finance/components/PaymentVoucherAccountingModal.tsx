@@ -299,8 +299,8 @@ export function PaymentVoucherAccountingModal({
           : "Ghi nhận bút toán"
       }
       subtitle={voucher?.voucher_no ?? ""}
-      panelClassName="w-[560px] max-w-[calc(100vw-24px)] max-[500px]:w-screen"
-      bodyClassName="p-4 max-[500px]:p-3"
+      panelClassName="w-[560px] max-w-[calc(100vw-24px)] max-md:w-screen max-md:max-w-screen"
+      bodyClassName="p-4 max-md:p-3"
       actions={actions}
       stackOffset={-2.5}
       zIndex={500}
