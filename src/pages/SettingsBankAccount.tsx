@@ -1,4 +1,4 @@
-import { NHTab } from "@/modules/settings/components/NHTab";
+import { NHTab } from "@/modules/settings/components/BankAccountTab";
 
 export function ThietLapNganHang() {
   return (

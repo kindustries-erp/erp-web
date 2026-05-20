@@ -6,8 +6,8 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 import { useAppStore } from "@/core/config/appStore";
-import { PhongBan } from "@/pages/PhongBan";
-import { ChucVu } from "@/pages/ChucVu";
+import { PhongBan } from "@/pages/Departments";
+import { ChucVu } from "@/pages/Positions";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable } from "@/shared/components/DataTable";
 import { DEFAULT_STACK_OFFSET } from "@/shared/components/DrawerModal";
@@ -36,8 +36,8 @@ import {
 import { usePermissionsEditor } from "@/modules/system/hooks/usePermissionsEditor";
 import { PermissionMatrixDrawer } from "@/modules/system/components/PermissionMatrixDrawer";
 import type { Role } from "@/modules/system/types/rbac";
-import { EmployeeDrawer } from "@/modules/hr/components/NhanSu/EmployeeDrawer";
-import { buildEmployeeColumns } from "@/modules/hr/components/NhanSu/employeeColumns";
+import { EmployeeDrawer } from "@/modules/hr/components/Employees/EmployeeDrawer";
+import { buildEmployeeColumns } from "@/modules/hr/components/Employees/employeeColumns";
 import {
   buildForm,
   emptyForm,
@@ -46,7 +46,7 @@ import {
   IconRefresh,
   STATUS_FILTER_FETCH_LIMIT,
   type EmpForm,
-} from "@/modules/hr/components/NhanSu/shared";
+} from "@/modules/hr/components/Employees/shared";
 
 export function NhanSu() {
   const t = useT();

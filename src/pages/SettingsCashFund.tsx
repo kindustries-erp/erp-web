@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { Wallet } from "lucide-react";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
-import { QuyTab } from "@/modules/settings/components/QuyTab";
-import { NHTab } from "@/modules/settings/components/NHTab";
-import { TKTab } from "@/modules/settings/components/TKTab";
+import { QuyTab } from "@/modules/settings/components/CashFundTab";
+import { NHTab } from "@/modules/settings/components/BankAccountTab";
+import { TKTab } from "@/modules/settings/components/ChartOfAccountsTab";
 import { BranchTab } from "@/modules/settings/components/BranchTab";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";

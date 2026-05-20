@@ -6,8 +6,8 @@ import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAppStore } from "@/core/config/appStore";
 import { useT, useDict } from "@/core/i18n";
 import { useState, useEffect, useRef } from "react";
-import { TienMat } from "./TienMat";
-import { TienGui } from "./TienGui";
+import { TienMat } from "./CashFund";
+import { TienGui } from "./BankDeposit";
 import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
 
 export function DongTien() {

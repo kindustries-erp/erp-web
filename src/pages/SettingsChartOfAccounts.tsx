@@ -1,4 +1,4 @@
-import { TKTab } from "@/modules/settings/components/TKTab";
+import { TKTab } from "@/modules/settings/components/ChartOfAccountsTab";
 
 export function ThietLapTaiKhoan() {
   return (

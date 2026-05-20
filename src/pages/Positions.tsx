@@ -10,7 +10,7 @@ import {
   type Department,
   type CreatePositionDto,
 } from "@/modules/hr/api/hrApi";
-import { ChucVuView } from "@/modules/hr/components/ChucVuView";
+import { ChucVuView } from "@/modules/hr/components/PositionsView";
 
 // ── Form state ─────────────────────────────────────────────────────────────
 
