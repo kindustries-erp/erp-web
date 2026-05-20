@@ -12,6 +12,7 @@ import type {
   CompanyBankAccount,
 } from "@/modules/accounting/api/catalogApi";
 import type {
+  CashFund,
   PaymentVoucher,
   CashBankTagPreset,
 } from "@/modules/finance/api/financeApi";
@@ -35,6 +36,7 @@ interface Props {
   voucher: PaymentVoucher | null;
   accounts: ChartOfAccount[];
   companyBankAccounts?: CompanyBankAccount[];
+  cashFunds?: CashFund[];
   tagPresets?: CashBankTagPreset[];
   defaultDebitAccountId?: string;
   defaultCreditAccountId?: string;
@@ -50,6 +52,7 @@ export function PaymentVoucherAccountingModal({
   voucher,
   accounts,
   companyBankAccounts = [],
+  cashFunds = [],
   tagPresets = [],
   defaultDebitAccountId = "",
   defaultCreditAccountId = "",
@@ -67,14 +70,46 @@ export function PaymentVoucherAccountingModal({
     useState<SimpleJournalEntryFormLine>(emptySimpleLine());
   const [isDirty, setIsDirty] = useState(false);
 
-  // Resolve debit account from voucher's bank account
-  const bankLinkedDebitAccountId = useMemo(() => {
-    if (!voucher?.company_bank_account_id) return defaultDebitAccountId;
-    const bank = companyBankAccounts.find(
-      (b) => b.id === voucher.company_bank_account_id,
-    );
-    return bank?.accounting_account_id ?? defaultDebitAccountId;
-  }, [voucher, companyBankAccounts, defaultDebitAccountId]);
+  const voucherType = voucher?.voucher_type ?? "";
+  const isReceipt =
+    voucherType === "CASH_RECEIPT" || voucherType === "BANK_RECEIPT";
+  const isPayment =
+    voucherType === "CASH_PAYMENT" || voucherType === "BANK_PAYMENT";
+  const lockedSideLabel = isReceipt ? "Tài khoản Nợ" : "Tài khoản Có";
+
+  const lockedSourceAccountId = useMemo(() => {
+    if (!voucher) {
+      return isReceipt ? defaultDebitAccountId : defaultCreditAccountId;
+    }
+
+    if (voucherType === "BANK_RECEIPT" || voucherType === "BANK_PAYMENT") {
+      const bank = companyBankAccounts.find(
+        (b) => b.id === voucher.company_bank_account_id,
+      );
+      return (
+        bank?.accounting_account_id ??
+        (isReceipt ? defaultDebitAccountId : defaultCreditAccountId)
+      );
+    }
+
+    if (voucherType === "CASH_RECEIPT" || voucherType === "CASH_PAYMENT") {
+      const fund = cashFunds.find((f) => f.id === voucher.cash_fund_id);
+      return (
+        fund?.accounting_account_id ??
+        (isReceipt ? defaultDebitAccountId : defaultCreditAccountId)
+      );
+    }
+
+    return isReceipt ? defaultDebitAccountId : defaultCreditAccountId;
+  }, [
+    voucher,
+    voucherType,
+    companyBankAccounts,
+    cashFunds,
+    defaultDebitAccountId,
+    defaultCreditAccountId,
+    isReceipt,
+  ]);
 
   useEffect(() => {
     if (!open || !voucher) return;
@@ -91,8 +126,12 @@ export function PaymentVoucherAccountingModal({
       );
       setLine({
         ...emptySimpleLine(),
-        debit_account_id: bankLinkedDebitAccountId,
-        credit_account_id: defaultCreditAccountId,
+        debit_account_id: isReceipt
+          ? lockedSourceAccountId
+          : defaultDebitAccountId,
+        credit_account_id: isPayment
+          ? lockedSourceAccountId
+          : defaultCreditAccountId,
         amount: String(defaultAmount || Number(voucher.amount || 0) || 0),
         description:
           defaultDescription || voucher.description || voucher.voucher_no,
@@ -114,8 +153,17 @@ export function PaymentVoucherAccountingModal({
                 : ((creditLine?.account_id as { id: string })?.id ?? "");
             setLine((prev) => ({
               ...prev,
-              debit_account_id: bankLinkedDebitAccountId,
-              credit_account_id: creditAccountId || prev.credit_account_id,
+              debit_account_id: isReceipt
+                ? lockedSourceAccountId
+                : debitLine
+                  ? typeof debitLine.account_id === "string"
+                    ? debitLine.account_id
+                    : ((debitLine.account_id as { id: string })?.id ??
+                      prev.debit_account_id)
+                  : prev.debit_account_id,
+              credit_account_id: isPayment
+                ? lockedSourceAccountId
+                : creditAccountId || prev.credit_account_id,
               amount,
               description:
                 debitLine?.description ?? je.description ?? prev.description,
@@ -134,8 +182,12 @@ export function PaymentVoucherAccountingModal({
     );
     setLine({
       ...emptySimpleLine(),
-      debit_account_id: bankLinkedDebitAccountId,
-      credit_account_id: defaultCreditAccountId,
+      debit_account_id: isReceipt
+        ? lockedSourceAccountId
+        : defaultDebitAccountId,
+      credit_account_id: isPayment
+        ? lockedSourceAccountId
+        : defaultCreditAccountId,
       amount: String(defaultAmount || Number(voucher.amount || 0) || 0),
       description:
         defaultDescription || voucher.description || voucher.voucher_no,
@@ -143,7 +195,10 @@ export function PaymentVoucherAccountingModal({
   }, [
     open,
     voucher,
-    bankLinkedDebitAccountId,
+    lockedSourceAccountId,
+    isReceipt,
+    isPayment,
+    defaultDebitAccountId,
     defaultCreditAccountId,
     defaultDescription,
     defaultDate,
@@ -163,8 +218,12 @@ export function PaymentVoucherAccountingModal({
     setSelectedPresetId(preset.id);
     setLine((prev) => ({
       ...prev,
-      // Debit account is locked to bank's accounting account — only update credit
-      credit_account_id: preset.credit_account_id ?? "",
+      debit_account_id: isReceipt
+        ? lockedSourceAccountId
+        : (preset.debit_account_id ?? prev.debit_account_id),
+      credit_account_id: isPayment
+        ? lockedSourceAccountId
+        : (preset.credit_account_id ?? prev.credit_account_id),
       description: preset.description || prev.description,
     }));
     if (preset.description) setDescription(preset.description);
@@ -182,7 +241,7 @@ export function PaymentVoucherAccountingModal({
     if (!voucher) return;
     if (!valid) {
       setError(
-        "Vui lòng nhập đủ ngày bút toán, TK Nợ, TK Có và số tiền hợp lệ",
+        `Vui lòng nhập đủ ngày bút toán, ${lockedSideLabel}, tài khoản đối ứng và số tiền hợp lệ`,
       );
       return;
     }
@@ -304,9 +363,16 @@ export function PaymentVoucherAccountingModal({
                   <Combobox
                     options={accountOptions}
                     value={line.debit_account_id}
-                    onChange={() => {}}
+                    onChange={(v) => {
+                      if (isReceipt) return;
+                      setLine((prev) => ({
+                        ...prev,
+                        debit_account_id: v || "",
+                      }));
+                      setIsDirty(true);
+                    }}
                     placeholder="Chọn TK Nợ"
-                    disabled
+                    disabled={isReceipt}
                   />
                 </DrawerField>
                 <DrawerField label="Tài khoản Có" required>
@@ -314,6 +380,7 @@ export function PaymentVoucherAccountingModal({
                     options={accountOptions}
                     value={line.credit_account_id}
                     onChange={(v) => {
+                      if (isPayment) return;
                       setLine((prev) => ({
                         ...prev,
                         credit_account_id: v || "",
@@ -321,6 +388,7 @@ export function PaymentVoucherAccountingModal({
                       setIsDirty(true);
                     }}
                     placeholder="Chọn TK Có"
+                    disabled={isPayment}
                   />
                 </DrawerField>
               </div>

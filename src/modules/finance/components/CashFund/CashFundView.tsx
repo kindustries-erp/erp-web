@@ -83,6 +83,7 @@ export function CashFundView(p: any) {
     attachmentType,
     attachmentNote,
     fundOptsDrawer,
+    cashFunds,
     fundAccountLabel,
     partnerOpts,
     employeeOpts,
@@ -296,6 +297,7 @@ export function CashFundView(p: any) {
         }}
         voucher={accountingVoucher}
         accounts={coaItems || []}
+        cashFunds={cashFunds || []}
         tagPresets={tagPresets || []}
         onSuccess={() => {
           closeDrawer();
