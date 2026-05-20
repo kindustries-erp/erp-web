@@ -47,10 +47,10 @@
   - [x] 4.1 Chạy `npx tsc --noEmit`
   - [x] 4.2 Chạy `npm run build`
   - [x] 4.3 Smoke logic mobile/desktop gesture (code-path review + build PASS)
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue)
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 
@@ -65,6 +65,6 @@
 
 ## Commit/Push Status
 
-- Web repo: Pending
+- Web repo: PASS — `fdbf537 feat(ui): add safe mobile tabbar drag` pushed `master`
 - API repo: N/A
 - DB/directus staging: N/A
