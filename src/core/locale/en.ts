@@ -773,7 +773,7 @@ export const en: Dict = {
       subtitleEdit: "Fill in the information below",
       sectionInfo: "Voucher Information",
       sectionPartner: "Partner",
-      sectionAccounting: "Accounting",
+      sectionAccounting: "Amount & Description",
       sectionAttachment: "Attachments",
       voucherNo: "Voucher No.",
       voucherNoPlaceholder: "Ex: PT-260430-001",

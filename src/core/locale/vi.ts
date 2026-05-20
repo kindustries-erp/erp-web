@@ -764,7 +764,7 @@ export const vi = {
       subtitleEdit: "Điền thông tin bên dưới",
       sectionInfo: "Thông tin chứng từ",
       sectionPartner: "Đối tượng",
-      sectionAccounting: "Hạch toán",
+      sectionAccounting: "Số tiền & Diễn giải",
       sectionAttachment: "Đính kèm",
       voucherNo: "Số chứng từ",
       voucherNoPlaceholder: "VD: PT-260430-001",

@@ -635,6 +635,7 @@ export const TienGui = forwardRef(
           }}
           voucher={accountingVoucher}
           accounts={coaItems}
+          companyBankAccounts={companyBankAccounts}
           tagPresets={tagPresets}
           onSuccess={() => {
             closeDrawer();
@@ -795,8 +796,9 @@ function buildDrawerActions(args: any): DrawerAction[] {
     return [
       { label: "Đóng", onClick: closeDrawer },
       {
-        label: editing.journal_entry_id ? "Sửa hạch toán" : "Ghi sổ",
-        primary: true,
+        label: editing.journal_entry_id ? "Sửa bút toán" : "Ghi nhận bút toán",
+        variant: "outline" as const,
+        align: "left" as const,
         loading: saving,
         disabled: saving,
         onClick: () => handleStatusTransition("POST", reloadCurrentData),

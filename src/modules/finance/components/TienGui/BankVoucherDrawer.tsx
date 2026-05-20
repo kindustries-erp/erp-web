@@ -284,12 +284,15 @@ export function BankVoucherDrawer(props: any) {
               </DrawerField>
             </div>
           </div>
+          {/* Đối tượng — gom chung vào card thông tin lệnh */}
+          <div className="mt-3 pt-3 border-t border-[color:var(--border)]">
+            <CounterpartyFields
+              {...props}
+              handleCreatePartner={handleCreatePartner}
+              handleEditPartner={handleEditPartner}
+            />
+          </div>
         </DrawerSection>
-        <CounterpartySection
-          {...props}
-          handleCreatePartner={handleCreatePartner}
-          handleEditPartner={handleEditPartner}
-        />
         <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
           <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
             <DrawerField label={t("voucher.drawer.amount")} required>
@@ -317,11 +320,10 @@ export function BankVoucherDrawer(props: any) {
           <DrawerField label={t("voucher.drawer.desc")}>
             <textarea
               disabled={
-                viewOnly &&
-                !(
-                  editing?.status === "APPROVED" ||
-                  editing?.status === "CONFIRMED"
-                )
+                viewOnly ||
+                editing?.status === "APPROVED" ||
+                editing?.status === "CONFIRMED" ||
+                editing?.status === "POSTED"
               }
               className={inputCls}
               rows={2}
@@ -449,12 +451,12 @@ export function BankVoucherDrawer(props: any) {
   );
 }
 
-function CounterpartySection(props: any) {
+function CounterpartyFields(props: any) {
   const { handleCreatePartner, handleEditPartner } = props;
   const { t, form, setField, viewOnly, employeeOpts, handleEmployeeChange } =
     props;
   return (
-    <DrawerSection title={t("voucher.drawer.sectionPartner")}>
+    <>
       <div className="grid grid-cols-3 max-[560px]:grid-cols-1 gap-x-3 gap-y-1">
         <DrawerField label="Loại đối tượng" required>
           <Combobox
@@ -524,7 +526,7 @@ function CounterpartySection(props: any) {
           )}
         </div>
       )}
-    </DrawerSection>
+    </>
   );
 }
 

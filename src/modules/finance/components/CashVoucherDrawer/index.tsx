@@ -351,7 +351,9 @@ export function CashVoucherDrawer({
           ...(canUpdateVoucher
             ? [
                 {
-                  label: editing?.journal_entry_id ? "Sửa hạch toán" : "Ghi sổ",
+                  label: editing?.journal_entry_id
+                    ? "Sửa bút toán"
+                    : "Ghi nhận bút toán",
                   primary: true,
                   loading: saving,
                   disabled: saving,
@@ -607,7 +609,12 @@ export function CashVoucherDrawer({
           <DrawerField label={t("voucher.drawer.desc")}>
             <textarea
               className={inputCls}
-              disabled={viewOnly}
+              disabled={
+                viewOnly ||
+                editing?.status === "APPROVED" ||
+                editing?.status === "CONFIRMED" ||
+                editing?.status === "POSTED"
+              }
               rows={2}
               value={form.description}
               onChange={(e) => onFieldChange("description", e.target.value)}

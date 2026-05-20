@@ -12,6 +12,10 @@ export interface DrawerAction {
   primary?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  /** When 'left', button is pushed to the left side of the footer */
+  align?: "left" | "right";
+  /** Visual variant — 'outline' renders a distinct outlined style */
+  variant?: "default" | "outline";
 }
 
 export const DEFAULT_STACK_OFFSET = -2;
@@ -60,7 +64,9 @@ function Btn({ action }: { action: DrawerAction }) {
         "disabled:opacity-50 disabled:cursor-not-allowed",
         action.primary
           ? "bg-primary text-primary-fg border-primary hover:opacity-90"
-          : "bg-surface text-foreground border-border hover:bg-surface-hover",
+          : action.variant === "outline"
+            ? "bg-transparent text-primary border-primary/60 hover:bg-primary/5"
+            : "bg-surface text-foreground border-border hover:bg-surface-hover",
       )}
     >
       {action.loading ? (
@@ -205,16 +211,29 @@ export function DrawerModal({
         {/* ── Footer ── */}
         {actions && actions.length > 0 && (
           <div
-            className="mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 justify-end flex-shrink-0"
+            className="mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 flex-shrink-0"
             style={{
               background: "rgba(249,251,255,0.82)",
               backdropFilter: "blur(16px)",
               WebkitBackdropFilter: "blur(16px)",
             }}
           >
-            {actions.map((a) => (
-              <Btn key={a.label} action={a} />
-            ))}
+            {/* Left-aligned actions */}
+            <div className="flex gap-2 flex-1 min-w-0">
+              {actions
+                .filter((a) => a.align === "left")
+                .map((a) => (
+                  <Btn key={a.label} action={a} />
+                ))}
+            </div>
+            {/* Right-aligned actions (default) */}
+            <div className="flex gap-2">
+              {actions
+                .filter((a) => a.align !== "left")
+                .map((a) => (
+                  <Btn key={a.label} action={a} />
+                ))}
+            </div>
           </div>
         )}
 
@@ -249,8 +268,8 @@ export function DrawerSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-[18px]">
-      <div className="text-[10px] font-semibold text-[color:var(--faint)] uppercase tracking-[0.1em] mb-[10px] pb-[6px] border-b border-[color:var(--border-light)]">
+    <div className="mb-3 rounded-xl border border-border bg-surface p-3 card-shadow">
+      <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)]">
         {title}
       </div>
       {children}

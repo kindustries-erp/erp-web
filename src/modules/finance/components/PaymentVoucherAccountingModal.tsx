@@ -3,11 +3,14 @@ import {
   DrawerModal,
   DrawerField,
   inputCls,
-  DEFAULT_STACK_OFFSET,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import type { ChartOfAccount } from "@/modules/accounting/api/catalogApi";
+import { DatePicker } from "@/shared/components/DatePicker";
+import type {
+  ChartOfAccount,
+  CompanyBankAccount,
+} from "@/modules/accounting/api/catalogApi";
 import type {
   PaymentVoucher,
   CashBankTagPreset,
@@ -21,12 +24,17 @@ import {
 import { postPaymentVoucherToJournalApi } from "@/modules/finance/api/financeApi";
 import { getJournalEntryApi } from "@/modules/accounting/api/journalEntriesApi";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
+import {
+  formatMoneyInput,
+  moneyToVietnameseWords,
+} from "@/modules/finance/utils/financeHelpers";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   voucher: PaymentVoucher | null;
   accounts: ChartOfAccount[];
+  companyBankAccounts?: CompanyBankAccount[];
   tagPresets?: CashBankTagPreset[];
   defaultDebitAccountId?: string;
   defaultCreditAccountId?: string;
@@ -41,6 +49,7 @@ export function PaymentVoucherAccountingModal({
   onClose,
   voucher,
   accounts,
+  companyBankAccounts = [],
   tagPresets = [],
   defaultDebitAccountId = "",
   defaultCreditAccountId = "",
@@ -56,12 +65,23 @@ export function PaymentVoucherAccountingModal({
   const [selectedPresetId, setSelectedPresetId] = useState("");
   const [line, setLine] =
     useState<SimpleJournalEntryFormLine>(emptySimpleLine());
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Resolve debit account from voucher's bank account
+  const bankLinkedDebitAccountId = useMemo(() => {
+    if (!voucher?.company_bank_account_id) return defaultDebitAccountId;
+    const bank = companyBankAccounts.find(
+      (b) => b.id === voucher.company_bank_account_id,
+    );
+    return bank?.accounting_account_id ?? defaultDebitAccountId;
+  }, [voucher, companyBankAccounts, defaultDebitAccountId]);
 
   useEffect(() => {
     if (!open || !voucher) return;
     setSaving(false);
     setError("");
     setSelectedPresetId("");
+    setIsDirty(false);
 
     // Nếu đã có journal_entry_id, load dữ liệu cũ để sửa
     if (voucher.journal_entry_id) {
@@ -71,7 +91,7 @@ export function PaymentVoucherAccountingModal({
       );
       setLine({
         ...emptySimpleLine(),
-        debit_account_id: defaultDebitAccountId,
+        debit_account_id: bankLinkedDebitAccountId,
         credit_account_id: defaultCreditAccountId,
         amount: String(defaultAmount || Number(voucher.amount || 0) || 0),
         description:
@@ -88,17 +108,13 @@ export function PaymentVoucherAccountingModal({
             const amount = debitLine
               ? String(Number(debitLine.debit) || 0)
               : String(Number(creditLine?.credit) || 0);
-            const debitAccountId =
-              typeof debitLine?.account_id === "string"
-                ? debitLine.account_id
-                : ((debitLine?.account_id as { id: string })?.id ?? "");
             const creditAccountId =
               typeof creditLine?.account_id === "string"
                 ? creditLine.account_id
                 : ((creditLine?.account_id as { id: string })?.id ?? "");
             setLine((prev) => ({
               ...prev,
-              debit_account_id: debitAccountId || prev.debit_account_id,
+              debit_account_id: bankLinkedDebitAccountId,
               credit_account_id: creditAccountId || prev.credit_account_id,
               amount,
               description:
@@ -118,7 +134,7 @@ export function PaymentVoucherAccountingModal({
     );
     setLine({
       ...emptySimpleLine(),
-      debit_account_id: defaultDebitAccountId,
+      debit_account_id: bankLinkedDebitAccountId,
       credit_account_id: defaultCreditAccountId,
       amount: String(defaultAmount || Number(voucher.amount || 0) || 0),
       description:
@@ -127,7 +143,7 @@ export function PaymentVoucherAccountingModal({
   }, [
     open,
     voucher,
-    defaultDebitAccountId,
+    bankLinkedDebitAccountId,
     defaultCreditAccountId,
     defaultDescription,
     defaultDate,
@@ -147,11 +163,12 @@ export function PaymentVoucherAccountingModal({
     setSelectedPresetId(preset.id);
     setLine((prev) => ({
       ...prev,
-      debit_account_id: preset.debit_account_id ?? "",
+      // Debit account is locked to bank's accounting account — only update credit
       credit_account_id: preset.credit_account_id ?? "",
       description: preset.description || prev.description,
     }));
     if (preset.description) setDescription(preset.description);
+    setIsDirty(true);
   }
 
   const valid =
@@ -165,7 +182,7 @@ export function PaymentVoucherAccountingModal({
     if (!voucher) return;
     if (!valid) {
       setError(
-        "Vui lòng nhập đủ ngày hạch toán, TK Nợ, TK Có và số tiền hợp lệ",
+        "Vui lòng nhập đủ ngày bút toán, TK Nợ, TK Có và số tiền hợp lệ",
       );
       return;
     }
@@ -191,118 +208,157 @@ export function PaymentVoucherAccountingModal({
       onSuccess();
       onClose();
     } catch (e) {
-      setError((e as Error)?.message || "Hạch toán thất bại");
+      setError((e as Error)?.message || "Ghi nhận bút toán thất bại");
     } finally {
       setSaving(false);
     }
   }
 
-  if (!voucher) return null;
-
-  const actions: DrawerAction[] = [
-    { label: "Đóng", onClick: onClose, disabled: saving },
-    {
-      label: voucher.journal_entry_id ? "Lưu hạch toán" : "Ghi sổ",
-      primary: true,
-      onClick: handleSubmit,
-      loading: saving,
-      disabled: saving,
-    },
-  ];
+  const actions: DrawerAction[] = voucher
+    ? [
+        { label: "Đóng", onClick: onClose, disabled: saving },
+        {
+          label: voucher.journal_entry_id
+            ? "Lưu bút toán"
+            : "Ghi nhận bút toán",
+          primary: true,
+          onClick: handleSubmit,
+          loading: saving,
+          disabled: saving,
+        },
+      ]
+    : [];
 
   return (
     <DrawerModal
-      open={open}
+      open={open && !!voucher}
       onClose={onClose}
+      confirmOnClose={isDirty}
       title={
-        voucher.journal_entry_id
-          ? "Sửa hạch toán chứng từ"
-          : "Hạch toán chứng từ"
+        voucher?.journal_entry_id
+          ? "Sửa bút toán chứng từ"
+          : "Ghi nhận bút toán"
       }
-      subtitle={voucher.voucher_no}
-      panelClassName="w-[560px] max-w-[calc(100vw-24px)]"
-      bodyClassName="p-4"
+      subtitle={voucher?.voucher_no ?? ""}
+      panelClassName="w-[560px] max-w-[calc(100vw-24px)] max-[500px]:w-screen"
+      bodyClassName="p-4 max-[500px]:p-3"
       actions={actions}
       stackOffset={-2.5}
       zIndex={500}
     >
-      <div className="space-y-3">
-        {error ? (
-          <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">
-            {error}
-          </div>
-        ) : null}
+      {voucher && (
+        <div className="space-y-4">
+          {error ? (
+            <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">
+              {error}
+            </div>
+          ) : null}
 
-        {/* Nghiệp vụ nhanh */}
-        <div>
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-fg">
-            Nghiệp vụ nhanh
+          {/* Nghiệp vụ nhanh — distinct card with horizontal scroll */}
+          <div className="rounded-xl border border-border bg-surface p-3 card-shadow">
+            <div className="mb-1 text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em]">
+              Nghiệp vụ nhanh
+            </div>
+            <p className="text-[11px] text-muted-fg mb-2">
+              Chọn nghiệp vụ nhanh để tự điền tài khoản
+            </p>
+            <CashBankTagPresetCards
+              presets={tagPresets}
+              selectedId={selectedPresetId}
+              debitAccountOpts={accountOptions}
+              creditAccountOpts={accountOptions}
+              disabled={saving}
+              onSelect={handlePresetSelect}
+              horizontal
+            />
           </div>
-          <CashBankTagPresetCards
-            presets={tagPresets}
-            selectedId={selectedPresetId}
-            debitAccountOpts={accountOptions}
-            creditAccountOpts={accountOptions}
-            disabled={saving}
-            onSelect={handlePresetSelect}
-          />
-        </div>
 
-        {/* Thông tin hạch toán */}
-        <div className="grid grid-cols-2 gap-3">
-          <DrawerField label="Số chứng từ">
-            <input className={inputCls} value={voucher.voucher_no} disabled />
-          </DrawerField>
-          <DrawerField label="Ngày hạch toán" required>
-            <input
-              type="date"
-              className={inputCls}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-          </DrawerField>
+          {/* Thông tin bút toán */}
+          <div className="rounded-xl border border-border bg-surface p-3 card-shadow">
+            <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-border">
+              Thông tin bút toán
+            </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 max-[500px]:grid-cols-1 gap-3">
+                <DrawerField label="Số chứng từ">
+                  <input
+                    className={inputCls}
+                    value={voucher.voucher_no}
+                    disabled
+                  />
+                </DrawerField>
+                <DrawerField label="Ngày bút toán" required>
+                  <DatePicker
+                    value={date}
+                    onChange={(v) => {
+                      setDate(v);
+                      setIsDirty(true);
+                    }}
+                    className="w-full min-w-0"
+                  />
+                </DrawerField>
+              </div>
+
+              <div className="grid grid-cols-2 max-[500px]:grid-cols-1 gap-3">
+                <DrawerField label="Tài khoản Nợ" required>
+                  <Combobox
+                    options={accountOptions}
+                    value={line.debit_account_id}
+                    onChange={() => {}}
+                    placeholder="Chọn TK Nợ"
+                    disabled
+                  />
+                </DrawerField>
+                <DrawerField label="Tài khoản Có" required>
+                  <Combobox
+                    options={accountOptions}
+                    value={line.credit_account_id}
+                    onChange={(v) => {
+                      setLine((prev) => ({
+                        ...prev,
+                        credit_account_id: v || "",
+                      }));
+                      setIsDirty(true);
+                    }}
+                    placeholder="Chọn TK Có"
+                  />
+                </DrawerField>
+              </div>
+
+              {/* Số tiền + Bằng chữ cùng hàng */}
+              <div className="grid grid-cols-[1fr_1.5fr] max-[500px]:grid-cols-1 gap-3">
+                <DrawerField label="Số tiền" required>
+                  <input
+                    className={inputCls}
+                    value={formatMoneyInput(line.amount)}
+                    disabled
+                  />
+                </DrawerField>
+                <DrawerField label="Bằng chữ">
+                  <input
+                    className={inputCls}
+                    value={moneyToVietnameseWords(line.amount)}
+                    disabled
+                  />
+                </DrawerField>
+              </div>
+
+              <DrawerField label="Diễn giải">
+                <textarea
+                  className={inputCls}
+                  rows={2}
+                  value={description}
+                  onChange={(e) => {
+                    setDescription(e.target.value);
+                    setIsDirty(true);
+                  }}
+                  placeholder="Nhập diễn giải bút toán..."
+                />
+              </DrawerField>
+            </div>
+          </div>
         </div>
-        <DrawerField label="Diễn giải">
-          <input
-            className={inputCls}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </DrawerField>
-        <div className="grid grid-cols-2 gap-3">
-          <DrawerField label="Tài khoản Nợ" required>
-            <Combobox
-              options={accountOptions}
-              value={line.debit_account_id}
-              onChange={(v) =>
-                setLine((prev) => ({ ...prev, debit_account_id: v || "" }))
-              }
-              placeholder="Chọn TK Nợ"
-            />
-          </DrawerField>
-          <DrawerField label="Tài khoản Có" required>
-            <Combobox
-              options={accountOptions}
-              value={line.credit_account_id}
-              onChange={(v) =>
-                setLine((prev) => ({ ...prev, credit_account_id: v || "" }))
-              }
-              placeholder="Chọn TK Có"
-            />
-          </DrawerField>
-        </div>
-        <DrawerField label="Số tiền" required>
-          <input
-            type="number"
-            min="0"
-            className={inputCls}
-            value={line.amount}
-            onChange={(e) =>
-              setLine((prev) => ({ ...prev, amount: e.target.value }))
-            }
-          />
-        </DrawerField>
-      </div>
+      )}
     </DrawerModal>
   );
 }
