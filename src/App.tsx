@@ -92,56 +92,56 @@ export default function App() {
             ) : (
               <>
                 {currentPage === "dashboard" && <Dashboard />}
-                {currentPage === "dongtien" && <DongTien />}
-                {currentPage === "tienmat" && <TienMat />}
-                {currentPage === "tiengui" && <TienGui />}
-                {currentPage === "dinhkem" && <DinhKemChungTu />}
-                {currentPage === "thietlap-quy" && <ThietLapQuy />}
-                {currentPage === "thietlap-nh" && <ThietLapNganHang />}
-                {currentPage === "thietlap-tk" && <ThietLapTaiKhoan />}
-                {currentPage === "nhansu" && <NhanSu />}
-                {currentPage === "phongban" && <PhongBan />}
-                {currentPage === "chucvu" && <ChucVu />}
-                {currentPage === "phaithu" && <PhaiThu />}
-                {currentPage === "phaittra" && <PhaiTra />}
-                {currentPage === "nhatkyechung" && <NhatKyChung />}
-                {(currentPage === "socat" ||
-                  currentPage === "banhang" ||
-                  currentPage === "khachhang" ||
-                  currentPage === "muahang" ||
-                  currentPage === "nhacungcap") && <ComingSoon />}
-                {currentPage === "phanquyen" && <PhanQuyen />}
-                {/* {currentPage === "phanquyen" && <ActivityLog />} */}
-                {currentPage === "activitylog" && <ActivityLog />}
-                {currentPage === "doitac" && <DoiTac />}
-                {currentPage === "hoadondientu" && <HoaDonDienTu />}
-                {currentPage === "workflowcanvas" && <WorkflowCanvas />}
+                {currentPage === "cashflow" && <DongTien />}
+                {currentPage === "cash-fund" && <TienMat />}
+                {currentPage === "bank-deposit" && <TienGui />}
+                {currentPage === "attachments" && <DinhKemChungTu />}
+                {currentPage === "settings-cash-fund" && <ThietLapQuy />}
+                {currentPage === "settings-bank" && <ThietLapNganHang />}
+                {currentPage === "settings-accounts" && <ThietLapTaiKhoan />}
+                {currentPage === "employees" && <NhanSu />}
+                {currentPage === "departments" && <PhongBan />}
+                {currentPage === "positions" && <ChucVu />}
+                {currentPage === "receivables" && <PhaiThu />}
+                {currentPage === "payables" && <PhaiTra />}
+                {currentPage === "journal" && <NhatKyChung />}
+                {(currentPage === "ledger" ||
+                  currentPage === "sales" ||
+                  currentPage === "customers" ||
+                  currentPage === "purchasing" ||
+                  currentPage === "suppliers") && <ComingSoon />}
+                {currentPage === "permissions" && <PhanQuyen />}
+                {/* {currentPage === "permissions" && <ActivityLog />} */}
+                {currentPage === "activity-log" && <ActivityLog />}
+                {currentPage === "partners" && <DoiTac />}
+                {currentPage === "e-invoice" && <HoaDonDienTu />}
+                {currentPage === "workflow" && <WorkflowCanvas />}
                 {/* Catch-all — unknown page keys (e.g. from stale persisted state) */}
                 {![
                   "dashboard",
-                  "dongtien",
-                  "tienmat",
-                  "tiengui",
-                  "dinhkem",
-                  "thietlap-quy",
-                  "thietlap-nh",
-                  "thietlap-tk",
-                  "nhansu",
-                  "phongban",
-                  "chucvu",
-                  "phaithu",
-                  "phaittra",
-                  "socat",
-                  "nhatkyechung",
-                  "banhang",
-                  "khachhang",
-                  "muahang",
-                  "nhacungcap",
-                  "phanquyen",
-                  "activitylog",
-                  "doitac",
-                  "hoadondientu",
-                  "workflowcanvas",
+                  "cashflow",
+                  "cash-fund",
+                  "bank-deposit",
+                  "attachments",
+                  "settings-cash-fund",
+                  "settings-bank",
+                  "settings-accounts",
+                  "employees",
+                  "departments",
+                  "positions",
+                  "receivables",
+                  "payables",
+                  "ledger",
+                  "journal",
+                  "sales",
+                  "customers",
+                  "purchasing",
+                  "suppliers",
+                  "permissions",
+                  "activity-log",
+                  "partners",
+                  "e-invoice",
+                  "workflow",
                 ].includes(currentPage) && <NotFound />}
               </>
             )}

@@ -83,15 +83,15 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   allTM: makeTx(32, "", ["Quỹ tiền mặt chính"]),
   allTG: makeTx(28, "NH", ["Vietcombank (VCB)", "Techcombank (TCB)"]),
   pagination: {
-    tienmat: { page: 1, size: 10 },
-    tiengui: { page: 1, size: 10 },
+    "cash-fund": { page: 1, size: 10 },
+    "bank-deposit": { page: 1, size: 10 },
   },
 
-  getDs: (src) => (src === "tienmat" ? get().allTM : get().allTG),
+  getDs: (src) => (src === "cash-fund" ? get().allTM : get().allTG),
 
   goPage: (src, page) => {
     const { pagination } = get();
-    const ds = src === "tienmat" ? get().allTM : get().allTG;
+    const ds = src === "cash-fund" ? get().allTM : get().allTG;
     const totalPages = Math.ceil(ds.length / pagination[src].size);
     if (page < 1 || page > totalPages) return;
     set({ pagination: { ...pagination, [src]: { ...pagination[src], page } } });

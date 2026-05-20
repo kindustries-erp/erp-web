@@ -404,7 +404,7 @@ const HoaDonDienTu: React.FC = () => {
 
     setCustomBreadcrumbs([
       ["breadcrumb.accounting"],
-      ["breadcrumb.cashflow", "dongtien"],
+      ["breadcrumb.cashflow", "cashflow"],
       [keys[activeTab]],
     ]);
   }, [activeTab, setCustomBreadcrumbs]);

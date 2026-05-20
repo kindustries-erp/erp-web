@@ -14,7 +14,7 @@ export function ImportModal() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = useT();
 
-  const isTM = importSrc === "tienmat";
+  const isTM = importSrc === "cash-fund";
   const title = isTM ? t("importModal.titleCash") : t("importModal.titleBank");
   const templateName = isTM
     ? "template_phieu_thu_chi.csv"

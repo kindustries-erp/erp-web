@@ -17,94 +17,100 @@ export const STATIC_TABS: Record<string, TabInfo> = {
 };
 
 export const SECTION_ROOTS: Record<string, SectionRoot> = {
-  dongtien: { labelKey: "nav.items.cashflow", group: "dongtien" },
-  tienmat: { labelKey: "nav.items.cashflowCash", group: "dongtien" },
-  tiengui: { labelKey: "nav.items.cashflowBankShort", group: "dongtien" },
-  dinhkem: { labelKey: "nav.items.cashflowAttachments", group: "dongtien" },
-  "thietlap-quy": { labelKey: "nav.items.catalog", group: "thietlap" },
-  "thietlap-nh": { labelKey: "nav.items.catalogBank", group: "thietlap" },
-  "thietlap-tk": { labelKey: "nav.items.catalogAccounts", group: "thietlap" },
-  phaithu: { labelKey: "nav.items.debt", group: "congno" },
-  phaittra: { labelKey: "nav.items.debtPayable", group: "congno" },
-  socat: { labelKey: "nav.items.reportLedger", group: "baocao" },
-  nhatkyechung: { labelKey: "nav.items.report", group: "baocao" },
-  nhansu: { labelKey: "nav.items.hr", group: "nhansu" },
-  phongban: { labelKey: "nav.items.hrDepts", group: "nhansu" },
-  chucvu: { labelKey: "nav.items.hrPositions", group: "nhansu" },
-  banhang: { labelKey: "nav.items.sales", group: "sales" },
-  khachhang: { labelKey: "nav.items.customers", group: "sales" },
-  muahang: { labelKey: "nav.items.purchasing", group: "purchasing" },
-  nhacungcap: { labelKey: "nav.items.suppliers", group: "purchasing" },
-  activitylog: { labelKey: "nav.items.activitylog", group: "system" },
-  doitac: { labelKey: "nav.items.partners", group: "partners" },
-  hoadondientu: { labelKey: "nav.items.hoadondientu", group: "dongtien" },
-  phanquyen: { labelKey: "nav.items.phanquyen", group: "system" },
+  cashflow: { labelKey: "nav.items.cashflow", group: "cashflow" },
+  "cash-fund": { labelKey: "nav.items.cashflowCash", group: "cashflow" },
+  "bank-deposit": {
+    labelKey: "nav.items.cashflowBankShort",
+    group: "cashflow",
+  },
+  attachments: { labelKey: "nav.items.cashflowAttachments", group: "cashflow" },
+  "settings-cash-fund": { labelKey: "nav.items.catalog", group: "settings" },
+  "settings-bank": { labelKey: "nav.items.catalogBank", group: "settings" },
+  "settings-accounts": {
+    labelKey: "nav.items.catalogAccounts",
+    group: "settings",
+  },
+  receivables: { labelKey: "nav.items.debt", group: "debt" },
+  payables: { labelKey: "nav.items.debtPayable", group: "debt" },
+  ledger: { labelKey: "nav.items.reportLedger", group: "reports" },
+  journal: { labelKey: "nav.items.report", group: "reports" },
+  employees: { labelKey: "nav.items.hr", group: "hr" },
+  departments: { labelKey: "nav.items.hrDepts", group: "hr" },
+  positions: { labelKey: "nav.items.hrPositions", group: "hr" },
+  sales: { labelKey: "nav.items.sales", group: "sales" },
+  customers: { labelKey: "nav.items.customers", group: "sales" },
+  purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
+  suppliers: { labelKey: "nav.items.suppliers", group: "purchasing" },
+  "activity-log": { labelKey: "nav.items.activitylog", group: "system" },
+  partners: { labelKey: "nav.items.partners", group: "partners" },
+  "e-invoice": { labelKey: "nav.items.hoadondientu", group: "cashflow" },
+  permissions: { labelKey: "nav.items.phanquyen", group: "system" },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   dashboard: [["breadcrumb.dashboard"]],
-  dongtien: [
+  cashflow: [
     ["breadcrumb.accounting"],
     ["breadcrumb.cashflow"],
     ["breadcrumb.cashflowOverview"],
   ],
-  tienmat: [
+  "cash-fund": [
     ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "dongtien"],
+    ["breadcrumb.cashflow", "cashflow"],
     ["breadcrumb.cash"],
   ],
-  tiengui: [
+  "bank-deposit": [
     ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "dongtien"],
+    ["breadcrumb.cashflow", "cashflow"],
     ["breadcrumb.bank"],
   ],
-  dinhkem: [["breadcrumb.accounting"], ["breadcrumb.attachments"]],
-  hoadondientu: [["breadcrumb.accounting"], ["breadcrumb.hoadondientu"]],
-  "thietlap-quy": [
+  attachments: [["breadcrumb.accounting"], ["breadcrumb.attachments"]],
+  "e-invoice": [["breadcrumb.accounting"], ["breadcrumb.hoadondientu"]],
+  "settings-cash-fund": [
     ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalog", "settings-cash-fund"],
     ["breadcrumb.catalogFunds"],
   ],
-  "thietlap-nh": [
+  "settings-bank": [
     ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalog", "settings-cash-fund"],
     ["breadcrumb.catalogBank"],
   ],
-  "thietlap-tk": [
+  "settings-accounts": [
     ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "thietlap-quy"],
+    ["breadcrumb.catalog", "settings-cash-fund"],
     ["breadcrumb.catalogAccounts"],
   ],
-  phaithu: [
+  receivables: [
     ["breadcrumb.accounting"],
     ["breadcrumb.debt"],
     ["breadcrumb.debtReceivable"],
   ],
-  phaittra: [
+  payables: [
     ["breadcrumb.accounting"],
     ["breadcrumb.debt"],
     ["breadcrumb.debtPayable"],
   ],
-  socat: [
+  ledger: [
     ["breadcrumb.accounting"],
     ["breadcrumb.report"],
     ["breadcrumb.reportLedger"],
   ],
-  nhatkyechung: [
+  journal: [
     ["breadcrumb.accounting"],
     ["breadcrumb.report"],
     ["breadcrumb.reportJournal"],
   ],
-  nhansu: [["breadcrumb.hr"], ["breadcrumb.hrStaff"]],
-  phongban: [["breadcrumb.hr"], ["breadcrumb.hrDepts"]],
-  chucvu: [["breadcrumb.hr"], ["breadcrumb.hrPositions"]],
-  banhang: [["breadcrumb.sales"], ["breadcrumb.salesOrders"]],
-  khachhang: [["breadcrumb.sales"], ["breadcrumb.customers"]],
-  muahang: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
-  nhacungcap: [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
-  activitylog: [["breadcrumb.system"], ["breadcrumb.activitylog"]],
-  doitac: [["breadcrumb.accounting"], ["breadcrumb.partners"]],
-  phanquyen: [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
+  employees: [["breadcrumb.hr"], ["breadcrumb.hrStaff"]],
+  departments: [["breadcrumb.hr"], ["breadcrumb.hrDepts"]],
+  positions: [["breadcrumb.hr"], ["breadcrumb.hrPositions"]],
+  sales: [["breadcrumb.sales"], ["breadcrumb.salesOrders"]],
+  customers: [["breadcrumb.sales"], ["breadcrumb.customers"]],
+  purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
+  suppliers: [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
+  "activity-log": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
+  partners: [["breadcrumb.accounting"], ["breadcrumb.partners"]],
+  permissions: [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
 };
 
 interface AppState {

@@ -15,7 +15,7 @@ function DetailView() {
 
   const isThu = r.type === "thu";
   const approved = r.trangThai === "da-duyet";
-  const isNH = panelContent.src === "tiengui";
+  const isNH = panelContent.src === "bank-deposit";
   const tl = isNH
     ? isThu
       ? t("panel.unt")
@@ -169,7 +169,7 @@ function NewTxForm() {
   if (!panelContent || panelContent.kind !== "newTx") return null;
   const { txType, src } = panelContent;
   const isThu = txType === "thu";
-  const isNH = src === "tiengui";
+  const isNH = src === "bank-deposit";
   const code =
     (isNH ? "NH" : "") +
     (isThu ? "PT" : "PC") +

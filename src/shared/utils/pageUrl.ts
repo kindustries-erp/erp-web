@@ -3,54 +3,39 @@ import { PageKey } from "@/shared/types";
 /** All valid page keys — used to validate URL paths */
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
-  "dongtien",
-  "tienmat",
-  "tiengui",
-  "dinhkem",
-  "thietlap-quy",
-  "thietlap-nh",
-  "thietlap-tk",
-  "phaithu",
-  "phaittra",
-  "socat",
-  "nhatkyechung",
-  "nhansu",
-  "phongban",
-  "chucvu",
-  "banhang",
-  "khachhang",
-  "muahang",
-  "nhacungcap",
-  "activitylog",
-  "doitac",
-  "phanquyen",
-  "hoadondientu",
+  "cashflow",
+  "cash-fund",
+  "bank-deposit",
+  "attachments",
+  "settings-cash-fund",
+  "settings-bank",
+  "settings-accounts",
+  "receivables",
+  "payables",
+  "ledger",
+  "journal",
+  "employees",
+  "departments",
+  "positions",
+  "sales",
+  "customers",
+  "purchasing",
+  "suppliers",
+  "activity-log",
+  "partners",
+  "permissions",
+  "e-invoice",
+  "workflow",
 ];
 
-/** PageKey → hyphenated URL slug */
+/**
+ * PageKey → URL slug.
+ * Only keys whose slug differs from the key itself need an entry.
+ */
 const PAGE_SLUG: Partial<Record<PageKey, string>> = {
-  dongtien: "dong-tien",
-  tienmat: "tien-mat",
-  tiengui: "tien-gui",
-  dinhkem: "tai-lieu",
-  "thietlap-quy": "thiet-lap",
-  "thietlap-nh": "thiet-lap-ngan-hang",
-  "thietlap-tk": "thiet-lap-tai-khoan",
-  phaithu: "cong-no",
-  phaittra: "phai-tra",
-  socat: "so-cat",
-  nhatkyechung: "bao-cao",
-  nhansu: "nhan-su",
-  phongban: "phong-ban",
-  chucvu: "chuc-vu",
-  banhang: "ban-hang",
-  khachhang: "khach-hang",
-  muahang: "mua-hang",
-  nhacungcap: "nha-cung-cap",
-  activitylog: "activity-log",
-  doitac: "doi-tac",
-  phanquyen: "phan-quyen",
-  hoadondientu: "hoa-don",
+  "settings-cash-fund": "settings/cash-fund",
+  "settings-bank": "settings/bank",
+  "settings-accounts": "settings/accounts",
 };
 
 /** Slug → PageKey (reverse of PAGE_SLUG) */
@@ -58,7 +43,35 @@ const SLUG_TO_PAGE: Record<string, PageKey> = Object.fromEntries(
   (Object.entries(PAGE_SLUG) as [PageKey, string][]).map(([k, v]) => [v, k]),
 );
 
-/** PageKey → relative URL path (e.g. tienmat → /tien-mat, dashboard → /) */
+/**
+ * Legacy Vietnamese slugs → new PageKey.
+ * Allows old bookmarks/URLs to still resolve correctly.
+ */
+const LEGACY_SLUGS: Record<string, PageKey> = {
+  "dong-tien": "cashflow",
+  "tien-mat": "cash-fund",
+  "tien-gui": "bank-deposit",
+  "tai-lieu": "attachments",
+  "thiet-lap": "settings-cash-fund",
+  "thiet-lap-ngan-hang": "settings-bank",
+  "thiet-lap-tai-khoan": "settings-accounts",
+  "cong-no": "receivables",
+  "phai-tra": "payables",
+  "so-cat": "ledger",
+  "bao-cao": "journal",
+  "nhan-su": "employees",
+  "phong-ban": "departments",
+  "chuc-vu": "positions",
+  "ban-hang": "sales",
+  "khach-hang": "customers",
+  "mua-hang": "purchasing",
+  "nha-cung-cap": "suppliers",
+  "doi-tac": "partners",
+  "phan-quyen": "permissions",
+  "hoa-don": "e-invoice",
+};
+
+/** PageKey → relative URL path (e.g. cash-fund → /cash-fund, dashboard → /) */
 export function pageToPath(page: PageKey, tab?: string): string {
   const slug = PAGE_SLUG[page] ?? (page === "dashboard" ? "" : page);
   const base = slug ? `/${slug}` : "/";
@@ -76,13 +89,24 @@ export function pathToPage(
   search: string,
 ): { page: PageKey; tab?: string } | null {
   const slug = pathname.replace(/^\//, "");
-  const page: PageKey | undefined =
-    slug === ""
-      ? "dashboard"
-      : (SLUG_TO_PAGE[slug] ??
-        (ALL_PAGE_KEYS.includes(slug as PageKey)
-          ? (slug as PageKey)
-          : undefined));
+  let page: PageKey | undefined;
+
+  if (slug === "") {
+    page = "dashboard";
+  } else {
+    page =
+      SLUG_TO_PAGE[slug] ??
+      (ALL_PAGE_KEYS.includes(slug as PageKey)
+        ? (slug as PageKey)
+        : LEGACY_SLUGS[slug]);
+  }
+
+  // If a legacy slug was detected, redirect to the new canonical URL
+  if (page !== undefined && LEGACY_SLUGS[slug] !== undefined) {
+    const newPath = pageToPath(page);
+    history.replaceState(null, "", newPath + search);
+  }
+
   if (page === undefined) return null;
   const tab = new URLSearchParams(search).get("tab") ?? undefined;
   return { page, tab };

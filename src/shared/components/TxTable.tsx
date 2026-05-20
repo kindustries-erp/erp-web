@@ -50,7 +50,7 @@ export function TxTable({ rows, src }: TxTableProps) {
                       isThu ? "bg-up-bg text-up-fg" : "bg-down-bg text-down-fg"
                     }`}
                   >
-                    {src === "tiengui"
+                    {src === "bank-deposit"
                       ? isThu
                         ? "UNT"
                         : "UNC"

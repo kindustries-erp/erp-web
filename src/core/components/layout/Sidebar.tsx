@@ -54,14 +54,14 @@ export function Sidebar() {
     .map((w: string) => w[0].toUpperCase())
     .join("");
 
-  const isThietLapQuy = currentPage === "thietlap-quy";
-  const isThietLapNH = currentPage === "thietlap-nh";
-  const isThietLapTK = currentPage === "thietlap-tk";
+  const isThietLapQuy = currentPage === "settings-cash-fund";
+  const isThietLapNH = currentPage === "settings-bank";
+  const isThietLapTK = currentPage === "settings-accounts";
   const isThietLapGroup = isThietLapQuy || isThietLapNH || isThietLapTK;
-  const isPartners = currentPage === "doitac";
-  const isInCongNoGroup = ["phaithu", "phaittra"].includes(currentPage);
-  const isInBaoCaoGroup = ["socat", "nhatkyechung"].includes(currentPage);
-  const isHoaDonDienTu = currentPage === "hoadondientu";
+  const isPartners = currentPage === "partners";
+  const isInCongNoGroup = ["receivables", "payables"].includes(currentPage);
+  const isInBaoCaoGroup = ["ledger", "journal"].includes(currentPage);
+  const isHoaDonDienTu = currentPage === "e-invoice";
   // ── Permission gates (hide sections the current session cannot access) ──
   const canFinance = useHasAnyPermission([
     "payment_vouchers",
@@ -165,9 +165,9 @@ export function Sidebar() {
                     collapsed={c}
                     icon={<IconDollar />}
                     label={t("nav.items.cashflow")}
-                    active={currentPage === "dongtien"}
-                    onClick={() => navTo("dongtien")}
-                    contextPage="dongtien"
+                    active={currentPage === "cashflow"}
+                    onClick={() => navTo("cashflow")}
+                    contextPage="cashflow"
                   />
                 </>
               )}
@@ -179,7 +179,7 @@ export function Sidebar() {
                     icon={<IconBox />}
                     label={t("nav.items.debt")}
                     active={isInCongNoGroup}
-                    onClick={() => navTo("phaithu")}
+                    onClick={() => navTo("receivables")}
                   />
                 </>
               )}
@@ -191,8 +191,8 @@ export function Sidebar() {
                     icon={<IconFileText />}
                     label={t("nav.items.hoadondientu")}
                     active={isHoaDonDienTu}
-                    onClick={() => navTo("hoadondientu")}
-                    contextPage="hoadondientu"
+                    onClick={() => navTo("e-invoice")}
+                    contextPage="e-invoice"
                   />
                 </>
               )}
@@ -204,7 +204,7 @@ export function Sidebar() {
                     icon={<Book className="h-4 w-4" />}
                     label={t("nav.items.report")}
                     active={isInBaoCaoGroup}
-                    onClick={() => navTo("nhatkyechung")}
+                    onClick={() => navTo("journal")}
                   />
                 </>
               )}
@@ -215,8 +215,8 @@ export function Sidebar() {
                   icon={<IconPeople />}
                   label={t("nav.items.partners")}
                   active={isPartners}
-                  onClick={() => navTo("doitac")}
-                  contextPage="doitac"
+                  onClick={() => navTo("partners")}
+                  contextPage="partners"
                 />
               )}
 
@@ -226,12 +226,12 @@ export function Sidebar() {
                   icon={<IconUser />}
                   label={t("nav.items.hr")}
                   active={
-                    currentPage === "nhansu" ||
-                    currentPage === "phongban" ||
-                    currentPage === "chucvu"
+                    currentPage === "employees" ||
+                    currentPage === "departments" ||
+                    currentPage === "positions"
                   }
-                  onClick={() => navTo("nhansu")}
-                  contextPage="nhansu"
+                  onClick={() => navTo("employees")}
+                  contextPage="employees"
                 />
               )}
 
@@ -240,9 +240,9 @@ export function Sidebar() {
                   collapsed={c}
                   icon={<Paperclip className="h-4 w-4" />}
                   label={t("nav.items.cashflowAttachments")}
-                  active={currentPage === "dinhkem"}
-                  onClick={() => navTo("dinhkem")}
-                  contextPage="dinhkem"
+                  active={currentPage === "attachments"}
+                  onClick={() => navTo("attachments")}
+                  contextPage="attachments"
                 />
               )}
 
@@ -252,7 +252,7 @@ export function Sidebar() {
                     icon={<Wallet className="h-4 w-4" />}
                     label={t("nav.items.catalog")}
                     active={isThietLapGroup}
-                    onClick={() => navTo("thietlap-quy")}
+                    onClick={() => navTo("settings-cash-fund")}
                   />
                 </>
               )}
@@ -266,17 +266,17 @@ export function Sidebar() {
                 collapsed={c}
                 icon={<IconCart />}
                 label={t("nav.items.sales")}
-                active={currentPage === "banhang"}
-                onClick={() => navTo("banhang")}
-                contextPage="banhang"
+                active={currentPage === "sales"}
+                onClick={() => navTo("sales")}
+                contextPage="sales"
               />
               <NavItem
                 collapsed={c}
                 icon={<IconPeople />}
                 label={t("nav.items.customers")}
-                active={currentPage === "khachhang"}
-                onClick={() => navTo("khachhang")}
-                contextPage="khachhang"
+                active={currentPage === "customers"}
+                onClick={() => navTo("customers")}
+                contextPage="customers"
               />
             </div>
 
@@ -288,17 +288,17 @@ export function Sidebar() {
                 collapsed={c}
                 icon={<IconShop />}
                 label={t("nav.items.purchasing")}
-                active={currentPage === "muahang"}
-                onClick={() => navTo("muahang")}
-                contextPage="muahang"
+                active={currentPage === "purchasing"}
+                onClick={() => navTo("purchasing")}
+                contextPage="purchasing"
               />
               <NavItem
                 collapsed={c}
                 icon={<IconPkg />}
                 label={t("nav.items.suppliers")}
-                active={currentPage === "nhacungcap"}
-                onClick={() => navTo("nhacungcap")}
-                contextPage="nhacungcap"
+                active={currentPage === "suppliers"}
+                onClick={() => navTo("suppliers")}
+                contextPage="suppliers"
               />
             </div>
 
@@ -312,9 +312,9 @@ export function Sidebar() {
                     collapsed={c}
                     icon={<IconActivity />}
                     label={t("nav.items.activitylog")}
-                    active={currentPage === "activitylog"}
-                    onClick={() => navTo("activitylog")}
-                    contextPage="activitylog"
+                    active={currentPage === "activity-log"}
+                    onClick={() => navTo("activity-log")}
+                    contextPage="activity-log"
                   />
                 )}
                 {canRBAC && (
@@ -322,18 +322,18 @@ export function Sidebar() {
                     collapsed={c}
                     icon={<IconShield />}
                     label={t("nav.items.phanquyen")}
-                    active={currentPage === "phanquyen"}
-                    onClick={() => navTo("phanquyen")}
-                    contextPage="phanquyen"
+                    active={currentPage === "permissions"}
+                    onClick={() => navTo("permissions")}
+                    contextPage="permissions"
                   />
                 )}
                 <NavItem
                   collapsed={c}
                   icon={<IconGitBranch />}
                   label={t("nav.items.workflowcanvas")}
-                  active={currentPage === "workflowcanvas"}
-                  onClick={() => navTo("workflowcanvas")}
-                  contextPage="workflowcanvas"
+                  active={currentPage === "workflow"}
+                  onClick={() => navTo("workflow")}
+                  contextPage="workflow"
                 />
               </div>
             )}
