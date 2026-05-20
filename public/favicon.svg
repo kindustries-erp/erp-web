@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <!-- Solid background -->
-  <rect width="512" height="512" rx="0" fill="#1e1e1e"/>
+  <rect width="512" height="512" rx="110" fill="#1e1e1e"/>
   <!-- Grid icon (4 rounded squares) centered in maskable safe zone (inner 80% = 51.2 to 460.8) -->
   <!-- Safe zone center: 256, safe radius: 204.8 -->
   <!-- Grid positioned within safe zone with good padding -->
