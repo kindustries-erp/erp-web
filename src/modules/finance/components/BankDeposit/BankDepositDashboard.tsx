@@ -14,7 +14,7 @@ import {
   IconTrendUp as IconUp,
 } from "@/shared/components/icons";
 
-export function TienGuiDashboard(props: any) {
+export function BankDepositDashboard(props: any) {
   const {
     t,
     canCreateVoucher,

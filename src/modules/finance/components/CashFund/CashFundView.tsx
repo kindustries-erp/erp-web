@@ -18,7 +18,7 @@ import { VoucherTable } from "@/modules/finance/components/VoucherTable";
 import { CashVoucherDrawer } from "@/modules/finance/components/CashVoucherDrawer";
 import { PaymentVoucherAccountingModal } from "../PaymentVoucherAccountingModal";
 
-export function TienMatView(p: any) {
+export function CashFundView(p: any) {
   const {
     t,
     canCreateVoucher,

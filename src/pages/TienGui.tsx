@@ -28,8 +28,8 @@ import {
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { BankVoucherDrawer } from "@/modules/finance/components/TienGui/BankVoucherDrawer";
-import { TienGuiDashboard } from "@/modules/finance/components/TienGui/TienGuiDashboard";
+import { BankVoucherDrawer } from "@/modules/finance/components/BankDeposit/BankVoucherDrawer";
+import { BankDepositDashboard } from "@/modules/finance/components/BankDeposit/BankDepositDashboard";
 import { PaymentVoucherAccountingModal } from "@/modules/finance/components/PaymentVoucherAccountingModal";
 import { usePeriodFilter } from "@/modules/finance/hooks/usePeriodFilter";
 import { useVoucherDashboard } from "@/modules/finance/hooks/useVoucherDashboard";
@@ -514,7 +514,7 @@ export const TienGui = forwardRef(
 
     return (
       <div>
-        <TienGuiDashboard
+        <BankDepositDashboard
           hideHeader={props.hideHeader}
           {...{
             t,

@@ -27,7 +27,7 @@ import { useCashVoucherHandlers } from "@/modules/finance/hooks/useCashVoucherHa
 import { useSearchFilter } from "@/shared/hooks/useFilterState";
 import { useAmountRangeFilter } from "@/shared/hooks/useFilterState";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { TienMatView } from "@/modules/finance/components/TienMat/TienMatView";
+import { CashFundView } from "@/modules/finance/components/CashFund/CashFundView";
 import { forwardRef, useImperativeHandle } from "react";
 
 export const TienMat = forwardRef(
@@ -379,7 +379,7 @@ export const TienMat = forwardRef(
     );
 
     return (
-      <TienMatView
+      <CashFundView
         {...{
           hideHeader: props.hideHeader,
           t,
