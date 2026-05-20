@@ -12,7 +12,7 @@ import {
   useHasAnyPermission,
   useHasPermission,
 } from "@/shared/hooks/useHasPermission";
-import { NavItem } from "./SidebarPrimitives";
+import { NavItem, NavGroup, NavGroupItem } from "./SidebarPrimitives";
 import {
   IconActivity,
   IconBox,
@@ -160,53 +160,77 @@ export function Sidebar() {
               </div>
 
               {canFinance && (
-                <>
-                  <NavItem
-                    collapsed={c}
-                    icon={<IconDollar />}
-                    label={t("nav.items.cashflow")}
+                <NavGroup
+                  icon={<IconDollar />}
+                  label={t("nav.items.cashflow")}
+                  active={["cashflow", "cash-fund", "bank-deposit"].includes(
+                    currentPage,
+                  )}
+                  collapsed={c}
+                >
+                  <NavGroupItem
+                    label={t("nav.items.cashflowOverview")}
                     active={currentPage === "cashflow"}
                     onClick={() => navTo("cashflow")}
                     contextPage="cashflow"
                   />
-                </>
+                  <NavGroupItem
+                    label={t("nav.items.cashflowCash")}
+                    active={currentPage === "cash-fund"}
+                    onClick={() => navTo("cash-fund")}
+                    contextPage="cash-fund"
+                  />
+                  <NavGroupItem
+                    label={t("nav.items.cashflowBankShort")}
+                    active={currentPage === "bank-deposit"}
+                    onClick={() => navTo("bank-deposit")}
+                    contextPage="bank-deposit"
+                  />
+                </NavGroup>
               )}
 
               {canCongNo && (
-                <>
-                  <NavItem
-                    collapsed={c}
-                    icon={<IconBox />}
-                    label={t("nav.items.debt")}
-                    active={isInCongNoGroup}
+                <NavGroup
+                  icon={<IconBox />}
+                  label={t("nav.items.debt")}
+                  active={isInCongNoGroup}
+                  collapsed={c}
+                >
+                  <NavGroupItem
+                    label={t("nav.items.debtReceivable")}
+                    active={currentPage === "receivables"}
                     onClick={() => navTo("receivables")}
+                    contextPage="receivables"
                   />
-                </>
+                  <NavGroupItem
+                    label={t("nav.items.debtPayable")}
+                    active={currentPage === "payables"}
+                    onClick={() => navTo("payables")}
+                    contextPage="payables"
+                  />
+                </NavGroup>
               )}
 
               {canFinance && (
-                <>
-                  <NavItem
-                    collapsed={c}
-                    icon={<IconFileText />}
-                    label={t("nav.items.hoadondientu")}
-                    active={isHoaDonDienTu}
-                    onClick={() => navTo("e-invoice")}
-                    contextPage="e-invoice"
-                  />
-                </>
+                <NavItem
+                  collapsed={c}
+                  icon={<IconFileText />}
+                  label={t("nav.items.hoadondientu")}
+                  active={isHoaDonDienTu}
+                  onClick={() => navTo("e-invoice")}
+                  contextPage="e-invoice"
+                />
               )}
 
               {canFinance && (
-                <>
-                  <NavItem
-                    collapsed={c}
-                    icon={<Book className="h-4 w-4" />}
-                    label={t("nav.items.report")}
-                    active={isInBaoCaoGroup}
-                    onClick={() => navTo("journal")}
-                  />
-                </>
+                <NavItem
+                  collapsed={c}
+                  icon={<Book className="h-4 w-4" />}
+                  label={t("nav.items.report")}
+                  active={isInBaoCaoGroup}
+                  onClick={() => navTo("journal")}
+                  contextPage="journal"
+                />
               )}
 
               {canPartners && (
@@ -221,18 +245,33 @@ export function Sidebar() {
               )}
 
               {canHR && (
-                <NavItem
-                  collapsed={c}
+                <NavGroup
                   icon={<IconUser />}
                   label={t("nav.items.hr")}
-                  active={
-                    currentPage === "employees" ||
-                    currentPage === "departments" ||
-                    currentPage === "positions"
-                  }
-                  onClick={() => navTo("employees")}
-                  contextPage="employees"
-                />
+                  active={["employees", "departments", "positions"].includes(
+                    currentPage,
+                  )}
+                  collapsed={c}
+                >
+                  <NavGroupItem
+                    label={t("nav.items.hrStaff")}
+                    active={currentPage === "employees"}
+                    onClick={() => navTo("employees")}
+                    contextPage="employees"
+                  />
+                  <NavGroupItem
+                    label={t("nav.items.hrDepts")}
+                    active={currentPage === "departments"}
+                    onClick={() => navTo("departments")}
+                    contextPage="departments"
+                  />
+                  <NavGroupItem
+                    label={t("nav.items.hrPositions")}
+                    active={currentPage === "positions"}
+                    onClick={() => navTo("positions")}
+                    contextPage="positions"
+                  />
+                </NavGroup>
               )}
 
               {canFinance && (
@@ -247,14 +286,31 @@ export function Sidebar() {
               )}
 
               {canFinance && (
-                <>
-                  <NavItem
-                    icon={<Wallet className="h-4 w-4" />}
-                    label={t("nav.items.catalog")}
-                    active={isThietLapGroup}
+                <NavGroup
+                  icon={<Wallet className="h-4 w-4" />}
+                  label={t("nav.items.catalog")}
+                  active={isThietLapGroup}
+                  collapsed={c}
+                >
+                  <NavGroupItem
+                    label={t("nav.items.catalogFunds")}
+                    active={isThietLapQuy}
                     onClick={() => navTo("settings-cash-fund")}
+                    contextPage="settings-cash-fund"
                   />
-                </>
+                  <NavGroupItem
+                    label={t("nav.items.catalogBank")}
+                    active={isThietLapNH}
+                    onClick={() => navTo("settings-bank")}
+                    contextPage="settings-bank"
+                  />
+                  <NavGroupItem
+                    label={t("nav.items.catalogAccounts")}
+                    active={isThietLapTK}
+                    onClick={() => navTo("settings-accounts")}
+                    contextPage="settings-accounts"
+                  />
+                </NavGroup>
               )}
             </div>
 

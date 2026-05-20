@@ -14,13 +14,13 @@ Convert all tab-based page layouts into separate pages with their own URL paths,
 
 ## Current State
 
-| Parent Page | Tabs (current) | URL pattern |
-|---|---|---|
-| CashFlow (`/cashflow`) | Tổng hợp, Tiền mặt, Tiền gửi | `/cashflow?tab=tong-hop\|tien-mat\|uy-nhiem-chi` |
-| Công nợ (`/receivables`) | Phải thu, Phải trả | `/receivables?tab=...` |
-| Nhân sự (`/employees`) | Nhân viên, Phòng ban, Chức vụ | `/employees?tab=...` |
-| Thiết lập (`/settings-cash-fund`) | Quỹ, Ngân hàng, Tài khoản | `/settings-cash-fund?tab=...` |
-| Hóa đơn (`/e-invoice`) | Nháp, Đã phát hành | `/e-invoice?tab=...` |
+| Parent Page                       | Tabs (current)                | URL pattern                                      |
+| --------------------------------- | ----------------------------- | ------------------------------------------------ |
+| CashFlow (`/cashflow`)            | Tổng hợp, Tiền mặt, Tiền gửi  | `/cashflow?tab=tong-hop\|tien-mat\|uy-nhiem-chi` |
+| Công nợ (`/receivables`)          | Phải thu, Phải trả            | `/receivables?tab=...`                           |
+| Nhân sự (`/employees`)            | Nhân viên, Phòng ban, Chức vụ | `/employees?tab=...`                             |
+| Thiết lập (`/settings-cash-fund`) | Quỹ, Ngân hàng, Tài khoản     | `/settings-cash-fund?tab=...`                    |
+| Hóa đơn (`/e-invoice`)            | Nháp, Đã phát hành            | `/e-invoice?tab=...`                             |
 
 ## Target State
 
@@ -89,11 +89,11 @@ KẾ TOÁN
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-|---|---|
-| Breaking existing bookmarks with `?tab=` params | Keep `pathToPage` handling — ignore unknown tab params gracefully |
-| Tab bar at bottom showing wrong grouping | Update `SECTION_ROOTS` to reflect new standalone pages |
-| Pages that embed other pages (CashFlow imports TienMat/TienGui) | Remove those imports, each page is independent |
+| Risk                                                            | Mitigation                                                        |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Breaking existing bookmarks with `?tab=` params                 | Keep `pathToPage` handling — ignore unknown tab params gracefully |
+| Tab bar at bottom showing wrong grouping                        | Update `SECTION_ROOTS` to reflect new standalone pages            |
+| Pages that embed other pages (CashFlow imports TienMat/TienGui) | Remove those imports, each page is independent                    |
 
 ---
 
