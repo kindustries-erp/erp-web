@@ -63,6 +63,7 @@ export interface CashVoucherDrawerProps {
   attachmentType: AttachmentType;
   attachmentNote: string;
   fundOpts: SelectOption[];
+  fundAccountLabel: string;
   partnerOpts: SelectOption[];
   employeeOpts: SelectOption[];
   coaOpts: SelectOption[];
@@ -106,6 +107,7 @@ export function CashVoucherDrawer({
   attachmentType,
   attachmentNote,
   fundOpts,
+  fundAccountLabel,
   partnerOpts,
   employeeOpts,
   tagPresets,
@@ -419,7 +421,7 @@ export function CashVoucherDrawer({
       >
         <DrawerSection title={t("voucher.drawer.sectionOrder")}>
           <div className="grid grid-cols-1 gap-y-1">
-            <div className="grid grid-cols-2 gap-x-3">
+            <div className="grid grid-cols-3 gap-x-3 max-[560px]:grid-cols-1">
               <DrawerField label={t("voucher.drawer.voucherNo")} required>
                 <input
                   type="text"
@@ -437,6 +439,15 @@ export function CashVoucherDrawer({
                   onChange={onCashFundChange}
                   placeholder={t("voucher.drawer.cashFundPlaceholder")}
                   disabled={viewOnly}
+                />
+              </DrawerField>
+              <DrawerField label="Tài khoản nợ">
+                <input
+                  type="text"
+                  disabled
+                  className={inputCls}
+                  value={fundAccountLabel}
+                  placeholder="Tự động theo quỹ tiền mặt"
                 />
               </DrawerField>
             </div>

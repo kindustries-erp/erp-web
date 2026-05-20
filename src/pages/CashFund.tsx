@@ -445,6 +445,14 @@ export const TienMat = forwardRef(
           attachmentType,
           attachmentNote,
           fundOptsDrawer: fundOpts,
+          fundAccountLabel: (() => {
+            const fund = cashFunds.find((f) => f.id === form.cash_fund_id);
+            if (!fund) return "";
+            const acct = coaItems.find(
+              (c) => c.id === fund.accounting_account_id,
+            );
+            return acct ? `${acct.account_code} — ${acct.account_name}` : "";
+          })(),
           partnerOpts,
           employeeOpts,
           coaOpts,

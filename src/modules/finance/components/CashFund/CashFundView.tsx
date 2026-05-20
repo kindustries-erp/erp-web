@@ -83,6 +83,7 @@ export function CashFundView(p: any) {
     attachmentType,
     attachmentNote,
     fundOptsDrawer,
+    fundAccountLabel,
     partnerOpts,
     employeeOpts,
     coaOpts,
@@ -233,6 +234,7 @@ export function CashFundView(p: any) {
         attachmentType={attachmentType}
         attachmentNote={attachmentNote}
         fundOpts={fundOptsDrawer}
+        fundAccountLabel={fundAccountLabel ?? ""}
         partnerOpts={partnerOpts}
         employeeOpts={employeeOpts}
         coaOpts={coaOpts}
