@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { Award } from "lucide-react";
 import { useT } from "@/core/i18n";
+import { PageHeader } from "@/shared/components/PageHeader";
 import {
   getPositionsPagedApi,
   createPositionApi,
@@ -201,38 +203,45 @@ export function ChucVu() {
   const isDirty = !!form.position_name.trim() || !!form.position_code.trim();
 
   return (
-    <ChucVuView
-      {...{
-        t,
-        openNew,
-        searchInput,
-        handleSearchInput,
-        items,
-        loading,
-        fetchError,
-        deptName,
-        openEdit,
-        setDeleteTarget,
-        page,
-        pageSize,
-        total,
-        totalPages,
-        setPage,
-        handlePageSize,
-        drawerOpen,
-        closeDrawer,
-        isDirty,
-        editing,
-        saving,
-        handleSave,
-        form,
-        setField,
-        depts,
-        saveError,
-        deleteTarget,
-        deleting,
-        handleDelete,
-      }}
-    />
+    <div className="p-4 md:p-6 space-y-4">
+      <PageHeader
+        title={t("nav.items.hrPositions")}
+        desc="Quản lý danh sách chức danh"
+        icon={<Award className="h-4 w-4" />}
+      />
+      <ChucVuView
+        {...{
+          t,
+          openNew,
+          searchInput,
+          handleSearchInput,
+          items,
+          loading,
+          fetchError,
+          deptName,
+          openEdit,
+          setDeleteTarget,
+          page,
+          pageSize,
+          total,
+          totalPages,
+          setPage,
+          handlePageSize,
+          drawerOpen,
+          closeDrawer,
+          isDirty,
+          editing,
+          saving,
+          handleSave,
+          form,
+          setField,
+          depts,
+          saveError,
+          deleteTarget,
+          deleting,
+          handleDelete,
+        }}
+      />
+    </div>
   );
 }

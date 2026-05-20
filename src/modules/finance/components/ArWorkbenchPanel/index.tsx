@@ -55,21 +55,48 @@ type ArWorkbenchTab = "phai-thu" | "phai-tra";
 
 interface ArWorkbenchPanelProps {
   defaultTab?: ArWorkbenchTab;
+  title?: string;
+  description?: string;
 }
 
-export function ArWorkbenchPanel({ defaultTab }: ArWorkbenchPanelProps = {}) {
+export function ArWorkbenchPanel({
+  defaultTab,
+  title,
+  description,
+}: ArWorkbenchPanelProps = {}) {
   const t = useT();
   const [activeTab, setActiveTab] = useState<ArWorkbenchTab>(
     defaultTab ?? "phai-thu",
   );
   const { setCustomBreadcrumbs } = useAppStore();
 
+  // Derive header title/desc: use explicit props, or derive from tab when defaultTab is set
+  const headerTitle = title
+    ? title
+    : defaultTab === "phai-thu"
+      ? "Phải thu"
+      : defaultTab === "phai-tra"
+        ? "Phải trả"
+        : t("nav.items.debt");
+  const headerDesc = description
+    ? description
+    : defaultTab === "phai-thu"
+      ? "Quản lý công nợ phải thu"
+      : defaultTab === "phai-tra"
+        ? "Quản lý công nợ phải trả"
+        : t("nav.items.debtDesc");
+
   useEffect(() => {
+    // When defaultTab is provided, skip URL sync entirely (navigation is via sidebar)
+    if (defaultTab) {
+      setActiveTab(defaultTab);
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const tab = params.get("tab");
-    const active = defaultTab
-      ? defaultTab
-      : tab && ["phai-thu", "phai-tra"].includes(tab)
+    const active =
+      tab && ["phai-thu", "phai-tra"].includes(tab)
         ? (tab as ArWorkbenchTab)
         : "phai-thu";
     setActiveTab(active);
@@ -96,13 +123,17 @@ export function ArWorkbenchPanel({ defaultTab }: ArWorkbenchPanelProps = {}) {
         `${window.location.pathname}?${params.toString()}`,
       );
     }
-  }, [setCustomBreadcrumbs]);
+  }, [defaultTab, setCustomBreadcrumbs]);
 
   const handleTabChange = (val: string) => {
     setActiveTab(val as ArWorkbenchTab);
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", val);
-    history.pushState(null, "", url.toString());
+
+    // Skip URL manipulation when defaultTab is set (sidebar navigation)
+    if (!defaultTab) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", val);
+      history.pushState(null, "", url.toString());
+    }
 
     if (val === "phai-thu") {
       setCustomBreadcrumbs([
@@ -343,8 +374,8 @@ export function ArWorkbenchPanel({ defaultTab }: ArWorkbenchPanelProps = {}) {
 
   return (
     <PageWithTabsLayout
-      title={t("nav.items.debt")}
-      desc={t("nav.items.debtDesc")}
+      title={headerTitle}
+      desc={headerDesc}
       icon={<Receipt className="h-4 w-4" />}
       hideTabs={!!defaultTab}
       actions={

@@ -14,5 +14,11 @@ export function PhaiTra() {
     return () => setCustomBreadcrumbs(null);
   }, [setCustomBreadcrumbs]);
 
-  return <ArWorkbenchPanel defaultTab="phai-tra" />;
+  return (
+    <ArWorkbenchPanel
+      defaultTab="phai-tra"
+      title="Phải trả"
+      description="Quản lý công nợ phải trả"
+    />
+  );
 }

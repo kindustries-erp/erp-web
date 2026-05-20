@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { Building2 } from "lucide-react";
 import { useT } from "@/core/i18n";
+import { PageHeader } from "@/shared/components/PageHeader";
 import {
   DrawerModal,
   DrawerSection,
@@ -249,7 +251,12 @@ export function PhongBan() {
     !!form.description.trim();
 
   return (
-    <div>
+    <div className="p-4 md:p-6 space-y-4">
+      <PageHeader
+        title={t("nav.items.hrDepts")}
+        desc="Quản lý danh sách phòng ban"
+        icon={<Building2 className="h-4 w-4" />}
+      />
       <div className="flex justify-end mb-4">
         <button
           onClick={openNew}

@@ -45,6 +45,7 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   partners: { labelKey: "nav.items.partners", group: "partners" },
   "e-invoice": { labelKey: "nav.items.hoadondientu", group: "cashflow" },
   permissions: { labelKey: "nav.items.phanquyen", group: "system" },
+  "settings-branch": { labelKey: "thietlap.tabs.chi-nhanh", group: "settings" },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
