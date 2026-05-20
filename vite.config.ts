@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "icon-192.png", "icon-512.png"],
       manifest: {
-        name: "Liouni ERP",
+        name: "Hệ thống ERP",
         short_name: "ERP",
-        description: "Hệ thống Liouni ERP",
+        description: "Hệ thống ERP",
         theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",

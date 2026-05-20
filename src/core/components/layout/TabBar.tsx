@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, DragEvent } from "react";
 import {
   useAppStore,
   STATIC_TABS,
@@ -13,10 +13,22 @@ function TabItem({
   tabKey,
   active,
   onMount,
+  dragging,
+  dragOver,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
 }: {
   tabKey: PageKey;
   active: boolean;
   onMount: (el: HTMLDivElement | null) => void;
+  dragging: boolean;
+  dragOver: boolean;
+  onDragStart: (tabKey: PageKey) => void;
+  onDragEnd: () => void;
+  onDragOver: (tabKey: PageKey) => void;
+  onDrop: (tabKey: PageKey) => void;
 }) {
   const { navigate, closeTab } = useAppStore();
   const t = useT();
@@ -29,14 +41,35 @@ function TabItem({
   return (
     <div
       ref={onMount}
+      draggable={closable}
       className={cn(
         "flex items-center gap-[6px] px-[16px] py-[8px] text-xs cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 transition-colors duration-200 rounded-full",
         active
-          ? "text-foreground font-medium"
-          : "text-[color:var(--muted-fg)] hover:text-foreground",
+          ? "text-foreground dark:text-white font-medium"
+          : "text-[color:var(--muted-fg)] dark:text-zinc-400 hover:text-foreground dark:hover:text-white",
+        closable && "cursor-grab active:cursor-grabbing",
+        dragging && "opacity-50",
+        dragOver && "ring-1 ring-black/10 dark:ring-white/20",
       )}
       onClick={() => navigate(tabKey)}
       onContextMenu={onContextMenu}
+      onDragStart={(e) => {
+        if (!closable) return;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", tabKey);
+        onDragStart(tabKey);
+      }}
+      onDragEnd={onDragEnd}
+      onDragOver={(e: DragEvent<HTMLDivElement>) => {
+        if (!closable) return;
+        e.preventDefault();
+        onDragOver(tabKey);
+      }}
+      onDrop={(e: DragEvent<HTMLDivElement>) => {
+        if (!closable) return;
+        e.preventDefault();
+        onDrop(tabKey);
+      }}
     >
       {label}
       {closable && (
@@ -55,9 +88,11 @@ function TabItem({
 }
 
 export function TabBar() {
-  const { openTabs, currentPage } = useAppStore();
+  const { openTabs, currentPage, reorderTabs } = useAppStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const [bgStyle, setBgStyle] = useState({ left: 0, width: 0 });
+  const [draggingTab, setDraggingTab] = useState<PageKey | null>(null);
+  const [dragOverTab, setDragOverTab] = useState<PageKey | null>(null);
   const tabsRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
@@ -69,6 +104,48 @@ export function TabBar() {
       });
     }
   }, [currentPage, openTabs]);
+
+  const handleDragStart = (tabKey: PageKey) => {
+    setDraggingTab(tabKey);
+    setDragOverTab(tabKey);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingTab(null);
+    setDragOverTab(null);
+  };
+
+  const handleDragOver = (tabKey: PageKey) => {
+    if (!draggingTab || draggingTab === tabKey) return;
+    setDragOverTab(tabKey);
+  };
+
+  const handleDrop = (targetKey: PageKey) => {
+    if (!draggingTab || draggingTab === targetKey) {
+      handleDragEnd();
+      return;
+    }
+
+    reorderTabs(draggingTab, targetKey);
+    handleDragEnd();
+  };
+
+  const handleContainerDrop = () => {
+    handleDragEnd();
+  };
+
+  const handleContainerDragOver = (e: DragEvent<HTMLDivElement>) => {
+    if (!draggingTab) return;
+    e.preventDefault();
+  };
+
+  const handleContainerDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    if (!containerRef.current?.contains(e.relatedTarget as Node | null)) {
+      setDragOverTab(null);
+    }
+  };
+
+  const draggableTabCount = openTabs.filter((tab) => !STATIC_TABS[tab]).length;
 
   return (
     <>
@@ -85,6 +162,10 @@ export function TabBar() {
         <div
           ref={containerRef}
           className="backdrop-blur-xl bg-white/50 dark:bg-black/50 flex items-center p-1 gap-1 rounded-full shadow-[0_-2px_10px_rgba(0,0,0,0.05),0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-x-auto scrollbar-none w-full"
+          onDragOver={handleContainerDragOver}
+          onDrop={handleContainerDrop}
+          onDragLeave={handleContainerDragLeave}
+          title={draggableTabCount > 1 ? "Kéo để đổi vị trí tab" : undefined}
         >
           {/* Sliding background */}
           <div
@@ -100,6 +181,12 @@ export function TabBar() {
               key={key}
               tabKey={key as PageKey}
               active={key === currentPage}
+              dragging={draggingTab === key}
+              dragOver={dragOverTab === key && draggingTab !== key}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
               onMount={(el) => {
                 tabsRefs.current[key] = el;
               }}

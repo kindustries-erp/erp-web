@@ -128,6 +128,9 @@ interface AppState {
   navigate: (page: PageKey) => void;
   syncFromUrl: (page: PageKey) => void;
   closeTab: (key: PageKey) => void;
+  closeAllTabs: () => void;
+  closeTabsToRight: (key: PageKey) => void;
+  reorderTabs: (sourceKey: PageKey, targetKey: PageKey) => void;
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
   toggleAppTheme: () => void;
@@ -213,6 +216,45 @@ export const useAppStore = create<AppState>()(
         } else {
           set({ openTabs: newTabs });
         }
+      },
+      closeAllTabs: () => {
+        const { openTabs, currentPage, navigate } = get();
+        const newTabs = openTabs.filter((t) => STATIC_TABS[t]);
+        if (!newTabs.includes(currentPage)) {
+          navigate(newTabs[newTabs.length - 1] ?? "dashboard");
+        } else {
+          set({ openTabs: newTabs });
+        }
+      },
+      closeTabsToRight: (key) => {
+        const { openTabs, currentPage, navigate } = get();
+        const index = openTabs.indexOf(key);
+        if (index < 0) return;
+
+        const keepTabs = openTabs.filter((tab, tabIndex) => {
+          if (tabIndex <= index) return true;
+          return Boolean(STATIC_TABS[tab]);
+        });
+
+        if (!keepTabs.includes(currentPage)) {
+          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "dashboard");
+        } else {
+          set({ openTabs: keepTabs });
+        }
+      },
+      reorderTabs: (sourceKey, targetKey) => {
+        if (sourceKey === targetKey) return;
+        if (STATIC_TABS[sourceKey] || STATIC_TABS[targetKey]) return;
+
+        const { openTabs } = get();
+        const sourceIndex = openTabs.indexOf(sourceKey);
+        const targetIndex = openTabs.indexOf(targetKey);
+        if (sourceIndex < 0 || targetIndex < 0) return;
+
+        const newTabs = [...openTabs];
+        const [movedTab] = newTabs.splice(sourceIndex, 1);
+        newTabs.splice(targetIndex, 0, movedTab);
+        set({ openTabs: newTabs });
       },
 
       toggleSidebar: () => {
