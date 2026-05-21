@@ -56,6 +56,7 @@
   --foreground: #e8eeff;
   --muted-fg: #aab8d6;
   --faint: #7f93bd;
+  --sidebar-label: #d0d8ea;
 }
 
 .theme-classic .sidebar {
@@ -72,6 +73,7 @@
   --foreground: #0f172a;
   --muted-fg: #64748b;
   --faint: #94a3b8;
+  --sidebar-label: #374151;
 }
 
 /* Collapsed state */

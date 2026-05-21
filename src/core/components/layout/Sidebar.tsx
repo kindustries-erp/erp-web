@@ -54,11 +54,13 @@ export function Sidebar() {
     if (Number.isNaN(parsed.getTime())) return buildVersion;
     const utcMs = parsed.getTime() + parsed.getTimezoneOffset() * 60 * 1000;
     const gmt7 = new Date(utcMs + 7 * 60 * 60 * 1000);
-    const dd = String(gmt7.getDate()).padStart(2, "0");
+    const yyyy = gmt7.getFullYear();
     const mm = String(gmt7.getMonth() + 1).padStart(2, "0");
+    const dd = String(gmt7.getDate()).padStart(2, "0");
     const hh = String(gmt7.getHours()).padStart(2, "0");
     const min = String(gmt7.getMinutes()).padStart(2, "0");
-    return `${dd}/${mm} ${hh}:${min}`;
+    const ss = String(gmt7.getSeconds()).padStart(2, "0");
+    return `${yyyy}${mm}${dd}.${hh}${min}${ss}`;
   })();
   const av = displayName
     .split(" ")
@@ -170,7 +172,7 @@ export function Sidebar() {
             </div>
 
             <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap transition-all duration-150">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap transition-all duration-150">
                 {t("nav.sections.accounting")}
               </div>
 
@@ -347,7 +349,7 @@ export function Sidebar() {
             </div>
 
             <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
                 {t("nav.sections.sales")}
               </div>
               <NavItem
@@ -369,7 +371,7 @@ export function Sidebar() {
             </div>
 
             <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
                 {t("nav.sections.purchasing")}
               </div>
               <NavItem
@@ -392,7 +394,7 @@ export function Sidebar() {
 
             {(canActivityLog || canRBAC) && (
               <div className="sidebar-nav-section py-2">
-                <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-bold text-[color:var(--muted-fg)] uppercase tracking-[0.07em] mb-[2px] whitespace-nowrap">
+                <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
                   {t("nav.sections.system")}
                 </div>
                 {canActivityLog && (

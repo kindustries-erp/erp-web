@@ -45,15 +45,19 @@ function TabItem({
   return (
     <div
       ref={onMount}
+      data-tab-page={tabKey}
+      data-tab-label={label}
       draggable={closable && !isMobile}
       className={cn(
-        "flex items-center gap-[6px] px-[16px] py-[8px] text-xs cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 transition-colors duration-200 rounded-full",
+        "flex items-center gap-[6px] px-[16px] py-[8px] text-xs cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 rounded-full",
+        "transition-all duration-200 ease-out",
         active
           ? "text-foreground dark:text-white font-medium"
           : "text-[color:var(--muted-fg)] dark:text-zinc-400 hover:text-foreground dark:hover:text-white",
         closable && !isMobile && "cursor-grab active:cursor-grabbing",
-        dragging && "opacity-50",
-        dragOver && "ring-1 ring-black/10 dark:ring-white/20",
+        dragging && "opacity-40 scale-95",
+        dragOver &&
+          "ring-2 ring-white/70 bg-white/40 scale-105 shadow-sm dark:ring-white/30 dark:bg-white/10",
       )}
       onClick={() => navigate(tabKey)}
       onContextMenu={onContextMenu}
