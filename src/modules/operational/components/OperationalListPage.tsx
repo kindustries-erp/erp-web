@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, Link2, RefreshCcw } from "lucide-react";
+import { FileText, Link2, RefreshCcw, Repeat, Warehouse } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
@@ -21,6 +21,7 @@ import { PageHeader } from "@/shared/components/PageHeader";
 import { StatusBadge } from "@/shared/components/badges";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
+  isRecurringDocument,
   operationalApi,
   type CreateOperationalPayload,
   InventoryStockRow,
@@ -126,6 +127,31 @@ function resolveDocumentType(
   return null;
 }
 
+function inventoryStatusLabel(status?: string | null) {
+  if (status === "NOT_RECEIVED") return "Chưa nhập";
+  if (status === "PARTIAL") return "Đang nhập";
+  if (status === "FULLY_RECEIVED") return "Đã nhập đủ";
+  if (status === "NOT_ISSUED") return "Chưa xuất";
+  if (status === "ISSUED") return "Đã xuất";
+  return status || "—";
+}
+
+function canPostReceipt(row: OperationalDocument, variant: OperationalVariant) {
+  return (
+    variant === "purchase" &&
+    row.status === "CONFIRMED" &&
+    row.inventory_status !== "FULLY_RECEIVED"
+  );
+}
+
+function canPostIssue(row: OperationalDocument, variant: OperationalVariant) {
+  return (
+    variant === "sales" &&
+    ["CONFIRMED", "IN_PROGRESS"].includes(row.status) &&
+    row.inventory_status !== "ISSUED"
+  );
+}
+
 function buildSamplePayload(
   variant: OperationalVariant,
 ): CreateOperationalPayload | null {
@@ -194,6 +220,7 @@ export function OperationalListPage({
   const [branchFilter, setBranchFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [recurringFilter, setRecurringFilter] = useState("");
   const [branchOptions, setBranchOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -216,6 +243,12 @@ export function OperationalListPage({
     applied_amount: 0,
     notes: "",
   });
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [detailDocument, setDetailDocument] =
+    useState<OperationalDocument | null>(null);
+  const [postingLoading, setPostingLoading] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -429,6 +462,71 @@ export function OperationalListPage({
     }
   }
 
+  async function openDetail(row: OperationalDocument) {
+    const documentType = resolveDocumentType(row, variant);
+    if (!documentType) return;
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setDetailError(null);
+    setDetailDocument(null);
+    try {
+      const document = await operationalApi.getDocument(documentType, row.id);
+      setDetailDocument(document);
+    } catch (err) {
+      setDetailError(extractApiError(err, "Không tải được chi tiết chứng từ"));
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  function closeDetail() {
+    setDetailOpen(false);
+    setDetailLoading(false);
+    setDetailError(null);
+    setDetailDocument(null);
+  }
+
+  async function postInventory(row: OperationalDocument) {
+    const documentType = resolveDocumentType(row, variant);
+    if (!documentType) return;
+    setPostingLoading(true);
+    setError(null);
+    try {
+      if (documentType === "purchase_orders") {
+        await operationalApi.postPurchaseReceipt(row.id, {
+          transaction_date: today(),
+        });
+        showToast({ title: "Đã post nhập kho", variant: "success" });
+      } else if (documentType === "sales_service_orders") {
+        await operationalApi.postSalesIssue(row.id, {
+          transaction_date: today(),
+        });
+        showToast({ title: "Đã post xuất kho", variant: "success" });
+      }
+      await load();
+      if (detailOpen && detailDocument?.id === row.id) {
+        const refreshed = await operationalApi.getDocument(
+          documentType,
+          row.id,
+        );
+        setDetailDocument(refreshed);
+      }
+    } catch (err) {
+      setError(extractApiError(err, "Post kho thất bại"));
+    } finally {
+      setPostingLoading(false);
+    }
+  }
+
+  const visibleItems = useMemo(() => {
+    if (!recurringFilter) return items;
+    return items.filter((row) =>
+      recurringFilter === "RECURRING"
+        ? isRecurringDocument(row)
+        : !isRecurringDocument(row),
+    );
+  }, [items, recurringFilter]);
+
   async function removePaymentLink(linkId: string) {
     if (!activeDocument || !activeDocumentType) return;
     setSettlementLoading(true);
@@ -504,6 +602,20 @@ export function OperationalListPage({
         className="w-[210px]"
         allowClear={false}
       />
+      <Combobox
+        options={[
+          { value: "", label: "Tất cả recurring" },
+          { value: "RECURRING", label: "Recurring" },
+          { value: "NON_RECURRING", label: "Không recurring" },
+        ]}
+        value={recurringFilter}
+        onChange={(value) => {
+          setRecurringFilter(value);
+          setPage(1);
+        }}
+        className="w-[210px]"
+        allowClear={false}
+      />
       <button
         className="btn-secondary inline-flex items-center gap-2"
         onClick={() => void load()}
@@ -558,6 +670,12 @@ export function OperationalListPage({
             <div className="text-xs text-[color:var(--muted-fg)]">
               ĐH: {normalizeDate(row.due_date) || "—"}
             </div>
+            {isRecurringDocument(row) ? (
+              <div className="inline-flex items-center gap-1 rounded-full bg-[color:var(--muted)] px-2 py-0.5 text-xs text-[color:var(--muted-fg)]">
+                <Repeat className="h-3 w-3" />
+                Recurring
+              </div>
+            ) : null}
             {row.next_due_date ? (
               <div className="text-xs text-[color:var(--muted-fg)]">
                 Kỳ sau: {normalizeDate(row.next_due_date)}
@@ -586,29 +704,66 @@ export function OperationalListPage({
           <div className="flex flex-col gap-1">
             <StatusBadge status={row.status} />
             <StatusBadge status={row.payment_status} />
+            {(variant === "purchase" || variant === "sales") &&
+            row.inventory_status ? (
+              <div className="text-xs text-[color:var(--muted-fg)]">
+                Kho: {inventoryStatusLabel(row.inventory_status)}
+              </div>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        key: "actions",
+        header: "Thao tác",
+        className: "align-top min-w-[240px]",
+        cell: (row) => (
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="btn-secondary inline-flex items-center gap-2"
+              onClick={() => void openDetail(row)}
+            >
+              <FileText className="h-4 w-4" />
+              Chi tiết
+            </button>
+            {config.paymentLinkable ? (
+              <button
+                type="button"
+                className="btn-secondary inline-flex items-center gap-2"
+                onClick={() => void openSettlement(row)}
+                disabled={Number(row.open_amount || 0) <= 0}
+              >
+                <Link2 className="h-4 w-4" />
+                Liên kết tiền
+              </button>
+            ) : null}
+            {canPostReceipt(row, variant) ? (
+              <button
+                type="button"
+                className="btn-secondary inline-flex items-center gap-2"
+                onClick={() => void postInventory(row)}
+                disabled={postingLoading}
+              >
+                <Warehouse className="h-4 w-4" />
+                Nhập kho
+              </button>
+            ) : null}
+            {canPostIssue(row, variant) ? (
+              <button
+                type="button"
+                className="btn-secondary inline-flex items-center gap-2"
+                onClick={() => void postInventory(row)}
+                disabled={postingLoading}
+              >
+                <Warehouse className="h-4 w-4" />
+                Xuất kho
+              </button>
+            ) : null}
           </div>
         ),
       },
     ];
-
-    if (config.paymentLinkable) {
-      baseColumns.push({
-        key: "actions",
-        header: "Thao tác",
-        className: "align-top min-w-[140px]",
-        cell: (row) => (
-          <button
-            type="button"
-            className="btn-secondary inline-flex items-center gap-2"
-            onClick={() => void openSettlement(row)}
-            disabled={Number(row.open_amount || 0) <= 0}
-          >
-            <Link2 className="h-4 w-4" />
-            Liên kết tiền
-          </button>
-        ),
-      });
-    }
 
     return baseColumns;
   }, [variant, config.paymentLinkable]);
@@ -723,7 +878,7 @@ export function OperationalListPage({
       ) : null}
 
       <DataTable
-        items={items}
+        items={visibleItems}
         columns={columns}
         getRowKey={(row) => `${row.document_type || variant}-${row.id}`}
         loading={loading}
@@ -741,6 +896,101 @@ export function OperationalListPage({
           setPage(1);
         }}
       />
+
+      <DrawerModal
+        open={detailOpen}
+        onClose={closeDetail}
+        title="Chi tiết chứng từ"
+        subtitle={
+          detailDocument
+            ? `${docNo(detailDocument)} — ${partner(detailDocument)}`
+            : "Xem chi tiết chứng từ operational"
+        }
+        bodyClassName="space-y-4"
+      >
+        {detailError ? (
+          <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+            {detailError}
+          </div>
+        ) : null}
+        {detailLoading ? (
+          <div className="text-sm text-[color:var(--muted-fg)]">
+            Đang tải chi tiết...
+          </div>
+        ) : detailDocument ? (
+          <>
+            <DrawerSection title="Thông tin chính">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <DrawerField label="Số chứng từ">
+                  <div>{docNo(detailDocument)}</div>
+                </DrawerField>
+                <DrawerField label="Đối tác/Nội dung">
+                  <div>{partner(detailDocument)}</div>
+                </DrawerField>
+                <DrawerField label="Ngày chứng từ">
+                  <div>
+                    {normalizeDate(detailDocument.document_date) || "—"}
+                  </div>
+                </DrawerField>
+                <DrawerField label="Đến hạn/Kỳ sau">
+                  <div>
+                    {normalizeDate(detailDocument.due_date) || "—"}
+                    {detailDocument.next_due_date
+                      ? ` / ${normalizeDate(detailDocument.next_due_date)}`
+                      : ""}
+                  </div>
+                </DrawerField>
+                <DrawerField label="Trạng thái">
+                  <div className="flex flex-wrap gap-2">
+                    <StatusBadge status={detailDocument.status} />
+                    <StatusBadge status={detailDocument.payment_status} />
+                  </div>
+                </DrawerField>
+                <DrawerField label="Kho">
+                  <div>
+                    {inventoryStatusLabel(detailDocument.inventory_status)}
+                  </div>
+                </DrawerField>
+              </div>
+            </DrawerSection>
+            <DrawerSection title="Dòng chi tiết">
+              {detailDocument.lines?.length ? (
+                <div className="space-y-2">
+                  {detailDocument.lines.map((line, index) => (
+                    <div
+                      key={
+                        line.id ||
+                        `${index}-${line.item_code || line.description || "line"}`
+                      }
+                      className="rounded-xl border border-border p-3 text-sm"
+                    >
+                      <div className="font-medium">
+                        {line.item_name ||
+                          line.description ||
+                          `Dòng ${index + 1}`}
+                      </div>
+                      <div className="text-xs text-[color:var(--muted-fg)]">
+                        {line.item_code || "—"} · SL{" "}
+                        {Number(line.qty || 0).toLocaleString("vi-VN")} · Thành
+                        tiền{" "}
+                        {money(
+                          line.amount ||
+                            Number(line.qty || 0) *
+                              Number(line.unit_price || 0),
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-[color:var(--muted-fg)]">
+                  Chưa có dòng chi tiết.
+                </div>
+              )}
+            </DrawerSection>
+          </>
+        ) : null}
+      </DrawerModal>
 
       <DrawerModal
         open={settlementOpen}

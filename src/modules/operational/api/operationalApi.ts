@@ -47,6 +47,7 @@ export interface OperationalDocument {
   invoice_status: string;
   payment_status: string;
   accounting_status: string;
+  inventory_status?: string;
   total_amount: number;
   settled_amount: number;
   open_amount: number;
@@ -59,15 +60,42 @@ export interface OperationalDocument {
 }
 
 export interface OperationalLine {
+  id?: string;
   line_no?: number;
   line_type?: string;
   item_code?: string;
   item_name?: string;
   description?: string;
+  inventory_item_id?: string | null;
   qty?: number;
   unit_price?: number;
   amount?: number;
   notes?: string;
+}
+
+export interface PostInventoryDocumentPayload {
+  transaction_date?: string;
+  notes?: string;
+}
+
+export interface OperationalInventoryPostResult {
+  data: OperationalDocument;
+}
+
+function resolvePath(documentType: OperationalDocumentType) {
+  return documentType === "sales_service_orders"
+    ? "sales-service-orders"
+    : documentType === "purchase_orders"
+      ? "purchase-orders"
+      : "operating-expenses";
+}
+
+function isRecurringDocument(row: OperationalDocument) {
+  return Boolean(
+    (row.recurrence_type && row.recurrence_type !== "ONE_TIME") ||
+    row.auto_generate_next ||
+    row.next_due_date,
+  );
 }
 
 export interface InventoryStockRow {
@@ -152,14 +180,8 @@ export const operationalApi = {
     return data.data;
   },
   getDocument: async (documentType: OperationalDocumentType, id: string) => {
-    const path =
-      documentType === "sales_service_orders"
-        ? "sales-service-orders"
-        : documentType === "purchase_orders"
-          ? "purchase-orders"
-          : "operating-expenses";
     const { data } = await axiosInstance.get<{ data: OperationalDocument }>(
-      `/api/v1/${path}/${id}`,
+      `/api/v1/${resolvePath(documentType)}/${id}`,
     );
     return data.data;
   },
@@ -188,4 +210,23 @@ export const operationalApi = {
       `/api/v1/${documentType}/${id}/payment-links/${linkId}`,
     );
   },
+  postPurchaseReceipt: async (
+    id: string,
+    payload: PostInventoryDocumentPayload,
+  ) => {
+    const { data } = await axiosInstance.post<OperationalInventoryPostResult>(
+      `/api/v1/purchase-orders/${id}/receipt`,
+      payload,
+    );
+    return data.data;
+  },
+  postSalesIssue: async (id: string, payload: PostInventoryDocumentPayload) => {
+    const { data } = await axiosInstance.post<OperationalInventoryPostResult>(
+      `/api/v1/sales-service-orders/${id}/issue`,
+      payload,
+    );
+    return data.data;
+  },
 };
+
+export { isRecurringDocument };
