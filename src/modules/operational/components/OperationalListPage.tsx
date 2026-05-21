@@ -23,10 +23,11 @@ import { extractApiError } from "@/shared/utils/apiError";
 import {
   operationalApi,
   type CreateOperationalPayload,
-  type OperationalDocument,
-  type OperationalDocumentPaymentLink,
-  type OperationalDocumentType,
-  type OperationalVariant,
+  InventoryStockRow,
+  OperationalDocument,
+  OperationalDocumentPaymentLink,
+  OperationalDocumentType,
+  OperationalVariant,
 } from "../api/operationalApi";
 
 const variantConfig: Record<
@@ -181,6 +182,7 @@ export function OperationalListPage({
   const config = variantConfig[variant];
 
   const [items, setItems] = useState<OperationalDocument[]>([]);
+  const [stockItems, setStockItems] = useState<InventoryStockRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -246,6 +248,7 @@ export function OperationalListPage({
     if (variant === "expenses") return operationalApi.listExpenses;
     if (variant === "receivables") return operationalApi.listReceivables;
     if (variant === "payables") return operationalApi.listPayables;
+    if (variant === "inventory") return operationalApi.listInventoryStock;
     return null;
   }, [variant]);
 
@@ -262,7 +265,13 @@ export function OperationalListPage({
         payment_status: paymentStatusFilter || undefined,
         status: statusFilter || undefined,
       });
-      setItems(data.items || []);
+      if (variant === "inventory") {
+        setStockItems((data.items || []) as InventoryStockRow[]);
+        setItems([]);
+      } else {
+        setItems((data.items || []) as OperationalDocument[]);
+        setStockItems([]);
+      }
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 0);
     } catch (err) {
@@ -604,6 +613,56 @@ export function OperationalListPage({
     return baseColumns;
   }, [variant, config.paymentLinkable]);
 
+  const stockColumns = useMemo<DataTableColumn<InventoryStockRow>[]>(
+    () => [
+      {
+        key: "item",
+        header: "Vật tư",
+        className: "align-top min-w-[220px]",
+        cell: (row) => (
+          <div className="space-y-1">
+            <div className="font-medium text-sm">{row.item_code || "—"}</div>
+            <div className="text-xs text-[color:var(--muted-fg)]">
+              {row.item_name || "Chưa đặt tên"}
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "qty",
+        header: "Số lượng",
+        className: "align-top min-w-[180px]",
+        cell: (row) => (
+          <div className="space-y-1 text-sm">
+            <div>
+              Nhập: {Number(row.received_qty || 0).toLocaleString("vi-VN")}
+            </div>
+            <div>
+              Xuất: {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
+            </div>
+            <div className="font-medium">
+              Tồn: {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}{" "}
+              {row.unit}
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "value",
+        header: "Giá trị tồn",
+        className: "align-top min-w-[160px]",
+        cell: (row) => money(row.stock_value),
+      },
+      {
+        key: "last",
+        header: "Giao dịch cuối",
+        className: "align-top min-w-[150px]",
+        cell: (row) => normalizeDate(row.last_transaction_date) || "—",
+      },
+    ],
+    [],
+  );
+
   if (variant === "inventory") {
     return (
       <div className="p-4 md:p-6 space-y-4">
@@ -612,10 +671,32 @@ export function OperationalListPage({
           desc={config.desc}
           icon={<FileText className="h-4 w-4" />}
         />
-        <div className="rounded-xl border border-border bg-surface p-4 text-sm text-[color:var(--muted-fg)]">
-          MVP kho đã có DB/API nền. UI nhập/xuất chi tiết sẽ nối tiếp sau khi
-          chốt form phiếu kho.
-        </div>
+        {error ? (
+          <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+        <DataTable
+          items={stockItems}
+          columns={stockColumns}
+          getRowKey={(row) =>
+            `${row.inventory_item_id}-${row.branch_id || "all"}`
+          }
+          loading={loading}
+          error={error}
+          emptyLabel="Chưa có tồn kho."
+          filters={filters}
+          minWidth={760}
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          totalPages={totalPages}
+          onPage={setPage}
+          onPageSize={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </div>
     );
   }

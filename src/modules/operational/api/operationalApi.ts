@@ -70,6 +70,19 @@ export interface OperationalLine {
   notes?: string;
 }
 
+export interface InventoryStockRow {
+  inventory_item_id: string;
+  branch_id?: string | null;
+  item_code: string;
+  item_name: string;
+  unit: string;
+  received_qty: number;
+  issued_qty: number;
+  on_hand_qty: number;
+  stock_value: number;
+  last_transaction_date?: string | null;
+}
+
 export interface CreateOperationalPayload extends Partial<OperationalDocument> {
   lines?: OperationalLine[];
 }
@@ -110,6 +123,12 @@ export const operationalApi = {
   listReceivables: (input?: ListParams) =>
     list("operational-receivables", input),
   listPayables: (input?: ListParams) => list("operational-payables", input),
+  listInventoryStock: async (input?: ListParams) => {
+    const { data } = await axiosInstance.get<
+      PaginatedResponse<InventoryStockRow>
+    >("/api/v1/inventory/stock", { params: params(input) });
+    return data;
+  },
 
   createSales: async (payload: CreateOperationalPayload) => {
     const { data } = await axiosInstance.post<{ data: OperationalDocument }>(
