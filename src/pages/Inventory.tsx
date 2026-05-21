@@ -1,5 +1,5 @@
 import { OperationalListPage } from "@/modules/operational/components/OperationalListPage";
 
-export function PhaiTra() {
-  return <OperationalListPage variant="payables" />;
+export function Kho() {
+  return <OperationalListPage variant="inventory" />;
 }

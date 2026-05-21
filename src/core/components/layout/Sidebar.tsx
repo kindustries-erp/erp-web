@@ -384,6 +384,22 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
+                icon={<IconFileText />}
+                label={t("nav.items.operatingExpenses")}
+                active={currentPage === "operating-expenses"}
+                onClick={() => navTo("operating-expenses")}
+                contextPage="operating-expenses"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconBox />}
+                label={t("nav.items.inventory")}
+                active={currentPage === "inventory"}
+                onClick={() => navTo("inventory")}
+                contextPage="inventory"
+              />
+              <NavItem
+                collapsed={c}
                 icon={<IconPkg />}
                 label={t("nav.items.suppliers")}
                 active={currentPage === "suppliers"}

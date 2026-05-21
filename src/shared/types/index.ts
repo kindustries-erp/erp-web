@@ -17,6 +17,8 @@ export type PageKey =
   | "sales"
   | "customers"
   | "purchasing"
+  | "operating-expenses"
+  | "inventory"
   | "suppliers"
   | "activity-log"
   | "partners"

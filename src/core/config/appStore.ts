@@ -40,6 +40,11 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   sales: { labelKey: "nav.items.sales", group: "sales" },
   customers: { labelKey: "nav.items.customers", group: "sales" },
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
+  "operating-expenses": {
+    labelKey: "nav.items.operatingExpenses",
+    group: "purchasing",
+  },
+  inventory: { labelKey: "nav.items.inventory", group: "inventory" },
   suppliers: { labelKey: "nav.items.suppliers", group: "purchasing" },
   "activity-log": { labelKey: "nav.items.activitylog", group: "system" },
   partners: { labelKey: "nav.items.partners", group: "partners" },
@@ -108,6 +113,11 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   sales: [["breadcrumb.sales"], ["breadcrumb.salesOrders"]],
   customers: [["breadcrumb.sales"], ["breadcrumb.customers"]],
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
+  "operating-expenses": [
+    ["breadcrumb.purchasing"],
+    ["breadcrumb.operatingExpenses"],
+  ],
+  inventory: [["breadcrumb.inventory"]],
   suppliers: [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
   "activity-log": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
   partners: [["breadcrumb.accounting"], ["breadcrumb.partners"]],

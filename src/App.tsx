@@ -23,6 +23,10 @@ import { PhongBan } from "@/pages/Departments";
 import { ChucVu } from "@/pages/Positions";
 import { PhaiThu } from "@/pages/Receivables";
 import { PhaiTra } from "@/pages/Payables";
+import { BanHang } from "@/pages/Sales";
+import { MuaHang } from "@/pages/Purchasing";
+import { ChiPhiVanHanh } from "@/pages/OperatingExpenses";
+import { Kho } from "@/pages/Inventory";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { NhatKyChung } from "@/pages/GeneralJournal";
 import { SettingsBranch } from "@/pages/SettingsBranch";
@@ -105,12 +109,14 @@ export default function App() {
                 {currentPage === "positions" && <ChucVu />}
                 {currentPage === "receivables" && <PhaiThu />}
                 {currentPage === "payables" && <PhaiTra />}
+                {currentPage === "sales" && <BanHang />}
+                {currentPage === "purchasing" && <MuaHang />}
+                {currentPage === "operating-expenses" && <ChiPhiVanHanh />}
+                {currentPage === "inventory" && <Kho />}
                 {currentPage === "journal" && <NhatKyChung />}
                 {currentPage === "settings-branch" && <SettingsBranch />}
                 {(currentPage === "ledger" ||
-                  currentPage === "sales" ||
                   currentPage === "customers" ||
-                  currentPage === "purchasing" ||
                   currentPage === "suppliers") && <ComingSoon />}
                 {currentPage === "permissions" && <PhanQuyen />}
                 {/* {currentPage === "permissions" && <ActivityLog />} */}
@@ -138,6 +144,8 @@ export default function App() {
                   "sales",
                   "customers",
                   "purchasing",
+                  "operating-expenses",
+                  "inventory",
                   "suppliers",
                   "permissions",
                   "activity-log",

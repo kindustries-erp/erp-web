@@ -1,11 +1,5 @@
-import { ArWorkbenchPanel } from "@/modules/finance/components/ArWorkbenchPanel";
+import { OperationalListPage } from "@/modules/operational/components/OperationalListPage";
 
 export function PhaiThu() {
-  return (
-    <ArWorkbenchPanel
-      defaultTab="phai-thu"
-      title="Phải thu"
-      description="Quản lý công nợ phải thu"
-    />
-  );
+  return <OperationalListPage variant="receivables" />;
 }
