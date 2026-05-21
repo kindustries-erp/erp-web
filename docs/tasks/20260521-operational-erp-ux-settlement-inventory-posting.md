@@ -56,10 +56,10 @@ Nâng UI operational ERP từ shell sang workflow usable cho nghiệm thu: mở 
 - [x] 4.0 Validation
   - [x] 4.1 Chạy `npm run build`
   - [x] 4.2 Smoke test flow liên quan
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
-  - [ ] 5.3 Tổng kết evidence
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue)
+  - [x] 5.2 Commit + push code (web/api)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 
@@ -70,13 +70,14 @@ Nâng UI operational ERP từ shell sang workflow usable cho nghiệm thu: mở 
   - recurring có badge + filter local
   - purchase có nút `Nhập kho` khi `CONFIRMED` và chưa `FULLY_RECEIVED`
   - sales có nút `Xuất kho` khi `CONFIRMED|IN_PROGRESS` và chưa `ISSUED`
+- bundle runtime sau deploy chứa marker `Đang xử lý một phần` trong asset web mới
 
 ## Lessons Learned
 
-- Không có issue / hoặc link entry: `docs/lessons-learned/<file>.md#<anchor>`
+- No issue
 
 ## Commit/Push Status
 
-- Web repo: pending
-- API repo: coordinated with backend task
+- Web repo: pushed `d0eb568 add operational line-level inventory posting UI`
+- API repo: coordinated and pushed `331e4ed`, `4f3a243`
 - DB/directus staging: apply+verify+document done
