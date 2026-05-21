@@ -46,9 +46,9 @@
   - [x] 4.1 Chạy `npx tsc --noEmit`
   - [x] 4.2 Chạy `npm run build`
   - [x] 4.3 Verify logic menu sidebar/tabbar (code-path review PASS)
-- [ ] 5.0 Close
-  - [ ] 5.1 Commit + push code
-  - [ ] 5.2 Tổng kết evidence
+- [x] 5.0 Close
+  - [x] 5.1 Commit + push code
+  - [x] 5.2 Tổng kết evidence
 
 ## Validation Evidence
 
@@ -56,6 +56,7 @@
 - `npx tsc --noEmit`: PASS (exit code 0)
 - `npm run build`: PASS
 - Verify logic: PASS — sidebar context menu chỉ render `Mở trong tab mới`; tabbar context menu mới render thêm `Đóng tab bên phải` và `Đóng tất cả tab phụ`
+- Deploy/runtime: PASS — container `liouni-erp-web` recreate thành công và `Up` trên `0.0.0.0:8808->80`; `docker logs` xác nhận nginx worker start bình thường
 
 ## Lessons Learned
 
@@ -63,6 +64,6 @@
 
 ## Commit/Push Status
 
-- Web repo: Pending
+- Web repo: PASS — `6c0fddf fix(ui): scope sidebar context menu actions` pushed `master`
 - API repo: N/A
 - DB/directus staging: N/A
