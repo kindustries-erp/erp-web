@@ -44,17 +44,17 @@
 - [x] 4.0 Validation
   - [x] 4.1 Chạy `npx tsc --noEmit`
   - [x] 4.2 Chạy `npm run build`
-  - [ ] 4.3 Deploy + verify runtime
-- [ ] 5.0 Close
-  - [ ] 5.1 Commit + push code
-  - [ ] 5.2 Tổng kết evidence
+  - [x] 4.3 Deploy + verify runtime
+- [x] 5.0 Close
+  - [x] 5.1 Commit + push code
+  - [x] 5.2 Tổng kết evidence
 
 ## Validation Evidence
 
 - DB precheck result: `DB_READY`
 - `npx tsc --noEmit`: PASS (exit code 0)
 - `npm run build`: PASS
-- Deploy/runtime: Pending
+- Deploy/runtime: PASS — container `liouni-erp-web` recreated và `Up` trên `0.0.0.0:8808->80`; `docker logs` xác nhận nginx worker start bình thường
 
 ## Lessons Learned
 
@@ -62,6 +62,6 @@
 
 ## Commit/Push Status
 
-- Web repo: Pending
+- Web repo: PASS — `a14aaaf fix(ui): disable mobile tab drag` pushed `master`
 - API repo: N/A
 - DB/directus staging: N/A

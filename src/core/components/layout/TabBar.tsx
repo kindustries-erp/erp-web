@@ -43,12 +43,12 @@ function TabItem({
     STATIC_TABS[tabKey]?.labelKey ?? SECTION_ROOTS[tabKey]?.labelKey;
   const label = labelKey ? t(labelKey) : tabKey;
   const closable = !STATIC_TABS[tabKey];
-  const onContextMenu = usePageContextMenu(tabKey, label);
+  const onContextMenu = usePageContextMenu(tabKey, label, undefined, "tabbar");
 
   const handleMenuOpen = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    openPageContextMenu(tabKey, label, e.currentTarget);
+    openPageContextMenu(tabKey, label, e.currentTarget, undefined, "tabbar");
   };
 
   return (
