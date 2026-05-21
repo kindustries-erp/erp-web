@@ -55,6 +55,7 @@
 - `npx tsc --noEmit`: PASS (exit code 0)
 - `npm run build`: PASS
 - Verify runtime/deploy: PASS — container `liouni-erp-web` recreated và `Up` trên `0.0.0.0:8808->80`; `docker logs` xác nhận nginx worker start bình thường
+- Width tuning vòng 2: `236px / calc(100vw - 68px)` đã build + deploy PASS
 
 ## Lessons Learned
 
@@ -62,6 +63,6 @@
 
 ## Commit/Push Status
 
-- Web repo: PASS — `945a263 fix(ui): tighten mobile sidebar width` pushed `master`
+- Web repo: PASS — `4f51c0d fix(ui): tighten mobile sidebar width more` pushed `master`
 - API repo: N/A
 - DB/directus staging: N/A
