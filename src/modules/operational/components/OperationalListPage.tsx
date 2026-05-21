@@ -73,6 +73,14 @@ interface SettlementFormState {
   notes: string;
 }
 
+interface InventoryPostingLineForm {
+  line_id: string;
+  line_name: string;
+  requested_qty: number;
+  max_qty: number;
+  inventory_item_id?: string | null;
+}
+
 function money(value: unknown) {
   const n = Number(value || 0);
   return n.toLocaleString("vi-VN", {
@@ -129,7 +137,7 @@ function resolveDocumentType(
 
 function inventoryStatusLabel(status?: string | null) {
   if (status === "NOT_RECEIVED") return "Chưa nhập";
-  if (status === "PARTIAL") return "Đang nhập";
+  if (status === "PARTIAL") return "Đang xử lý một phần";
   if (status === "FULLY_RECEIVED") return "Đã nhập đủ";
   if (status === "NOT_ISSUED") return "Chưa xuất";
   if (status === "ISSUED") return "Đã xuất";
@@ -249,6 +257,15 @@ export function OperationalListPage({
   const [detailDocument, setDetailDocument] =
     useState<OperationalDocument | null>(null);
   const [postingLoading, setPostingLoading] = useState(false);
+  const [postingDrawerOpen, setPostingDrawerOpen] = useState(false);
+  const [postingDocument, setPostingDocument] =
+    useState<OperationalDocument | null>(null);
+  const [postingDocumentType, setPostingDocumentType] =
+    useState<OperationalDocumentType | null>(null);
+  const [postingLineForms, setPostingLineForms] = useState<
+    InventoryPostingLineForm[]
+  >([]);
+  const [postingNotes, setPostingNotes] = useState("");
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -486,31 +503,86 @@ export function OperationalListPage({
     setDetailDocument(null);
   }
 
-  async function postInventory(row: OperationalDocument) {
+  async function openPostingDrawer(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
     setPostingLoading(true);
     setError(null);
     try {
-      if (documentType === "purchase_orders") {
-        await operationalApi.postPurchaseReceipt(row.id, {
+      const document = await operationalApi.getDocument(documentType, row.id);
+      const lineForms = (document.lines || [])
+        .filter((line) => line.inventory_item_id && Number(line.qty || 0) > 0)
+        .map((line) => ({
+          line_id: String(line.id || ""),
+          line_name:
+            line.item_name ||
+            line.description ||
+            line.item_code ||
+            String(line.id),
+          requested_qty: Number(line.qty || 0),
+          max_qty: Number(line.qty || 0),
+          inventory_item_id: line.inventory_item_id || null,
+        }))
+        .filter((line) => line.line_id);
+      setPostingDocument(document);
+      setPostingDocumentType(documentType);
+      setPostingLineForms(lineForms);
+      setPostingNotes("");
+      setPostingDrawerOpen(true);
+    } catch (err) {
+      setError(extractApiError(err, "Không tải được dữ liệu post kho"));
+    } finally {
+      setPostingLoading(false);
+    }
+  }
+
+  function closePostingDrawer() {
+    setPostingDrawerOpen(false);
+    setPostingDocument(null);
+    setPostingDocumentType(null);
+    setPostingLineForms([]);
+    setPostingNotes("");
+  }
+
+  async function submitPostingDrawer() {
+    if (!postingDocument || !postingDocumentType) return;
+    const selectedLines = postingLineForms
+      .filter((line) => Number(line.requested_qty || 0) > 0)
+      .map((line) => ({
+        line_id: line.line_id,
+        qty: Number(line.requested_qty || 0),
+      }));
+    if (!selectedLines.length) {
+      setError("Vui lòng nhập số lượng post kho cho ít nhất 1 dòng.");
+      return;
+    }
+    setPostingLoading(true);
+    setError(null);
+    try {
+      if (postingDocumentType === "purchase_orders") {
+        await operationalApi.postPurchaseReceipt(postingDocument.id, {
           transaction_date: today(),
+          notes: postingNotes || undefined,
+          receipt_lines: selectedLines,
         });
         showToast({ title: "Đã post nhập kho", variant: "success" });
-      } else if (documentType === "sales_service_orders") {
-        await operationalApi.postSalesIssue(row.id, {
+      } else if (postingDocumentType === "sales_service_orders") {
+        await operationalApi.postSalesIssue(postingDocument.id, {
           transaction_date: today(),
+          notes: postingNotes || undefined,
+          issue_lines: selectedLines,
         });
         showToast({ title: "Đã post xuất kho", variant: "success" });
       }
       await load();
-      if (detailOpen && detailDocument?.id === row.id) {
+      if (detailOpen && detailDocument?.id === postingDocument.id) {
         const refreshed = await operationalApi.getDocument(
-          documentType,
-          row.id,
+          postingDocumentType,
+          postingDocument.id,
         );
         setDetailDocument(refreshed);
       }
+      closePostingDrawer();
     } catch (err) {
       setError(extractApiError(err, "Post kho thất bại"));
     } finally {
@@ -742,7 +814,7 @@ export function OperationalListPage({
               <button
                 type="button"
                 className="btn-secondary inline-flex items-center gap-2"
-                onClick={() => void postInventory(row)}
+                onClick={() => void openPostingDrawer(row)}
                 disabled={postingLoading}
               >
                 <Warehouse className="h-4 w-4" />
@@ -753,7 +825,7 @@ export function OperationalListPage({
               <button
                 type="button"
                 className="btn-secondary inline-flex items-center gap-2"
-                onClick={() => void postInventory(row)}
+                onClick={() => void openPostingDrawer(row)}
                 disabled={postingLoading}
               >
                 <Warehouse className="h-4 w-4" />
@@ -990,6 +1062,84 @@ export function OperationalListPage({
             </DrawerSection>
           </>
         ) : null}
+      </DrawerModal>
+
+      <DrawerModal
+        open={postingDrawerOpen}
+        onClose={closePostingDrawer}
+        title={
+          postingDocumentType === "purchase_orders"
+            ? "Nhập kho theo dòng"
+            : "Xuất kho theo dòng"
+        }
+        subtitle={
+          postingDocument
+            ? `${docNo(postingDocument)} — ${partner(postingDocument)}`
+            : "Chọn số lượng theo từng dòng chứng từ"
+        }
+        actions={[
+          {
+            label: postingLoading ? "Đang post..." : "Xác nhận post kho",
+            primary: true,
+            loading: postingLoading,
+            onClick: () => void submitPostingDrawer(),
+          },
+        ]}
+      >
+        <DrawerSection title="Số lượng theo dòng">
+          <div className="space-y-3">
+            {postingLineForms.length === 0 ? (
+              <div className="text-sm text-[color:var(--muted-fg)]">
+                Chứng từ không có dòng vật tư/phụ tùng hợp lệ.
+              </div>
+            ) : (
+              postingLineForms.map((line) => (
+                <div
+                  key={line.line_id}
+                  className="rounded-xl border border-border p-3 space-y-2"
+                >
+                  <div className="text-sm font-medium">{line.line_name}</div>
+                  <div className="text-xs text-[color:var(--muted-fg)]">
+                    Tối đa có thể post:{" "}
+                    {Number(line.max_qty || 0).toLocaleString("vi-VN")}
+                  </div>
+                  <input
+                    type="number"
+                    min={0}
+                    max={line.max_qty}
+                    step={1}
+                    className={inputCls}
+                    value={line.requested_qty}
+                    onChange={(event) => {
+                      const value = Number(event.target.value || 0);
+                      setPostingLineForms((prev) =>
+                        prev.map((item) =>
+                          item.line_id === line.line_id
+                            ? {
+                                ...item,
+                                requested_qty: Math.max(
+                                  0,
+                                  Math.min(item.max_qty, value),
+                                ),
+                              }
+                            : item,
+                        ),
+                      );
+                    }}
+                  />
+                </div>
+              ))
+            )}
+          </div>
+          <DrawerField label="Ghi chú post kho">
+            <input
+              className={inputCls}
+              value={postingNotes}
+              onChange={(event) => setPostingNotes(event.target.value)}
+              placeholder="Ghi chú nhập/xuất kho"
+            />
+          </DrawerField>
+        </DrawerSection>
       </DrawerModal>
 
       <DrawerModal

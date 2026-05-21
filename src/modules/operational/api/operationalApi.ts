@@ -73,9 +73,16 @@ export interface OperationalLine {
   notes?: string;
 }
 
+export interface PostInventoryLinePayload {
+  line_id: string;
+  qty: number;
+}
+
 export interface PostInventoryDocumentPayload {
   transaction_date?: string;
   notes?: string;
+  receipt_lines?: PostInventoryLinePayload[];
+  issue_lines?: PostInventoryLinePayload[];
 }
 
 export interface OperationalInventoryPostResult {
