@@ -47,6 +47,19 @@ export function Sidebar() {
 
   const t = useT();
   const displayName = employee?.full_name ?? t("nav.bottom.userFallback");
+  const buildVersion = __APP_BUILD_VERSION__;
+  const buildVersionLabel = (() => {
+    const rawIso = buildVersion.split("-").slice(0, 3).join("-");
+    const parsed = new Date(rawIso);
+    if (Number.isNaN(parsed.getTime())) return buildVersion;
+    const utcMs = parsed.getTime() + parsed.getTimezoneOffset() * 60 * 1000;
+    const gmt7 = new Date(utcMs + 7 * 60 * 60 * 1000);
+    const dd = String(gmt7.getDate()).padStart(2, "0");
+    const mm = String(gmt7.getMonth() + 1).padStart(2, "0");
+    const hh = String(gmt7.getHours()).padStart(2, "0");
+    const min = String(gmt7.getMinutes()).padStart(2, "0");
+    return `${dd}/${mm} ${hh}:${min}`;
+  })();
   const av = displayName
     .split(" ")
     .filter(Boolean)
@@ -460,35 +473,40 @@ export function Sidebar() {
               </>
             ) : (
               <div
-                className="flex flex-row items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-surface-hover cursor-pointer"
+                className="flex flex-col gap-0.5 px-1 py-[7px] rounded-lg hover:bg-surface-hover cursor-pointer"
                 onClick={() => setProfileOpen(true)}
               >
-                <div className="w-[18px] h-[18px] min-w-[18px] bg-primary rounded-full flex items-center justify-center text-primary-fg text-[7px] font-semibold flex-shrink-0">
-                  {av}
-                </div>
-                <span className="text-xs font-medium text-[color:var(--muted-fg)] whitespace-nowrap overflow-hidden flex-1">
-                  {displayName}
-                </span>
-                <button
-                  className="flex items-center justify-center w-[18px] h-[18px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-[color:var(--muted)] border-none bg-transparent cursor-pointer flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    logoutAction();
-                  }}
-                >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+                <div className="flex flex-row items-center gap-2">
+                  <div className="w-[18px] h-[18px] min-w-[18px] bg-primary rounded-full flex items-center justify-center text-primary-fg text-[7px] font-semibold flex-shrink-0">
+                    {av}
+                  </div>
+                  <span className="text-xs font-medium text-[color:var(--muted-fg)] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
+                    {displayName}
+                  </span>
+                  <button
+                    className="flex items-center justify-center w-[18px] h-[18px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-[color:var(--muted)] border-none bg-transparent cursor-pointer flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      logoutAction();
+                    }}
                   >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                </button>
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="pl-6 text-[10px] leading-tight text-[color:var(--faint)] whitespace-nowrap overflow-hidden text-ellipsis">
+                  build {buildVersionLabel}
+                </div>
               </div>
             )}
           </div>

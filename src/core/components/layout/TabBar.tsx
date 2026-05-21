@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, DragEvent, MouseEvent } from "react";
+import { useRef, useEffect, useState, DragEvent } from "react";
 import {
   useAppStore,
   STATIC_TABS,
@@ -6,10 +6,7 @@ import {
 } from "@/core/config/appStore";
 import { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
-import {
-  openPageContextMenu,
-  usePageContextMenu,
-} from "@/shared/components/ContextMenu";
+import { usePageContextMenu } from "@/shared/components/ContextMenu";
 import { useT } from "@/core/i18n";
 
 const MOBILE_BREAKPOINT = 768;
@@ -45,12 +42,6 @@ function TabItem({
   const closable = !STATIC_TABS[tabKey];
   const onContextMenu = usePageContextMenu(tabKey, label, undefined, "tabbar");
 
-  const handleMenuOpen = (e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openPageContextMenu(tabKey, label, e.currentTarget, undefined, "tabbar");
-  };
-
   return (
     <div
       ref={onMount}
@@ -65,7 +56,7 @@ function TabItem({
         dragOver && "ring-1 ring-black/10 dark:ring-white/20",
       )}
       onClick={() => navigate(tabKey)}
-      onContextMenu={isMobile ? undefined : onContextMenu}
+      onContextMenu={onContextMenu}
       onDragStart={(e) => {
         if (!closable || isMobile) return;
         e.dataTransfer.effectAllowed = "move";
@@ -85,19 +76,9 @@ function TabItem({
       }}
     >
       <span>{label}</span>
-      {isMobile && closable && (
-        <button
-          type="button"
-          className="inline-flex md:hidden items-center justify-center w-5 h-5 rounded-full text-[color:var(--faint)] hover:bg-surface-hover hover:text-[color:var(--muted-fg)]"
-          aria-label={`Mở menu ${label}`}
-          onClick={handleMenuOpen}
-        >
-          ⋯
-        </button>
-      )}
       {closable && (
         <span
-          className="text-[color:var(--faint)] text-sm leading-none cursor-pointer px-[3px] py-[1px] rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1 hidden md:inline"
+          className="text-[color:var(--faint)] text-sm leading-none cursor-pointer px-[3px] py-[1px] rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1"
           onClick={(e) => {
             e.stopPropagation();
             closeTab(tabKey);

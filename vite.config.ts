@@ -3,7 +3,14 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 
+const buildVersion =
+  process.env.BUILD_VERSION ??
+  `${new Date().toISOString()}-${Math.random().toString(36).slice(2, 8)}`;
+
 export default defineConfig({
+  define: {
+    __APP_BUILD_VERSION__: JSON.stringify(buildVersion),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -46,6 +53,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
         maximumFileSizeToCacheInBytes: 5000000,
         runtimeCaching: [
