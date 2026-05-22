@@ -186,6 +186,36 @@ export const operationalApi = {
     );
     return data.data;
   },
+  updateSales: async (
+    id: string,
+    payload: Partial<CreateOperationalPayload>,
+  ) => {
+    const { data } = await axiosInstance.patch<{ data: OperationalDocument }>(
+      `/api/v1/sales-service-orders/${id}`,
+      payload,
+    );
+    return data.data;
+  },
+  updatePurchase: async (
+    id: string,
+    payload: Partial<CreateOperationalPayload>,
+  ) => {
+    const { data } = await axiosInstance.patch<{ data: OperationalDocument }>(
+      `/api/v1/purchase-orders/${id}`,
+      payload,
+    );
+    return data.data;
+  },
+  updateExpense: async (
+    id: string,
+    payload: Partial<CreateOperationalPayload>,
+  ) => {
+    const { data } = await axiosInstance.patch<{ data: OperationalDocument }>(
+      `/api/v1/operating-expenses/${id}`,
+      payload,
+    );
+    return data.data;
+  },
   getDocument: async (documentType: OperationalDocumentType, id: string) => {
     const { data } = await axiosInstance.get<{ data: OperationalDocument }>(
       `/api/v1/${resolvePath(documentType)}/${id}`,

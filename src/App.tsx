@@ -33,6 +33,8 @@ import { SettingsBranch } from "@/pages/SettingsBranch";
 import { Login } from "@/pages/Login";
 import { ActivityLog } from "@/pages/ActivityLog";
 import { DoiTac } from "@/pages/Partners";
+import { KhachHang } from "@/pages/Customers";
+import { NhaCungCap } from "@/pages/Suppliers";
 import { PhanQuyen } from "@/pages/Permissions";
 import HoaDonDienTu from "@/pages/EInvoice";
 import { NotFound } from "@/pages/NotFound";
@@ -115,9 +117,9 @@ export default function App() {
                 {currentPage === "inventory" && <Kho />}
                 {currentPage === "journal" && <NhatKyChung />}
                 {currentPage === "settings-branch" && <SettingsBranch />}
-                {(currentPage === "ledger" ||
-                  currentPage === "customers" ||
-                  currentPage === "suppliers") && <ComingSoon />}
+                {currentPage === "ledger" && <ComingSoon />}
+                {currentPage === "customers" && <KhachHang />}
+                {currentPage === "suppliers" && <NhaCungCap />}
                 {currentPage === "permissions" && <PhanQuyen />}
                 {/* {currentPage === "permissions" && <ActivityLog />} */}
                 {currentPage === "activity-log" && <ActivityLog />}

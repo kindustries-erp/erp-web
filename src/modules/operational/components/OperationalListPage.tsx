@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, Link2, RefreshCcw, Repeat, Warehouse } from "lucide-react";
+import {
+  FileText,
+  Link2,
+  Pencil,
+  Plus,
+  RefreshCcw,
+  Repeat,
+  Warehouse,
+} from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
@@ -36,6 +44,7 @@ import {
   type InventoryPostingLineForm,
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
+import { OperationalFormDrawer } from "./OperationalFormDrawer";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -223,6 +232,10 @@ export function OperationalListPage({
   const [branchOptions, setBranchOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingRow, setEditingRow] = useState<OperationalDocument | null>(
+    null,
+  );
 
   const {
     activeStep,
@@ -898,11 +911,30 @@ export function OperationalListPage({
         desc={config.desc}
         icon={<FileText className="h-4 w-4" />}
         actions={
-          config.cta ? (
-            <BtnPrimary onClick={() => void createSample()} disabled={loading}>
-              {config.cta}
-            </BtnPrimary>
-          ) : undefined
+          <div className="flex items-center gap-2">
+            {(variant === "sales" ||
+              variant === "purchase" ||
+              variant === "expenses") && (
+              <BtnPrimary
+                onClick={() => {
+                  setEditingRow(null);
+                  setFormOpen(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Tạo mới
+              </BtnPrimary>
+            )}
+            {config.cta ? (
+              <button
+                className="btn-secondary inline-flex items-center gap-2"
+                onClick={() => void createSample()}
+                disabled={loading}
+              >
+                {config.cta}
+              </button>
+            ) : undefined}
+          </div>
         }
       />
 
@@ -929,6 +961,15 @@ export function OperationalListPage({
                   label: "Chi tiết",
                   icon: <FileText className="h-4 w-4" />,
                   onClick: () => void openDetail(row),
+                },
+                {
+                  label: "Sửa",
+                  icon: <Pencil className="h-4 w-4" />,
+                  onClick: () => {
+                    setEditingRow(row);
+                    setFormOpen(true);
+                  },
+                  hidden: !["sales", "purchase", "expenses"].includes(variant),
                 },
                 {
                   label: "Liên kết tiền",
@@ -1297,6 +1338,31 @@ export function OperationalListPage({
           </div>
         ) : null}
       </DrawerModal>
+
+      {(variant === "sales" ||
+        variant === "purchase" ||
+        variant === "expenses") && (
+        <OperationalFormDrawer
+          variant={variant as "sales" | "purchase" | "expenses"}
+          open={formOpen}
+          editing={editingRow}
+          onClose={() => {
+            setFormOpen(false);
+            setEditingRow(null);
+          }}
+          onSaved={async () => {
+            await load();
+            showToast({
+              title: editingRow
+                ? "Đã cập nhật chứng từ"
+                : "Đã tạo chứng từ mới",
+              variant: "success",
+            });
+            setFormOpen(false);
+            setEditingRow(null);
+          }}
+        />
+      )}
     </div>
   );
 }
