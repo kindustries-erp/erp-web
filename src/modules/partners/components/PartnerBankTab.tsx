@@ -8,10 +8,12 @@ import {
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { Skeleton } from "@/shared/components/Skeleton";
-import { TablePagination } from "@/shared/components/TablePagination";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  ActionDropdown,
+  type ActionItem,
+} from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
   getBusinessPartnersApi,
@@ -29,7 +31,7 @@ import {
   emptyBankForm,
   buildBankForm,
 } from "@/modules/partners/types";
-import { PageHeader, RowActions } from "./shared";
+import { PageHeader } from "./shared";
 
 export function PartnerBankTab() {
   const [partners, setPartners] = useState<BusinessPartner[]>([]);
@@ -180,6 +182,55 @@ export function PartnerBankTab() {
     label: `${p.code} — ${p.name}`,
   }));
 
+  const columns: DataTableColumn<BusinessPartnerBankAccount>[] = [
+    {
+      key: "partner",
+      header: "Đối tác",
+      cell: (b) => partnerName(b.business_partner_id),
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "bank_name",
+      header: t("doitac.headers.bankName"),
+      cell: (b) => b.bank_name,
+      className: "font-medium",
+    },
+    {
+      key: "account_number",
+      header: t("doitac.headers.accountNumber"),
+      cell: (b) => b.account_number,
+      className: "font-mono",
+    },
+    {
+      key: "account_holder",
+      header: t("doitac.headers.accountHolder"),
+      cell: (b) => b.account_holder,
+    },
+    {
+      key: "bank_branch",
+      header: t("doitac.headers.bankBranch"),
+      cell: () => "—",
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "currency",
+      header: t("doitac.headers.currency"),
+      cell: (b) => b.currency ?? "VND",
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "is_default",
+      header: t("doitac.headers.isDefault"),
+      cell: (b) =>
+        b.is_default ? (
+          <span className="text-[color:var(--approve-fg)] font-bold">✓</span>
+        ) : (
+          <span className="text-[color:var(--faint)]">—</span>
+        ),
+      className: "text-center",
+    },
+  ];
+
   return (
     <div>
       <PageHeader
@@ -187,116 +238,36 @@ export function PartnerBankTab() {
         desc="Tài khoản ngân hàng của đối tác."
         onAdd={openNew}
       />
-      <div className="mb-3">
-        <Combobox
-          options={partnerOpts}
-          value={partnerFilter}
-          onChange={(v) => handlePartnerFilter(v)}
-          placeholder="— Lọc theo đối tác —"
-          className="w-[240px]"
-        />
-      </div>
-      <div className="bg-surface border border-border rounded-[10px] overflow-x-auto card-shadow">
-        <table className="w-full border-collapse" style={{ minWidth: 700 }}>
-          <thead>
-            <tr>
-              {[
-                "Đối tác",
-                t("doitac.headers.bankName"),
-                t("doitac.headers.accountNumber"),
-                t("doitac.headers.accountHolder"),
-                t("doitac.headers.bankBranch"),
-                t("doitac.headers.currency"),
-                t("doitac.headers.isDefault"),
-                "",
-              ].map((h, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[8px] border-b border-border uppercase tracking-[0.05em]",
-                    i === 7 && "w-[80px]",
-                  )}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading &&
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 8 }).map((_, j) => (
-                    <td
-                      key={j}
-                      className="px-[10px] py-[10px] border-b border-[color:var(--border-light)]"
-                    >
-                      <Skeleton className="h-3 w-20" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            {!loading && fetchError && (
-              <tr>
-                <td
-                  colSpan={8}
-                  className="text-center text-xs text-[color:var(--warn-fg)] py-8"
-                >
-                  {fetchError}
-                </td>
-              </tr>
-            )}
-            {!loading && !fetchError && items.length === 0 && (
-              <tr>
-                <td
-                  colSpan={8}
-                  className="text-center text-xs text-[color:var(--faint)] py-8"
-                >
-                  {t("common.noData")}
-                </td>
-              </tr>
-            )}
-            {items.map((b) => (
-              <tr key={b.id} className="hover:bg-surface-hover">
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {partnerName(b.business_partner_id)}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">
-                  {b.bank_name}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-mono">
-                  {b.account_number}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-                  {b.account_holder}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  —
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {b.currency ?? "VND"}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-center">
-                  {b.is_default ? (
-                    <span className="text-[color:var(--approve-fg)] font-bold">
-                      ✓
-                    </span>
-                  ) : (
-                    <span className="text-[color:var(--faint)]">—</span>
-                  )}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-                  <RowActions
-                    onEdit={() => openEdit(b)}
-                    onDelete={() => setDeleteTarget(b)}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <TablePagination
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(b) => b.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        filters={
+          <Combobox
+            options={partnerOpts}
+            value={partnerFilter}
+            onChange={(v) => handlePartnerFilter(v)}
+            placeholder="— Lọc theo đối tác —"
+            className="w-[240px]"
+          />
+        }
+        actionsColumn={{
+          cell: (b) => (
+            <ActionDropdown
+              items={[
+                { label: t("common.edit"), onClick: () => openEdit(b) },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(b),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
         page={page}
         pageSize={pageSize}
         total={total}

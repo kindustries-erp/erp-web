@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Settings } from "lucide-react";
+import { Pencil, Settings, Trash2 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -11,6 +11,10 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  ActionDropdown,
+  type ActionItem,
+} from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   getChartOfAccountsPagedApi,
@@ -21,14 +25,7 @@ import {
   type ChartOfAccount,
   type CreateChartOfAccountDto,
 } from "@/modules/accounting/api/catalogApi";
-import {
-  SectionHeader,
-  TagCell,
-  ErrorBanner,
-  IconEdit,
-  IconTrash,
-  extractApiError,
-} from "./shared";
+import { SectionHeader, TagCell, ErrorBanner, extractApiError } from "./shared";
 
 const ACC_TYPES = [
   { value: "asset", label: "Tài sản" },
@@ -258,30 +255,6 @@ export function TKTab() {
       cell: (c) => <TagCell active={!!c.is_cash_account} />,
       skeletonClassName: "w-16",
     },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-[80px]",
-      skeletonClassName: "",
-      cell: (c) => (
-        <div className="flex gap-[5px] justify-end">
-          <button
-            title={t("common.edit")}
-            onClick={() => openEdit(c)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
-          >
-            <IconEdit />
-          </button>
-          <button
-            title={t("common.delete")}
-            onClick={() => setDeleteTarget(c)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
-          >
-            <IconTrash />
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -308,6 +281,24 @@ export function TKTab() {
         emptyLabel={t("common.noData")}
         minWidth={700}
         loadingRows={4}
+        actionsColumn={{
+          cell: (c) => {
+            const actionItems: ActionItem[] = [
+              {
+                label: t("common.edit"),
+                onClick: () => openEdit(c),
+                icon: <Pencil size={14} />,
+              },
+              {
+                label: t("common.delete"),
+                onClick: () => setDeleteTarget(c),
+                icon: <Trash2 size={14} />,
+                variant: "danger",
+              },
+            ];
+            return <ActionDropdown items={actionItems} />;
+          },
+        }}
         page={page}
         pageSize={pageSize}
         total={total}

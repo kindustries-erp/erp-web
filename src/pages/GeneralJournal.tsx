@@ -1,6 +1,7 @@
 import { BarChart3, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 import { PageHeader } from "@/shared/components/PageHeader";
@@ -30,6 +31,7 @@ import {
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 interface FlatRow {
+  _rowKey: string;
   entry: JournalEntry;
   debitLine: JournalEntryLine | null;
   creditLine: JournalEntryLine | null;
@@ -48,6 +50,7 @@ function flattenEntry(entry: JournalEntry): FlatRow[] {
   if (lines.length === 0) {
     return [
       {
+        _rowKey: `${entry.id}-0`,
         entry,
         debitLine: null,
         creditLine: null,
@@ -69,7 +72,14 @@ function flattenEntry(entry: JournalEntry): FlatRow[] {
     const c = credits[i] ?? null;
     const amount = d ? money(d.debit) : c ? money(c.credit) : 0;
     const description = (d ?? c)?.description || entry.description || "";
-    rows.push({ entry, debitLine: d, creditLine: c, amount, description });
+    rows.push({
+      _rowKey: `${entry.id}-${i}`,
+      entry,
+      debitLine: d,
+      creditLine: c,
+      amount,
+      description,
+    });
   }
 
   return rows;
@@ -175,6 +185,45 @@ export function NhatKyChung() {
   // Build flat rows for display
   const flatRows = list.items.flatMap(flattenEntry);
 
+  const journalColumns: DataTableColumn<FlatRow>[] = [
+    {
+      key: "voucher_no",
+      header: t("journalEntries.columns.voucherNo"),
+      cell: (row) => row.entry.voucher_no || row.entry.id.slice(0, 8),
+      className: "font-medium",
+    },
+    {
+      key: "date",
+      header: t("journalEntries.columns.date"),
+      cell: (row) => row.entry.date,
+    },
+    {
+      key: "debit_account",
+      header: t("journalEntries.form.debitAccount"),
+      cell: (row) =>
+        row.debitLine ? getAccountLabel(row.debitLine.account_id) : "—",
+    },
+    {
+      key: "credit_account",
+      header: t("journalEntries.form.creditAccount"),
+      cell: (row) =>
+        row.creditLine ? getAccountLabel(row.creditLine.account_id) : "—",
+    },
+    {
+      key: "amount",
+      header: t("journalEntries.form.amount"),
+      cell: (row) => (row.amount > 0 ? formatMoney(row.amount) : "—"),
+      className: "text-right",
+      headerClassName: "text-right",
+    },
+    {
+      key: "description",
+      header: t("journalEntries.form.lineDescription"),
+      cell: (row) => row.description || "—",
+      className: "max-w-[200px] truncate",
+    },
+  ];
+
   return (
     <>
       <div className="p-4 md:p-6 space-y-4">
@@ -277,105 +326,25 @@ export function NhatKyChung() {
         )}
 
         {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
-        <div className="rounded-2xl border border-border bg-surface overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-xs">
-              <thead className="bg-surface-hover text-[color:var(--muted-fg)]">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium">
-                    {t("journalEntries.columns.voucherNo")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium">
-                    {t("journalEntries.columns.date")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium">
-                    {t("journalEntries.form.debitAccount")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium">
-                    {t("journalEntries.form.creditAccount")}
-                  </th>
-                  <th className="px-3 py-2 text-right font-medium">
-                    {t("journalEntries.form.amount")}
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium">
-                    {t("journalEntries.form.lineDescription")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {list.loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
-                    >
-                      {t("journalEntries.loading")}
-                    </td>
-                  </tr>
-                ) : flatRows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-3 py-8 text-center text-[color:var(--muted-fg)]"
-                    >
-                      {t("common.noData")}
-                    </td>
-                  </tr>
-                ) : (
-                  flatRows.map((row, idx) => (
-                    <tr
-                      key={`${row.entry.id}-${idx}`}
-                      onClick={() => handleRowClick(row.entry)}
-                      className="border-t border-border cursor-pointer hover:bg-surface-hover"
-                    >
-                      <td className="px-3 py-2 font-medium">
-                        {row.entry.voucher_no || row.entry.id.slice(0, 8)}
-                      </td>
-                      <td className="px-3 py-2">{row.entry.date}</td>
-                      <td className="px-3 py-2">
-                        {row.debitLine
-                          ? getAccountLabel(row.debitLine.account_id)
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2">
-                        {row.creditLine
-                          ? getAccountLabel(row.creditLine.account_id)
-                          : "—"}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        {row.amount > 0 ? formatMoney(row.amount) : "—"}
-                      </td>
-                      <td className="px-3 py-2 max-w-[200px] truncate">
-                        {row.description || "—"}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2 text-xs">
-            <button
-              type="button"
-              disabled={list.page <= 1}
-              onClick={() => list.setPage(Math.max(1, list.page - 1))}
-              className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
-            >
-              {t("journalEntries.pagination.prev")}
-            </button>
-            <span>
-              {list.page} / {Math.max(1, list.totalPages)}
-            </span>
-            <button
-              type="button"
-              disabled={list.page >= Math.max(1, list.totalPages)}
-              onClick={() => list.setPage(list.page + 1)}
-              className="rounded-lg border border-border px-3 py-1.5 disabled:opacity-40"
-            >
-              {t("journalEntries.pagination.next")}
-            </button>
-          </div>
-        </div>
+        <DataTable<FlatRow>
+          items={flatRows}
+          columns={journalColumns}
+          getRowKey={(row) => row._rowKey}
+          loading={list.loading}
+          emptyLabel={t("common.noData")}
+          onRowClick={(row) => handleRowClick(row.entry)}
+          page={list.page}
+          pageSize={list.pageSize}
+          total={list.total}
+          totalPages={Math.max(1, list.totalPages)}
+          onPage={list.setPage}
+          onPageSize={(ps) => {
+            list.setPageSize(ps);
+            list.setPage(1);
+          }}
+          elevated={false}
+          containerClassName="rounded-2xl"
+        />
       </div>
 
       {/* Create modal */}

@@ -3,6 +3,7 @@ import { Panel, PanelMore } from "@/shared/components/Panel";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { StatusBadge, VoucherTypeBadge } from "@/shared/components/badges";
 import { AttachmentCell } from "@/shared/components/AttachmentComponents";
 import { IconEdit, IconSort, IconTrash } from "@/shared/components/icons";
@@ -209,32 +210,6 @@ export function VoucherTable({
       ),
       skeletonClassName: "w-16",
     },
-    {
-      key: "actions",
-      header: "",
-      cell: (v) => (
-        <div className="flex gap-[5px] justify-end">
-          <button
-            title={t("voucher.table.btnEdit")}
-            onClick={() => onEdit(v)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
-          >
-            <IconEdit />
-          </button>
-          {v.status === "DRAFT" && (
-            <button
-              title={t("voucher.table.btnDelete")}
-              onClick={() => onDelete(v)}
-              className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
-            >
-              <IconTrash />
-            </button>
-          )}
-        </div>
-      ),
-      headerClassName: "w-[72px]",
-      skeletonClassName: "",
-    },
   ];
 
   return (
@@ -248,6 +223,26 @@ export function VoucherTable({
         emptyLabel={noDataLabel}
         minWidth={860}
         elevated={false}
+        actionsColumn={{
+          cell: (v) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("voucher.table.btnEdit"),
+                  icon: <IconEdit />,
+                  onClick: () => onEdit(v),
+                },
+                {
+                  label: t("voucher.table.btnDelete"),
+                  icon: <IconTrash />,
+                  onClick: () => onDelete(v),
+                  variant: "danger",
+                  hidden: v.status !== "DRAFT",
+                },
+              ]}
+            />
+          ),
+        }}
         filters={
           <>
             <SearchInput

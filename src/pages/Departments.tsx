@@ -9,9 +9,9 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { TablePagination } from "@/shared/components/TablePagination";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { SearchInput } from "@/shared/components/SearchInput";
-import { Skeleton } from "@/shared/components/Skeleton";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
 import {
@@ -38,32 +38,7 @@ const IconPlus = () => (
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
-const IconEdit = () => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
-const IconTrash = () => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-  </svg>
-);
+
 const IconBuilding = () => (
   <svg
     width="14"
@@ -245,6 +220,47 @@ export function PhongBan() {
     }
   }
 
+  const columns: DataTableColumn<Department>[] = [
+    {
+      key: "department_code",
+      header: t("phongban.headers.code"),
+      cell: (dept) => dept.department_code,
+      className: "font-mono text-[color:var(--muted-fg)]",
+      skeletonClassName: "h-3 w-16",
+    },
+    {
+      key: "department_name",
+      header: t("phongban.headers.name"),
+      cell: (dept) => dept.department_name,
+      className: "font-medium",
+      skeletonClassName: "h-3 w-32",
+    },
+    {
+      key: "description",
+      header: t("phongban.headers.description"),
+      cell: (dept) => dept.description ?? "—",
+      className: "text-[color:var(--muted-fg)] max-w-[220px] truncate",
+      skeletonClassName: "h-3 w-40",
+    },
+    {
+      key: "status",
+      header: t("phongban.headers.status"),
+      cell: (dept) => (
+        <span
+          className={cn(
+            "inline-flex items-center px-[8px] py-[3px] rounded-[20px] text-[10px] font-medium",
+            dept.is_active
+              ? "bg-approve-bg text-approve-fg"
+              : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
+          )}
+        >
+          {dept.is_active ? t("status.active") : t("status.inactive")}
+        </span>
+      ),
+      skeletonClassName: "h-4 w-16 rounded-full",
+    },
+  ];
+
   const isDirty =
     !!form.department_name.trim() ||
     !!form.department_code.trim() ||
@@ -266,132 +282,46 @@ export function PhongBan() {
         </button>
       </div>
 
-      {/* ── Search ── */}
-      <div className="mb-4">
-        <SearchInput
-          placeholder={t("phongban.searchPlaceholder")}
-          value={searchInput}
-          onChange={handleSearchInput}
-          className="max-w-[320px]"
-        />
-      </div>
-
-      {/* ── Table ── */}
-      <div className="bg-surface border border-border rounded-[10px] overflow-x-auto card-shadow">
-        <table className="w-full border-collapse" style={{ minWidth: 520 }}>
-          <thead>
-            <tr>
-              {[
-                t("phongban.headers.code"),
-                t("phongban.headers.name"),
-                t("phongban.headers.description"),
-                t("phongban.headers.status"),
-                "",
-              ].map((h, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-3 py-[9px] border-b border-border uppercase tracking-[0.05em]",
-                    i === 4 && "w-[80px]",
-                  )}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading &&
-              Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i}>
-                  <td className="px-3 py-[10px] border-b border-[color:var(--border-light)]">
-                    <Skeleton className="h-3 w-16" />
-                  </td>
-                  <td className="px-3 py-[10px] border-b border-[color:var(--border-light)]">
-                    <Skeleton className="h-3 w-32" />
-                  </td>
-                  <td className="px-3 py-[10px] border-b border-[color:var(--border-light)]">
-                    <Skeleton className="h-3 w-40" />
-                  </td>
-                  <td className="px-3 py-[10px] border-b border-[color:var(--border-light)]">
-                    <Skeleton className="h-4 w-16 rounded-full" />
-                  </td>
-                  <td className="px-3 py-[10px] border-b border-[color:var(--border-light)]" />
-                </tr>
-              ))}
-            {!loading && fetchError && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="text-center text-xs text-[color:var(--warn-fg)] py-10"
-                >
-                  {fetchError}
-                </td>
-              </tr>
-            )}
-            {!loading && !fetchError && items.length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="text-center text-xs text-[color:var(--faint)] py-10"
-                >
-                  {t("common.noData")}
-                </td>
-              </tr>
-            )}
-            {items.map((dept) => (
-              <tr key={dept.id} className="hover:bg-surface-hover">
-                <td className="px-3 py-[10px] border-b border-[color:var(--border-light)] text-xs font-mono text-[color:var(--muted-fg)]">
-                  {dept.department_code}
-                </td>
-                <td className="px-3 py-[10px] border-b border-[color:var(--border-light)] text-xs font-medium text-foreground">
-                  {dept.department_name}
-                </td>
-                <td className="px-3 py-[10px] border-b border-[color:var(--border-light)] text-xs text-[color:var(--muted-fg)] max-w-[220px] truncate">
-                  {dept.description ?? "—"}
-                </td>
-                <td className="px-3 py-[10px] border-b border-[color:var(--border-light)] text-xs">
-                  <span
-                    className={cn(
-                      "inline-flex items-center px-[8px] py-[3px] rounded-[20px] text-[10px] font-medium",
-                      dept.is_active
-                        ? "bg-approve-bg text-approve-fg"
-                        : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
-                    )}
-                  >
-                    {dept.is_active ? t("status.active") : t("status.inactive")}
-                  </span>
-                </td>
-                <td className="px-3 py-[10px] border-b border-[color:var(--border-light)]">
-                  <div className="flex gap-[5px] justify-end">
-                    <button
-                      title={t("common.edit")}
-                      onClick={() => openEdit(dept)}
-                      className="p-[5px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
-                    >
-                      <IconEdit />
-                    </button>
-                    <button
-                      title={t("common.delete")}
-                      onClick={() => setDeleteTarget(dept)}
-                      className="p-[5px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
-                    >
-                      <IconTrash />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <TablePagination
+      {/* ── DataTable ── */}
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(dept) => dept.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        minWidth={520}
+        filters={
+          <SearchInput
+            placeholder={t("phongban.searchPlaceholder")}
+            value={searchInput}
+            onChange={handleSearchInput}
+            className="max-w-[320px]"
+          />
+        }
         page={page}
         pageSize={pageSize}
         total={total}
         totalPages={totalPages}
         onPage={setPage}
         onPageSize={handlePageSize}
+        actionsColumn={{
+          cell: (dept) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("common.edit"),
+                  onClick: () => openEdit(dept),
+                },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(dept),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
       />
 
       {/* ── Drawer: Add / Edit ── */}

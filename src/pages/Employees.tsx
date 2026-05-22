@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Users } from "lucide-react";
+import { Pencil, Trash2, UserCheck, Users } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -8,6 +8,7 @@ import { useAppStore } from "@/core/config/appStore";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { DEFAULT_STACK_OFFSET } from "@/shared/components/DrawerModal";
 import {
   getEmployeesPagedApi,
@@ -292,13 +293,9 @@ export function NhanSu() {
     () =>
       buildEmployeeColumns({
         t,
-        canImpersonate,
         statusLabel,
-        onImpersonate: setImpersonateTarget,
-        onEdit: openEdit,
-        onDelete: setDeleteTarget,
       }),
-    [t, canImpersonate, statusLabel],
+    [t, statusLabel],
   );
 
   return (
@@ -344,6 +341,31 @@ export function NhanSu() {
         totalPages={totalPages}
         onPage={setPage}
         onPageSize={handlePageSize}
+        actionsColumn={{
+          cell: (emp) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("nhansu.actions.loginAsUser"),
+                  icon: <UserCheck size={14} />,
+                  onClick: () => setImpersonateTarget(emp),
+                  hidden: !canImpersonate,
+                },
+                {
+                  label: t("nhansu.actions.edit"),
+                  icon: <Pencil size={14} />,
+                  onClick: () => openEdit(emp),
+                },
+                {
+                  label: t("nhansu.actions.delete"),
+                  icon: <Trash2 size={14} />,
+                  onClick: () => setDeleteTarget(emp),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
       />
       <EmployeeDrawer
         open={drawerOpen}

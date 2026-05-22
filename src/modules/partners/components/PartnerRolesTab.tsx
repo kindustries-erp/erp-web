@@ -7,10 +7,9 @@ import {
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { Skeleton } from "@/shared/components/Skeleton";
-import { TablePagination } from "@/shared/components/TablePagination";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
   getBusinessPartnersApi,
@@ -24,7 +23,7 @@ import {
 } from "@/modules/partners/api/partnerApi";
 import { PARTNER_ROLE_OPTS } from "@/modules/partners/constants";
 import { type PartnerRoleForm, emptyRoleForm } from "@/modules/partners/types";
-import { PageHeader, RowActions, StatusBadge } from "./shared";
+import { PageHeader, StatusBadge } from "./shared";
 
 function buildRoleForm(r: BusinessPartnerRole): PartnerRoleForm {
   return {
@@ -173,6 +172,26 @@ export function PartnerRolesTab() {
   const roleLabel = (role: string) =>
     PARTNER_ROLE_OPTS.find((o) => o.value === role)?.label ?? role;
 
+  const columns: DataTableColumn<BusinessPartnerRole>[] = [
+    {
+      key: "partner",
+      header: t("doitac.headers.partner"),
+      cell: (r) => partnerName(r.business_partner_id),
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "role",
+      header: t("doitac.headers.role"),
+      cell: (r) => roleLabel(r.role),
+      className: "font-medium",
+    },
+    {
+      key: "status",
+      header: t("doitac.headers.status"),
+      cell: (r) => <StatusBadge active={r.is_active} />,
+    },
+  ];
+
   return (
     <div>
       <PageHeader
@@ -180,100 +199,46 @@ export function PartnerRolesTab() {
         desc={t("doitac.roles.desc")}
         onAdd={openNew}
       />
-      <div className="mb-3">
-        <Combobox
-          options={partnerOpts}
-          value={partnerFilter}
-          onChange={(v) => handlePartnerFilter(v)}
-          placeholder={t("doitac.roles.partnerFilterPlaceholder")}
-          className="w-[240px]"
-        />
-      </div>
-      <div className="bg-surface border border-border rounded-[10px] overflow-x-auto card-shadow">
-        <table className="w-full border-collapse" style={{ minWidth: 620 }}>
-          <thead>
-            <tr>
-              {[
-                t("doitac.headers.partner"),
-                t("doitac.headers.role"),
-                t("doitac.headers.status"),
-                "",
-              ].map((h, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[8px] border-b border-border uppercase tracking-[0.05em]",
-                    i === 3 && "w-[80px]",
-                  )}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading &&
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 4 }).map((_, j) => (
-                    <td
-                      key={j}
-                      className="px-[10px] py-[10px] border-b border-[color:var(--border-light)]"
-                    >
-                      <Skeleton className="h-3 w-24" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            {!loading && fetchError && (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="text-center text-xs text-[color:var(--warn-fg)] py-8"
-                >
-                  {fetchError}
-                </td>
-              </tr>
-            )}
-            {!loading && !fetchError && items.length === 0 && (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="text-center text-xs text-[color:var(--faint)] py-8"
-                >
-                  {t("common.noData")}
-                </td>
-              </tr>
-            )}
-            {items.map((r) => (
-              <tr key={r.id} className="hover:bg-surface-hover">
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {partnerName(r.business_partner_id)}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">
-                  {roleLabel(r.role)}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-                  <StatusBadge active={r.is_active} />
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-                  <RowActions
-                    onEdit={() => openEdit(r)}
-                    onDelete={() => setDeleteTarget(r)}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <TablePagination
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(r) => r.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        minWidth={620}
+        filters={
+          <Combobox
+            options={partnerOpts}
+            value={partnerFilter}
+            onChange={(v) => handlePartnerFilter(v)}
+            placeholder={t("doitac.roles.partnerFilterPlaceholder")}
+            className="w-[240px]"
+          />
+        }
         page={page}
         pageSize={pageSize}
         total={total}
         totalPages={totalPages}
         onPage={setPage}
         onPageSize={handlePageSize}
+        actionsColumn={{
+          cell: (r) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("common.edit"),
+                  onClick: () => openEdit(r),
+                },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(r),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
       />
 
       <DrawerModal

@@ -21,7 +21,8 @@ import {
   type ChartOfAccount,
 } from "@/modules/accounting/api/catalogApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import { SectionHeader, ErrorBanner, IconEdit, IconTrash } from "./shared";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { SectionHeader, ErrorBanner } from "./shared";
 
 interface BankForm {
   bank_account_code: string;
@@ -233,30 +234,6 @@ export function NHTab() {
       className: "text-[color:var(--muted-fg)]",
       skeletonClassName: "w-12",
     },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-[80px]",
-      skeletonClassName: "",
-      cell: (b) => (
-        <div className="flex gap-[5px] justify-end">
-          <button
-            title={t("common.edit")}
-            onClick={() => openEdit(b)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
-          >
-            <IconEdit />
-          </button>
-          <button
-            title={t("common.delete")}
-            onClick={() => setDeleteTarget(b)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
-          >
-            <IconTrash />
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -276,6 +253,23 @@ export function NHTab() {
         emptyLabel={t("common.noData")}
         minWidth={750}
         loadingRows={4}
+        actionsColumn={{
+          cell: (b) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("common.edit"),
+                  onClick: () => openEdit(b),
+                },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(b),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
         page={page}
         pageSize={pageSize}
         total={total}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Wallet } from "lucide-react";
+import { Pencil, Trash2, Wallet } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -10,6 +10,10 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import {
+  ActionDropdown,
+  type ActionItem,
+} from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   getCashFundsPagedApi,
@@ -24,14 +28,7 @@ import {
   getChartOfAccountsApi,
   type ChartOfAccount,
 } from "@/modules/accounting/api/catalogApi";
-import {
-  SectionHeader,
-  TagCell,
-  ErrorBanner,
-  IconEdit,
-  IconTrash,
-  extractApiError,
-} from "./shared";
+import { SectionHeader, TagCell, ErrorBanner, extractApiError } from "./shared";
 
 interface QuyForm {
   fund_code: string;
@@ -224,30 +221,6 @@ export function QuyTab() {
       cell: (q) => <TagCell active={q.is_active} isDefault={false} />,
       skeletonClassName: "w-16",
     },
-    {
-      key: "actions",
-      header: "",
-      headerClassName: "w-[80px]",
-      skeletonClassName: "",
-      cell: (q) => (
-        <div className="flex gap-[5px] justify-end">
-          <button
-            title={t("common.edit")}
-            onClick={() => openEdit(q)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
-          >
-            <IconEdit />
-          </button>
-          <button
-            title={t("common.delete")}
-            onClick={() => setDeleteTarget(q)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-surface-hover cursor-pointer"
-          >
-            <IconTrash />
-          </button>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -267,6 +240,24 @@ export function QuyTab() {
         emptyLabel={t("common.noData")}
         minWidth={600}
         loadingRows={4}
+        actionsColumn={{
+          cell: (q) => {
+            const actionItems: ActionItem[] = [
+              {
+                label: t("common.edit"),
+                onClick: () => openEdit(q),
+                icon: <Pencil size={14} />,
+              },
+              {
+                label: t("common.delete"),
+                onClick: () => setDeleteTarget(q),
+                icon: <Trash2 size={14} />,
+                variant: "danger",
+              },
+            ];
+            return <ActionDropdown items={actionItems} />;
+          },
+        }}
         page={page}
         pageSize={pageSize}
         total={total}

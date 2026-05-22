@@ -7,16 +7,16 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
-import { Skeleton } from "@/shared/components/Skeleton";
-import { TablePagination } from "@/shared/components/TablePagination";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { cn } from "@/shared/utils";
 import {
   PARTNER_KIND_OPTS,
   CURRENCY_OPTS,
   PARTNER_ROLE_OPTS,
 } from "@/modules/partners/constants";
-import { PageHeader, RowActions, StatusBadge } from "./shared";
+import { PageHeader, StatusBadge } from "./shared";
+import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 
 export function PartnersTabView(p: any) {
   const {
@@ -57,6 +57,45 @@ export function PartnersTabView(p: any) {
     deleting,
     handleDelete,
   } = p;
+
+  const columns: DataTableColumn<BusinessPartner>[] = [
+    {
+      key: "code",
+      header: t("doitac.headers.code"),
+      cell: (bp) => bp.code,
+      className: "font-mono font-semibold text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "name",
+      header: t("doitac.headers.name"),
+      cell: (bp) => bp.name,
+      className: "font-medium",
+    },
+    {
+      key: "kind",
+      header: t("doitac.headers.kind"),
+      cell: (bp) => kindLabel(bp.partner_kind),
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "tax_code",
+      header: t("doitac.headers.taxCode"),
+      cell: (bp) => bp.tax_code || "—",
+      className: "font-mono text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "phone",
+      header: t("doitac.headers.phone"),
+      cell: (bp) => bp.phone || "—",
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "status",
+      header: t("doitac.headers.status"),
+      cell: (bp) => <StatusBadge active={bp.is_active} />,
+    },
+  ];
+
   return (
     <div>
       <PageHeader
@@ -64,32 +103,45 @@ export function PartnersTabView(p: any) {
         desc={t("doitac.desc")}
         onAdd={openNew}
       />
-      <div className="mb-3">
-        <SearchInput
-          placeholder="Tìm mã, tên hoặc MST..."
-          value={searchInput}
-          onChange={handleSearchInput}
-          className="max-w-[280px]"
-        />
-      </div>
-      <PartnerTable
-        {...{
-          t,
-          items,
-          loading,
-          fetchError,
-          kindLabel,
-          openEdit,
-          setDeleteTarget,
-        }}
-      />
-      <TablePagination
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(bp) => bp.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        minWidth={680}
+        filters={
+          <SearchInput
+            placeholder="Tìm mã, tên hoặc MST..."
+            value={searchInput}
+            onChange={handleSearchInput}
+            className="max-w-[280px]"
+          />
+        }
         page={page}
         pageSize={pageSize}
         total={total}
         totalPages={totalPages}
         onPage={setPage}
         onPageSize={handlePageSize}
+        actionsColumn={{
+          cell: (bp) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("common.edit"),
+                  onClick: () => openEdit(bp),
+                },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(bp),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
       />
       <PartnerDrawer
         {...{
@@ -122,121 +174,6 @@ export function PartnersTabView(p: any) {
         onCancel={() => setDeleteTarget(null)}
       />
     </div>
-  );
-}
-
-function PartnerTable({
-  t,
-  items,
-  loading,
-  fetchError,
-  kindLabel,
-  openEdit,
-  setDeleteTarget,
-}: any) {
-  const headers = [
-    t("doitac.headers.code"),
-    t("doitac.headers.name"),
-    t("doitac.headers.kind"),
-    t("doitac.headers.taxCode"),
-    t("doitac.headers.phone"),
-    t("doitac.headers.status"),
-    "",
-  ];
-  return (
-    <div className="bg-surface border border-border rounded-[10px] overflow-x-auto card-shadow">
-      <table className="w-full border-collapse" style={{ minWidth: 680 }}>
-        <thead>
-          <tr>
-            {headers.map((h, i) => (
-              <th
-                key={i}
-                className={cn(
-                  "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[8px] border-b border-border uppercase tracking-[0.05em]",
-                  i === 6 && "w-[80px]",
-                )}
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading &&
-            Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)}
-          {!loading && fetchError && (
-            <tr>
-              <td
-                colSpan={7}
-                className="text-center text-xs text-[color:var(--warn-fg)] py-8"
-              >
-                {fetchError}
-              </td>
-            </tr>
-          )}
-          {!loading && !fetchError && items.length === 0 && (
-            <tr>
-              <td
-                colSpan={7}
-                className="text-center text-xs text-[color:var(--faint)] py-8"
-              >
-                {t("common.noData")}
-              </td>
-            </tr>
-          )}
-          {items.map((bp: any) => (
-            <PartnerRow
-              key={bp.id}
-              {...{ bp, kindLabel, openEdit, setDeleteTarget }}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-function SkeletonRow() {
-  return (
-    <tr>
-      {[14, 36, 20, 20, 24, 16, 0].map((w, j) => (
-        <td
-          key={j}
-          className="px-[10px] py-[10px] border-b border-[color:var(--border-light)]"
-        >
-          {w > 0 && <Skeleton className={`h-3 w-${w}`} />}
-        </td>
-      ))}
-    </tr>
-  );
-}
-function PartnerRow({ bp, kindLabel, openEdit, setDeleteTarget }: any) {
-  return (
-    <tr className="hover:bg-surface-hover">
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-mono font-semibold text-[color:var(--muted-fg)]">
-        {bp.code}
-      </td>
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">
-        {bp.name}
-      </td>
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-        {kindLabel(bp.partner_kind)}
-      </td>
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-mono text-[color:var(--muted-fg)]">
-        {bp.tax_code || "—"}
-      </td>
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-        {bp.phone || "—"}
-      </td>
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-        <StatusBadge active={bp.is_active} />
-      </td>
-      <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-        <RowActions
-          onEdit={() => openEdit(bp)}
-          onDelete={() => setDeleteTarget(bp)}
-        />
-      </td>
-    </tr>
   );
 }
 

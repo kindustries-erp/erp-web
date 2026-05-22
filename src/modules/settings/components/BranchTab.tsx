@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Building2 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import {
   DrawerModal,
   DrawerSection,
@@ -46,30 +47,6 @@ export function BranchTab() {
       header: "Trạng thái",
       cell: (b) => (b.is_active ? "Hoạt động" : "Ngưng"),
     },
-    {
-      key: "a",
-      header: "",
-      cell: (b) => (
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={() => {
-              setEditing(b);
-              setForm({
-                code: b.code,
-                name: b.name,
-                is_active: b.is_active !== false,
-              });
-              setOpen(true);
-            }}
-          >
-            <IconEdit />
-          </button>
-          <button onClick={() => setDel(b)}>
-            <IconTrash />
-          </button>
-        </div>
-      ),
-    },
   ];
   return (
     <div>
@@ -90,6 +67,33 @@ export function BranchTab() {
         loading={loading}
         emptyLabel={t("common.noData")}
         minWidth={600}
+        actionsColumn={{
+          cell: (b) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("common.edit"),
+                  icon: <IconEdit />,
+                  onClick: () => {
+                    setEditing(b);
+                    setForm({
+                      code: b.code,
+                      name: b.name,
+                      is_active: b.is_active !== false,
+                    });
+                    setOpen(true);
+                  },
+                },
+                {
+                  label: t("common.delete"),
+                  icon: <IconTrash />,
+                  onClick: () => setDel(b),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
       />
       <DrawerModal
         open={open}

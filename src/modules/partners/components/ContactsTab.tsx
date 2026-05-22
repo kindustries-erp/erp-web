@@ -9,10 +9,9 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
-import { Skeleton } from "@/shared/components/Skeleton";
-import { TablePagination } from "@/shared/components/TablePagination";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { cn } from "@/shared/utils";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
   getBusinessPartnersApi,
@@ -24,7 +23,7 @@ import {
   type BusinessPartnerContact,
   type CreateBusinessPartnerContactDto,
 } from "@/modules/partners/api/partnerApi";
-import { PageHeader, RowActions, StatusBadge } from "./shared";
+import { PageHeader, StatusBadge } from "./shared";
 
 interface ContactForm {
   business_partner_id: string;
@@ -229,6 +228,44 @@ export function ContactsTab() {
     label: `${p.code} — ${p.name}`,
   }));
 
+  const columns: DataTableColumn<BusinessPartnerContact>[] = [
+    {
+      key: "partner",
+      header: t("doitac.headers.code"),
+      cell: (c) => partnerName(c.business_partner_id),
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "full_name",
+      header: t("doitac.headers.contactName"),
+      cell: (c) => c.full_name,
+      className: "font-medium",
+    },
+    {
+      key: "position",
+      header: t("doitac.headers.position"),
+      cell: (c) => c.position || "—",
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "phone",
+      header: t("doitac.headers.phone"),
+      cell: (c) => c.phone || "—",
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "email",
+      header: t("doitac.headers.email"),
+      cell: (c) => c.email || "—",
+      className: "text-[color:var(--muted-fg)]",
+    },
+    {
+      key: "status",
+      header: t("doitac.headers.status"),
+      cell: (c) => <StatusBadge active={c.is_active} />,
+    },
+  ];
+
   return (
     <div>
       <PageHeader
@@ -236,112 +273,44 @@ export function ContactsTab() {
         desc="Danh sách liên hệ của đối tác."
         onAdd={openNew}
       />
-      <div className="flex gap-2 mb-3 flex-wrap">
-        <Combobox
-          options={partnerOpts}
-          value={partnerFilter}
-          onChange={(v) => handlePartnerFilter(v)}
-          placeholder="— Lọc theo đối tác —"
-          className="w-[240px]"
-        />
-        <SearchInput
-          placeholder="Tìm tên liên hệ..."
-          value={searchInput}
-          onChange={handleSearchInput}
-          className="max-w-[220px]"
-        />
-      </div>
-      <div className="bg-surface border border-border rounded-[10px] overflow-x-auto card-shadow">
-        <table className="w-full border-collapse" style={{ minWidth: 680 }}>
-          <thead>
-            <tr>
-              {[
-                t("doitac.headers.code"),
-                t("doitac.headers.contactName"),
-                t("doitac.headers.position"),
-                t("doitac.headers.phone"),
-                t("doitac.headers.email"),
-                t("doitac.headers.status"),
-                "",
-              ].map((h, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    "text-left text-[11px] font-semibold text-[color:var(--muted-fg)] px-[10px] py-[8px] border-b border-border uppercase tracking-[0.05em]",
-                    i === 6 && "w-[80px]",
-                  )}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading &&
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => (
-                    <td
-                      key={j}
-                      className="px-[10px] py-[10px] border-b border-[color:var(--border-light)]"
-                    >
-                      <Skeleton className="h-3 w-20" />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            {!loading && fetchError && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="text-center text-xs text-[color:var(--warn-fg)] py-8"
-                >
-                  {fetchError}
-                </td>
-              </tr>
-            )}
-            {!loading && !fetchError && items.length === 0 && (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="text-center text-xs text-[color:var(--faint)] py-8"
-                >
-                  {t("common.noData")}
-                </td>
-              </tr>
-            )}
-            {items.map((c) => (
-              <tr key={c.id} className="hover:bg-surface-hover">
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {partnerName(c.business_partner_id)}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] font-medium">
-                  {c.full_name}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {c.position || "—"}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {c.phone || "—"}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {c.email || "—"}
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-                  <StatusBadge active={c.is_active} />
-                </td>
-                <td className="text-xs px-[10px] py-[10px] border-b border-[color:var(--border-light)]">
-                  <RowActions
-                    onEdit={() => openEdit(c)}
-                    onDelete={() => setDeleteTarget(c)}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <TablePagination
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(c) => c.id}
+        loading={loading}
+        error={fetchError}
+        emptyLabel={t("common.noData")}
+        filters={
+          <>
+            <Combobox
+              options={partnerOpts}
+              value={partnerFilter}
+              onChange={(v) => handlePartnerFilter(v)}
+              placeholder="— Lọc theo đối tác —"
+              className="w-[240px]"
+            />
+            <SearchInput
+              placeholder="Tìm tên liên hệ..."
+              value={searchInput}
+              onChange={handleSearchInput}
+              className="max-w-[220px]"
+            />
+          </>
+        }
+        actionsColumn={{
+          cell: (c) => (
+            <ActionDropdown
+              items={[
+                { label: t("common.edit"), onClick: () => openEdit(c) },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(c),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
         page={page}
         pageSize={pageSize}
         total={total}

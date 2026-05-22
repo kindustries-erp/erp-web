@@ -4,15 +4,7 @@ import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { TablePagination } from "@/shared/components/TablePagination";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
@@ -625,6 +617,105 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
+  function getColumns(
+    mode: "draft" | "issued" | "output" | "input",
+  ): DataTableColumn<Einvoice>[] {
+    const partnerHeader = mode === "input" ? "Người bán" : "Khách hàng";
+    const taxHeader = mode === "input" ? "MST người bán" : "MST";
+
+    return [
+      {
+        key: "invoice_date",
+        header: "Ngày HĐ",
+        headerClassName: "pl-6",
+        className: "pl-6 text-[color:var(--muted-fg)]",
+        cell: (inv) =>
+          inv.invoice_date
+            ? new Date(inv.invoice_date).toLocaleDateString("vi-VN")
+            : "-",
+      },
+      {
+        key: "document_no",
+        header: "Mã chứng từ",
+        className: "font-medium",
+        cell: (inv) => inv.document_no || "-",
+      },
+      {
+        key: "invoice_no",
+        header: "Số hóa đơn",
+        className: "font-mono",
+        cell: (inv) => inv.invoice_no || "-",
+      },
+      {
+        key: "source",
+        header: "Nguồn",
+        cell: (inv) => (
+          <Badge variant="outline">
+            {inv.source === "TAX_PORTAL" ? "Cổng thuế" : "Viettel v2.49"}
+          </Badge>
+        ),
+      },
+      {
+        key: "partner",
+        header: partnerHeader,
+        className: "max-w-[200px] truncate",
+        cell: (inv) =>
+          mode === "input" ? inv.seller_name || "-" : inv.buyer_name || "-",
+      },
+      {
+        key: "tax_code",
+        header: taxHeader,
+        className: "font-mono text-xs",
+        cell: (inv) =>
+          mode === "input"
+            ? inv.seller_tax_code || "-"
+            : inv.buyer_tax_code || "-",
+      },
+      {
+        key: "total_amount",
+        header: "Tổng tiền",
+        headerClassName: "text-right",
+        className: "text-right font-mono",
+        cell: (inv) => formatMoney(inv.total_amount),
+      },
+      {
+        key: "status",
+        header: "Trạng thái",
+        cell: (inv) => (
+          <Badge variant={statusVariant(inv.status)}>
+            {statusLabel(inv.status)}
+          </Badge>
+        ),
+      },
+      {
+        key: "detail",
+        header: "Chi tiết",
+        headerClassName: "text-right pr-6",
+        className:
+          "text-right pr-6 text-[10px] text-muted-foreground leading-tight",
+        cell: (inv) =>
+          mode === "issued" ? (
+            <button
+              type="button"
+              onClick={() => setIssuedDetail(inv)}
+              className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover"
+            >
+              Xem chi tiết
+            </button>
+          ) : (
+            <>
+              <div className="truncate max-w-[120px]">
+                {inv.tax_status || "-"}
+              </div>
+              <div className="truncate max-w-[120px]">
+                {inv.external_invoice_id || "-"}
+              </div>
+            </>
+          ),
+      },
+    ];
+  }
+
   function renderTable(mode: "draft" | "issued" | "output" | "input") {
     const invoices =
       mode === "draft"
@@ -650,8 +741,6 @@ const HoaDonDienTu: React.FC = () => {
           : mode === "output"
             ? setOutputFilters
             : setInputFilters;
-    const partnerHeader = mode === "input" ? "Người bán" : "Khách hàng";
-    const taxHeader = mode === "input" ? "MST người bán" : "MST";
     const showFilters =
       mode === "draft" ||
       mode === "issued" ||
@@ -660,6 +749,8 @@ const HoaDonDienTu: React.FC = () => {
     const overOneMonth =
       (mode === "output" || mode === "input") &&
       isTaxPortalRangeOverOneMonth(state.startDate, state.endDate);
+
+    const columns = getColumns(mode);
 
     return (
       <div className="space-y-4">
@@ -720,122 +811,32 @@ const HoaDonDienTu: React.FC = () => {
           </div>
         )}
 
-        <div className="bg-surface border border-border rounded-xl overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">Ngày HĐ</TableHead>
-                <TableHead>Mã chứng từ</TableHead>
-                <TableHead>Số hóa đơn</TableHead>
-                <TableHead>Nguồn</TableHead>
-                <TableHead>{partnerHeader}</TableHead>
-                <TableHead>{taxHeader}</TableHead>
-                <TableHead className="text-right">Tổng tiền</TableHead>
-                <TableHead>Trạng thái</TableHead>
-                <TableHead className="text-right pr-6">Chi tiết</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoices.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="py-8 text-center text-muted-foreground"
-                  >
-                    {loading ? "Đang tải..." : "Chưa có dữ liệu"}
-                  </TableCell>
-                </TableRow>
-              )}
-              {invoices.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell className="pl-6 text-[color:var(--muted-fg)]">
-                    {inv.invoice_date
-                      ? new Date(inv.invoice_date).toLocaleDateString("vi-VN")
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {inv.document_no || "-"}
-                  </TableCell>
-                  <TableCell className="font-mono">
-                    {inv.invoice_no || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {inv.source === "TAX_PORTAL"
-                        ? "Cổng thuế"
-                        : "Viettel v2.49"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {mode === "input"
-                      ? inv.seller_name || "-"
-                      : inv.buyer_name || "-"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {mode === "input"
-                      ? inv.seller_tax_code || "-"
-                      : inv.buyer_tax_code || "-"}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatMoney(inv.total_amount)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant(inv.status)}>
-                      {statusLabel(inv.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right pr-6 text-[10px] text-muted-foreground leading-tight">
-                    {mode === "issued" ? (
-                      <button
-                        type="button"
-                        onClick={() => setIssuedDetail(inv)}
-                        className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover"
-                      >
-                        Xem chi tiết
-                      </button>
-                    ) : (
-                      <>
-                        <div className="truncate max-w-[120px]">
-                          {inv.tax_status || "-"}
-                        </div>
-                        <div className="truncate max-w-[120px]">
-                          {inv.external_invoice_id || "-"}
-                        </div>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {showFilters && invoices.length > 0 && (
-                <TableRow className="bg-surface-hover/30 font-semibold">
-                  <TableCell colSpan={6} className="pl-6 text-right py-3">
-                    Tổng cộng:
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
-                    {formatMoney(state.sumTotalAmount)}
-                  </TableCell>
-                  <TableCell
-                    colSpan={2}
-                    className="text-xs text-muted-foreground pr-6"
-                  >
-                    (Thuế: {formatMoney(state.sumVatAmount)})
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        {showFilters && (
-          <TablePagination
-            page={state.page}
-            pageSize={state.pageSize}
-            total={state.total}
-            totalPages={state.totalPages}
-            onPage={(page) => setState((prev) => ({ ...prev, page }))}
-            onPageSize={(pageSize) =>
-              setState((prev) => ({ ...prev, pageSize, page: 1 }))
-            }
-          />
+        <DataTable<Einvoice>
+          items={invoices}
+          columns={columns}
+          getRowKey={(inv) => inv.id}
+          loading={loading}
+          emptyLabel="Chưa có dữ liệu"
+          page={state.page}
+          pageSize={state.pageSize}
+          total={state.total}
+          totalPages={state.totalPages}
+          onPage={(page) => setState((prev) => ({ ...prev, page }))}
+          onPageSize={(pageSize) =>
+            setState((prev) => ({ ...prev, pageSize, page: 1 }))
+          }
+        />
+
+        {showFilters && invoices.length > 0 && (
+          <div className="bg-surface border border-border rounded-xl px-6 py-3 flex items-center font-semibold">
+            <span className="flex-1 text-right">Tổng cộng:</span>
+            <span className="text-right font-mono ml-4">
+              {formatMoney(state.sumTotalAmount)}
+            </span>
+            <span className="text-xs text-muted-foreground ml-4">
+              (Thuế: {formatMoney(state.sumVatAmount)})
+            </span>
+          </div>
         )}
       </div>
     );

@@ -9,6 +9,7 @@ import {
 } from "@/modules/finance/api/financeApi";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { Combobox } from "@/shared/components/Combobox";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { DatePicker } from "@/shared/components/DatePicker";
 import {
@@ -276,7 +277,6 @@ export function OperationalListPage({
 
   useEffect(() => {
     resetFlow();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variant]);
 
   const loader = useMemo(() => {
@@ -798,56 +798,6 @@ export function OperationalListPage({
           </div>
         ),
       },
-      {
-        key: "actions",
-        header: "Thao tác",
-        className: "align-top min-w-[240px]",
-        cell: (row) => (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="btn-secondary inline-flex items-center gap-2"
-              onClick={() => void openDetail(row)}
-            >
-              <FileText className="h-4 w-4" />
-              Chi tiết
-            </button>
-            {config.paymentLinkable ? (
-              <button
-                type="button"
-                className="btn-secondary inline-flex items-center gap-2"
-                onClick={() => void openSettlement(row)}
-                disabled={Number(row.open_amount || 0) <= 0}
-              >
-                <Link2 className="h-4 w-4" />
-                Liên kết tiền
-              </button>
-            ) : null}
-            {canPostReceipt(row, variant) ? (
-              <button
-                type="button"
-                className="btn-secondary inline-flex items-center gap-2"
-                onClick={() => void openPostingDrawer(row)}
-                disabled={postingLoading}
-              >
-                <Warehouse className="h-4 w-4" />
-                Nhập kho
-              </button>
-            ) : null}
-            {canPostIssue(row, variant) ? (
-              <button
-                type="button"
-                className="btn-secondary inline-flex items-center gap-2"
-                onClick={() => void openPostingDrawer(row)}
-                disabled={postingLoading}
-              >
-                <Warehouse className="h-4 w-4" />
-                Xuất kho
-              </button>
-            ) : null}
-          </div>
-        ),
-      },
     ];
 
     return baseColumns;
@@ -971,6 +921,43 @@ export function OperationalListPage({
         emptyLabel="Chưa có dữ liệu."
         filters={filters}
         minWidth={980}
+        actionsColumn={{
+          cell: (row) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: "Chi tiết",
+                  icon: <FileText className="h-4 w-4" />,
+                  onClick: () => void openDetail(row),
+                },
+                {
+                  label: "Liên kết tiền",
+                  icon: <Link2 className="h-4 w-4" />,
+                  onClick: () => void openSettlement(row),
+                  hidden:
+                    !config.paymentLinkable ||
+                    Number(row.open_amount || 0) <= 0,
+                },
+                {
+                  label: "Nhập kho",
+                  icon: <Warehouse className="h-4 w-4" />,
+                  onClick: () => {
+                    if (!postingLoading) void openPostingDrawer(row);
+                  },
+                  hidden: !canPostReceipt(row, variant),
+                },
+                {
+                  label: "Xuất kho",
+                  icon: <Warehouse className="h-4 w-4" />,
+                  onClick: () => {
+                    if (!postingLoading) void openPostingDrawer(row);
+                  },
+                  hidden: !canPostIssue(row, variant),
+                },
+              ]}
+            />
+          ),
+        }}
         page={page}
         pageSize={pageSize}
         total={total}

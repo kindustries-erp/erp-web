@@ -7,6 +7,7 @@ import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Badge } from "@/shared/components/ui/badge";
 import { useRoles } from "@/modules/system/hooks/useRoles";
 import { usePermissionsEditor } from "@/modules/system/hooks/usePermissionsEditor";
@@ -290,32 +291,6 @@ export function PhanQuyen() {
       className: "text-foreground max-w-[420px]",
       skeletonClassName: "w-56",
     },
-    {
-      key: "actions",
-      header: t("rbac.headers.actions"),
-      cell: (role) => (
-        <div className="flex items-center gap-1 justify-end">
-          <button
-            onClick={() => openEdit(role)}
-            title={t("rbac.actions.authorize")}
-            className="flex items-center gap-1 px-2 py-[5px] rounded-lg text-[color:var(--muted-fg)] hover:text-primary hover:bg-[color:var(--muted)] transition-colors border border-transparent hover:border-[color:var(--border)] whitespace-nowrap"
-          >
-            <IconShield />
-            <span className="text-[11px]">{t("rbac.actions.authorize")}</span>
-          </button>
-          <button
-            onClick={() => setDeleteTarget(role)}
-            title={t("rbac.actions.delete")}
-            className="flex items-center gap-1 px-2 py-[5px] rounded-lg text-[color:var(--muted-fg)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors border border-transparent hover:border-red-200 whitespace-nowrap"
-          >
-            <IconTrash />
-            <span className="text-[11px]">{t("rbac.actions.delete")}</span>
-          </button>
-        </div>
-      ),
-      headerClassName: "text-right w-[170px]",
-      skeletonClassName: "",
-    },
   ];
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -342,6 +317,25 @@ export function PhanQuyen() {
         emptyLabel={t("rbac.empty")}
         minWidth={760}
         loadingRows={5}
+        actionsColumn={{
+          cell: (role) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("rbac.actions.authorize"),
+                  icon: <IconShield />,
+                  onClick: () => openEdit(role),
+                },
+                {
+                  label: t("rbac.actions.delete"),
+                  icon: <IconTrash />,
+                  onClick: () => setDeleteTarget(role),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
+        }}
         filters={
           <>
             <SearchInput

@@ -26,8 +26,16 @@ export interface DataTableColumn<T> {
   skeletonClassName?: string;
 }
 
+export interface ActionsColumnConfig<T> {
+  cell: (item: T) => ReactNode;
+  header?: ReactNode;
+  className?: string;
+  headerClassName?: string;
+}
+
 interface DataTableRowMeta {
   className?: string;
+  headerClassName?: string;
   skeletonClassName?: string;
 }
 
@@ -43,12 +51,14 @@ interface DataTableProps<T> {
   loadingRows?: number;
   elevated?: boolean;
   containerClassName?: string;
+  actionsColumn?: ActionsColumnConfig<T>;
   page?: number;
   pageSize?: number;
   total?: number;
   totalPages?: number;
   onPage?: (page: number) => void;
   onPageSize?: (pageSize: number) => void;
+  onRowClick?: (item: T) => void;
 }
 
 export function DataTable<T>({
@@ -63,12 +73,14 @@ export function DataTable<T>({
   loadingRows = 6,
   elevated = true,
   containerClassName,
+  actionsColumn,
   page,
   pageSize,
   total,
   totalPages,
   onPage,
   onPageSize,
+  onRowClick,
 }: DataTableProps<T>) {
   const showPagination =
     page != null &&
@@ -78,15 +90,35 @@ export function DataTable<T>({
     !!onPage &&
     !!onPageSize;
 
-  const tableColumns = columns.map<ColumnDef<T, unknown>>((column) => ({
-    id: column.key,
-    header: () => column.header,
-    cell: ({ row }) => column.cell(row.original),
-    meta: {
-      className: column.className,
-      skeletonClassName: column.skeletonClassName,
-    } satisfies DataTableRowMeta,
-  }));
+  const effectiveColumns = actionsColumn
+    ? columns.filter((col) => col.key !== "actions")
+    : columns;
+
+  const tableColumns: ColumnDef<T, unknown>[] = effectiveColumns.map(
+    (column) => ({
+      id: column.key,
+      header: () => column.header,
+      cell: ({ row }) => column.cell(row.original),
+      meta: {
+        className: column.className,
+        headerClassName: column.headerClassName,
+        skeletonClassName: column.skeletonClassName,
+      } satisfies DataTableRowMeta,
+    }),
+  );
+
+  if (actionsColumn) {
+    tableColumns.unshift({
+      id: "__actions",
+      header: () => actionsColumn.header ?? "",
+      cell: ({ row }) => actionsColumn.cell(row.original),
+      meta: {
+        className: actionsColumn.className,
+        headerClassName: actionsColumn.headerClassName ?? "w-[48px]",
+        skeletonClassName: "",
+      } satisfies DataTableRowMeta,
+    });
+  }
 
   const table = useReactTable({
     data: items,
@@ -114,11 +146,11 @@ export function DataTable<T>({
                 className="hover:bg-transparent border-b border-border"
               >
                 {headerGroup.headers.map((header) => {
-                  const column = columns.find((x) => x.key === header.id);
+                  const meta = header.column.columnDef.meta as DataTableRowMeta;
                   return (
                     <TableHead
                       key={header.id}
-                      className={column?.headerClassName}
+                      className={meta?.headerClassName}
                     >
                       {header.isPlaceholder
                         ? null
@@ -154,7 +186,7 @@ export function DataTable<T>({
             {!loading && error && (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={tableColumns.length}
                   className="text-center text-[color:var(--warn-fg)] py-10"
                 >
                   {error}
@@ -165,7 +197,7 @@ export function DataTable<T>({
             {!loading && !error && items.length === 0 && (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={tableColumns.length}
                   className="text-center text-[color:var(--faint)] py-10"
                 >
                   {emptyLabel}
@@ -179,6 +211,10 @@ export function DataTable<T>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={cn(onRowClick && "cursor-pointer")}
+                  onClick={
+                    onRowClick ? () => onRowClick(row.original) : undefined
+                  }
                 >
                   {row.getVisibleCells().map((cell) => {
                     const meta = cell.column.columnDef.meta as DataTableRowMeta;
