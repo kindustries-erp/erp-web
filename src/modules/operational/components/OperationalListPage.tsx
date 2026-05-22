@@ -26,10 +26,15 @@ import {
   type CreateOperationalPayload,
   InventoryStockRow,
   OperationalDocument,
-  OperationalDocumentPaymentLink,
+  type OperationalDocumentPaymentLink,
   OperationalDocumentType,
   OperationalVariant,
 } from "../api/operationalApi";
+import {
+  useOperationalFlowStore,
+  type InventoryPostingLineForm,
+  type SettlementFormState,
+} from "../hooks/useOperationalFlowStore";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -65,21 +70,6 @@ const variantConfig: Record<
     desc: "Nhập kho từ đơn mua, xuất kho vào đơn sửa xe; tồn theo chi nhánh.",
   },
 };
-
-interface SettlementFormState {
-  payment_voucher_id: string;
-  applied_date: string;
-  applied_amount: number;
-  notes: string;
-}
-
-interface InventoryPostingLineForm {
-  line_id: string;
-  line_name: string;
-  requested_qty: number;
-  max_qty: number;
-  inventory_item_id?: string | null;
-}
 
 function money(value: unknown) {
   const n = Number(value || 0);
@@ -233,39 +223,31 @@ export function OperationalListPage({
     Array<{ value: string; label: string }>
   >([]);
 
-  const [settlementOpen, setSettlementOpen] = useState(false);
-  const [settlementLoading, setSettlementLoading] = useState(false);
-  const [settlementError, setSettlementError] = useState<string | null>(null);
-  const [activeDocument, setActiveDocument] =
-    useState<OperationalDocument | null>(null);
-  const [activeDocumentType, setActiveDocumentType] =
-    useState<OperationalDocumentType | null>(null);
-  const [paymentLinks, setPaymentLinks] = useState<
-    OperationalDocumentPaymentLink[]
-  >([]);
-  const [voucherOptions, setVoucherOptions] = useState<PaymentVoucher[]>([]);
-  const [voucherLoading, setVoucherLoading] = useState(false);
-  const [settlementForm, setSettlementForm] = useState<SettlementFormState>({
-    payment_voucher_id: "",
-    applied_date: today(),
-    applied_amount: 0,
-    notes: "",
-  });
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  const [detailDocument, setDetailDocument] =
-    useState<OperationalDocument | null>(null);
-  const [postingLoading, setPostingLoading] = useState(false);
-  const [postingDrawerOpen, setPostingDrawerOpen] = useState(false);
-  const [postingDocument, setPostingDocument] =
-    useState<OperationalDocument | null>(null);
-  const [postingDocumentType, setPostingDocumentType] =
-    useState<OperationalDocumentType | null>(null);
-  const [postingLineForms, setPostingLineForms] = useState<
-    InventoryPostingLineForm[]
-  >([]);
-  const [postingNotes, setPostingNotes] = useState("");
+  const {
+    activeStep,
+    rootDocument,
+    rootDocumentType,
+    detailDocument,
+    detailLoading,
+    detailError,
+    settlementLoading,
+    settlementError,
+    voucherLoading,
+    paymentLinks,
+    voucherOptions,
+    settlementForm,
+    postingDocument,
+    postingDocumentType,
+    postingLoading,
+    postingLineForms,
+    postingNotes,
+    setRootContext,
+    setActiveStep,
+    setDetailState,
+    setSettlementState,
+    setPostingState,
+    resetFlow,
+  } = useOperationalFlowStore();
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -291,6 +273,11 @@ export function OperationalListPage({
         setBranchOptions([]);
       });
   }, []);
+
+  useEffect(() => {
+    resetFlow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant]);
 
   const loader = useMemo(() => {
     if (variant === "sales") return operationalApi.listSales;
@@ -366,17 +353,20 @@ export function OperationalListPage({
   async function openSettlement(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
-    setSettlementOpen(true);
-    setSettlementError(null);
-    setActiveDocument(row);
-    setActiveDocumentType(documentType);
-    setSettlementForm({
-      payment_voucher_id: "",
-      applied_date: today(),
-      applied_amount: Number(row.open_amount || 0),
-      notes: "",
+    setRootContext(row, documentType);
+    setActiveStep("settlement");
+    setSettlementState({
+      settlementError: null,
+      settlementForm: {
+        payment_voucher_id: "",
+        applied_date: today(),
+        applied_amount: Number(row.open_amount || 0),
+        notes: "",
+      },
+      voucherLoading: true,
+      paymentLinks: [],
+      voucherOptions: [],
     });
-    setVoucherLoading(true);
     try {
       const [links, vouchers] = await Promise.all([
         operationalApi.listPaymentLinks(documentType, row.id),
@@ -394,26 +384,28 @@ export function OperationalListPage({
           sort: ["-document_date"],
         }),
       ]);
-      setPaymentLinks(links);
-      setVoucherOptions(vouchers.items ?? []);
+      setSettlementState({
+        paymentLinks: links,
+        voucherOptions: vouchers.items ?? [],
+      });
     } catch (err) {
-      setSettlementError(
-        extractApiError(err, "Không tải được dữ liệu cấn trừ"),
-      );
-      setPaymentLinks([]);
-      setVoucherOptions([]);
+      setSettlementState({
+        settlementError: extractApiError(err, "Không tải được dữ liệu cấn trừ"),
+        paymentLinks: [],
+        voucherOptions: [],
+      });
     } finally {
-      setVoucherLoading(false);
+      setSettlementState({ voucherLoading: false });
     }
   }
 
   function closeSettlement() {
-    setSettlementOpen(false);
-    setSettlementError(null);
-    setActiveDocument(null);
-    setActiveDocumentType(null);
-    setPaymentLinks([]);
-    setVoucherOptions([]);
+    if (detailDocument) {
+      setActiveStep("detail");
+      setSettlementState({ settlementError: null });
+      return;
+    }
+    resetFlow();
   }
 
   const selectedVoucher = useMemo(
@@ -434,31 +426,33 @@ export function OperationalListPage({
   );
 
   async function refreshSettlementData() {
-    if (!activeDocument || !activeDocumentType) return;
+    if (!rootDocument || !rootDocumentType) return;
     const [document, links] = await Promise.all([
-      operationalApi.getDocument(activeDocumentType, activeDocument.id),
-      operationalApi.listPaymentLinks(activeDocumentType, activeDocument.id),
+      operationalApi.getDocument(rootDocumentType, rootDocument.id),
+      operationalApi.listPaymentLinks(rootDocumentType, rootDocument.id),
     ]);
-    setActiveDocument(document);
-    setPaymentLinks(links);
+    setRootContext(document, rootDocumentType);
+    setDetailState({ detailDocument: document });
+    setSettlementState({ paymentLinks: links });
   }
 
   async function saveSettlement() {
-    if (!activeDocument || !activeDocumentType) return;
+    if (!rootDocument || !rootDocumentType) return;
     if (!settlementForm.payment_voucher_id) {
-      setSettlementError("Vui lòng chọn phiếu dòng tiền.");
+      setSettlementState({ settlementError: "Vui lòng chọn phiếu dòng tiền." });
       return;
     }
     if (settlementForm.applied_amount <= 0) {
-      setSettlementError("Số tiền cấn trừ phải lớn hơn 0.");
+      setSettlementState({
+        settlementError: "Số tiền cấn trừ phải lớn hơn 0.",
+      });
       return;
     }
-    setSettlementLoading(true);
-    setSettlementError(null);
+    setSettlementState({ settlementLoading: true, settlementError: null });
     try {
       await operationalApi.createPaymentLink({
-        document_type: activeDocumentType,
-        document_id: activeDocument.id,
+        document_type: rootDocumentType,
+        document_id: rootDocument.id,
         payment_voucher_id: settlementForm.payment_voucher_id,
         applied_amount: settlementForm.applied_amount,
         applied_date: settlementForm.applied_date,
@@ -467,46 +461,53 @@ export function OperationalListPage({
       await refreshSettlementData();
       await load();
       showToast({ title: "Đã liên kết phiếu dòng tiền", variant: "success" });
-      setSettlementForm((prev) => ({
-        ...prev,
-        payment_voucher_id: "",
-        notes: "",
-      }));
+      setSettlementState({
+        settlementForm: {
+          ...settlementForm,
+          payment_voucher_id: "",
+          notes: "",
+        },
+      });
     } catch (err) {
-      setSettlementError(extractApiError(err, "Liên kết thanh toán thất bại"));
+      setSettlementState({
+        settlementError: extractApiError(err, "Liên kết thanh toán thất bại"),
+      });
     } finally {
-      setSettlementLoading(false);
+      setSettlementState({ settlementLoading: false });
     }
   }
 
   async function openDetail(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
-    setDetailOpen(true);
-    setDetailLoading(true);
-    setDetailError(null);
-    setDetailDocument(null);
+    setRootContext(row, documentType);
+    setActiveStep("detail");
+    setDetailState({
+      detailLoading: true,
+      detailError: null,
+      detailDocument: null,
+    });
     try {
       const document = await operationalApi.getDocument(documentType, row.id);
-      setDetailDocument(document);
+      setRootContext(document, documentType);
+      setDetailState({ detailDocument: document });
     } catch (err) {
-      setDetailError(extractApiError(err, "Không tải được chi tiết chứng từ"));
+      setDetailState({
+        detailError: extractApiError(err, "Không tải được chi tiết chứng từ"),
+      });
     } finally {
-      setDetailLoading(false);
+      setDetailState({ detailLoading: false });
     }
   }
 
   function closeDetail() {
-    setDetailOpen(false);
-    setDetailLoading(false);
-    setDetailError(null);
-    setDetailDocument(null);
+    resetFlow();
   }
 
   async function openPostingDrawer(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
-    setPostingLoading(true);
+    setPostingState({ postingLoading: true });
     setError(null);
     try {
       const document = await operationalApi.getDocument(documentType, row.id);
@@ -524,24 +525,33 @@ export function OperationalListPage({
           inventory_item_id: line.inventory_item_id || null,
         }))
         .filter((line) => line.line_id);
-      setPostingDocument(document);
-      setPostingDocumentType(documentType);
-      setPostingLineForms(lineForms);
-      setPostingNotes("");
-      setPostingDrawerOpen(true);
+      setRootContext(document, documentType);
+      setDetailState({ detailDocument: document });
+      setPostingState({
+        postingDocument: document,
+        postingDocumentType: documentType,
+        postingLineForms: lineForms,
+        postingNotes: "",
+      });
     } catch (err) {
       setError(extractApiError(err, "Không tải được dữ liệu post kho"));
     } finally {
-      setPostingLoading(false);
+      setPostingState({ postingLoading: false });
     }
   }
 
   function closePostingDrawer() {
-    setPostingDrawerOpen(false);
-    setPostingDocument(null);
-    setPostingDocumentType(null);
-    setPostingLineForms([]);
-    setPostingNotes("");
+    if (detailDocument) {
+      setActiveStep("detail");
+      setPostingState({
+        postingDocument: null,
+        postingDocumentType: null,
+        postingLineForms: [],
+        postingNotes: "",
+      });
+      return;
+    }
+    resetFlow();
   }
 
   async function submitPostingDrawer() {
@@ -556,7 +566,7 @@ export function OperationalListPage({
       setError("Vui lòng nhập số lượng post kho cho ít nhất 1 dòng.");
       return;
     }
-    setPostingLoading(true);
+    setPostingState({ postingLoading: true });
     setError(null);
     try {
       if (postingDocumentType === "purchase_orders") {
@@ -564,29 +574,30 @@ export function OperationalListPage({
           transaction_date: today(),
           notes: postingNotes || undefined,
           receipt_lines: selectedLines,
-        });
+        } as any);
         showToast({ title: "Đã post nhập kho", variant: "success" });
       } else if (postingDocumentType === "sales_service_orders") {
         await operationalApi.postSalesIssue(postingDocument.id, {
           transaction_date: today(),
           notes: postingNotes || undefined,
           issue_lines: selectedLines,
-        });
+        } as any);
         showToast({ title: "Đã post xuất kho", variant: "success" });
       }
       await load();
-      if (detailOpen && detailDocument?.id === postingDocument.id) {
+      if (detailDocument?.id === postingDocument.id) {
         const refreshed = await operationalApi.getDocument(
           postingDocumentType,
           postingDocument.id,
         );
-        setDetailDocument(refreshed);
+        setRootContext(refreshed, postingDocumentType);
+        setDetailState({ detailDocument: refreshed });
       }
       closePostingDrawer();
     } catch (err) {
       setError(extractApiError(err, "Post kho thất bại"));
     } finally {
-      setPostingLoading(false);
+      setPostingState({ postingLoading: false });
     }
   }
 
@@ -600,24 +611,26 @@ export function OperationalListPage({
   }, [items, recurringFilter]);
 
   async function removePaymentLink(linkId: string) {
-    if (!activeDocument || !activeDocumentType) return;
-    setSettlementLoading(true);
-    setSettlementError(null);
+    if (!rootDocument || !rootDocumentType) return;
+    setSettlementState({ settlementLoading: true, settlementError: null });
     try {
       await operationalApi.deletePaymentLink(
-        activeDocumentType,
-        activeDocument.id,
+        rootDocumentType,
+        rootDocument.id,
         linkId,
       );
       await refreshSettlementData();
       await load();
       showToast({ title: "Đã gỡ liên kết thanh toán", variant: "success" });
     } catch (err) {
-      setSettlementError(
-        extractApiError(err, "Không gỡ được liên kết thanh toán"),
-      );
+      setSettlementState({
+        settlementError: extractApiError(
+          err,
+          "Không gỡ được liên kết thanh toán",
+        ),
+      });
     } finally {
-      setSettlementLoading(false);
+      setSettlementState({ settlementLoading: false });
     }
   }
 
@@ -970,7 +983,7 @@ export function OperationalListPage({
       />
 
       <DrawerModal
-        open={detailOpen}
+        open={activeStep === "detail"}
         onClose={closeDetail}
         title="Chi tiết chứng từ"
         subtitle={
@@ -1065,7 +1078,7 @@ export function OperationalListPage({
       </DrawerModal>
 
       <DrawerModal
-        open={postingDrawerOpen}
+        open={activeStep === "posting"}
         onClose={closePostingDrawer}
         title={
           postingDocumentType === "purchase_orders"
@@ -1112,8 +1125,8 @@ export function OperationalListPage({
                     value={line.requested_qty}
                     onChange={(event) => {
                       const value = Number(event.target.value || 0);
-                      setPostingLineForms((prev) =>
-                        prev.map((item) =>
+                      setPostingState({
+                        postingLineForms: postingLineForms.map((item) =>
                           item.line_id === line.line_id
                             ? {
                                 ...item,
@@ -1124,7 +1137,7 @@ export function OperationalListPage({
                               }
                             : item,
                         ),
-                      );
+                      });
                     }}
                   />
                 </div>
@@ -1135,7 +1148,9 @@ export function OperationalListPage({
             <input
               className={inputCls}
               value={postingNotes}
-              onChange={(event) => setPostingNotes(event.target.value)}
+              onChange={(event) =>
+                setPostingState({ postingNotes: event.target.value })
+              }
               placeholder="Ghi chú nhập/xuất kho"
             />
           </DrawerField>
@@ -1143,12 +1158,12 @@ export function OperationalListPage({
       </DrawerModal>
 
       <DrawerModal
-        open={settlementOpen}
+        open={activeStep === "settlement"}
         onClose={closeSettlement}
         title="Liên kết phiếu dòng tiền"
         subtitle={
-          activeDocument
-            ? `${docNo(activeDocument)} — Còn mở ${money(activeDocument.open_amount)}`
+          rootDocument
+            ? `${docNo(rootDocument)} — Còn mở ${money(rootDocument.open_amount)}`
             : "Liên kết thanh toán cho chứng từ operational"
         }
         actions={[
@@ -1169,16 +1184,18 @@ export function OperationalListPage({
                 const voucher = voucherOptions.find(
                   (item) => item.id === value,
                 );
-                setSettlementForm((prev) => ({
-                  ...prev,
-                  payment_voucher_id: value,
-                  applied_amount: voucher
-                    ? Math.min(
-                        Number(activeDocument?.open_amount || 0),
-                        Number(voucher.amount || 0),
-                      )
-                    : prev.applied_amount,
-                }));
+                setSettlementState({
+                  settlementForm: {
+                    ...settlementForm,
+                    payment_voucher_id: value,
+                    applied_amount: voucher
+                      ? Math.min(
+                          Number(rootDocument?.open_amount || 0),
+                          Number(voucher.amount || 0),
+                        )
+                      : settlementForm.applied_amount,
+                  },
+                });
               }}
               placeholder={
                 voucherLoading ? "Đang tải..." : "Chọn phiếu dòng tiền"
@@ -1197,10 +1214,12 @@ export function OperationalListPage({
               <DatePicker
                 value={settlementForm.applied_date}
                 onChange={(value) =>
-                  setSettlementForm((prev) => ({
-                    ...prev,
-                    applied_date: value,
-                  }))
+                  setSettlementState({
+                    settlementForm: {
+                      ...settlementForm,
+                      applied_date: value,
+                    },
+                  })
                 }
                 className="w-full"
               />
@@ -1213,10 +1232,12 @@ export function OperationalListPage({
                 className={inputCls}
                 value={settlementForm.applied_amount}
                 onChange={(event) =>
-                  setSettlementForm((prev) => ({
-                    ...prev,
-                    applied_amount: Number(event.target.value || 0),
-                  }))
+                  setSettlementState({
+                    settlementForm: {
+                      ...settlementForm,
+                      applied_amount: Number(event.target.value || 0),
+                    },
+                  })
                 }
               />
             </DrawerField>
@@ -1226,10 +1247,12 @@ export function OperationalListPage({
               className={inputCls}
               value={settlementForm.notes}
               onChange={(event) =>
-                setSettlementForm((prev) => ({
-                  ...prev,
-                  notes: event.target.value,
-                }))
+                setSettlementState({
+                  settlementForm: {
+                    ...settlementForm,
+                    notes: event.target.value,
+                  },
+                })
               }
               placeholder="Ghi chú cấn trừ"
             />
