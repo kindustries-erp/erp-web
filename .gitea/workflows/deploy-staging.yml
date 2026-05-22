@@ -21,5 +21,14 @@ jobs:
             git reset --hard origin/staging
             cd /opt/stacks/liouni-erp-web
             docker compose up -d --build
-            curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8808/ | grep -q "200"
+            for i in $(seq 1 20); do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8808/ || true)
+              if [ "$code" = "200" ]; then
+                echo "Web health OK (200)"
+                exit 0
+              fi
+              sleep 2
+            done
+            echo "Web health check failed"
+            exit 1
           '
