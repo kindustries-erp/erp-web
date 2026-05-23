@@ -269,7 +269,6 @@ export type CounterpartySource = "INTERNAL" | "EXTERNAL";
 
 export type CashBankRelatedDocumentType =
   | "payment_vouchers"
-  | "ar_documents"
   | "ap_documents"
   | "sales_invoices"
   | "purchase_invoices"
@@ -1071,8 +1070,43 @@ export async function deletePartnerLedgerSettlementApi(
   await axiosInstance.delete(`/api/v1/partner-ledger-settlements/${id}`);
 }
 
-// ─── AR Workbench ─────────────────────────────────────────────────────────────
+export interface CreateArSalesInvoiceLineDto {
+  line_no?: number;
+  item_code?: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate?: number;
+  revenue_account_id?: string;
+  tax_account_id?: string;
+  metadata?: Record<string, unknown>;
+}
 
+export interface CreateArSalesInvoiceDto {
+  document_no: string;
+  business_partner_id: string;
+  journal_entry_id?: number;
+  document_date: string;
+  posting_date: string;
+  due_date?: string;
+  currency?: string;
+  exchange_rate?: number;
+  reference_no?: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  lines: CreateArSalesInvoiceLineDto[];
+}
+
+export type PaymentMethod = "CASH" | "BANK" | "EWALLET";
+
+// ─── AR Workbench (legacy removed) ────────────────────────────────────────────
+
+/*
+Legacy AR Workbench types and API bindings were removed after AR decommission.
+Keep only shared DTOs still referenced by non-AR flows (e.g. e-invoice draft UI).
+*/
+
+/* AR legacy removed
 export type ArDocumentType =
   | "INVOICE"
   | "IMMEDIATE_SALE"
@@ -1516,3 +1550,4 @@ export async function applyAdvanceToInvoiceApi(
   }>("/api/v1/ar-workbench/advance-applications", dto);
   return data.data;
 }
+*/

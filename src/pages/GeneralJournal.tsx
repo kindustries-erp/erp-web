@@ -26,8 +26,6 @@ import {
 import {
   getPaymentVoucherApi,
   type PaymentVoucher,
-  type ArDocument,
-  getArDocumentsApi,
 } from "@/modules/finance/api/financeApi";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -92,7 +90,6 @@ function flattenEntry(entry: JournalEntry): FlatRow[] {
 type VoucherDetailState =
   | { kind: "loading" }
   | { kind: "payment"; voucher: PaymentVoucher }
-  | { kind: "ar"; doc: ArDocument }
   | { kind: "journal"; entry: JournalEntry }
   | { kind: "error"; msg: string };
 
@@ -170,27 +167,6 @@ export function NhatKyChung() {
           kind: "error",
           msg: `Không tải được phiếu tiền: ${entry.reference_id}`,
         });
-      }
-      return;
-    }
-
-    if (
-      (refType === "ar_documents" || refType === "ar_documents_reversal") &&
-      entry.reference_id
-    ) {
-      setDetailState({ kind: "loading" });
-      try {
-        const res = await getArDocumentsApi({ page: 1, pageSize: 1 });
-        const doc = (res.items as ArDocument[] | undefined)?.find?.(
-          (d) => d.id === entry.reference_id,
-        );
-        if (doc) {
-          setDetailState({ kind: "ar", doc });
-        } else {
-          await openJournalDetail(entry);
-        }
-      } catch {
-        await openJournalDetail(entry);
       }
       return;
     }
@@ -401,12 +377,9 @@ export function NhatKyChung() {
         title={
           detailState?.kind === "payment"
             ? `Phiếu tiền ${detailState.voucher.voucher_no}`
-            : detailState?.kind === "ar"
-              ? `Phiếu AR ${detailState.doc.document_no ?? detailState.doc.id}`
-              : detailState?.kind === "journal"
-                ? detailState.entry.voucher_no ||
-                  t("journalEntries.detail.title")
-                : t("journalEntries.detail.title")
+            : detailState?.kind === "journal"
+              ? detailState.entry.voucher_no || t("journalEntries.detail.title")
+              : t("journalEntries.detail.title")
         }
         subtitle={
           detailState?.kind === "payment"
@@ -434,10 +407,7 @@ export function NhatKyChung() {
           <PaymentVoucherReadOnly voucher={detailState.voucher} />
         )}
 
-        {/* AR Document — read-only summary */}
-        {detailState?.kind === "ar" && (
-          <ArDocumentReadOnly doc={detailState.doc} />
-        )}
+        {/* AR Document — read-only summary: removed (AR legacy decommissioned) */}
 
         {/* Journal Entry (created in Nhật Ký Chung) */}
         {detailState?.kind === "journal" &&
@@ -547,38 +517,6 @@ function PaymentVoucherReadOnly({ voucher: v }: { voucher: PaymentVoucher }) {
       </div>
       <p className="text-[color:var(--muted-fg)] italic">
         Xem chi tiết đầy đủ tại mục Tiền Mặt / Tiền Gửi.
-      </p>
-    </div>
-  );
-}
-
-function ArDocumentReadOnly({ doc: d }: { doc: ArDocument }) {
-  return (
-    <div className="space-y-3 text-xs">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl border border-border p-3">
-        <div>
-          <div className="text-[color:var(--muted-fg)]">Số phiếu</div>
-          <div>{d.document_no ?? d.id}</div>
-        </div>
-        <div>
-          <div className="text-[color:var(--muted-fg)]">Ngày hạch toán</div>
-          <div>{d.posting_date ?? "—"}</div>
-        </div>
-        <div>
-          <div className="text-[color:var(--muted-fg)]">Loại</div>
-          <div>{d.document_type ?? "—"}</div>
-        </div>
-        <div>
-          <div className="text-[color:var(--muted-fg)]">Trạng thái</div>
-          <div>{d.status ?? "—"}</div>
-        </div>
-        <div className="col-span-2">
-          <div className="text-[color:var(--muted-fg)]">Diễn giải</div>
-          <div>{d.description ?? "—"}</div>
-        </div>
-      </div>
-      <p className="text-[color:var(--muted-fg)] italic">
-        Xem chi tiết đầy đủ tại mục Phải Thu.
       </p>
     </div>
   );

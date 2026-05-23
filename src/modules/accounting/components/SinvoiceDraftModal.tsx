@@ -18,11 +18,30 @@ import {
   getPaymentVoucherLookupBusinessPartnersApi,
   type CreateArSalesInvoiceDto,
 } from "@/modules/finance/api/financeApi";
+import { todayIsoDate } from "@/modules/finance/utils/financeHelpers";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
-import {
-  emptySalesInvoiceForm,
-  money,
-} from "@/modules/finance/components/ArWorkbenchPanel/shared";
+
+function money(v?: number | string | null) {
+  return Number(v ?? 0).toLocaleString("vi-VN");
+}
+
+function emptySalesInvoiceForm(): CreateArSalesInvoiceDto {
+  const today = todayIsoDate();
+  return {
+    document_no: `AR-${today.split("-").join("")}-`,
+    business_partner_id: "",
+    document_date: today,
+    posting_date: today,
+    due_date: "",
+    currency: "VND",
+    exchange_rate: 1,
+    reference_no: "",
+    description: "",
+    lines: [
+      { line_no: 1, description: "", quantity: 1, unit_price: 0, tax_rate: 10 },
+    ],
+  };
+}
 
 interface CreateArSalesInvoiceWithViettelDto extends CreateArSalesInvoiceDto {
   template_code?: string;
