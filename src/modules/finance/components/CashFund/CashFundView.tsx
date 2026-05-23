@@ -11,7 +11,12 @@ import {
   IconTrendUp as IconUp,
   IconTrendDown as IconDown,
 } from "@/shared/components/icons";
-import { VoucherFilterBar } from "@/modules/finance/components/VoucherFilterBar";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
+import {
+  STATUS_FILTER_OPTS,
+  COUNTERPARTY_SOURCE_OPTS,
+} from "@/modules/finance/types/voucherForm";
 import { VoucherKpiRow } from "@/modules/finance/components/VoucherKpiRow";
 import { VoucherChartRow } from "@/modules/finance/components/VoucherChartRow";
 import { VoucherTable } from "@/modules/finance/components/VoucherTable";
@@ -115,6 +120,29 @@ export function CashFundView(p: any) {
   } = p;
   const [accountingModalOpen, setAccountingModalOpen] = useState(false);
   const [accountingVoucher, setAccountingVoucher] = useState<any | null>(null);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+
+  const filterConfig: FilterPanelConfig = {
+    period: true,
+    search: true,
+    amountRange: true,
+    channel: {
+      label: t("voucher.filter.fund"),
+      placeholder: t("voucher.filter.fundPlaceholder"),
+      options: fundOpts ?? [],
+    },
+    status: { options: STATUS_FILTER_OPTS },
+    counterpartySource: { options: COUNTERPARTY_SOURCE_OPTS },
+  };
+
+  // Count active filters for badge
+  const activeFilterCount = [
+    hasActiveFilter,
+    !!searchInput,
+    !!amountMinInput || !!amountMaxInput,
+    !!statusFilter,
+    !!counterpartySourceFilter,
+  ].filter(Boolean).length;
 
   return (
     <PageLayout
@@ -124,6 +152,10 @@ export function CashFundView(p: any) {
       actions={
         canCreateVoucher ? (
           <>
+            <FilterButton
+              onClick={() => setFilterPanelOpen((v) => !v)}
+              activeCount={activeFilterCount}
+            />
             <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}>
               <IconPlus /> {t("tienmat.createReceipt")}
             </BtnPrimary>
@@ -131,29 +163,15 @@ export function CashFundView(p: any) {
               <IconPlus /> {t("tienmat.createPayment")}
             </BtnPrimary>
           </>
-        ) : undefined
+        ) : (
+          <FilterButton
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            activeCount={activeFilterCount}
+          />
+        )
       }
       hideHeader={p.hideHeader}
     >
-      <div className="flex justify-between items-center mb-4 gap-4">
-        <div className="flex-1">
-          <VoucherFilterBar
-            period={period}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-            channelFilter={fundFilter}
-            channelOpts={fundOpts}
-            channelLabel={t("voucher.filter.fund")}
-            channelPlaceholder={t("voucher.filter.fundPlaceholder")}
-            hasActiveFilter={hasActiveFilter}
-            onPeriodChange={handlePeriodChange}
-            onDateFrom={handleDateFrom}
-            onDateTo={handleDateTo}
-            onChannelChange={handleFundFilter}
-            onReset={handleReset}
-          />
-        </div>
-      </div>
       <VoucherKpiRow
         openingLoading={openingLoading}
         summaryLoading={summaryLoading}
@@ -299,6 +317,45 @@ export function CashFundView(p: any) {
         onSuccess={() => {
           closeDrawer();
           if (typeof reloadAll === "function") reloadAll();
+        }}
+      />
+      <FilterPanel
+        config={filterConfig}
+        filter={{
+          state: {
+            period,
+            dateFrom,
+            dateTo,
+            channel: fundFilter,
+            search: searchInput,
+            amountMin: amountMinInput,
+            amountMax: amountMaxInput,
+            status: statusFilter,
+            counterpartySource: counterpartySourceFilter,
+            custom: {},
+          },
+          inputs: {
+            search: searchInput,
+            amountMin: amountMinInput,
+            amountMax: amountMaxInput,
+          },
+          panelOpen: filterPanelOpen,
+          openPanel: () => setFilterPanelOpen(true),
+          closePanel: () => setFilterPanelOpen(false),
+          togglePanel: () => setFilterPanelOpen((v: boolean) => !v),
+          setPeriod: handlePeriodChange,
+          setDateFrom: handleDateFrom,
+          setDateTo: handleDateTo,
+          setChannel: handleFundFilter,
+          setSearchInput: handleSearchInput,
+          setAmountMinInput: (v: string) => handleAmountRangeInput("min", v),
+          setAmountMaxInput: (v: string) => handleAmountRangeInput("max", v),
+          setStatus: setStatusFilter,
+          setCounterpartySource: setCounterpartySourceFilter,
+          setCustom: () => {},
+          resetAll: handleReset,
+          hasActiveFilter: activeFilterCount > 0,
+          activeFilterCount,
         }}
       />
     </PageLayout>
