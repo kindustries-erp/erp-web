@@ -135,9 +135,16 @@ export function CashFundView(p: any) {
     counterpartySource: { options: COUNTERPARTY_SOURCE_OPTS },
   };
 
-  // Count active filters for badge
+  // Count active filters for badge — count each filter individually
+  const defaultPeriod = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  })();
+  const periodChanged =
+    period !== defaultPeriod || dateFrom !== `${defaultPeriod}-01`;
   const activeFilterCount = [
-    hasActiveFilter, // includes period deviation + fundFilter
+    periodChanged,
+    !!fundFilter,
     !!searchInput,
     !!amountMinInput || !!amountMaxInput,
     !!statusFilter,
