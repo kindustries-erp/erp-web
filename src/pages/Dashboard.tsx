@@ -1,6 +1,6 @@
 import { LayoutDashboard } from "lucide-react";
 import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel, PanelMore, PanelBadge } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { useT } from "@/core/i18n";
@@ -34,21 +34,17 @@ export function Dashboard() {
   const barIn = "#e0e0de";
   const barOut = "#1a1a1a";
   return (
-    <div>
-      <PageHeader
-        title={t("dashboard.title")}
-        desc={t("dashboard.desc")}
-        icon={<LayoutDashboard className="h-4 w-4" />}
-        actions={
-          <>
-            <Btn>{t("common.thisMonth")}</Btn>
-            <BtnPrimary icon={<IconDownload />}>
-              {t("common.export")}
-            </BtnPrimary>
-          </>
-        }
-      />
-
+    <PageLayout
+      title={t("dashboard.title")}
+      desc={t("dashboard.desc")}
+      icon={<LayoutDashboard className="h-4 w-4" />}
+      actions={
+        <>
+          <Btn>{t("common.thisMonth")}</Btn>
+          <BtnPrimary icon={<IconDownload />}>{t("common.export")}</BtnPrimary>
+        </>
+      }
+    >
       {/* KPIs */}
       <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4">
         <KpiCard
@@ -139,7 +135,7 @@ export function Dashboard() {
           </a>
         </Panel>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

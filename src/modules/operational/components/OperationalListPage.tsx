@@ -26,7 +26,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { StatusBadge } from "@/shared/components/badges";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
@@ -868,12 +868,11 @@ export function OperationalListPage({
 
   if (variant === "inventory") {
     return (
-      <div className="space-y-4">
-        <PageHeader
-          title={config.title}
-          desc={config.desc}
-          icon={<FileText className="h-4 w-4" />}
-        />
+      <PageLayout
+        title={config.title}
+        desc={config.desc}
+        icon={<FileText className="h-4 w-4" />}
+      >
         {error ? (
           <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             {error}
@@ -900,44 +899,42 @@ export function OperationalListPage({
             setPage(1);
           }}
         />
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={config.title}
-        desc={config.desc}
-        icon={<FileText className="h-4 w-4" />}
-        actions={
-          <div className="flex items-center gap-2">
-            {(variant === "sales" ||
-              variant === "purchase" ||
-              variant === "expenses") && (
-              <BtnPrimary
-                onClick={() => {
-                  setEditingRow(null);
-                  setFormOpen(true);
-                }}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Tạo mới
-              </BtnPrimary>
-            )}
-            {config.cta ? (
-              <button
-                className="btn-secondary inline-flex items-center gap-2"
-                onClick={() => void createSample()}
-                disabled={loading}
-              >
-                {config.cta}
-              </button>
-            ) : undefined}
-          </div>
-        }
-      />
-
+    <PageLayout
+      title={config.title}
+      desc={config.desc}
+      icon={<FileText className="h-4 w-4" />}
+      actions={
+        <div className="flex items-center gap-2">
+          {(variant === "sales" ||
+            variant === "purchase" ||
+            variant === "expenses") && (
+            <BtnPrimary
+              onClick={() => {
+                setEditingRow(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Tạo mới
+            </BtnPrimary>
+          )}
+          {config.cta ? (
+            <button
+              className="btn-secondary inline-flex items-center gap-2"
+              onClick={() => void createSample()}
+              disabled={loading}
+            >
+              {config.cta}
+            </button>
+          ) : undefined}
+        </div>
+      }
+    >
       {error ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
           {error}
@@ -1363,6 +1360,6 @@ export function OperationalListPage({
           }}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }

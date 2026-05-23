@@ -5,7 +5,7 @@ import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { useAppStore } from "@/core/config/appStore";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -299,12 +299,11 @@ export function NhanSu() {
   );
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("nav.items.hrStaff")}
-        desc={t("nhansu.desc")}
-        icon={<Users className="h-4 w-4" />}
-      />
+    <PageLayout
+      title={t("nav.items.hrStaff")}
+      desc={t("nhansu.desc")}
+      icon={<Users className="h-4 w-4" />}
+    >
       <div className="flex justify-end mb-4">
         <HeaderActions
           onRefresh={() => loadData(page, pageSize, search, statusFilter)}
@@ -437,7 +436,7 @@ export function NhanSu() {
         loading={impersonating}
         danger={false}
       />
-    </div>
+    </PageLayout>
   );
 }
 

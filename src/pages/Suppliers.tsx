@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Truck } from "lucide-react";
 import { useAppStore } from "@/core/config/appStore";
-import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { RoleFilteredPartnersTab } from "@/modules/partners/components/RoleFilteredPartnersTab";
 
 export function NhaCungCap() {
@@ -13,7 +13,7 @@ export function NhaCungCap() {
   }, [setCustomBreadcrumbs]);
 
   return (
-    <PageWithTabsLayout
+    <PageLayout
       title="Nhà cung cấp"
       desc="Danh sách nhà cung cấp lấy từ master đối tác và filter theo vai trò VENDOR."
       icon={<Truck className="h-4 w-4" />}
@@ -27,6 +27,6 @@ export function NhaCungCap() {
         title="Nhà cung cấp"
         desc="Tạo mới/cập nhật nhà cung cấp từ master đối tác."
       />
-    </PageWithTabsLayout>
+    </PageLayout>
   );
 }

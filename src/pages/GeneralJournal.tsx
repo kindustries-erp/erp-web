@@ -4,7 +4,7 @@ import { DrawerModal } from "@/shared/components/DrawerModal";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import {
   useJournalEntries,
   useJournalEntryActions,
@@ -226,14 +226,11 @@ export function NhatKyChung() {
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <PageHeader
-            title={t("journalEntries.title")}
-            desc={t("journalEntries.desc")}
-            icon={<BarChart3 className="h-4 w-4" />}
-            className="mb-0"
-          />
+      <PageLayout
+        title={t("journalEntries.title")}
+        desc={t("journalEntries.desc")}
+        icon={<BarChart3 className="h-4 w-4" />}
+        actions={
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
@@ -241,8 +238,8 @@ export function NhatKyChung() {
           >
             <Plus className="w-4 h-4" /> {t("journalEntries.actions.new")}
           </button>
-        </div>
-
+        }
+      >
         {/* Filters */}
         <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
@@ -345,7 +342,7 @@ export function NhatKyChung() {
           elevated={false}
           containerClassName="rounded-2xl"
         />
-      </div>
+      </PageLayout>
 
       {/* Create modal */}
       <DrawerModal

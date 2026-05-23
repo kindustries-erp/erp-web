@@ -6,7 +6,7 @@ import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAppStore } from "@/core/config/appStore";
 import { useT, useDict } from "@/core/i18n";
 import { useEffect } from "react";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 
 export function DongTien() {
   const { setCustomBreadcrumbs, navigate } = useAppStore();
@@ -73,18 +73,16 @@ export function DongTien() {
   ];
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("dongtien.title")}
-        desc={t("dongtien.desc")}
-        icon={<BarChart3 className="h-4 w-4" />}
-        actions={
-          <BtnPrimary>
-            <IconDownload /> {t("common.export")}
-          </BtnPrimary>
-        }
-      />
-
+    <PageLayout
+      title={t("dongtien.title")}
+      desc={t("dongtien.desc")}
+      icon={<BarChart3 className="h-4 w-4" />}
+      actions={
+        <BtnPrimary>
+          <IconDownload /> {t("common.export")}
+        </BtnPrimary>
+      }
+    >
       {/* KPIs */}
       <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4 mt-4">
         <KpiCard
@@ -230,7 +228,7 @@ export function DongTien() {
           </table>
         </div>
       </Panel>
-    </div>
+    </PageLayout>
   );
 }
 

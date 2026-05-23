@@ -1,6 +1,6 @@
 import { Wallet } from "lucide-react";
 import { useState } from "react";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { OpeningBalancePanel } from "@/modules/finance/components/OpeningBalancePanel";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
@@ -117,27 +117,24 @@ export function CashFundView(p: any) {
   const [accountingVoucher, setAccountingVoucher] = useState<any | null>(null);
 
   return (
-    <div>
-      {!p.hideHeader && (
-        <PageHeader
-          title={t("tienmat.title")}
-          desc={t("tienmat.desc")}
-          icon={<Wallet className="h-4 w-4" />}
-          actions={
-            canCreateVoucher ? (
-              <>
-                <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}>
-                  <IconPlus /> {t("tienmat.createReceipt")}
-                </BtnPrimary>
-                <BtnPrimary onClick={() => openNew("CASH_PAYMENT")}>
-                  <IconPlus /> {t("tienmat.createPayment")}
-                </BtnPrimary>
-              </>
-            ) : undefined
-          }
-          className="mb-4"
-        />
-      )}
+    <PageLayout
+      title={t("tienmat.title")}
+      desc={t("tienmat.desc")}
+      icon={<Wallet className="h-4 w-4" />}
+      actions={
+        canCreateVoucher ? (
+          <>
+            <BtnPrimary onClick={() => openNew("CASH_RECEIPT")}>
+              <IconPlus /> {t("tienmat.createReceipt")}
+            </BtnPrimary>
+            <BtnPrimary onClick={() => openNew("CASH_PAYMENT")}>
+              <IconPlus /> {t("tienmat.createPayment")}
+            </BtnPrimary>
+          </>
+        ) : undefined
+      }
+      hideHeader={p.hideHeader}
+    >
       <div className="flex justify-between items-center mb-4 gap-4">
         <div className="flex-1">
           <VoucherFilterBar
@@ -304,6 +301,6 @@ export function CashFundView(p: any) {
           if (typeof reloadAll === "function") reloadAll();
         }}
       />
-    </div>
+    </PageLayout>
   );
 }

@@ -3,7 +3,7 @@ import { Wallet } from "lucide-react";
 import { QuyTab } from "@/modules/settings/components/CashFundTab";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 
 export function ThietLapQuy() {
   const { setCustomBreadcrumbs } = useAppStore();
@@ -19,13 +19,12 @@ export function ThietLapQuy() {
   }, [setCustomBreadcrumbs]);
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("thietlap.tabs.quy")}
-        desc={t("thietlap.desc")}
-        icon={<Wallet className="h-4 w-4" />}
-      />
+    <PageLayout
+      title={t("thietlap.tabs.quy")}
+      desc={t("thietlap.desc")}
+      icon={<Wallet className="h-4 w-4" />}
+    >
       <QuyTab />
-    </div>
+    </PageLayout>
   );
 }

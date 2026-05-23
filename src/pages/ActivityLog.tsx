@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Activity, RefreshCw } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
@@ -283,24 +283,22 @@ export function ActivityLog() {
   ];
 
   return (
-    <div>
-      <PageHeader
-        title={t("activitylog.title")}
-        desc={t("activitylog.desc")}
-        icon={<Activity className="h-4 w-4" />}
-        actions={
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={loading}
-            className="flex items-center gap-[6px] px-3 py-[7px] rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] text-xs text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            {t("activitylog.refresh")}
-          </button>
-        }
-      />
-
+    <PageLayout
+      title={t("activitylog.title")}
+      desc={t("activitylog.desc")}
+      icon={<Activity className="h-4 w-4" />}
+      actions={
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={loading}
+          className="flex items-center gap-[6px] px-3 py-[7px] rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] text-xs text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          {t("activitylog.refresh")}
+        </button>
+      }
+    >
       {/* ── Stats strip ── */}
       {!loading && !fetchError && (
         <div className="mb-3 text-xs text-[color:var(--muted-fg)]">
@@ -391,6 +389,6 @@ export function ActivityLog() {
         onPage={setPage}
         onPageSize={handlePageSize}
       />
-    </div>
+    </PageLayout>
   );
 }

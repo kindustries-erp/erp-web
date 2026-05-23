@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Users } from "lucide-react";
 import { useAppStore } from "@/core/config/appStore";
-import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { RoleFilteredPartnersTab } from "@/modules/partners/components/RoleFilteredPartnersTab";
 
 export function KhachHang() {
@@ -13,7 +13,7 @@ export function KhachHang() {
   }, [setCustomBreadcrumbs]);
 
   return (
-    <PageWithTabsLayout
+    <PageLayout
       title="Khách hàng"
       desc="Danh sách khách hàng lấy từ master đối tác và filter theo vai trò CUSTOMER."
       icon={<Users className="h-4 w-4" />}
@@ -27,6 +27,6 @@ export function KhachHang() {
         title="Khách hàng"
         desc="Tạo mới/cập nhật khách hàng từ master đối tác."
       />
-    </PageWithTabsLayout>
+    </PageLayout>
   );
 }

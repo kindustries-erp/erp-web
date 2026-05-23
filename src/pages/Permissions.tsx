@@ -4,7 +4,7 @@ import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -296,18 +296,16 @@ export function PhanQuyen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div>
-      <PageHeader
-        title={t("rbac.title")}
-        desc={t("rbac.desc")}
-        icon={<Shield className="h-4 w-4" />}
-        actions={
-          <BtnPrimary onClick={openNew}>
-            <IconPlus /> {t("rbac.create")}
-          </BtnPrimary>
-        }
-        className="mb-4"
-      />
+    <PageLayout
+      title={t("rbac.title")}
+      desc={t("rbac.desc")}
+      icon={<Shield className="h-4 w-4" />}
+      actions={
+        <BtnPrimary onClick={openNew}>
+          <IconPlus /> {t("rbac.create")}
+        </BtnPrimary>
+      }
+    >
       <DataTable
         items={roles}
         columns={columns}
@@ -399,6 +397,6 @@ export function PhanQuyen() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </PageLayout>
   );
 }

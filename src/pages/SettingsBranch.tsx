@@ -3,7 +3,7 @@ import { GitBranch } from "lucide-react";
 import { BranchTab } from "@/modules/settings/components/BranchTab";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 
 export function SettingsBranch() {
   const { setCustomBreadcrumbs } = useAppStore();
@@ -17,13 +17,12 @@ export function SettingsBranch() {
     return () => setCustomBreadcrumbs(null);
   }, [setCustomBreadcrumbs]);
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("thietlap.tabs.chi-nhanh")}
-        desc={t("thietlap.desc")}
-        icon={<GitBranch className="h-4 w-4" />}
-      />
+    <PageLayout
+      title={t("thietlap.tabs.chi-nhanh")}
+      desc={t("thietlap.desc")}
+      icon={<GitBranch className="h-4 w-4" />}
+    >
       <BranchTab />
-    </div>
+    </PageLayout>
   );
 }

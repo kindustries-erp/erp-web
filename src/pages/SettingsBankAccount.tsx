@@ -3,7 +3,7 @@ import { Landmark } from "lucide-react";
 import { NHTab } from "@/modules/settings/components/BankAccountTab";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 
 export function ThietLapNganHang() {
   const { setCustomBreadcrumbs } = useAppStore();
@@ -19,13 +19,12 @@ export function ThietLapNganHang() {
   }, [setCustomBreadcrumbs]);
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("thietlap.tabs.ngan-hang")}
-        desc={t("thietlap.desc")}
-        icon={<Landmark className="h-4 w-4" />}
-      />
+    <PageLayout
+      title={t("thietlap.tabs.ngan-hang")}
+      desc={t("thietlap.desc")}
+      icon={<Landmark className="h-4 w-4" />}
+    >
       <NHTab />
-    </div>
+    </PageLayout>
   );
 }

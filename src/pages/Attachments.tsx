@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ExternalLink, FileText, Eye, Paperclip } from "lucide-react";
 import { Panel, PanelMore } from "@/shared/components/Panel";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { useT } from "@/core/i18n";
 import { Combobox } from "@/shared/components/Combobox";
@@ -210,13 +210,11 @@ export function DinhKemChungTu() {
   const t = useT();
 
   return (
-    <div>
-      <PageHeader
-        title={t("dinhkem.title")}
-        desc={t("dinhkem.desc")}
-        icon={<Paperclip className="h-4 w-4" />}
-      />
-
+    <PageLayout
+      title={t("dinhkem.title")}
+      desc={t("dinhkem.desc")}
+      icon={<Paperclip className="h-4 w-4" />}
+    >
       <Panel title="Danh sách tài liệu" extra={<PanelMore />}>
         <DataTable
           items={items}
@@ -271,7 +269,7 @@ export function DinhKemChungTu() {
         onOpenFile={selected ? () => openFile(selected) : undefined}
         onClose={() => setSelected(null)}
       />
-    </div>
+    </PageLayout>
   );
 }
 

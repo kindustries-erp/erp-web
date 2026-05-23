@@ -1,6 +1,6 @@
 import { Landmark } from "lucide-react";
 import { KpiCard } from "@/shared/components/KpiCard";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { OpeningBalancePanel } from "@/modules/finance/components/OpeningBalancePanel";
 import { VoucherFilterBar } from "@/modules/finance/components/VoucherFilterBar";
@@ -69,26 +69,24 @@ export function BankDepositDashboard(props: any) {
     setCounterpartySourceFilter,
   } = props;
   return (
-    <>
-      {!props.hideHeader && (
-        <PageHeader
-          title={t("tiengui.title")}
-          desc={t("tiengui.desc")}
-          icon={<Landmark className="h-4 w-4" />}
-          actions={
-            canCreateVoucher ? (
-              <>
-                <BtnPrimary onClick={() => openNew("BANK_RECEIPT")}>
-                  <IconPlus /> {t("tiengui.createUNT")}
-                </BtnPrimary>
-                <BtnPrimary onClick={() => openNew("BANK_PAYMENT")}>
-                  <IconPlus /> {t("tiengui.createUNC")}
-                </BtnPrimary>
-              </>
-            ) : undefined
-          }
-        />
-      )}
+    <PageLayout
+      title={t("tiengui.title")}
+      desc={t("tiengui.desc")}
+      icon={<Landmark className="h-4 w-4" />}
+      actions={
+        canCreateVoucher ? (
+          <>
+            <BtnPrimary onClick={() => openNew("BANK_RECEIPT")}>
+              <IconPlus /> {t("tiengui.createUNT")}
+            </BtnPrimary>
+            <BtnPrimary onClick={() => openNew("BANK_PAYMENT")}>
+              <IconPlus /> {t("tiengui.createUNC")}
+            </BtnPrimary>
+          </>
+        ) : undefined
+      }
+      hideHeader={props.hideHeader}
+    >
       <div className="flex justify-between items-center mb-4 gap-4">
         <div className="flex-1">
           <VoucherFilterBar
@@ -184,6 +182,6 @@ export function BankDepositDashboard(props: any) {
       <div className="mt-4">
         <OpeningBalancePanel type="BANK" />
       </div>
-    </>
+    </PageLayout>
   );
 }

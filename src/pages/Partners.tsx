@@ -4,7 +4,7 @@ import { PartnersTab } from "@/modules/partners/components/PartnersTab";
 import { ContactsTab } from "@/modules/partners/components/ContactsTab";
 import { PartnerBankTab } from "@/modules/partners/components/PartnerBankTab";
 import { PartnerRolesTab } from "@/modules/partners/components/PartnerRolesTab";
-import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 
@@ -56,7 +56,7 @@ export function DoiTac() {
   };
 
   return (
-    <PageWithTabsLayout
+    <PageLayout
       title={t("nav.items.partners")}
       desc={t("doitac.desc")}
       icon={<Users className="h-4 w-4" />}
@@ -81,6 +81,6 @@ export function DoiTac() {
       <div className={activeTab === "vai-tro" ? "" : "hidden"}>
         <PartnerRolesTab />
       </div>
-    </PageWithTabsLayout>
+    </PageLayout>
   );
 }

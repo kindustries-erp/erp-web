@@ -8,7 +8,7 @@ import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
-import { PageWithTabsLayout } from "@/shared/components/PageWithTabsLayout";
+import { PageLayout } from "@/shared/components/PageLayout";
 import {
   getConfigApi,
   getSinvoiceHealthApi,
@@ -844,7 +844,7 @@ const HoaDonDienTu: React.FC = () => {
 
   return (
     <>
-      <PageWithTabsLayout
+      <PageLayout
         title={t("nav.items.hoadondientu")}
         desc={
           config
@@ -1202,7 +1202,7 @@ const HoaDonDienTu: React.FC = () => {
             </div>
           </div>
         </div>
-      </PageWithTabsLayout>
+      </PageLayout>
 
       <DrawerModal
         open={!!issuedDetail}

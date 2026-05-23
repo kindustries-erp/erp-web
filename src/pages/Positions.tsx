@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Award } from "lucide-react";
 import { useT } from "@/core/i18n";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import {
   getPositionsPagedApi,
   createPositionApi,
@@ -203,12 +203,11 @@ export function ChucVu() {
   const isDirty = !!form.position_name.trim() || !!form.position_code.trim();
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("nav.items.hrPositions")}
-        desc="Quản lý danh sách chức danh"
-        icon={<Award className="h-4 w-4" />}
-      />
+    <PageLayout
+      title={t("nav.items.hrPositions")}
+      desc="Quản lý danh sách chức danh"
+      icon={<Award className="h-4 w-4" />}
+    >
       <ChucVuView
         {...{
           t,
@@ -242,6 +241,6 @@ export function ChucVu() {
           handleDelete,
         }}
       />
-    </div>
+    </PageLayout>
   );
 }
