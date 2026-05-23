@@ -11,7 +11,8 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { SearchInput } from "@/shared/components/SearchInput";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
 import {
@@ -101,6 +102,10 @@ export function PhongBan() {
 
   const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+
+  const filterConfig: FilterPanelConfig = { search: true };
+  const activeFilterCount = [!!searchInput].filter(Boolean).length;
 
   useEffect(() => {
     loadData(page, pageSize, search);
@@ -272,55 +277,94 @@ export function PhongBan() {
       desc="Quản lý danh sách phòng ban"
       icon={<Building2 className="h-4 w-4" />}
       actions={
-        <button
-          onClick={openNew}
-          className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
-        >
-          <IconPlus /> {t("phongban.add")}
-        </button>
+        <>
+          <FilterButton
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            activeCount={activeFilterCount}
+          />
+          <button
+            onClick={openNew}
+            className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
+          >
+            <IconPlus /> {t("phongban.add")}
+          </button>
+        </>
       }
     >
-      {/* ── DataTable ── */}
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(dept) => dept.id}
-        loading={loading}
-        error={fetchError}
-        emptyLabel={t("common.noData")}
-        minWidth={520}
-        filters={
-          <SearchInput
-            placeholder={t("phongban.searchPlaceholder")}
-            value={searchInput}
-            onChange={handleSearchInput}
-            className="max-w-[320px]"
+      <div className="flex gap-5 items-start">
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* ── DataTable ── */}
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(dept) => dept.id}
+            loading={loading}
+            error={fetchError}
+            emptyLabel={t("common.noData")}
+            minWidth={520}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={handlePageSize}
+            actionsColumn={{
+              cell: (dept) => (
+                <ActionDropdown
+                  items={[
+                    {
+                      label: t("common.edit"),
+                      onClick: () => openEdit(dept),
+                    },
+                    {
+                      label: t("common.delete"),
+                      onClick: () => setDeleteTarget(dept),
+                      variant: "danger",
+                    },
+                  ]}
+                />
+              ),
+            }}
           />
-        }
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-        actionsColumn={{
-          cell: (dept) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: t("common.edit"),
-                  onClick: () => openEdit(dept),
-                },
-                {
-                  label: t("common.delete"),
-                  onClick: () => setDeleteTarget(dept),
-                  variant: "danger",
-                },
-              ]}
-            />
-          ),
-        }}
-      />
+        </div>
+        <FilterPanel
+          config={filterConfig}
+          filter={{
+            state: {
+              period: "",
+              dateFrom: "",
+              dateTo: "",
+              channel: "",
+              search: searchInput,
+              amountMin: "",
+              amountMax: "",
+              status: "",
+              counterpartySource: "",
+              custom: {},
+            },
+            inputs: { search: searchInput, amountMin: "", amountMax: "" },
+            panelOpen: filterPanelOpen,
+            openPanel: () => setFilterPanelOpen(true),
+            closePanel: () => setFilterPanelOpen(false),
+            togglePanel: () => setFilterPanelOpen((v) => !v),
+            setPeriod: () => {},
+            setDateFrom: () => {},
+            setDateTo: () => {},
+            setChannel: () => {},
+            setSearchInput: handleSearchInput,
+            setAmountMinInput: () => {},
+            setAmountMaxInput: () => {},
+            setStatus: () => {},
+            setCounterpartySource: () => {},
+            setCustom: () => {},
+            resetAll: () => {
+              handleSearchInput("");
+            },
+            hasActiveFilter: activeFilterCount > 0,
+            activeFilterCount,
+          }}
+        />
+      </div>
 
       {/* ── Drawer: Add / Edit ── */}
       <DrawerModal

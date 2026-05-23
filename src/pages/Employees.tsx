@@ -3,10 +3,10 @@ import { Pencil, Trash2, UserCheck, Users } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { SearchInput } from "@/shared/components/SearchInput";
 import { useAppStore } from "@/core/config/appStore";
 import { PageLayout } from "@/shared/components/PageLayout";
-import { Combobox } from "@/shared/components/Combobox";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import { DataTable } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { DEFAULT_STACK_OFFSET } from "@/shared/components/DrawerModal";
@@ -79,6 +79,7 @@ export function NhanSu() {
   const [allRoles, setAllRoles] = useState<Role[]>([]);
   const [policyTarget, setPolicyTarget] = useState<Employee | null>(null);
   const [policyDrawerOpen, setPolicyDrawerOpen] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const policyEditor = usePermissionsEditor({
     getApi: (id) => getEmployeePermissionsApi(id),
     saveApi: (id, dto) => saveEmployeePermissionsApi(id, dto),
@@ -298,74 +299,121 @@ export function NhanSu() {
     [t, statusLabel],
   );
 
+  const filterConfig: FilterPanelConfig = {
+    search: true,
+    status: {
+      options: statusOptions,
+      placeholder: t("nhansu.status.all"),
+    },
+  };
+
+  const activeFilterCount = [!!searchInput, !!statusFilter].filter(
+    Boolean,
+  ).length;
+
+  function resetAllFilters() {
+    handleSearchInput("");
+    handleStatusFilter("");
+  }
+
   return (
     <PageLayout
       title={t("nav.items.hrStaff")}
       desc={t("nhansu.desc")}
       icon={<Users className="h-4 w-4" />}
+      actions={
+        <>
+          <FilterButton
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            activeCount={activeFilterCount}
+          />
+          <HeaderActions
+            onRefresh={() => loadData(page, pageSize, search, statusFilter)}
+            onNew={openNew}
+            t={t}
+          />
+        </>
+      }
     >
-      <div className="flex justify-end mb-4">
-        <HeaderActions
-          onRefresh={() => loadData(page, pageSize, search, statusFilter)}
-          onNew={openNew}
-          t={t}
+      <div className="flex gap-5 items-start">
+        <div className="flex-1 min-w-0 space-y-4">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(emp) => emp.id}
+            loading={loading}
+            error={fetchError}
+            emptyLabel={t("common.noData")}
+            minWidth={700}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={handlePageSize}
+            actionsColumn={{
+              cell: (emp) => (
+                <ActionDropdown
+                  items={[
+                    {
+                      label: t("nhansu.actions.loginAsUser"),
+                      icon: <UserCheck size={14} />,
+                      onClick: () => setImpersonateTarget(emp),
+                      hidden: !canImpersonate,
+                    },
+                    {
+                      label: t("nhansu.actions.edit"),
+                      icon: <Pencil size={14} />,
+                      onClick: () => openEdit(emp),
+                    },
+                    {
+                      label: t("nhansu.actions.delete"),
+                      icon: <Trash2 size={14} />,
+                      onClick: () => setDeleteTarget(emp),
+                      variant: "danger",
+                    },
+                  ]}
+                />
+              ),
+            }}
+          />
+        </div>
+        <FilterPanel
+          config={filterConfig}
+          filter={{
+            state: {
+              period: "",
+              dateFrom: "",
+              dateTo: "",
+              channel: "",
+              search: searchInput,
+              amountMin: "",
+              amountMax: "",
+              status: statusFilter,
+              counterpartySource: "",
+              custom: {},
+            },
+            inputs: { search: searchInput, amountMin: "", amountMax: "" },
+            panelOpen: filterPanelOpen,
+            openPanel: () => setFilterPanelOpen(true),
+            closePanel: () => setFilterPanelOpen(false),
+            togglePanel: () => setFilterPanelOpen((v) => !v),
+            setPeriod: () => {},
+            setDateFrom: () => {},
+            setDateTo: () => {},
+            setChannel: () => {},
+            setSearchInput: handleSearchInput,
+            setAmountMinInput: () => {},
+            setAmountMaxInput: () => {},
+            setStatus: handleStatusFilter,
+            setCounterpartySource: () => {},
+            setCustom: () => {},
+            resetAll: resetAllFilters,
+            hasActiveFilter: activeFilterCount > 0,
+            activeFilterCount,
+          }}
         />
       </div>
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <SearchInput
-          placeholder={t("nhansu.searchPlaceholder")}
-          value={searchInput}
-          onChange={handleSearchInput}
-          className="max-w-[280px]"
-        />
-        <Combobox
-          options={statusOptions}
-          value={statusFilter}
-          onChange={handleStatusFilter}
-          placeholder={t("nhansu.status.all")}
-          className="max-w-[180px]"
-        />
-      </div>
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(emp) => emp.id}
-        loading={loading}
-        error={fetchError}
-        emptyLabel={t("common.noData")}
-        minWidth={700}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-        actionsColumn={{
-          cell: (emp) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: t("nhansu.actions.loginAsUser"),
-                  icon: <UserCheck size={14} />,
-                  onClick: () => setImpersonateTarget(emp),
-                  hidden: !canImpersonate,
-                },
-                {
-                  label: t("nhansu.actions.edit"),
-                  icon: <Pencil size={14} />,
-                  onClick: () => openEdit(emp),
-                },
-                {
-                  label: t("nhansu.actions.delete"),
-                  icon: <Trash2 size={14} />,
-                  onClick: () => setDeleteTarget(emp),
-                  variant: "danger",
-                },
-              ]}
-            />
-          ),
-        }}
-      />
       <EmployeeDrawer
         open={drawerOpen}
         editing={editing}

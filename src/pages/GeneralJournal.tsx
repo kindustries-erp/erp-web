@@ -5,6 +5,8 @@ import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 import { PageLayout } from "@/shared/components/PageLayout";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import {
   useJournalEntries,
   useJournalEntryActions,
@@ -102,6 +104,7 @@ export function NhatKyChung() {
   const lookups = useJournalEntryLookups();
   const actions = useJournalEntryActions(list.load);
   const [createOpen, setCreateOpen] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   // Unified detail modal state
   const [detailState, setDetailState] = useState<VoucherDetailState | null>(
@@ -118,6 +121,41 @@ export function NhatKyChung() {
     ]);
     return () => setCustomBreadcrumbs(null);
   }, [setCustomBreadcrumbs]);
+
+  // FilterPanel config — search + period (date range) + account (channel) + status (custom)
+  const accountOpts = lookups.accounts.map((a) => ({
+    value: a.id,
+    label: [a.account_code, a.account_name].filter(Boolean).join(" — "),
+  }));
+  const periodOpts = lookups.periods.map((p) => ({
+    value: p.id,
+    label: p.name,
+  }));
+
+  const filterConfig: FilterPanelConfig = {
+    search: true,
+    custom: [
+      {
+        key: "account",
+        label: t("journalEntries.filters.account"),
+        placeholder: t("journalEntries.filters.account"),
+        options: accountOpts,
+      },
+      {
+        key: "period",
+        label: t("journalEntries.filters.period"),
+        placeholder: t("journalEntries.filters.period"),
+        options: periodOpts,
+      },
+    ],
+  };
+
+  const activeFilterCount = [
+    !!list.search,
+    !!list.accountId,
+    !!list.periodId,
+    !!list.dateFrom || !!list.dateTo,
+  ].filter(Boolean).length;
 
   async function handleRowClick(entry: JournalEntry) {
     const refType = entry.reference_type;
@@ -231,117 +269,109 @@ export function NhatKyChung() {
         desc={t("journalEntries.desc")}
         icon={<BarChart3 className="h-4 w-4" />}
         actions={
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-          >
-            <Plus className="w-4 h-4" /> {t("journalEntries.actions.new")}
-          </button>
-        }
-      >
-        {/* Filters */}
-        <div className="rounded-2xl border border-border bg-surface p-4 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3">
-            <input
-              value={list.search}
-              onChange={(e) => {
-                list.setSearch(e.target.value);
-                list.setPage(1);
-              }}
-              placeholder={t("journalEntries.filters.search")}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
+          <>
+            <FilterButton
+              onClick={() => setFilterPanelOpen((v) => !v)}
+              activeCount={activeFilterCount}
             />
-            <select
-              value={list.accountId}
-              onChange={(e) => {
-                list.setAccountId(e.target.value);
-                list.setPage(1);
-              }}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-            >
-              <option value="">{t("journalEntries.filters.account")}</option>
-              {lookups.accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {[a.account_code, a.account_name].filter(Boolean).join(" — ")}
-                </option>
-              ))}
-            </select>
-            <select
-              value={list.periodId}
-              onChange={(e) => {
-                list.setPeriodId(e.target.value);
-                list.setPage(1);
-              }}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-            >
-              <option value="">{t("journalEntries.filters.period")}</option>
-              {lookups.periods.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-
-            <input
-              value={list.dateFrom}
-              onChange={(e) => {
-                list.setDateFrom(e.target.value);
-                list.setPage(1);
-              }}
-              type="date"
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-            />
-            <input
-              value={list.dateTo}
-              onChange={(e) => {
-                list.setDateTo(e.target.value);
-                list.setPage(1);
-              }}
-              type="date"
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-xs outline-none focus:border-primary"
-            />
-          </div>
-          <div className="flex items-center justify-between text-xs text-[color:var(--muted-fg)]">
-            <span>
-              {t("journalEntries.total")}: {list.total}
-            </span>
             <button
               type="button"
-              onClick={list.resetFilters}
-              className="hover:text-foreground"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
             >
-              {t("journalEntries.filters.reset")}
+              <Plus className="w-4 h-4" /> {t("journalEntries.actions.new")}
             </button>
+          </>
+        }
+      >
+        <div className="flex gap-5 items-start">
+          <div className="flex-1 min-w-0 space-y-4">
+            {list.error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                {list.error}
+              </div>
+            )}
+
+            {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
+            <DataTable<FlatRow>
+              items={flatRows}
+              columns={journalColumns}
+              getRowKey={(row) => row._rowKey}
+              loading={list.loading}
+              emptyLabel={t("common.noData")}
+              onRowClick={(row) => handleRowClick(row.entry)}
+              page={list.page}
+              pageSize={list.pageSize}
+              total={list.total}
+              totalPages={Math.max(1, list.totalPages)}
+              onPage={list.setPage}
+              onPageSize={(ps) => {
+                list.setPageSize(ps);
+                list.setPage(1);
+              }}
+              elevated={false}
+              containerClassName="rounded-2xl"
+            />
           </div>
+          {/* Filter sidebar */}
+          <FilterPanel
+            config={filterConfig}
+            filter={{
+              state: {
+                period: "",
+                dateFrom: list.dateFrom,
+                dateTo: list.dateTo,
+                channel: "",
+                search: list.search,
+                amountMin: "",
+                amountMax: "",
+                status: "",
+                counterpartySource: "",
+                custom: { account: list.accountId, period: list.periodId },
+              },
+              inputs: {
+                search: list.search,
+                amountMin: "",
+                amountMax: "",
+              },
+              panelOpen: filterPanelOpen,
+              openPanel: () => setFilterPanelOpen(true),
+              closePanel: () => setFilterPanelOpen(false),
+              togglePanel: () => setFilterPanelOpen((v) => !v),
+              setPeriod: () => {},
+              setDateFrom: (v: string) => {
+                list.setDateFrom(v);
+                list.setPage(1);
+              },
+              setDateTo: (v: string) => {
+                list.setDateTo(v);
+                list.setPage(1);
+              },
+              setChannel: () => {},
+              setSearchInput: (v: string) => {
+                list.setSearch(v);
+                list.setPage(1);
+              },
+              setAmountMinInput: () => {},
+              setAmountMaxInput: () => {},
+              setStatus: () => {},
+              setCounterpartySource: () => {},
+              setCustom: (key: string, v: string) => {
+                if (key === "account") {
+                  list.setAccountId(v);
+                  list.setPage(1);
+                }
+                if (key === "period") {
+                  list.setPeriodId(v);
+                  list.setPage(1);
+                }
+              },
+              resetAll: list.resetFilters,
+              hasActiveFilter: activeFilterCount > 0,
+              activeFilterCount,
+            }}
+          />
         </div>
-
-        {list.error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
-            {list.error}
-          </div>
-        )}
-
-        {/* Journal Table — 1 row per line pair, all rows show full voucher info */}
-        <DataTable<FlatRow>
-          items={flatRows}
-          columns={journalColumns}
-          getRowKey={(row) => row._rowKey}
-          loading={list.loading}
-          emptyLabel={t("common.noData")}
-          onRowClick={(row) => handleRowClick(row.entry)}
-          page={list.page}
-          pageSize={list.pageSize}
-          total={list.total}
-          totalPages={Math.max(1, list.totalPages)}
-          onPage={list.setPage}
-          onPageSize={(ps) => {
-            list.setPageSize(ps);
-            list.setPage(1);
-          }}
-          elevated={false}
-          containerClassName="rounded-2xl"
-        />
       </PageLayout>
 
       {/* Create modal */}

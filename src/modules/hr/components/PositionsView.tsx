@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   DrawerModal,
   DrawerSection,
@@ -5,7 +6,6 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { SearchInput } from "@/shared/components/SearchInput";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -13,6 +13,8 @@ import {
   ActionDropdown,
   type ActionItem,
 } from "@/shared/components/ActionDropdown";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import { Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import type { Position } from "@/modules/hr/api/hrApi";
@@ -76,6 +78,11 @@ export function ChucVuView(p: any) {
     deleting,
     handleDelete,
   } = p;
+
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+
+  const filterConfig: FilterPanelConfig = { search: true };
+  const activeFilterCount = [!!searchInput].filter(Boolean).length;
 
   const columns: DataTableColumn<Position>[] = [
     {
@@ -145,54 +152,93 @@ export function ChucVuView(p: any) {
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <button
-          onClick={openNew}
-          className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
-        >
-          <IconPlus /> {t("chucvu.add")}
-        </button>
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            activeCount={activeFilterCount}
+          />
+          <button
+            onClick={openNew}
+            className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
+          >
+            <IconPlus /> {t("chucvu.add")}
+          </button>
+        </div>
       </div>
-      <div className="mb-4">
-        <SearchInput
-          placeholder={t("chucvu.searchPlaceholder")}
-          value={searchInput}
-          onChange={handleSearchInput}
-          className="max-w-[320px]"
+      <div className="flex gap-5 items-start">
+        <div className="flex-1 min-w-0 space-y-4">
+          <DataTable<Position>
+            items={items}
+            columns={columns}
+            getRowKey={(pos) => pos.id}
+            loading={loading}
+            error={fetchError}
+            emptyLabel={t("common.noData")}
+            minWidth={560}
+            actionsColumn={{
+              cell: (pos) => {
+                const actionItems: ActionItem[] = [
+                  {
+                    label: t("common.edit"),
+                    onClick: () => openEdit(pos),
+                    icon: <Pencil size={14} />,
+                  },
+                  {
+                    label: t("common.delete"),
+                    onClick: () => setDeleteTarget(pos),
+                    icon: <Trash2 size={14} />,
+                    variant: "danger",
+                  },
+                ];
+                return <ActionDropdown items={actionItems} />;
+              },
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={handlePageSize}
+          />
+        </div>
+        <FilterPanel
+          config={filterConfig}
+          filter={{
+            state: {
+              period: "",
+              dateFrom: "",
+              dateTo: "",
+              channel: "",
+              search: searchInput,
+              amountMin: "",
+              amountMax: "",
+              status: "",
+              counterpartySource: "",
+              custom: {},
+            },
+            inputs: { search: searchInput, amountMin: "", amountMax: "" },
+            panelOpen: filterPanelOpen,
+            openPanel: () => setFilterPanelOpen(true),
+            closePanel: () => setFilterPanelOpen(false),
+            togglePanel: () => setFilterPanelOpen((v) => !v),
+            setPeriod: () => {},
+            setDateFrom: () => {},
+            setDateTo: () => {},
+            setChannel: () => {},
+            setSearchInput: handleSearchInput,
+            setAmountMinInput: () => {},
+            setAmountMaxInput: () => {},
+            setStatus: () => {},
+            setCounterpartySource: () => {},
+            setCustom: () => {},
+            resetAll: () => {
+              handleSearchInput("");
+            },
+            hasActiveFilter: activeFilterCount > 0,
+            activeFilterCount,
+          }}
         />
       </div>
-      <DataTable<Position>
-        items={items}
-        columns={columns}
-        getRowKey={(pos) => pos.id}
-        loading={loading}
-        error={fetchError}
-        emptyLabel={t("common.noData")}
-        minWidth={560}
-        actionsColumn={{
-          cell: (pos) => {
-            const actionItems: ActionItem[] = [
-              {
-                label: t("common.edit"),
-                onClick: () => openEdit(pos),
-                icon: <Pencil size={14} />,
-              },
-              {
-                label: t("common.delete"),
-                onClick: () => setDeleteTarget(pos),
-                icon: <Trash2 size={14} />,
-                variant: "danger",
-              },
-            ];
-            return <ActionDropdown items={actionItems} />;
-          },
-        }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-      />
       <PositionDrawer
         {...{
           t,

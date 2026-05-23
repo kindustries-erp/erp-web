@@ -27,6 +27,8 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { PageLayout } from "@/shared/components/PageLayout";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import { StatusBadge } from "@/shared/components/badges";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
@@ -236,6 +238,7 @@ export function OperationalListPage({
   const [editingRow, setEditingRow] = useState<OperationalDocument | null>(
     null,
   );
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   const {
     activeStep,
@@ -649,71 +652,6 @@ export function OperationalListPage({
 
   const filters = (
     <>
-      <input
-        className="input min-w-[220px] flex-1"
-        placeholder="Tìm số chứng từ, đối tác, ghi chú..."
-        value={searchInput}
-        onChange={(event) => setSearchInput(event.target.value)}
-      />
-      <Combobox
-        options={[{ value: "", label: "Tất cả chi nhánh" }, ...branchOptions]}
-        value={branchFilter}
-        onChange={(value) => {
-          setBranchFilter(value);
-          setPage(1);
-        }}
-        className="w-[220px]"
-        allowClear={false}
-      />
-      <Combobox
-        options={[
-          { value: "", label: "Tất cả thanh toán" },
-          { value: "UNPAID", label: "UNPAID" },
-          { value: "PARTIALLY_PAID", label: "PARTIALLY_PAID" },
-          { value: "PAID", label: "PAID" },
-          { value: "OVERDUE", label: "OVERDUE" },
-          { value: "VOID", label: "VOID" },
-        ]}
-        value={paymentStatusFilter}
-        onChange={(value) => {
-          setPaymentStatusFilter(value);
-          setPage(1);
-        }}
-        className="w-[210px]"
-        allowClear={false}
-      />
-      <Combobox
-        options={[
-          { value: "", label: "Tất cả trạng thái" },
-          { value: "DRAFT", label: "DRAFT" },
-          { value: "CONFIRMED", label: "CONFIRMED" },
-          { value: "IN_PROGRESS", label: "IN_PROGRESS" },
-          { value: "COMPLETED", label: "COMPLETED" },
-          { value: "RECEIVED", label: "RECEIVED" },
-          { value: "CANCELLED", label: "CANCELLED" },
-        ]}
-        value={statusFilter}
-        onChange={(value) => {
-          setStatusFilter(value);
-          setPage(1);
-        }}
-        className="w-[210px]"
-        allowClear={false}
-      />
-      <Combobox
-        options={[
-          { value: "", label: "Tất cả recurring" },
-          { value: "RECURRING", label: "Recurring" },
-          { value: "NON_RECURRING", label: "Không recurring" },
-        ]}
-        value={recurringFilter}
-        onChange={(value) => {
-          setRecurringFilter(value);
-          setPage(1);
-        }}
-        className="w-[210px]"
-        allowClear={false}
-      />
       <button
         className="btn-secondary inline-flex items-center gap-2"
         onClick={() => void load()}
@@ -724,6 +662,68 @@ export function OperationalListPage({
       </button>
     </>
   );
+
+  const STATUS_OPTIONS = [
+    { value: "DRAFT", label: "DRAFT" },
+    { value: "CONFIRMED", label: "CONFIRMED" },
+    { value: "IN_PROGRESS", label: "IN_PROGRESS" },
+    { value: "COMPLETED", label: "COMPLETED" },
+    { value: "RECEIVED", label: "RECEIVED" },
+    { value: "CANCELLED", label: "CANCELLED" },
+  ];
+  const PAYMENT_STATUS_OPTIONS = [
+    { value: "UNPAID", label: "UNPAID" },
+    { value: "PARTIALLY_PAID", label: "PARTIALLY_PAID" },
+    { value: "PAID", label: "PAID" },
+    { value: "OVERDUE", label: "OVERDUE" },
+    { value: "VOID", label: "VOID" },
+  ];
+  const RECURRING_OPTIONS = [
+    { value: "RECURRING", label: "Recurring" },
+    { value: "NON_RECURRING", label: "Không recurring" },
+  ];
+
+  const filterConfig: FilterPanelConfig = {
+    search: true,
+    channel: {
+      label: "Chi nhánh",
+      placeholder: "Tất cả chi nhánh",
+      options: branchOptions,
+    },
+    status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
+    custom: [
+      {
+        key: "paymentStatus",
+        label: "Thanh toán",
+        placeholder: "Tất cả thanh toán",
+        options: PAYMENT_STATUS_OPTIONS,
+      },
+      {
+        key: "recurring",
+        label: "Recurring",
+        placeholder: "Tất cả recurring",
+        options: RECURRING_OPTIONS,
+      },
+    ],
+  };
+
+  const activeFilterCount = [
+    !!searchInput,
+    !!branchFilter,
+    !!statusFilter,
+    !!paymentStatusFilter,
+    !!recurringFilter,
+  ].filter(Boolean).length;
+
+  function resetAllFilters() {
+    setSearchInput("");
+    setSearch("");
+    setBranchFilter("");
+    setStatusFilter("");
+    setPaymentStatusFilter("");
+    setRecurringFilter("");
+    setPage(1);
+  }
 
   const columns = useMemo<DataTableColumn<OperationalDocument>[]>(() => {
     const baseColumns: DataTableColumn<OperationalDocument>[] = [
@@ -872,33 +872,96 @@ export function OperationalListPage({
         title={config.title}
         desc={config.desc}
         icon={<FileText className="h-4 w-4" />}
+        actions={
+          <FilterButton
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            activeCount={activeFilterCount}
+          />
+        }
       >
         {error ? (
           <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         ) : null}
-        <DataTable
-          items={stockItems}
-          columns={stockColumns}
-          getRowKey={(row) =>
-            `${row.inventory_item_id}-${row.branch_id || "all"}`
-          }
-          loading={loading}
-          error={error}
-          emptyLabel="Chưa có tồn kho."
-          filters={filters}
-          minWidth={760}
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          totalPages={totalPages}
-          onPage={setPage}
-          onPageSize={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
+        <div className="flex gap-5 items-start">
+          <div className="flex-1 min-w-0 space-y-4">
+            <DataTable
+              items={stockItems}
+              columns={stockColumns}
+              getRowKey={(row) =>
+                `${row.inventory_item_id}-${row.branch_id || "all"}`
+              }
+              loading={loading}
+              error={error}
+              emptyLabel="Chưa có tồn kho."
+              filters={filters}
+              minWidth={760}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              totalPages={totalPages}
+              onPage={setPage}
+              onPageSize={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
+          </div>
+          <FilterPanel
+            config={filterConfig}
+            filter={{
+              state: {
+                period: "",
+                dateFrom: "",
+                dateTo: "",
+                channel: branchFilter,
+                search: searchInput,
+                amountMin: "",
+                amountMax: "",
+                status: statusFilter,
+                counterpartySource: "",
+                custom: {
+                  paymentStatus: paymentStatusFilter,
+                  recurring: recurringFilter,
+                },
+              },
+              inputs: { search: searchInput, amountMin: "", amountMax: "" },
+              panelOpen: filterPanelOpen,
+              openPanel: () => setFilterPanelOpen(true),
+              closePanel: () => setFilterPanelOpen(false),
+              togglePanel: () => setFilterPanelOpen((v) => !v),
+              setPeriod: () => {},
+              setDateFrom: () => {},
+              setDateTo: () => {},
+              setChannel: (v: string) => {
+                setBranchFilter(v);
+                setPage(1);
+              },
+              setSearchInput: (v: string) => setSearchInput(v),
+              setAmountMinInput: () => {},
+              setAmountMaxInput: () => {},
+              setStatus: (v: string) => {
+                setStatusFilter(v);
+                setPage(1);
+              },
+              setCounterpartySource: () => {},
+              setCustom: (key: string, v: string) => {
+                if (key === "paymentStatus") {
+                  setPaymentStatusFilter(v);
+                  setPage(1);
+                }
+                if (key === "recurring") {
+                  setRecurringFilter(v);
+                  setPage(1);
+                }
+              },
+              resetAll: resetAllFilters,
+              hasActiveFilter: activeFilterCount > 0,
+              activeFilterCount,
+            }}
+          />
+        </div>
       </PageLayout>
     );
   }
@@ -910,6 +973,10 @@ export function OperationalListPage({
       icon={<FileText className="h-4 w-4" />}
       actions={
         <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={() => setFilterPanelOpen((v) => !v)}
+            activeCount={activeFilterCount}
+          />
           {(variant === "sales" ||
             variant === "purchase" ||
             variant === "expenses") && (
@@ -941,71 +1008,130 @@ export function OperationalListPage({
         </div>
       ) : null}
 
-      <DataTable
-        items={visibleItems}
-        columns={columns}
-        getRowKey={(row) => `${row.document_type || variant}-${row.id}`}
-        loading={loading}
-        error={error}
-        emptyLabel="Chưa có dữ liệu."
-        filters={filters}
-        minWidth={980}
-        actionsColumn={{
-          cell: (row) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: "Chi tiết",
-                  icon: <FileText className="h-4 w-4" />,
-                  onClick: () => void openDetail(row),
-                },
-                {
-                  label: "Sửa",
-                  icon: <Pencil className="h-4 w-4" />,
-                  onClick: () => {
-                    setEditingRow(row);
-                    setFormOpen(true);
-                  },
-                  hidden: !["sales", "purchase", "expenses"].includes(variant),
-                },
-                {
-                  label: "Liên kết tiền",
-                  icon: <Link2 className="h-4 w-4" />,
-                  onClick: () => void openSettlement(row),
-                  hidden:
-                    !config.paymentLinkable ||
-                    Number(row.open_amount || 0) <= 0,
-                },
-                {
-                  label: "Nhập kho",
-                  icon: <Warehouse className="h-4 w-4" />,
-                  onClick: () => {
-                    if (!postingLoading) void openPostingDrawer(row);
-                  },
-                  hidden: !canPostReceipt(row, variant),
-                },
-                {
-                  label: "Xuất kho",
-                  icon: <Warehouse className="h-4 w-4" />,
-                  onClick: () => {
-                    if (!postingLoading) void openPostingDrawer(row);
-                  },
-                  hidden: !canPostIssue(row, variant),
-                },
-              ]}
-            />
-          ),
-        }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={(size) => {
-          setPageSize(size);
-          setPage(1);
-        }}
-      />
+      <div className="flex gap-5 items-start">
+        <div className="flex-1 min-w-0 space-y-4">
+          <DataTable
+            items={visibleItems}
+            columns={columns}
+            getRowKey={(row) => `${row.document_type || variant}-${row.id}`}
+            loading={loading}
+            error={error}
+            emptyLabel="Chưa có dữ liệu."
+            filters={filters}
+            minWidth={980}
+            actionsColumn={{
+              cell: (row) => (
+                <ActionDropdown
+                  items={[
+                    {
+                      label: "Chi tiết",
+                      icon: <FileText className="h-4 w-4" />,
+                      onClick: () => void openDetail(row),
+                    },
+                    {
+                      label: "Sửa",
+                      icon: <Pencil className="h-4 w-4" />,
+                      onClick: () => {
+                        setEditingRow(row);
+                        setFormOpen(true);
+                      },
+                      hidden: !["sales", "purchase", "expenses"].includes(
+                        variant,
+                      ),
+                    },
+                    {
+                      label: "Liên kết tiền",
+                      icon: <Link2 className="h-4 w-4" />,
+                      onClick: () => void openSettlement(row),
+                      hidden:
+                        !config.paymentLinkable ||
+                        Number(row.open_amount || 0) <= 0,
+                    },
+                    {
+                      label: "Nhập kho",
+                      icon: <Warehouse className="h-4 w-4" />,
+                      onClick: () => {
+                        if (!postingLoading) void openPostingDrawer(row);
+                      },
+                      hidden: !canPostReceipt(row, variant),
+                    },
+                    {
+                      label: "Xuất kho",
+                      icon: <Warehouse className="h-4 w-4" />,
+                      onClick: () => {
+                        if (!postingLoading) void openPostingDrawer(row);
+                      },
+                      hidden: !canPostIssue(row, variant),
+                    },
+                  ]}
+                />
+              ),
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
+        </div>
+        <FilterPanel
+          config={filterConfig}
+          filter={{
+            state: {
+              period: "",
+              dateFrom: "",
+              dateTo: "",
+              channel: branchFilter,
+              search: searchInput,
+              amountMin: "",
+              amountMax: "",
+              status: statusFilter,
+              counterpartySource: "",
+              custom: {
+                paymentStatus: paymentStatusFilter,
+                recurring: recurringFilter,
+              },
+            },
+            inputs: { search: searchInput, amountMin: "", amountMax: "" },
+            panelOpen: filterPanelOpen,
+            openPanel: () => setFilterPanelOpen(true),
+            closePanel: () => setFilterPanelOpen(false),
+            togglePanel: () => setFilterPanelOpen((v) => !v),
+            setPeriod: () => {},
+            setDateFrom: () => {},
+            setDateTo: () => {},
+            setChannel: (v: string) => {
+              setBranchFilter(v);
+              setPage(1);
+            },
+            setSearchInput: (v: string) => setSearchInput(v),
+            setAmountMinInput: () => {},
+            setAmountMaxInput: () => {},
+            setStatus: (v: string) => {
+              setStatusFilter(v);
+              setPage(1);
+            },
+            setCounterpartySource: () => {},
+            setCustom: (key: string, v: string) => {
+              if (key === "paymentStatus") {
+                setPaymentStatusFilter(v);
+                setPage(1);
+              }
+              if (key === "recurring") {
+                setRecurringFilter(v);
+                setPage(1);
+              }
+            },
+            resetAll: resetAllFilters,
+            hasActiveFilter: activeFilterCount > 0,
+            activeFilterCount,
+          }}
+        />
+      </div>
 
       <DrawerModal
         open={activeStep === "detail"}
