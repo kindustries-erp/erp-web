@@ -172,71 +172,116 @@ export function CashFundView(p: any) {
       }
       hideHeader={p.hideHeader}
     >
-      <VoucherKpiRow
-        openingLoading={openingLoading}
-        summaryLoading={summaryLoading}
-        openingBal={openingBal}
-        closingBal={closingBal}
-        receiptTotal={summary?.receipt ?? null}
-        paymentTotal={summary?.payment ?? null}
-        fmtAmount={fmtAmount}
-        openingIcon={<IconCard />}
-        receiptIcon={<IconUp />}
-        paymentIcon={<IconDown />}
-        closingIcon={<IconCard />}
-        openingLabel={t("tienmat.kpi.fund")}
-        receiptLabel={t("tienmat.kpi.income")}
-        paymentLabel={t("tienmat.kpi.expense")}
-        closingLabel={t("tienmat.kpi.fund")}
-      />
-      <VoucherChartRow
-        openingLoading={openingLoading}
-        donutLoading={donutLoading}
-        chartData={chartData}
-        chartLabels={chartLabels}
-        chartYMax={chartYMax}
-        chartUnit={chartUnit}
-        receiptDonutItems={receiptDonutItems}
-        paymentDonutItems={paymentDonutItems}
-        balanceTrendTitle={t("tienmat.balanceTrend")}
-        incomeStructureTitle={t("tienmat.incomeStructure")}
-        expenseStructureTitle={t("tienmat.expenseStructure")}
-      />
-      <VoucherTable
-        title={t("tienmat.txList")}
-        vouchers={vouchers}
-        loading={loading}
-        fetchError={fetchError}
-        voucherAttachments={voucherAttachments}
-        sortCol={sortCol}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        searchInput={searchInput}
-        amountMinInput={amountMinInput}
-        amountMaxInput={amountMaxInput}
-        statusFilter={statusFilter}
-        noDataLabel={t("common.noData")}
-        channelNameResolver={fundName}
-        channelColLabel={t("voucher.table.colFund")}
-        onSort={handleSort}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-        onEdit={openEdit}
-        onDelete={setDeleteTarget}
-        onSearchInput={handleSearchInput}
-        onAmountMin={(v) => handleAmountRangeInput("min", v)}
-        onAmountMax={(v) => handleAmountRangeInput("max", v)}
-        onStatusFilter={setStatusFilter}
-        counterpartySourceFilter={counterpartySourceFilter}
-        onCounterpartySourceFilter={(v) => {
-          setCounterpartySourceFilter(v);
-          setPage(1);
-        }}
-      />
-      <div className="mt-4">
-        <OpeningBalancePanel type="CASH" />
+      <div className="flex gap-4">
+        {/* Main content */}
+        <div className="flex-1 min-w-0 space-y-4">
+          <VoucherKpiRow
+            openingLoading={openingLoading}
+            summaryLoading={summaryLoading}
+            openingBal={openingBal}
+            closingBal={closingBal}
+            receiptTotal={summary?.receipt ?? null}
+            paymentTotal={summary?.payment ?? null}
+            fmtAmount={fmtAmount}
+            openingIcon={<IconCard />}
+            receiptIcon={<IconUp />}
+            paymentIcon={<IconDown />}
+            closingIcon={<IconCard />}
+            openingLabel={t("tienmat.kpi.fund")}
+            receiptLabel={t("tienmat.kpi.income")}
+            paymentLabel={t("tienmat.kpi.expense")}
+            closingLabel={t("tienmat.kpi.fund")}
+          />
+          <VoucherChartRow
+            openingLoading={openingLoading}
+            donutLoading={donutLoading}
+            chartData={chartData}
+            chartLabels={chartLabels}
+            chartYMax={chartYMax}
+            chartUnit={chartUnit}
+            receiptDonutItems={receiptDonutItems}
+            paymentDonutItems={paymentDonutItems}
+            balanceTrendTitle={t("tienmat.balanceTrend")}
+            incomeStructureTitle={t("tienmat.incomeStructure")}
+            expenseStructureTitle={t("tienmat.expenseStructure")}
+          />
+          <VoucherTable
+            title={t("tienmat.txList")}
+            vouchers={vouchers}
+            loading={loading}
+            fetchError={fetchError}
+            voucherAttachments={voucherAttachments}
+            sortCol={sortCol}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            searchInput={searchInput}
+            amountMinInput={amountMinInput}
+            amountMaxInput={amountMaxInput}
+            statusFilter={statusFilter}
+            noDataLabel={t("common.noData")}
+            channelNameResolver={fundName}
+            channelColLabel={t("voucher.table.colFund")}
+            onSort={handleSort}
+            onPage={setPage}
+            onPageSize={handlePageSize}
+            onEdit={openEdit}
+            onDelete={setDeleteTarget}
+            onSearchInput={handleSearchInput}
+            onAmountMin={(v) => handleAmountRangeInput("min", v)}
+            onAmountMax={(v) => handleAmountRangeInput("max", v)}
+            onStatusFilter={setStatusFilter}
+            counterpartySourceFilter={counterpartySourceFilter}
+            onCounterpartySourceFilter={(v) => {
+              setCounterpartySourceFilter(v);
+              setPage(1);
+            }}
+          />
+          <div className="mt-4">
+            <OpeningBalancePanel type="CASH" />
+          </div>
+        </div>
+        {/* Filter sidebar (inline column) */}
+        <FilterPanel
+          config={filterConfig}
+          filter={{
+            state: {
+              period,
+              dateFrom,
+              dateTo,
+              channel: fundFilter,
+              search: searchInput,
+              amountMin: amountMinInput,
+              amountMax: amountMaxInput,
+              status: statusFilter,
+              counterpartySource: counterpartySourceFilter,
+              custom: {},
+            },
+            inputs: {
+              search: searchInput,
+              amountMin: amountMinInput,
+              amountMax: amountMaxInput,
+            },
+            panelOpen: filterPanelOpen,
+            openPanel: () => setFilterPanelOpen(true),
+            closePanel: () => setFilterPanelOpen(false),
+            togglePanel: () => setFilterPanelOpen((v: boolean) => !v),
+            setPeriod: handlePeriodChange,
+            setDateFrom: handleDateFrom,
+            setDateTo: handleDateTo,
+            setChannel: handleFundFilter,
+            setSearchInput: handleSearchInput,
+            setAmountMinInput: (v: string) => handleAmountRangeInput("min", v),
+            setAmountMaxInput: (v: string) => handleAmountRangeInput("max", v),
+            setStatus: setStatusFilter,
+            setCounterpartySource: setCounterpartySourceFilter,
+            setCustom: () => {},
+            resetAll: handleReset,
+            hasActiveFilter: activeFilterCount > 0,
+            activeFilterCount,
+          }}
+        />
       </div>
       <CashVoucherDrawer
         open={drawerOpen}
@@ -317,45 +362,6 @@ export function CashFundView(p: any) {
         onSuccess={() => {
           closeDrawer();
           if (typeof reloadAll === "function") reloadAll();
-        }}
-      />
-      <FilterPanel
-        config={filterConfig}
-        filter={{
-          state: {
-            period,
-            dateFrom,
-            dateTo,
-            channel: fundFilter,
-            search: searchInput,
-            amountMin: amountMinInput,
-            amountMax: amountMaxInput,
-            status: statusFilter,
-            counterpartySource: counterpartySourceFilter,
-            custom: {},
-          },
-          inputs: {
-            search: searchInput,
-            amountMin: amountMinInput,
-            amountMax: amountMaxInput,
-          },
-          panelOpen: filterPanelOpen,
-          openPanel: () => setFilterPanelOpen(true),
-          closePanel: () => setFilterPanelOpen(false),
-          togglePanel: () => setFilterPanelOpen((v: boolean) => !v),
-          setPeriod: handlePeriodChange,
-          setDateFrom: handleDateFrom,
-          setDateTo: handleDateTo,
-          setChannel: handleFundFilter,
-          setSearchInput: handleSearchInput,
-          setAmountMinInput: (v: string) => handleAmountRangeInput("min", v),
-          setAmountMaxInput: (v: string) => handleAmountRangeInput("max", v),
-          setStatus: setStatusFilter,
-          setCounterpartySource: setCounterpartySourceFilter,
-          setCustom: () => {},
-          resetAll: handleReset,
-          hasActiveFilter: activeFilterCount > 0,
-          activeFilterCount,
         }}
       />
     </PageLayout>
