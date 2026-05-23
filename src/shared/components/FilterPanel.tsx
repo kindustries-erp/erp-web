@@ -56,7 +56,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
   const t = useT();
 
   const content = (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {config.search && (
         <FilterSection label={t("voucher.filter.search") || "Tìm kiếm"}>
           <SearchInput
@@ -77,7 +77,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
             placeholder="Chọn kỳ..."
             className="w-full"
           />
-          <div className="mt-2.5 space-y-2">
+          <div className="mt-2 space-y-2">
             <DatePicker
               value={filter.state.dateFrom}
               onChange={filter.setDateFrom}
@@ -137,7 +137,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
               value={filter.inputs.amountMin}
               onChange={(e) => filter.setAmountMinInput(e.target.value)}
               placeholder="Từ"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-foreground placeholder:text-[color:var(--faint)] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full rounded-lg border border-border bg-[color:var(--muted)] px-3 py-2 text-xs text-foreground placeholder:text-[color:var(--faint)] focus:outline-none focus:border-primary transition-colors"
             />
             <input
               type="text"
@@ -145,7 +145,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
               value={filter.inputs.amountMax}
               onChange={(e) => filter.setAmountMaxInput(e.target.value)}
               placeholder="Đến"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-xs text-foreground placeholder:text-[color:var(--faint)] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full rounded-lg border border-border bg-[color:var(--muted)] px-3 py-2 text-xs text-foreground placeholder:text-[color:var(--faint)] focus:outline-none focus:border-primary transition-colors"
             />
           </div>
         </FilterSection>
@@ -166,37 +166,33 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
   );
 
   const header = (
-    <div className="flex items-center justify-between mb-6 pb-4 border-b border-primary/10">
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-sm">
-          <Filter className="h-4 w-4 text-primary" />
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <div className="w-7 h-7 flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]">
+          <Filter className="h-3.5 w-3.5 text-primary" />
         </div>
-        <div>
-          <span className="text-sm font-bold text-foreground block leading-tight">
-            Bộ lọc
+        <span className="text-sm font-semibold text-foreground">Bộ lọc</span>
+        {filter.hasActiveFilter && (
+          <span className="bg-primary text-primary-fg text-[10px] font-semibold px-[7px] py-[2px] rounded-[20px]">
+            {filter.activeFilterCount}
           </span>
-          {filter.hasActiveFilter && (
-            <span className="text-[10px] text-primary font-medium">
-              {filter.activeFilterCount} đang áp dụng
-            </span>
-          )}
-        </div>
+        )}
       </div>
       <div className="flex items-center gap-1">
         {filter.hasActiveFilter && (
           <button
             type="button"
             onClick={filter.resetAll}
-            className="p-2 rounded-lg text-[color:var(--muted-fg)] hover:text-primary hover:bg-primary/10 transition-all"
+            className="p-1.5 rounded-md text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] transition-colors"
             title="Reset"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-3.5 w-3.5" />
           </button>
         )}
         <button
           type="button"
           onClick={filter.closePanel}
-          className="p-2 rounded-lg text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] transition-all"
+          className="p-1.5 rounded-md text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] transition-colors"
         >
           <X className="h-4 w-4" />
         </button>
@@ -206,7 +202,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
 
   return (
     <>
-      {/* Desktop: inline column with CSS transition slide */}
+      {/* Desktop: inline column — same style as dashboard cards */}
       <div
         className={cn(
           "hidden md:block shrink-0 self-start sticky top-0 overflow-hidden",
@@ -219,11 +215,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
       >
         <div
           className={cn(
-            "w-[280px] rounded-2xl bg-surface p-5",
-            "border border-[color:var(--border)]",
-            "shadow-[0_4px_24px_rgba(0,0,0,0.08),0_1px_4px_rgba(0,0,0,0.04)]",
-            "ring-1 ring-primary/10",
-            "overflow-y-auto max-h-[calc(100vh-120px)]",
+            "w-[280px] rounded-xl p-4 card-shadow overflow-y-auto max-h-[calc(100vh-120px)]",
             "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             filter.panelOpen
               ? "translate-x-0"
@@ -235,7 +227,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
         </div>
       </div>
 
-      {/* Mobile: full-screen with slide from LEFT to RIGHT */}
+      {/* Mobile: full-screen slide from left */}
       <div
         className={cn(
           "md:hidden fixed inset-0 z-50 flex flex-col bg-surface",
@@ -244,8 +236,8 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
         )}
         style={{ pointerEvents: filter.panelOpen ? "auto" : "none" }}
       >
-        <div className="px-5 pt-5 shrink-0">{header}</div>
-        <div className="flex-1 overflow-y-auto px-5 pb-5">{content}</div>
+        <div className="px-4 pt-4 shrink-0">{header}</div>
+        <div className="flex-1 overflow-y-auto px-4 pb-4">{content}</div>
       </div>
     </>
   );
@@ -262,7 +254,7 @@ function FilterSection({
 }) {
   return (
     <div>
-      <label className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2.5 block">
+      <label className="text-[10px] text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-2 block">
         {label}
       </label>
       {children}
