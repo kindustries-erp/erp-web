@@ -45,8 +45,8 @@ export function FilterButton({
 }
 
 // ── FilterPanel ──────────────────────────────────────────────────────────────
-// Desktop: inline right column (260px), elevated card with shadow
-// Mobile: full-screen modal overlay
+// Desktop: inline right column with slide animation, elevated & prominent
+// Mobile: full-screen modal
 
 interface FilterPanelProps {
   config: FilterPanelConfig;
@@ -56,8 +56,6 @@ interface FilterPanelProps {
 
 export function FilterPanel({ config, filter, className }: FilterPanelProps) {
   const t = useT();
-
-  if (!filter.panelOpen) return null;
 
   const content = (
     <div className="space-y-5">
@@ -81,7 +79,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
             placeholder="Chọn kỳ..."
             className="w-full"
           />
-          <div className="grid grid-cols-2 gap-2 mt-2">
+          <div className="mt-2 space-y-2">
             <DatePicker
               value={filter.state.dateFrom}
               onChange={filter.setDateFrom}
@@ -170,12 +168,14 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
   );
 
   const header = (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between mb-5">
       <div className="flex items-center gap-2">
-        <Filter className="h-3.5 w-3.5 text-primary" />
-        <span className="text-sm font-semibold text-foreground">Bộ lọc</span>
+        <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Filter className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <span className="text-sm font-bold text-foreground">Bộ lọc</span>
         {filter.hasActiveFilter && (
-          <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full font-medium">
+          <span className="text-[9px] text-primary-fg bg-primary px-1.5 py-0.5 rounded-full font-bold">
             {filter.activeFilterCount}
           </span>
         )}
@@ -185,7 +185,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
           <button
             type="button"
             onClick={filter.resetAll}
-            className="p-1.5 rounded-md text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] transition-colors"
+            className="p-1.5 rounded-md text-[color:var(--muted-fg)] hover:text-primary hover:bg-primary/10 transition-colors"
             title="Reset"
           >
             <RotateCcw className="h-3.5 w-3.5" />
@@ -204,12 +204,15 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
 
   return (
     <>
-      {/* Desktop: inline column */}
+      {/* Desktop: inline column with slide-in animation */}
       <div
         className={cn(
-          "hidden md:block w-[260px] shrink-0 self-start sticky top-0",
-          "rounded-2xl border border-border bg-surface shadow-lg",
-          "p-5",
+          "hidden md:block w-[280px] shrink-0 self-start sticky top-0",
+          "rounded-2xl border-2 border-primary/20 bg-surface",
+          "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+          "p-5 overflow-y-auto max-h-[calc(100vh-120px)]",
+          "animate-in slide-in-from-right-5 duration-300 ease-out",
+          !filter.panelOpen && "hidden",
           className,
         )}
       >
@@ -217,13 +220,15 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
         {content}
       </div>
 
-      {/* Mobile: full-screen modal */}
-      <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-surface">
-        <div className="px-4 pt-4 pb-2 border-b border-border shrink-0">
-          {header}
+      {/* Mobile: full-screen modal with slide-up */}
+      {filter.panelOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-surface animate-in slide-in-from-bottom duration-300">
+          <div className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+            {header}
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-5">{content}</div>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">{content}</div>
-      </div>
+      )}
     </>
   );
 }
@@ -239,7 +244,7 @@ function FilterSection({
 }) {
   return (
     <div>
-      <label className="text-[11px] font-semibold text-foreground uppercase tracking-wide mb-2 block">
+      <label className="text-[11px] font-bold text-foreground uppercase tracking-wider mb-2 block">
         {label}
       </label>
       {children}
