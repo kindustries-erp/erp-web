@@ -215,7 +215,9 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
       >
         <div
           className={cn(
-            "w-[280px] rounded-xl p-4 card-shadow overflow-y-auto max-h-[calc(100vh-120px)]",
+            "w-[280px] rounded-xl p-4 bg-surface border border-border",
+            "shadow-[0_2px_6px_rgba(0,0,0,0.08),0_8px_24px_rgba(0,0,0,0.1)]",
+            "overflow-y-auto max-h-[calc(100vh-120px)]",
             "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             filter.panelOpen
               ? "translate-x-0"
