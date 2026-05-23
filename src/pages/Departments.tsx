@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Building2 } from "lucide-react";
 import { useT } from "@/core/i18n";
-import { PageHeader } from "@/shared/components/PageHeader";
+import { PageLayout } from "@/shared/components/PageLayout";
 import {
   DrawerModal,
   DrawerSection,
@@ -267,21 +267,19 @@ export function PhongBan() {
     !!form.description.trim();
 
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={t("nav.items.hrDepts")}
-        desc="Quản lý danh sách phòng ban"
-        icon={<Building2 className="h-4 w-4" />}
-      />
-      <div className="flex justify-end mb-4">
+    <PageLayout
+      title={t("nav.items.hrDepts")}
+      desc="Quản lý danh sách phòng ban"
+      icon={<Building2 className="h-4 w-4" />}
+      actions={
         <button
           onClick={openNew}
           className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
         >
           <IconPlus /> {t("phongban.add")}
         </button>
-      </div>
-
+      }
+    >
       {/* ── DataTable ── */}
       <DataTable
         items={items}
@@ -409,6 +407,6 @@ export function PhongBan() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </PageLayout>
   );
 }

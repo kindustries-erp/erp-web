@@ -1,12 +1,5 @@
 import React from "react";
-import { PageHeader } from "@/shared/components/PageHeader";
-import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { cn } from "@/shared/utils";
-
-interface TabItem {
-  value: string;
-  label: string;
-}
+import { PageLayout, type TabItem } from "@/shared/components/PageLayout";
 
 interface PageWithTabsLayoutProps {
   title: string;
@@ -23,6 +16,10 @@ interface PageWithTabsLayoutProps {
   hideTabs?: boolean;
 }
 
+/**
+ * @deprecated Use `<PageLayout tabs={...}>` directly instead.
+ * This component is kept for backward compatibility.
+ */
 export function PageWithTabsLayout({
   title,
   desc,
@@ -33,44 +30,25 @@ export function PageWithTabsLayout({
   activeTab,
   onTabChange,
   children,
-  stickyOffset = "-26px",
+  stickyOffset,
   className,
   hideTabs,
 }: PageWithTabsLayoutProps) {
   return (
-    <div className={cn("page-with-tabs-layout", className)}>
-      <PageHeader
-        title={title}
-        desc={desc}
-        icon={icon}
-        actions={actions}
-        className="mb-4"
-      />
-
-      {middleContent && <div className="mb-4">{middleContent}</div>}
-
-      {!hideTabs && (
-        <Tabs
-          value={activeTab}
-          onValueChange={onTabChange}
-          className="w-full sticky z-10 bg-[color:var(--surface)]"
-          style={{ top: stickyOffset }}
-        >
-          <TabsList className="bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-4 mb-6 shadow-[0_4px_4px_-4px_rgba(0,0,0,0.1)] overflow-x-auto scrollbar-none">
-            {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="border-b-2 border-transparent rounded-none px-4 py-1.5 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-foreground whitespace-nowrap flex-shrink-0"
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      )}
-
-      <div className="tab-content-container">{children}</div>
-    </div>
+    <PageLayout
+      title={title}
+      desc={desc}
+      icon={icon}
+      actions={actions}
+      middleContent={middleContent}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
+      hideTabs={hideTabs}
+      stickyOffset={stickyOffset}
+      className={className}
+    >
+      {children}
+    </PageLayout>
   );
 }

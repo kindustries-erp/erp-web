@@ -86,7 +86,16 @@ src/
 - Option arrays and label maps go in `modules/<domain>/types/`
 - Not inside components or pages
 
-### 7. DrawerModal Stacking
+### 7. PageLayout Wrapper (mandatory)
+
+Every page uses `<PageLayout>` from `shared/components/PageLayout.tsx`:
+- Provides consistent `space-y-4` spacing
+- Renders `PageHeader` with title/desc/icon/actions
+- Optionally renders sticky tabs (replaces `PageWithTabsLayout`)
+- No padding on pages — shell handles it (`app-content` CSS)
+- Use `hideHeader` for embedded/nested pages
+
+### 8. DrawerModal Stacking
 
 - Use `stackOffset` (negative = front, positive = back) + `zIndex` (increment by 10)
 - Mobile: CSS auto-resets to full-width overlay

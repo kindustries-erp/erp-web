@@ -98,7 +98,48 @@ Nếu tạo mới, phải ghi lý do ngắn trong task hoặc PR note.
 - Domain UI: `src/modules/<domain>/components`
 - Page chỉ compose hook + components
 
-### 4.6 Axios & API error handling
+### 4.6 PageLayout — mandatory page wrapper
+
+Every page MUST use `<PageLayout>` from `shared/components/PageLayout.tsx` as its root wrapper:
+
+```tsx
+import { PageLayout } from "@/shared/components/PageLayout";
+
+export function MyPage() {
+  return (
+    <PageLayout
+      title="Page Title"
+      desc="Optional description"
+      icon={<MyIcon className="h-4 w-4" />}
+      actions={<BtnPrimary>Create</BtnPrimary>}
+    >
+      {/* page content — each direct child gets space-y-4 spacing */}
+    </PageLayout>
+  );
+}
+```
+
+For pages with tabs:
+```tsx
+<PageLayout
+  title="Partners"
+  icon={<Users />}
+  tabs={[{ value: "all", label: "All" }, { value: "customers", label: "Customers" }]}
+  activeTab={tab}
+  onTabChange={setTab}
+>
+  {tab === "all" && <AllTab />}
+  {tab === "customers" && <CustomersTab />}
+</PageLayout>
+```
+
+Rules:
+- **DO NOT** add `p-4`, `p-6`, or any padding on the page root — the shell handles padding.
+- **DO NOT** use raw `<div className="space-y-4">` + `<PageHeader>` — use `<PageLayout>` instead.
+- `PageWithTabsLayout` is deprecated — use `<PageLayout tabs={...}>` for new pages.
+- Use `hideHeader` prop when embedding a page inside another (e.g. CashFund inside CashFlow tabs).
+
+### 4.7 Axios & API error handling
 
 Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (theo thứ tự):
 
