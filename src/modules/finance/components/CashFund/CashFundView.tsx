@@ -142,7 +142,16 @@ export function CashFundView(p: any) {
     !!amountMinInput || !!amountMaxInput,
     !!statusFilter,
     !!counterpartySourceFilter,
+    !!fundFilter,
   ].filter(Boolean).length;
+
+  // Full reset: clear all filters including search, status, counterparty
+  function resetAllFilters() {
+    handleReset(); // resets period + amounts + fund
+    handleSearchInput("");
+    setStatusFilter("");
+    setCounterpartySourceFilter("");
+  }
 
   return (
     <PageLayout
@@ -277,7 +286,7 @@ export function CashFundView(p: any) {
             setStatus: setStatusFilter,
             setCounterpartySource: setCounterpartySourceFilter,
             setCustom: () => {},
-            resetAll: handleReset,
+            resetAll: resetAllFilters,
             hasActiveFilter: activeFilterCount > 0,
             activeFilterCount,
           }}
