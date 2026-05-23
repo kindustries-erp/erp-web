@@ -120,11 +120,15 @@ export function MyPage() {
 ```
 
 For pages with tabs:
+
 ```tsx
 <PageLayout
   title="Partners"
   icon={<Users />}
-  tabs={[{ value: "all", label: "All" }, { value: "customers", label: "Customers" }]}
+  tabs={[
+    { value: "all", label: "All" },
+    { value: "customers", label: "Customers" },
+  ]}
   activeTab={tab}
   onTabChange={setTab}
 >
@@ -134,12 +138,58 @@ For pages with tabs:
 ```
 
 Rules:
+
 - **DO NOT** add `p-4`, `p-6`, or any padding on the page root — the shell handles padding.
 - **DO NOT** use raw `<div className="space-y-4">` + `<PageHeader>` — use `<PageLayout>` instead.
 - `PageWithTabsLayout` is deprecated — use `<PageLayout tabs={...}>` for new pages.
 - Use `hideHeader` prop when embedding a page inside another (e.g. CashFund inside CashFlow tabs).
 
-### 4.7 Axios & API error handling
+### 4.7 FilterPanel — unified filter system
+
+All pages with data tables use the shared filter system:
+
+**Hook**: `useFilterPanel(config, onFilterChange)` from `shared/hooks/useFilterPanel.ts`
+
+- Manages all filter state: period, dateRange, channel, search, amount, status, counterpartySource, custom
+- Debounce built-in for search/amount (400ms)
+- `hasActiveFilter`, `activeFilterCount`, `resetAll()`
+- Apply realtime — no "submit" button needed
+
+**Components**: `FilterButton` + `FilterPanel` from `shared/components/FilterPanel.tsx`
+
+- `FilterButton` — trigger button with badge showing active filter count
+- `FilterPanel` — slide-in panel from right side, renders only enabled filters
+
+**Usage pattern**:
+
+```tsx
+const filterConfig: FilterPanelConfig = {
+  period: true,
+  search: true,
+  amountRange: true,
+  channel: { label: "Quỹ", placeholder: "Tất cả quỹ", options: fundOpts },
+  status: { options: STATUS_FILTER_OPTS },
+};
+
+const filter = useFilterPanel(filterConfig, () => setPage(1));
+
+// In PageLayout actions:
+<FilterButton onClick={filter.togglePanel} activeCount={filter.activeFilterCount} />
+
+// After PageLayout children:
+<FilterPanel config={filterConfig} filter={filter} />
+
+// Use filter.state.* in API calls
+loadVouchers({ dateFrom: filter.state.dateFrom, status: filter.state.status, ... });
+```
+
+Rules:
+
+- New pages with tables MUST use `useFilterPanel` + `FilterPanel`.
+- DO NOT add inline filter bars above tables — use the right-side panel.
+- Each page declares which filters it needs via `FilterPanelConfig`.
+
+### 4.8 Axios & API error handling
 
 Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (theo thứ tự):
 

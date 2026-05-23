@@ -855,6 +855,13 @@ export const en: Dict = {
       bank: "Bank:",
       bankPlaceholder: "All banks",
       reset: "Reset",
+      search: "Search",
+      panelTitle: "Filters",
+      amount: "Amount",
+      status: "Status",
+      counterparty: "Counterparty",
+      allStatus: "All statuses",
+      allCounterparty: "All counterparties",
     },
     kpi: {
       opening: "Opening Balance",

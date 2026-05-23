@@ -846,6 +846,13 @@ export const vi = {
       bank: "Ngân hàng:",
       bankPlaceholder: "Tất cả NH",
       reset: "Đặt lại",
+      search: "Tìm kiếm",
+      panelTitle: "Bộ lọc",
+      amount: "Số tiền",
+      status: "Trạng thái",
+      counterparty: "Đối tượng",
+      allStatus: "Tất cả trạng thái",
+      allCounterparty: "Tất cả đối tượng",
     },
     kpi: {
       opening: "Tồn đầu kỳ",
