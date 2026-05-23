@@ -1364,4 +1364,19 @@ export const en: Dict = {
       cancel: "Cancel",
     },
   },
+  apiErrors: {
+    forbidden: "You do not have permission to perform this action.",
+    sessionExpired: "Your session has expired.",
+    impersonationEnded: "Impersonation session ended",
+    impersonationEndedDesc: "Token expired — restored original account.",
+    networkError: "Cannot connect to the server.",
+    timeout: "Request timed out.",
+    unknown: "An error occurred.",
+  },
+  apiToast: {
+    createSuccess: "Created successfully",
+    updateSuccess: "Updated successfully",
+    deleteSuccess: "Deleted successfully",
+    saveFail: "Operation failed",
+  },
 };

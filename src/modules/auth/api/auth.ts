@@ -209,6 +209,7 @@ export async function loginApi(payload: LoginRequest): Promise<LoginResponse> {
   const { data } = await axiosInstance.post<LoginResponse>(
     "/api/v1/auth/login",
     payload,
+    { _silentSuccess: true },
   );
   return data;
 }
@@ -219,6 +220,7 @@ export async function logoutApi(
   const { data } = await axiosInstance.post<LogoutResponse>(
     "/api/v1/auth/logout",
     payload,
+    { _silentSuccess: true },
   );
   return data;
 }
@@ -229,6 +231,7 @@ export async function refreshTokenApi(
   const { data } = await axiosInstance.post<RefreshResponse>(
     "/api/v1/auth/refresh",
     payload,
+    { _silentSuccess: true },
   );
   return data;
 }
@@ -239,6 +242,7 @@ export async function impersonateApi(
   const { data } = await axiosInstance.post<ImpersonateResponse>(
     "/api/v1/auth/impersonate",
     payload,
+    { _silentSuccess: true },
   );
   return data;
 }

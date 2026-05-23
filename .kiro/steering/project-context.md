@@ -115,9 +115,60 @@ All persisted to localStorage via Zustand `persist` middleware.
 - Single axios instance at `src/core/api/axiosInstance.ts`
 - Base URL from `VITE_API_BASE_URL` env var
 - Auto-attaches Bearer token from authStore
-- 401 → auto-refresh via `/api/v1/auth/refresh` → retry original request
-- 403 → sets `forbidden` flag in appStore
-- API functions in `modules/<domain>/api/` return typed responses
+
+### Interceptor Pipeline (order of execution)
+
+1. **Request**: attaches `Bearer <token>` from localStorage
+2. **Retry** (response error): auto-retries network errors (`ERR_NETWORK`, `ECONNABORTED`) and 502/503/504 up to 2 times with 1s exponential backoff
+3. **Success toast** (response success): POST/PUT/PATCH/DELETE → auto shows i18n success toast (`createSuccess` / `updateSuccess` / `deleteSuccess`)
+4. **Auth + Error toast** (response error):
+   - 401 → refresh token via `/api/v1/auth/refresh` → retry original request; if refresh fails → logout
+   - 403 → sets `appStore.forbidden` flag (renders Forbidden page)
+   - All other errors → auto shows destructive toast with API error message preserved as-is
+
+### Opt-out Flags
+
+Components can suppress automatic toasts per-request:
+
+```ts
+// Suppress success toast (e.g., component shows its own inline feedback)
+await axiosInstance.post(url, payload, { _silentSuccess: true });
+
+// Suppress error toast (e.g., component handles error in ErrorBanner)
+await axiosInstance.post(url, payload, { _silentError: true });
+
+// Suppress both
+await axiosInstance.post(url, payload, {
+  _silentSuccess: true,
+  _silentError: true,
+});
+```
+
+### Error Extraction Utility
+
+`extractApiError(e, fallback?)` in `shared/utils/apiError.ts`:
+
+- Extracts `response.data.message` from AxiosError (preserves Directus/NestJS message as-is)
+- Handles `string[]` from NestJS validation pipe (joins with "; ")
+- Falls back to i18n network/timeout/unknown messages
+- Still useful for inline error display (`ErrorBanner`, local state)
+
+### i18n Keys
+
+- `apiErrors.*` — error messages (forbidden, sessionExpired, networkError, timeout, unknown)
+- `apiToast.*` — toast titles (createSuccess, updateSuccess, deleteSuccess, saveFail)
+
+### API Function Pattern
+
+```ts
+// modules/<domain>/api/<domain>Api.ts
+export async function createItemApi(payload: CreateDto): Promise<Item> {
+  const { data } = await axiosInstance.post<Item>("/api/v1/items", payload);
+  return data;
+}
+```
+
+Components just `await createItemApi(payload)` — toast is automatic. Use `_silentSuccess` / `_silentError` only when custom UI feedback is needed.
 
 ## Validation & Build
 

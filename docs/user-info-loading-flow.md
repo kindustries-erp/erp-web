@@ -184,7 +184,7 @@ bootstrapAction: async () => {
 
 ### Code Path
 
-[src/core/api/axiosInstance.ts](../src/core/api/axiosInstance.ts) → Response interceptor (lines 77-147)
+[src/core/api/axiosInstance.ts](../src/core/api/axiosInstance.ts) → Response interceptors
 
 ### Behavior
 
@@ -407,11 +407,24 @@ interface AuthState {
 2. **If refresh succeeds**: Retry original request with new token
 3. **If refresh fails or no refresh token**: Clear auth & redirect to login
 
+### Auto-Retry (network/5xx)
+
+- Network errors (`ERR_NETWORK`, `ECONNABORTED`) and 502/503/504 are retried up to 2 times
+- Exponential backoff: 1s, 2s
+- Retries happen transparently before the error toast fires
+- If all retries fail, the error propagates to the global error toast
+
+### Global Toast (automatic)
+
+- **Success**: POST/PUT/PATCH/DELETE → auto shows i18n success toast
+- **Error**: all non-401/non-403 errors → auto shows destructive toast with API message
+- Opt-out per request: `{ _silentSuccess: true }` or `{ _silentError: true }`
+
 ### Other errors
 
 - Bootstrap errors are silently ignored (stale data is usable)
-- API call errors are caught and displayed in UI toasts
-- Axios interceptor handles queue management for concurrent requests
+- 403 → sets `appStore.forbidden` flag (renders Forbidden page, no toast)
+- Axios interceptor handles queue management for concurrent 401 requests
 
 ### Logout on error
 

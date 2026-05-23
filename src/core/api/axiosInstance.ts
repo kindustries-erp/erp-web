@@ -1,7 +1,65 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
+import { useAppStore } from "@/core/config/appStore";
+import { useUIStore } from "@/core/config/uiStore";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { vi } from "@/core/locale/vi";
+import { en } from "@/core/locale/en";
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:10000";
+
+// ── Custom config flags for opt-out ──────────────────────────────────────────
+declare module "axios" {
+  interface AxiosRequestConfig {
+    /** Set true to suppress the automatic success toast */
+    _silentSuccess?: boolean;
+    /** Set true to suppress the automatic error toast */
+    _silentError?: boolean;
+    /** Current retry attempt count (internal) */
+    _retryCount?: number;
+  }
+}
+
+// ── Retry config ─────────────────────────────────────────────────────────────
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 1000;
+const RETRYABLE_STATUS = new Set([502, 503, 504]);
+
+function isRetryable(error: AxiosError): boolean {
+  // Network errors (no response received)
+  if (
+    !error.response &&
+    (error.code === "ERR_NETWORK" || error.code === "ECONNABORTED")
+  ) {
+    return true;
+  }
+  // Server errors that are typically transient
+  if (error.response && RETRYABLE_STATUS.has(error.response.status)) {
+    return true;
+  }
+  return false;
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// ── i18n helpers (non-React context) ─────────────────────────────────────────
+function tError(key: keyof typeof vi.apiErrors): string {
+  const locale = useAppStore.getState().locale;
+  const dict = locale === "en" ? en : vi;
+  return dict.apiErrors[key];
+}
+
+function tToast(key: keyof typeof vi.apiToast): string {
+  const locale = useAppStore.getState().locale;
+  const dict = locale === "en" ? en : vi;
+  return dict.apiToast[key];
+}
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -21,7 +79,7 @@ function processQueue(error: unknown, token: string | null) {
   waitingQueue = [];
 }
 
-// ── LocalStorage helpers (avoids circular imports with authStore) ──────────
+// ── LocalStorage helpers ──────────────────────────────────────────────────
 function getStoredAuth(): {
   accessToken: string | null;
   refreshToken: string | null;
@@ -61,11 +119,6 @@ function patchStoredTokens(
   }
 }
 
-/**
- * Reads the actor snapshot from localStorage.
- * Returns non-null actorRefreshToken only when an impersonation session
- * was active and we have a way to restore the actor session.
- */
 function getStoredImpersonationSnapshot(): {
   actorRefreshToken: string | null;
 } {
@@ -83,11 +136,6 @@ function getStoredImpersonationSnapshot(): {
   }
 }
 
-/**
- * Patches localStorage after restoring actor session from impersonation:
- * - Replaces accessToken/refreshToken/expiresAt with actor tokens
- * - Clears actorAccessToken/actorRefreshToken/actorExpiresAt/impersonation
- */
 function patchStoredActorRestore(
   accessToken: string,
   refreshToken: string,
@@ -122,8 +170,54 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// ── Response interceptor: 401 → refresh token → retry ────────────────────
+// ── Response interceptor: auto-retry for network/5xx errors ───────────────
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const config = error.config as RetryableConfig | undefined;
+    if (!config) return Promise.reject(error);
+
+    const retryCount = config._retryCount ?? 0;
+
+    if (isRetryable(error) && retryCount < MAX_RETRIES) {
+      config._retryCount = retryCount + 1;
+      await delay(RETRY_DELAY_MS * config._retryCount);
+      return axiosInstance(config);
+    }
+
+    return Promise.reject(error);
+  },
+);
+
+// ── Response interceptor: global SUCCESS toast ────────────────────────────
+const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
+
+axiosInstance.interceptors.response.use(
+  (response: AxiosResponse) => {
+    const config = response.config;
+    const method = config.method?.toLowerCase() ?? "";
+
+    // Only show toast for mutating methods, skip if opted out
+    if (MUTATING_METHODS.has(method) && !config._silentSuccess) {
+      const showToast = useUIStore.getState().showToast;
+      let title: string;
+
+      if (method === "post") title = tToast("createSuccess");
+      else if (method === "delete") title = tToast("deleteSuccess");
+      else title = tToast("updateSuccess");
+
+      showToast({ title, variant: "success" });
+    }
+
+    return response;
+  },
+  // pass errors through to the next interceptor
+  (error) => Promise.reject(error),
+);
+
+// ── Response interceptor: 401 refresh + global ERROR toast ────────────────
 
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -132,9 +226,7 @@ axiosInstance.interceptors.response.use(
 
     // Handle 403 Forbidden errors
     if (error.response?.status === 403) {
-      import("@/core/config/appStore").then(({ useAppStore }) => {
-        useAppStore.getState().setForbidden(true);
-      });
+      useAppStore.getState().setForbidden(true);
       return Promise.reject(error);
     }
 
@@ -144,17 +236,30 @@ axiosInstance.interceptors.response.use(
       !originalRequest ||
       originalRequest._retry
     ) {
+      // ── Global error toast (non-401, non-403) ───────────────────────
+      if (!originalRequest?._silentError && error.response?.status !== 401) {
+        const apiMsg = (
+          error.response?.data as { message?: string | string[] } | undefined
+        )?.message;
+        const description = Array.isArray(apiMsg)
+          ? apiMsg.join("; ")
+          : apiMsg || undefined;
+
+        useUIStore.getState().showToast({
+          title: tToast("saveFail"),
+          description,
+          variant: "destructive",
+        });
+      }
       return Promise.reject(error);
     }
 
     const { refreshToken } = getStoredAuth();
 
     if (!refreshToken) {
-      // Check if this is an expired impersonation token
       const { actorRefreshToken } = getStoredImpersonationSnapshot();
 
       if (actorRefreshToken) {
-        // Impersonation token expired — restore actor session
         try {
           const { data } = await axios.post<{
             access_token: string;
@@ -177,40 +282,29 @@ axiosInstance.interceptors.response.use(
             newExpiresAt,
           );
 
-          import("@/modules/auth/domain/authStore").then(({ useAuthStore }) => {
-            useAuthStore.setState({
-              accessToken: data.access_token,
-              refreshToken: data.refresh_token,
-              expiresAt: newExpiresAt,
-              actorAccessToken: null,
-              actorRefreshToken: null,
-              actorExpiresAt: null,
-              impersonation: null,
-            });
-            useAuthStore.getState().bootstrapAction();
+          useAuthStore.setState({
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            expiresAt: newExpiresAt,
+            actorAccessToken: null,
+            actorRefreshToken: null,
+            actorExpiresAt: null,
+            impersonation: null,
           });
+          useAuthStore.getState().bootstrapAction();
 
-          import("@/core/config/uiStore").then(({ useUIStore }) => {
-            useUIStore.getState().showToast({
-              title: "Phiên đăng nhập hộ đã kết thúc",
-              description: "Token hết hạn — đã khôi phục tài khoản gốc.",
-              variant: "default",
-            });
+          useUIStore.getState().showToast({
+            title: tError("impersonationEnded"),
+            description: tError("impersonationEndedDesc"),
+            variant: "default",
           });
         } catch {
-          // Actor refresh also failed — full logout
-          import("@/modules/auth/domain/authStore").then(({ useAuthStore }) => {
-            useAuthStore.getState().clearAuth();
-          });
+          useAuthStore.getState().clearAuth();
         }
-        // Do NOT retry original request — it was made as impersonated user
         return Promise.reject(error);
       }
 
-      // Normal case: no refresh token, not in impersonation — force logout
-      import("@/modules/auth/domain/authStore").then(({ useAuthStore }) => {
-        useAuthStore.getState().clearAuth();
-      });
+      useAuthStore.getState().clearAuth();
       return Promise.reject(error);
     }
 
@@ -229,7 +323,6 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      // Use raw axios (not axiosInstance) to avoid interceptor loop
       const { data } = await axios.post<{
         access_token: string;
         refresh_token: string;
@@ -242,16 +335,12 @@ axiosInstance.interceptors.response.use(
 
       const newExpiresAt = Date.now() + data.expires * 1000;
 
-      // Persist to localStorage immediately so all tabs stay in sync
       patchStoredTokens(data.access_token, data.refresh_token, newExpiresAt);
 
-      // Sync in-memory Zustand store (lazy import to avoid circular dep)
-      import("@/modules/auth/domain/authStore").then(({ useAuthStore }) => {
-        useAuthStore.setState({
-          accessToken: data.access_token,
-          refreshToken: data.refresh_token,
-          expiresAt: newExpiresAt,
-        });
+      useAuthStore.setState({
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: newExpiresAt,
       });
 
       processQueue(null, data.access_token);
@@ -259,9 +348,7 @@ axiosInstance.interceptors.response.use(
       return axiosInstance(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      import("@/modules/auth/domain/authStore").then(({ useAuthStore }) => {
-        useAuthStore.getState().clearAuth();
-      });
+      useAuthStore.getState().clearAuth();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

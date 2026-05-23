@@ -1,14 +1,6 @@
 import React from "react";
 import { useT } from "@/core/i18n";
-
-// ── Helper ────────────────────────────────────────────────────────────────────
-export function extractApiError(e: unknown, fallback: string): string {
-  const err = e as {
-    response?: { data?: { message?: string } };
-    message?: string;
-  };
-  return err?.response?.data?.message || err?.message || fallback;
-}
+export { extractApiError } from "@/shared/utils/apiError";
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
 export function SectionHeader({

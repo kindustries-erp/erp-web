@@ -735,7 +735,10 @@ export async function uploadFileApi(file: File): Promise<{ id: string }> {
   const { data } = await axiosInstance.post<{ id: string }>(
     "/api/v1/files/upload",
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      _silentSuccess: true,
+    },
   );
   return data;
 }

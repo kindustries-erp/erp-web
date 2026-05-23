@@ -98,6 +98,30 @@ Nếu tạo mới, phải ghi lý do ngắn trong task hoặc PR note.
 - Domain UI: `src/modules/<domain>/components`
 - Page chỉ compose hook + components
 
+### 4.6 Axios & API error handling
+
+Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (theo thứ tự):
+
+1. **Request**: gắn Bearer token
+2. **Retry**: network errors + 502/503/504 → retry tối đa 2 lần, backoff 1s/2s
+3. **Success toast**: POST/PUT/PATCH/DELETE thành công → auto show toast i18n
+4. **Auth + Error toast**:
+   - 401 → refresh token → retry request gốc; fail → logout
+   - 403 → set forbidden page
+   - Còn lại → auto show destructive toast với message từ API
+
+**Opt-out flags** (truyền trong request config):
+
+- `_silentSuccess: true` — tắt success toast (khi component tự show feedback)
+- `_silentError: true` — tắt error toast (khi component dùng ErrorBanner inline)
+
+**Quy tắc cho agent**:
+
+- Khi viết API call mới, KHÔNG cần gọi `showToast` thủ công — interceptor tự xử lý.
+- Chỉ dùng `_silentSuccess` / `_silentError` khi component có UI feedback riêng (inline error, custom success message).
+- Error message từ API (Directus/NestJS) được giữ nguyên, không translate lại ở frontend.
+- i18n keys: `apiErrors.*` (lỗi hệ thống), `apiToast.*` (toast titles).
+
 ## 5) i18n và UI consistency
 
 - Mọi text hiển thị phải qua i18n key (`vi.ts` và `en.ts` nếu thêm mới).
