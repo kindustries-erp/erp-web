@@ -185,7 +185,16 @@ Components just `await createItemApi(payload)` — toast is automatic. Use `_sil
 npx tsc --noEmit          # Type check
 npm run lint:check        # ESLint (zero warnings)
 npm run build             # Full build (tsc + vite)
+npx vitest run            # Unit tests (must pass before commit)
 ```
+
+### Unit Testing
+
+- Framework: Vitest + React Testing Library + fast-check (property tests)
+- Test files: `__tests__/*.test.ts(x)` co-located with source
+- Pre-commit hook runs all tests automatically (husky)
+- Run single file: `npx vitest run src/path/to/file.test.ts`
+- Watch mode: `npx vitest` (not in pre-commit)
 
 ## Path Alias
 

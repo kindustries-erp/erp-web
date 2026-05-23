@@ -224,10 +224,13 @@ Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (the
 Khi task có thay đổi TypeScript:
 
 - `npx tsc --noEmit`
+- `npx vitest run` (all tests must pass)
 
 Khi task có thay đổi UI:
 
 - Smoke check route liên quan (render, empty state, loading state, basic interaction).
+
+Pre-commit hook tự động chạy: prettier → lint-staged → vitest run. Nếu test fail → commit bị block.
 
 ## 7) Output contract khi agent báo hoàn tất
 
