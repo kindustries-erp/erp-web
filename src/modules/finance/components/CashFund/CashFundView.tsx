@@ -137,12 +137,11 @@ export function CashFundView(p: any) {
 
   // Count active filters for badge
   const activeFilterCount = [
-    hasActiveFilter,
+    hasActiveFilter, // includes period deviation + fundFilter
     !!searchInput,
     !!amountMinInput || !!amountMaxInput,
     !!statusFilter,
     !!counterpartySourceFilter,
-    !!fundFilter,
   ].filter(Boolean).length;
 
   // Full reset: clear all filters including search, status, counterparty
