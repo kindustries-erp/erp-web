@@ -868,7 +868,7 @@ export function OperationalListPage({
 
   if (variant === "inventory") {
     return (
-      <div className="p-4 md:p-6 space-y-4">
+      <div className="space-y-4">
         <PageHeader
           title={config.title}
           desc={config.desc}
@@ -905,7 +905,7 @@ export function OperationalListPage({
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="space-y-4">
       <PageHeader
         title={config.title}
         desc={config.desc}

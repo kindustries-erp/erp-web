@@ -203,7 +203,7 @@ export function ChucVu() {
   const isDirty = !!form.position_name.trim() || !!form.position_code.trim();
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="space-y-4">
       <PageHeader
         title={t("nav.items.hrPositions")}
         desc="Quản lý danh sách chức danh"

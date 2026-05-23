@@ -73,7 +73,7 @@ export function DongTien() {
   ];
 
   return (
-    <div className="p-4 max-[500px]:p-3">
+    <div className="space-y-4">
       <PageHeader
         title={t("dongtien.title")}
         desc={t("dongtien.desc")}

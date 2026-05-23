@@ -17,7 +17,7 @@ export function SettingsBranch() {
     return () => setCustomBreadcrumbs(null);
   }, [setCustomBreadcrumbs]);
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="space-y-4">
       <PageHeader
         title={t("thietlap.tabs.chi-nhanh")}
         desc={t("thietlap.desc")}

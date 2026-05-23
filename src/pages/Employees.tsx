@@ -299,7 +299,7 @@ export function NhanSu() {
   );
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="space-y-4">
       <PageHeader
         title={t("nav.items.hrStaff")}
         desc={t("nhansu.desc")}

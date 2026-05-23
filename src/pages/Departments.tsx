@@ -267,7 +267,7 @@ export function PhongBan() {
     !!form.description.trim();
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="space-y-4">
       <PageHeader
         title={t("nav.items.hrDepts")}
         desc="Quản lý danh sách phòng ban"

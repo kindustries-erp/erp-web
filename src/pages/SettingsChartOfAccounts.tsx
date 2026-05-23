@@ -19,7 +19,7 @@ export function ThietLapTaiKhoan() {
   }, [setCustomBreadcrumbs]);
 
   return (
-    <div className="p-4 md:p-6 space-y-4">
+    <div className="space-y-4">
       <PageHeader
         title={t("thietlap.tabs.tai-khoan")}
         desc={t("thietlap.desc")}
