@@ -45,8 +45,6 @@ export function FilterButton({
 }
 
 // ── FilterPanel ──────────────────────────────────────────────────────────────
-// Desktop: inline right column with slide animation, elevated & prominent
-// Mobile: full-screen modal
 
 interface FilterPanelProps {
   config: FilterPanelConfig;
@@ -204,31 +202,47 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
 
   return (
     <>
-      {/* Desktop: inline column with slide-in animation */}
+      {/* Desktop: inline column with CSS transition slide */}
       <div
         className={cn(
-          "hidden md:block w-[280px] shrink-0 self-start sticky top-0",
-          "rounded-2xl border-2 border-primary/20 bg-surface",
-          "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
-          "p-5 overflow-y-auto max-h-[calc(100vh-120px)]",
-          "animate-in slide-in-from-right-5 duration-300 ease-out",
-          !filter.panelOpen && "hidden",
+          "hidden md:block shrink-0 self-start sticky top-0 overflow-hidden",
+          "transition-[width,opacity,margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          filter.panelOpen
+            ? "w-[280px] opacity-100 ml-5"
+            : "w-0 opacity-0 ml-0",
           className,
         )}
       >
-        {header}
-        {content}
+        <div
+          className={cn(
+            "w-[280px] rounded-2xl border-2 border-primary/20 bg-surface p-5",
+            "shadow-[0_8px_30px_rgba(0,0,0,0.12)]",
+            "overflow-y-auto max-h-[calc(100vh-120px)]",
+            "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            filter.panelOpen
+              ? "translate-x-0"
+              : "translate-x-[calc(100%+20px)]",
+          )}
+        >
+          {header}
+          {content}
+        </div>
       </div>
 
-      {/* Mobile: full-screen modal with slide-up */}
-      {filter.panelOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col bg-surface animate-in slide-in-from-bottom duration-300">
-          <div className="px-5 pt-5 pb-3 border-b border-border shrink-0">
-            {header}
-          </div>
-          <div className="flex-1 overflow-y-auto px-5 py-5">{content}</div>
+      {/* Mobile: full-screen modal with slide-up transition */}
+      <div
+        className={cn(
+          "md:hidden fixed inset-0 z-50 flex flex-col bg-surface",
+          "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          filter.panelOpen ? "translate-y-0" : "translate-y-full",
+        )}
+        style={{ pointerEvents: filter.panelOpen ? "auto" : "none" }}
+      >
+        <div className="px-5 pt-5 pb-3 border-b border-border shrink-0">
+          {header}
         </div>
-      )}
+        <div className="flex-1 overflow-y-auto px-5 py-5">{content}</div>
+      </div>
     </>
   );
 }
