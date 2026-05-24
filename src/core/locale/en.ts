@@ -103,6 +103,10 @@ export const en: Dict = {
   topbar: {
     search: "Search accounts, vouchers...",
     settings: "Settings / Change password",
+    notifications: {
+      title: "Notifications",
+      empty: "No notifications yet",
+    },
     impersonation: {
       stopButton: "Return to your account",
       actorLabel: "Account",

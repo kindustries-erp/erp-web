@@ -144,6 +144,7 @@ interface AppState {
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
   toggleAppTheme: () => void;
+  setAppTheme: (theme: AppTheme) => void;
   toggleLocale: () => void;
   login: () => void;
   logout: () => void;
@@ -278,6 +279,10 @@ export const useAppStore = create<AppState>()(
         const appTheme = get().appTheme === "shell" ? "classic" : "shell";
         set({ appTheme });
         applyDocumentTheme(appTheme);
+      },
+      setAppTheme: (theme) => {
+        set({ appTheme: theme });
+        applyDocumentTheme(theme);
       },
 
       toggleLocale: () =>
