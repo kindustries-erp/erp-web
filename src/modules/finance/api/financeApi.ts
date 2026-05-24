@@ -186,8 +186,7 @@ export type VoucherType =
   | "CASH_PAYMENT"
   | "BANK_RECEIPT"
   | "BANK_PAYMENT"
-  | "EWALLET_RECEIPT"
-  | "CUSTOMER_ADVANCE_RECEIPT";
+  | "EWALLET_RECEIPT";
 
 export interface VoucherNumberingConfig {
   id: string;
@@ -342,16 +341,6 @@ export interface PaymentVoucher {
   beneficiary_bank_name_snapshot: string | null;
   beneficiary_bank_account_snapshot: string | null;
   beneficiary_account_holder_snapshot: string | null;
-  ar_advance_original_amount?: number | string | null;
-  ar_advance_applied_amount?: number | string | null;
-  ar_advance_remaining_amount?: number | string | null;
-  ar_advance_status?:
-    | "NONE"
-    | "UNAPPLIED"
-    | "PARTIALLY_APPLIED"
-    | "FULLY_APPLIED"
-    | "REVERSED"
-    | null;
   cash_bank_tag_preset_id?: string | null;
   is_active: boolean;
   related_documents?: CashBankRelatedDocumentInput[];
@@ -1099,264 +1088,16 @@ export interface CreateArSalesInvoiceDto {
 
 export type PaymentMethod = "CASH" | "BANK" | "EWALLET";
 
-// ─── AR Workbench (legacy removed) ────────────────────────────────────────────
-
-/*
-Legacy AR Workbench types and API bindings were removed after AR decommission.
-Keep only shared DTOs still referenced by non-AR flows (e.g. e-invoice draft UI).
-*/
-
-/* AR legacy removed
-export type ArDocumentType =
-  | "INVOICE"
-  | "IMMEDIATE_SALE"
-  | "ADVANCE"
-  | "CREDIT_NOTE"
-  | "SALES_RETURN"
-  | "REFUND"
-  | "WRITE_OFF"
-  | "SUSPENSE"
-  | "FX_REVALUATION"
-  | "RETENTION"
-  | "COD"
-  | "GATEWAY"
-  | "INTERCOMPANY"
-  | "CONTRACT_MILESTONE"
-  | "ADJUSTMENT";
-
-export type ArDocumentStatus =
-  | "DRAFT"
-  | "POSTED"
-  | "PARTIAL"
-  | "SETTLED"
-  | "DISPUTED"
-  | "REVERSED"
-  | "CANCELLED";
-
-export interface ArDocument {
-  id: string;
-  document_no: string;
-  document_type: ArDocumentType;
-  business_partner_id: string | null;
-  business_partner_name_snapshot?: string | null;
-  can_delete?: boolean;
-  related_documents?: CashBankRelatedDocumentInput[];
-  journal_entry_id?: number | null;
-  document_date: string;
-  posting_date: string;
-  due_date: string | null;
-  currency: string;
-  exchange_rate: number;
-  total_amount: number;
-  settled_amount: number;
-  open_amount: number;
-  status: ArDocumentStatus;
-  source_type: string | null;
-  source_id: string | null;
-  reference_no: string | null;
-  description: string;
-  risk_status: "NORMAL" | "OVERDUE" | "BAD_DEBT_RISK" | "LEGAL";
-  dispute_status: "NONE" | "DISPUTED" | "RESOLVED";
-  collection_status:
-    | "NOT_STARTED"
-    | "REMINDER_SENT"
-    | "PROMISED"
-    | "ESCALATED"
-    | "LEGAL";
-  promise_to_pay_date: string | null;
-  created_at: string;
-  updated_at: string | null;
-}
-
-export interface CreateArDocumentDto {
-  document_no: string;
-  document_type: ArDocumentType;
-  business_partner_id?: string;
-  journal_entry_id?: number;
-  document_date: string;
-  posting_date: string;
-  due_date?: string;
-  currency?: string;
-  exchange_rate?: number;
-  total_amount: number;
-  status?: ArDocumentStatus;
-  reference_no?: string;
-  description?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface CreateArSalesInvoiceLineDto {
-  line_no?: number;
-  item_code?: string;
-  description: string;
-  quantity: number;
-  unit_price: number;
-  tax_rate?: number;
-  revenue_account_id?: string;
-  tax_account_id?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface CreateArSalesInvoiceDto {
-  document_no: string;
-  business_partner_id: string;
-  journal_entry_id?: number;
-  document_date: string;
-  posting_date: string;
-  due_date?: string;
-  currency?: string;
-  exchange_rate?: number;
-  reference_no?: string;
-  description?: string;
-  metadata?: Record<string, unknown>;
-  lines: CreateArSalesInvoiceLineDto[];
-}
-
-export type UpdateArDocumentDto = Partial<CreateArDocumentDto>;
-
-export interface ArCoverageItem {
-  id: number;
-  use_case: string;
-  status:
-    | "phase1_supported"
-    | "phase1_foundation"
-    | "phase2a_supported"
-    | "existing_supported";
-  route: string;
-}
-
-export interface ArSummary {
-  totals: {
-    count: number;
-    total_amount: number;
-    settled_amount: number;
-    open_amount: number;
-    overdue_amount: number;
-  };
-  by_type: Record<
-    string,
-    { count: number; open_amount: number; total_amount: number }
-  >;
-  coverage: ArCoverageItem[];
-}
-
 export interface ArDocumentListParams extends ListParams {
   business_partner_id?: string;
-  document_type?: ArDocumentType;
-  status?: ArDocumentStatus;
+  document_type?: string;
+  status?: string;
   risk_status?: string;
   open_only?: boolean;
   overdue?: boolean;
 }
 
-export async function getArDocumentsApi(
-  params: ArDocumentListParams = {},
-): Promise<PaginatedResponse<ArDocument>> {
-  const { data } = await axiosInstance.get<PaginatedResponse<ArDocument>>(
-    "/api/v1/ar-workbench/documents",
-    {
-      params: {
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        sort: (params.sort ?? ["-posting_date"]).join(","),
-        ...(params.search ? { search: params.search } : {}),
-        ...(params.business_partner_id
-          ? { business_partner_id: params.business_partner_id }
-          : {}),
-        ...(params.document_type
-          ? { document_type: params.document_type }
-          : {}),
-        ...(params.status ? { status: params.status } : {}),
-        ...(params.risk_status ? { risk_status: params.risk_status } : {}),
-        ...(params.open_only ? { open_only: true } : {}),
-        ...(params.overdue ? { overdue: true } : {}),
-      },
-    },
-  );
-  return data;
-}
-
-export async function createArDocumentApi(
-  dto: CreateArDocumentDto,
-): Promise<ArDocument> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: ArDocument;
-  }>("/api/v1/ar-workbench/documents", dto);
-  return data.data;
-}
-
-export async function updateArDocumentApi(
-  id: string,
-  dto: UpdateArDocumentDto,
-): Promise<ArDocument> {
-  const { data } = await axiosInstance.patch<{
-    message: string;
-    data: ArDocument;
-  }>(`/api/v1/ar-workbench/documents/${id}`, dto);
-  return data.data;
-}
-
-export async function deleteArDocumentApi(id: string): Promise<void> {
-  await axiosInstance.delete(`/api/v1/ar-workbench/documents/${id}`);
-}
-
-export async function createArSalesInvoiceApi(
-  dto: CreateArSalesInvoiceDto,
-): Promise<{ document: ArDocument }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { document: ArDocument };
-  }>("/api/v1/ar-workbench/sales-invoices", dto);
-  return data.data;
-}
-
-export async function postArDocumentApi(
-  id: string,
-): Promise<{ document: ArDocument; journal_entry: unknown }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { document: ArDocument; journal_entry: unknown };
-  }>(`/api/v1/ar-workbench/documents/${id}/post`);
-  return data.data;
-}
-
-export async function getArSummaryApi(
-  params: ArDocumentListParams = {},
-): Promise<ArSummary> {
-  const { data } = await axiosInstance.get<ArSummary>(
-    "/api/v1/ar-workbench/summary",
-    {
-      params: {
-        ...(params.business_partner_id
-          ? { business_partner_id: params.business_partner_id }
-          : {}),
-        ...(params.document_type
-          ? { document_type: params.document_type }
-          : {}),
-        ...(params.status ? { status: params.status } : {}),
-        ...(params.open_only ? { open_only: true } : {}),
-        ...(params.overdue ? { overdue: true } : {}),
-      },
-    },
-  );
-  return data;
-}
-
-export async function getArCoverageApi(): Promise<{
-  items: ArCoverageItem[];
-  total: number;
-}> {
-  const { data } = await axiosInstance.get<{
-    items: ArCoverageItem[];
-    total: number;
-  }>("/api/v1/ar-workbench/coverage");
-  return data;
-}
-
 // ─── Payment Voucher / Receipt (AR Workbench) ─────────────────────────────────
-
-export type PaymentMethod = "CASH" | "BANK" | "EWALLET";
 
 export interface PaymentAllocationLine {
   target_document_id: string;
@@ -1379,20 +1120,6 @@ export interface CreatePaymentReceiptDto {
   currency?: string;
   description?: string;
   allocations?: PaymentAllocationLine[];
-}
-
-export interface CreateCustomerAdvanceDto {
-  voucher_no?: string;
-  payment_method: PaymentMethod;
-  document_date: string;
-  posting_date?: string;
-  counterparty_id: string;
-  counterparty_name_snapshot?: string;
-  debit_account_id?: string;
-  credit_account_id?: string;
-  amount: number;
-  currency?: string;
-  description?: string;
 }
 
 export async function getPaymentVouchersApi(
@@ -1446,108 +1173,3 @@ export async function allocatePaymentApi(
   });
   return data.data;
 }
-
-export async function getCustomerAdvancesApi(
-  params: ArDocumentListParams = {},
-): Promise<PaginatedResponse<PaymentVoucher>> {
-  const { data } = await axiosInstance.get<PaginatedResponse<PaymentVoucher>>(
-    "/api/v1/ar-workbench/customer-advances",
-    {
-      params: {
-        page: params.page ?? 1,
-        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
-        ...(params.business_partner_id
-          ? { business_partner_id: params.business_partner_id }
-          : {}),
-        ...(params.status ? { status: params.status } : {}),
-      },
-    },
-  );
-  return data;
-}
-
-export async function createCustomerAdvanceApi(
-  dto: CreateCustomerAdvanceDto,
-): Promise<PaymentVoucher> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: PaymentVoucher;
-  }>("/api/v1/ar-workbench/customer-advances", dto);
-  return data.data;
-}
-
-export async function postCustomerAdvanceApi(
-  id: string,
-): Promise<{ voucher: PaymentVoucher; journal_entry: unknown }> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: { voucher: PaymentVoucher; journal_entry: unknown };
-  }>(`/api/v1/ar-workbench/customer-advances/${id}/post`);
-  return data.data;
-}
-
-// ─── UC#4 Apply Advance to Invoice / Cấn trừ cọc ────────────────────────────
-
-export interface ApplyAdvanceToInvoiceDto {
-  advance_voucher_id: string;
-  ar_document_id: string;
-  amount: number;
-  application_date: string;
-  application_no?: string;
-  reason?: string;
-}
-
-export interface AdvanceApplication {
-  id: string;
-  application_no: string;
-  application_type: "ADVANCE_APPLICATION";
-  payment_voucher_id: string;
-  source_document_id?: string | null;
-  target_document_id: string;
-  application_date: string;
-  amount: number;
-  status: "POSTED" | "REVERSED";
-  reason?: string;
-  metadata?: Record<string, unknown>;
-  created_at?: string;
-}
-
-export interface ApplyAdvanceResult {
-  application: AdvanceApplication;
-  advance_after: {
-    id: string;
-    voucher_no: string;
-    ar_advance_remaining_amount: number;
-    ar_advance_status: string;
-  };
-  invoice_after: {
-    id: string;
-    document_no: string;
-    open_amount: number;
-    settled_amount: number;
-    status: string;
-  };
-}
-
-export async function getAdvanceApplicationsApi(params: {
-  advance_voucher_id?: string;
-  ar_document_id?: string;
-  page?: number;
-  pageSize?: number;
-}): Promise<PaginatedResponse<AdvanceApplication>> {
-  const { data } = await axiosInstance.get<
-    PaginatedResponse<AdvanceApplication>
-  >("/api/v1/ar-workbench/advance-applications", { params });
-  return data;
-}
-
-export async function applyAdvanceToInvoiceApi(
-  dto: ApplyAdvanceToInvoiceDto,
-): Promise<ApplyAdvanceResult> {
-  const { data } = await axiosInstance.post<{
-    message: string;
-    data: ApplyAdvanceResult;
-  }>("/api/v1/ar-workbench/advance-applications", dto);
-  return data.data;
-}
-*/

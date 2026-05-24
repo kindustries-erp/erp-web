@@ -9,7 +9,7 @@ import type {
 
 export interface CashVoucherForm {
   voucher_no: string;
-  voucher_type: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT";
+  voucher_type: "CASH_RECEIPT" | "CASH_PAYMENT";
   document_date: string;
   posting_date: string;
   cash_fund_id: string;
@@ -30,7 +30,7 @@ export interface CashVoucherForm {
 
 export interface BankVoucherForm {
   voucher_no: string;
-  voucher_type: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT";
+  voucher_type: "BANK_RECEIPT" | "BANK_PAYMENT";
   document_date: string;
   posting_date: string;
   company_bank_account_id: string;

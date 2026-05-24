@@ -185,11 +185,7 @@ export function useBankVoucherHandlers({
   }, []);
 
   function voucherPrefix(vtype: VoucherType) {
-    return vtype === "CUSTOMER_ADVANCE_RECEIPT"
-      ? "DCNH"
-      : vtype === "BANK_RECEIPT"
-        ? "UNT"
-        : "UNC";
+    return vtype === "BANK_RECEIPT" ? "UNT" : "UNC";
   }
 
   async function generateVoucherNo(vtype: VoucherType) {
@@ -211,9 +207,7 @@ export function useBankVoucherHandlers({
     }
   }
 
-  async function loadTagPresets(
-    vtype: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
-  ) {
+  async function loadTagPresets(vtype: "BANK_RECEIPT" | "BANK_PAYMENT") {
     try {
       setTagPresets(
         await getCashBankTagPresetsApi({
@@ -226,9 +220,7 @@ export function useBankVoucherHandlers({
     }
   }
 
-  async function openNew(
-    vtype: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
-  ) {
+  async function openNew(vtype: "BANK_RECEIPT" | "BANK_PAYMENT") {
     // 1. Reset state & Open drawer immediately
     setDrawerOpen(true);
     setEditing(null);
@@ -278,12 +270,7 @@ export function useBankVoucherHandlers({
     loadExistingAttachments(voucher.id);
     if (voucher.counterparty_id)
       loadPartnerBankAccounts(voucher.counterparty_id);
-    loadTagPresets(
-      voucher.voucher_type as
-        | "BANK_RECEIPT"
-        | "BANK_PAYMENT"
-        | "CUSTOMER_ADVANCE_RECEIPT",
-    );
+    loadTagPresets(voucher.voucher_type as "BANK_RECEIPT" | "BANK_PAYMENT");
   }
 
   const setField = <K extends keyof BankVoucherForm>(

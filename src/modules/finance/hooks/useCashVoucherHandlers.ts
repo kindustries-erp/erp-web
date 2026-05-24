@@ -194,11 +194,7 @@ export function useCashVoucherHandlers({
   }
 
   function voucherPrefix(vtype: VoucherType) {
-    return vtype === "CUSTOMER_ADVANCE_RECEIPT"
-      ? "DC"
-      : vtype === "CASH_RECEIPT"
-        ? "PT"
-        : "PC";
+    return vtype === "CASH_RECEIPT" ? "PT" : "PC";
   }
 
   async function generateVoucherNo(vtype: VoucherType) {
@@ -219,9 +215,7 @@ export function useCashVoucherHandlers({
     }
   }
 
-  async function loadTagPresets(
-    vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
-  ) {
+  async function loadTagPresets(vtype: "CASH_RECEIPT" | "CASH_PAYMENT") {
     try {
       setTagPresets(
         await getCashBankTagPresetsApi({
@@ -234,9 +228,7 @@ export function useCashVoucherHandlers({
     }
   }
 
-  async function openNew(
-    vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
-  ) {
+  async function openNew(vtype: "CASH_RECEIPT" | "CASH_PAYMENT") {
     setForm(emptyForm(vtype));
     setPostingDateTouched(false);
     openDrawerForNew(); // Open immediately
@@ -251,12 +243,7 @@ export function useCashVoucherHandlers({
     setForm(buildForm(voucher));
     setPostingDateTouched(true);
     openDrawerForEdit(voucher);
-    loadTagPresets(
-      voucher.voucher_type as
-        | "CASH_RECEIPT"
-        | "CASH_PAYMENT"
-        | "CUSTOMER_ADVANCE_RECEIPT",
-    );
+    loadTagPresets(voucher.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT");
   }
 
   const setField = <K extends keyof CashVoucherForm>(

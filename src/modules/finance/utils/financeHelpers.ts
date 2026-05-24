@@ -257,7 +257,7 @@ export function buildDonutItems(
 }
 
 export function emptyForm(
-  vtype: "CASH_RECEIPT" | "CASH_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+  vtype: "CASH_RECEIPT" | "CASH_PAYMENT",
 ): CashVoucherForm {
   return {
     voucher_no: "",
@@ -288,10 +288,7 @@ export function buildForm(v: PaymentVoucher): CashVoucherForm {
       : (v.employee_id ?? "");
   return {
     voucher_no: v.voucher_no,
-    voucher_type: v.voucher_type as
-      | "CASH_RECEIPT"
-      | "CASH_PAYMENT"
-      | "CUSTOMER_ADVANCE_RECEIPT",
+    voucher_type: v.voucher_type as "CASH_RECEIPT" | "CASH_PAYMENT",
     document_date: v.document_date,
     posting_date: v.posting_date,
     cash_fund_id: v.cash_fund_id ?? "",
@@ -313,7 +310,7 @@ export function buildForm(v: PaymentVoucher): CashVoucherForm {
 }
 
 export function emptyBankForm(
-  vtype: "BANK_RECEIPT" | "BANK_PAYMENT" | "CUSTOMER_ADVANCE_RECEIPT",
+  vtype: "BANK_RECEIPT" | "BANK_PAYMENT",
 ): BankVoucherForm {
   return {
     voucher_no: "",
@@ -344,10 +341,7 @@ export function buildBankForm(v: PaymentVoucher): BankVoucherForm {
       : (v.employee_id ?? "");
   return {
     voucher_no: v.voucher_no,
-    voucher_type: v.voucher_type as
-      | "BANK_RECEIPT"
-      | "BANK_PAYMENT"
-      | "CUSTOMER_ADVANCE_RECEIPT",
+    voucher_type: v.voucher_type as "BANK_RECEIPT" | "BANK_PAYMENT",
     document_date: v.document_date,
     posting_date: v.posting_date,
     company_bank_account_id: v.company_bank_account_id ?? "",
