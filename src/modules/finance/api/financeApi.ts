@@ -817,38 +817,6 @@ export async function getVoucherAttachmentsApi(
   return data.items;
 }
 
-// ─── PaymentVoucherApprovalLog (read-only) ────────────────────────────────────
-
-export type ApprovalAction =
-  | "SUBMIT"
-  | "APPROVE"
-  | "REJECT"
-  | "POST"
-  | "CANCEL";
-
-export interface PaymentVoucherApprovalLog {
-  id: string;
-  payment_voucher_id: string;
-  action: ApprovalAction;
-  action_by: string | null;
-  action_by_name?: string | null;
-  action_at: string;
-  note: string | null;
-  from_status: string | null;
-  to_status: string | null;
-}
-
-export async function getVoucherApprovalLogsApi(
-  voucherId: string,
-): Promise<PaymentVoucherApprovalLog[]> {
-  const { data } = await axiosInstance.get<
-    PaginatedResponse<PaymentVoucherApprovalLog>
-  >("/api/v1/payment-voucher-approval-logs", {
-    params: { payment_voucher_id: voucherId, pageSize: 50 },
-  });
-  return data.items;
-}
-
 // ─── PartnerLedger ────────────────────────────────────────────────────────────
 
 export type PartnerLedgerItemType = "RECEIVABLE" | "PAYABLE";

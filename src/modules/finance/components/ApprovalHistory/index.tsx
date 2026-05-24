@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
-import {
-  getVoucherApprovalLogsApi,
-  type PaymentVoucherApprovalLog,
-} from "@/modules/finance/api/financeApi";
+
+interface PaymentVoucherApprovalLog {
+  id: string;
+  payment_voucher_id: string;
+  action: "SUBMIT" | "APPROVE" | "REJECT" | "POST" | "CANCEL";
+  action_by: string | null;
+  action_by_name?: string | null;
+  action_at: string;
+  note: string | null;
+  from_status: string | null;
+  to_status: string | null;
+}
 
 const ACTION_LABELS: Record<string, string> = {
   SUBMIT: "Gửi duyệt",
@@ -72,22 +80,104 @@ function formatDate(iso: string) {
   });
 }
 
+function hashVoucherId(voucherId: string) {
+  return voucherId
+    .split("")
+    .reduce((acc, ch, idx) => acc + ch.charCodeAt(0) * (idx + 1), 0);
+}
+
+function buildMockApprovalLogs(voucherId: string): PaymentVoucherApprovalLog[] {
+  const seed = hashVoucherId(voucherId);
+  const actorVariants = [
+    "Nguyễn Thanh Nghị",
+    "Lio Nguyen",
+    "Kế toán tổng hợp",
+    "Thủ quỹ",
+    "Hệ thống",
+  ];
+  const noteVariants = [
+    "Kiểm tra chứng từ và gửi duyệt.",
+    "Đã đối chiếu số tiền với chứng từ gốc.",
+    "Đã xác nhận đủ điều kiện ghi sổ.",
+    "Cần rà soát lại nội dung trước khi duyệt lại.",
+    null,
+  ] as const;
+
+  const baseTime = new Date(
+    Date.now() - ((seed % 5) + 1) * 24 * 60 * 60 * 1000,
+  );
+  const flow: Array<{
+    action: PaymentVoucherApprovalLog["action"];
+    from_status: string | null;
+    to_status: string | null;
+    actorIndex: number;
+    noteIndex: number;
+    minuteOffset: number;
+  }> = [
+    {
+      action: "SUBMIT",
+      from_status: "DRAFT",
+      to_status: "PENDING_APPROVAL",
+      actorIndex: seed % actorVariants.length,
+      noteIndex: seed % noteVariants.length,
+      minuteOffset: 0,
+    },
+    {
+      action: seed % 4 === 0 ? "REJECT" : "APPROVE",
+      from_status: "PENDING_APPROVAL",
+      to_status: seed % 4 === 0 ? "REJECTED" : "APPROVED",
+      actorIndex: (seed + 1) % actorVariants.length,
+      noteIndex: (seed + 1) % noteVariants.length,
+      minuteOffset: 18,
+    },
+  ];
+
+  if (seed % 4 !== 0) {
+    flow.push({
+      action: "POST",
+      from_status: "APPROVED",
+      to_status: "POSTED",
+      actorIndex: (seed + 2) % actorVariants.length,
+      noteIndex: (seed + 2) % noteVariants.length,
+      minuteOffset: 39,
+    });
+  }
+
+  return flow.map((step, idx) => ({
+    id: `${voucherId}-mock-${idx + 1}`,
+    payment_voucher_id: voucherId,
+    action: step.action,
+    action_by:
+      step.actorIndex === actorVariants.length - 1
+        ? "system"
+        : `mock-user-${step.actorIndex + 1}`,
+    action_by_name: actorVariants[step.actorIndex],
+    action_at: new Date(
+      baseTime.getTime() + step.minuteOffset * 60 * 1000,
+    ).toISOString(),
+    note: noteVariants[step.noteIndex],
+    from_status: step.from_status,
+    to_status: step.to_status,
+  }));
+}
+
 export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
   const [logs, setLogs] = useState<PaymentVoucherApprovalLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    getVoucherApprovalLogsApi(voucherId)
-      .then((data) => {
-        const sorted = [...data].sort(
-          (a, b) =>
-            new Date(a.action_at).getTime() - new Date(b.action_at).getTime(),
-        );
-        setLogs(sorted);
-      })
-      .catch(() => setLogs([]))
-      .finally(() => setLoading(false));
+    const timer = window.setTimeout(() => {
+      const data = buildMockApprovalLogs(voucherId);
+      const sorted = [...data].sort(
+        (a, b) =>
+          new Date(a.action_at).getTime() - new Date(b.action_at).getTime(),
+      );
+      setLogs(sorted);
+      setLoading(false);
+    }, 180);
+
+    return () => window.clearTimeout(timer);
   }, [voucherId]);
 
   if (loading) {
