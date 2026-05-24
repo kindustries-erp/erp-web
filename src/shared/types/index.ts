@@ -1,6 +1,7 @@
 export type PageKey =
   | "dashboard"
   | "cashflow"
+  | "cashflow-vouchers"
   | "cash-fund"
   | "bank-deposit"
   | "attachments"

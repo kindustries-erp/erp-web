@@ -1171,3 +1171,285 @@ export async function allocatePaymentApi(
   });
   return data.data;
 }
+
+export type CashflowVoucherStatus = "DRAFT" | "POSTED" | "CANCELLED";
+export type CashflowPartyScope = "INTERNAL" | "EXTERNAL";
+export type CashflowChannelType = "CASH" | "BANK";
+export type CashflowFlowDirection = "INFLOW" | "OUTFLOW";
+
+export interface CashflowVoucher {
+  id: string;
+  voucher_no: string;
+  voucher_date: string;
+  branch_id?: string | null;
+  company_id?: string | null;
+  voucher_family: string;
+  channel_type: CashflowChannelType;
+  flow_direction: CashflowFlowDirection;
+  business_type: string;
+  party_scope: CashflowPartyScope;
+  employee_id?: string | null;
+  employee_name_snapshot?: string | null;
+  counterparty_id?: string | null;
+  counterparty_name_snapshot?: string | null;
+  counterparty_tax_code_snapshot?: string | null;
+  cash_fund_id?: string | null;
+  bank_account_id?: string | null;
+  currency_code: string;
+  exchange_rate?: number | null;
+  amount: number;
+  base_amount: number;
+  description: string;
+  note?: string | null;
+  reason?: string | null;
+  status: CashflowVoucherStatus;
+  allocation_status?: string | null;
+  allocated_amount?: number | null;
+  unallocated_amount?: number | null;
+  allocation_count?: number | null;
+  related_document_count?: number | null;
+  journal_entry_id?: number | null;
+  journal_entry_no_snapshot?: string | null;
+  posted_at?: string | null;
+  cancelled_at?: string | null;
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+export interface CashflowVoucherListParams extends ListParams {
+  status?: CashflowVoucherStatus | "";
+  channel_type?: CashflowChannelType | "";
+  flow_direction?: CashflowFlowDirection | "";
+  business_type?: string;
+  party_scope?: CashflowPartyScope | "";
+  branch_id?: string;
+  company_id?: string;
+  date_from?: string;
+  date_to?: string;
+  search?: string;
+}
+
+export interface CreateCashflowVoucherDto {
+  voucher_no?: string;
+  voucher_date: string;
+  branch_id?: string;
+  company_id?: string;
+  channel_type: CashflowChannelType;
+  business_type: string;
+  source_module?: string;
+  source_document_type?: string;
+  source_document_id?: string;
+  party_scope: CashflowPartyScope;
+  employee_id?: string;
+  employee_name_snapshot?: string;
+  counterparty_id?: string;
+  counterparty_name_snapshot?: string;
+  counterparty_tax_code_snapshot?: string;
+  currency_code?: string;
+  exchange_rate?: number;
+  amount: number;
+  base_amount?: number;
+  cash_fund_id?: string;
+  bank_account_id?: string;
+  description: string;
+  note?: string;
+  reason?: string;
+  reference_no?: string;
+  external_reference_no?: string;
+  legacy_payment_voucher_id?: string;
+}
+
+export type UpdateCashflowVoucherDto = Partial<CreateCashflowVoucherDto>;
+
+export interface AddCashflowRelatedDocumentDto {
+  related_document_type: string;
+  related_document_id: string;
+  related_document_no_snapshot?: string;
+  reference_amount?: number;
+  note?: string;
+}
+
+export interface AddCashflowAllocationDto {
+  target_document_type: string;
+  target_document_id: string;
+  target_document_no_snapshot?: string;
+  allocation_type: string;
+  allocated_amount: number;
+  currency_code?: string;
+  exchange_rate?: number;
+  reason?: string;
+}
+
+export async function getCashflowVouchersApi(
+  params: CashflowVoucherListParams = {},
+): Promise<PaginatedResponse<CashflowVoucher>> {
+  const { data } = await axiosInstance.get<PaginatedResponse<CashflowVoucher>>(
+    "/api/v1/cashflow-vouchers",
+    {
+      params: {
+        page: params.page ?? 1,
+        pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
+        sort: (params.sort ?? ["-voucher_date", "-created_at"]).join(","),
+        ...(params.status ? { status: params.status } : {}),
+        ...(params.channel_type ? { channel_type: params.channel_type } : {}),
+        ...(params.flow_direction
+          ? { flow_direction: params.flow_direction }
+          : {}),
+        ...(params.business_type
+          ? { business_type: params.business_type }
+          : {}),
+        ...(params.party_scope ? { party_scope: params.party_scope } : {}),
+        ...(params.branch_id ? { branch_id: params.branch_id } : {}),
+        ...(params.company_id ? { company_id: params.company_id } : {}),
+        ...(params.date_from ? { date_from: params.date_from } : {}),
+        ...(params.date_to ? { date_to: params.date_to } : {}),
+        ...(params.search ? { search: params.search } : {}),
+      },
+    },
+  );
+  return data;
+}
+
+export async function getCashflowVoucherDetailApi(
+  id: string,
+): Promise<CashflowVoucher> {
+  const { data } = await axiosInstance.get<{ data: CashflowVoucher }>(
+    `/api/v1/cashflow-vouchers/${id}`,
+  );
+  return data.data;
+}
+
+export async function createCashflowVoucherApi(
+  dto: CreateCashflowVoucherDto,
+): Promise<CashflowVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: CashflowVoucher;
+  }>("/api/v1/cashflow-vouchers", dto);
+  return data.data;
+}
+
+export async function updateCashflowVoucherApi(
+  id: string,
+  dto: UpdateCashflowVoucherDto,
+): Promise<CashflowVoucher> {
+  const { data } = await axiosInstance.patch<{
+    message: string;
+    data: CashflowVoucher;
+  }>(`/api/v1/cashflow-vouchers/${id}`, dto);
+  return data.data;
+}
+
+export async function deleteCashflowVoucherApi(id: string): Promise<void> {
+  await axiosInstance.delete(`/api/v1/cashflow-vouchers/${id}`);
+}
+
+export async function postCashflowVoucherApi(
+  id: string,
+  journal_entry?: unknown,
+): Promise<CashflowVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: CashflowVoucher;
+  }>(
+    `/api/v1/cashflow-vouchers/${id}/post`,
+    journal_entry ? { journal_entry } : {},
+  );
+  return data.data;
+}
+
+export async function cancelCashflowVoucherApi(
+  id: string,
+  cancel_reason: string,
+): Promise<CashflowVoucher> {
+  const { data } = await axiosInstance.post<{
+    message: string;
+    data: CashflowVoucher;
+  }>(`/api/v1/cashflow-vouchers/${id}/cancel`, { cancel_reason });
+  return data.data;
+}
+
+export async function getCashflowVoucherTimelineApi(
+  id: string,
+): Promise<unknown[]> {
+  const { data } = await axiosInstance.get<{ data: unknown[] }>(
+    `/api/v1/cashflow-vouchers/${id}/timeline`,
+  );
+  return data.data;
+}
+
+export async function getCashflowVoucherRelatedDocumentsApi(
+  id: string,
+): Promise<unknown[]> {
+  const { data } = await axiosInstance.get<{ data: unknown[] }>(
+    `/api/v1/cashflow-vouchers/${id}/related-documents`,
+  );
+  return data.data;
+}
+
+export async function addCashflowVoucherRelatedDocumentApi(
+  id: string,
+  dto: AddCashflowRelatedDocumentDto,
+): Promise<unknown> {
+  const { data } = await axiosInstance.post<{ message: string; data: unknown }>(
+    `/api/v1/cashflow-vouchers/${id}/related-documents`,
+    dto,
+  );
+  return data.data;
+}
+
+export async function removeCashflowVoucherRelatedDocumentApi(
+  id: string,
+  relatedId: string,
+): Promise<void> {
+  await axiosInstance.delete(
+    `/api/v1/cashflow-vouchers/${id}/related-documents/${relatedId}`,
+  );
+}
+
+export async function getCashflowVoucherAllocationsApi(
+  id: string,
+): Promise<unknown[]> {
+  const { data } = await axiosInstance.get<{ data: unknown[] }>(
+    `/api/v1/cashflow-vouchers/${id}/allocations`,
+  );
+  return data.data;
+}
+
+export async function addCashflowVoucherAllocationApi(
+  id: string,
+  dto: AddCashflowAllocationDto,
+): Promise<unknown> {
+  const { data } = await axiosInstance.post<{ message: string; data: unknown }>(
+    `/api/v1/cashflow-vouchers/${id}/allocations`,
+    dto,
+  );
+  return data.data;
+}
+
+export async function removeCashflowVoucherAllocationApi(
+  id: string,
+  allocationId: string,
+): Promise<void> {
+  await axiosInstance.delete(
+    `/api/v1/cashflow-vouchers/${id}/allocations/${allocationId}`,
+  );
+}
+
+export async function lookupCashflowVoucherPartiesApi(
+  scope: CashflowPartyScope,
+  query?: string,
+): Promise<unknown[]> {
+  const { data } = await axiosInstance.get<{
+    scope: CashflowPartyScope;
+    data: unknown[];
+  }>(`/api/v1/cashflow-vouchers/parties/lookup`, {
+    params: {
+      scope,
+      ...(query ? { query } : {}),
+      page: 1,
+      pageSize: 50,
+    },
+  });
+  return data.data;
+}

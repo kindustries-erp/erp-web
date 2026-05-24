@@ -12,6 +12,7 @@ import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
 import { DongTien } from "@/pages/CashFlow";
+import { CashflowVouchersPage } from "@/pages/CashflowVouchers";
 import { TienMat } from "@/pages/CashFund";
 import { TienGui } from "@/pages/BankDeposit";
 import { DinhKemChungTu } from "@/pages/Attachments";
@@ -100,6 +101,9 @@ export default function App() {
               <>
                 {currentPage === "dashboard" && <Dashboard />}
                 {currentPage === "cashflow" && <DongTien />}
+                {currentPage === "cashflow-vouchers" && (
+                  <CashflowVouchersPage />
+                )}
                 {currentPage === "cash-fund" && <TienMat />}
                 {currentPage === "bank-deposit" && <TienGui />}
                 {currentPage === "attachments" && <DinhKemChungTu />}
@@ -130,6 +134,7 @@ export default function App() {
                 {![
                   "dashboard",
                   "cashflow",
+                  "cashflow-vouchers",
                   "cash-fund",
                   "bank-deposit",
                   "attachments",

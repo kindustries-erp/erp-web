@@ -180,9 +180,12 @@ export function Sidebar() {
                 <NavGroup
                   icon={<IconDollar />}
                   label={t("nav.items.cashflow")}
-                  active={["cashflow", "cash-fund", "bank-deposit"].includes(
-                    currentPage,
-                  )}
+                  active={[
+                    "cashflow",
+                    "cashflow-vouchers",
+                    "cash-fund",
+                    "bank-deposit",
+                  ].includes(currentPage)}
                   collapsed={c}
                 >
                   <NavGroupItem
@@ -190,6 +193,12 @@ export function Sidebar() {
                     active={currentPage === "cashflow"}
                     onClick={() => navTo("cashflow")}
                     contextPage="cashflow"
+                  />
+                  <NavGroupItem
+                    label={t("nav.items.cashflowVouchers")}
+                    active={currentPage === "cashflow-vouchers"}
+                    onClick={() => navTo("cashflow-vouchers")}
+                    contextPage="cashflow-vouchers"
                   />
                   <NavGroupItem
                     label={t("nav.items.cashflowCash")}

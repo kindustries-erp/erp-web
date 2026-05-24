@@ -18,6 +18,10 @@ export const STATIC_TABS: Record<string, TabInfo> = {
 
 export const SECTION_ROOTS: Record<string, SectionRoot> = {
   cashflow: { labelKey: "nav.items.cashflow", group: "cashflow" },
+  "cashflow-vouchers": {
+    labelKey: "nav.items.cashflowVouchers",
+    group: "cashflow",
+  },
   "cash-fund": { labelKey: "nav.items.cashflowCash", group: "cashflow" },
   "bank-deposit": {
     labelKey: "nav.items.cashflowBankShort",
@@ -59,6 +63,11 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.accounting"],
     ["breadcrumb.cashflow"],
     ["breadcrumb.cashflowOverview"],
+  ],
+  "cashflow-vouchers": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.cashflow", "cashflow"],
+    ["breadcrumb.cashflowVouchers"],
   ],
   "cash-fund": [
     ["breadcrumb.accounting"],

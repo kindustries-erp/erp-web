@@ -4,6 +4,7 @@ import { PageKey } from "@/shared/types";
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
   "cashflow",
+  "cashflow-vouchers",
   "cash-fund",
   "bank-deposit",
   "attachments",
@@ -53,6 +54,7 @@ const SLUG_TO_PAGE: Record<string, PageKey> = Object.fromEntries(
  */
 const LEGACY_SLUGS: Record<string, PageKey> = {
   "dong-tien": "cashflow",
+  "phieu-thu-chi": "cashflow-vouchers",
   "tien-mat": "cash-fund",
   "tien-gui": "bank-deposit",
   "tai-lieu": "attachments",
