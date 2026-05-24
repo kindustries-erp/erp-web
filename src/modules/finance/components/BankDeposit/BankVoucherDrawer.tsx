@@ -35,6 +35,7 @@ import type {
 import { ApprovalHistory } from "@/modules/finance/components/ApprovalHistory";
 import { CashBankTagPresetCards } from "@/modules/finance/components/CashBankTagPresetCards";
 import { RelatedDocumentsEditor } from "@/modules/finance/components/RelatedDocumentsEditor";
+import { StatusBadge } from "@/shared/components/badges";
 
 export function BankVoucherDrawer(props: any) {
   const {
@@ -245,7 +246,12 @@ export function BankVoucherDrawer(props: any) {
         subtitle={
           editing ? editing.voucher_no : t("voucher.drawer.subtitleEdit")
         }
-        headerExtra={editToggle}
+        headerExtra={
+          <>
+            {editing && <StatusBadge status={editing.status} />}
+            {editToggle}
+          </>
+        }
         panelClassName="min-[1200px]:w-[900px] max-[1200px]:w-[70vw] max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
         bodyClassName="p-4"
         actions={drawerActions}
@@ -255,47 +261,12 @@ export function BankVoucherDrawer(props: any) {
           {/* ── Left column (3/5) ── */}
           <div className="space-y-0">
             <DrawerSection title={t("voucher.drawer.sectionOrder")}>
-              <div className="grid grid-cols-1 gap-y-1">
-                <div className="grid grid-cols-2 gap-x-3">
-                  <DrawerField label={t("voucher.drawer.voucherNo")} required>
-                    <input
-                      type="text"
-                      disabled={viewOnly}
-                      className={inputCls}
-                      value={form.voucher_no}
-                      onChange={(e) => setField("voucher_no", e.target.value)}
-                      placeholder={t("voucher.drawer.voucherNoPlaceholder")}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("voucher.drawer.bankAccount")} required>
-                    <Combobox
-                      disabled={viewOnly}
-                      options={companyBankOpts}
-                      value={form.company_bank_account_id}
-                      onChange={handleCompanyBankChange}
-                      placeholder={t("voucher.drawer.bankAccountPlaceholder")}
-                    />
-                  </DrawerField>
-                </div>
-                <div className="grid grid-cols-1 gap-x-3">
-                  <DrawerField label={t("voucher.drawer.docDate")} required>
-                    <DatePicker
-                      disabled={viewOnly}
-                      value={form.document_date}
-                      onChange={handleDocumentDateChange}
-                      className="w-full min-w-0"
-                    />
-                  </DrawerField>
-                </div>
-              </div>
               {/* Đối tượng — gom chung vào card thông tin lệnh */}
-              <div className="mt-3 pt-3 border-t border-[color:var(--border)]">
-                <CounterpartyFields
-                  {...props}
-                  handleCreatePartner={handleCreatePartner}
-                  handleEditPartner={handleEditPartner}
-                />
-              </div>
+              <CounterpartyFields
+                {...props}
+                handleCreatePartner={handleCreatePartner}
+                handleEditPartner={handleEditPartner}
+              />
             </DrawerSection>
             <DrawerSection title={t("voucher.drawer.sectionAccounting")}>
               <div className="grid grid-cols-2 max-[560px]:grid-cols-1 gap-x-3">
@@ -417,38 +388,45 @@ export function BankVoucherDrawer(props: any) {
 
           {/* ── Right column (2/5) ── */}
           <div className="space-y-0">
-            {editing && (
-              <DrawerSection title={t("voucher.drawer.sectionOrder")}>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-[color:var(--muted-fg)]">
-                      Trạng thái
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {editing.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[color:var(--muted-fg)]">
-                      Ngày tạo
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {editing.date_created?.slice(0, 10) ?? "—"}
-                    </span>
-                  </div>
-                  {editing.created_by_name && (
-                    <div className="flex justify-between">
-                      <span className="text-[color:var(--muted-fg)]">
-                        Người tạo
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {editing.created_by_name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </DrawerSection>
-            )}
+            <DrawerSection title={t("voucher.drawer.sectionOrder")}>
+              <DrawerField label={t("voucher.drawer.voucherNo")}>
+                <input
+                  type="text"
+                  disabled={viewOnly}
+                  className={inputCls}
+                  value={form.voucher_no}
+                  onChange={(e) => setField("voucher_no", e.target.value)}
+                  placeholder={t("voucher.drawer.voucherNoPlaceholder")}
+                />
+              </DrawerField>
+              <DrawerField label={t("voucher.drawer.docDate")}>
+                <DatePicker
+                  disabled={viewOnly}
+                  value={form.document_date}
+                  onChange={handleDocumentDateChange}
+                  className="w-full min-w-0"
+                />
+              </DrawerField>
+              {editing && (
+                <DrawerField label="Ngày tạo">
+                  <input
+                    type="text"
+                    disabled
+                    className={inputCls}
+                    value={editing.date_created?.slice(0, 10) ?? "—"}
+                  />
+                </DrawerField>
+              )}
+              <DrawerField label={t("voucher.drawer.bankAccount")}>
+                <Combobox
+                  disabled={viewOnly}
+                  options={companyBankOpts}
+                  value={form.company_bank_account_id}
+                  onChange={handleCompanyBankChange}
+                  placeholder={t("voucher.drawer.bankAccountPlaceholder")}
+                />
+              </DrawerField>
+            </DrawerSection>
             {editing && (
               <DrawerSection title="Lịch sử duyệt">
                 <ApprovalHistory voucherId={editing.id} />
