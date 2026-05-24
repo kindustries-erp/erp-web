@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -211,13 +212,15 @@ export function Login() {
           </div>
 
           {/* Submit */}
-          <button
+          <Button
             type="submit"
+            variant="primary"
+            size="lg"
             disabled={loading}
-            className="mt-2 w-full bg-primary text-primary-fg font-semibold text-sm py-[10px] rounded-lg hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-60"
+            className="mt-2 font-semibold"
           >
             {loading ? t("login.loading") : t("login.submit")}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

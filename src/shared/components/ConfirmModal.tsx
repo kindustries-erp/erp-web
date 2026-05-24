@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 
 interface ConfirmModalProps {
   open: boolean;
@@ -50,22 +51,19 @@ export function ConfirmModal({
         </h3>
         <p className="text-xs text-slate-500 mb-6 leading-relaxed">{message}</p>
         <div className="flex gap-2 justify-end">
-          <button
+          <Button
+            variant="secondary"
+            size="md"
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 rounded-xl border border-border text-xs font-medium bg-surface text-foreground hover:bg-surface-hover transition-colors cursor-pointer disabled:opacity-50"
           >
             {cancelLabel || t("confirmModal.defaultCancel")}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={danger ? "danger" : "primary"}
+            size="md"
             onClick={onConfirm}
             disabled={loading}
-            className={cn(
-              "px-4 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer disabled:opacity-50 flex items-center gap-[6px] shadow-sm active:scale-95",
-              danger
-                ? "bg-red-500 text-white hover:bg-red-600 hover:shadow-lg hover:shadow-red-500/20"
-                : "bg-primary text-primary-fg border border-primary hover:opacity-90",
-            )}
           >
             {loading && (
               <svg
@@ -81,7 +79,7 @@ export function ConfirmModal({
             {loading
               ? t("common.processing")
               : confirmLabel || t("confirmModal.defaultConfirm")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>,

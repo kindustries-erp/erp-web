@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Button } from "@/shared/components/ui/Button";
 
 interface BtnPrimaryProps {
   children: ReactNode;
@@ -11,6 +12,8 @@ interface BtnPrimaryProps {
 /**
  * Primary action button – filled background with primary color.
  * Used consistently across all pages for create/confirm actions.
+ *
+ * @deprecated Prefer using <Button variant="primary"> directly.
  */
 export function BtnPrimary({
   children,
@@ -20,13 +23,15 @@ export function BtnPrimary({
   className,
 }: BtnPrimaryProps) {
   return (
-    <button
+    <Button
+      variant="primary"
+      size="sm"
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${className ?? ""}`}
+      className={className}
     >
       {children}
-    </button>
+    </Button>
   );
 }

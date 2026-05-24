@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 import { ConfirmModal } from "./ConfirmModal";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -55,19 +56,18 @@ export interface DrawerModalProps {
 // ── Btn helper ─────────────────────────────────────────────────────────────
 
 function Btn({ action }: { action: DrawerAction }) {
+  const variant = action.primary
+    ? "primary"
+    : action.variant === "outline"
+      ? "outline"
+      : "secondary";
+
   return (
-    <button
+    <Button
+      variant={variant}
+      size="sm"
       disabled={action.disabled || action.loading}
       onClick={action.onClick}
-      className={cn(
-        "px-[14px] py-[7px] rounded-lg border text-xs font-medium cursor-pointer flex items-center gap-[6px] whitespace-nowrap",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        action.primary
-          ? "bg-primary text-primary-fg border-primary hover:opacity-90"
-          : action.variant === "outline"
-            ? "bg-transparent text-primary border-primary/60 hover:bg-primary/5"
-            : "bg-surface text-foreground border-border hover:bg-surface-hover",
-      )}
     >
       {action.loading ? (
         <>
@@ -85,7 +85,7 @@ function Btn({ action }: { action: DrawerAction }) {
       ) : (
         action.label
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -189,12 +189,14 @@ export function DrawerModal({
             )}
           </div>
           {headerExtra}
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={requestClose}
-            className="ml-1 text-[color:var(--faint)] text-xl leading-none px-1 hover:text-foreground flex-shrink-0"
+            className="ml-1 text-[color:var(--faint)] text-xl leading-none"
           >
             ×
-          </button>
+          </Button>
         </div>
 
         {/* ── Body ── */}

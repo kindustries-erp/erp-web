@@ -101,6 +101,10 @@ export const vi = {
   topbar: {
     search: "Tìm kiếm tài khoản, chứng từ...",
     settings: "Cài đặt / Đổi mật khẩu",
+    notifications: {
+      title: "Thông báo",
+      empty: "Chưa có thông báo nào",
+    },
     impersonation: {
       stopButton: "Quay lại tài khoản gốc",
       actorLabel: "Tài khoản",

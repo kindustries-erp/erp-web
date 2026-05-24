@@ -1,6 +1,7 @@
 import React from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { toast } from "react-hot-toast";
+import { Button } from "@/shared/components/ui/Button";
 
 export function ReloadPrompt() {
   const {
@@ -38,18 +39,16 @@ export function ReloadPrompt() {
             Có phiên bản mới. Vui lòng tải lại trang để cập nhật.
           </div>
           <div className="flex space-x-3">
-            <button
-              className="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800"
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => updateServiceWorker(true)}
             >
               Cập nhật
-            </button>
-            <button
-              className="text-gray-900 bg-white border border-gray-300 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-700 dark:focus:ring-gray-700"
-              onClick={() => close()}
-            >
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => close()}>
               Bỏ qua
-            </button>
+            </Button>
           </div>
         </div>
       )}
