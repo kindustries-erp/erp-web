@@ -3,6 +3,7 @@ import { cn } from "@/shared/utils";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
+import { Button } from "@/shared/components/ui/Button";
 import { PERIOD_OPTS } from "@/modules/finance/utils/financeHelpers";
 import { useT } from "@/core/i18n";
 import type {
@@ -24,11 +25,12 @@ export function FilterButton({
   className,
 }: FilterButtonProps) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
       onClick={onClick}
       className={cn(
-        "relative inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-foreground hover:bg-[color:var(--muted)] transition-colors",
+        "relative px-3 py-2",
         activeCount > 0 && "border-primary/50 text-primary",
         className,
       )}
@@ -40,7 +42,7 @@ export function FilterButton({
           {activeCount}
         </span>
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -180,22 +182,18 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
       </div>
       <div className="flex items-center gap-1">
         {filter.hasActiveFilter && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={filter.resetAll}
-            className="p-1.5 rounded-md text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] transition-colors"
             title="Reset"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
-          onClick={filter.closePanel}
-          className="p-1.5 rounded-md text-[color:var(--muted-fg)] hover:text-foreground hover:bg-[color:var(--muted)] transition-colors"
-        >
+        <Button variant="ghost" size="icon-sm" onClick={filter.closePanel}>
           <X className="h-4 w-4" />
-        </button>
+        </Button>
       </div>
     </div>
   );

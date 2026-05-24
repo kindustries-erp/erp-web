@@ -4,6 +4,7 @@ import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
 import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
 import { ThemePopover } from "./ThemePopover";
 import { NotificationPopover } from "./NotificationPopover";
 
@@ -28,8 +29,10 @@ export function Topbar() {
   return (
     <div className="topbar h-12 flex items-center gap-[10px] flex-shrink-0">
       {/* Hamburger (mobile) */}
-      <button
-        className="mobile-hamburger hidden w-8 h-8 border border-border rounded-lg items-center justify-center cursor-pointer flex-shrink-0 bg-surface"
+      <Button
+        variant="secondary"
+        size="icon"
+        className="mobile-hamburger hidden"
         onClick={() => setMobileSidebarOpen(true)}
       >
         <svg
@@ -44,7 +47,7 @@ export function Topbar() {
           <line x1="3" y1="12" x2="21" y2="12" />
           <line x1="3" y1="18" x2="21" y2="18" />
         </svg>
-      </button>
+      </Button>
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-[5px] text-xs text-[color:var(--muted-fg)] min-w-0 overflow-hidden">
@@ -143,21 +146,24 @@ export function Topbar() {
       {/* Right controls */}
       <div className="flex items-center gap-1 max-[640px]:ml-auto flex-shrink-0">
         {/* Language toggle — show language code */}
-        <button
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={toggleLocale}
           title={t("nav.bottom.language")}
-          className="h-8 px-3 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover"
+          className="h-8 px-3"
         >
           <span className="text-[11px] font-semibold text-[color:var(--muted-fg)]">
             {locale === "vi" ? "VI" : "EN"}
           </span>
-        </button>
+        </Button>
 
         {/* App theme switch */}
         <ThemePopover>
-          <button
+          <Button
+            variant="secondary"
+            size="icon"
             title={t("nav.bottom.themeStyle")}
-            className="w-8 h-8 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover"
           >
             <svg
               className="w-[14px] h-[14px] text-[color:var(--muted-fg)] flex-shrink-0"
@@ -172,12 +178,12 @@ export function Topbar() {
               <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
               <path d="M12 2C6.5 2 2 6.1 2 11.2c0 3.7 2.8 6.8 6.5 6.8h1.2c1 0 1.7.8 1.7 1.7 0 1.2.9 2.1 2.1 2.1 4.7 0 8.5-4.4 8.5-9.8C22 6.5 17.5 2 12 2z" />
             </svg>
-          </button>
+          </Button>
         </ThemePopover>
 
         {/* Bell */}
         <NotificationPopover>
-          <button className="w-8 h-8 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover">
+          <Button variant="secondary" size="icon">
             <svg
               width="15"
               height="15"
@@ -190,7 +196,7 @@ export function Topbar() {
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-          </button>
+          </Button>
         </NotificationPopover>
       </div>
     </div>

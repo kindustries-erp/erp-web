@@ -1,6 +1,7 @@
 import { useAppStore, AppTheme } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { Popover } from "@/core/components/ui/Popover";
+import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 
 const THEME_OPTIONS: {
@@ -58,11 +59,13 @@ export function ThemePopover({ children }: { children: React.ReactNode }) {
             {t("nav.bottom.themeStyle")}
           </p>
           {THEME_OPTIONS.map((opt) => (
-            <button
+            <Button
               key={opt.value}
+              variant="ghost"
+              size="sm"
               onClick={() => setAppTheme(opt.value)}
               className={cn(
-                "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs transition-colors",
+                "w-full justify-start gap-2.5 px-2.5 py-2",
                 appTheme === opt.value
                   ? "bg-[color:var(--popup-bg-hover)] text-foreground font-medium"
                   : "text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
@@ -83,7 +86,7 @@ export function ThemePopover({ children }: { children: React.ReactNode }) {
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
               )}
-            </button>
+            </Button>
           ))}
         </div>
       }
