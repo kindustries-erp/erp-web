@@ -601,6 +601,27 @@ export async function deletePaymentVoucherApi(id: string): Promise<void> {
   await axiosInstance.delete(`/api/v1/payment-vouchers/${id}`);
 }
 
+export interface PaymentVoucherTimelineLog {
+  id: string;
+  action: string;
+  action_label: string;
+  action_at: string;
+  actor_id: string | null;
+  actor_name: string | null;
+  actor_email: string | null;
+  from_status: string | null;
+  to_status: string | null;
+  changed_fields: string[];
+  note: string | null;
+  reason: string | null;
+  module: string;
+  entity_type: string;
+  entity_id: string;
+  entity_no: string | null;
+  event_group: string;
+  source: string;
+}
+
 export async function getPaymentVoucherApi(
   id: string,
 ): Promise<PaymentVoucher> {
@@ -611,6 +632,15 @@ export async function getPaymentVoucherApi(
     | PaymentVoucher
   >(`/api/v1/payment-vouchers/${id}`);
   return "data" in data && data.data ? data.data : (data as PaymentVoucher);
+}
+
+export async function getPaymentVoucherTimelineApi(
+  id: string,
+): Promise<PaymentVoucherTimelineLog[]> {
+  const { data } = await axiosInstance.get<PaymentVoucherTimelineLog[]>(
+    `/api/v1/payment-vouchers/${id}/timeline`,
+  );
+  return data;
 }
 
 // ─── PaymentVoucher Status Transitions ───────────────────────────────────────
