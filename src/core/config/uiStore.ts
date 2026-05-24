@@ -31,7 +31,16 @@ interface UIState {
   openImport: (src: string) => void;
   closeImport: () => void;
   setImportFile: (file: File | null) => void;
+  resetShellState: () => void;
 }
+
+const shellStateDefaults = {
+  panelOpen: false,
+  panelContent: null as PanelContent | null,
+  importModalOpen: false,
+  importSrc: "",
+  importFile: null as File | null,
+};
 
 export const useUIStore = create<UIState>((set, get) => ({
   toastMsg: "",
@@ -56,20 +65,22 @@ export const useUIStore = create<UIState>((set, get) => ({
     set({ toastVisible: false });
   },
 
-  panelOpen: false,
-  panelContent: null,
+  ...shellStateDefaults,
   openPanel: (content) => set({ panelOpen: true, panelContent: content }),
-  closePanel: () => set({ panelOpen: false }),
+  closePanel: () => set({ panelOpen: false, panelContent: null }),
 
-  importModalOpen: false,
-  importSrc: "",
-  importFile: null,
   openImport: (src) =>
     set({ importModalOpen: true, importSrc: src, importFile: null }),
-  closeImport: () => set({ importModalOpen: false, importFile: null }),
+  closeImport: () =>
+    set({ importModalOpen: false, importSrc: "", importFile: null }),
   setImportFile: (file) => {
     const prev = get().importFile;
     if (prev) URL.revokeObjectURL(prev.name); // cleanup if needed
     set({ importFile: file });
+  },
+  resetShellState: () => {
+    const prev = get().importFile;
+    if (prev) URL.revokeObjectURL(prev.name);
+    set(shellStateDefaults);
   },
 }));

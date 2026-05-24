@@ -17,6 +17,7 @@ import type {
   ImpersonationMetadata,
 } from "@/modules/auth/api/auth";
 import { useAppStore } from "@/core/config/appStore";
+import { useUIStore } from "@/core/config/uiStore";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           });
           // Sync UI state
+          useUIStore.getState().resetShellState();
           useAppStore.getState().login();
         } catch (err: unknown) {
           const message =
@@ -142,6 +144,7 @@ export const useAuthStore = create<AuthState>()(
             actorExpiresAt: null,
           });
           // Sync UI state
+          useUIStore.getState().resetShellState();
           useAppStore.getState().logout();
         }
       },
