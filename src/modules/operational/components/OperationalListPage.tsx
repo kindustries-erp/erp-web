@@ -884,7 +884,7 @@ export function OperationalListPage({
             {error}
           </div>
         ) : null}
-        <div className="flex gap-5 items-start">
+        <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
             <DataTable
               items={stockItems}
@@ -1008,7 +1008,7 @@ export function OperationalListPage({
         </div>
       ) : null}
 
-      <div className="flex gap-5 items-start">
+      <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <DataTable
             items={visibleItems}

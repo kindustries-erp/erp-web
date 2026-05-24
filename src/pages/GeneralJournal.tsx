@@ -260,7 +260,7 @@ export function NhatKyChung() {
           </>
         }
       >
-        <div className="flex gap-5 items-start">
+        <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
             {list.error && (
               <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">

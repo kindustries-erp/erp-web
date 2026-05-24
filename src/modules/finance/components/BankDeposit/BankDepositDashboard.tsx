@@ -141,7 +141,7 @@ export function BankDepositDashboard(props: any) {
       }
       hideHeader={props.hideHeader}
     >
-      <div className="flex gap-5 items-start">
+      <div className="flex items-start">
         {/* Main content */}
         <div className="flex-1 min-w-0 space-y-4">
           <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3">

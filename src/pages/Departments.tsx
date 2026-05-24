@@ -291,7 +291,7 @@ export function PhongBan() {
         </>
       }
     >
-      <div className="flex gap-5 items-start">
+      <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           {/* ── DataTable ── */}
           <DataTable
