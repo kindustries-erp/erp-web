@@ -1,7 +1,5 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-npm run format
-npx lint-staged
-npx vitest run --reporter=dot
-# npm run lint:check
+bun run format
+bunx lint-staged
+bunx vitest run --reporter=dot
+# bun run lint:check
+# fallback debug nếu bunx có issue: ./node_modules/.bin/vitest run --reporter=dot; ./node_modules/.bin/lint-staged
