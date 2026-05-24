@@ -748,6 +748,13 @@ export const vi = {
     toastSuccess: "Import thành công! Đang xử lý dữ liệu...",
   },
   voucher: {
+    status: {
+      draft: "Nháp",
+      pendingApproval: "Chờ duyệt",
+      approved: "Đã duyệt",
+      rejected: "Từ chối",
+      cancelled: "Đã hủy",
+    },
     actions: {
       createSuccess: "Tạo phiếu thành công",
       updateSuccess: "Cập nhật phiếu thành công",

@@ -32,6 +32,8 @@ export interface DrawerModalProps {
   /** Header */
   icon?: React.ReactNode;
   title: string;
+  /** Inline element rendered right after the title text (e.g. status badge) */
+  titleExtra?: React.ReactNode;
   subtitle?: string;
   /** Extra element rendered to the right of title+subtitle, before the × button */
   headerExtra?: React.ReactNode;
@@ -96,6 +98,7 @@ export function DrawerModal({
   onClose,
   icon,
   title,
+  titleExtra,
   subtitle,
   headerExtra,
   actions,
@@ -179,8 +182,9 @@ export function DrawerModal({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-foreground leading-tight truncate">
-              {title}
+            <div className="text-sm font-semibold text-foreground leading-tight truncate flex items-center gap-2">
+              <span className="truncate">{title}</span>
+              {titleExtra}
             </div>
             {subtitle && (
               <div className="text-xs text-[color:var(--muted-fg)] truncate mt-[1px]">

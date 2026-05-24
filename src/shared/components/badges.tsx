@@ -1,9 +1,19 @@
 import { cn } from "@/shared/utils";
+import { useT } from "@/core/i18n";
 import type { VoucherStatus } from "@/modules/finance/api/financeApi";
 
 // ── VoucherStatus badge ───────────────────────────────────────────────────────
 
-/** Maps VoucherStatus → Vietnamese label */
+/** i18n keys for VoucherStatus labels */
+const STATUS_I18N_KEYS: Record<VoucherStatus, string> = {
+  DRAFT: "voucher.status.draft",
+  PENDING_APPROVAL: "voucher.status.pendingApproval",
+  APPROVED: "voucher.status.approved",
+  REJECTED: "voucher.status.rejected",
+  CANCELLED: "voucher.status.cancelled",
+};
+
+/** Fallback Vietnamese labels (used when i18n is not available) */
 export const STATUS_LABELS: Record<VoucherStatus, string> = {
   DRAFT: "Nháp",
   PENDING_APPROVAL: "Chờ duyệt",
@@ -28,13 +38,15 @@ interface StatusBadgeProps {
  * Badge hiển thị trạng thái chứng từ (Nháp, Chờ duyệt, Đã duyệt, ...).
  */
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const t = useT();
   const s = status as VoucherStatus;
-  const label = STATUS_LABELS[s] ?? status;
+  const i18nKey = STATUS_I18N_KEYS[s];
+  const label = i18nKey ? t(i18nKey) : (STATUS_LABELS[s] ?? status);
   const cls = STATUS_CLS[s] ?? "";
   return (
     <span
       className={cn(
-        "text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium whitespace-nowrap",
+        "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap",
         cls,
       )}
     >

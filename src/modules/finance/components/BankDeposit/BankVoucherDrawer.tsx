@@ -246,12 +246,8 @@ export function BankVoucherDrawer(props: any) {
         subtitle={
           editing ? editing.voucher_no : t("voucher.drawer.subtitleEdit")
         }
-        headerExtra={
-          <>
-            {editing && <StatusBadge status={editing.status} />}
-            {editToggle}
-          </>
-        }
+        titleExtra={editing && <StatusBadge status={editing.status} />}
+        headerExtra={editToggle}
         panelClassName="min-[1200px]:w-[900px] max-[1200px]:w-[70vw] max-[980px]:w-[calc(100vw-24px)] max-[500px]:w-screen"
         bodyClassName="p-4"
         actions={drawerActions}

@@ -757,6 +757,13 @@ export const en: Dict = {
     toastSuccess: "Import successful! Processing data...",
   },
   voucher: {
+    status: {
+      draft: "Draft",
+      pendingApproval: "Pending",
+      approved: "Approved",
+      rejected: "Rejected",
+      cancelled: "Cancelled",
+    },
     actions: {
       createSuccess: "Voucher created successfully",
       updateSuccess: "Voucher updated successfully",
