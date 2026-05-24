@@ -65,10 +65,10 @@ Chuẩn hóa một package manager duy nhất cho `liouni-erp-web` là Bun, đ�
   - [x] 4.5 Container `liouni-erp-web` Up, logs sạch
   - [x] 4.6 `http://127.0.0.1:8808/` → HTTP 200; `https://dev.erp.liouni.com/` → HTTP 200
   - [x] 4.7 Bundle: `/usr/share/nginx/html/assets/index-C1AUp8TH.js` (hash mới)
-- [ ] 5.0 Close
-  - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web)
-  - [ ] 5.3 Tổng kết evidence
+- [x] 5.0 Close
+  - [x] 5.1 Lessons learned entry (if issue) — không phát sinh issue mới cần lesson file; đã fix luôn warning Husky v10 header trước khi close
+  - [x] 5.2 Commit + push code (web)
+  - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 
@@ -90,6 +90,6 @@ Chuẩn hóa một package manager duy nhất cho `liouni-erp-web` là Bun, đ�
 
 ## Commit/Push Status
 
-- Web repo:
+- Web repo: `ac8b408` pushed → `origin/staging`
 - API repo: N/A
 - DB/directus staging: N/A
