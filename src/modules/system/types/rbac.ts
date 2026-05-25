@@ -133,8 +133,8 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
   },
   // Nhân sự
   { collection: "erp_employees", label: "Nhân viên", group: "Nhân sự" },
-  { collection: "departments", label: "Phòng ban", group: "Nhân sự" },
-  { collection: "positions", label: "Chức danh", group: "Nhân sự" },
+  { collection: "erp_departments", label: "Phòng ban", group: "Nhân sự" },
+  { collection: "erp_positions", label: "Chức danh", group: "Nhân sự" },
   // Đối tác
   { collection: "erp_business_partners", label: "Đối tác", group: "Đối tác" },
   {
