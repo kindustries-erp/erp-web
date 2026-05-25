@@ -1450,6 +1450,64 @@ export async function removeCashflowVoucherRelatedDocumentApi(
   );
 }
 
+export interface CashflowVoucherAttachment {
+  id: string;
+  cashflow_voucher_id: string | CashflowVoucher;
+  file:
+    | string
+    | {
+        id: string;
+        filename_download?: string;
+        filename_disk?: string;
+        type?: string;
+        filesize?: number;
+      };
+  attachment_type: AttachmentType | null;
+  note: string | null;
+  uploaded_at: string;
+  uploaded_by: string | null;
+}
+
+export interface CreateCashflowVoucherAttachmentDto {
+  cashflow_voucher_id: string;
+  file: string;
+  attachment_type: AttachmentType;
+  note?: string;
+}
+
+export async function createCashflowVoucherAttachmentApi(
+  dto: CreateCashflowVoucherAttachmentDto,
+): Promise<CashflowVoucherAttachment> {
+  const { data } = await axiosInstance.post<
+    | { message?: string; data?: CashflowVoucherAttachment }
+    | CashflowVoucherAttachment
+  >("/api/v1/cashflow-voucher-attachments", dto);
+  return "data" in data && data.data
+    ? data.data
+    : (data as CashflowVoucherAttachment);
+}
+
+export async function deleteCashflowVoucherAttachmentApi(
+  id: string,
+): Promise<void> {
+  await axiosInstance.delete(`/api/v1/cashflow-voucher-attachments/${id}`);
+}
+
+export async function getCashflowVoucherAttachmentsApi(
+  voucherId: string,
+): Promise<CashflowVoucherAttachment[]> {
+  const { data } = await axiosInstance.get<
+    PaginatedResponse<CashflowVoucherAttachment>
+  >("/api/v1/cashflow-voucher-attachments", {
+    params: {
+      cashflow_voucher_id: voucherId,
+      pageSize: 50,
+      sort: "-uploaded_at",
+    },
+  });
+  return data.items;
+}
+
 export async function getCashflowVoucherAllocationsApi(
   id: string,
 ): Promise<unknown[]> {

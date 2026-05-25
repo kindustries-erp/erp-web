@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Wallet } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel } from "@/shared/components/Panel";
+import { FileUploadBox } from "@/shared/components/FileUploadBox";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 import {
@@ -15,11 +16,17 @@ import {
   getCashflowVoucherTimelineApi,
   getCashflowVouchersApi,
   postCashflowVoucherApi,
+  createCashflowVoucherAttachmentApi,
+  deleteCashflowVoucherAttachmentApi,
+  getCashflowVoucherAttachmentsApi,
+  uploadFileApi,
+  getFileViewUrl,
   type CashflowMoneySource,
   type CashflowPartyItem,
   type CashflowPartyScope,
   type CashflowVoucher,
   type CashflowVoucherStatus,
+  type CashflowVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
@@ -76,6 +83,13 @@ export function CashflowVouchersPage() {
   const [timeline, setTimeline] = useState<unknown[]>([]);
   const [relatedDocs, setRelatedDocs] = useState<unknown[]>([]);
   const [allocations, setAllocations] = useState<unknown[]>([]);
+  const [attachments, setAttachments] = useState<CashflowVoucherAttachment[]>(
+    [],
+  );
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [attachmentType, setAttachmentType] = useState("OTHER");
+  const [attachmentNote, setAttachmentNote] = useState("");
+  const [attachmentSaving, setAttachmentSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<CashflowVoucherStatus | "">(
     "",
   );
@@ -132,18 +146,21 @@ export function CashflowVouchersPage() {
 
   const loadDetailSidecars = async (id: string) => {
     try {
-      const [tl, rd, al] = await Promise.all([
+      const [tl, rd, al, att] = await Promise.all([
         getCashflowVoucherTimelineApi(id),
         getCashflowVoucherRelatedDocumentsApi(id),
         getCashflowVoucherAllocationsApi(id),
+        getCashflowVoucherAttachmentsApi(id),
       ]);
       setTimeline(tl ?? []);
       setRelatedDocs(rd ?? []);
       setAllocations(al ?? []);
+      setAttachments(att ?? []);
     } catch {
       setTimeline([]);
       setRelatedDocs([]);
       setAllocations([]);
+      setAttachments([]);
     }
   };
 
@@ -164,6 +181,53 @@ export function CashflowVouchersPage() {
       loadDetailSidecars(selected.id);
     }
   }, [selected?.id]);
+
+  const handleUploadAttachments = useCallback(async () => {
+    if (!selected?.id || attachmentFiles.length === 0) return;
+    setAttachmentSaving(true);
+    setError(null);
+    try {
+      for (const file of attachmentFiles) {
+        const uploaded = await uploadFileApi(file);
+        await createCashflowVoucherAttachmentApi({
+          cashflow_voucher_id: selected.id,
+          file: uploaded.id,
+          attachment_type: attachmentType as any,
+          note: attachmentNote || undefined,
+        });
+      }
+      setAttachmentFiles([]);
+      setAttachmentNote("");
+      await loadDetailSidecars(selected.id);
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message || e?.message || "Upload đính kèm thất bại",
+      );
+    } finally {
+      setAttachmentSaving(false);
+    }
+  }, [selected?.id, attachmentFiles, attachmentType, attachmentNote]);
+
+  const handleDeleteAttachment = useCallback(
+    async (attachment: CashflowVoucherAttachment) => {
+      if (!selected?.id) return;
+      const ok = window.confirm("Xóa file đính kèm này?");
+      if (!ok) return;
+      setAttachmentSaving(true);
+      setError(null);
+      try {
+        await deleteCashflowVoucherAttachmentApi(attachment.id);
+        await loadDetailSidecars(selected.id);
+      } catch (e: any) {
+        setError(
+          e?.response?.data?.message || e?.message || "Xóa đính kèm thất bại",
+        );
+      } finally {
+        setAttachmentSaving(false);
+      }
+    },
+    [selected?.id],
+  );
 
   const selectedChannelName = useMemo(() => {
     if (!selected) return "-";
@@ -585,6 +649,109 @@ export function CashflowVouchersPage() {
               <pre className="max-h-[160px] overflow-auto rounded bg-[color:var(--surface-muted)] p-3 text-xs">
                 {JSON.stringify(allocations, null, 2)}
               </pre>
+            </Panel>
+            <Panel title={`Đính kèm (${attachments.length})`}>
+              <div className="space-y-3">
+                {attachments.length === 0 ? (
+                  <p className="text-xs text-[color:var(--muted-fg)]">
+                    Chưa có file đính kèm
+                  </p>
+                ) : (
+                  <div className="divide-y rounded border">
+                    {attachments.map((att) => {
+                      const fileId =
+                        att.file && typeof att.file === "object"
+                          ? att.file.id
+                          : (att.file as string);
+                      const fileName =
+                        att.file && typeof att.file === "object"
+                          ? (att.file.filename_download ?? att.file.id)
+                          : `File ${String(att.file).slice(0, 8)}`;
+                      return (
+                        <div
+                          key={att.id}
+                          className="flex items-center gap-2 px-3 py-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-medium">
+                              {fileName}
+                            </div>
+                            <div className="text-[11px] text-[color:var(--muted-fg)]">
+                              {att.attachment_type ?? "OTHER"}
+                              {att.note ? ` · ${att.note}` : ""}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={!fileId}
+                            onClick={() =>
+                              window.open(
+                                getFileViewUrl(fileId),
+                                "_blank",
+                                "noopener,noreferrer",
+                              )
+                            }
+                            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
+                          >
+                            Xem
+                          </button>
+                          <button
+                            type="button"
+                            disabled={attachmentSaving}
+                            onClick={() => handleDeleteAttachment(att)}
+                            className="rounded border px-2 py-1 text-xs text-red-700 disabled:opacity-50"
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="space-y-2 border-t pt-3">
+                  <FileUploadBox
+                    multiple
+                    files={attachmentFiles}
+                    onFilesChange={setAttachmentFiles}
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="mb-1 text-xs font-medium text-[color:var(--muted-fg)]">
+                        Loại đính kèm
+                      </div>
+                      <select
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        value={attachmentType}
+                        onChange={(e) => setAttachmentType(e.target.value)}
+                      >
+                        <option value="OTHER">OTHER</option>
+                        <option value="INVOICE">INVOICE</option>
+                        <option value="CONTRACT">CONTRACT</option>
+                        <option value="PROOF">PROOF</option>
+                      </select>
+                    </div>
+                    <div>
+                      <div className="mb-1 text-xs font-medium text-[color:var(--muted-fg)]">
+                        Ghi chú
+                      </div>
+                      <input
+                        className="w-full rounded border px-2 py-1 text-xs"
+                        placeholder="Ghi chú (tùy chọn)"
+                        value={attachmentNote}
+                        onChange={(e) => setAttachmentNote(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={attachmentSaving || attachmentFiles.length === 0}
+                    onClick={handleUploadAttachments}
+                    className="rounded bg-black px-4 py-2 text-xs text-white disabled:opacity-50"
+                  >
+                    {attachmentSaving ? "Đang upload..." : "Upload đính kèm"}
+                  </button>
+                </div>
+              </div>
             </Panel>
           </div>
         </div>
