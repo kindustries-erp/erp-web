@@ -85,7 +85,7 @@ export function Sidebar() {
     "payment_vouchers",
     "cash_funds",
     "company_bank_accounts",
-    "chart_of_accounts",
+    "erp_chart_of_accounts",
   ]);
   const canCongNo = useHasPermission("partner_ledger_items", "read");
   const canHR = useHasAnyPermission([

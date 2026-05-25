@@ -100,8 +100,9 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "TK NH công ty",
     group: "Tài chính",
   },
+  { collection: "erp_branches", label: "Chi nhánh", group: "Tài chính" },
   {
-    collection: "chart_of_accounts",
+    collection: "erp_chart_of_accounts",
     label: "Sơ đồ tài khoản",
     group: "Tài chính",
   },
