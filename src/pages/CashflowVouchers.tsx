@@ -73,8 +73,8 @@ const EMPTY_FORM: FormState = {
 export function CashflowVouchersPage() {
   const t = useT();
   const { setCustomBreadcrumbs } = useAppStore();
-  const canCreate = useHasPermission("cashflow_vouchers", "create");
-  const canUpdate = useHasPermission("cashflow_vouchers", "update");
+  const canCreate = useHasPermission("erp_cashflow_vouchers", "create");
+  const canUpdate = useHasPermission("erp_cashflow_vouchers", "update");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -311,7 +311,7 @@ export function CashflowVouchersPage() {
   return (
     <PageLayout
       title={t("nav.items.cashflowVouchers")}
-      desc="Canonical cashflow_vouchers — additive greenfield"
+      desc="Canonical erp_cashflow_vouchers — additive greenfield"
       icon={<Wallet className="h-4 w-4" />}
     >
       <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_1.4fr] gap-4 mt-4">
