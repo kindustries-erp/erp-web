@@ -88,8 +88,12 @@ export function Sidebar() {
     "chart_of_accounts",
   ]);
   const canCongNo = useHasPermission("partner_ledger_items", "read");
-  const canHR = useHasAnyPermission(["employees", "departments", "positions"]);
-  const canPartners = useHasPermission("business_partners");
+  const canHR = useHasAnyPermission([
+    "erp_employees",
+    "departments",
+    "positions",
+  ]);
+  const canPartners = useHasPermission("erp_business_partners");
   const canActivityLog = useHasPermission("directus_activity");
   const canRBAC = useHasPermission("directus_roles");
 
