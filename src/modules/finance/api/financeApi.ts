@@ -1195,6 +1195,8 @@ export interface CashflowVoucher {
   counterparty_tax_code_snapshot?: string | null;
   cash_fund_id?: string | null;
   bank_account_id?: string | null;
+  money_source_id?: string | null;
+  money_source_channel?: string | null;
   currency_code: string;
   exchange_rate?: number | null;
   amount: number;
@@ -1249,8 +1251,7 @@ export interface CreateCashflowVoucherDto {
   exchange_rate?: number;
   amount: number;
   base_amount?: number;
-  cash_fund_id?: string;
-  bank_account_id?: string;
+  money_source_id: string;
   description: string;
   note?: string;
   reason?: string;
@@ -1367,6 +1368,48 @@ export async function cancelCashflowVoucherApi(
     data: CashflowVoucher;
   }>(`/api/v1/cashflow-vouchers/${id}/cancel`, { cancel_reason });
   return data.data;
+}
+
+export interface CashflowMoneySource {
+  id: string;
+  code: string | null;
+  name: string | null;
+  label: string;
+  branch_id: string | null;
+  accounting_account_id: string | null;
+  channel: "CASH" | "BANK";
+}
+
+export async function getCashflowMoneySourcesApi(): Promise<
+  CashflowMoneySource[]
+> {
+  const { data } = await axiosInstance.get<{
+    data: CashflowMoneySource[];
+  }>("/api/v1/cashflow-vouchers/money-sources");
+  return data.data ?? [];
+}
+
+export interface CashflowPartyItem {
+  id: string;
+  scope: "INTERNAL" | "EXTERNAL";
+  code: string | null;
+  display_name: string | null;
+  tax_code?: string | null;
+  branch_id: string | null;
+}
+
+export async function getCashflowPartiesApi(
+  scope: "INTERNAL" | "EXTERNAL" | "",
+  query?: string,
+  page = 1,
+  pageSize = 50,
+): Promise<CashflowPartyItem[]> {
+  const { data } = await axiosInstance.get<{
+    data: CashflowPartyItem[];
+  }>("/api/v1/cashflow-vouchers/party", {
+    params: { scope, query, page, pageSize },
+  });
+  return data.data ?? [];
 }
 
 export async function getCashflowVoucherTimelineApi(

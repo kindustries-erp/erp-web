@@ -8,18 +8,19 @@ import {
   cancelCashflowVoucherApi,
   createCashflowVoucherApi,
   deleteCashflowVoucherApi,
+  getCashflowMoneySourcesApi,
+  getCashflowPartiesApi,
   getCashflowVoucherAllocationsApi,
   getCashflowVoucherRelatedDocumentsApi,
   getCashflowVoucherTimelineApi,
   getCashflowVouchersApi,
   postCashflowVoucherApi,
-  type CashflowChannelType,
+  type CashflowMoneySource,
+  type CashflowPartyItem,
   type CashflowPartyScope,
   type CashflowVoucher,
   type CashflowVoucherStatus,
 } from "@/modules/finance/api/financeApi";
-import { getCashFundsApi } from "@/modules/finance/api/financeApi";
-import { getCompanyBankAccountsApi } from "@/modules/accounting/api/catalogApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 const BUSINESS_TYPE_OPTIONS = [
@@ -38,16 +39,14 @@ const BUSINESS_TYPE_OPTIONS = [
 
 type FormState = {
   voucher_date: string;
-  channel_type: CashflowChannelType;
+  channel_type: "CASH" | "BANK";
   business_type: string;
   party_scope: CashflowPartyScope;
-  employee_name_snapshot: string;
-  counterparty_name_snapshot: string;
+  party_id: string;
   amount: string;
   currency_code: string;
   description: string;
-  cash_fund_id: string;
-  bank_account_id: string;
+  money_source_id: string;
 };
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -57,13 +56,11 @@ const EMPTY_FORM: FormState = {
   channel_type: "CASH",
   business_type: "OTHER_RECEIPT",
   party_scope: "EXTERNAL",
-  employee_name_snapshot: "",
-  counterparty_name_snapshot: "",
+  party_id: "",
   amount: "",
   currency_code: "VND",
   description: "",
-  cash_fund_id: "",
-  bank_account_id: "",
+  money_source_id: "",
 };
 
 export function CashflowVouchersPage() {
@@ -83,17 +80,8 @@ export function CashflowVouchersPage() {
     "",
   );
   const [search, setSearch] = useState("");
-  const [cashFunds, setCashFunds] = useState<
-    Array<{ id: string; fund_name: string }>
-  >([]);
-  const [bankAccounts, setBankAccounts] = useState<
-    Array<{
-      id: string;
-      account_name?: string;
-      bank_name?: string;
-      account_number?: string;
-    }>
-  >([]);
+  const [moneySources, setMoneySources] = useState<CashflowMoneySource[]>([]);
+  const [parties, setParties] = useState<CashflowPartyItem[]>([]);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
   useEffect(() => {
@@ -131,21 +119,12 @@ export function CashflowVouchersPage() {
 
   const loadAux = async () => {
     try {
-      const [funds, banks] = await Promise.all([
-        getCashFundsApi(),
-        getCompanyBankAccountsApi(),
+      const [moneySourceRes, partyRes] = await Promise.all([
+        getCashflowMoneySourcesApi(),
+        getCashflowPartiesApi(form.party_scope),
       ]);
-      setCashFunds(
-        (funds ?? []).map((x) => ({ id: x.id, fund_name: x.fund_name })),
-      );
-      setBankAccounts(
-        (banks ?? []).map((x: any) => ({
-          id: x.id,
-          account_name: x.account_name,
-          bank_name: x.bank_name,
-          account_number: x.account_number,
-        })),
-      );
+      setMoneySources(moneySourceRes ?? []);
+      setParties(partyRes ?? []);
     } catch {
       // non-blocking
     }
@@ -174,6 +153,13 @@ export function CashflowVouchersPage() {
   }, [statusFilter]);
 
   useEffect(() => {
+    getCashflowPartiesApi(form.party_scope)
+      .then((res) => setParties(res ?? []))
+      .catch(() => setParties([]));
+    setForm((s) => ({ ...s, party_id: "" }));
+  }, [form.party_scope]);
+
+  useEffect(() => {
     if (selected?.id) {
       loadDetailSidecars(selected.id);
     }
@@ -181,18 +167,9 @@ export function CashflowVouchersPage() {
 
   const selectedChannelName = useMemo(() => {
     if (!selected) return "-";
-    if (selected.channel_type === "CASH") {
-      return (
-        cashFunds.find((x) => x.id === selected.cash_fund_id)?.fund_name ||
-        selected.cash_fund_id ||
-        "-"
-      );
-    }
-    const bank = bankAccounts.find((x) => x.id === selected.bank_account_id);
-    return bank
-      ? `${bank.bank_name || ""} ${bank.account_number || ""}`.trim()
-      : selected.bank_account_id || "-";
-  }, [selected, cashFunds, bankAccounts]);
+    const source = moneySources.find((x) => x.id === selected.money_source_id);
+    return source?.label || selected.money_source_id || "-";
+  }, [selected, moneySources]);
 
   const submitCreate = async () => {
     setSaving(true);
@@ -203,25 +180,18 @@ export function CashflowVouchersPage() {
         channel_type: form.channel_type,
         business_type: form.business_type,
         party_scope: form.party_scope,
-        employee_name_snapshot:
+        employee_id:
           form.party_scope === "INTERNAL"
-            ? form.employee_name_snapshot || undefined
+            ? form.party_id || undefined
             : undefined,
-        counterparty_name_snapshot:
+        counterparty_id:
           form.party_scope === "EXTERNAL"
-            ? form.counterparty_name_snapshot || undefined
+            ? form.party_id || undefined
             : undefined,
         amount: Number(form.amount),
         currency_code: form.currency_code,
         description: form.description,
-        cash_fund_id:
-          form.channel_type === "CASH"
-            ? form.cash_fund_id || undefined
-            : undefined,
-        bank_account_id:
-          form.channel_type === "BANK"
-            ? form.bank_account_id || undefined
-            : undefined,
+        money_source_id: form.money_source_id,
       };
       const created = await createCashflowVoucherApi(dto);
       setForm(EMPTY_FORM);
@@ -300,7 +270,8 @@ export function CashflowVouchersPage() {
                 onChange={(e) =>
                   setForm((s) => ({
                     ...s,
-                    channel_type: e.target.value as CashflowChannelType,
+                    channel_type: e.target.value as "CASH" | "BANK",
+                    money_source_id: "",
                   }))
                 }
               >
@@ -339,30 +310,38 @@ export function CashflowVouchersPage() {
               </select>
             </Field>
             {form.party_scope === "INTERNAL" ? (
-              <Field label="Tên nhân sự snapshot">
-                <input
+              <Field label="Nhân sự">
+                <select
                   className="w-full rounded border px-3 py-2"
-                  value={form.employee_name_snapshot}
+                  value={form.party_id}
                   onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      employee_name_snapshot: e.target.value,
-                    }))
+                    setForm((s) => ({ ...s, party_id: e.target.value }))
                   }
-                />
+                >
+                  <option value="">Chọn nhân sự</option>
+                  {parties.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.display_name || x.code || x.id}
+                    </option>
+                  ))}
+                </select>
               </Field>
             ) : (
-              <Field label="Tên đối tác snapshot">
-                <input
+              <Field label="Đối tác">
+                <select
                   className="w-full rounded border px-3 py-2"
-                  value={form.counterparty_name_snapshot}
+                  value={form.party_id}
                   onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      counterparty_name_snapshot: e.target.value,
-                    }))
+                    setForm((s) => ({ ...s, party_id: e.target.value }))
                   }
-                />
+                >
+                  <option value="">Chọn đối tác</option>
+                  {parties.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.display_name || x.code || x.id}
+                    </option>
+                  ))}
+                </select>
               </Field>
             )}
             <Field label="Số tiền">
@@ -385,41 +364,24 @@ export function CashflowVouchersPage() {
                 }
               />
             </Field>
-            {form.channel_type === "CASH" ? (
-              <Field label="Quỹ tiền mặt">
-                <select
-                  className="w-full rounded border px-3 py-2"
-                  value={form.cash_fund_id}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, cash_fund_id: e.target.value }))
-                  }
-                >
-                  <option value="">Chọn quỹ</option>
-                  {cashFunds.map((x) => (
+            <Field label="Nguồn tiền">
+              <select
+                className="w-full rounded border px-3 py-2"
+                value={form.money_source_id}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, money_source_id: e.target.value }))
+                }
+              >
+                <option value="">Chọn nguồn tiền</option>
+                {moneySources
+                  .filter((x) => x.channel === form.channel_type)
+                  .map((x) => (
                     <option key={x.id} value={x.id}>
-                      {x.fund_name}
+                      {x.label}
                     </option>
                   ))}
-                </select>
-              </Field>
-            ) : (
-              <Field label="Tài khoản ngân hàng">
-                <select
-                  className="w-full rounded border px-3 py-2"
-                  value={form.bank_account_id}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, bank_account_id: e.target.value }))
-                  }
-                >
-                  <option value="">Chọn tài khoản</option>
-                  {bankAccounts.map((x) => (
-                    <option key={x.id} value={x.id}>
-                      {`${x.bank_name || ""} ${x.account_number || ""}`.trim()}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            )}
+              </select>
+            </Field>
             <Field label="Diễn giải" full>
               <textarea
                 className="w-full rounded border px-3 py-2 min-h-[88px]"
