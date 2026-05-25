@@ -1,0 +1,58 @@
+/* ══════════════════════════════════════════
+   Orcaq Theme — Database-tool inspired layout
+   Tab bar on top, breadcrumb in dark bottom bar
+   ══════════════════════════════════════════ */
+.theme-orca {
+  /* ── Palette ── */
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f5f6f8;
+  --border: #e0e4ea;
+  --border-light: #eef0f4;
+  --foreground: #1a1a2e;
+  --muted: #f8f9fb;
+  --muted-fg: #6b7280;
+  --faint: #9ca3af;
+  --primary: #f5a623;
+  --primary-fg: #1a1a2e;
+
+  /* ── Semantic colors ── */
+  --up-bg: #ecfdf5;
+  --up-fg: #059669;
+  --down-bg: #fef2f2;
+  --down-fg: #dc2626;
+  --warn-bg: #fffbeb;
+  --warn-fg: #d97706;
+  --approve-bg: #ecfdf5;
+  --approve-fg: #059669;
+
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  /* ── Glass chrome — disabled for flat look ── */
+  --glass-chrome: #ffffff;
+  --glass-border: #e0e4ea;
+  --glass-blur: 0px;
+
+  /* ── Popups & dropdowns ── */
+  --popup-bg: #ffffff;
+  --popup-bg-hover: #f5f6f8;
+  --popup-border: #e0e4ea;
+  --popup-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+  /* ── App shell ── */
+  --app-shell-bg: #1e1e2e;
+  --app-shell-border: transparent;
+  --sidebar-bg: #1e1e2e;
+  --sidebar-border: #2d2d3d;
+  --main-panel-bg: var(--surface);
+  --main-panel-border: #e0e4ea;
+
+  /* ── Orca-specific tokens ── */
+  --orca-tab-bg: #2d2d3d;
+  --orca-tab-active-bg: #ffffff;
+  --orca-tab-active-fg: #1a1a2e;
+  --orca-tab-inactive-fg: #a0a0b0;
+  --orca-breadcrumb-bg: #f8f9fb;
+  --orca-breadcrumb-border: #e0e4ea;
+  --orca-accent: #f5a623;
+}

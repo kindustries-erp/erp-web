@@ -78,7 +78,9 @@ export function Login() {
           title={`${t("nav.bottom.themeStyle")}: ${
             appTheme === "shell"
               ? t("nav.bottom.themeShell")
-              : t("nav.bottom.themeClassic")
+              : appTheme === "classic"
+                ? t("nav.bottom.themeClassic")
+                : t("nav.bottom.themeOrca")
           }`}
           className="w-8 h-8 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover"
         >

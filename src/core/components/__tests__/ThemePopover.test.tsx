@@ -18,6 +18,7 @@ vi.mock("@/core/i18n", () => ({
       "nav.bottom.themeStyle": "Theme",
       "nav.bottom.themeShell": "Shell",
       "nav.bottom.themeClassic": "Classic",
+      "nav.bottom.themeOrca": "Orcaq",
     };
     return map[key] ?? key;
   },

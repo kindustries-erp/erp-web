@@ -1,6 +1,7 @@
 /* ── Theme Variables ── */
 @import "./styles/themes/default.css";
 @import "./styles/themes/classic.css";
+@import "./styles/themes/orca.css";
 
 /* ── Base & Reset ── */
 @import "./styles/base.css";

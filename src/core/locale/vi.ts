@@ -54,8 +54,10 @@ export const vi = {
       themeStyle: "Theme",
       themeShell: "Shell",
       themeClassic: "Classic",
+      themeOrca: "Orcaq",
       settings: "Cài đặt",
       language: "Tiếng Việt",
+      languageLabel: "Ngôn ngữ",
       logout: "Đăng xuất",
       userFallback: "Người dùng",
       toggleSidebar: "Thu gọn / Mở rộng",
@@ -103,6 +105,9 @@ export const vi = {
   topbar: {
     search: "Tìm kiếm tài khoản, chứng từ...",
     settings: "Cài đặt / Đổi mật khẩu",
+    userMenu: {
+      profile: "Hồ sơ cá nhân",
+    },
     notifications: {
       title: "Thông báo",
       empty: "Chưa có thông báo nào",

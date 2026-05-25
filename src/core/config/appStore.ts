@@ -3,13 +3,14 @@ import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 
-export type AppTheme = "shell" | "classic";
+export type AppTheme = "shell" | "classic" | "orca";
 
 function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
     "theme-classic",
     appTheme === "classic",
   );
+  document.documentElement.classList.toggle("theme-orca", appTheme === "orca");
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
@@ -155,6 +156,7 @@ interface AppState {
   toggleAppTheme: () => void;
   setAppTheme: (theme: AppTheme) => void;
   toggleLocale: () => void;
+  setLocale: (locale: "vi" | "en") => void;
   login: () => void;
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
@@ -285,7 +287,9 @@ export const useAppStore = create<AppState>()(
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
       toggleAppTheme: () => {
-        const appTheme = get().appTheme === "shell" ? "classic" : "shell";
+        const order: AppTheme[] = ["shell", "classic", "orca"];
+        const idx = order.indexOf(get().appTheme);
+        const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
         applyDocumentTheme(appTheme);
       },
@@ -296,6 +300,7 @@ export const useAppStore = create<AppState>()(
 
       toggleLocale: () =>
         set((s) => ({ locale: s.locale === "vi" ? "en" : "vi" })),
+      setLocale: (locale) => set({ locale }),
       login: () => set({ isLoggedIn: true }),
       logout: () => set({ isLoggedIn: false }),
     }),

@@ -56,8 +56,10 @@ export const en: Dict = {
       themeStyle: "Theme",
       themeShell: "Shell",
       themeClassic: "Classic",
+      themeOrca: "Orcaq",
       settings: "Settings",
       language: "English",
+      languageLabel: "Language",
       logout: "Sign out",
       userFallback: "User",
       toggleSidebar: "Collapse / Expand",
@@ -105,6 +107,9 @@ export const en: Dict = {
   topbar: {
     search: "Search accounts, vouchers...",
     settings: "Settings / Change password",
+    userMenu: {
+      profile: "User Profile",
+    },
     notifications: {
       title: "Notifications",
       empty: "No notifications yet",

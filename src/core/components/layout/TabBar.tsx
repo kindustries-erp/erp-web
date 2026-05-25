@@ -175,10 +175,10 @@ export function TabBar() {
           scrollbar-width: none;
         }
       `}</style>
-      <div className="absolute bottom-6 md:bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[90%]">
+      <div className="tab-bar-wrapper absolute bottom-6 md:bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[90%]">
         <div
           ref={containerRef}
-          className="backdrop-blur-xl bg-white/50 dark:bg-black/50 flex items-center p-1 gap-1 rounded-full shadow-[0_-2px_10px_rgba(0,0,0,0.05),0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-x-auto scrollbar-none w-full"
+          className="tab-bar-inner backdrop-blur-xl bg-white/50 dark:bg-black/50 flex items-center p-1 gap-1 rounded-full shadow-[0_-2px_10px_rgba(0,0,0,0.05),0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-x-auto scrollbar-none w-full"
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}
