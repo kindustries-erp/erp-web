@@ -19,11 +19,9 @@
   pointer-events: all;
 }
 
-/* Orcaq theme: darker overlay with subtle blur */
+/* Orcaq theme: darker overlay */
 .theme-orca .slide-panel-overlay {
   background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
 }
 
 /* ── Slide Panel ── */
@@ -51,12 +49,12 @@
   transform: translateX(0);
 }
 
-/* Orcaq theme: flush panel, no rounded corners, full height */
+/* Orcaq theme: panel inset by tab-bar (36px) top and bottom-bar (28px) bottom */
 .theme-orca .slide-panel {
-  top: 0;
+  top: 36px;
   right: 0;
-  bottom: 0;
-  height: 100vh !important;
+  bottom: 28px;
+  height: auto !important;
   border-radius: 0;
   border: none;
   border-left: 1px solid var(--border);
@@ -244,10 +242,9 @@
 }
 
 /* Orcaq theme: import modal overlay */
+/* Orcaq theme: import modal overlay */
 .theme-orca .import-modal-overlay {
   background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
 }
 
 /* ── Toast ── */
