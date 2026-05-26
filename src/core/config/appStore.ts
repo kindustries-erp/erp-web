@@ -170,7 +170,7 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      appTheme: "shell",
+      appTheme: "orca",
       locale: "vi",
       isLoggedIn: false,
       customBreadcrumbs: null,
@@ -313,7 +313,7 @@ export const useAppStore = create<AppState>()(
         isLoggedIn: s.isLoggedIn,
       }),
       onRehydrateStorage: () => (state) => {
-        applyDocumentTheme(state?.appTheme ?? "shell");
+        applyDocumentTheme(state?.appTheme ?? "orca");
       },
     },
   ),
