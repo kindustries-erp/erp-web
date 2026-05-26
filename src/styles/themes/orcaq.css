@@ -2,7 +2,7 @@
    Orcaq Theme — Database-tool inspired layout
    Tab bar on top, breadcrumb in dark bottom bar
    ══════════════════════════════════════════ */
-.theme-orca {
+.theme-orcaq {
   /* ── Palette ── */
   --background: #ffffff;
   --surface: #ffffff;
@@ -48,11 +48,11 @@
   --main-panel-border: #e0e4ea;
 
   /* ── Orca-specific tokens ── */
-  --orca-tab-bg: #2d2d3d;
-  --orca-tab-active-bg: #ffffff;
-  --orca-tab-active-fg: #1a1a2e;
-  --orca-tab-inactive-fg: #a0a0b0;
-  --orca-breadcrumb-bg: #f8f9fb;
-  --orca-breadcrumb-border: #e0e4ea;
-  --orca-accent: #f5a623;
+  --orcaq-tab-bg: #2d2d3d;
+  --orcaq-tab-active-bg: #ffffff;
+  --orcaq-tab-active-fg: #1a1a2e;
+  --orcaq-tab-inactive-fg: #a0a0b0;
+  --orcaq-breadcrumb-bg: #f8f9fb;
+  --orcaq-breadcrumb-border: #e0e4ea;
+  --orcaq-accent: #f5a623;
 }

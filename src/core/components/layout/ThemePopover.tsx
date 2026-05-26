@@ -46,7 +46,7 @@ const THEME_OPTIONS: {
     ),
   },
   {
-    value: "orca",
+    value: "orcaq",
     labelKey: "nav.bottom.themeOrca",
     icon: (
       <svg

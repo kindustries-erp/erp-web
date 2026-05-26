@@ -8,7 +8,7 @@ import { cn } from "@/shared/utils";
 const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
   { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "classic", labelKey: "nav.bottom.themeClassic" },
-  { value: "orca", labelKey: "nav.bottom.themeOrca" },
+  { value: "orcaq", labelKey: "nav.bottom.themeOrca" },
 ];
 
 const LOCALE_OPTIONS: { value: "vi" | "en"; label: string }[] = [

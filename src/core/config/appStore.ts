@@ -3,14 +3,17 @@ import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 
-export type AppTheme = "shell" | "classic" | "orca";
+export type AppTheme = "shell" | "classic" | "orcaq";
 
 function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
     "theme-classic",
     appTheme === "classic",
   );
-  document.documentElement.classList.toggle("theme-orca", appTheme === "orca");
+  document.documentElement.classList.toggle(
+    "theme-orcaq",
+    appTheme === "orcaq",
+  );
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
@@ -170,7 +173,7 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      appTheme: "orca",
+      appTheme: "orcaq",
       locale: "vi",
       isLoggedIn: false,
       customBreadcrumbs: null,
@@ -287,7 +290,7 @@ export const useAppStore = create<AppState>()(
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["shell", "classic", "orca"];
+        const order: AppTheme[] = ["shell", "classic", "orcaq"];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
@@ -313,7 +316,7 @@ export const useAppStore = create<AppState>()(
         isLoggedIn: s.isLoggedIn,
       }),
       onRehydrateStorage: () => (state) => {
-        applyDocumentTheme(state?.appTheme ?? "orca");
+        applyDocumentTheme(state?.appTheme ?? "orcaq");
       },
     },
   ),

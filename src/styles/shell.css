@@ -232,7 +232,7 @@
 /* ══════════════════════════════════════════
    Orcaq Theme — Tab-on-top, flat DB-tool style
    ══════════════════════════════════════════ */
-.theme-orca .app-shell {
+.theme-orcaq .app-shell {
   padding: 0;
   gap: 0;
   border-color: transparent;
@@ -241,7 +241,7 @@
   background: var(--app-shell-bg);
 }
 
-.theme-orca .sidebar {
+.theme-orcaq .sidebar {
   margin: 0;
   border-radius: 0;
   border: none;
@@ -257,15 +257,15 @@
   --sidebar-label: #c0c0e0;
 }
 
-.theme-orca .right-panel {
+.theme-orcaq .right-panel {
   margin: 0;
   border-radius: 0;
   border: none;
   box-shadow: none;
 }
 
-.theme-orca .topbar {
-  /* In orca, topbar becomes the breadcrumb in a dark bottom status bar */
+.theme-orcaq .topbar {
+  /* In orcaq, topbar becomes the breadcrumb in a dark bottom status bar */
   position: relative;
   top: auto;
   left: auto;
@@ -286,18 +286,18 @@
   color: #8888a8;
 }
 
-/* Hamburger button visible on dark bottom bar in orca mobile */
-.theme-orca .topbar .mobile-hamburger {
+/* Hamburger button visible on dark bottom bar in orcaq mobile */
+.theme-orcaq .topbar .mobile-hamburger {
   color: #e0e0e0;
   border-color: rgba(255, 255, 255, 0.15);
   background: transparent;
 }
 
-.theme-orca .topbar .mobile-hamburger:hover {
+.theme-orcaq .topbar .mobile-hamburger:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.theme-orca .tab-bar-wrapper {
+.theme-orcaq .tab-bar-wrapper {
   position: relative;
   bottom: auto;
   left: auto;
@@ -312,7 +312,7 @@
   padding: 0;
 }
 
-.theme-orca .tab-bar-inner {
+.theme-orcaq .tab-bar-inner {
   background: transparent !important;
   backdrop-filter: none !important;
   border: none !important;
@@ -323,30 +323,30 @@
   height: 36px;
 }
 
-/* Orca tab items: flat style on dark bg */
-.theme-orca .tab-bar-inner > div[data-tab-page] {
+/* Orcaq tab items: flat style on dark bg */
+.theme-orcaq .tab-bar-inner > div[data-tab-page] {
   border-radius: 0;
   padding: 6px 14px;
   font-size: 12px;
-  color: var(--orca-tab-inactive-fg);
+  color: var(--orcaq-tab-inactive-fg);
   border-bottom: 2px solid transparent;
   transition:
     color 0.15s,
     border-color 0.15s;
 }
 
-.theme-orca .tab-bar-inner > div[data-tab-page].text-foreground,
-.theme-orca .tab-bar-inner > div[data-tab-page][class*="font-medium"] {
+.theme-orcaq .tab-bar-inner > div[data-tab-page].text-foreground,
+.theme-orcaq .tab-bar-inner > div[data-tab-page][class*="font-medium"] {
   color: #ffffff;
-  border-bottom-color: var(--orca-accent);
+  border-bottom-color: var(--orcaq-accent);
 }
 
-/* Hide the floating pill indicator in orca */
-.theme-orca .tab-bar-inner > div.absolute {
+/* Hide the floating pill indicator in orcaq */
+.theme-orcaq .tab-bar-inner > div.absolute {
   display: none !important;
 }
 
-.theme-orca .app-content {
+.theme-orcaq .app-content {
   /* No absolute offset needed — topbar and tabbar are in flow */
   order: 0;
   padding-top: 20px;
@@ -522,26 +522,26 @@
     display: flex !important;
   }
 
-  /* Orca mobile: keep tab-on-top layout */
-  .theme-orca .sidebar {
+  /* Orcaq mobile: keep tab-on-top layout */
+  .theme-orcaq .sidebar {
     border-radius: 0 12px 12px 0;
   }
 
-  .theme-orca .tab-bar-wrapper {
+  .theme-orcaq .tab-bar-wrapper {
     height: 32px;
   }
 
-  .theme-orca .tab-bar-inner {
+  .theme-orcaq .tab-bar-inner {
     height: 32px;
   }
 
-  .theme-orca .topbar {
+  .theme-orcaq .topbar {
     height: 28px;
     min-height: 28px;
     padding: 0 12px;
   }
 
-  .theme-orca .app-content {
+  .theme-orcaq .app-content {
     padding-top: 12px;
     padding-bottom: 12px !important;
     padding-left: 12px;
