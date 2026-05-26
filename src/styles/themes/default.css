@@ -3,7 +3,7 @@
    ══════════════════════════════════════════ */
 :root {
   /* ── Palette ── */
-  --background: #ffffff;
+  --background: #f4f6f8;
   --surface: #ffffff;
   --surface-hover: #f7f8fa;
   --border: #e4e7ec;
@@ -43,6 +43,6 @@
   --app-shell-border: #0c1528;
   --sidebar-bg: #1e1e1e;
   --sidebar-border: #2f2f2f;
-  --main-panel-bg: var(--surface);
+  --main-panel-bg: var(--background);
   --main-panel-border: #dfe6f2;
 }

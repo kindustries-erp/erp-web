@@ -4,7 +4,7 @@
    ══════════════════════════════════════════ */
 .theme-orcaq {
   /* ── Palette ── */
-  --background: #ffffff;
+  --background: #f2f3f5;
   --surface: #ffffff;
   --surface-hover: #f5f6f8;
   --border: #e0e4ea;
@@ -44,7 +44,7 @@
   --app-shell-border: transparent;
   --sidebar-bg: #1e1e2e;
   --sidebar-border: #2d2d3d;
-  --main-panel-bg: var(--surface);
+  --main-panel-bg: var(--background);
   --main-panel-border: #e0e4ea;
 
   /* ── Orca-specific tokens ── */
@@ -55,4 +55,62 @@
   --orcaq-breadcrumb-bg: #f8f9fb;
   --orcaq-breadcrumb-border: #e0e4ea;
   --orcaq-accent: #f5a623;
+}
+
+/* ── Orcaq: border-radius 8px globally (except tab bar) ── */
+.theme-orcaq * {
+  --radius: 8px;
+}
+
+.theme-orcaq .rounded-lg,
+.theme-orcaq .rounded-xl {
+  border-radius: 8px !important;
+}
+
+.theme-orcaq
+  .rounded-full:not(.w-6):not(.w-8):not(.min-w-\[22px\]):not(
+    .min-w-\[18px\]
+  ):not(.min-w-\[32px\]) {
+  border-radius: 8px !important;
+}
+
+.theme-orcaq .rounded-md {
+  border-radius: 6px !important;
+}
+
+.theme-orcaq .rounded-sm {
+  border-radius: 4px !important;
+}
+
+/* Keep avatar circles round */
+.theme-orcaq .rounded-full.bg-primary,
+.theme-orcaq .rounded-full.bg-\[color\:var\(--muted\)\] {
+  border-radius: 9999px !important;
+}
+
+/* Cards, panels, inputs */
+.theme-orcaq .card-shadow,
+.theme-orcaq [class*="rounded-xl"],
+.theme-orcaq [class*="rounded-lg"] {
+  border-radius: 8px;
+}
+
+.theme-orcaq input,
+.theme-orcaq textarea,
+.theme-orcaq select,
+.theme-orcaq [role="combobox"] {
+  border-radius: 6px !important;
+}
+
+.theme-orcaq button {
+  border-radius: 6px;
+}
+
+/* Tab bar: no border-radius */
+.theme-orcaq .tab-bar-wrapper,
+.theme-orcaq .tab-bar-inner,
+.theme-orcaq .tab-bar-inner > div,
+.theme-orcaq .tab-bar-inner > div[data-tab-page],
+.theme-orcaq .tab-bar-inner .tab-item {
+  border-radius: 0 !important;
 }

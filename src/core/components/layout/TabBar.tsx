@@ -49,7 +49,7 @@ function TabItem({
       data-tab-label={label}
       draggable={closable && !isMobile}
       className={cn(
-        "flex items-center gap-[6px] px-[16px] py-[8px] text-xs cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 rounded-full",
+        "tab-item flex items-center gap-[6px] px-[16px] py-[8px] text-xs cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10",
         "transition-all duration-200 ease-out",
         active
           ? "text-foreground dark:text-white font-medium"

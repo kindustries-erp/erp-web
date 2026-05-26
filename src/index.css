@@ -18,3 +18,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Kill all focus rings/outlines globally ── */
+@layer utilities {
+  *:focus,
+  *:focus-visible,
+  *:focus-within {
+    outline: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+  }
+}

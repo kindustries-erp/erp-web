@@ -10,6 +10,14 @@
   padding: 0;
 }
 
+*:focus {
+  outline: none !important;
+}
+
+*:focus-visible {
+  outline: none !important;
+}
+
 html {
   height: 100%;
   width: 100%;

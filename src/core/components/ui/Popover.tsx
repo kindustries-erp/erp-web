@@ -35,7 +35,7 @@ export function Popover({
           className={cn(
             "z-[9999] rounded-xl border shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] data-[state=open]:animate-[popover-in_150ms_ease-out] data-[state=closed]:animate-[popover-out_100ms_ease-in]",
             glass
-              ? "backdrop-blur-xl bg-white/85 border-white/50 [--muted-fg:#374151] [--faint:#4b5563] [--foreground:#030712] [--popup-bg-hover:rgba(0,0,0,0.05)] text-[#1f2937] font-[450]"
+              ? "backdrop-blur-sm bg-white/95 border-white/60 [--muted-fg:#374151] [--faint:#4b5563] [--foreground:#030712] [--popup-bg-hover:rgba(0,0,0,0.05)] text-[#1f2937] font-[450]"
               : "border-[color:var(--popup-border)] bg-[color:var(--popup-bg)]",
             className,
           )}
