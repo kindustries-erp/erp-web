@@ -30,6 +30,9 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "e-invoice",
   "workflow",
   "settings-branch",
+  "mfg-items",
+  "mfg-purchase-orders",
+  "mfg-vehicles",
 ];
 
 /**

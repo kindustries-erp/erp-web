@@ -26,7 +26,10 @@ export type PageKey =
   | "permissions"
   | "e-invoice"
   | "workflow"
-  | "settings-branch";
+  | "settings-branch"
+  | "mfg-items"
+  | "mfg-purchase-orders"
+  | "mfg-vehicles";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

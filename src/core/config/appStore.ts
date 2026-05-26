@@ -59,6 +59,12 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   "e-invoice": { labelKey: "nav.items.hoadondientu", group: "cashflow" },
   permissions: { labelKey: "nav.items.phanquyen", group: "system" },
   "settings-branch": { labelKey: "thietlap.tabs.chi-nhanh", group: "settings" },
+  "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
+  "mfg-purchase-orders": {
+    labelKey: "nav.items.mfgPo",
+    group: "manufacturing",
+  },
+  "mfg-vehicles": { labelKey: "nav.items.mfgVehicles", group: "manufacturing" },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
@@ -132,8 +138,12 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   ],
   inventory: [["breadcrumb.inventory"]],
   suppliers: [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
-  "activity-log": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
+  "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
+  "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
+  "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
+  workflow: [["breadcrumb.system"], ["breadcrumb.workflowcanvas"]],
   partners: [["breadcrumb.accounting"], ["breadcrumb.partners"]],
+  "activity-log": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
   permissions: [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
 };
 

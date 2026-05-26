@@ -37,6 +37,9 @@ import { DoiTac } from "@/pages/Partners";
 import { KhachHang } from "@/pages/Customers";
 import { NhaCungCap } from "@/pages/Suppliers";
 import { PhanQuyen } from "@/pages/Permissions";
+import { MfgItems } from "@/pages/MfgItems";
+import { MfgPurchaseOrders } from "@/pages/MfgPurchaseOrders";
+import { MfgVehicles } from "@/pages/MfgVehicles";
 import HoaDonDienTu from "@/pages/EInvoice";
 import { NotFound } from "@/pages/NotFound";
 import WorkflowCanvas from "@/pages/WorkflowCanvas";
@@ -119,6 +122,9 @@ export default function App() {
                 {currentPage === "purchasing" && <MuaHang />}
                 {currentPage === "operating-expenses" && <ChiPhiVanHanh />}
                 {currentPage === "inventory" && <Kho />}
+                {currentPage === "mfg-items" && <MfgItems />}
+                {currentPage === "mfg-purchase-orders" && <MfgPurchaseOrders />}
+                {currentPage === "mfg-vehicles" && <MfgVehicles />}
                 {currentPage === "journal" && <NhatKyChung />}
                 {currentPage === "settings-branch" && <SettingsBranch />}
                 {currentPage === "ledger" && <ComingSoon />}
@@ -153,6 +159,9 @@ export default function App() {
                   "purchasing",
                   "operating-expenses",
                   "inventory",
+                  "mfg-items",
+                  "mfg-purchase-orders",
+                  "mfg-vehicles",
                   "suppliers",
                   "permissions",
                   "activity-log",
