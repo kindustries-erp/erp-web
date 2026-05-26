@@ -223,14 +223,15 @@ Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (the
 
 Khi task có thay đổi TypeScript:
 
-- `npx tsc --noEmit`
-- `npx vitest run` (all tests must pass)
+- Bun-first tooling: use `bun` / `bunx` by default for install/build/test/lint/format; only fall back to `npm`/`npx` if the task records a verified Bun incompatibility.
+- `bunx tsc --noEmit`
+- `bunx vitest run` (all tests must pass)
 
 Khi task có thay đổi UI:
 
 - Smoke check route liên quan (render, empty state, loading state, basic interaction).
 
-Pre-commit hook tự động chạy: prettier → lint-staged → vitest run. Nếu test fail → commit bị block.
+Pre-commit hook tự động chạy qua Bun toolchain: prettier → lint-staged → vitest run. Nếu test fail → commit bị block.
 
 ## 7) Output contract khi agent báo hoàn tất
 

@@ -13,6 +13,7 @@ This file is the entrypoint for any AI agent/model working in this repository.
 - No code without a task file in `docs/tasks/`.
 - Tick checklist items (`[ ]` -> `[x]`) in realtime when each sub-task is done.
 - If any issue/blocker occurs, record it in lessons learned before closing task.
+- Bun-first: all install/build/test/lint/format commands in this repo must use `bun` / `bunx`, not `npm`, `npx`, `pnpm`, or `yarn`, unless the task records a verified Bun incompatibility.
 
 ## Canonical references
 
@@ -21,9 +22,9 @@ This file is the entrypoint for any AI agent/model working in this repository.
 
 ## Testing rules (NON-NEGOTIABLE)
 
-- Pre-commit hook runs ALL tests (`npx vitest run`). If tests fail, commit is blocked.
+- Pre-commit hook runs ALL tests (`bunx vitest run`). If tests fail, commit is blocked.
 - **If a test fails, fix the SOURCE CODE — NOT the test.** Tests are the source of truth for expected behavior.
 - Unit tests live in `__tests__/*.test.ts(x)` co-located with source.
-- Run tests: `npx vitest run` (all) or `npx vitest run src/path/to/file.test.ts` (specific).
+- Run tests: `bunx vitest run` (all) or `bunx vitest run src/path/to/file.test.ts` (specific).
 - Framework: Vitest + React Testing Library + fast-check (property tests).
 - Lessons template: `docs/lessons-learned/_template.md`
