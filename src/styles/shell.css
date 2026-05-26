@@ -168,9 +168,9 @@
 
 /* ── App Content ── */
 .app-content {
-  /* topbar(48px) + spacing(20px) top, tabbar(40px) + spacing(16px) bottom */
+  /* topbar(48px) + spacing(20px) top, tabbar(32px) + spacing(16px) bottom */
   padding-top: calc(48px + 20px);
-  padding-bottom: calc(40px + 16px) !important;
+  padding-bottom: calc(32px + 16px) !important;
   padding-left: 24px;
   padding-right: 24px;
 }
@@ -402,9 +402,9 @@
 
   .app-content {
     margin: 0;
-    /* topbar(48px) + spacing(16px) top, tabbar(40px) + spacing(12px) bottom */
+    /* topbar(48px) + spacing(16px) top, tabbar(32px) + spacing(12px) bottom */
     padding-top: calc(48px + 16px) !important;
-    padding-bottom: calc(40px + 12px) !important;
+    padding-bottom: calc(32px + 12px) !important;
     padding-left: 12px;
     padding-right: 12px;
     border-radius: 0;
