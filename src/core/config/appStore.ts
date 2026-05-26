@@ -234,10 +234,21 @@ export const useAppStore = create<AppState>()(
       },
 
       closeTab: (key) => {
-        const { openTabs, currentPage, navigate } = get();
+        const { openTabs, currentPage } = get();
+        const idx = openTabs.indexOf(key);
         const newTabs = openTabs.filter((t) => t !== key);
         if (currentPage === key) {
-          navigate(newTabs[newTabs.length - 1] ?? "dashboard");
+          // Pick adjacent tab (prefer the one at same index, fallback left)
+          const nextPage =
+            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
+          const path = pageToPath(nextPage);
+          const current = window.location.pathname + window.location.search;
+          if (current !== path) history.pushState(null, "", path);
+          set({
+            currentPage: nextPage,
+            openTabs: newTabs,
+            customBreadcrumbs: null,
+          });
         } else {
           set({ openTabs: newTabs });
         }
