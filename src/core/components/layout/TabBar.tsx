@@ -49,10 +49,10 @@ function TabItem({
       data-tab-label={label}
       draggable={closable && !isMobile}
       className={cn(
-        "tab-item flex items-center gap-[5px] px-[12px] py-[5px] text-[11px] cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10 border-b-2 border-transparent",
+        "tab-item flex items-center gap-[5px] px-[12px] py-[5px] text-[11px] cursor-pointer whitespace-nowrap flex-shrink-0 relative z-10",
         "transition-all duration-150 ease-out",
         active
-          ? "text-foreground font-semibold border-b-[color:var(--primary)]"
+          ? "text-foreground font-semibold"
           : "text-[color:var(--muted-fg)] hover:text-foreground",
         closable && !isMobile && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40 scale-95",
@@ -97,10 +97,21 @@ function TabItem({
 export function TabBar() {
   const { openTabs, currentPage, reorderTabs } = useAppStore();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [bgStyle, setBgStyle] = useState({ left: 0, width: 0 });
   const [draggingTab, setDraggingTab] = useState<PageKey | null>(null);
   const [dragOverTab, setDragOverTab] = useState<PageKey | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const tabsRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  useEffect(() => {
+    const activeTabEl = tabsRefs.current[currentPage];
+    if (activeTabEl) {
+      setBgStyle({
+        left: activeTabEl.offsetLeft,
+        width: activeTabEl.offsetWidth,
+      });
+    }
+  }, [currentPage, openTabs]);
 
   useEffect(() => {
     const syncMobile = () =>
@@ -151,7 +162,6 @@ export function TabBar() {
   };
 
   const draggableTabCount = openTabs.filter((tab) => !STATIC_TABS[tab]).length;
-
   return (
     <>
       <style>{`
@@ -172,6 +182,15 @@ export function TabBar() {
           onDragLeave={handleContainerDragLeave}
           title={draggableTabCount > 1 ? "Kéo để đổi vị trí tab" : undefined}
         >
+          {/* Sliding active indicator */}
+          <div
+            className="tab-bar-indicator absolute top-[4px] bottom-[4px] bg-[color:var(--surface)] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-300 ease-in-out z-0"
+            style={{
+              left: `${bgStyle.left}px`,
+              width: `${bgStyle.width}px`,
+            }}
+          />
+
           {openTabs.map((key) => (
             <TabItem
               key={key}

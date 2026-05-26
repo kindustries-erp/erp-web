@@ -89,6 +89,7 @@ src/
 ### 7. PageLayout Wrapper (mandatory)
 
 Every page uses `<PageLayout>` from `shared/components/PageLayout.tsx`:
+
 - Provides consistent `space-y-4` spacing
 - Renders `PageHeader` with title/desc/icon/actions
 - Optionally renders sticky tabs (replaces `PageWithTabsLayout`)

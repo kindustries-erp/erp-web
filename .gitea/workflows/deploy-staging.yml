@@ -1,7 +1,7 @@
 name: Deploy ERP Web Staging
 on:
   push:
-    branches: [ staging ]
+    branches: [staging]
 jobs:
   deploy:
     runs-on: ubuntu-latest

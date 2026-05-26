@@ -1,14 +1,17 @@
 # Task — ERP Web compatibility for erp_departments / erp_positions
 
 ## Request Input (bạn chỉ cần điền phần này)
+
 - Type: ENHANCE
 - Mục tiêu: Keep Employees / Positions UI working after Directus+API rename of `departments` and `positions` to `erp_` prefixed collections.
 - Bối cảnh/ngữ cảnh: Web may reference collection keys in HR API layer, routing metadata, RBAC/menu config, and employee form components.
 
 ## Goal
+
 Đảm bảo UI HR không gãy sau rename DB/API, đặc biệt employee form lookup department/position.
 
 ## Scope
+
 - In-scope:
   - Audit/patch HR API layer and any collection-key usage
   - Build and smoke Employees / Positions screens
@@ -17,6 +20,7 @@
   - New UI redesign
 
 ## Relevant Files
+
 - `src/modules/hr/api/hrApi.ts` - HR API bindings
 - `src/pages/Employees.tsx` - employee screen orchestration
 - `src/pages/Positions.tsx` - positions screen orchestration
@@ -25,6 +29,7 @@
 - `src/modules/system/types/rbac.ts` - permission key audit
 
 ## Gate 0 — DB Precheck (bắt buộc)
+
 - Collections/fields liên quan:
   - `erp_departments`, `erp_positions`, `erp_employees.department_id`, `erp_employees.position_id`
 - Data nền cần có:
@@ -35,6 +40,7 @@
 - Nếu `DB_GAP_FOUND`: link DB task (directus-staging): `/opt/repos/liouni-erp/directus-staging/ops/tasks/20260526-erp-prefix-departments-positions.md`
 
 ## Checklist (bắt buộc cập nhật realtime)
+
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done
 - [x] 3.0 UI gate done
@@ -47,6 +53,7 @@
   - [x] 5.3 Tổng kết evidence
 
 ## Validation Evidence
+
 - DB precheck result: `DB_READY` — `erp_departments` / `erp_positions` present and employee relations preserved.
 - `npx tsc --noEmit`: PASS via `bun run build`
 - Smoke test:
@@ -56,9 +63,11 @@
   - published web root `https://dev.erp.liouni.com/` -> `200`
 
 ## Lessons Learned
+
 - Không có issue
 
 ## Commit/Push Status
+
 - Web repo: pending
 - API repo: pending
 - DB/directus staging: apply+verify+document (no code push required)
