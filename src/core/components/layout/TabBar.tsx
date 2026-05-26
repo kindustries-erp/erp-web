@@ -54,7 +54,6 @@ function TabItem({
         active
           ? "text-foreground font-semibold"
           : "text-[color:var(--muted-fg)] hover:text-foreground",
-        closable && !isMobile && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40 scale-95",
         dragOver && "bg-[color:var(--surface-hover)] scale-105",
       )}
