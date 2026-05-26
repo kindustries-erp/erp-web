@@ -175,17 +175,17 @@ export function TabBar() {
           scrollbar-width: none;
         }
       `}</style>
-      <div className="tab-bar-wrapper absolute bottom-6 md:bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[90%]">
+      <div className="tab-bar-wrapper absolute bottom-0 left-0 right-0 z-50">
         <div
           ref={containerRef}
-          className="tab-bar-inner backdrop-blur-xl bg-white/50 dark:bg-black/50 flex items-center p-1 gap-1 rounded-full shadow-[0_-2px_10px_rgba(0,0,0,0.05),0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/20 relative overflow-x-auto scrollbar-none w-full"
+          className="tab-bar-inner flex items-center px-3 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto scrollbar-none w-full h-10"
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}
           title={draggableTabCount > 1 ? "Kéo để đổi vị trí tab" : undefined}
         >
           <div
-            className="absolute top-1 bottom-1 bg-white dark:bg-zinc-700 shadow-[0_2px_8px_rgba(0,0,0,0.1)] rounded-full transition-all duration-300 ease-in-out z-0"
+            className="absolute top-0 bottom-0 bg-[color:var(--surface-hover)] transition-all duration-300 ease-in-out z-0"
             style={{
               left: `${bgStyle.left}px`,
               width: `${bgStyle.width}px`,
