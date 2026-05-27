@@ -3,7 +3,7 @@
    ══════════════════════════════════════════ */
 .theme-classic {
   /* ── Palette ── */
-  --background: #ffffff;
+  --background: #f9fbfc;
   --surface: #ffffff;
   --surface-hover: #f7f8fa;
   --border: #e4e7ec;
@@ -41,8 +41,8 @@
   /* ── App shell (classic uses surface/border tokens) ── */
   --app-shell-bg: var(--background);
   --app-shell-border: transparent;
-  --sidebar-bg: var(--surface);
+  --sidebar-bg: #f9fbfc;
   --sidebar-border: var(--border);
-  --main-panel-bg: var(--surface);
+  --main-panel-bg: #f9fbfc;
   --main-panel-border: var(--border);
 }

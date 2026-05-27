@@ -112,6 +112,18 @@ export function DrawerModal({
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
 
+  // Keep z-index elevated while closing animation plays, then drop to -1
+  const [elevatedZ, setElevatedZ] = useState(open);
+  useEffect(() => {
+    if (open) {
+      setElevatedZ(true);
+    } else {
+      // Wait for closing animation (opacity 0.22s + transform 0.25s) before dropping z-index
+      const timer = setTimeout(() => setElevatedZ(false), 280);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   const [instanceId] = useState(() => {
     drawerStackSeq += 1;
     return drawerStackSeq;
@@ -155,7 +167,7 @@ export function DrawerModal({
     <div
       className={cn("slide-panel-overlay", open && "open")}
       style={{
-        zIndex,
+        zIndex: elevatedZ ? zIndex : -1,
         // backdropFilter: "blur(1px)",
         // WebkitBackdropFilter: "blur(1px)",
       }}
