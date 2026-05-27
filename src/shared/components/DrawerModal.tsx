@@ -112,14 +112,24 @@ export function DrawerModal({
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Keep z-index elevated while closing animation plays, then drop to -1
-  const [elevatedZ, setElevatedZ] = useState(open);
+  // Mount/unmount portal: mount immediately on open, delay unmount for exit animation
+  const [mounted, setMounted] = useState(open);
+  // Separate "visible" state to trigger enter animation after mount
+  const [visible, setVisible] = useState(open);
+
   useEffect(() => {
     if (open) {
-      setElevatedZ(true);
+      setMounted(true);
+      // Trigger enter animation on next frame after portal is in DOM
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
     } else {
-      // Wait for closing animation (opacity 0.22s + transform 0.25s) before dropping z-index
-      const timer = setTimeout(() => setElevatedZ(false), 280);
+      setVisible(false);
+      // Wait for exit animation before unmounting
+      const timer = setTimeout(() => setMounted(false), 280);
       return () => clearTimeout(timer);
     }
   }, [open]);
@@ -163,11 +173,14 @@ export function DrawerModal({
     return () => window.removeEventListener("keydown", handler);
   }, [open, requestClose]);
 
+  // Don't render portal when not mounted (no DOM footprint when closed)
+  if (!mounted) return null;
+
   return createPortal(
     <div
-      className={cn("slide-panel-overlay", open && "open")}
+      className={cn("slide-panel-overlay", visible && "open")}
       style={{
-        zIndex: elevatedZ ? zIndex : -1,
+        zIndex,
         // backdropFilter: "blur(1px)",
         // WebkitBackdropFilter: "blur(1px)",
       }}
