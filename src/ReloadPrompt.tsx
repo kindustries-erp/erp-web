@@ -2,8 +2,10 @@ import React from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/shared/components/ui/Button";
+import { useT } from "@/core/i18n";
 
 export function ReloadPrompt() {
+  const t = useT();
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -24,7 +26,7 @@ export function ReloadPrompt() {
 
   React.useEffect(() => {
     if (offlineReady) {
-      toast.success("Ứng dụng đã sẵn sàng chạy offline.", {
+      toast.success(t("pwa.offlineReady"), {
         duration: 4000,
       });
       close();
@@ -36,7 +38,7 @@ export function ReloadPrompt() {
       {needRefresh && (
         <div className="fixed bottom-4 right-4 z-50 p-4 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700">
           <div className="mb-3 text-sm font-medium text-gray-900 dark:text-white">
-            Có phiên bản mới. Vui lòng tải lại trang để cập nhật.
+            {t("pwa.newVersion")}
           </div>
           <div className="flex space-x-3">
             <Button
@@ -44,10 +46,10 @@ export function ReloadPrompt() {
               size="sm"
               onClick={() => updateServiceWorker(true)}
             >
-              Cập nhật
+              {t("pwa.update")}
             </Button>
             <Button variant="secondary" size="sm" onClick={() => close()}>
-              Bỏ qua
+              {t("pwa.dismiss")}
             </Button>
           </div>
         </div>

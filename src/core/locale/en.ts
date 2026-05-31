@@ -1406,6 +1406,12 @@ export const en: Dict = {
     timeout: "Request timed out.",
     unknown: "An error occurred.",
   },
+  pwa: {
+    offlineReady: "App is ready to work offline.",
+    newVersion: "A new version is available. Please reload to update.",
+    update: "Update",
+    dismiss: "Dismiss",
+  },
   apiToast: {
     createSuccess: "Created successfully",
     updateSuccess: "Updated successfully",
