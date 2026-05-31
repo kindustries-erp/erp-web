@@ -80,7 +80,7 @@ function TabItem({
       <span>{label}</span>
       {closable && (
         <span
-          className="text-[color:var(--faint)] text-sm leading-none cursor-pointer px-[3px] py-[1px] rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1"
+          className="inline-flex items-center justify-center w-4 h-4 text-[color:var(--faint)] text-sm leading-none cursor-pointer rounded-sm hover:bg-surface-hover hover:text-[color:var(--muted-fg)] ml-1"
           onClick={(e) => {
             e.stopPropagation();
             closeTab(tabKey);
