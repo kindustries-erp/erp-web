@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/Button";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function Login() {
-  const { locale, toggleLocale, appTheme, toggleAppTheme } = useAppStore();
+  const { locale, toggleLocale } = useAppStore();
   const { loginAction, loading } = useAuthStore();
   const t = useT();
 
@@ -46,7 +46,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background px-4">
-      {/* Theme + lang toggles top-right */}
+      {/* Lang toggle top-right */}
       <div className="fixed top-4 right-4 flex items-center gap-1">
         {/* Language toggle */}
         <button
@@ -70,33 +70,6 @@ export function Login() {
           <span className="text-[11px] font-semibold text-[color:var(--muted-fg)]">
             {locale === "vi" ? "VI" : "EN"}
           </span>
-        </button>
-
-        {/* App theme switch */}
-        <button
-          onClick={toggleAppTheme}
-          title={`${t("nav.bottom.themeStyle")}: ${
-            appTheme === "shell"
-              ? t("nav.bottom.themeShell")
-              : appTheme === "classic"
-                ? t("nav.bottom.themeClassic")
-                : t("nav.bottom.themeOrca")
-          }`}
-          className="w-8 h-8 border border-border rounded-lg flex items-center justify-center cursor-pointer flex-shrink-0 bg-surface hover:bg-surface-hover"
-        >
-          <svg
-            className="w-[14px] h-[14px] text-[color:var(--muted-fg)] flex-shrink-0"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-            <path d="M12 2C6.5 2 2 6.1 2 11.2c0 3.7 2.8 6.8 6.5 6.8h1.2c1 0 1.7.8 1.7 1.7 0 1.2.9 2.1 2.1 2.1 4.7 0 8.5-4.4 8.5-9.8C22 6.5 17.5 2 12 2z" />
-          </svg>
         </button>
       </div>
 
