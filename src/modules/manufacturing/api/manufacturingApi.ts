@@ -1,7 +1,9 @@
 import axiosInstance from "@/core/api/axiosInstance";
-import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import {
+  buildPaginated,
+  type PaginatedResponse,
+  type ListParams,
+} from "@/shared/types/pagination";
 
 export interface ErpItem {
   id: string;
@@ -13,6 +15,9 @@ export interface ErpItem {
   is_active: boolean;
   notes?: string | null;
   created_at?: string;
+  updated_at?: string | null;
+  on_hand_qty?: number;
+  available_qty?: number;
 }
 
 export interface ErpPoLine {
@@ -55,9 +60,104 @@ export interface ErpVehicle {
   created_at?: string;
 }
 
+export interface ComponentStockSummary {
+  item: ErpItem & {
+    stock_summary?: {
+      on_hand_qty: number;
+      available_qty: number;
+      txn_count: number;
+    };
+  };
+  stock: {
+    on_hand_qty: number;
+    available_qty: number;
+    txn_count: number;
+    lot_count: number;
+    serial_count: number;
+  };
+  lots: Array<{
+    id: string;
+    lot_code: string;
+    received_qty?: number;
+    issued_qty?: number;
+    on_hand_qty?: number;
+    expiry_date?: string | null;
+  }>;
+  serials: Array<{
+    id: string;
+    serial_no: string;
+    status?: string;
+    vin_id?: string | null;
+    receipt_line_id?: string | null;
+  }>;
+}
+
+export interface ComponentTxn {
+  id: string;
+  txn_type: "RECEIPT" | "ISSUE";
+  txn_date: string;
+  qty: string | number;
+  unit_cost?: string | number;
+  amount?: string | number;
+  tracking_type: "NONE" | "LOT" | "SERIAL";
+  lot_code?: string | null;
+  source_type: "PURCHASE_RECEIPT" | "VIN_ISSUE";
+  source_id: string;
+  source_no?: string | null;
+  notes?: string | null;
+  receipt?: {
+    id: string;
+    receipt_no: string;
+    receipt_date?: string;
+  } | null;
+  purchase_order?: {
+    id: string;
+    po_no: string;
+    document_date?: string;
+    expected_receipt_date?: string | null;
+    status?: string;
+  } | null;
+  issue?: {
+    id: string;
+    issue_no: string;
+    issue_date?: string;
+  } | null;
+  vin?: {
+    id: string;
+    vin: string;
+    frame_no: string;
+    engine_no: string;
+    production_order_id?: string | null;
+    status?: string;
+  } | null;
+}
+
 export interface MfgListParams extends ListParams {
   tracking_type?: string;
   supplier_id?: string;
+  status?: string;
+  branch_id?: string;
+  item_type?: string;
+  has_stock?: string;
+  txn_type?: string;
+  source_type?: string;
+}
+
+export interface CreateComponentDto {
+  item_code: string;
+  item_name: string;
+  tracking_type: "NONE" | "LOT" | "SERIAL";
+  uom?: string;
+  is_active?: boolean;
+  notes?: string;
+}
+
+export interface UpdateComponentDto {
+  item_name?: string;
+  tracking_type?: "NONE" | "LOT" | "SERIAL";
+  uom?: string;
+  is_active?: boolean;
+  notes?: string;
 }
 
 export interface PoImportResult {
@@ -67,8 +167,6 @@ export interface PoImportResult {
   errors: { row: number; field: string; message: string }[];
   created_pos: { po_no: string; id: string; line_count: number }[];
 }
-
-// ─── API ──────────────────────────────────────────────────────────────────────
 
 const BASE = "/api/v1/erp-manufacturing";
 
@@ -81,39 +179,117 @@ function p(input: MfgListParams = {}) {
     ...(input.branch_id ? { branch_id: input.branch_id } : {}),
     ...(input.supplier_id ? { supplier_id: input.supplier_id } : {}),
     ...(input.tracking_type ? { tracking_type: input.tracking_type } : {}),
+    ...(input.item_type ? { item_type: input.item_type } : {}),
+    ...(input.has_stock ? { has_stock: input.has_stock } : {}),
+    ...(input.txn_type ? { txn_type: input.txn_type } : {}),
+    ...(input.source_type ? { source_type: input.source_type } : {}),
+    ...(input.sort
+      ? { sort: Array.isArray(input.sort) ? input.sort[0] : input.sort }
+      : {}),
   };
 }
 
+function normalizePaginated<T>(
+  raw: any,
+  page: number,
+  pageSize: number,
+): PaginatedResponse<T> {
+  return buildPaginated<T>(raw?.data ?? [], raw?.meta, page, pageSize);
+}
+
 export const manufacturingApi = {
-  // ── Items ──────────────────────────────────────────────────────────────────
   listItems: async (
     params?: MfgListParams,
   ): Promise<PaginatedResponse<ErpItem>> => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
     const { data } = await axiosInstance.get(`${BASE}/items`, {
       params: p(params),
     });
+    return normalizePaginated<ErpItem>(data, page, pageSize);
+  },
+
+  listComponents: async (
+    params?: MfgListParams,
+  ): Promise<PaginatedResponse<ErpItem>> => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
+    const { data } = await axiosInstance.get(`${BASE}/items/components`, {
+      params: p(params),
+    });
+    return normalizePaginated<ErpItem>(data, page, pageSize);
+  },
+
+  createComponent: async (payload: CreateComponentDto) => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/items/components`,
+      payload,
+    );
     return data;
   },
 
-  // ── PO ────────────────────────────────────────────────────────────────────
+  getComponent: async (
+    id: string,
+  ): Promise<ErpItem & { stock_summary?: any }> => {
+    const { data } = await axiosInstance.get(`${BASE}/items/components/${id}`);
+    return data;
+  },
+
+  updateComponent: async (id: string, payload: UpdateComponentDto) => {
+    const { data } = await axiosInstance.patch(
+      `${BASE}/items/components/${id}`,
+      payload,
+    );
+    return data;
+  },
+
+  getComponentStockSummary: async (
+    id: string,
+  ): Promise<ComponentStockSummary> => {
+    const { data } = await axiosInstance.get(
+      `${BASE}/items/components/${id}/stock-summary`,
+    );
+    return data;
+  },
+
+  listComponentTxns: async (
+    id: string,
+    params?: MfgListParams,
+  ): Promise<PaginatedResponse<ComponentTxn>> => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
+    const { data } = await axiosInstance.get(
+      `${BASE}/items/components/${id}/txns`,
+      {
+        params: p(params),
+      },
+    );
+    return normalizePaginated<ComponentTxn>(data, page, pageSize);
+  },
+
   listPos: async (
     params?: MfgListParams,
   ): Promise<PaginatedResponse<ErpPo>> => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
     const { data } = await axiosInstance.get(`${BASE}/purchase-orders`, {
       params: p(params),
     });
-    return data;
+    return normalizePaginated<ErpPo>(data, page, pageSize);
   },
+
   getPo: async (id: string): Promise<ErpPo> => {
     const { data } = await axiosInstance.get(`${BASE}/purchase-orders/${id}`);
     return data;
   },
+
   confirmPo: async (id: string) => {
     const { data } = await axiosInstance.post(
       `${BASE}/purchase-orders/${id}/confirm`,
     );
     return data;
   },
+
   cancelPo: async (id: string) => {
     const { data } = await axiosInstance.post(
       `${BASE}/purchase-orders/${id}/cancel`,
@@ -121,10 +297,8 @@ export const manufacturingApi = {
     return data;
   },
 
-  // ── Template & Import ─────────────────────────────────────────────────────
   downloadPoTemplate: () => {
     const url = `${BASE}/purchase-orders/template/download`;
-    // Need auth token — build it with axios interceptor
     return axiosInstance.get(url, { responseType: "blob" }).then((res) => {
       const blob = new Blob([res.data as BlobPart], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -148,13 +322,19 @@ export const manufacturingApi = {
     return data;
   },
 
-  // ── Vehicles ──────────────────────────────────────────────────────────────
   listVehicles: async (
     params?: MfgListParams,
   ): Promise<PaginatedResponse<ErpVehicle>> => {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
     const { data } = await axiosInstance.get(`${BASE}/vehicles`, {
       params: p(params),
     });
+    return normalizePaginated<ErpVehicle>(data, page, pageSize);
+  },
+
+  getVehicle: async (id: string): Promise<ErpVehicle> => {
+    const { data } = await axiosInstance.get(`${BASE}/vehicles/${id}`);
     return data;
   },
 };
