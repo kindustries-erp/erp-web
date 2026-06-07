@@ -1,48 +1,94 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// ERP CORE auth store — local JWT, không dùng Directus
+// Giữ nguyên tên export để không vỡ component cũ
+// ─────────────────────────────────────────────────────────────────────────────
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   loginApi,
-  logoutApi,
-  selfUpdateProfileApi,
-  changePasswordApi,
   getProfileApi,
-  impersonateApi,
-  hasFullDirectusRolesAccess,
-} from "@/modules/auth/api/auth";
-import type {
-  Employee,
-  SelfUpdateProfileRequest,
-  UserProfile,
-  EffectiveCollectionPermission,
-  ImpersonationMetadata,
-} from "@/modules/auth/api/auth";
+  type CoreLoginResponse,
+  type CoreProfileResponse,
+} from "@/modules/auth/api/auth.core";
 import { useAppStore } from "@/core/config/appStore";
 import { useUIStore } from "@/core/config/uiStore";
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── Compat types — giữ đủ shape để component cũ không TS-error ───────────────
+
+export interface EffectiveCollectionPermission {
+  collection: string;
+  actions: string[];
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  status: string;
+  role?: {
+    id: string;
+    name: string;
+    icon?: string;
+    description?: string | null;
+  } | null;
+}
+
+// employee-like shape tối thiểu để Sidebar/UserMenu/UserProfileModal không vỡ
+export interface Employee {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  notes: string | null;
+  employee_code: string;
+  status: string;
+  employment_status?: string;
+  department_id: { department_name: string };
+  position_id: { position_name: string };
+}
+
+export type ImpersonationMetadata =
+  | { active: false }
+  | { active: true; actor: { id: string; email: string } };
+
+export interface SelfUpdateProfileRequest {
+  full_name?: string;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+// ── Helpers — build Employee stub từ CoreProfileResponse ─────────────────────
+
+function profileToEmployee(p: CoreProfileResponse): Employee {
+  return {
+    id: p.id,
+    email: p.email,
+    full_name: p.email, // placeholder cho đến khi BE trả full_name
+    phone: null,
+    notes: null,
+    employee_code: "—",
+    status: p.status,
+    department_id: { department_name: "—" },
+    position_id: { position_name: "—" },
+  };
+}
+
+// ── State interface — compat với consumers cũ ─────────────────────────────────
 
 interface AuthState {
   accessToken: string | null;
-  refreshToken: string | null;
-  /** Timestamp (ms) when the access token expires */
+  refreshToken: string | null; // compat với axios/store cũ
   expiresAt: number | null;
   employee: Employee | null;
   profile: UserProfile | null;
-  effectivePermissions: EffectiveCollectionPermission[];
+  effectivePermissions: EffectiveCollectionPermission[]; // luôn [] — no Directus RBAC
   loading: boolean;
   error: string | null;
-
-  /** True khi session hiện tại có full CRUD trên directus_roles */
-  canImpersonate: boolean;
-  /** Metadata trả về từ GET /auth/profile — active=true khi đang impersonate */
+  canImpersonate: false;
   impersonation: ImpersonationMetadata | null;
-  /**
-   * Actor snapshot — lưu thông tin session gốc để có thể restore sau khi
-   * kết thúc impersonation. Persisted để F5 không mất.
-   */
   actorAccessToken: string | null;
   actorRefreshToken: string | null;
   actorExpiresAt: number | null;
+  _raw: CoreLoginResponse | null; // internal — lưu raw response
 
   loginAction: (email: string, password: string) => Promise<void>;
   logoutAction: () => Promise<void>;
@@ -50,19 +96,11 @@ interface AuthState {
   updateProfileAction: (payload: SelfUpdateProfileRequest) => Promise<void>;
   changePasswordAction: (newPassword: string) => Promise<void>;
   bootstrapAction: () => Promise<void>;
-  /** Bắt đầu impersonation session với target user */
+  stopImpersonationAction: (reason?: string) => Promise<void>;
   impersonateAction: (targetUserId: string) => Promise<void>;
-  /**
-   * Kết thúc impersonation, restore lại actor session.
-   * reason = "expired" khi token hết hạn (do axios interceptor gọi).
-   * reason = "manual" khi user tự bấm "Quay lại tài khoản gốc".
-   */
-  stopImpersonationAction: (
-    reason?: "manual" | "expired" | "unauthorized",
-  ) => Promise<void>;
 }
 
-// ── Store ──────────────────────────────────────────────────────────────────
+// ── Store ─────────────────────────────────────────────────────────────────────
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -75,40 +113,39 @@ export const useAuthStore = create<AuthState>()(
       effectivePermissions: [],
       loading: false,
       error: null,
-      canImpersonate: false,
+      canImpersonate: false as const,
       impersonation: null,
       actorAccessToken: null,
       actorRefreshToken: null,
       actorExpiresAt: null,
+      _raw: null,
 
       loginAction: async (email, password) => {
         set({ loading: true, error: null });
         try {
           const data = await loginApi({ email, password });
+          const profile: UserProfile = {
+            id: data.user.id,
+            email: data.user.email,
+            status: data.user.status,
+          };
           set({
-            accessToken: data.access_token,
-            refreshToken: data.refresh_token,
-            expiresAt: Date.now() + data.expires * 1000,
-            employee: data.employee,
-          });
-          const profileData = await getProfileApi();
-          set({
-            profile: profileData.profile,
-            employee: profileData.employee ?? data.employee,
-            effectivePermissions: profileData.effectivePermissions,
-            canImpersonate: hasFullDirectusRolesAccess(
-              profileData.effectivePermissions,
-            ),
-            impersonation: profileData.impersonation ?? { active: false },
-            actorAccessToken: null,
-            actorRefreshToken: null,
-            actorExpiresAt: null,
+            accessToken: data.accessToken,
+            _raw: data,
+            profile,
             loading: false,
             error: null,
+            impersonation: { active: false },
           });
-          // Sync UI state
           useUIStore.getState().resetShellState();
           useAppStore.getState().login();
+          // Best-effort: load full profile
+          try {
+            const raw = await getProfileApi();
+            set({ employee: profileToEmployee(raw) });
+          } catch {
+            // non-blocking
+          }
         } catch (err: unknown) {
           const message =
             (err as { response?: { data?: { message?: string } } })?.response
@@ -119,213 +156,71 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logoutAction: async () => {
-        const { refreshToken } = useAuthStore.getState();
-        set({ loading: true, error: null });
-        try {
-          if (refreshToken) {
-            await logoutApi({ refresh_token: refreshToken });
-          }
-        } catch {
-          // Proceed with local logout even if API call fails
-        } finally {
-          set({
-            accessToken: null,
-            refreshToken: null,
-            expiresAt: null,
-            employee: null,
-            profile: null,
-            effectivePermissions: [],
-            loading: false,
-            error: null,
-            canImpersonate: false,
-            impersonation: null,
-            actorAccessToken: null,
-            actorRefreshToken: null,
-            actorExpiresAt: null,
-          });
-          // Sync UI state
-          useUIStore.getState().resetShellState();
-          useAppStore.getState().logout();
-        }
-      },
-
-      clearAuth: () => {
         set({
           accessToken: null,
-          refreshToken: null,
-          expiresAt: null,
+          _raw: null,
           employee: null,
           profile: null,
           effectivePermissions: [],
           loading: false,
           error: null,
-          canImpersonate: false,
           impersonation: null,
-          actorAccessToken: null,
-          actorRefreshToken: null,
-          actorExpiresAt: null,
+        });
+        useUIStore.getState().resetShellState();
+        useAppStore.getState().logout();
+      },
+
+      clearAuth: () => {
+        set({
+          accessToken: null,
+          _raw: null,
+          employee: null,
+          profile: null,
+          effectivePermissions: [],
+          loading: false,
+          error: null,
+          impersonation: null,
         });
         useAppStore.getState().logout();
       },
 
-      updateProfileAction: async (payload: SelfUpdateProfileRequest) => {
-        const { employee } = useAuthStore.getState();
-        if (!employee) return;
-        set({ loading: true, error: null });
-        try {
-          const updated = await selfUpdateProfileApi(payload);
-          set({
-            employee: { ...employee, ...updated },
-            loading: false,
-          });
-        } catch (err: unknown) {
-          const message =
-            (err as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message ?? "Cập nhật thất bại";
-          set({ loading: false, error: message });
-          throw err;
-        }
+      updateProfileAction: async (_payload) => {
+        // TODO: wire to core BE update endpoint khi có
+        return;
       },
 
-      changePasswordAction: async (newPassword: string) => {
-        set({ loading: true, error: null });
-        try {
-          await changePasswordApi({ new_password: newPassword });
-          set({ loading: false });
-        } catch (err: unknown) {
-          const message =
-            (err as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message ?? "Đổi mật khẩu thất bại";
-          set({ loading: false, error: message });
-          throw err;
-        }
+      changePasswordAction: async (_newPassword) => {
+        // TODO: wire to core BE change-password endpoint khi có
+        return;
       },
 
       bootstrapAction: async () => {
         const { accessToken } = useAuthStore.getState();
         if (!accessToken) return;
         try {
-          const data = await getProfileApi();
-          const canImp = hasFullDirectusRolesAccess(data.effectivePermissions);
-          set({
-            profile: data.profile,
-            employee: data.employee,
-            effectivePermissions: data.effectivePermissions,
-            canImpersonate: canImp,
-            impersonation: data.impersonation ?? { active: false },
-          });
-        } catch (e) {
-          void e;
-          // Silently ignore — stale cached data is still usable;
-          // the axios interceptor will handle 401 and clear auth if needed.
-        }
-      },
-
-      impersonateAction: async (targetUserId: string) => {
-        const state = useAuthStore.getState();
-        set({ loading: true, error: null });
-        try {
-          const res = await impersonateApi({ target_user_id: targetUserId });
-
-          set({
-            actorAccessToken: state.accessToken,
-            actorRefreshToken: state.refreshToken,
-            actorExpiresAt: state.expiresAt,
-          });
-
-          set({
-            accessToken: res.impersonation_token,
-            refreshToken: null,
-            expiresAt: Date.now() + res.expires * 1000,
-          });
-
-          const profileData = await getProfileApi();
-          set({
-            profile: profileData.profile,
-            employee: profileData.employee,
-            effectivePermissions: profileData.effectivePermissions,
-            canImpersonate: hasFullDirectusRolesAccess(
-              profileData.effectivePermissions,
-            ),
-            impersonation: profileData.impersonation ?? {
-              active: true,
-              actor: { id: "", email: "" },
-            },
-            loading: false,
-          });
-        } catch (err: unknown) {
-          const { actorAccessToken, actorRefreshToken, actorExpiresAt } =
-            useAuthStore.getState();
-          if (actorAccessToken) {
-            set({
-              accessToken: actorAccessToken,
-              refreshToken: actorRefreshToken,
-              expiresAt: actorExpiresAt,
-              actorAccessToken: null,
-              actorRefreshToken: null,
-              actorExpiresAt: null,
-            });
-          }
-          const message =
-            (err as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message ?? "Không thể đăng nhập thay người dùng này";
-          set({ loading: false, error: message });
-          throw err;
-        }
-      },
-
-      stopImpersonationAction: async (
-        reason?: "manual" | "expired" | "unauthorized",
-      ) => {
-        const { actorAccessToken, actorRefreshToken, actorExpiresAt } =
-          useAuthStore.getState();
-
-        if (!actorAccessToken) {
-          useAuthStore.getState().clearAuth();
-          return;
-        }
-
-        set({
-          accessToken: actorAccessToken,
-          refreshToken: actorRefreshToken,
-          expiresAt: actorExpiresAt,
-          actorAccessToken: null,
-          actorRefreshToken: null,
-          actorExpiresAt: null,
-          impersonation: null,
-        });
-
-        try {
-          const profileData = await getProfileApi();
-          set({
-            profile: profileData.profile,
-            employee: profileData.employee,
-            effectivePermissions: profileData.effectivePermissions,
-            canImpersonate: hasFullDirectusRolesAccess(
-              profileData.effectivePermissions,
-            ),
-            impersonation: profileData.impersonation ?? { active: false },
-          });
+          const raw = await getProfileApi();
+          const profile: UserProfile = {
+            id: raw.id,
+            email: raw.email,
+            status: raw.status,
+          };
+          set({ profile, employee: profileToEmployee(raw) });
+          useAppStore.getState().login();
         } catch {
-          // Nếu profile load thất bại, vẫn giữ actor session
+          useAuthStore.getState().clearAuth();
         }
-
-        void reason;
       },
+
+      // no-op stubs — core không có impersonation
+      stopImpersonationAction: async () => {},
+      impersonateAction: async () => {},
     }),
     {
       name: "erp-auth",
       partialize: (s) => ({
         accessToken: s.accessToken,
-        refreshToken: s.refreshToken,
-        expiresAt: s.expiresAt,
-        employee: s.employee,
         profile: s.profile,
-        effectivePermissions: s.effectivePermissions,
-        actorAccessToken: s.actorAccessToken,
-        actorRefreshToken: s.actorRefreshToken,
-        actorExpiresAt: s.actorExpiresAt,
-        impersonation: s.impersonation,
+        employee: s.employee,
       }),
     },
   ),

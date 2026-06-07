@@ -6,14 +6,8 @@ import { pageToPath } from "@/shared/utils/pageUrl";
 export type AppTheme = "shell" | "classic" | "orcaq";
 
 function applyDocumentTheme(appTheme: AppTheme) {
-  document.documentElement.classList.toggle(
-    "theme-classic",
-    appTheme === "classic",
-  );
-  document.documentElement.classList.toggle(
-    "theme-orcaq",
-    appTheme === "orcaq",
-  );
+  document.documentElement.classList.toggle("theme-classic", appTheme === "classic");
+  document.documentElement.classList.toggle("theme-orcaq", appTheme === "orcaq");
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
@@ -21,130 +15,22 @@ export const STATIC_TABS: Record<string, TabInfo> = {
 };
 
 export const SECTION_ROOTS: Record<string, SectionRoot> = {
-  cashflow: { labelKey: "nav.items.cashflow", group: "cashflow" },
-  "cashflow-vouchers": {
-    labelKey: "nav.items.cashflowVouchers",
-    group: "cashflow",
-  },
-  "cash-fund": { labelKey: "nav.items.cashflowCash", group: "cashflow" },
-  "bank-deposit": {
-    labelKey: "nav.items.cashflowBankShort",
-    group: "cashflow",
-  },
-  attachments: { labelKey: "nav.items.cashflowAttachments", group: "cashflow" },
-  "settings-cash-fund": { labelKey: "nav.items.catalog", group: "settings" },
-  "settings-bank": { labelKey: "nav.items.catalogBank", group: "settings" },
-  "settings-accounts": {
-    labelKey: "nav.items.catalogAccounts",
-    group: "settings",
-  },
-  receivables: { labelKey: "nav.items.debtReceivable", group: "debt" },
-  payables: { labelKey: "nav.items.debtPayable", group: "debt" },
-  ledger: { labelKey: "nav.items.reportLedger", group: "reports" },
-  journal: { labelKey: "nav.items.report", group: "reports" },
-  employees: { labelKey: "nav.items.hr", group: "hr" },
-  departments: { labelKey: "nav.items.hrDepts", group: "hr" },
-  positions: { labelKey: "nav.items.hrPositions", group: "hr" },
   sales: { labelKey: "nav.items.sales", group: "sales" },
-  customers: { labelKey: "nav.items.customers", group: "sales" },
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
-  "operating-expenses": {
-    labelKey: "nav.items.operatingExpenses",
-    group: "purchasing",
-  },
   inventory: { labelKey: "nav.items.inventory", group: "inventory" },
-  suppliers: { labelKey: "nav.items.suppliers", group: "purchasing" },
-  "activity-log": { labelKey: "nav.items.activitylog", group: "system" },
-  partners: { labelKey: "nav.items.partners", group: "partners" },
-  "e-invoice": { labelKey: "nav.items.hoadondientu", group: "cashflow" },
-  permissions: { labelKey: "nav.items.phanquyen", group: "system" },
-  "settings-branch": { labelKey: "thietlap.tabs.chi-nhanh", group: "settings" },
   "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
-  "mfg-purchase-orders": {
-    labelKey: "nav.items.mfgPo",
-    group: "manufacturing",
-  },
+  "mfg-purchase-orders": { labelKey: "nav.items.mfgPo", group: "manufacturing" },
   "mfg-vehicles": { labelKey: "nav.items.mfgVehicles", group: "manufacturing" },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   dashboard: [["breadcrumb.dashboard"]],
-  cashflow: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow"],
-    ["breadcrumb.cashflowOverview"],
-  ],
-  "cashflow-vouchers": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "cashflow"],
-    ["breadcrumb.cashflowVouchers"],
-  ],
-  "cash-fund": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "cashflow"],
-    ["breadcrumb.cash"],
-  ],
-  "bank-deposit": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.cashflow", "cashflow"],
-    ["breadcrumb.bank"],
-  ],
-  attachments: [["breadcrumb.accounting"], ["breadcrumb.attachments"]],
-  "e-invoice": [["breadcrumb.accounting"], ["breadcrumb.hoadondientu"]],
-  "settings-cash-fund": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "settings-cash-fund"],
-    ["breadcrumb.catalogFunds"],
-  ],
-  "settings-bank": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "settings-cash-fund"],
-    ["breadcrumb.catalogBank"],
-  ],
-  "settings-accounts": [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.catalog", "settings-cash-fund"],
-    ["breadcrumb.catalogAccounts"],
-  ],
-  receivables: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.debt"],
-    ["breadcrumb.debtReceivable"],
-  ],
-  payables: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.debt"],
-    ["breadcrumb.debtPayable"],
-  ],
-  ledger: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.report"],
-    ["breadcrumb.reportLedger"],
-  ],
-  journal: [
-    ["breadcrumb.accounting"],
-    ["breadcrumb.report"],
-    ["breadcrumb.reportJournal"],
-  ],
-  employees: [["breadcrumb.hr"], ["breadcrumb.hrStaff"]],
-  departments: [["breadcrumb.hr"], ["breadcrumb.hrDepts"]],
-  positions: [["breadcrumb.hr"], ["breadcrumb.hrPositions"]],
   sales: [["breadcrumb.sales"], ["breadcrumb.salesOrders"]],
-  customers: [["breadcrumb.sales"], ["breadcrumb.customers"]],
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
-  "operating-expenses": [
-    ["breadcrumb.purchasing"],
-    ["breadcrumb.operatingExpenses"],
-  ],
   inventory: [["breadcrumb.inventory"]],
-  suppliers: [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
   "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
-  workflow: [["breadcrumb.system"], ["breadcrumb.workflowcanvas"]],
-  partners: [["breadcrumb.accounting"], ["breadcrumb.partners"]],
-  "activity-log": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
-  permissions: [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
 };
 
 interface AppState {
@@ -207,13 +93,7 @@ export const useAppStore = create<AppState>()(
             newTabs.push(page);
           }
         }
-        set({
-          currentPage: page,
-          openTabs: newTabs,
-          forbidden: false,
-          mobileSidebarOpen: false,
-          customBreadcrumbs: null,
-        });
+        set({ currentPage: page, openTabs: newTabs, forbidden: false, mobileSidebarOpen: false, customBreadcrumbs: null });
         const path = pageToPath(page);
         const current = window.location.pathname + window.location.search;
         if (current !== path) history.pushState(null, "", path);
@@ -235,12 +115,7 @@ export const useAppStore = create<AppState>()(
             newTabs.push(page);
           }
         }
-        set({
-          currentPage: page,
-          openTabs: newTabs,
-          forbidden: false,
-          mobileSidebarOpen: false,
-        });
+        set({ currentPage: page, openTabs: newTabs, forbidden: false, mobileSidebarOpen: false });
       },
 
       closeTab: (key) => {
@@ -248,21 +123,16 @@ export const useAppStore = create<AppState>()(
         const idx = openTabs.indexOf(key);
         const newTabs = openTabs.filter((t) => t !== key);
         if (currentPage === key) {
-          // Pick adjacent tab (prefer the one at same index, fallback left)
-          const nextPage =
-            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
+          const nextPage = newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
           const path = pageToPath(nextPage);
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
-          set({
-            currentPage: nextPage,
-            openTabs: newTabs,
-            customBreadcrumbs: null,
-          });
+          set({ currentPage: nextPage, openTabs: newTabs, customBreadcrumbs: null });
         } else {
           set({ openTabs: newTabs });
         }
       },
+
       closeAllTabs: () => {
         const { openTabs, currentPage, navigate } = get();
         const newTabs = openTabs.filter((t) => STATIC_TABS[t]);
@@ -272,31 +142,29 @@ export const useAppStore = create<AppState>()(
           set({ openTabs: newTabs });
         }
       },
+
       closeTabsToRight: (key) => {
         const { openTabs, currentPage, navigate } = get();
         const index = openTabs.indexOf(key);
         if (index < 0) return;
-
         const keepTabs = openTabs.filter((tab, tabIndex) => {
           if (tabIndex <= index) return true;
           return Boolean(STATIC_TABS[tab]);
         });
-
         if (!keepTabs.includes(currentPage)) {
           navigate(keepTabs[keepTabs.length - 1] ?? key ?? "dashboard");
         } else {
           set({ openTabs: keepTabs });
         }
       },
+
       reorderTabs: (sourceKey, targetKey) => {
         if (sourceKey === targetKey) return;
         if (STATIC_TABS[sourceKey] || STATIC_TABS[targetKey]) return;
-
         const { openTabs } = get();
         const sourceIndex = openTabs.indexOf(sourceKey);
         const targetIndex = openTabs.indexOf(targetKey);
         if (sourceIndex < 0 || targetIndex < 0) return;
-
         const newTabs = [...openTabs];
         const [movedTab] = newTabs.splice(sourceIndex, 1);
         newTabs.splice(targetIndex, 0, movedTab);
@@ -305,7 +173,6 @@ export const useAppStore = create<AppState>()(
 
       toggleSidebar: () => {
         set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed }));
-        // Fire resize after CSS transition (220ms) so Chart.js repaints
         setTimeout(() => window.dispatchEvent(new Event("resize")), 240);
       },
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
@@ -325,20 +192,19 @@ export const useAppStore = create<AppState>()(
       toggleLocale: () =>
         set((s) => ({ locale: s.locale === "vi" ? "en" : "vi" })),
       setLocale: (locale) => set({ locale }),
+
       login: () => set({ isLoggedIn: true }),
-      logout: () => set({ isLoggedIn: false }),
+      logout: () =>
+        set({ isLoggedIn: false, currentPage: "dashboard", openTabs: ["dashboard"] }),
     }),
     {
-      name: "erp-ui",
+      name: "erp-app",
       partialize: (s) => ({
         sidebarCollapsed: s.sidebarCollapsed,
         appTheme: s.appTheme,
         locale: s.locale,
         isLoggedIn: s.isLoggedIn,
       }),
-      onRehydrateStorage: () => (state) => {
-        applyDocumentTheme(state?.appTheme ?? "orcaq");
-      },
     },
   ),
 );

@@ -98,6 +98,8 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
     resigned: t("profile.statusResigned"),
   };
 
+  const currentEmploymentStatus = employee.employment_status ?? employee.status;
+
   const avatarIcon = (
     <div className="w-[30px] h-[30px] bg-primary rounded-full flex items-center justify-center text-primary-fg text-[10px] font-bold select-none">
       {av}
@@ -224,8 +226,7 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                       : "bg-warn-bg text-warn-fg border-[#f5d580]",
                   )}
                 >
-                  {statusLabel[employee.employment_status] ??
-                    employee.employment_status}
+                  {statusLabel[currentEmploymentStatus] ?? currentEmploymentStatus}
                 </span>
               }
             />
@@ -265,14 +266,7 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                   </div>
                   <div className="text-[color:var(--warn-fg)]/80">
                     {t("profile.impersonation.actorLabel")}:{" "}
-                    {[
-                      impersonation.actor?.first_name,
-                      impersonation.actor?.last_name,
-                    ]
-                      .filter(Boolean)
-                      .join(" ") ||
-                      impersonation.actor?.email ||
-                      "—"}
+                    {impersonation.actor?.email || "—"}
                   </div>
                 </div>
                 <button
