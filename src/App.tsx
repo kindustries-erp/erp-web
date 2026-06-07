@@ -16,9 +16,13 @@ import { Kho } from "@/pages/Inventory";
 import { MfgItems } from "@/pages/MfgItems";
 import { MfgPurchaseOrders } from "@/pages/MfgPurchaseOrders";
 import { MfgVehicles } from "@/pages/MfgVehicles";
+import { ErpBomPage } from "@/pages/ErpBomPage";
+import { ErpGoodsReceiptsPage } from "@/pages/ErpGoodsReceiptsPage";
+import { ErpProductionPage } from "@/pages/ErpProductionPage";
+import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
+import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
-import { ErrorPage } from "@/shared/components/ErrorPage";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 
 const CORE_PAGES = [
@@ -29,10 +33,15 @@ const CORE_PAGES = [
   "mfg-items",
   "mfg-purchase-orders",
   "mfg-vehicles",
+  "erp-bom",
+  "erp-goods-receipts",
+  "erp-production",
+  "erp-sales-orders",
+  "erp-goods-issues",
 ] as const;
 
 export default function App() {
-  const { currentPage, isLoggedIn, syncFromUrl, forbidden } = useAppStore();
+  const { currentPage, isLoggedIn, syncFromUrl } = useAppStore();
   const { bootstrapAction } = useAuthStore();
   const contentRef = useRef<HTMLDivElement | null>(null);
 
@@ -80,22 +89,23 @@ export default function App() {
             onScroll={keepContentXLocked}
             className="app-content flex-1 overflow-x-hidden overflow-y-auto"
           >
-            {forbidden ? (
-              <ErrorPage code="403" />
-            ) : (
-              <>
-                {currentPage === "dashboard" && <Dashboard />}
-                {currentPage === "sales" && <BanHang />}
-                {currentPage === "purchasing" && <MuaHang />}
-                {currentPage === "inventory" && <Kho />}
-                {currentPage === "mfg-items" && <MfgItems />}
-                {currentPage === "mfg-purchase-orders" && <MfgPurchaseOrders />}
-                {currentPage === "mfg-vehicles" && <MfgVehicles />}
-                {!(CORE_PAGES as readonly string[]).includes(currentPage) && (
-                  <NotFound />
-                )}
-              </>
-            )}
+            <>
+              {currentPage === "dashboard" && <Dashboard />}
+              {currentPage === "sales" && <BanHang />}
+              {currentPage === "purchasing" && <MuaHang />}
+              {currentPage === "inventory" && <Kho />}
+              {currentPage === "mfg-items" && <MfgItems />}
+              {currentPage === "mfg-purchase-orders" && <MfgPurchaseOrders />}
+              {currentPage === "mfg-vehicles" && <MfgVehicles />}
+              {currentPage === "erp-bom" && <ErpBomPage />}
+              {currentPage === "erp-goods-receipts" && <ErpGoodsReceiptsPage />}
+              {currentPage === "erp-production" && <ErpProductionPage />}
+              {currentPage === "erp-sales-orders" && <ErpSalesOrdersPage />}
+              {currentPage === "erp-goods-issues" && <ErpGoodsIssuesPage />}
+              {!(CORE_PAGES as readonly string[]).includes(currentPage) && (
+                <NotFound />
+              )}
+            </>
           </div>
           <TabBar />
         </div>

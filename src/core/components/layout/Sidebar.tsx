@@ -34,7 +34,8 @@ export function Sidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const t = useT();
-  const displayName = employee?.full_name ?? employee?.email ?? t("nav.bottom.userFallback");
+  const displayName =
+    employee?.full_name ?? employee?.email ?? t("nav.bottom.userFallback");
   const buildVersion = __APP_BUILD_VERSION__;
   const buildVersionLabel = (() => {
     const rawIso = buildVersion.split("-").slice(0, 3).join("-");
@@ -74,15 +75,24 @@ export function Sidebar() {
         )}
 
         <aside
-          className={cn("sidebar", c && "collapsed", mobileSidebarOpen && "mobile-open")}
-          onMouseEnter={() => { if (sidebarCollapsed) setHoverExpanded(true); }}
+          className={cn(
+            "sidebar",
+            c && "collapsed",
+            mobileSidebarOpen && "mobile-open",
+          )}
+          onMouseEnter={() => {
+            if (sidebarCollapsed) setHoverExpanded(true);
+          }}
           onMouseLeave={() => setHoverExpanded(false)}
         >
           {/* Header */}
           <div className="sidebar-header h-12 px-[10px] border-b border-border flex items-center gap-2 flex-shrink-0 transition-all duration-[220ms]">
             <div className="sidebar-logo-wrap flex items-center gap-2 overflow-hidden flex-1 min-w-0 transition-all duration-[220ms]">
               <div className="w-8 h-8 min-w-[32px] bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg className="w-[18px] h-[18px] fill-primary-fg" viewBox="0 0 24 24">
+                <svg
+                  className="w-[18px] h-[18px] fill-primary-fg"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />
                 </svg>
               </div>
@@ -98,10 +108,23 @@ export function Sidebar() {
             <button
               className="sidebar-toggle-btn w-[26px] h-[26px] min-w-[26px] border border-border rounded-[7px] flex items-center justify-center cursor-pointer text-[color:var(--muted-fg)] bg-surface hover:bg-surface-hover flex-shrink-0"
               onClick={toggleSidebar}
-              title={sidebarCollapsed && hoverExpanded ? t("nav.bottom.pinSidebar") : t("nav.bottom.toggleSidebar")}
+              title={
+                sidebarCollapsed && hoverExpanded
+                  ? t("nav.bottom.pinSidebar")
+                  : t("nav.bottom.toggleSidebar")
+              }
             >
-              <span className={cn("transition-transform duration-200", c && "rotate-180")}>
-                {sidebarCollapsed && hoverExpanded ? <IconPin /> : <IconChevronLeft />}
+              <span
+                className={cn(
+                  "transition-transform duration-200",
+                  c && "rotate-180",
+                )}
+              >
+                {sidebarCollapsed && hoverExpanded ? (
+                  <IconPin />
+                ) : (
+                  <IconChevronLeft />
+                )}
               </span>
             </button>
           </div>
@@ -187,6 +210,46 @@ export function Sidebar() {
                 onClick={() => navTo("mfg-vehicles")}
                 contextPage="mfg-vehicles"
               />
+              <NavItem
+                collapsed={c}
+                icon={<IconBox />}
+                label={t("nav.items.erpBom")}
+                active={currentPage === "erp-bom"}
+                onClick={() => navTo("erp-bom")}
+                contextPage="erp-bom"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconShop />}
+                label={t("nav.items.erpGoodsReceipts")}
+                active={currentPage === "erp-goods-receipts"}
+                onClick={() => navTo("erp-goods-receipts")}
+                contextPage="erp-goods-receipts"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconGrid />}
+                label={t("nav.items.erpProduction")}
+                active={currentPage === "erp-production"}
+                onClick={() => navTo("erp-production")}
+                contextPage="erp-production"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconCart />}
+                label={t("nav.items.erpSalesOrders")}
+                active={currentPage === "erp-sales-orders"}
+                onClick={() => navTo("erp-sales-orders")}
+                contextPage="erp-sales-orders"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconShop />}
+                label={t("nav.items.erpGoodsIssues")}
+                active={currentPage === "erp-goods-issues"}
+                onClick={() => navTo("erp-goods-issues")}
+                contextPage="erp-goods-issues"
+              />
             </div>
           </div>
 
@@ -194,7 +257,9 @@ export function Sidebar() {
           <div
             className={cn(
               "sidebar-bottom border-t border-border p-[10px] flex-shrink-0 overflow-hidden",
-              c ? "flex flex-col items-center gap-[6px]" : "flex items-center gap-[6px]",
+              c
+                ? "flex flex-col items-center gap-[6px]"
+                : "flex items-center gap-[6px]",
             )}
           >
             <UserMenuPopover
@@ -213,7 +278,15 @@ export function Sidebar() {
                 <span className="hide-on-collapse text-xs font-medium text-[color:var(--muted-fg)] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
                   {displayName}
                 </span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="hide-on-collapse text-[color:var(--faint)] flex-shrink-0">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="hide-on-collapse text-[color:var(--faint)] flex-shrink-0"
+                >
                   <polyline points="7 10 12 5 17 10" />
                   <polyline points="7 14 12 19 17 14" />
                 </svg>
@@ -222,7 +295,14 @@ export function Sidebar() {
 
             <NotificationPopover>
               <button className="flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-surface-hover border-none bg-transparent cursor-pointer flex-shrink-0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
@@ -231,8 +311,14 @@ export function Sidebar() {
           </div>
         </aside>
       </>
-      <UserProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
-      <ChangePasswordModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <UserProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+      />
+      <ChangePasswordModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </TooltipProvider>
   );
 }

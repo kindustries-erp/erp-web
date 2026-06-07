@@ -8,6 +8,11 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "mfg-items",
   "mfg-purchase-orders",
   "mfg-vehicles",
+  "erp-bom",
+  "erp-goods-receipts",
+  "erp-production",
+  "erp-sales-orders",
+  "erp-goods-issues",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
@@ -36,10 +41,9 @@ export function pathToPage(
   if (slug === "") {
     page = "dashboard";
   } else {
-    page =
-      ALL_PAGE_KEYS.includes(slug as PageKey)
-        ? (slug as PageKey)
-        : LEGACY_SLUGS[slug];
+    page = ALL_PAGE_KEYS.includes(slug as PageKey)
+      ? (slug as PageKey)
+      : LEGACY_SLUGS[slug];
   }
 
   if (page === undefined) return null;

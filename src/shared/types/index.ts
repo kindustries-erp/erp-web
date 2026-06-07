@@ -29,7 +29,12 @@ export type PageKey =
   | "settings-branch"
   | "mfg-items"
   | "mfg-purchase-orders"
-  | "mfg-vehicles";
+  | "mfg-vehicles"
+  | "erp-bom"
+  | "erp-goods-receipts"
+  | "erp-production"
+  | "erp-sales-orders"
+  | "erp-goods-issues";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {
