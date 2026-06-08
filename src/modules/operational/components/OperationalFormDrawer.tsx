@@ -488,22 +488,26 @@ export function OperationalFormDrawer({
                   onChange={(e) => setDocumentDate(e.target.value)}
                 />
               </DrawerField>
-              <DrawerField label="Ngày đến hạn">
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
-              </DrawerField>
-              <DrawerField label="Trạng thái hóa đơn">
-                <Combobox
-                  options={invoiceOptions}
-                  value={invoiceStatus}
-                  onChange={(v) => setInvoiceStatus(v || "NO_INVOICE")}
-                  allowClear={false}
-                />
-              </DrawerField>
+              {variant !== "purchase" && (
+                <DrawerField label="Ngày đến hạn">
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={dueDate}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                </DrawerField>
+              )}
+              {variant !== "purchase" && (
+                <DrawerField label="Trạng thái hóa đơn">
+                  <Combobox
+                    options={invoiceOptions}
+                    value={invoiceStatus}
+                    onChange={(v) => setInvoiceStatus(v || "NO_INVOICE")}
+                    allowClear={false}
+                  />
+                </DrawerField>
+              )}
               <DrawerField label="Trạng thái">
                 <Combobox
                   options={statusOptions}
