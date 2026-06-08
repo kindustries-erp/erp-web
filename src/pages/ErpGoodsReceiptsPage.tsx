@@ -282,6 +282,12 @@ export function ErpGoodsReceiptsPage() {
       skeletonClassName: "w-32",
     },
     {
+      key: "supplierName",
+      header: "Nhà cung cấp",
+      cell: (item) => item.supplierName || "—",
+      skeletonClassName: "w-40",
+    },
+    {
       key: "receiptDate",
       header: "Ngày nhập",
       cell: (item) => fmtDate(item.receiptDate),
