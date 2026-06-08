@@ -6,8 +6,14 @@ import { pageToPath } from "@/shared/utils/pageUrl";
 export type AppTheme = "shell" | "classic" | "orcaq";
 
 function applyDocumentTheme(appTheme: AppTheme) {
-  document.documentElement.classList.toggle("theme-classic", appTheme === "classic");
-  document.documentElement.classList.toggle("theme-orcaq", appTheme === "orcaq");
+  document.documentElement.classList.toggle(
+    "theme-classic",
+    appTheme === "classic",
+  );
+  document.documentElement.classList.toggle(
+    "theme-orcaq",
+    appTheme === "orcaq",
+  );
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
@@ -19,7 +25,10 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
   inventory: { labelKey: "nav.items.inventory", group: "inventory" },
   "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
-  "mfg-purchase-orders": { labelKey: "nav.items.mfgPo", group: "manufacturing" },
+  "mfg-purchase-orders": {
+    labelKey: "nav.items.mfgPo",
+    group: "manufacturing",
+  },
   "mfg-vehicles": { labelKey: "nav.items.mfgVehicles", group: "manufacturing" },
 };
 
@@ -93,7 +102,13 @@ export const useAppStore = create<AppState>()(
             newTabs.push(page);
           }
         }
-        set({ currentPage: page, openTabs: newTabs, forbidden: false, mobileSidebarOpen: false, customBreadcrumbs: null });
+        set({
+          currentPage: page,
+          openTabs: newTabs,
+          forbidden: false,
+          mobileSidebarOpen: false,
+          customBreadcrumbs: null,
+        });
         const path = pageToPath(page);
         const current = window.location.pathname + window.location.search;
         if (current !== path) history.pushState(null, "", path);
@@ -115,7 +130,12 @@ export const useAppStore = create<AppState>()(
             newTabs.push(page);
           }
         }
-        set({ currentPage: page, openTabs: newTabs, forbidden: false, mobileSidebarOpen: false });
+        set({
+          currentPage: page,
+          openTabs: newTabs,
+          forbidden: false,
+          mobileSidebarOpen: false,
+        });
       },
 
       closeTab: (key) => {
@@ -123,11 +143,16 @@ export const useAppStore = create<AppState>()(
         const idx = openTabs.indexOf(key);
         const newTabs = openTabs.filter((t) => t !== key);
         if (currentPage === key) {
-          const nextPage = newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
+          const nextPage =
+            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
           const path = pageToPath(nextPage);
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
-          set({ currentPage: nextPage, openTabs: newTabs, customBreadcrumbs: null });
+          set({
+            currentPage: nextPage,
+            openTabs: newTabs,
+            customBreadcrumbs: null,
+          });
         } else {
           set({ openTabs: newTabs });
         }
@@ -195,7 +220,11 @@ export const useAppStore = create<AppState>()(
 
       login: () => set({ isLoggedIn: true }),
       logout: () =>
-        set({ isLoggedIn: false, currentPage: "dashboard", openTabs: ["dashboard"] }),
+        set({
+          isLoggedIn: false,
+          currentPage: "dashboard",
+          openTabs: ["dashboard"],
+        }),
     }),
     {
       name: "erp-app",

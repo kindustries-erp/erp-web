@@ -38,8 +38,11 @@ export async function loginApi(payload: {
 }
 
 export async function getProfileApi(): Promise<CoreProfileResponse> {
-  const { data } = await axiosInstance.get<CoreProfileResponse>("/auth/profile", {
-    _silentError: true,
-  });
+  const { data } = await axiosInstance.get<CoreProfileResponse>(
+    "/auth/profile",
+    {
+      _silentError: true,
+    },
+  );
   return data;
 }

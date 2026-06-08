@@ -104,7 +104,9 @@ export default function App() {
               {currentPage === "erp-production" && <ErpProductionPage />}
               {currentPage === "erp-sales-orders" && <ErpSalesOrdersPage />}
               {currentPage === "erp-goods-issues" && <ErpGoodsIssuesPage />}
-              {currentPage === "erp-inventory-items" && <ErpInventoryItemsPage />}
+              {currentPage === "erp-inventory-items" && (
+                <ErpInventoryItemsPage />
+              )}
               {!(CORE_PAGES as readonly string[]).includes(currentPage) && (
                 <NotFound />
               )}

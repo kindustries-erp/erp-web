@@ -59,7 +59,9 @@ export const bomCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpBom> => {
-    const { data } = await axiosInstance.get<BomDetailResponse>(`${BASE}/${id}`);
+    const { data } = await axiosInstance.get<BomDetailResponse>(
+      `${BASE}/${id}`,
+    );
     return data.data;
   },
   create: async (payload: CreateBomPayload): Promise<ErpBom> => {

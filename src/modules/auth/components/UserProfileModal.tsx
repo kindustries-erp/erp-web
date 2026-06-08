@@ -226,7 +226,8 @@ export function UserProfileModal({ open, onClose }: UserProfileModalProps) {
                       : "bg-warn-bg text-warn-fg border-[#f5d580]",
                   )}
                 >
-                  {statusLabel[currentEmploymentStatus] ?? currentEmploymentStatus}
+                  {statusLabel[currentEmploymentStatus] ??
+                    currentEmploymentStatus}
                 </span>
               }
             />
