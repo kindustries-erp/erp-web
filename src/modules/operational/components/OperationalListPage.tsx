@@ -728,7 +728,91 @@ export function OperationalListPage({
     setPage(1);
   }
 
+  const purchaseColumns = useMemo<DataTableColumn<OperationalDocument>[]>(
+    () => [
+      {
+        key: "po_no",
+        header: "Số PO",
+        className: "align-top min-w-[140px]",
+        cell: (row) => (
+          <span className="font-medium text-sm">{row.purchase_no || "—"}</span>
+        ),
+      },
+      {
+        key: "supplier",
+        header: "Nhà cung cấp",
+        className: "align-top min-w-[200px]",
+        cell: (row) => (
+          <div className="space-y-0.5">
+            <div>{row.supplier_name_snapshot || "—"}</div>
+          </div>
+        ),
+      },
+      {
+        key: "order_date",
+        header: "Ngày đặt",
+        className: "align-top min-w-[110px]",
+        cell: (row) => normalizeDate(row.document_date) || "—",
+      },
+      {
+        key: "expected_date",
+        header: "Ngày nhận DK",
+        className: "align-top min-w-[120px]",
+        cell: (row) => normalizeDate(row.due_date) || "—",
+      },
+      {
+        key: "po_status",
+        header: "Trạng thái",
+        className: "align-top min-w-[140px]",
+        cell: (row) => (
+          <div className="flex flex-col gap-1">
+            <StatusBadge status={row.status} />
+            {row.inventory_status ? (
+              <div className="text-xs text-[color:var(--muted-fg)]">
+                Kho: {inventoryStatusLabel(row.inventory_status)}
+              </div>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        key: "total_amount",
+        header: "Tổng tiền",
+        className: "align-top min-w-[140px] text-right",
+        cell: (row) => (
+          <div className="text-sm font-medium text-right">
+            {money(row.total_amount)}
+          </div>
+        ),
+      },
+      {
+        key: "receipt_status",
+        header: "Tình trạng nhập",
+        className: "align-top min-w-[140px]",
+        cell: (row) => {
+          const status = row.inventory_status;
+          let label = "—";
+          let cls = "text-[color:var(--muted-fg)]";
+          if (status === "NOT_RECEIVED") {
+            label = "Chưa nhập kho";
+            cls = "text-orange-600";
+          } else if (status === "PARTIAL") {
+            label = "Nhập một phần";
+            cls = "text-yellow-600";
+          } else if (status === "FULLY_RECEIVED") {
+            label = "Đã nhập đủ";
+            cls = "text-green-600 font-medium";
+          }
+          return <span className={`text-xs ${cls}`}>{label}</span>;
+        },
+      },
+    ],
+    [],
+  );
+
   const columns = useMemo<DataTableColumn<OperationalDocument>[]>(() => {
+    if (variant === "purchase") return purchaseColumns;
+
     const baseColumns: DataTableColumn<OperationalDocument>[] = [
       {
         key: "document",
@@ -805,8 +889,7 @@ export function OperationalListPage({
           <div className="flex flex-col gap-1">
             <StatusBadge status={row.status} />
             <StatusBadge status={row.payment_status} />
-            {(variant === "purchase" || variant === "sales") &&
-            row.inventory_status ? (
+            {variant === "sales" && row.inventory_status ? (
               <div className="text-xs text-[color:var(--muted-fg)]">
                 Kho: {inventoryStatusLabel(row.inventory_status)}
               </div>
@@ -817,7 +900,7 @@ export function OperationalListPage({
     ];
 
     return baseColumns;
-  }, [variant, config.paymentLinkable]);
+  }, [variant, config.paymentLinkable, purchaseColumns]);
 
   const stockColumns = useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
@@ -835,34 +918,50 @@ export function OperationalListPage({
         ),
       },
       {
-        key: "qty",
-        header: "Số lượng",
-        className: "align-top min-w-[180px]",
+        key: "received_qty",
+        header: "Nhập",
+        className: "align-top min-w-[100px] text-right",
         cell: (row) => (
-          <div className="space-y-1 text-sm">
-            <div>
-              Nhập: {Number(row.received_qty || 0).toLocaleString("vi-VN")}
-            </div>
-            <div>
-              Xuất: {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
-            </div>
-            <div className="font-medium">
-              Tồn: {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}{" "}
+          <span className="text-sm tabular-nums">
+            {Number(row.received_qty || 0).toLocaleString("vi-VN")}
+          </span>
+        ),
+      },
+      {
+        key: "issued_qty",
+        header: "Xuất",
+        className: "align-top min-w-[100px] text-right",
+        cell: (row) => (
+          <span className="text-sm tabular-nums">
+            {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
+          </span>
+        ),
+      },
+      {
+        key: "on_hand_qty",
+        header: "Tồn",
+        className: "align-top min-w-[110px] text-right",
+        cell: (row) => (
+          <span className="text-sm font-medium tabular-nums">
+            {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}{" "}
+            <span className="font-normal text-xs text-[color:var(--muted-fg)]">
               {row.unit}
-            </div>
-          </div>
+            </span>
+          </span>
         ),
       },
       {
         key: "value",
         header: "Giá trị tồn",
-        className: "align-top min-w-[160px]",
-        cell: (row) => money(row.stock_value),
+        className: "align-top min-w-[150px] text-right",
+        cell: (row) => (
+          <span className="text-sm tabular-nums">{money(row.stock_value)}</span>
+        ),
       },
       {
         key: "last",
         header: "Giao dịch cuối",
-        className: "align-top min-w-[150px]",
+        className: "align-top min-w-[140px]",
         cell: (row) => normalizeDate(row.last_transaction_date) || "—",
       },
     ],
@@ -1045,7 +1144,10 @@ export function OperationalListPage({
                           setFormOpen(true);
                         } catch (err) {
                           setError(
-                            extractApiError(err, "Không tải được dữ liệu chỉnh sửa"),
+                            extractApiError(
+                              err,
+                              "Không tải được dữ liệu chỉnh sửa",
+                            ),
                           );
                         }
                       },
