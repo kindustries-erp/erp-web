@@ -528,8 +528,11 @@ export function OperationalListPage({
     try {
       const document = await operationalApi.getDocument(documentType, row.id);
       const lineForms = (document.lines || [])
-        .filter((line) => line.inventory_item_id && Number(line.qty || 0) > 0)
-        .map((line) => ({
+        .filter(
+          (line: import("../api/operationalApi").OperationalLine) =>
+            line.inventory_item_id && Number(line.qty || 0) > 0,
+        )
+        .map((line: import("../api/operationalApi").OperationalLine) => ({
           line_id: String(line.id || ""),
           line_name:
             line.item_name ||
@@ -540,7 +543,7 @@ export function OperationalListPage({
           max_qty: Number(line.qty || 0),
           inventory_item_id: line.inventory_item_id || null,
         }))
-        .filter((line) => line.line_id);
+        .filter((line: InventoryPostingLineForm) => line.line_id);
       setRootContext(document, documentType);
       setDetailState({ detailDocument: document });
       setPostingState({
