@@ -39,6 +39,11 @@ export type UpdatePoPayload = Partial<CreatePoPayload>;
 
 const BASE = "/api/v1/purchase-orders";
 
+type PoDetailResponse = {
+  message: string;
+  data: ErpPurchaseOrder;
+};
+
 export const purchaseOrdersCoreApi = {
   list: async (
     params?: ListParams,
@@ -55,21 +60,21 @@ export const purchaseOrdersCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpPurchaseOrder> => {
-    const { data } = await axiosInstance.get<ErpPurchaseOrder>(`${BASE}/${id}`);
-    return data;
+    const { data } = await axiosInstance.get<PoDetailResponse>(`${BASE}/${id}`);
+    return data.data;
   },
   create: async (payload: CreatePoPayload): Promise<ErpPurchaseOrder> => {
-    const { data } = await axiosInstance.post<ErpPurchaseOrder>(BASE, payload);
-    return data;
+    const { data } = await axiosInstance.post<PoDetailResponse>(BASE, payload);
+    return data.data;
   },
   update: async (
     id: string,
     payload: UpdatePoPayload,
   ): Promise<ErpPurchaseOrder> => {
-    const { data } = await axiosInstance.patch<ErpPurchaseOrder>(
+    const { data } = await axiosInstance.patch<PoDetailResponse>(
       `${BASE}/${id}`,
       payload,
     );
-    return data;
+    return data.data;
   },
 };

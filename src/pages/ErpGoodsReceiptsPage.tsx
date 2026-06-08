@@ -1,27 +1,555 @@
-import { Boxes } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Boxes, Pencil, Plus, ReceiptText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import {
+  DrawerAction,
+  DrawerField,
+  DrawerModal,
+  DrawerSection,
+  inputCls,
+} from "@/shared/components/DrawerModal";
+import { Combobox } from "@/shared/components/Combobox";
+import {
+  goodsReceiptsCoreApi,
+  type CreateGrPayload,
+  type ErpGoodsReceipt,
+} from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
+import {
+  purchaseOrdersCoreApi,
+  type ErpPurchaseOrder,
+} from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+
+interface GrLineForm {
+  purchaseOrderLineId: string;
+  itemId: string;
+  itemName: string;
+  qtyReceived: string;
+  unitCost: string;
+}
+
+interface GrForm {
+  receiptNo: string;
+  purchaseOrderId: string;
+  supplierId: string;
+  receiptDate: string;
+  status: string;
+  remarks: string;
+  lines: GrLineForm[];
+}
+
+const emptyForm = (): GrForm => ({
+  receiptNo: "",
+  purchaseOrderId: "",
+  supplierId: "",
+  receiptDate: new Date().toISOString().slice(0, 10),
+  status: "DRAFT",
+  remarks: "",
+  lines: [],
+});
+
+function buildForm(gr: ErpGoodsReceipt): GrForm {
+  return {
+    receiptNo: gr.receiptNo ?? "",
+    purchaseOrderId: gr.purchaseOrderId ?? "",
+    supplierId: gr.supplierId ?? "",
+    receiptDate: gr.receiptDate ? gr.receiptDate.slice(0, 10) : "",
+    status: gr.status ?? "DRAFT",
+    remarks: gr.remarks ?? "",
+    lines:
+      gr.lines?.map((line) => ({
+        purchaseOrderLineId: line.purchaseOrderLineId ?? "",
+        itemId: line.itemId ?? "",
+        itemName: line.itemName ?? "",
+        qtyReceived: line.qtyReceived ?? "0",
+        unitCost: line.unitCost ?? "",
+      })) ?? [],
+  };
+}
+
+function fmtDate(value?: string | null) {
+  if (!value) return "—";
+  return value.slice(0, 10);
+}
+
+function buildPayload(form: GrForm): CreateGrPayload {
+  return {
+    receiptNo: form.receiptNo.trim(),
+    purchaseOrderId: form.purchaseOrderId || undefined,
+    supplierId: form.supplierId || undefined,
+    receiptDate: form.receiptDate,
+    status: form.status || "DRAFT",
+    remarks: form.remarks.trim() || undefined,
+    lines: form.lines.map((line) => ({
+      purchaseOrderLineId: line.purchaseOrderLineId || undefined,
+      itemId: line.itemId || undefined,
+      qtyReceived: line.qtyReceived,
+      unitCost: line.unitCost || undefined,
+    })),
+  };
+}
 
 export function ErpGoodsReceiptsPage() {
+  const [items, setItems] = useState<ErpGoodsReceipt[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editing, setEditing] = useState<ErpGoodsReceipt | null>(null);
+  const [viewOnly, setViewOnly] = useState(false);
+  const [form, setForm] = useState<GrForm>(emptyForm);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [postingId, setPostingId] = useState<string | null>(null);
+
+  const [poOptions, setPoOptions] = useState<Array<{ value: string; label: string }>>(
+    [],
+  );
+
+  const loadReceipts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await goodsReceiptsCoreApi.list({ page, pageSize, search });
+      setItems(res.items);
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể tải goods receipts");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, search]);
+
+  const loadPoOptions = useCallback(async () => {
+    try {
+      const res = await purchaseOrdersCoreApi.list({ page: 1, pageSize: 100 });
+      setPoOptions(
+        res.items.map((po) => ({
+          value: po.id,
+          label: `${po.poNo} — ${po.status ?? "N/A"}`,
+        })),
+      );
+    } catch {
+      setPoOptions([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadReceipts();
+  }, [loadReceipts]);
+
+  useEffect(() => {
+    void loadPoOptions();
+  }, [loadPoOptions]);
+
+  function resetForm() {
+    setForm(emptyForm());
+    setEditing(null);
+    setViewOnly(false);
+    setSaveError(null);
+  }
+
+  function closeDrawer() {
+    setDrawerOpen(false);
+    resetForm();
+  }
+
+  function openCreate() {
+    resetForm();
+    setDrawerOpen(true);
+  }
+
+  async function loadPoIntoForm(poId: string) {
+    if (!poId) {
+      setForm((prev) => ({ ...prev, purchaseOrderId: "", supplierId: "", lines: [] }));
+      return;
+    }
+
+    try {
+      const po: ErpPurchaseOrder = await purchaseOrdersCoreApi.get(poId);
+      setForm((prev) => ({
+        ...prev,
+        purchaseOrderId: po.id,
+        supplierId: po.supplierId ?? "",
+        lines:
+          po.lines?.map((line) => ({
+            purchaseOrderLineId: line.id ?? "",
+            itemId: line.itemId ?? "",
+            itemName: line.itemName ?? line.description ?? "",
+            qtyReceived: line.qtyOrdered ?? "0",
+            unitCost: line.unitPrice ?? "",
+          })) ?? [],
+      }));
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Không thể load PO");
+    }
+  }
+
+  async function openEdit(item: ErpGoodsReceipt) {
+    setViewOnly(false);
+    setSaveError(null);
+    try {
+      const detail = await goodsReceiptsCoreApi.get(item.id);
+      setEditing(detail);
+      setForm(buildForm(detail));
+      setDrawerOpen(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể tải chi tiết goods receipt");
+    }
+  }
+
+  async function openView(item: ErpGoodsReceipt) {
+    setViewOnly(true);
+    setSaveError(null);
+    try {
+      const detail = await goodsReceiptsCoreApi.get(item.id);
+      setEditing(detail);
+      setForm(buildForm(detail));
+      setDrawerOpen(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể tải chi tiết goods receipt");
+    }
+  }
+
+  async function handleSave() {
+    if (viewOnly) {
+      closeDrawer();
+      return;
+    }
+
+    if (!form.receiptNo.trim()) {
+      setSaveError("Số phiếu nhập là bắt buộc");
+      return;
+    }
+
+    if (!form.lines.length) {
+      setSaveError("Phải có ít nhất 1 dòng nhập kho từ PO");
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const payload = buildPayload(form);
+      if (editing) {
+        await goodsReceiptsCoreApi.update(editing.id, payload);
+      } else {
+        await goodsReceiptsCoreApi.create(payload);
+      }
+      closeDrawer();
+      if (!editing && page !== 1) setPage(1);
+      else await loadReceipts();
+    } catch (e: any) {
+      setSaveError(
+        e?.response?.data?.message || e?.message || "Không thể lưu goods receipt",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePost(item: ErpGoodsReceipt) {
+    setPostingId(item.id);
+    try {
+      await goodsReceiptsCoreApi.post(item.id);
+      await loadReceipts();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể post goods receipt");
+    } finally {
+      setPostingId(null);
+    }
+  }
+
+  const columns: DataTableColumn<ErpGoodsReceipt>[] = [
+    {
+      key: "receiptNo",
+      header: "Số phiếu nhập",
+      cell: (item) => <span className="font-medium">{item.receiptNo}</span>,
+      skeletonClassName: "w-28",
+    },
+    {
+      key: "purchaseOrderId",
+      header: "PO",
+      cell: (item) => item.purchaseOrderId || "—",
+      skeletonClassName: "w-32",
+    },
+    {
+      key: "receiptDate",
+      header: "Ngày nhập",
+      cell: (item) => fmtDate(item.receiptDate),
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "status",
+      header: "Trạng thái",
+      cell: (item) => item.status || "—",
+      skeletonClassName: "w-16",
+    },
+  ];
+
+  const filterBar = useMemo(
+    () => (
+      <>
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setPage(1);
+              setSearch(searchInput.trim());
+            }
+          }}
+          placeholder="Tìm số phiếu nhập"
+          className={`${inputCls} min-w-[260px] bg-surface`}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            setPage(1);
+            setSearch(searchInput.trim());
+          }}
+          className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
+        >
+          Search
+        </button>
+      </>
+    ),
+    [searchInput],
+  );
+
+  const drawerActions: DrawerAction[] = [
+    {
+      label: "Hủy",
+      onClick: closeDrawer,
+      variant: "outline",
+    },
+    {
+      label: viewOnly ? "Đóng" : editing ? "Cập nhật" : "Tạo mới",
+      onClick: handleSave,
+      primary: true,
+      loading: saving,
+    },
+  ];
+
   return (
     <PageLayout
       title="ERP Goods Receipts"
       desc="Ghi nhận nhập kho từ đơn mua hàng."
       icon={<Boxes className="h-5 w-5" />}
-      className="p-4 md:p-6"
+      actions={
+        <button
+          type="button"
+          onClick={openCreate}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Tạo mới
+        </button>
+      }
     >
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <div className="space-y-2">
-          <h3 className="text-base font-semibold text-foreground">
-            ERP Goods Receipts
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Ghi nhận nhập kho từ đơn mua hàng.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Wave 1 shell wire xong. CRUD/data sẽ implement ở bước tiếp theo.
-          </p>
-        </div>
-      </div>
+      <DataTable
+        items={items}
+        columns={columns}
+        getRowKey={(item) => item.id}
+        loading={loading}
+        error={error}
+        emptyLabel="Chưa có goods receipt"
+        filters={filterBar}
+        minWidth={980}
+        loadingRows={6}
+        actionsColumn={{
+          header: "",
+          className: "w-[48px]",
+          cell: (item) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: "Xem",
+                  onClick: () => void openView(item),
+                  icon: <ReceiptText className="h-3.5 w-3.5" />,
+                },
+                {
+                  label: "Sửa",
+                  onClick: () => void openEdit(item),
+                  icon: <Pencil className="h-3.5 w-3.5" />,
+                },
+                {
+                  label: postingId === item.id ? "Đang post..." : "Post",
+                  onClick: () => void handlePost(item),
+                  icon: <ReceiptText className="h-3.5 w-3.5" />,
+                  hidden: item.status === "POSTED",
+                },
+              ]}
+            />
+          ),
+        }}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={(value) => {
+          setPage(1);
+          setPageSize(value);
+        }}
+      />
+
+      <DrawerModal
+        open={drawerOpen}
+        onClose={closeDrawer}
+        icon={<Boxes className="h-4 w-4" />}
+        title={
+          viewOnly
+            ? "Xem goods receipt"
+            : editing
+              ? "Cập nhật goods receipt"
+              : "Tạo goods receipt mới"
+        }
+        subtitle={editing ? editing.receiptNo : "Nhập kho từ purchase order"}
+        actions={drawerActions}
+        panelClassName="min-[1024px]:min-w-[780px]"
+      >
+        {saveError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {saveError}
+          </div>
+        )}
+
+        <DrawerSection title="Thông tin chung">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <DrawerField label="Số phiếu nhập" required>
+              <input
+                value={form.receiptNo}
+                disabled={viewOnly}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, receiptNo: e.target.value }))
+                }
+                className={inputCls}
+              />
+            </DrawerField>
+            <DrawerField label="Ngày nhập" required>
+              <input
+                type="date"
+                value={form.receiptDate}
+                disabled={viewOnly}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, receiptDate: e.target.value }))
+                }
+                className={inputCls}
+              />
+            </DrawerField>
+            <DrawerField label="Purchase Order">
+              <Combobox
+                value={form.purchaseOrderId}
+                disabled={viewOnly || !!editing}
+                onChange={(value) => {
+                  void loadPoIntoForm(value);
+                }}
+                options={poOptions}
+                placeholder="Chọn PO để lấy dòng"
+                searchPlaceholder="Tìm PO"
+              />
+            </DrawerField>
+            <DrawerField label="Trạng thái">
+              <Combobox
+                value={form.status}
+                disabled={viewOnly}
+                allowClear={false}
+                onChange={(value) =>
+                  setForm((prev) => ({ ...prev, status: value || "DRAFT" }))
+                }
+                options={[
+                  { value: "DRAFT", label: "DRAFT" },
+                  { value: "POSTED", label: "POSTED" },
+                ]}
+              />
+            </DrawerField>
+          </div>
+
+          <DrawerField label="Ghi chú">
+            <textarea
+              value={form.remarks}
+              disabled={viewOnly}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, remarks: e.target.value }))
+              }
+              className={`${inputCls} min-h-[88px] resize-y`}
+            />
+          </DrawerField>
+        </DrawerSection>
+
+        <DrawerSection title="Dòng nhập kho từ PO">
+          <div className="space-y-3">
+            {form.lines.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+                Chọn purchase order để auto-populate các dòng nhập kho.
+              </div>
+            ) : (
+              form.lines.map((line, index) => (
+                <div
+                  key={`${index}-${line.purchaseOrderLineId}`}
+                  className="rounded-xl border border-border bg-muted/20 p-3"
+                >
+                  <div className="mb-2 text-xs font-semibold text-muted-foreground">
+                    Dòng {index + 1}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <DrawerField label="Mặt hàng">
+                      <input
+                        value={line.itemName}
+                        disabled
+                        className={inputCls}
+                      />
+                    </DrawerField>
+                    <DrawerField label="Số lượng nhập" required>
+                      <input
+                        value={line.qtyReceived}
+                        disabled={viewOnly}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            lines: prev.lines.map((row, i) =>
+                              i === index
+                                ? { ...row, qtyReceived: e.target.value }
+                                : row,
+                            ),
+                          }))
+                        }
+                        className={inputCls}
+                      />
+                    </DrawerField>
+                    <DrawerField label="Đơn giá">
+                      <input
+                        value={line.unitCost}
+                        disabled={viewOnly}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            lines: prev.lines.map((row, i) =>
+                              i === index
+                                ? { ...row, unitCost: e.target.value }
+                                : row,
+                            ),
+                          }))
+                        }
+                        className={inputCls}
+                      />
+                    </DrawerField>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DrawerSection>
+      </DrawerModal>
     </PageLayout>
   );
 }

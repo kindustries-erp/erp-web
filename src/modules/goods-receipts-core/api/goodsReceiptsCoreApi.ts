@@ -38,6 +38,11 @@ export type UpdateGrPayload = Partial<CreateGrPayload>;
 
 const BASE = "/api/v1/goods-receipts";
 
+type GrDetailResponse = {
+  message: string;
+  data: ErpGoodsReceipt;
+};
+
 export const goodsReceiptsCoreApi = {
   list: async (
     params?: ListParams,
@@ -54,31 +59,31 @@ export const goodsReceiptsCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpGoodsReceipt> => {
-    const { data } = await axiosInstance.get<ErpGoodsReceipt>(`${BASE}/${id}`);
-    return data;
+    const { data } = await axiosInstance.get<GrDetailResponse>(`${BASE}/${id}`);
+    return data.data;
   },
   create: async (payload: CreateGrPayload): Promise<ErpGoodsReceipt> => {
-    const { data } = await axiosInstance.post<ErpGoodsReceipt>(BASE, payload);
-    return data;
+    const { data } = await axiosInstance.post<GrDetailResponse>(BASE, payload);
+    return data.data;
   },
   update: async (
     id: string,
     payload: UpdateGrPayload,
   ): Promise<ErpGoodsReceipt> => {
-    const { data } = await axiosInstance.patch<ErpGoodsReceipt>(
+    const { data } = await axiosInstance.patch<GrDetailResponse>(
       `${BASE}/${id}`,
       payload,
     );
-    return data;
+    return data.data;
   },
   post: async (
     id: string,
     warehouseCode?: string,
   ): Promise<ErpGoodsReceipt> => {
-    const { data } = await axiosInstance.post<ErpGoodsReceipt>(
+    const { data } = await axiosInstance.post<GrDetailResponse>(
       `${BASE}/${id}/post`,
       { warehouseCode },
     );
-    return data;
+    return data.data;
   },
 };

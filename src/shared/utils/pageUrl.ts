@@ -13,6 +13,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-production",
   "erp-sales-orders",
   "erp-goods-issues",
+  "erp-inventory-items",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {

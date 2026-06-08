@@ -21,6 +21,7 @@ import { ErpGoodsReceiptsPage } from "@/pages/ErpGoodsReceiptsPage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
+import { ErpInventoryItemsPage } from "@/pages/ErpInventoryItemsPage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -38,6 +39,7 @@ const CORE_PAGES = [
   "erp-production",
   "erp-sales-orders",
   "erp-goods-issues",
+  "erp-inventory-items",
 ] as const;
 
 export default function App() {
@@ -102,6 +104,7 @@ export default function App() {
               {currentPage === "erp-production" && <ErpProductionPage />}
               {currentPage === "erp-sales-orders" && <ErpSalesOrdersPage />}
               {currentPage === "erp-goods-issues" && <ErpGoodsIssuesPage />}
+              {currentPage === "erp-inventory-items" && <ErpInventoryItemsPage />}
               {!(CORE_PAGES as readonly string[]).includes(currentPage) && (
                 <NotFound />
               )}

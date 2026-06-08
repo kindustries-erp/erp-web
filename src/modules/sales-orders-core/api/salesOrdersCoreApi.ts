@@ -37,6 +37,11 @@ export type UpdateSoPayload = Partial<CreateSoPayload>;
 
 const BASE = "/api/v1/sales-orders";
 
+type SoDetailResponse = {
+  message: string;
+  data: ErpSalesOrder;
+};
+
 export const salesOrdersCoreApi = {
   list: async (
     params?: ListParams,
@@ -54,41 +59,41 @@ export const salesOrdersCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpSalesOrder> => {
-    const { data } = await axiosInstance.get<ErpSalesOrder>(`${BASE}/${id}`);
-    return data;
+    const { data } = await axiosInstance.get<SoDetailResponse>(`${BASE}/${id}`);
+    return data.data;
   },
   create: async (payload: CreateSoPayload): Promise<ErpSalesOrder> => {
-    const { data } = await axiosInstance.post<ErpSalesOrder>(BASE, payload);
-    return data;
+    const { data } = await axiosInstance.post<SoDetailResponse>(BASE, payload);
+    return data.data;
   },
   update: async (
     id: string,
     payload: UpdateSoPayload,
   ): Promise<ErpSalesOrder> => {
-    const { data } = await axiosInstance.patch<ErpSalesOrder>(
+    const { data } = await axiosInstance.patch<SoDetailResponse>(
       `${BASE}/${id}`,
       payload,
     );
-    return data;
+    return data.data;
   },
   reserve: async (
     id: string,
     warehouseCode?: string,
   ): Promise<ErpSalesOrder> => {
-    const { data } = await axiosInstance.post<ErpSalesOrder>(
+    const { data } = await axiosInstance.post<SoDetailResponse>(
       `${BASE}/${id}/reserve`,
       { warehouseCode },
     );
-    return data;
+    return data.data;
   },
   unreserve: async (
     id: string,
     warehouseCode?: string,
   ): Promise<ErpSalesOrder> => {
-    const { data } = await axiosInstance.post<ErpSalesOrder>(
+    const { data } = await axiosInstance.post<SoDetailResponse>(
       `${BASE}/${id}/unreserve`,
       { warehouseCode },
     );
-    return data;
+    return data.data;
   },
 };

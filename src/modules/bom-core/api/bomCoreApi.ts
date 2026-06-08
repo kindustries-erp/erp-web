@@ -42,6 +42,11 @@ export type UpdateBomPayload = Partial<CreateBomPayload>;
 
 const BASE = "/api/v1/bom";
 
+type BomDetailResponse = {
+  message: string;
+  data: ErpBom;
+};
+
 export const bomCoreApi = {
   list: async (params?: ListParams): Promise<PaginatedResponse<ErpBom>> => {
     const { data } = await axiosInstance.get<PaginatedResponse<ErpBom>>(BASE, {
@@ -54,18 +59,18 @@ export const bomCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpBom> => {
-    const { data } = await axiosInstance.get<ErpBom>(`${BASE}/${id}`);
-    return data;
+    const { data } = await axiosInstance.get<BomDetailResponse>(`${BASE}/${id}`);
+    return data.data;
   },
   create: async (payload: CreateBomPayload): Promise<ErpBom> => {
-    const { data } = await axiosInstance.post<ErpBom>(BASE, payload);
-    return data;
+    const { data } = await axiosInstance.post<BomDetailResponse>(BASE, payload);
+    return data.data;
   },
   update: async (id: string, payload: UpdateBomPayload): Promise<ErpBom> => {
-    const { data } = await axiosInstance.patch<ErpBom>(
+    const { data } = await axiosInstance.patch<BomDetailResponse>(
       `${BASE}/${id}`,
       payload,
     );
-    return data;
+    return data.data;
   },
 };

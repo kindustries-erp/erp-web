@@ -38,6 +38,8 @@ export type UpdateGiPayload = Partial<CreateGiPayload>;
 
 const BASE = "/api/v1/goods-issues";
 
+type GiDetailResponse = { message: string; data: ErpGoodsIssue };
+
 export const goodsIssuesCoreApi = {
   list: async (
     params?: ListParams,
@@ -55,8 +57,8 @@ export const goodsIssuesCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpGoodsIssue> => {
-    const { data } = await axiosInstance.get<ErpGoodsIssue>(`${BASE}/${id}`);
-    return data;
+    const { data } = await axiosInstance.get<GiDetailResponse>(`${BASE}/${id}`);
+    return data.data;
   },
   create: async (payload: CreateGiPayload): Promise<ErpGoodsIssue> => {
     const { data } = await axiosInstance.post<ErpGoodsIssue>(BASE, payload);

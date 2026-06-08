@@ -48,6 +48,7 @@ export const vi = {
       erpProduction: "Sản xuất",
       erpSalesOrders: "Đơn bán hàng",
       erpGoodsIssues: "Xuất kho",
+      erpInventoryItems: "Hàng hóa ERP",
       activitylog: "Nhật ký hoạt động",
       phanquyen: "Phân quyền & Vai trò",
       workflowcanvas: "Sơ đồ quy trình",

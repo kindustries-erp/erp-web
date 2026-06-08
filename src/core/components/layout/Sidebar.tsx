@@ -250,6 +250,14 @@ export function Sidebar() {
                 onClick={() => navTo("erp-goods-issues")}
                 contextPage="erp-goods-issues"
               />
+              <NavItem
+                collapsed={c}
+                icon={<IconBox />}
+                label={t("nav.items.erpInventoryItems")}
+                active={currentPage === "erp-inventory-items"}
+                onClick={() => navTo("erp-inventory-items")}
+                contextPage="erp-inventory-items"
+              />
             </div>
           </div>
 
