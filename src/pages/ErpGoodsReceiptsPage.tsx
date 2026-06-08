@@ -25,6 +25,7 @@ interface GrLineForm {
   purchaseOrderLineId: string;
   itemId: string;
   itemName: string;
+  itemDesc: string;
   qtyReceived: string;
   unitCost: string;
 }
@@ -62,6 +63,7 @@ function buildForm(gr: ErpGoodsReceipt): GrForm {
         purchaseOrderLineId: line.purchaseOrderLineId ?? "",
         itemId: line.itemId ?? "",
         itemName: line.itemName ?? "",
+        itemDesc: line.itemName ?? "",
         qtyReceived: line.qtyReceived ?? "0",
         unitCost: line.unitCost ?? "",
       })) ?? [],
@@ -113,6 +115,13 @@ export function ErpGoodsReceiptsPage() {
     [],
   );
 
+  function remainingQty(poLine?: NonNullable<ErpPurchaseOrder["lines"]>[number]) {
+    return Math.max(
+      0,
+      Number(poLine?.qtyOrdered || 0) - Number(poLine?.qtyReceived || 0),
+    );
+  }
+
   const loadReceipts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -131,10 +140,18 @@ export function ErpGoodsReceiptsPage() {
   const loadPoOptions = useCallback(async () => {
     try {
       const res = await purchaseOrdersCoreApi.list({ page: 1, pageSize: 100 });
+      const actionable = res.items.filter((po) => {
+        if (["DRAFT", "CANCELLED", "RECEIVED"].includes(po.status ?? "")) {
+          return false;
+        }
+        return (po.lines || []).some((line) => remainingQty(line) > 0);
+      });
       setPoOptions(
-        res.items.map((po) => ({
+        actionable.map((po) => ({
           value: po.id,
-          label: `${po.poNo} — ${po.status ?? "N/A"}`,
+          label: `${po.poNo} — ${po.status ?? "N/A"} — còn ${(
+            po.lines || []
+          ).reduce((sum, line) => sum + remainingQty(line), 0)}`,
         })),
       );
     } catch {
@@ -180,16 +197,46 @@ export function ErpGoodsReceiptsPage() {
         purchaseOrderId: po.id,
         supplierId: po.supplierId ?? "",
         lines:
-          po.lines?.map((line) => ({
-            purchaseOrderLineId: line.id ?? "",
-            itemId: line.itemId ?? "",
-            itemName: line.itemName ?? line.description ?? "",
-            qtyReceived: line.qtyOrdered ?? "0",
-            unitCost: line.unitPrice ?? "",
-          })) ?? [],
+          po.lines
+            ?.filter((line) => remainingQty(line) > 0)
+            .map((line) => ({
+              purchaseOrderLineId: line.id ?? "",
+              itemId: line.itemId ?? "",
+              itemName: line.itemName ?? line.description ?? line.itemId ?? "",
+              itemDesc: line.description ?? "",
+              qtyReceived: String(remainingQty(line)),
+              unitCost: line.unitPrice ?? "",
+            })) ?? [],
       }));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Không thể load PO");
+    }
+  }
+
+  async function enrichReceipt(detail: ErpGoodsReceipt): Promise<ErpGoodsReceipt> {
+    if (!detail.purchaseOrderId || !detail.lines?.length) return detail;
+    try {
+      const po = await purchaseOrdersCoreApi.get(detail.purchaseOrderId);
+      const lineMap = new Map(
+        (po.lines || []).map((line) => [line.id, line]),
+      );
+      return {
+        ...detail,
+        lines: detail.lines.map((line) => {
+          const poLine = lineMap.get(line.purchaseOrderLineId);
+          return {
+            ...line,
+            itemName:
+              line.itemName ||
+              poLine?.itemName ||
+              poLine?.description ||
+              line.itemId ||
+              "",
+          };
+        }),
+      };
+    } catch {
+      return detail;
     }
   }
 
@@ -198,8 +245,9 @@ export function ErpGoodsReceiptsPage() {
     setSaveError(null);
     try {
       const detail = await goodsReceiptsCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
+      const enriched = await enrichReceipt(detail);
+      setEditing(enriched);
+      setForm(buildForm(enriched));
       setDrawerOpen(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải chi tiết goods receipt");
@@ -211,8 +259,9 @@ export function ErpGoodsReceiptsPage() {
     setSaveError(null);
     try {
       const detail = await goodsReceiptsCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
+      const enriched = await enrichReceipt(detail);
+      setEditing(enriched);
+      setForm(buildForm(enriched));
       setDrawerOpen(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải chi tiết goods receipt");
@@ -496,7 +545,7 @@ export function ErpGoodsReceiptsPage() {
           <div className="space-y-3">
             {form.lines.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                Chọn purchase order để auto-populate các dòng nhập kho.
+                Chỉ hiện PO đã xác nhận và còn số lượng chưa nhập. PO nháp, đã hủy, hoặc đã nhập đủ sẽ không còn trong danh sách chọn.
               </div>
             ) : (
               form.lines.map((line, index) => (
@@ -511,6 +560,13 @@ export function ErpGoodsReceiptsPage() {
                     <DrawerField label="Mặt hàng">
                       <input
                         value={line.itemName}
+                        disabled
+                        className={inputCls}
+                      />
+                    </DrawerField>
+                    <DrawerField label="Mô tả / tham chiếu dòng PO">
+                      <input
+                        value={line.itemDesc}
                         disabled
                         className={inputCls}
                       />

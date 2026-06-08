@@ -1033,11 +1033,23 @@ export function OperationalListPage({
                     },
                     {
                       label: "Sửa",
-                      icon: <Pencil className="h-4 w-4" />,
-                      onClick: () => {
-                        setEditingRow(row);
-                        setFormOpen(true);
+                      onClick: async () => {
+                        const documentType = resolveDocumentType(row, variant);
+                        if (!documentType) return;
+                        try {
+                          const detail = await operationalApi.getDocument(
+                            documentType,
+                            row.id,
+                          );
+                          setEditingRow(detail);
+                          setFormOpen(true);
+                        } catch (err) {
+                          setError(
+                            extractApiError(err, "Không tải được dữ liệu chỉnh sửa"),
+                          );
+                        }
                       },
+                      icon: <Pencil className="h-4 w-4" />,
                       hidden: !["sales", "purchase", "expenses"].includes(
                         variant,
                       ),

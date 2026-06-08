@@ -319,12 +319,8 @@ export function OperationalFormDrawer({
       setError("Vui lòng chọn khách hàng hoặc nhập tên snapshot.");
       return;
     }
-    if (
-      (variant === "purchase" || variant === "expenses") &&
-      !partnerId &&
-      !partnerNameSnapshot.trim()
-    ) {
-      setError("Vui lòng chọn nhà cung cấp hoặc nhập tên snapshot.");
+    if ((variant === "purchase" || variant === "expenses") && !partnerId) {
+      setError("Vui lòng chọn nhà cung cấp.");
       return;
     }
     if (!lines.length) {
@@ -424,6 +420,11 @@ export function OperationalFormDrawer({
     <DrawerModal
       open={open}
       onClose={onClose}
+      panelClassName={
+        variant === "purchase"
+          ? "min-[1024px]:min-w-[1120px]"
+          : "min-[1024px]:min-w-[920px]"
+      }
       title={
         editing
           ? `Cập nhật ${variantTitle[variant]}`
@@ -443,7 +444,7 @@ export function OperationalFormDrawer({
         },
       ]}
     >
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div className="space-y-4">
           <DrawerSection title="Thông tin chung">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3">
@@ -470,13 +471,15 @@ export function OperationalFormDrawer({
                   onChange={(v) => setPartnerId(v || "")}
                 />
               </DrawerField>
-              <DrawerField label="Tên snapshot">
-                <input
-                  className={inputCls}
-                  value={partnerNameSnapshot}
-                  onChange={(e) => setPartnerNameSnapshot(e.target.value)}
-                />
-              </DrawerField>
+              {variant !== "purchase" && (
+                <DrawerField label="Tên snapshot">
+                  <input
+                    className={inputCls}
+                    value={partnerNameSnapshot}
+                    onChange={(e) => setPartnerNameSnapshot(e.target.value)}
+                  />
+                </DrawerField>
+              )}
               <DrawerField label="Ngày chứng từ" required>
                 <input
                   type="date"
@@ -582,53 +585,57 @@ export function OperationalFormDrawer({
                       </DrawerField>
                     </>
                   )}
-                  <DrawerField label="Chu kỳ">
-                    <Combobox
-                      options={recurrenceOptions}
-                      value={recurrenceType}
-                      onChange={(v) => setRecurrenceType(v || "ONE_TIME")}
-                      allowClear={false}
-                    />
-                  </DrawerField>
-                  <DrawerField label="Khoảng lặp">
-                    <input
-                      type="number"
-                      min={1}
-                      className={inputCls}
-                      value={recurrenceInterval}
-                      onChange={(e) => setRecurrenceInterval(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label="Bắt đầu">
-                    <input
-                      type="date"
-                      className={inputCls}
-                      value={recurrenceStartDate}
-                      onChange={(e) => setRecurrenceStartDate(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label="Kết thúc">
-                    <input
-                      type="date"
-                      className={inputCls}
-                      value={recurrenceEndDate}
-                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label="Kỳ tiếp theo">
-                    <input
-                      type="date"
-                      className={inputCls}
-                      value={nextDueDate}
-                      onChange={(e) => setNextDueDate(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label="Tự sinh kỳ sau">
-                    <Checkbox
-                      checked={autoGenerateNext}
-                      onCheckedChange={(v) => setAutoGenerateNext(!!v)}
-                    />
-                  </DrawerField>
+                  {variant === "expenses" && (
+                    <>
+                      <DrawerField label="Chu kỳ">
+                        <Combobox
+                          options={recurrenceOptions}
+                          value={recurrenceType}
+                          onChange={(v) => setRecurrenceType(v || "ONE_TIME")}
+                          allowClear={false}
+                        />
+                      </DrawerField>
+                      <DrawerField label="Khoảng lặp">
+                        <input
+                          type="number"
+                          min={1}
+                          className={inputCls}
+                          value={recurrenceInterval}
+                          onChange={(e) => setRecurrenceInterval(e.target.value)}
+                        />
+                      </DrawerField>
+                      <DrawerField label="Bắt đầu">
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={recurrenceStartDate}
+                          onChange={(e) => setRecurrenceStartDate(e.target.value)}
+                        />
+                      </DrawerField>
+                      <DrawerField label="Kết thúc">
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={recurrenceEndDate}
+                          onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                        />
+                      </DrawerField>
+                      <DrawerField label="Kỳ tiếp theo">
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={nextDueDate}
+                          onChange={(e) => setNextDueDate(e.target.value)}
+                        />
+                      </DrawerField>
+                      <DrawerField label="Tự sinh kỳ sau">
+                        <Checkbox
+                          checked={autoGenerateNext}
+                          onCheckedChange={(v) => setAutoGenerateNext(!!v)}
+                        />
+                      </DrawerField>
+                    </>
+                  )}
                 </>
               )}
 
@@ -649,9 +656,22 @@ export function OperationalFormDrawer({
               {lines.map((line, idx) => (
                 <div
                   key={line.tempId}
-                  className="rounded-lg border border-[color:var(--border)] p-3 space-y-2"
+                  className="rounded-lg border border-[color:var(--border)] p-3 space-y-2 overflow-x-auto"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="text-xs font-semibold text-muted-foreground">
+                      Dòng {idx + 1}
+                    </div>
+                    {lines.length > 1 && (
+                      <button
+                        className="text-xs text-red-500 hover:underline whitespace-nowrap"
+                        onClick={() => removeLine(idx)}
+                      >
+                        Xóa dòng này
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex min-w-[1100px] items-start gap-3">
                     <DrawerField label="Loại dòng">
                       <Combobox
                         options={lineTypeOptions}
@@ -729,14 +749,7 @@ export function OperationalFormDrawer({
                       />
                     </DrawerField>
                   </div>
-                  {lines.length > 1 && (
-                    <button
-                      className="text-xs text-red-500 hover:underline"
-                      onClick={() => removeLine(idx)}
-                    >
-                      Xóa dòng này
-                    </button>
-                  )}
+
                 </div>
               ))}
               <button
