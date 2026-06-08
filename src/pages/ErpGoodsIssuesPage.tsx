@@ -178,7 +178,7 @@ export function ErpGoodsIssuesPage() {
       const res = await getBusinessPartnersPagedApi({
         page: 1,
         pageSize: LOOKUP_LIMIT,
-        role: "CUSTOMER",
+        partnerType: "CUSTOMER",
       });
       setCustomerOptions(
         res.items.map((p) => ({

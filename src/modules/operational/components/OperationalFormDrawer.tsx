@@ -187,7 +187,7 @@ export function OperationalFormDrawer({
 
   useEffect(() => {
     const partnerRole = variant === "sales" ? "CUSTOMER" : "VENDOR";
-    getBusinessPartnersPagedApi({ page: 1, pageSize: 200, role: partnerRole })
+    getBusinessPartnersPagedApi({ page: 1, pageSize: 200, partnerType: partnerRole })
       .then((res) => {
         setPartnerOptions(
           (res.items || []).map((p: BusinessPartner) => ({

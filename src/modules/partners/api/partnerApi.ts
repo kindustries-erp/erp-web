@@ -62,7 +62,7 @@ export async function getBusinessPartnersApi(): Promise<BusinessPartner[]> {
 }
 
 export async function getBusinessPartnersPagedApi(
-  params: ListParams & { role?: string } = {},
+  params: ListParams & { partnerType?: string } = {},
 ): Promise<PaginatedResponse<BusinessPartner>> {
   const { data } = await axiosInstance.get<PaginatedResponse<BusinessPartner>>(
     "/api/v1/business-partners",
@@ -72,7 +72,7 @@ export async function getBusinessPartnersPagedApi(
         pageSize: params.pageSize ?? DEFAULT_PAGE_SIZE,
         sort: (params.sort ?? DEFAULT_SORT).join(","),
         ...(params.search ? { search: params.search } : {}),
-        ...(params.role ? { role: params.role } : {}),
+        ...(params.partnerType ? { partnerType: params.partnerType } : {}),
       },
     },
   );
