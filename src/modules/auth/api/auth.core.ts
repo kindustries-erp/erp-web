@@ -30,7 +30,7 @@ export async function loginApi(payload: {
   password: string;
 }): Promise<CoreLoginResponse> {
   const { data } = await axiosInstance.post<CoreLoginResponse>(
-    "/auth/login",
+    "/api/v1/auth/login",
     payload,
     { _silentSuccess: true },
   );
@@ -39,7 +39,7 @@ export async function loginApi(payload: {
 
 export async function getProfileApi(): Promise<CoreProfileResponse> {
   const { data } = await axiosInstance.get<CoreProfileResponse>(
-    "/auth/profile",
+    "/api/v1/auth/profile",
     {
       _silentError: true,
     },
