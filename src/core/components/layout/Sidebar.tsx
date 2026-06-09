@@ -196,14 +196,6 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconShop />}
-                label={t("nav.items.mfgPo")}
-                active={currentPage === "mfg-purchase-orders"}
-                onClick={() => navTo("mfg-purchase-orders")}
-                contextPage="mfg-purchase-orders"
-              />
-              <NavItem
-                collapsed={c}
                 icon={<IconCart />}
                 label={t("nav.items.mfgVehicles")}
                 active={currentPage === "mfg-vehicles"}

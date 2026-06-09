@@ -14,7 +14,6 @@ import { BanHang } from "@/pages/Sales";
 import { MuaHang } from "@/pages/Purchasing";
 import { Kho } from "@/pages/Inventory";
 import { MfgItems } from "@/pages/MfgItems";
-import { MfgPurchaseOrders } from "@/pages/MfgPurchaseOrders";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
 import { ErpGoodsReceiptsPage } from "@/pages/ErpGoodsReceiptsPage";
@@ -97,7 +96,6 @@ export default function App() {
               {currentPage === "purchasing" && <MuaHang />}
               {currentPage === "inventory" && <Kho />}
               {currentPage === "mfg-items" && <MfgItems />}
-              {currentPage === "mfg-purchase-orders" && <MfgPurchaseOrders />}
               {currentPage === "mfg-vehicles" && <MfgVehicles />}
               {currentPage === "erp-bom" && <ErpBomPage />}
               {currentPage === "erp-goods-receipts" && <ErpGoodsReceiptsPage />}

@@ -74,10 +74,6 @@ vi.mock("@/pages/MfgItems", () => ({
   MfgItems: () => <div>mfg-items-page</div>,
 }));
 
-vi.mock("@/pages/MfgPurchaseOrders", () => ({
-  MfgPurchaseOrders: () => <div>mfg-po-page</div>,
-}));
-
 vi.mock("@/pages/MfgVehicles", () => ({
   MfgVehicles: () => <div>mfg-vehicles-page</div>,
 }));
