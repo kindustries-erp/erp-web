@@ -93,7 +93,11 @@ const lineTypeOptions = [
   { value: "EXPENSE", label: "Chi phí" },
 ];
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
 const newTempId = () =>
   `line-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -164,6 +168,7 @@ export function OperationalFormDrawer({
   const [dueDate, setDueDate] = useState("");
   const [invoiceStatus, setInvoiceStatus] = useState("NO_INVOICE");
   const [status, setStatus] = useState("DRAFT");
+  const [paymentStatus, setPaymentStatus] = useState("UNPAID");
   const [recurrenceType, setRecurrenceType] = useState("ONE_TIME");
   const [recurrenceInterval, setRecurrenceInterval] = useState("1");
   const [recurrenceStartDate, setRecurrenceStartDate] = useState("");
@@ -254,6 +259,7 @@ export function OperationalFormDrawer({
       setDueDate("");
       setInvoiceStatus("NO_INVOICE");
       setStatus("DRAFT");
+      setPaymentStatus("UNPAID");
       setRecurrenceType("ONE_TIME");
       setRecurrenceInterval("1");
       setRecurrenceStartDate("");
@@ -283,17 +289,18 @@ export function OperationalFormDrawer({
     setVehicleModel((editing as any).vehicle_model || "");
     setServiceAdvisorName((editing as any).service_advisor_name || "");
     setExpenseCategory(editing.expense_category || "");
-    setDocumentDate((editing.document_date || today()).slice(0, 10));
+    setDocumentDate((editing.document_date || today()).slice(0, 16));
     setExpectedDate(
       (
         (editing as any).expected_delivery_date ||
         (editing as any).expected_receipt_date ||
         ""
-      ).slice(0, 10),
+      ).slice(0, 16),
     );
     setDueDate((editing.due_date || "").slice(0, 10));
     setInvoiceStatus(editing.invoice_status || "NO_INVOICE");
     setStatus(editing.status || "DRAFT");
+    setPaymentStatus(editing.payment_status || "UNPAID");
     setRecurrenceType(editing.recurrence_type || "ONE_TIME");
     setRecurrenceInterval(String((editing as any).recurrence_interval ?? 1));
     setRecurrenceStartDate(
@@ -370,6 +377,7 @@ export function OperationalFormDrawer({
       branch_id: branchId || undefined,
       invoice_status: invoiceStatus,
       status,
+      payment_status: paymentStatus,
       total_amount: totalAmount,
       notes: notes.trim() || undefined,
       lines: lines.map((line, idx) => ({
@@ -519,7 +527,7 @@ export function OperationalFormDrawer({
               )}
               <DrawerField label="Ngày chứng từ" required>
                 <input
-                  type="date"
+                  type="datetime-local"
                   className={inputCls}
                   value={documentDate}
                   onChange={(e) => setDocumentDate(e.target.value)}
@@ -554,6 +562,23 @@ export function OperationalFormDrawer({
                 />
               </DrawerField>
 
+              {variant === "purchase" && (
+                <DrawerField label="T.thái thanh toán">
+                  <Combobox
+                    options={[
+                      { value: "UNPAID", label: "UNPAID" },
+                      { value: "PARTIALLY_PAID", label: "PARTIALLY_PAID" },
+                      { value: "PAID", label: "PAID" },
+                      { value: "OVERDUE", label: "OVERDUE" },
+                      { value: "VOID", label: "VOID" },
+                    ]}
+                    value={paymentStatus}
+                    onChange={(v) => setPaymentStatus(v || "UNPAID")}
+                    allowClear={false}
+                  />
+                </DrawerField>
+              )}
+
               {variant === "sales" && (
                 <>
                   <DrawerField label="Biển số xe">
@@ -586,7 +611,7 @@ export function OperationalFormDrawer({
                   </DrawerField>
                   <DrawerField label="Ngày giao dự kiến">
                     <input
-                      type="date"
+                      type="datetime-local"
                       className={inputCls}
                       value={expectedDate}
                       onChange={(e) => setExpectedDate(e.target.value)}
@@ -600,7 +625,7 @@ export function OperationalFormDrawer({
                   {variant === "purchase" && (
                     <DrawerField label="Ngày nhận dự kiến">
                       <input
-                        type="date"
+                        type="datetime-local"
                         className={inputCls}
                         value={expectedDate}
                         onChange={(e) => setExpectedDate(e.target.value)}

@@ -96,6 +96,18 @@ function normalizeDate(value?: string | null) {
   return value ? String(value).slice(0, 10) : "";
 }
 
+function normalizeDateTime(value?: string | null) {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  } catch {
+    return String(value);
+  }
+}
+
 function today() {
   return normalizeDate(new Date().toISOString());
 }
@@ -797,14 +809,14 @@ export function OperationalListPage({
       {
         key: "order_date",
         header: "Ngày đặt",
-        className: "align-top min-w-[110px]",
-        cell: (row) => normalizeDate(row.document_date) || "—",
+        className: "align-top min-w-[150px]",
+        cell: (row) => normalizeDateTime(row.document_date) || "—",
       },
       {
         key: "expected_date",
         header: "Ngày nhận DK",
-        className: "align-top min-w-[120px]",
-        cell: (row) => normalizeDate(row.due_date) || "—",
+        className: "align-top min-w-[150px]",
+        cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
       {
         key: "po_status",
@@ -813,6 +825,7 @@ export function OperationalListPage({
         cell: (row) => (
           <div className="flex flex-col gap-1">
             <StatusBadge status={row.status} />
+            <StatusBadge status={row.payment_status} />
             {row.inventory_status ? (
               <div className="text-xs text-[color:var(--muted-fg)]">
                 Kho: {inventoryStatusLabel(row.inventory_status)}
@@ -1217,9 +1230,11 @@ export function OperationalListPage({
                         }
                       },
                       icon: <Pencil className="h-4 w-4" />,
-                      hidden: !["sales", "purchase", "expenses"].includes(
-                        variant,
-                      ),
+                      hidden:
+                        !["sales", "purchase", "expenses"].includes(variant) ||
+                        (variant === "purchase" &&
+                          (row.status === "RECEIVED" ||
+                            row.status === "FULLY_RECEIVED")),
                     },
                     {
                       label: "Liên kết tiền",

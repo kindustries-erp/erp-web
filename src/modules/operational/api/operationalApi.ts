@@ -162,7 +162,9 @@ function normalizePurchaseRow(row: any): OperationalDocument {
   const totalAmount =
     row?.total_amount !== undefined && row?.total_amount !== null
       ? Number(row.total_amount)
-      : computedTotal;
+      : row?.totalAmount !== undefined && row?.totalAmount !== null
+        ? Number(row.totalAmount)
+        : computedTotal;
 
   return {
     ...row,
@@ -176,16 +178,20 @@ function normalizePurchaseRow(row: any): OperationalDocument {
     document_date: row.document_date ?? row.orderDate ?? "",
     due_date: row.due_date ?? row.expectedDate ?? null,
     status: row.status ?? "DRAFT",
-    invoice_status: row.invoice_status ?? "NO_INVOICE",
-    payment_status: row.payment_status ?? "UNPAID",
-    accounting_status: row.accounting_status ?? "UNPOSTED",
-    inventory_status: row.inventory_status ?? "NOT_RECEIVED",
+    invoice_status: row.invoice_status ?? row.invoiceStatus ?? "NO_INVOICE",
+    payment_status: row.payment_status ?? row.paymentStatus ?? "UNPAID",
+    accounting_status:
+      row.accounting_status ?? row.accountingStatus ?? "UNPOSTED",
+    inventory_status:
+      row.inventory_status ?? row.inventoryStatus ?? "NOT_RECEIVED",
     total_amount: totalAmount,
-    settled_amount: Number(row.settled_amount ?? 0),
+    settled_amount: Number(row.settled_amount ?? row.settledAmount ?? 0),
     open_amount:
       row.open_amount !== undefined && row.open_amount !== null
         ? Number(row.open_amount)
-        : totalAmount,
+        : row.openAmount !== undefined && row.openAmount !== null
+          ? Number(row.openAmount)
+          : totalAmount,
     recurrence_type: row.recurrence_type ?? "ONE_TIME",
     auto_generate_next: Boolean(row.auto_generate_next),
     notes: row.notes ?? row.remarks ?? null,
@@ -204,6 +210,7 @@ function toCorePurchasePayload(
     expectedDate:
       (payload as any).expected_receipt_date || payload.due_date || undefined,
     status: payload.status,
+    paymentStatus: payload.payment_status,
     remarks: payload.notes || undefined,
     lines: (payload.lines || []).map((line) => ({
       itemId: line.inventory_item_id || undefined,
