@@ -25,6 +25,10 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import {
+  manufacturingApi,
+  type CreateVehicleDto,
+} from "@/modules/manufacturing/api/manufacturingApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAppStore } from "@/core/config/appStore";
 
@@ -37,11 +41,21 @@ interface ProductionForm {
   referenceNo: string;
 }
 
+interface VehicleForm {
+  batch_lines: string;
+  notes: string;
+}
+
 const emptyForm = (): ProductionForm => ({
   finishedGoodItemId: "",
   qtyToProduce: "1",
   warehouseCode: "",
   referenceNo: "",
+});
+
+const emptyVehicleForm = (): VehicleForm => ({
+  batch_lines: "",
+  notes: "",
 });
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -232,6 +246,9 @@ export function ErpProductionPage() {
   const [executing, setExecuting] = useState(false);
   const [execError, setExecError] = useState<string | null>(null);
   const [result, setResult] = useState<ExecuteProductionResult | null>(null);
+  const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
+  const [vehicleSaving, setVehicleSaving] = useState(false);
+  const [vehicleError, setVehicleError] = useState<string | null>(null);
 
   // ── History list ──
   const [orders, setOrders] = useState<ErpProductionOrder[]>([]);
@@ -316,6 +333,11 @@ export function ErpProductionPage() {
       };
       const res = await productionCoreApi.execute(payload);
       setResult(res);
+      setVehicleForm({
+        batch_lines: "",
+        notes: res.referenceNo ? `Tạo sau sản xuất ${res.referenceNo}` : "",
+      });
+      setVehicleError(null);
       showToast({ title: "Sản xuất thành công!", variant: "success" });
       // Reload history to include the new order
       await loadHistory();
@@ -330,10 +352,84 @@ export function ErpProductionPage() {
     }
   }
 
+  async function handleCreateVehicle() {
+    if (!result?.finishedGoodItemId) {
+      setVehicleError("Chưa có thành phẩm từ lần sản xuất gần nhất");
+      return;
+    }
+
+    const rows = vehicleForm.batch_lines
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    if (!rows.length) {
+      setVehicleError("Phải nhập ít nhất 1 dòng số khung / số máy");
+      return;
+    }
+
+    const parsed = rows.map((row, index) => {
+      const parts = row.split("|").map((x) => x.trim());
+      return {
+        rowNo: index + 1,
+        frame_no: parts[0] || "",
+        engine_no: parts[1] || "",
+        serial_no: parts[2] || "",
+      };
+    });
+
+    const invalid = parsed.find((row) => !row.frame_no || !row.engine_no);
+    if (invalid) {
+      setVehicleError(
+        `Dòng ${invalid.rowNo} thiếu số khung hoặc số máy. Format: so_khung|so_may|serial(optional)`,
+      );
+      return;
+    }
+
+    const qtyProduced = Number(result.qtyProduced || 0);
+    if (qtyProduced > 0 && parsed.length !== qtyProduced) {
+      setVehicleError(
+        `Đã sản xuất ${qtyProduced} xe, cần nhập đúng ${qtyProduced} dòng số khung/số máy`,
+      );
+      return;
+    }
+
+    setVehicleSaving(true);
+    setVehicleError(null);
+    try {
+      for (const row of parsed) {
+        const payload: CreateVehicleDto = {
+          frame_no: row.frame_no,
+          engine_no: row.engine_no,
+          serial_no: row.serial_no || undefined,
+          notes: vehicleForm.notes.trim() || undefined,
+          finished_good_item_id: result.finishedGoodItemId,
+          assembly_date: new Date().toISOString().slice(0, 10),
+        };
+        await manufacturingApi.createVehicle(payload);
+      }
+      showToast({
+        title: `Đã tạo ${parsed.length} xe thành công`,
+        variant: "success",
+      });
+      setVehicleForm(emptyVehicleForm());
+    } catch (e: any) {
+      setVehicleError(
+        e?.response?.data?.message ||
+          e?.message ||
+          "Không thể tạo xe theo batch",
+      );
+    } finally {
+      setVehicleSaving(false);
+    }
+  }
+
   function handleReset() {
     setForm(emptyForm());
     setResult(null);
     setExecError(null);
+    setVehicleForm(emptyVehicleForm());
+    setVehicleError(null);
   }
 
   // ── History table columns ──
@@ -502,6 +598,76 @@ export function ErpProductionPage() {
 
         {/* ─── Result panel ─── */}
         {result && <ResultPanel result={result} />}
+
+        {result?.finishedGoodItemId && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="mb-4 space-y-0.5">
+              <h3 className="text-base font-semibold text-foreground">
+                Nhập batch số khung / số máy sau sản xuất
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Mỗi dòng tương ứng 1 xe. Format:
+                số_khung|số_máy|serial(optional).
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <DrawerField
+                  label="Batch số khung | số máy | serial(optional)"
+                  required
+                >
+                  <textarea
+                    value={vehicleForm.batch_lines}
+                    onChange={(e) =>
+                      setVehicleForm((prev) => ({
+                        ...prev,
+                        batch_lines: e.target.value,
+                      }))
+                    }
+                    disabled={vehicleSaving}
+                    className={`${inputCls} min-h-[180px]`}
+                    placeholder={"SK001|SM001|SER001\nSK002|SM002\nSK003|SM003"}
+                  />
+                </DrawerField>
+              </div>
+              <div className="md:col-span-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Số khung là mã canonical của xe; không nhập VIN riêng nữa. Nếu
+                sản xuất 10 xe thì nhập đúng 10 dòng.
+              </div>
+              <div className="md:col-span-2">
+                <DrawerField label="Ghi chú">
+                  <input
+                    value={vehicleForm.notes}
+                    onChange={(e) =>
+                      setVehicleForm((prev) => ({
+                        ...prev,
+                        notes: e.target.value,
+                      }))
+                    }
+                    disabled={vehicleSaving}
+                    className={inputCls}
+                    placeholder="Ghi chú tùy chọn"
+                  />
+                </DrawerField>
+              </div>
+            </div>
+            {vehicleError && (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {vehicleError}
+              </div>
+            )}
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => void handleCreateVehicle()}
+                disabled={vehicleSaving}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                Tạo xe / VIN
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ─── History ─── */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">

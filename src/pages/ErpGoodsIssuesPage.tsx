@@ -22,6 +22,7 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
 
 const LOOKUP_LIMIT = 200;
 
@@ -41,6 +42,8 @@ interface GiLineForm {
   salesOrderLineId: string;
   itemId: string;
   itemName: string;
+  serialId: string;
+  vehicleId: string;
   qtyIssued: string;
   unitCost: string;
 }
@@ -61,6 +64,8 @@ const emptyLine = (): GiLineForm => ({
   salesOrderLineId: "",
   itemId: "",
   itemName: "",
+  serialId: "",
+  vehicleId: "",
   qtyIssued: "1",
   unitCost: "",
 });
@@ -88,6 +93,8 @@ function buildForm(gi: ErpGoodsIssue): GiForm {
           salesOrderLineId: line.salesOrderLineId ?? "",
           itemId: line.itemId ?? "",
           itemName: line.itemName ?? "",
+          serialId: line.serialId ?? "",
+          vehicleId: line.vehicleId ?? "",
           qtyIssued: line.qtyIssued ?? "1",
           unitCost: line.unitCost ?? "",
         }))
@@ -107,6 +114,8 @@ function toPayload(form: GiForm): CreateGiPayload {
       salesOrderLineId: line.salesOrderLineId || undefined,
       itemId: line.itemId || undefined,
       itemName: line.itemName || undefined,
+      serialId: line.serialId || undefined,
+      vehicleId: line.vehicleId || undefined,
       qtyIssued: line.qtyIssued,
       unitCost: line.unitCost || undefined,
     })),
@@ -157,6 +166,9 @@ export function ErpGoodsIssuesPage() {
   >([]);
   const [itemOptions, setItemOptions] = useState<
     Array<{ value: string; label: string }>
+  >([]);
+  const [vehicleOptions, setVehicleOptions] = useState<
+    Array<{ value: string; label: string; itemId?: string | null }>
   >([]);
 
   // ─── Load list ───────────────────────────────────────────────────────────────
@@ -211,6 +223,24 @@ export function ErpGoodsIssuesPage() {
     }
   }, []);
 
+  const loadVehicleLookup = useCallback(async () => {
+    try {
+      const res = await manufacturingApi.listVehicles({
+        page: 1,
+        pageSize: LOOKUP_LIMIT,
+      });
+      setVehicleOptions(
+        res.items.map((vehicle) => ({
+          value: vehicle.id,
+          label: `${vehicle.vin} — ${vehicle.frame_no} — ${vehicle.engine_no}`,
+          itemId: vehicle.finished_good_item_id ?? null,
+        })),
+      );
+    } catch {
+      setVehicleOptions([]);
+    }
+  }, []);
+
   useEffect(() => {
     void loadIssues();
   }, [loadIssues]);
@@ -218,7 +248,8 @@ export function ErpGoodsIssuesPage() {
   useEffect(() => {
     void loadCustomers();
     void loadItemsLookup();
-  }, [loadCustomers, loadItemsLookup]);
+    void loadVehicleLookup();
+  }, [loadCustomers, loadItemsLookup, loadVehicleLookup]);
 
   // ─── Drawer helpers ──────────────────────────────────────────────────────────
 
@@ -648,11 +679,41 @@ export function ErpGoodsIssuesPage() {
                           itemName:
                             matched?.label.split(" — ").slice(1).join(" — ") ||
                             "",
+                          vehicleId:
+                            line.vehicleId &&
+                            vehicleOptions.some(
+                              (opt) =>
+                                opt.value === line.vehicleId &&
+                                opt.itemId === value,
+                            )
+                              ? line.vehicleId
+                              : "",
                         });
                       }}
                       options={itemOptions}
                       placeholder="Chọn inventory item"
                       searchPlaceholder="Tìm SKU / tên"
+                    />
+                  </DrawerField>
+                  <DrawerField label="Xe / VIN">
+                    <Combobox
+                      value={line.vehicleId}
+                      disabled={viewOnly}
+                      onChange={(value) => {
+                        const matched = vehicleOptions.find(
+                          (opt) => opt.value === value,
+                        );
+                        updateLine(index, {
+                          vehicleId: value,
+                          serialId: "",
+                          itemId: matched?.itemId || line.itemId,
+                        });
+                      }}
+                      options={vehicleOptions.filter(
+                        (opt) => !line.itemId || opt.itemId === line.itemId,
+                      )}
+                      placeholder="Chọn xe/VIN để trace"
+                      searchPlaceholder="Tìm VIN / số khung / số máy"
                     />
                   </DrawerField>
                   <DrawerField label="Số lượng xuất" required>
@@ -682,6 +743,11 @@ export function ErpGoodsIssuesPage() {
                       Item: {line.itemName}
                     </div>
                   )}
+                  {line.vehicleId && (
+                    <div className="text-xs text-muted-foreground md:col-span-2">
+                      VIN trace enabled for dòng này.
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -696,6 +762,7 @@ export function ErpGoodsIssuesPage() {
                 <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2">Item</th>
+                    <th className="px-3 py-2">VIN / Khung / Máy</th>
                     <th className="px-3 py-2 text-right">Qty Issued</th>
                     <th className="px-3 py-2 text-right">Unit Cost</th>
                     <th className="px-3 py-2 text-right">Amount</th>
@@ -706,6 +773,11 @@ export function ErpGoodsIssuesPage() {
                     <tr key={line.id ?? idx} className="border-t border-border">
                       <td className="px-3 py-2">
                         {line.itemName || line.itemId || "—"}
+                      </td>
+                      <td className="px-3 py-2 text-xs">
+                        {line.vehicleVin || line.frameNo || line.engineNo
+                          ? `${line.vehicleVin || "—"} / ${line.frameNo || "—"} / ${line.engineNo || "—"}`
+                          : "—"}
                       </td>
                       <td className="px-3 py-2 text-right">
                         {fmtQty(line.qtyIssued)}

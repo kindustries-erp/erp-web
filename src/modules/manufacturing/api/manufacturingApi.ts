@@ -60,6 +60,17 @@ export interface ErpVehicle {
   created_at?: string;
 }
 
+export interface CreateVehicleDto {
+  vin?: string | null;
+  frame_no: string;
+  engine_no: string;
+  finished_good_item_id?: string | null;
+  assembly_date?: string | null;
+  branch_id?: string | null;
+  notes?: string | null;
+  serial_no?: string | null;
+}
+
 export interface ComponentStockSummary {
   item: ErpItem & {
     stock_summary?: {
@@ -335,6 +346,11 @@ export const manufacturingApi = {
 
   getVehicle: async (id: string): Promise<ErpVehicle> => {
     const { data } = await axiosInstance.get(`${BASE}/vehicles/${id}`);
+    return data;
+  },
+
+  createVehicle: async (payload: CreateVehicleDto): Promise<ErpVehicle> => {
+    const { data } = await axiosInstance.post(`${BASE}/vehicles`, payload);
     return data;
   },
 };

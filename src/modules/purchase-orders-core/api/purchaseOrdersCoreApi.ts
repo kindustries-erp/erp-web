@@ -26,7 +26,7 @@ export interface ErpPurchaseOrder {
 }
 
 export interface CreatePoPayload {
-  poNo: string;
+  poNo?: string;
   supplierId?: string;
   orderDate: string;
   expectedDate?: string;
@@ -76,5 +76,12 @@ export const purchaseOrdersCoreApi = {
       payload,
     );
     return data.data;
+  },
+  nextNo: async (date?: string): Promise<string> => {
+    const { data } = await axiosInstance.get<{ nextNo: string }>(
+      `${BASE}/next-no`,
+      { params: date ? { date } : {} },
+    );
+    return data.nextNo;
   },
 };

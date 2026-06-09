@@ -224,6 +224,15 @@ export function ErpGoodsReceiptsPage() {
   function openCreate() {
     resetForm();
     setDrawerOpen(true);
+    // Auto-fill số NK tiếp theo
+    void goodsReceiptsCoreApi
+      .nextNo()
+      .then((no) => {
+        setForm((prev) => ({ ...prev, receiptNo: no }));
+      })
+      .catch(() => {
+        /* silent — user có thể nhập tay */
+      });
   }
 
   async function loadPoIntoForm(poId: string) {
@@ -322,11 +331,6 @@ export function ErpGoodsReceiptsPage() {
   async function handleSave() {
     if (viewOnly) {
       closeDrawer();
-      return;
-    }
-
-    if (!form.receiptNo.trim()) {
-      setSaveError("Số phiếu nhập là bắt buộc");
       return;
     }
 
@@ -543,13 +547,14 @@ export function ErpGoodsReceiptsPage() {
 
         <DrawerSection title="Thông tin chung">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="Số phiếu nhập" required>
+            <DrawerField label="Số phiếu nhập">
               <input
                 value={form.receiptNo}
                 disabled={viewOnly}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, receiptNo: e.target.value }))
                 }
+                placeholder="NK-YYYYMM001 (tự động điền, có thể sửa)"
                 className={inputCls}
               />
             </DrawerField>

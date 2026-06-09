@@ -23,6 +23,7 @@ import {
   type OperationalVariant,
   type OperationalLine,
 } from "../api/operationalApi";
+import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { extractApiError } from "@/shared/utils/apiError";
 
 interface LineDraft {
@@ -69,6 +70,7 @@ const salesStatusOptions = [
 const purchaseStatusOptions = [
   { value: "DRAFT", label: "Nháp" },
   { value: "CONFIRMED", label: "Xác nhận" },
+  { value: "PARTIAL_RECEIVED", label: "Nhận một phần" },
   { value: "RECEIVED", label: "Đã nhận" },
   { value: "CANCELLED", label: "Hủy" },
 ];
@@ -141,10 +143,16 @@ export function OperationalFormDrawer({
   onClose,
   onSaved,
 }: Props) {
-  const isPurchaseLocked =
+  const purchaseStatusValue = (editing?.status || "DRAFT") as string;
+  const isPurchaseStatusOnlyMode =
     variant === "purchase" &&
     !!editing &&
-    (editing.status || "DRAFT") !== "DRAFT";
+    ["CONFIRMED", "PARTIAL_RECEIVED"].includes(purchaseStatusValue);
+  const isPurchaseFullyLocked =
+    variant === "purchase" &&
+    !!editing &&
+    ["RECEIVED", "FULLY_RECEIVED", "CANCELLED"].includes(purchaseStatusValue);
+  const isPurchaseLocked = isPurchaseStatusOnlyMode || isPurchaseFullyLocked;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [branchOptions, setBranchOptions] = useState<
@@ -272,6 +280,17 @@ export function OperationalFormDrawer({
       setAutoGenerateNext(false);
       setNotes("");
       setLines([emptyLine(variant)]);
+      // Auto-fill số PO tiếp theo khi tạo mới purchase
+      if (variant === "purchase") {
+        void purchaseOrdersCoreApi
+          .nextNo()
+          .then((no) => {
+            setDocNo(no);
+          })
+          .catch(() => {
+            /* silent — user nhập tay */
+          });
+      }
       return;
     }
 
@@ -375,33 +394,39 @@ export function OperationalFormDrawer({
       return;
     }
 
-    const payload: CreateOperationalPayload = isPurchaseLocked
+    const payload: CreateOperationalPayload = isPurchaseStatusOnlyMode
       ? {
+          status,
           payment_status: paymentStatus,
           notes: notes.trim() || undefined,
         }
-      : {
-          document_date: documentDate,
-          due_date: dueDate || undefined,
-          branch_id: branchId || undefined,
-          invoice_status: invoiceStatus,
-          status,
-          payment_status: paymentStatus,
-          total_amount: totalAmount,
-          notes: notes.trim() || undefined,
-          lines: lines.map((line, idx) => ({
-            line_no: idx + 1,
-            line_type: line.line_type || undefined,
-            inventory_item_id: line.inventory_item_id || undefined,
-            item_code: line.item_code.trim() || undefined,
-            item_name: line.item_name.trim() || undefined,
-            description: line.description.trim() || undefined,
-            qty: Number(line.qty || 0),
-            unit_price: Number(line.unit_price || 0),
-            amount: Number(line.amount || 0),
-            notes: line.notes.trim() || undefined,
-          })),
-        };
+      : isPurchaseFullyLocked
+        ? {
+            payment_status: paymentStatus,
+            notes: notes.trim() || undefined,
+          }
+        : {
+            document_date: documentDate,
+            due_date: dueDate || undefined,
+            branch_id: branchId || undefined,
+            invoice_status: invoiceStatus,
+            status,
+            payment_status: paymentStatus,
+            total_amount: totalAmount,
+            notes: notes.trim() || undefined,
+            lines: lines.map((line, idx) => ({
+              line_no: idx + 1,
+              line_type: line.line_type || undefined,
+              inventory_item_id: line.inventory_item_id || undefined,
+              item_code: line.item_code.trim() || undefined,
+              item_name: line.item_name.trim() || undefined,
+              description: line.description.trim() || undefined,
+              qty: Number(line.qty || 0),
+              unit_price: Number(line.unit_price || 0),
+              amount: Number(line.amount || 0),
+              notes: line.notes.trim() || undefined,
+            })),
+          };
 
     if (variant === "sales") {
       Object.assign(payload, {
@@ -506,6 +531,10 @@ export function OperationalFormDrawer({
                 <input
                   className={inputCls}
                   value={docNo}
+                  disabled={isPurchaseLocked}
+                  placeholder={
+                    variant === "purchase" ? "PO-YYYYMM001" : undefined
+                  }
                   onChange={(e) => setDocNo(e.target.value)}
                 />
               </DrawerField>

@@ -6,6 +6,12 @@ export interface ErpGiLine {
   salesOrderLineId?: string;
   itemId?: string;
   itemName?: string;
+  serialId?: string;
+  serialNo?: string;
+  vehicleId?: string;
+  vehicleVin?: string;
+  frameNo?: string;
+  engineNo?: string;
   qtyIssued: string;
   unitCost?: string;
   amount?: string;
