@@ -37,7 +37,6 @@ interface GrForm {
   purchaseOrderId: string;
   supplierId: string;
   receiptDate: string;
-  status: string;
   remarks: string;
   lines: GrLineForm[];
 }
@@ -47,7 +46,6 @@ const emptyForm = (): GrForm => ({
   purchaseOrderId: "",
   supplierId: "",
   receiptDate: new Date().toISOString().slice(0, 10),
-  status: "DRAFT",
   remarks: "",
   lines: [],
 });
@@ -58,7 +56,6 @@ function buildForm(gr: ErpGoodsReceipt): GrForm {
     purchaseOrderId: gr.purchaseOrderId ?? "",
     supplierId: gr.supplierId ?? "",
     receiptDate: gr.receiptDate ? gr.receiptDate.slice(0, 10) : "",
-    status: gr.status ?? "DRAFT",
     remarks: gr.remarks ?? "",
     lines:
       gr.lines?.map((line) => ({
@@ -83,7 +80,6 @@ function buildPayload(form: GrForm): CreateGrPayload {
     purchaseOrderId: form.purchaseOrderId || undefined,
     supplierId: form.supplierId || undefined,
     receiptDate: form.receiptDate,
-    status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
     lines: form.lines.map((line) => ({
       purchaseOrderLineId: line.purchaseOrderLineId || undefined,
@@ -118,6 +114,7 @@ export function ErpGoodsReceiptsPage() {
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [poLabelMap, setPoLabelMap] = useState<Record<string, string>>({});
 
   function remainingQty(
     poLine?: NonNullable<ErpPurchaseOrder["lines"]>[number],
@@ -167,19 +164,21 @@ export function ErpGoodsReceiptsPage() {
       // Load 200 PO đầu để có đủ lựa chọn
       const res = await purchaseOrdersCoreApi.list({ page: 1, pageSize: 200 });
       const actionable = res.items.filter(isPoActionable);
-      setPoOptions(
-        actionable.map((po) => {
-          const totalRemaining = (po.lines || []).reduce(
-            (sum, line) => sum + remainingQty(line),
-            0,
-          );
-          const remainingLabel =
-            po.lines && po.lines.length > 0 ? ` — còn ${totalRemaining}` : "";
-          return {
-            value: po.id,
-            label: `${po.poNo} — ${po.supplierName || po.supplierId || "N/A"} — ${po.status ?? "N/A"}${remainingLabel}`,
-          };
-        }),
+      const mapped = actionable.map((po) => {
+        const totalRemaining = (po.lines || []).reduce(
+          (sum, line) => sum + remainingQty(line),
+          0,
+        );
+        const remainingLabel =
+          po.lines && po.lines.length > 0 ? ` — còn ${totalRemaining}` : "";
+        return {
+          value: po.id,
+          label: `${po.poNo} — ${po.supplierName || po.supplierId || "N/A"} — ${po.status ?? "N/A"}${remainingLabel}`,
+        };
+      });
+      setPoOptions(mapped);
+      setPoLabelMap(
+        Object.fromEntries(res.items.map((po) => [po.id, po.poNo || po.id])),
       );
     } catch {
       setPoOptions([]);
@@ -367,7 +366,10 @@ export function ErpGoodsReceiptsPage() {
     {
       key: "purchaseOrderId",
       header: "PO",
-      cell: (item) => item.purchaseOrderId || "—",
+      cell: (item) =>
+        (item.purchaseOrderId ? poLabelMap[item.purchaseOrderId] : undefined) ||
+        item.purchaseOrderId ||
+        "—",
       skeletonClassName: "w-32",
     },
     {
@@ -551,20 +553,6 @@ export function ErpGoodsReceiptsPage() {
                 options={poOptions}
                 placeholder="Chọn PO để lấy dòng"
                 searchPlaceholder="Tìm PO"
-              />
-            </DrawerField>
-            <DrawerField label="Trạng thái">
-              <Combobox
-                value={form.status}
-                disabled={true}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, status: value || "DRAFT" }))
-                }
-                options={[
-                  { value: "DRAFT", label: "DRAFT" },
-                  { value: "POSTED", label: "POSTED" },
-                ]}
               />
             </DrawerField>
           </div>

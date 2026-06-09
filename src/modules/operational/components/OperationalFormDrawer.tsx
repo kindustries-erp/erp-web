@@ -13,6 +13,10 @@ import {
 } from "@/modules/partners/api/partnerApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import {
+  inventoryCoreApi,
+  type ErpInventoryItem,
+} from "@/modules/inventory-core/api/inventoryCoreApi";
+import {
   operationalApi,
   type CreateOperationalPayload,
   type OperationalDocument,
@@ -24,6 +28,7 @@ import { extractApiError } from "@/shared/utils/apiError";
 interface LineDraft {
   tempId: string;
   line_type: string;
+  inventory_item_id: string;
   item_code: string;
   item_name: string;
   description: string;
@@ -95,7 +100,8 @@ const newTempId = () =>
 function emptyLine(variant: Props["variant"]): LineDraft {
   return {
     tempId: newTempId(),
-    line_type: variant === "expenses" ? "EXPENSE" : "SERVICE",
+    line_type: variant === "expenses" ? "EXPENSE" : "PART",
+    inventory_item_id: "",
     item_code: "",
     item_name: "",
     description: "",
@@ -112,8 +118,8 @@ function toLineDraft(
 ): LineDraft {
   return {
     tempId: newTempId(),
-    line_type:
-      line.line_type || (variant === "expenses" ? "EXPENSE" : "SERVICE"),
+    line_type: line.line_type || (variant === "expenses" ? "EXPENSE" : "PART"),
+    inventory_item_id: line.inventory_item_id || "",
     item_code: line.item_code || "",
     item_name: line.item_name || "",
     description: line.description || "",
@@ -138,6 +144,9 @@ export function OperationalFormDrawer({
   >([]);
   const [partnerOptions, setPartnerOptions] = useState<
     Array<{ value: string; label: string }>
+  >([]);
+  const [inventoryItemOptions, setInventoryItemOptions] = useState<
+    Array<{ value: string; label: string; sku: string; itemName: string }>
   >([]);
 
   const [docNo, setDocNo] = useState("");
@@ -187,7 +196,11 @@ export function OperationalFormDrawer({
 
   useEffect(() => {
     const partnerRole = variant === "sales" ? "CUSTOMER" : "VENDOR";
-    getBusinessPartnersPagedApi({ page: 1, pageSize: 200, partnerType: partnerRole })
+    getBusinessPartnersPagedApi({
+      page: 1,
+      pageSize: 200,
+      partnerType: partnerRole,
+    })
       .then((res) => {
         setPartnerOptions(
           (res.items || []).map((p: BusinessPartner) => ({
@@ -197,6 +210,29 @@ export function OperationalFormDrawer({
         );
       })
       .catch(() => setPartnerOptions([]));
+  }, [variant]);
+
+  useEffect(() => {
+    if (variant !== "purchase") {
+      setInventoryItemOptions([]);
+      return;
+    }
+    inventoryCoreApi
+      .list({ page: 1, pageSize: 200 })
+      .then((res) => {
+        const options = (res.items || [])
+          .filter((item: ErpInventoryItem) =>
+            ["RAW", "GOODS", "WIP"].includes(item.itemType || ""),
+          )
+          .map((item: ErpInventoryItem) => ({
+            value: item.id,
+            label: `${item.sku} — ${item.itemName}`,
+            sku: item.sku,
+            itemName: item.itemName,
+          }));
+        setInventoryItemOptions(options);
+      })
+      .catch(() => setInventoryItemOptions([]));
   }, [variant]);
 
   useEffect(() => {
@@ -339,6 +375,7 @@ export function OperationalFormDrawer({
       lines: lines.map((line, idx) => ({
         line_no: idx + 1,
         line_type: line.line_type || undefined,
+        inventory_item_id: line.inventory_item_id || undefined,
         item_code: line.item_code.trim() || undefined,
         item_name: line.item_name.trim() || undefined,
         description: line.description.trim() || undefined,
@@ -605,7 +642,9 @@ export function OperationalFormDrawer({
                           min={1}
                           className={inputCls}
                           value={recurrenceInterval}
-                          onChange={(e) => setRecurrenceInterval(e.target.value)}
+                          onChange={(e) =>
+                            setRecurrenceInterval(e.target.value)
+                          }
                         />
                       </DrawerField>
                       <DrawerField label="Bắt đầu">
@@ -613,7 +652,9 @@ export function OperationalFormDrawer({
                           type="date"
                           className={inputCls}
                           value={recurrenceStartDate}
-                          onChange={(e) => setRecurrenceStartDate(e.target.value)}
+                          onChange={(e) =>
+                            setRecurrenceStartDate(e.target.value)
+                          }
                         />
                       </DrawerField>
                       <DrawerField label="Kết thúc">
@@ -686,24 +727,61 @@ export function OperationalFormDrawer({
                         allowClear={false}
                       />
                     </DrawerField>
-                    <DrawerField label="Mã hàng/dịch vụ">
-                      <input
-                        className={inputCls}
-                        value={line.item_code}
-                        onChange={(e) =>
-                          setLine(idx, "item_code", e.target.value)
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Tên hàng/dịch vụ">
-                      <input
-                        className={inputCls}
-                        value={line.item_name}
-                        onChange={(e) =>
-                          setLine(idx, "item_name", e.target.value)
-                        }
-                      />
-                    </DrawerField>
+                    {variant === "purchase" ? (
+                      <DrawerField label="Linh kiện canonical" required>
+                        <Combobox
+                          options={inventoryItemOptions}
+                          value={line.inventory_item_id}
+                          onChange={(v) => {
+                            const selected = inventoryItemOptions.find(
+                              (item) => item.value === (v || ""),
+                            );
+                            setLines((prev) =>
+                              prev.map((draft, i) =>
+                                i !== idx
+                                  ? draft
+                                  : {
+                                      ...draft,
+                                      inventory_item_id: v || "",
+                                      item_code: selected?.sku || "",
+                                      item_name: selected?.itemName || "",
+                                      description:
+                                        draft.description ||
+                                        selected?.itemName ||
+                                        "",
+                                      line_type: v ? "PART" : draft.line_type,
+                                    },
+                              ),
+                            );
+                          }}
+                          placeholder="Chọn linh kiện từ danh mục canonical"
+                          searchPlaceholder="Tìm SKU / tên linh kiện..."
+                          emptyLabel="Không có linh kiện phù hợp"
+                          allowClear={false}
+                        />
+                      </DrawerField>
+                    ) : (
+                      <>
+                        <DrawerField label="Mã hàng/dịch vụ">
+                          <input
+                            className={inputCls}
+                            value={line.item_code}
+                            onChange={(e) =>
+                              setLine(idx, "item_code", e.target.value)
+                            }
+                          />
+                        </DrawerField>
+                        <DrawerField label="Tên hàng/dịch vụ">
+                          <input
+                            className={inputCls}
+                            value={line.item_name}
+                            onChange={(e) =>
+                              setLine(idx, "item_name", e.target.value)
+                            }
+                          />
+                        </DrawerField>
+                      </>
+                    )}
                     <DrawerField label="Mô tả">
                       <input
                         className={inputCls}
@@ -753,7 +831,6 @@ export function OperationalFormDrawer({
                       />
                     </DrawerField>
                   </div>
-
                 </div>
               ))}
               <button
