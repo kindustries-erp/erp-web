@@ -24,6 +24,11 @@ export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
 
 const BASE = "/api/v1/inventory/items";
 
+type InventoryItemDetailResponse = {
+  message: string;
+  data: ErpInventoryItem;
+};
+
 function p(params: ListParams = {}) {
   return {
     page: params.page ?? 1,
@@ -42,23 +47,28 @@ export const inventoryCoreApi = {
     return data;
   },
   get: async (id: string): Promise<ErpInventoryItem> => {
-    const { data } = await axiosInstance.get<ErpInventoryItem>(`${BASE}/${id}`);
-    return data;
+    const { data } = await axiosInstance.get<InventoryItemDetailResponse>(
+      `${BASE}/${id}`,
+    );
+    return data.data;
   },
   create: async (
     payload: CreateInventoryItemPayload,
   ): Promise<ErpInventoryItem> => {
-    const { data } = await axiosInstance.post<ErpInventoryItem>(BASE, payload);
-    return data;
+    const { data } = await axiosInstance.post<InventoryItemDetailResponse>(
+      BASE,
+      payload,
+    );
+    return data.data;
   },
   update: async (
     id: string,
     payload: UpdateInventoryItemPayload,
   ): Promise<ErpInventoryItem> => {
-    const { data } = await axiosInstance.patch<ErpInventoryItem>(
+    const { data } = await axiosInstance.patch<InventoryItemDetailResponse>(
       `${BASE}/${id}`,
       payload,
     );
-    return data;
+    return data.data;
   },
 };

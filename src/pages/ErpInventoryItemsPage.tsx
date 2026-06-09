@@ -20,9 +20,10 @@ import {
 // ─── Static options ────────────────────────────────────────────────────────────
 
 const ITEM_TYPE_OPTIONS = [
-  { value: "FINISHED_GOOD", label: "FINISHED_GOOD — Thành phẩm" },
-  { value: "RAW_MATERIAL", label: "RAW_MATERIAL — Nguyên vật liệu" },
+  { value: "FG", label: "FG — Thành phẩm" },
+  { value: "RAW", label: "RAW — Nguyên vật liệu" },
   { value: "WIP", label: "WIP — Bán thành phẩm" },
+  { value: "GOODS", label: "GOODS — Hàng hóa" },
   { value: "SERVICE", label: "SERVICE — Dịch vụ" },
   { value: "OTHER", label: "OTHER — Khác" },
 ];
@@ -55,7 +56,7 @@ const emptyForm = (): ItemForm => ({
   sku: "",
   itemName: "",
   uom: "PCS",
-  itemType: "FINISHED_GOOD",
+  itemType: "FG",
   status: "ACTIVE",
 });
 
@@ -64,7 +65,7 @@ function buildForm(item: ErpInventoryItem): ItemForm {
     sku: item.sku ?? "",
     itemName: item.itemName ?? "",
     uom: item.uom ?? "PCS",
-    itemType: item.itemType ?? "FINISHED_GOOD",
+    itemType: item.itemType ?? "FG",
     status: item.status ?? "ACTIVE",
   };
 }
@@ -74,7 +75,7 @@ function toPayload(form: ItemForm): CreateInventoryItemPayload {
     sku: form.sku.trim(),
     itemName: form.itemName.trim(),
     uom: form.uom || "PCS",
-    itemType: form.itemType || "FINISHED_GOOD",
+    itemType: form.itemType || "FG",
     status: form.status || "ACTIVE",
   };
 }
@@ -112,7 +113,9 @@ export function ErpInventoryItemsPage() {
       setTotal(res.total);
       setTotalPages(res.totalPages);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải danh mục hàng hóa");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải danh mục hàng hóa",
+      );
     } finally {
       setLoading(false);
     }
@@ -150,7 +153,9 @@ export function ErpInventoryItemsPage() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết hàng hóa");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải chi tiết hàng hóa",
+      );
     }
   }
 
@@ -163,7 +168,9 @@ export function ErpInventoryItemsPage() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết hàng hóa");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải chi tiết hàng hóa",
+      );
     }
   }
 
@@ -425,7 +432,7 @@ export function ErpInventoryItemsPage() {
                 onChange={(value) =>
                   setForm((prev) => ({
                     ...prev,
-                    itemType: value || "FINISHED_GOOD",
+                    itemType: value || "FG",
                   }))
                 }
                 options={ITEM_TYPE_OPTIONS}

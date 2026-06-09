@@ -61,24 +61,24 @@ export const goodsIssuesCoreApi = {
     return data.data;
   },
   create: async (payload: CreateGiPayload): Promise<ErpGoodsIssue> => {
-    const { data } = await axiosInstance.post<ErpGoodsIssue>(BASE, payload);
-    return data;
+    const { data } = await axiosInstance.post<GiDetailResponse>(BASE, payload);
+    return data.data;
   },
   update: async (
     id: string,
     payload: UpdateGiPayload,
   ): Promise<ErpGoodsIssue> => {
-    const { data } = await axiosInstance.patch<ErpGoodsIssue>(
+    const { data } = await axiosInstance.patch<GiDetailResponse>(
       `${BASE}/${id}`,
       payload,
     );
-    return data;
+    return data.data;
   },
   post: async (id: string, warehouseCode?: string): Promise<ErpGoodsIssue> => {
-    const { data } = await axiosInstance.post<ErpGoodsIssue>(
+    const { data } = await axiosInstance.post<GiDetailResponse>(
       `${BASE}/${id}/post`,
       { warehouseCode },
     );
-    return data;
+    return data.data;
   },
 };

@@ -18,12 +18,15 @@ import {
   type ErpGoodsIssue,
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
-import { inventoryCoreApi, type ErpInventoryItem } from "@/modules/inventory-core/api/inventoryCoreApi";
+import {
+  inventoryCoreApi,
+  type ErpInventoryItem,
+} from "@/modules/inventory-core/api/inventoryCoreApi";
 
 const LOOKUP_LIMIT = 200;
 
 const ISSUE_TYPE_OPTIONS = [
-  { value: "SALES", label: "SALES — Xuất bán" },
+  { value: "SALE", label: "SALE — Xuất bán" },
   { value: "OTHER", label: "OTHER — Xuất khác" },
 ];
 
@@ -65,7 +68,7 @@ const emptyLine = (): GiLineForm => ({
 const emptyForm = (): GiForm => ({
   issueNo: "",
   issueDate: new Date().toISOString().slice(0, 10),
-  issueType: "SALES",
+  issueType: "SALE",
   customerId: "",
   status: "DRAFT",
   remarks: "",
@@ -76,7 +79,7 @@ function buildForm(gi: ErpGoodsIssue): GiForm {
   return {
     issueNo: gi.issueNo ?? "",
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
-    issueType: gi.issueType ?? "SALES",
+    issueType: gi.issueType ?? "SALE",
     customerId: gi.customerId ?? "",
     status: gi.status ?? "DRAFT",
     remarks: gi.remarks ?? "",
@@ -96,7 +99,7 @@ function toPayload(form: GiForm): CreateGiPayload {
   return {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
-    issueType: form.issueType || "SALES",
+    issueType: form.issueType || "SALE",
     customerId: form.customerId || undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
@@ -193,7 +196,10 @@ export function ErpGoodsIssuesPage() {
 
   const loadItemsLookup = useCallback(async () => {
     try {
-      const res = await inventoryCoreApi.list({ page: 1, pageSize: LOOKUP_LIMIT });
+      const res = await inventoryCoreApi.list({
+        page: 1,
+        pageSize: LOOKUP_LIMIT,
+      });
       setItemOptions(
         res.items.map((item: ErpInventoryItem) => ({
           value: item.id,
@@ -242,7 +248,9 @@ export function ErpGoodsIssuesPage() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết goods issue");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải chi tiết goods issue",
+      );
     }
   }
 
@@ -255,7 +263,9 @@ export function ErpGoodsIssuesPage() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết goods issue");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải chi tiết goods issue",
+      );
     }
   }
 
@@ -338,7 +348,9 @@ export function ErpGoodsIssuesPage() {
       await loadIssues();
     } catch (e: any) {
       setError(
-        e?.response?.data?.message || e?.message || "Không thể post goods issue",
+        e?.response?.data?.message ||
+          e?.message ||
+          "Không thể post goods issue",
       );
     } finally {
       setPostingId(null);
@@ -546,7 +558,7 @@ export function ErpGoodsIssuesPage() {
                 disabled={viewOnly}
                 allowClear={false}
                 onChange={(value) =>
-                  setForm((prev) => ({ ...prev, issueType: value || "SALES" }))
+                  setForm((prev) => ({ ...prev, issueType: value || "SALE" }))
                 }
                 options={ISSUE_TYPE_OPTIONS}
                 placeholder="Chọn loại xuất"
@@ -628,11 +640,14 @@ export function ErpGoodsIssuesPage() {
                       value={line.itemId}
                       disabled={viewOnly}
                       onChange={(value) => {
-                        const matched = itemOptions.find((opt) => opt.value === value);
+                        const matched = itemOptions.find(
+                          (opt) => opt.value === value,
+                        );
                         updateLine(index, {
                           itemId: value,
                           itemName:
-                            matched?.label.split(" — ").slice(1).join(" — ") || "",
+                            matched?.label.split(" — ").slice(1).join(" — ") ||
+                            "",
                         });
                       }}
                       options={itemOptions}

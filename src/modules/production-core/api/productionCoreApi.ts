@@ -49,15 +49,20 @@ export interface ErpProductionOrder {
 const BASE_EXECUTE = "/api/v1/production/execute";
 const BASE_ORDERS = "/api/v1/production/orders";
 
+type ExecuteProductionResponse = {
+  message: string;
+  data: ExecuteProductionResult;
+};
+
 export const productionCoreApi = {
   execute: async (
     payload: ExecuteProductionPayload,
   ): Promise<ExecuteProductionResult> => {
-    const { data } = await axiosInstance.post<ExecuteProductionResult>(
+    const { data } = await axiosInstance.post<ExecuteProductionResponse>(
       BASE_EXECUTE,
       payload,
     );
-    return data;
+    return data.data;
   },
 
   list: async (
