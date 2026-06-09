@@ -78,8 +78,8 @@ const variantConfig: Record<
     paymentLinkable: true,
   },
   inventory: {
-    title: "Kho",
-    desc: "Nhập kho từ đơn mua, xuất kho vào đơn sửa xe; tồn theo chi nhánh.",
+    title: "Kho (Tổng hợp tồn)",
+    desc: "Tổng hợp tồn kho toàn bộ hàng hóa: linh kiện (RAW), thành phẩm (FG), bán thành phẩm (WIP). Có thể lọc theo loại.",
   },
 };
 
@@ -239,6 +239,7 @@ export function OperationalListPage({
     null,
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [itemTypeFilter, setItemTypeFilter] = useState("");
 
   const {
     activeStep,
@@ -317,7 +318,10 @@ export function OperationalListPage({
         branch_id: branchFilter || undefined,
         payment_status: paymentStatusFilter || undefined,
         status: statusFilter || undefined,
-      });
+        ...(variant === "inventory" && itemTypeFilter
+          ? { item_type: itemTypeFilter }
+          : {}),
+      } as any);
       if (variant === "inventory") {
         setStockItems((data.items || []) as InventoryStockRow[]);
         setItems([]);
@@ -344,6 +348,7 @@ export function OperationalListPage({
     branchFilter,
     paymentStatusFilter,
     statusFilter,
+    itemTypeFilter,
   ]);
 
   async function createSample() {
@@ -653,18 +658,59 @@ export function OperationalListPage({
     }
   }
 
-  const filters = (
-    <>
-      <button
-        className="btn-secondary inline-flex items-center gap-2"
-        onClick={() => void load()}
-        disabled={loading}
-      >
-        <RefreshCcw className="h-4 w-4" />
-        Tải lại
-      </button>
-    </>
-  );
+  const ITEM_TYPE_OPTIONS = [
+    { value: "RAW", label: "RAW — Linh kiện" },
+    { value: "FG", label: "FG — Thành phẩm" },
+    { value: "WIP", label: "WIP — Bán thành phẩm" },
+  ];
+
+  const filters =
+    variant === "inventory" ? (
+      <>
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setPage(1);
+              setSearch(searchInput.trim());
+            }
+          }}
+          placeholder="Tìm mã / tên vật tư"
+          className="inline-flex h-9 rounded-lg border border-border bg-surface px-3 text-xs min-w-[220px] focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <div className="w-[180px]">
+          <Combobox
+            value={itemTypeFilter}
+            onChange={(value) => {
+              setPage(1);
+              setItemTypeFilter(value);
+            }}
+            placeholder="Tất cả loại"
+            options={ITEM_TYPE_OPTIONS}
+          />
+        </div>
+        <button
+          className="btn-secondary inline-flex items-center gap-2"
+          onClick={() => void load()}
+          disabled={loading}
+        >
+          <RefreshCcw className="h-4 w-4" />
+          Tải lại
+        </button>
+      </>
+    ) : (
+      <>
+        <button
+          className="btn-secondary inline-flex items-center gap-2"
+          onClick={() => void load()}
+          disabled={loading}
+        >
+          <RefreshCcw className="h-4 w-4" />
+          Tải lại
+        </button>
+      </>
+    );
 
   const STATUS_OPTIONS = [
     { value: "DRAFT", label: "DRAFT" },
@@ -916,6 +962,25 @@ export function OperationalListPage({
             </div>
           </div>
         ),
+      },
+      {
+        key: "item_type",
+        header: "Loại",
+        className: "align-top min-w-[90px]",
+        cell: (row) => {
+          const t = row.item_type;
+          let cls = "bg-slate-100 text-slate-600";
+          if (t === "RAW") cls = "bg-blue-100 text-blue-700";
+          else if (t === "FG") cls = "bg-emerald-100 text-emerald-700";
+          else if (t === "WIP") cls = "bg-amber-100 text-amber-700";
+          return (
+            <span
+              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}
+            >
+              {t || "—"}
+            </span>
+          );
+        },
       },
       {
         key: "received_qty",

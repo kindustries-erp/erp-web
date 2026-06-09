@@ -384,7 +384,7 @@ export function MfgItems() {
   return (
     <PageLayout
       title="Danh mục linh kiện"
-      desc="Quản lý linh kiện, xem tồn kho và truy ngược PO / VIN theo lịch sử nhập xuất."
+      desc="Quản lý linh kiện sản xuất (RAW): mã, tracking, UOM, trạng thái. Xem tồn kho chi tiết per item, lịch sử nhập xuất, truy ngược PO và VIN."
       icon={<Box className="h-4 w-4" />}
       actions={
         <button

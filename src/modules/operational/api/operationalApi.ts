@@ -110,6 +110,7 @@ export interface InventoryStockRow {
   branch_id?: string | null;
   item_code: string;
   item_name: string;
+  item_type: string;
   unit: string;
   received_qty: number;
   issued_qty: number;
@@ -206,7 +207,8 @@ function toCorePurchasePayload(
     remarks: payload.notes || undefined,
     lines: (payload.lines || []).map((line) => ({
       itemId: line.inventory_item_id || undefined,
-      description: line.description || line.item_name || line.item_code || undefined,
+      description:
+        line.description || line.item_name || line.item_code || undefined,
       qtyOrdered: String(line.qty ?? 0),
       unitPrice:
         line.unit_price !== undefined ? String(line.unit_price) : undefined,
@@ -257,10 +259,15 @@ export const operationalApi = {
   listReceivables: (input?: ListParams) =>
     list("operational-receivables", input),
   listPayables: (input?: ListParams) => list("operational-payables", input),
-  listInventoryStock: async (input?: ListParams) => {
+  listInventoryStock: async (input?: ListParams & { item_type?: string }) => {
     const { data } = await axiosInstance.get<
       PaginatedResponse<InventoryStockRow>
-    >("/api/v1/inventory/stock", { params: params(input) });
+    >("/api/v1/inventory/stock", {
+      params: {
+        ...params(input),
+        ...(input?.item_type ? { item_type: input.item_type } : {}),
+      },
+    });
     return data;
   },
 
