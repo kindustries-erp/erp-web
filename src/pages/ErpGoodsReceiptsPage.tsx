@@ -132,15 +132,9 @@ export function ErpGoodsReceiptsPage() {
   }
 
   function isPoActionable(po: ErpPurchaseOrder): boolean {
-    const excludedStatuses = [
-      "DRAFT",
-      "CANCELLED",
-      "RECEIVED",
-      "FULLY_RECEIVED",
-    ];
-    // Chỉ exclude khi status explicitly nằm trong danh sách bị cấm
-    // Nếu status null/undefined, không exclude (khác với legacy assume DRAFT)
-    if (po.status && excludedStatuses.includes(po.status)) return false;
+    const blockedStatuses = ["DRAFT", "CANCELLED"];
+    if (po.status && blockedStatuses.includes(po.status)) return false;
+    if (!po.lines || po.lines.length === 0) return false;
     return poHasOpenQty(po);
   }
 
@@ -192,6 +186,28 @@ export function ErpGoodsReceiptsPage() {
   useEffect(() => {
     void loadPoOptions();
   }, [loadPoOptions]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const purchaseOrderId = params.get("purchaseOrderId") || "";
+    const mode = params.get("mode") || "";
+
+    if (!drawerOpen && purchaseOrderId && mode === "from-po") {
+      resetForm();
+      setDrawerOpen(true);
+      void loadPoIntoForm(purchaseOrderId);
+      params.delete("purchaseOrderId");
+      params.delete("mode");
+      const nextQuery = params.toString();
+      history.replaceState(
+        null,
+        "",
+        nextQuery
+          ? `${window.location.pathname}?${nextQuery}`
+          : window.location.pathname,
+      );
+    }
+  }, [drawerOpen]);
 
   function resetForm() {
     setForm(emptyForm());
@@ -324,18 +340,23 @@ export function ErpGoodsReceiptsPage() {
     try {
       const payload = buildPayload(form);
       if (editing) {
+        // Cập nhật GR đã tồn tại — không auto-post
         await goodsReceiptsCoreApi.update(editing.id, payload);
+        closeDrawer();
+        await loadReceipts();
       } else {
-        await goodsReceiptsCoreApi.create(payload);
+        // Tạo mới: create xong auto-post luôn
+        const created = await goodsReceiptsCoreApi.create(payload);
+        await goodsReceiptsCoreApi.post(created.id);
+        showToast({ title: "Nhập kho thành công!", variant: "success" });
+        closeDrawer();
+        if (page !== 1) setPage(1);
+        else await loadReceipts();
+        navigate("inventory");
       }
-      closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else await loadReceipts();
     } catch (e: any) {
       setSaveError(
-        e?.response?.data?.message ||
-          e?.message ||
-          "Không thể lưu goods receipt",
+        e?.response?.data?.message || e?.message || "Không thể lưu / nhập kho",
       );
     } finally {
       setSaving(false);
@@ -573,8 +594,9 @@ export function ErpGoodsReceiptsPage() {
           <div className="space-y-3">
             {form.lines.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                Chỉ hiện PO đã xác nhận và còn số lượng chưa nhập. PO nháp, đã
-                hủy, hoặc đã nhập đủ sẽ không còn trong danh sách chọn.
+                Chỉ hiện PO còn open qty để nhập kho. PO nháp hoặc đã hủy sẽ bị
+                loại. PO đã nhập đủ sẽ không còn trong danh sách chọn dù status
+                header là gì.
               </div>
             ) : (
               form.lines.map((line, index) => (

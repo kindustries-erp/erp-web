@@ -141,6 +141,10 @@ export function OperationalFormDrawer({
   onClose,
   onSaved,
 }: Props) {
+  const isPurchaseLocked =
+    variant === "purchase" &&
+    !!editing &&
+    (editing.status || "DRAFT") !== "DRAFT";
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [branchOptions, setBranchOptions] = useState<
@@ -371,28 +375,33 @@ export function OperationalFormDrawer({
       return;
     }
 
-    const payload: CreateOperationalPayload = {
-      document_date: documentDate,
-      due_date: dueDate || undefined,
-      branch_id: branchId || undefined,
-      invoice_status: invoiceStatus,
-      status,
-      payment_status: paymentStatus,
-      total_amount: totalAmount,
-      notes: notes.trim() || undefined,
-      lines: lines.map((line, idx) => ({
-        line_no: idx + 1,
-        line_type: line.line_type || undefined,
-        inventory_item_id: line.inventory_item_id || undefined,
-        item_code: line.item_code.trim() || undefined,
-        item_name: line.item_name.trim() || undefined,
-        description: line.description.trim() || undefined,
-        qty: Number(line.qty || 0),
-        unit_price: Number(line.unit_price || 0),
-        amount: Number(line.amount || 0),
-        notes: line.notes.trim() || undefined,
-      })),
-    };
+    const payload: CreateOperationalPayload = isPurchaseLocked
+      ? {
+          payment_status: paymentStatus,
+          notes: notes.trim() || undefined,
+        }
+      : {
+          document_date: documentDate,
+          due_date: dueDate || undefined,
+          branch_id: branchId || undefined,
+          invoice_status: invoiceStatus,
+          status,
+          payment_status: paymentStatus,
+          total_amount: totalAmount,
+          notes: notes.trim() || undefined,
+          lines: lines.map((line, idx) => ({
+            line_no: idx + 1,
+            line_type: line.line_type || undefined,
+            inventory_item_id: line.inventory_item_id || undefined,
+            item_code: line.item_code.trim() || undefined,
+            item_name: line.item_name.trim() || undefined,
+            description: line.description.trim() || undefined,
+            qty: Number(line.qty || 0),
+            unit_price: Number(line.unit_price || 0),
+            amount: Number(line.amount || 0),
+            notes: line.notes.trim() || undefined,
+          })),
+        };
 
     if (variant === "sales") {
       Object.assign(payload, {
@@ -530,6 +539,7 @@ export function OperationalFormDrawer({
                   type="datetime-local"
                   className={inputCls}
                   value={documentDate}
+                  disabled={isPurchaseLocked}
                   onChange={(e) => setDocumentDate(e.target.value)}
                 />
               </DrawerField>
@@ -557,6 +567,7 @@ export function OperationalFormDrawer({
                 <Combobox
                   options={statusOptions}
                   value={status}
+                  disabled={isPurchaseLocked}
                   onChange={(v) => setStatus(v || "DRAFT")}
                   allowClear={false}
                 />
@@ -628,6 +639,7 @@ export function OperationalFormDrawer({
                         type="datetime-local"
                         className={inputCls}
                         value={expectedDate}
+                        disabled={isPurchaseLocked}
                         onChange={(e) => setExpectedDate(e.target.value)}
                       />
                     </DrawerField>
@@ -735,6 +747,7 @@ export function OperationalFormDrawer({
                     {lines.length > 1 && (
                       <button
                         className="text-xs text-red-500 hover:underline whitespace-nowrap"
+                        disabled={isPurchaseLocked}
                         onClick={() => removeLine(idx)}
                       >
                         Xóa dòng này
@@ -746,6 +759,7 @@ export function OperationalFormDrawer({
                       <Combobox
                         options={lineTypeOptions}
                         value={line.line_type}
+                        disabled={isPurchaseLocked}
                         onChange={(v) =>
                           setLine(idx, "line_type", v || "SERVICE")
                         }
@@ -757,6 +771,7 @@ export function OperationalFormDrawer({
                         <Combobox
                           options={inventoryItemOptions}
                           value={line.inventory_item_id}
+                          disabled={isPurchaseLocked}
                           onChange={(v) => {
                             const selected = inventoryItemOptions.find(
                               (item) => item.value === (v || ""),
@@ -811,6 +826,7 @@ export function OperationalFormDrawer({
                       <input
                         className={inputCls}
                         value={line.description}
+                        disabled={isPurchaseLocked}
                         onChange={(e) =>
                           setLine(idx, "description", e.target.value)
                         }
@@ -823,6 +839,7 @@ export function OperationalFormDrawer({
                         step="0.01"
                         className={inputCls}
                         value={line.qty}
+                        disabled={isPurchaseLocked}
                         onChange={(e) => setLine(idx, "qty", e.target.value)}
                       />
                     </DrawerField>
@@ -833,6 +850,7 @@ export function OperationalFormDrawer({
                         step="0.01"
                         className={inputCls}
                         value={line.unit_price}
+                        disabled={isPurchaseLocked}
                         onChange={(e) =>
                           setLine(idx, "unit_price", e.target.value)
                         }
@@ -845,6 +863,7 @@ export function OperationalFormDrawer({
                         step="0.01"
                         className={inputCls}
                         value={line.amount}
+                        disabled={isPurchaseLocked}
                         onChange={(e) => setLine(idx, "amount", e.target.value)}
                       />
                     </DrawerField>
@@ -852,6 +871,7 @@ export function OperationalFormDrawer({
                       <input
                         className={inputCls}
                         value={line.notes}
+                        disabled={isPurchaseLocked}
                         onChange={(e) => setLine(idx, "notes", e.target.value)}
                       />
                     </DrawerField>
@@ -860,6 +880,7 @@ export function OperationalFormDrawer({
               ))}
               <button
                 className="text-xs text-blue-500 hover:underline"
+                disabled={isPurchaseLocked}
                 onClick={addLine}
               >
                 + Thêm dòng

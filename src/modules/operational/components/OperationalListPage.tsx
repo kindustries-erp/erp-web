@@ -9,6 +9,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import {
@@ -161,7 +162,7 @@ function inventoryStatusLabel(status?: string | null) {
 function canPostReceipt(row: OperationalDocument, variant: OperationalVariant) {
   return (
     variant === "purchase" &&
-    row.status === "CONFIRMED" &&
+    row.status === "RECEIVED" &&
     row.inventory_status !== "FULLY_RECEIVED"
   );
 }
@@ -226,6 +227,7 @@ export function OperationalListPage({
   variant: OperationalVariant;
 }) {
   const t = useT();
+  const navigate = useAppStore((s) => s.navigate);
   const showToast = useUIStore((s) => s.showToast);
   const config = variantConfig[variant];
 
@@ -540,6 +542,15 @@ export function OperationalListPage({
   async function openPostingDrawer(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
+    if (documentType === "purchase_orders") {
+      navigate("erp-goods-receipts");
+      const params = new URLSearchParams(window.location.search);
+      params.set("purchaseOrderId", row.id);
+      params.set("mode", "from-po");
+      const nextPath = `${window.location.pathname}?${params.toString()}`;
+      history.replaceState(null, "", nextPath);
+      return;
+    }
     setPostingState({ postingLoading: true });
     setError(null);
     try {
@@ -1230,11 +1241,9 @@ export function OperationalListPage({
                         }
                       },
                       icon: <Pencil className="h-4 w-4" />,
-                      hidden:
-                        !["sales", "purchase", "expenses"].includes(variant) ||
-                        (variant === "purchase" &&
-                          (row.status === "RECEIVED" ||
-                            row.status === "FULLY_RECEIVED")),
+                      hidden: !["sales", "purchase", "expenses"].includes(
+                        variant,
+                      ),
                     },
                     {
                       label: "Liên kết tiền",
