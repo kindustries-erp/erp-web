@@ -20,6 +20,8 @@ import {
   purchaseOrdersCoreApi,
   type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 
 interface GrLineForm {
   purchaseOrderLineId: string;
@@ -93,6 +95,8 @@ function buildPayload(form: GrForm): CreateGrPayload {
 }
 
 export function ErpGoodsReceiptsPage() {
+  const navigate = useAppStore((s) => s.navigate);
+  const showToast = useUIStore((s) => s.showToast);
   const [items, setItems] = useState<ErpGoodsReceipt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -343,7 +347,9 @@ export function ErpGoodsReceiptsPage() {
     setPostingId(item.id);
     try {
       await goodsReceiptsCoreApi.post(item.id);
+      showToast({ title: "Nhập kho thành công!", variant: "success" });
       await loadReceipts();
+      navigate("inventory");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể post goods receipt");
     } finally {
@@ -550,7 +556,7 @@ export function ErpGoodsReceiptsPage() {
             <DrawerField label="Trạng thái">
               <Combobox
                 value={form.status}
-                disabled={viewOnly}
+                disabled={true}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, status: value || "DRAFT" }))
