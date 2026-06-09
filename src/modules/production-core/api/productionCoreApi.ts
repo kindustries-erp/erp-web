@@ -24,10 +24,17 @@ export interface ExecuteProductionResult {
   finishedGoodItemName?: string;
   qtyProduced?: string;
   warehouseCode?: string;
-  materialsIssued?: MaterialIssuedItem[];
+  materialsIssued?: Array<{
+    itemId: string;
+    itemName?: string;
+    uom?: string;
+    qtyIssued: string;
+    newStockQty?: string;
+  }>;
   finishedGoodReceipt?: {
     receiptNo?: string;
     status?: string;
+    newStockQty?: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;

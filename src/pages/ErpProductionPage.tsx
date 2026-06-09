@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Factory,
   RotateCcw,
+  ArrowRight,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -24,10 +25,10 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { useUIStore } from "@/core/config/uiStore";
+import { useAppStore } from "@/core/config/appStore";
 
 const LOOKUP_LIMIT = 200;
-
-// ─── Form types ────────────────────────────────────────────────────────────────
 
 interface ProductionForm {
   finishedGoodItemId: string;
@@ -64,6 +65,7 @@ function fmtQty(value?: string | null) {
 
 function ResultPanel({ result }: { result: ExecuteProductionResult }) {
   const [showRaw, setShowRaw] = useState(false);
+  const navigate = useAppStore((s) => s.navigate);
 
   return (
     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 space-y-3">
@@ -113,6 +115,16 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
             </div>
           </div>
         ) : null}
+        {result.finishedGoodReceipt?.newStockQty ? (
+          <div className="rounded-xl border border-emerald-100 bg-emerald-100/50 px-3 py-2">
+            <div className="text-[10px] font-medium uppercase tracking-wide text-emerald-700 mb-0.5">
+              Tồn kho hiện tại (FG)
+            </div>
+            <div className="text-sm font-bold text-emerald-900">
+              {fmtQty(result.finishedGoodReceipt.newStockQty)}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* Materials issued */}
@@ -127,6 +139,7 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
                 <tr>
                   <th className="px-3 py-2">Mặt hàng</th>
                   <th className="px-3 py-2 text-right">Qty xuất</th>
+                  <th className="px-3 py-2 text-right">Tồn sau xuất</th>
                   <th className="px-3 py-2">ĐVT</th>
                 </tr>
               </thead>
@@ -142,6 +155,9 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
                     <td className="px-3 py-2 text-right font-medium">
                       {fmtQty(mat.qtyIssued)}
                     </td>
+                    <td className="px-3 py-2 text-right font-semibold text-emerald-800">
+                      {mat.newStockQty ? fmtQty(mat.newStockQty) : "—"}
+                    </td>
                     <td className="px-3 py-2 text-muted-foreground">
                       {mat.uom || "—"}
                     </td>
@@ -155,26 +171,28 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
 
       {/* finishedGoodReceipt if present */}
       {result.finishedGoodReceipt ? (
-        <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2 text-xs space-y-1">
-          <div className="font-semibold text-emerald-700 mb-1">
-            Phiếu nhập thành phẩm
+        <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2 text-xs space-y-1 flex justify-between items-center">
+          <div>
+            <div className="font-semibold text-emerald-700 mb-1">
+              Phiếu nhập thành phẩm
+            </div>
+            {result.finishedGoodReceipt.receiptNo ? (
+              <div className="flex gap-2">
+                <span className="text-muted-foreground">Receipt No:</span>
+                <span className="font-medium">
+                  {result.finishedGoodReceipt.receiptNo as string}
+                </span>
+              </div>
+            ) : null}
           </div>
-          {result.finishedGoodReceipt.receiptNo ? (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Receipt No</span>
-              <span className="font-medium">
-                {result.finishedGoodReceipt.receiptNo as string}
-              </span>
-            </div>
-          ) : null}
-          {result.finishedGoodReceipt.status ? (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Status</span>
-              <span className="font-medium">
-                {result.finishedGoodReceipt.status as string}
-              </span>
-            </div>
-          ) : null}
+          <button
+            type="button"
+            onClick={() => navigate("inventory")}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+          >
+            Đến Kho để xem
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       ) : null}
 
@@ -203,6 +221,7 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
 // ─── Main component ─────────────────────────────────────────────────────────
 
 export function ErpProductionPage() {
+  const showToast = useUIStore((s) => s.showToast);
   // ── Inventory item lookup ──
   const [itemOptions, setItemOptions] = useState<
     Array<{ value: string; label: string }>
@@ -297,6 +316,7 @@ export function ErpProductionPage() {
       };
       const res = await productionCoreApi.execute(payload);
       setResult(res);
+      showToast({ title: "Sản xuất thành công!", variant: "success" });
       // Reload history to include the new order
       await loadHistory();
     } catch (e: any) {
@@ -481,9 +501,7 @@ export function ErpProductionPage() {
         </div>
 
         {/* ─── Result panel ─── */}
-        {result && (
-          <ResultPanel result={result} />
-        )}
+        {result && <ResultPanel result={result} />}
 
         {/* ─── History ─── */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
