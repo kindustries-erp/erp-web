@@ -13,8 +13,9 @@ vi.mock("@/core/config/appStore", () => ({
   useAppStore: () => ({
     locale: mockLocale,
     toggleLocale: mockToggleLocale,
-    appTheme: "orcaq",
+    appTheme: "shell",
     toggleAppTheme: mockToggleAppTheme,
+    setAppTheme: vi.fn(),
   }),
 }));
 
@@ -60,8 +61,8 @@ describe("Login", () => {
   });
 
   it("does NOT render the theme switch button (only the language toggle)", () => {
-    render(<Login />);
-    const buttons = screen.getAllByRole("button");
+    const { container } = render(<Login />);
+    const buttons = Array.from(container.querySelectorAll("button"));
     // Expected buttons: language toggle, password show/hide, submit. No theme switch.
     const themeButton = buttons.find((b) =>
       b.getAttribute("title")?.startsWith(viLocale.nav.bottom.themeStyle),

@@ -153,18 +153,37 @@ export function TabBar() {
   return (
     <>
       <style>{`
-        .scrollbar-none::-webkit-scrollbar {
-          display: none;
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 3px;
         }
-        .scrollbar-none {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.15);
+          border-radius: 99px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.3);
+        }
+        .theme-orcaq .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.15);
+        }
+        .theme-orcaq .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+        }
+        .theme-orcaq .custom-scrollbar {
+          scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
         }
       `}</style>
       <div className="tab-bar-wrapper absolute bottom-0 left-0 right-0 z-50">
         <div
           ref={containerRef}
-          className="tab-bar-inner flex items-center px-2 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto scrollbar-none w-full h-9"
+          className="tab-bar-inner flex items-center px-2 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}

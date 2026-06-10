@@ -78,7 +78,7 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      appTheme: "orcaq",
+      appTheme: "shell",
       locale: "vi",
       isLoggedIn: false,
       customBreadcrumbs: null,
@@ -234,6 +234,13 @@ export const useAppStore = create<AppState>()(
         locale: s.locale,
         isLoggedIn: s.isLoggedIn,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          applyDocumentTheme(state.appTheme);
+        } else {
+          applyDocumentTheme("shell");
+        }
+      },
     },
   ),
 );

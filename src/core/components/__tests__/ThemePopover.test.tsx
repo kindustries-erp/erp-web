@@ -9,6 +9,9 @@ vi.mock("@/core/config/appStore", () => ({
   useAppStore: () => ({
     appTheme: mockAppTheme,
     setAppTheme: mockSetAppTheme,
+    locale: "vi",
+    toggleLocale: vi.fn(),
+    toggleAppTheme: vi.fn(),
   }),
 }));
 
