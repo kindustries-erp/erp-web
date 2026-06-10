@@ -51,7 +51,7 @@
 
 ## Rollback
 
-- Web: `git -C /opt/repos/liouni-erp/liouni-erp-web revert <commit>` + `docker compose up -d --build`
+- Web: `git -C /opt/repos/liouni-erp-core/liouni-erp-web revert <commit>` + `docker compose up -d --build`
 - Không cần rollback DB (không đụng schema Web)
 - Nếu cần ẩn tạm: xóa Sidebar entry `cashflow-vouchers` + remove route from App.tsx + rebuild
 

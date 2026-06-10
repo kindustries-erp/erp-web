@@ -36,8 +36,8 @@ Thiết kế và triển khai thay đổi theo DB-first để:
 - `src/modules/accounting/components/JournalEntryLineTable/index.tsx` - bỏ input debit/credit amount tách rời.
 - `src/modules/accounting/types/journalEntry.ts` - cập nhật type payload/form model.
 - `src/modules/accounting/api/journalEntriesApi.ts` - mở rộng API lấy related voucher detail.
-- `/opt/repos/liouni-erp/liouni-erp-api/src/journal-entries/journal-entries.controller.ts` - endpoint detail/hỗ trợ voucher detail.
-- `/opt/repos/liouni-erp/liouni-erp-api/src/journal-entries/journal-entries.service.ts` - enrich response detail từ reference.
+- `/opt/repos/liouni-erp-core/liouni-erp-api/src/journal-entries/journal-entries.controller.ts` - endpoint detail/hỗ trợ voucher detail.
+- `/opt/repos/liouni-erp-core/liouni-erp-api/src/journal-entries/journal-entries.service.ts` - enrich response detail từ reference.
 
 ## Gate 0 — DB Precheck (bắt buộc)
 

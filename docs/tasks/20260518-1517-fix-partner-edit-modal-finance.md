@@ -22,9 +22,9 @@
 
 ## Relevant Files
 
-- `/opt/repos/liouni-erp/liouni-erp-web/src/modules/partners/components/PartnerDrawer.tsx` - Sửa layout modal.
-- `/opt/repos/liouni-erp/liouni-erp-web/src/modules/finance/components/TienGui/BankVoucherDrawer.tsx` - Thêm logic load data khi bấm edit.
-- `/opt/repos/liouni-erp/liouni-erp-web/src/modules/finance/hooks/useBankVoucherHandlers.ts` - (Nếu cần) để xử lý logic state phức tạp.
+- `/opt/repos/liouni-erp-core/liouni-erp-web/src/modules/partners/components/PartnerDrawer.tsx` - Sửa layout modal.
+- `/opt/repos/liouni-erp-core/liouni-erp-web/src/modules/finance/components/TienGui/BankVoucherDrawer.tsx` - Thêm logic load data khi bấm edit.
+- `/opt/repos/liouni-erp-core/liouni-erp-web/src/modules/finance/hooks/useBankVoucherHandlers.ts` - (Nếu cần) để xử lý logic state phức tạp.
 
 ## Gate 0 — DB Precheck (bắt buộc)
 

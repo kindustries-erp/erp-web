@@ -19,7 +19,7 @@
 
 ## Evidence
 
-- Build: `npm run build` exit 0 in `/opt/repos/liouni-erp/liouni-erp-web`.
+- Build: `npm run build` exit 0 in `/opt/repos/liouni-erp-core/liouni-erp-web`.
 - Routes/pages added: `Sales.tsx`, `Purchasing.tsx`, `OperatingExpenses.tsx`, `Inventory.tsx`, updated `Receivables.tsx`, `Payables.tsx`.
 - API client added: `src/modules/operational/api/operationalApi.ts`.
 - Shared list shell added: `src/modules/operational/components/OperationalListPage.tsx`.

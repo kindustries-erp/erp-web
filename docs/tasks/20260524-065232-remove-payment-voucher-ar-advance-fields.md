@@ -52,7 +52,7 @@
   - Backup: `/opt/backups/directus-staging/20260524071223-remove-customer-advance/directus-staging-before-change.sql`
   - DB/Directus không còn `ar_advance_*`
 - `npm run build`:
-  - PASS tại `/opt/repos/liouni-erp/liouni-erp-web`
+  - PASS tại `/opt/repos/liouni-erp-core/liouni-erp-web`
 - Smoke test:
   - `curl https://dev.erp.liouni.com/` => `200`
   - live bundle: `/usr/share/nginx/html/assets/index-D0F5Voom.js`
