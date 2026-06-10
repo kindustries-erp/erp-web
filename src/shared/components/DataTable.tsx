@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -59,6 +59,8 @@ interface DataTableProps<T> {
   onPage?: (page: number) => void;
   onPageSize?: (pageSize: number) => void;
   onRowClick?: (item: T) => void;
+  renderSubRow?: (item: T) => ReactNode;
+  expandedRowKeys?: string[];
 }
 
 export function DataTable<T>({
@@ -81,6 +83,8 @@ export function DataTable<T>({
   onPage,
   onPageSize,
   onRowClick,
+  renderSubRow,
+  expandedRowKeys,
 }: DataTableProps<T>) {
   const showPagination =
     page != null &&
@@ -207,28 +211,49 @@ export function DataTable<T>({
 
             {!loading &&
               !error &&
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={cn(onRowClick && "cursor-pointer")}
-                  onClick={
-                    onRowClick ? () => onRowClick(row.original) : undefined
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const meta = cell.column.columnDef.meta as DataTableRowMeta;
-                    return (
-                      <TableCell key={cell.id} className={meta.className}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
+              table.getRowModel().rows.map((row) => {
+                const isExpanded = expandedRowKeys?.includes(
+                  getRowKey(row.original),
+                );
+                return (
+                  <React.Fragment key={row.id}>
+                    <TableRow
+                      data-state={row.getIsSelected() && "selected"}
+                      className={cn(
+                        onRowClick && "cursor-pointer",
+                        isExpanded &&
+                          "bg-muted/5 font-medium border-l-2 border-l-primary",
+                      )}
+                      onClick={
+                        onRowClick ? () => onRowClick(row.original) : undefined
+                      }
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const meta = cell.column.columnDef
+                          .meta as DataTableRowMeta;
+                        return (
+                          <TableCell key={cell.id} className={meta.className}>
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                    {renderSubRow && isExpanded && (
+                      <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
+                        <TableCell
+                          colSpan={tableColumns.length}
+                          className="p-4 pl-14 bg-muted/20"
+                        >
+                          {renderSubRow(row.original)}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
+                );
+              })}
           </TableBody>
         </Table>
       </div>

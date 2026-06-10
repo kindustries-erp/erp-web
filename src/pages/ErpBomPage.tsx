@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Boxes,
+  Pencil,
+  Plus,
+  Trash2,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -21,6 +28,7 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { cn } from "@/shared/utils";
 
 const ITEM_LOOKUP_LIMIT = 200;
 
@@ -111,6 +119,159 @@ function toPayload(form: BomForm): CreateBomPayload {
   };
 }
 
+interface BomTreeProps {
+  bomId: string;
+  fgToBomMap: Record<string, ErpBom>;
+  itemsMap: Record<string, string>;
+  level?: number;
+}
+
+function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
+  const [bom, setBom] = useState<ErpBom | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedLines, setExpandedLines] = useState<Record<string, boolean>>(
+    {},
+  );
+
+  useEffect(() => {
+    let active = true;
+    async function fetchDetail() {
+      setLoading(true);
+      setError(null);
+      try {
+        const detail = await bomCoreApi.get(bomId);
+        if (active) {
+          setBom(detail);
+        }
+      } catch (err) {
+        if (active) {
+          setError("Không thể tải chi tiết cấu trúc");
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+    void fetchDetail();
+    return () => {
+      active = false;
+    };
+  }, [bomId]);
+
+  if (loading) {
+    return (
+      <div className="pl-4 py-2 text-xs text-muted-foreground animate-pulse">
+        Đang tải cấu trúc NVL...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pl-4 py-2 text-xs text-red-500 font-medium">
+        ⚠️ {error}
+      </div>
+    );
+  }
+
+  if (!bom || !bom.lines || bom.lines.length === 0) {
+    return (
+      <div className="pl-4 py-2 text-xs text-muted-foreground italic">
+        Không có nguyên vật liệu bên trong.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1 pl-4 border-l border-dashed border-border/40 ml-2.5 mt-1">
+      {bom.lines.map((line, idx) => {
+        const itemId = line.componentItemId;
+        const itemName =
+          line.componentItemName ||
+          (itemId ? itemsMap[itemId] : "Linh kiện không xác định");
+        const subBom = itemId ? fgToBomMap[itemId] : null;
+        const isExpanded = itemId ? !!expandedLines[itemId] : false;
+
+        const formattedQty = parseFloat(line.qtyRequired || "0").toFixed(1);
+        const hasScrap = line.scrapRate && parseFloat(line.scrapRate) > 0;
+        const formattedScrap = hasScrap
+          ? parseFloat(line.scrapRate || "0").toFixed(1)
+          : "";
+
+        return (
+          <div key={line.id || idx} className="text-xs">
+            <div className="flex items-center justify-between py-1 hover:bg-primary/5 rounded px-2 transition-all duration-150 gap-4">
+              <div className="flex items-center gap-2 min-w-0">
+                {subBom ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (itemId) {
+                        setExpandedLines((prev) => ({
+                          ...prev,
+                          [itemId]: !prev[itemId],
+                        }));
+                      }
+                    }}
+                    className="p-0.5 hover:bg-muted rounded text-muted-foreground transition-colors flex items-center justify-center shrink-0"
+                  >
+                    <ChevronRight
+                      className={cn(
+                        "h-3 w-3 transform transition-transform",
+                        isExpanded && "rotate-90",
+                      )}
+                    />
+                  </button>
+                ) : (
+                  <span className="w-4 h-4 flex items-center justify-center text-muted-foreground/30 text-[10px] shrink-0">
+                    •
+                  </span>
+                )}
+                <span className="font-medium text-foreground/90 truncate">
+                  {itemName}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0 text-[11px] text-muted-foreground">
+                <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full min-w-[32px] text-center">
+                  {formattedQty}
+                </span>
+                <span className="font-medium text-foreground/75 w-10 truncate">
+                  {line.uom}
+                </span>
+                {hasScrap && (
+                  <span className="text-amber-700 bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 rounded-full text-[9px] font-medium shrink-0">
+                    Hao hụt {formattedScrap}%
+                  </span>
+                )}
+                {line.notes && (
+                  <span
+                    className="italic max-w-[120px] truncate text-muted-foreground/80"
+                    title={line.notes}
+                  >
+                    ({line.notes})
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {subBom && isExpanded && itemId && (
+              <BomTree
+                bomId={subBom.id}
+                fgToBomMap={fgToBomMap}
+                itemsMap={itemsMap}
+                level={level + 1}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ErpBomPage() {
   const [items, setItems] = useState<ErpBom[]>([]);
   const [loading, setLoading] = useState(true);
@@ -166,13 +327,56 @@ export function ErpBomPage() {
     }
   }, []);
 
+  const [expandedBomIds, setExpandedBomIds] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [allBoms, setAllBoms] = useState<ErpBom[]>([]);
+
+  const loadAllBoms = useCallback(async () => {
+    try {
+      const res = await bomCoreApi.list({ page: 1, pageSize: 1000 });
+      setAllBoms(res.items);
+    } catch (e) {
+      console.error("Không thể tải danh sách BOM cho cấu trúc cây", e);
+    }
+  }, []);
+
   useEffect(() => {
     void loadBoms();
   }, [loadBoms]);
 
   useEffect(() => {
+    void loadAllBoms();
+  }, [loadAllBoms]);
+
+  useEffect(() => {
     void loadItemOptions();
   }, [loadItemOptions]);
+
+  const fgToBomMap = useMemo(() => {
+    const map: Record<string, ErpBom> = {};
+    allBoms.forEach((bom) => {
+      if (bom.finishedGoodItemId) {
+        map[bom.finishedGoodItemId] = bom;
+      }
+    });
+    return map;
+  }, [allBoms]);
+
+  const itemsMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    itemOptions.forEach((opt) => {
+      map[opt.value] = opt.label;
+    });
+    return map;
+  }, [itemOptions]);
+
+  function toggleExpand(id: string) {
+    setExpandedBomIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  }
 
   function resetForm() {
     setForm(emptyForm());
@@ -269,6 +473,7 @@ export function ErpBomPage() {
         await bomCoreApi.create(payload);
       }
       closeDrawer();
+      void loadAllBoms();
       if (!editing && page !== 1) setPage(1);
       else await loadBoms();
     } catch (e: any) {
@@ -284,7 +489,27 @@ export function ErpBomPage() {
     {
       key: "bomCode",
       header: "Mã BOM",
-      cell: (item) => <span className="font-medium">{item.bomCode}</span>,
+      cell: (item) => {
+        const isExpanded = !!expandedBomIds[item.id];
+        return (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleExpand(item.id);
+            }}
+            className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left"
+          >
+            <span className="font-semibold text-primary">{item.bomCode}</span>
+            <ChevronRight
+              className={cn(
+                "h-3.5 w-3.5 transition-transform text-muted-foreground",
+                isExpanded && "rotate-90 text-primary",
+              )}
+            />
+          </button>
+        );
+      },
       skeletonClassName: "w-24",
     },
     {
@@ -396,21 +621,9 @@ export function ErpBomPage() {
             <ActionDropdown
               items={[
                 {
-                  label: "Xem",
-                  onClick: () => void openView(item),
-                  icon: <Boxes className="h-3.5 w-3.5" />,
-                },
-                {
                   label: "Sửa",
                   onClick: () => void openEdit(item),
                   icon: <Pencil className="h-3.5 w-3.5" />,
-                },
-                {
-                  label: "Delete chưa hỗ trợ",
-                  onClick: () => undefined,
-                  icon: <Trash2 className="h-3.5 w-3.5" />,
-                  variant: "danger",
-                  hidden: true,
                 },
               ]}
             />
@@ -425,6 +638,16 @@ export function ErpBomPage() {
           setPage(1);
           setPageSize(value);
         }}
+        renderSubRow={(item) => (
+          <BomTree
+            bomId={item.id}
+            fgToBomMap={fgToBomMap}
+            itemsMap={itemsMap}
+          />
+        )}
+        expandedRowKeys={Object.keys(expandedBomIds).filter(
+          (key) => expandedBomIds[key],
+        )}
       />
 
       <DrawerModal
