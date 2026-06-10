@@ -35,7 +35,8 @@ Chuẩn bị lane web `erp-core` với scope route/menu tối giản: login, pro
 - Constraint/index/default cần có:
   - API/DB target đang ở trạng thái `DB_GAP_FOUND`
 - Kết quả: `DB_GAP_FOUND`
-- Nếu `DB_GAP_FOUND`: link DB task (directus-staging): `/opt/repos/liouni-erp/directus-staging/ops/tasks/20260607-erp-core-postgres-scan-and-plan.md`
+- Nếu `DB_GAP_FOUND`: link DB scan/reference task (legacy directus-staging source): `/opt/repos/liouni-erp/directus-staging/ops/tasks/20260607-erp-core-postgres-scan-and-plan.md`
+- Active web source for this lane is now `/opt/repos/liouni-erp-core/liouni-erp-web`.
 
 ## Checklist (bắt buộc cập nhật realtime)
 

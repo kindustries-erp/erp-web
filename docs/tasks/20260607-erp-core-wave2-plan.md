@@ -119,8 +119,8 @@ Nếu endpoint nào missing → implement BE trước, sau đó mới làm FE t�
 **Todo ID:** `wave2-build-verify`
 
 ```bash
-cd /opt/repos/liouni-erp/liouni-erp-web && bun run build
-cd /opt/repos/liouni-erp/liouni-erp-api && bun run start
+cd /opt/repos/liouni-erp-core/liouni-erp-web && bun run build
+cd /opt/repos/liouni-erp-core/liouni-erp-api && bun run start
 # smoke: login → navigate từng page → không 404/500
 ```
 
