@@ -670,7 +670,7 @@ export function ErpBomPage() {
           {/* Cột trái (4/5): Định mức nguyên vật liệu */}
           <div className="flex-1 min-w-0 order-2 xl:order-1">
             <DrawerSection title="Định mức nguyên vật liệu">
-              {!viewOnly && (
+              {!viewOnly && !editing && (
                 <div className="mb-3 flex justify-end">
                   <button
                     type="button"
@@ -692,7 +692,7 @@ export function ErpBomPage() {
                       <div className="text-xs font-semibold text-muted-foreground">
                         NVL {index + 1}
                       </div>
-                      {!viewOnly && (
+                      {!viewOnly && !editing && (
                         <button
                           type="button"
                           onClick={() => removeLine(index)}
@@ -709,7 +709,7 @@ export function ErpBomPage() {
                         <DrawerField label="Linh kiện" required>
                           <Combobox
                             value={line.componentItemId}
-                            disabled={viewOnly}
+                            disabled={viewOnly || !!editing}
                             onChange={(value) =>
                               updateLine(index, { componentItemId: value })
                             }
@@ -723,7 +723,7 @@ export function ErpBomPage() {
                         <DrawerField label="Số lượng" required>
                           <input
                             value={line.qtyRequired}
-                            disabled={viewOnly}
+                            disabled={viewOnly || !!editing}
                             onChange={(e) =>
                               updateLine(index, { qtyRequired: e.target.value })
                             }
@@ -735,7 +735,7 @@ export function ErpBomPage() {
                         <DrawerField label="ĐVT">
                           <input
                             value={line.uom}
-                            disabled={viewOnly}
+                            disabled={viewOnly || !!editing}
                             onChange={(e) =>
                               updateLine(index, { uom: e.target.value })
                             }
@@ -747,7 +747,7 @@ export function ErpBomPage() {
                         <DrawerField label="Tỷ lệ hao hụt">
                           <input
                             value={line.scrapRate}
-                            disabled={viewOnly}
+                            disabled={viewOnly || !!editing}
                             onChange={(e) =>
                               updateLine(index, { scrapRate: e.target.value })
                             }
@@ -793,7 +793,7 @@ export function ErpBomPage() {
                 <DrawerField label="Version" required>
                   <input
                     value={form.version}
-                    disabled={viewOnly}
+                    disabled={viewOnly || !!editing}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, version: e.target.value }))
                     }
@@ -803,35 +803,17 @@ export function ErpBomPage() {
                 <DrawerField label="Tên BOM" required>
                   <input
                     value={form.bomName}
-                    disabled={viewOnly}
+                    disabled={viewOnly || !!editing}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, bomName: e.target.value }))
                     }
                     className={inputCls}
                   />
                 </DrawerField>
-                <DrawerField label="Trạng thái">
-                  <Combobox
-                    value={form.status}
-                    disabled={viewOnly}
-                    allowClear={false}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        status: value || "ACTIVE",
-                      }))
-                    }
-                    options={[
-                      { value: "ACTIVE", label: "ACTIVE" },
-                      { value: "INACTIVE", label: "INACTIVE" },
-                      { value: "DRAFT", label: "DRAFT" },
-                    ]}
-                  />
-                </DrawerField>
                 <DrawerField label="Thành phẩm">
                   <Combobox
                     value={form.finishedGoodItemId}
-                    disabled={viewOnly}
+                    disabled={viewOnly || !!editing}
                     onChange={(value) =>
                       setForm((prev) => ({
                         ...prev,
@@ -867,6 +849,24 @@ export function ErpBomPage() {
                       }))
                     }
                     className="w-full"
+                  />
+                </DrawerField>
+                <DrawerField label="Trạng thái">
+                  <Combobox
+                    value={form.status}
+                    disabled={viewOnly || !!editing}
+                    allowClear={false}
+                    onChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        status: value || "ACTIVE",
+                      }))
+                    }
+                    options={[
+                      { value: "ACTIVE", label: "ACTIVE" },
+                      { value: "INACTIVE", label: "INACTIVE" },
+                      { value: "DRAFT", label: "DRAFT" },
+                    ]}
                   />
                 </DrawerField>
                 <DrawerField label="Ghi chú">
