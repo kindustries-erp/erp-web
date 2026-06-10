@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Pencil, Plus, ReceiptText } from "lucide-react";
+import { Boxes, Pencil, Plus, ReceiptText, XCircle } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -110,6 +110,7 @@ export function ErpGoodsReceiptsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState<string | null>(null);
+  const [cancelId, setCancelId] = useState<string | null>(null);
 
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
@@ -381,6 +382,19 @@ export function ErpGoodsReceiptsPage() {
     }
   }
 
+  async function handleCancel(item: ErpGoodsReceipt) {
+    setCancelId(item.id);
+    try {
+      await goodsReceiptsCoreApi.cancel(item.id);
+      showToast({ title: "Đã hủy phiếu nhập", variant: "success" });
+      await loadReceipts();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không thể hủy phiếu nhập");
+    } finally {
+      setCancelId(null);
+    }
+  }
+
   const columns: DataTableColumn<ErpGoodsReceipt>[] = [
     {
       key: "receiptNo",
@@ -412,7 +426,28 @@ export function ErpGoodsReceiptsPage() {
     {
       key: "status",
       header: "Trạng thái",
-      cell: (item) => item.status || "—",
+      cell: (item) => {
+        const s = item.status || "";
+        const cls =
+          s === "POSTED"
+            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+            : s === "CANCELLED"
+              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300";
+        const label =
+          s === "POSTED"
+            ? "Đã ghi sổ"
+            : s === "CANCELLED"
+              ? "Đã hủy"
+              : s || "—";
+        return (
+          <span
+            className={`inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium ${cls}`}
+          >
+            {label}
+          </span>
+        );
+      },
       skeletonClassName: "w-16",
     },
   ];
@@ -504,10 +539,11 @@ export function ErpGoodsReceiptsPage() {
                   icon: <Pencil className="h-3.5 w-3.5" />,
                 },
                 {
-                  label: postingId === item.id ? "Đang post..." : "Post",
-                  onClick: () => void handlePost(item),
-                  icon: <ReceiptText className="h-3.5 w-3.5" />,
-                  hidden: item.status === "POSTED",
+                  label:
+                    cancelId === item.id ? "Đang hủy..." : "Hủy phiếu nhập",
+                  onClick: () => void handleCancel(item),
+                  icon: <XCircle className="h-3.5 w-3.5 text-red-500" />,
+                  hidden: item.status !== "POSTED",
                 },
               ]}
             />

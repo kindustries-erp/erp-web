@@ -69,10 +69,7 @@ const salesStatusOptions = [
 
 const purchaseStatusOptions = [
   { value: "DRAFT", label: "Nháp" },
-  { value: "CONFIRMED", label: "Xác nhận" },
-  { value: "PARTIAL_RECEIVED", label: "Nhận một phần" },
-  { value: "RECEIVED", label: "Đã nhận" },
-  { value: "CANCELLED", label: "Hủy" },
+  { value: "CONFIRMED", label: "Đã xác nhận" },
 ];
 
 const expenseStatusOptions = [

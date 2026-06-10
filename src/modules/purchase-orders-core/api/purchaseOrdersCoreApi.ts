@@ -12,6 +12,26 @@ export interface ErpPoLine {
   amount?: string;
 }
 
+export interface ErpPoReceiptLine {
+  id?: string;
+  lineNo?: number;
+  itemId?: string | null;
+  purchaseOrderLineId?: string | null;
+  qtyReceived: string;
+  unitCost?: string | null;
+  amount?: string | null;
+}
+
+export interface ErpPoReceipt {
+  id: string;
+  receiptNo: string;
+  receiptDate: string;
+  status?: string | null;
+  remarks?: string | null;
+  createdAt?: string;
+  lines?: ErpPoReceiptLine[];
+}
+
 export interface ErpPurchaseOrder {
   id: string;
   poNo: string;
@@ -22,6 +42,8 @@ export interface ErpPurchaseOrder {
   status?: string | null;
   remarks?: string | null;
   createdAt?: string;
+  inventoryStatus?: string | null;
+  receipts?: ErpPoReceipt[];
   lines?: ErpPoLine[];
 }
 

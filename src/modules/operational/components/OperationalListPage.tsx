@@ -48,6 +48,10 @@ import {
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
+import {
+  purchaseOrdersCoreApi,
+  type ErpPoReceipt,
+} from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -254,6 +258,7 @@ export function OperationalListPage({
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
+  const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
 
   const {
     activeStep,
@@ -526,6 +531,16 @@ export function OperationalListPage({
       const document = await operationalApi.getDocument(documentType, row.id);
       setRootContext(document, documentType);
       setDetailState({ detailDocument: document });
+      if (documentType === "purchase_orders") {
+        try {
+          const po = await purchaseOrdersCoreApi.get(row.id);
+          setPoReceipts(po.receipts || []);
+        } catch {
+          setPoReceipts([]);
+        }
+      } else {
+        setPoReceipts([]);
+      }
     } catch (err) {
       setDetailState({
         detailError: extractApiError(err, "Không tải được chi tiết chứng từ"),
@@ -1430,6 +1445,51 @@ export function OperationalListPage({
                 </div>
               )}
             </DrawerSection>
+            {rootDocumentType === "purchase_orders" ? (
+              <DrawerSection title="Lịch sử nhập kho">
+                {poReceipts.length ? (
+                  <div className="space-y-3">
+                    {poReceipts.map((receipt) => (
+                      <div
+                        key={receipt.id}
+                        className="rounded-xl border border-border p-3 text-sm"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="font-medium">{receipt.receiptNo}</div>
+                          <div className="text-xs text-[color:var(--muted-fg)]">
+                            {normalizeDate(receipt.receiptDate) || "—"} ·{" "}
+                            {receipt.status || "—"}
+                          </div>
+                        </div>
+                        {receipt.remarks ? (
+                          <div className="mt-1 text-xs text-[color:var(--muted-fg)]">
+                            {receipt.remarks}
+                          </div>
+                        ) : null}
+                        <div className="mt-2 space-y-1">
+                          {(receipt.lines || []).map((line, idx) => (
+                            <div
+                              key={line.id || `${receipt.id}-${idx}`}
+                              className="text-xs text-[color:var(--muted-fg)]"
+                            >
+                              Dòng {line.lineNo || idx + 1}: nhận{" "}
+                              {Number(line.qtyReceived || 0).toLocaleString(
+                                "vi-VN",
+                              )}{" "}
+                              đơn vị
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-[color:var(--muted-fg)]">
+                    Chưa có lần nhập kho nào cho PO này.
+                  </div>
+                )}
+              </DrawerSection>
+            ) : null}
           </>
         ) : null}
       </DrawerModal>

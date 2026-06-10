@@ -86,6 +86,13 @@ export const goodsReceiptsCoreApi = {
     );
     return data.data;
   },
+  cancel: async (id: string): Promise<ErpGoodsReceipt> => {
+    const { data } = await axiosInstance.post<GrDetailResponse>(
+      `${BASE}/${id}/cancel`,
+      {},
+    );
+    return data.data;
+  },
   nextNo: async (date?: string): Promise<string> => {
     const { data } = await axiosInstance.get<{ nextNo: string }>(
       `${BASE}/next-no`,
