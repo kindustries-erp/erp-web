@@ -174,6 +174,45 @@ export function Sidebar() {
               <NavItem
                 collapsed={c}
                 icon={<IconBox />}
+                label={t("nav.items.erpSalesOrders")}
+                active={currentPage === "erp-sales-orders"}
+                onClick={() => navTo("erp-sales-orders")}
+                contextPage="erp-sales-orders"
+              />
+            </div>
+
+            {/* Kho */}
+            <div className="sidebar-nav-section py-2">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                Kho
+              </div>
+              <NavItem
+                collapsed={c}
+                icon={<IconBox />}
+                label={t("nav.items.erpInventoryItems")}
+                active={currentPage === "erp-inventory-items"}
+                onClick={() => navTo("erp-inventory-items")}
+                contextPage="erp-inventory-items"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconBox />}
+                label={t("nav.items.erpGoodsReceipts")}
+                active={currentPage === "erp-goods-receipts"}
+                onClick={() => navTo("erp-goods-receipts")}
+                contextPage="erp-goods-receipts"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconShop />}
+                label={t("nav.items.erpGoodsIssues")}
+                active={currentPage === "erp-goods-issues"}
+                onClick={() => navTo("erp-goods-issues")}
+                contextPage="erp-goods-issues"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconBox />}
                 label={t("nav.items.inventory")}
                 active={currentPage === "inventory"}
                 onClick={() => navTo("inventory")}
@@ -211,14 +250,6 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<IconBox />}
-                label={t("nav.items.mfgItems")}
-                active={currentPage === "mfg-items"}
-                onClick={() => navTo("mfg-items")}
-                contextPage="mfg-items"
-              />
-              <NavItem
-                collapsed={c}
                 icon={<IconCart />}
                 label={t("nav.items.mfgVehicles")}
                 active={currentPage === "mfg-vehicles"}
@@ -235,43 +266,11 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconShop />}
-                label={t("nav.items.erpGoodsReceipts")}
-                active={currentPage === "erp-goods-receipts"}
-                onClick={() => navTo("erp-goods-receipts")}
-                contextPage="erp-goods-receipts"
-              />
-              <NavItem
-                collapsed={c}
                 icon={<IconGrid />}
                 label={t("nav.items.erpProduction")}
                 active={currentPage === "erp-production"}
                 onClick={() => navTo("erp-production")}
                 contextPage="erp-production"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconCart />}
-                label={t("nav.items.erpSalesOrders")}
-                active={currentPage === "erp-sales-orders"}
-                onClick={() => navTo("erp-sales-orders")}
-                contextPage="erp-sales-orders"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconShop />}
-                label={t("nav.items.erpGoodsIssues")}
-                active={currentPage === "erp-goods-issues"}
-                onClick={() => navTo("erp-goods-issues")}
-                contextPage="erp-goods-issues"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconBox />}
-                label={t("nav.items.erpInventoryItems")}
-                active={currentPage === "erp-inventory-items"}
-                onClick={() => navTo("erp-inventory-items")}
-                contextPage="erp-inventory-items"
               />
             </div>
           </div>
