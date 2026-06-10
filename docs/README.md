@@ -4,8 +4,9 @@
 
 1. `../AGENTS.md`
 2. `ai/technical-instructions.md`
-3. `app-structure.md`
-4. Relevant file in `tasks/`
+3. `erp-core-index.md` *(ERP CORE lane bootstrap / active-vs-legacy docs guide)*
+4. `app-structure.md`
+5. Relevant file in `tasks/`
 
 ## Main sections
 
