@@ -181,6 +181,29 @@ export function Sidebar() {
               />
             </div>
 
+            {/* Partners */}
+            <div className="sidebar-nav-section py-2">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                Đối tác
+              </div>
+              <NavItem
+                collapsed={c}
+                icon={<IconShop />}
+                label="Nhà cung cấp"
+                active={currentPage === "erp-suppliers"}
+                onClick={() => navTo("erp-suppliers")}
+                contextPage="erp-suppliers"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconCart />}
+                label="Khách hàng"
+                active={currentPage === "erp-customers"}
+                onClick={() => navTo("erp-customers")}
+                contextPage="erp-customers"
+              />
+            </div>
+
             {/* Manufacturing / BOM / Production */}
             <div className="sidebar-nav-section py-2">
               <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">

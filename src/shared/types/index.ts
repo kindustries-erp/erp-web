@@ -35,7 +35,9 @@ export type PageKey =
   | "erp-production"
   | "erp-sales-orders"
   | "erp-goods-issues"
-  | "erp-inventory-items";
+  | "erp-inventory-items"
+  | "erp-suppliers"
+  | "erp-customers";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {
