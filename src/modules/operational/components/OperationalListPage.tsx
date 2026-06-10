@@ -7,7 +7,9 @@ import {
   RefreshCcw,
   Repeat,
   Warehouse,
+  ChevronRight,
 } from "lucide-react";
+import { cn } from "@/shared/utils";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
@@ -65,7 +67,6 @@ const variantConfig: Record<
   purchase: {
     title: "Mua hàng nhập kho",
     desc: "Phụ tùng, nguyên vật liệu; có thể định kỳ và trigger nhập kho.",
-    cta: "Tạo đơn mua mẫu",
   },
   expenses: {
     title: "Chi phí vận hành",
@@ -200,16 +201,7 @@ function buildSamplePayload(
       ],
     };
   }
-  if (variant === "purchase") {
-    return {
-      supplier_name_snapshot: "Nhà cung cấp mẫu",
-      status: "CONFIRMED",
-      invoice_status: "NO_INVOICE",
-      recurrence_type: "ONE_TIME",
-      total_amount: 2500000,
-      lines: [{ item_name: "Phụ tùng mẫu", qty: 2, unit_price: 1250000 }],
-    };
-  }
+
   if (variant === "expenses") {
     return {
       supplier_name_snapshot: "NCC dịch vụ mẫu",
@@ -223,6 +215,145 @@ function buildSamplePayload(
     };
   }
   return null;
+}
+
+function PurchaseSubRow({ rowId }: { rowId: string }) {
+  const [detail, setDetail] = useState<OperationalDocument | null>(null);
+  const [receipts, setReceipts] = useState<ErpPoReceipt[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const t = useT();
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setLoading(true);
+      try {
+        const doc = await operationalApi.getDocument("purchase_orders", rowId);
+        if (active) setDetail(doc);
+        const po = await purchaseOrdersCoreApi.get(rowId);
+        if (active) setReceipts(po.receipts || []);
+      } catch (e) {
+        if (active) setError(t("Không tải được chi tiết dòng"));
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [rowId, t]);
+
+  if (loading)
+    return (
+      <div className="pl-4 py-2 text-xs text-[color:var(--muted-fg)] animate-pulse">
+        {t("Đang tải chi tiết...")}
+      </div>
+    );
+  if (error)
+    return (
+      <div className="pl-4 py-2 text-xs text-red-500 font-medium">
+        ⚠️ {error}
+      </div>
+    );
+  if (!detail) return null;
+
+  return (
+    <div className="flex flex-col md:flex-row gap-6 pl-4 border-l border-dashed border-[color:var(--border)]/40 ml-2.5 mt-1 mb-2">
+      <div className="flex-1 space-y-1">
+        <div className="text-xs font-semibold text-[color:var(--muted-fg)] mb-1 uppercase tracking-wider">
+          {t("Chi tiết")}
+        </div>
+        {!detail.lines || detail.lines.length === 0 ? (
+          <div className="text-xs text-[color:var(--muted-fg)] italic">
+            {t("Không có dòng chi tiết.")}
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {detail.lines.map((line, idx) => (
+              <div
+                key={line.id || idx}
+                className="text-xs flex items-center justify-between py-1.5 hover:bg-[color:var(--muted)]/80 rounded px-2 transition-all duration-150 gap-4"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-4 h-4 flex items-center justify-center text-[color:var(--muted-fg)]/30 text-[10px] shrink-0">
+                    •
+                  </span>
+                  <span className="font-medium text-[color:var(--foreground)]/90 truncate">
+                    {line.item_name ||
+                      line.description ||
+                      `${t("Dòng")} ${idx + 1}`}
+                    {line.item_code && (
+                      <span className="text-[color:var(--muted-fg)] ml-1.5 font-normal">
+                        ({line.item_code})
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 text-[11px] text-[color:var(--muted-fg)]">
+                  <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full min-w-[32px] text-center">
+                    {Number(line.qty || 0).toLocaleString("vi-VN")}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="w-full md:w-72 shrink-0 space-y-1">
+        <div className="text-xs font-semibold text-[color:var(--muted-fg)] mb-1 uppercase tracking-wider">
+          {t("Lịch sử nhập kho")}
+        </div>
+        {receipts.length === 0 ? (
+          <div className="text-xs text-[color:var(--muted-fg)] italic px-2">
+            {t("Chưa có lịch sử nhập.")}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {receipts.map((receipt) => (
+              <div
+                key={receipt.id}
+                className="bg-surface border border-[color:var(--border)] rounded px-3 py-2 text-xs hover:border-primary/30 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-medium">{receipt.receiptNo}</span>
+                  <span className="text-[color:var(--muted-fg)]">
+                    {receipt.receiptDate
+                      ? receipt.receiptDate.slice(0, 10)
+                      : "—"}{" "}
+                    · {t(receipt.status || "—")}
+                  </span>
+                </div>
+                {receipt.remarks && (
+                  <div className="text-[color:var(--muted-fg)] mb-1.5">
+                    {receipt.remarks}
+                  </div>
+                )}
+                <div className="space-y-1 mt-1 border-t border-[color:var(--border)] pt-1.5">
+                  {(receipt.lines || []).map((line, idx) => (
+                    <div
+                      key={line.id || idx}
+                      className="flex justify-between text-[color:var(--muted-fg)]"
+                    >
+                      <span>
+                        {t("Dòng")} {line.lineNo || idx + 1}
+                      </span>
+                      <span className="font-medium text-[color:var(--foreground)]/80">
+                        {t("Nhận:")}{" "}
+                        {Number(line.qtyReceived || 0).toLocaleString("vi-VN")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function OperationalListPage({
@@ -253,12 +384,23 @@ export function OperationalListPage({
     Array<{ value: string; label: string }>
   >([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [viewOnly, setViewOnly] = useState(false);
+  const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
+    {},
+  );
   const [editingRow, setEditingRow] = useState<OperationalDocument | null>(
     null,
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
+
+  function toggleExpand(id: string) {
+    setExpandedRowIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  }
 
   const {
     activeStep,
@@ -520,6 +662,25 @@ export function OperationalListPage({
   async function openDetail(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
+
+    if (variant === "purchase") {
+      setLoading(true);
+      setError(null);
+      try {
+        const document = await operationalApi.getDocument(documentType, row.id);
+        const po = await purchaseOrdersCoreApi.get(row.id);
+        setPoReceipts(po.receipts || []);
+        setEditingRow(document);
+        setViewOnly(true);
+        setFormOpen(true);
+      } catch (err) {
+        setError(extractApiError(err, t("Không tải được chi tiết chứng từ")));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     setRootContext(row, documentType);
     setActiveStep("detail");
     setDetailState({
@@ -816,11 +977,32 @@ export function OperationalListPage({
     () => [
       {
         key: "po_no",
-        header: "Số PO",
+        header: t("Số PO"),
         className: "align-top min-w-[140px]",
-        cell: (row) => (
-          <span className="font-medium text-sm">{row.purchase_no || "—"}</span>
-        ),
+        cell: (row) => {
+          const rowKey = `${row.document_type || variant}-${row.id}`;
+          const isExpanded = !!expandedRowIds[rowKey];
+          return (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpand(rowKey);
+              }}
+              className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
+            >
+              <span className="font-semibold text-primary">
+                {row.purchase_no || "—"}
+              </span>
+              <ChevronRight
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
+                  isExpanded && "rotate-90 text-primary",
+                )}
+              />
+            </button>
+          );
+        },
       },
       {
         key: "supplier",
@@ -857,16 +1039,6 @@ export function OperationalListPage({
                 Kho: {inventoryStatusLabel(row.inventory_status)}
               </div>
             ) : null}
-          </div>
-        ),
-      },
-      {
-        key: "total_amount",
-        header: "Tổng tiền",
-        className: "align-top min-w-[140px] text-right",
-        cell: (row) => (
-          <div className="text-sm font-medium text-right">
-            {money(row.total_amount)}
           </div>
         ),
       },
@@ -1230,9 +1402,10 @@ export function OperationalListPage({
                 <ActionDropdown
                   items={[
                     {
-                      label: "Chi tiết",
+                      label: t("Chi tiết"),
                       icon: <FileText className="h-4 w-4" />,
                       onClick: () => void openDetail(row),
+                      hidden: variant === "purchase",
                     },
                     {
                       label: "Sửa",
@@ -1288,6 +1461,14 @@ export function OperationalListPage({
                 />
               ),
             }}
+            renderSubRow={
+              variant === "purchase"
+                ? (item) => <PurchaseSubRow rowId={item.id} />
+                : undefined
+            }
+            expandedRowKeys={Object.keys(expandedRowIds).filter(
+              (key) => expandedRowIds[key],
+            )}
             page={page}
             pageSize={pageSize}
             total={total}
@@ -1735,9 +1916,12 @@ export function OperationalListPage({
           variant={variant as "sales" | "purchase" | "expenses"}
           open={formOpen}
           editing={editingRow}
+          viewOnly={viewOnly}
+          poReceipts={poReceipts}
           onClose={() => {
             setFormOpen(false);
             setEditingRow(null);
+            setViewOnly(false);
           }}
           onSaved={async () => {
             await load();
