@@ -39,7 +39,10 @@ jobs:
           git reset --hard origin/erp-core
 
           cd /opt/stacks/liouni-erp-core-web
-          docker compose up -d --build --force-recreate
+          docker compose build
+          docker compose create --force-recreate
+          docker compose start
+          docker compose ps
 
           for i in $(seq 1 30); do
             web_status=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8809/ || true)
