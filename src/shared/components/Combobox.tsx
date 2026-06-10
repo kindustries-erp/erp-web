@@ -20,6 +20,7 @@ interface ComboboxProps {
   disabled?: boolean;
   /** Show a "clear / no selection" row at the top. Default: true */
   allowClear?: boolean;
+  readOnly?: boolean;
 }
 
 export function Combobox({
@@ -31,6 +32,7 @@ export function Combobox({
   emptyLabel = "Không tìm thấy.",
   className,
   disabled,
+  readOnly,
   allowClear = true,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
@@ -62,14 +64,18 @@ export function Combobox({
         <Popover.Trigger asChild>
           <button
             type="button"
-            disabled={disabled}
-            onClick={() => !disabled && setOpen(!open)}
+            disabled={disabled || readOnly}
+            onClick={() => !(disabled || readOnly) && setOpen(!open)}
             className={cn(
               "flex items-center justify-between w-full px-3 py-2 text-xs border rounded-xl transition-all outline-none",
               open
                 ? "border-primary ring-2 ring-primary/10 bg-surface"
                 : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
-              disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer",
+              disabled
+                ? "opacity-60 cursor-not-allowed"
+                : readOnly
+                  ? "cursor-default"
+                  : "cursor-pointer",
               className,
             )}
           >

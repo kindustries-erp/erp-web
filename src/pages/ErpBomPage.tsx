@@ -203,7 +203,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
 
         return (
           <div key={line.id || idx} className="text-xs">
-            <div className="flex items-center justify-between py-1 hover:bg-primary/5 rounded px-2 transition-all duration-150 gap-4">
+            <div className="flex items-center justify-between py-1 hover:bg-muted/80 rounded px-2 transition-all duration-150 gap-4">
               <div className="flex items-center gap-2 min-w-0">
                 {subBom ? (
                   <button
@@ -232,6 +232,11 @@ function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
                 )}
                 <span className="font-medium text-foreground/90 truncate">
                   {itemName}
+                  {line.notes && (
+                    <span className="italic text-muted-foreground ml-1.5 font-normal">
+                      ({line.notes})
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -245,14 +250,6 @@ function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
                 {hasScrap && (
                   <span className="text-amber-700 bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 rounded-full text-[9px] font-medium shrink-0">
                     Hao hụt {formattedScrap}%
-                  </span>
-                )}
-                {line.notes && (
-                  <span
-                    className="italic max-w-[120px] truncate text-muted-foreground/80"
-                    title={line.notes}
-                  >
-                    ({line.notes})
                   </span>
                 )}
               </div>
@@ -522,7 +519,9 @@ export function ErpBomPage() {
     {
       key: "finishedGoodItemName",
       header: "Thành phẩm",
-      cell: (item) => item.finishedGoodItemName || "—",
+      cell: (item) =>
+        item.finishedGoodItemName ||
+        (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—"),
       skeletonClassName: "w-36",
     },
     {
@@ -534,14 +533,51 @@ export function ErpBomPage() {
     {
       key: "status",
       header: "Trạng thái",
-      cell: (item) => item.status || "—",
-      skeletonClassName: "w-16",
+      cell: (item) => {
+        const statusMap = {
+          ACTIVE: { label: "Đang áp dụng", cls: "bg-green-100 text-green-700" },
+          INACTIVE: {
+            label: "Ngừng áp dụng",
+            cls: "bg-red-100 text-red-700",
+          },
+          DRAFT: { label: "Bản nháp", cls: "bg-gray-100 text-gray-700" },
+        };
+        const s =
+          statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
+        return (
+          <span
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${s.cls}`}
+          >
+            {s.label}
+          </span>
+        );
+      },
+      skeletonClassName: "w-20",
     },
     {
       key: "effectiveFrom",
       header: "Hiệu lực từ",
       cell: (item) => fmtDate(item.effectiveFrom),
       skeletonClassName: "w-20",
+    },
+    {
+      key: "effectiveTo",
+      header: "Hiệu lực đến",
+      cell: (item) => fmtDate(item.effectiveTo),
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "notes",
+      header: "Ghi chú",
+      cell: (item) => (
+        <span
+          className="truncate max-w-[160px] block"
+          title={item.notes || undefined}
+        >
+          {item.notes || "—"}
+        </span>
+      ),
+      skeletonClassName: "w-32",
     },
   ];
 
@@ -709,7 +745,7 @@ export function ErpBomPage() {
                         <DrawerField label="Linh kiện" required>
                           <Combobox
                             value={line.componentItemId}
-                            disabled={viewOnly || !!editing}
+                            readOnly={viewOnly || !!editing}
                             onChange={(value) =>
                               updateLine(index, { componentItemId: value })
                             }
@@ -723,7 +759,7 @@ export function ErpBomPage() {
                         <DrawerField label="Số lượng" required>
                           <input
                             value={line.qtyRequired}
-                            disabled={viewOnly || !!editing}
+                            readOnly={viewOnly || !!editing}
                             onChange={(e) =>
                               updateLine(index, { qtyRequired: e.target.value })
                             }
@@ -735,7 +771,7 @@ export function ErpBomPage() {
                         <DrawerField label="ĐVT">
                           <input
                             value={line.uom}
-                            disabled={viewOnly || !!editing}
+                            readOnly={viewOnly || !!editing}
                             onChange={(e) =>
                               updateLine(index, { uom: e.target.value })
                             }
@@ -747,7 +783,7 @@ export function ErpBomPage() {
                         <DrawerField label="Tỷ lệ hao hụt">
                           <input
                             value={line.scrapRate}
-                            disabled={viewOnly || !!editing}
+                            readOnly={viewOnly || !!editing}
                             onChange={(e) =>
                               updateLine(index, { scrapRate: e.target.value })
                             }
@@ -762,7 +798,7 @@ export function ErpBomPage() {
                       <DrawerField label="Ghi chú dòng">
                         <textarea
                           value={line.notes}
-                          disabled={viewOnly}
+                          readOnly={viewOnly}
                           onChange={(e) =>
                             updateLine(index, { notes: e.target.value })
                           }
@@ -783,7 +819,7 @@ export function ErpBomPage() {
                 <DrawerField label="Mã BOM" required>
                   <input
                     value={form.bomCode}
-                    disabled={viewOnly || !!editing}
+                    readOnly={viewOnly || !!editing}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, bomCode: e.target.value }))
                     }
@@ -793,7 +829,7 @@ export function ErpBomPage() {
                 <DrawerField label="Version" required>
                   <input
                     value={form.version}
-                    disabled={viewOnly || !!editing}
+                    readOnly={viewOnly || !!editing}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, version: e.target.value }))
                     }
@@ -803,7 +839,7 @@ export function ErpBomPage() {
                 <DrawerField label="Tên BOM" required>
                   <input
                     value={form.bomName}
-                    disabled={viewOnly || !!editing}
+                    readOnly={viewOnly || !!editing}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, bomName: e.target.value }))
                     }
@@ -813,7 +849,7 @@ export function ErpBomPage() {
                 <DrawerField label="Thành phẩm">
                   <Combobox
                     value={form.finishedGoodItemId}
-                    disabled={viewOnly || !!editing}
+                    readOnly={viewOnly || !!editing}
                     onChange={(value) =>
                       setForm((prev) => ({
                         ...prev,
@@ -854,7 +890,7 @@ export function ErpBomPage() {
                 <DrawerField label="Trạng thái">
                   <Combobox
                     value={form.status}
-                    disabled={viewOnly || !!editing}
+                    readOnly={viewOnly || !!editing}
                     allowClear={false}
                     onChange={(value) =>
                       setForm((prev) => ({
@@ -872,7 +908,7 @@ export function ErpBomPage() {
                 <DrawerField label="Ghi chú">
                   <textarea
                     value={form.notes}
-                    disabled={viewOnly}
+                    readOnly={viewOnly}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, notes: e.target.value }))
                     }
