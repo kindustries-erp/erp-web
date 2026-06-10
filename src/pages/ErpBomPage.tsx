@@ -519,9 +519,26 @@ export function ErpBomPage() {
     {
       key: "finishedGoodItemName",
       header: "Thành phẩm",
-      cell: (item) =>
-        item.finishedGoodItemName ||
-        (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—"),
+      cell: (item) => {
+        const name =
+          item.finishedGoodItemName ||
+          (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—");
+        return (
+          <div className="flex flex-col min-w-0">
+            <span className="truncate font-medium text-foreground" title={name}>
+              {name}
+            </span>
+            {item.notes && (
+              <span
+                className="italic text-muted-foreground text-[11px] mt-0.5 truncate"
+                title={item.notes}
+              >
+                ({item.notes})
+              </span>
+            )}
+          </div>
+        );
+      },
       skeletonClassName: "w-36",
     },
     {
@@ -546,7 +563,7 @@ export function ErpBomPage() {
           statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
         return (
           <span
-            className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${s.cls}`}
+            className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap inline-block ${s.cls}`}
           >
             {s.label}
           </span>
@@ -565,19 +582,6 @@ export function ErpBomPage() {
       header: "Hiệu lực đến",
       cell: (item) => fmtDate(item.effectiveTo),
       skeletonClassName: "w-20",
-    },
-    {
-      key: "notes",
-      header: "Ghi chú",
-      cell: (item) => (
-        <span
-          className="truncate max-w-[160px] block"
-          title={item.notes || undefined}
-        >
-          {item.notes || "—"}
-        </span>
-      ),
-      skeletonClassName: "w-32",
     },
   ];
 
@@ -890,7 +894,7 @@ export function ErpBomPage() {
                 <DrawerField label="Trạng thái">
                   <Combobox
                     value={form.status}
-                    readOnly={viewOnly || !!editing}
+                    readOnly={viewOnly}
                     allowClear={false}
                     onChange={(value) =>
                       setForm((prev) => ({
@@ -899,9 +903,9 @@ export function ErpBomPage() {
                       }))
                     }
                     options={[
-                      { value: "ACTIVE", label: "ACTIVE" },
-                      { value: "INACTIVE", label: "INACTIVE" },
-                      { value: "DRAFT", label: "DRAFT" },
+                      { value: "ACTIVE", label: "Đang áp dụng" },
+                      { value: "INACTIVE", label: "Ngừng áp dụng" },
+                      { value: "DRAFT", label: "Bản nháp" },
                     ]}
                   />
                 </DrawerField>
