@@ -244,10 +244,14 @@ export function ErpGoodsIssuesPage() {
   useEffect(() => {
     const url = new URL(window.location.href);
     const searchFromUrl = url.searchParams.get("search")?.trim() ?? "";
-    if (searchFromUrl) {
-      setSearchInput(searchFromUrl);
-      setSearch(searchFromUrl);
+    const searchFromSession =
+      window.sessionStorage.getItem("erp_goods_issue_search")?.trim() ?? "";
+    const initialSearch = searchFromUrl || searchFromSession;
+    if (initialSearch) {
+      setSearchInput(initialSearch);
+      setSearch(initialSearch);
       setPage(1);
+      window.sessionStorage.removeItem("erp_goods_issue_search");
     }
   }, []);
 

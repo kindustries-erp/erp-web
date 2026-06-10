@@ -225,11 +225,12 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
                 type="button"
                 onClick={() => {
                   const issueNo = result.goodsIssue?.issueNo ?? "";
-                  window.history.pushState(
-                    {},
-                    "",
-                    `/erp-goods-issues?search=${encodeURIComponent(issueNo)}`,
-                  );
+                  if (issueNo) {
+                    window.sessionStorage.setItem(
+                      "erp_goods_issue_search",
+                      issueNo,
+                    );
+                  }
                   navigate("erp-goods-issues");
                 }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100"
