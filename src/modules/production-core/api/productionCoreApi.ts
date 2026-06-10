@@ -31,6 +31,14 @@ export interface ExecuteProductionResult {
     qtyIssued: string;
     newStockQty?: string;
   }>;
+  goodsIssue?: {
+    id?: string;
+    issueNo?: string;
+    issueDate?: string;
+    status?: string;
+    issueType?: string;
+    [key: string]: unknown;
+  };
   finishedGoodReceipt?: {
     receiptNo?: string;
     status?: string;

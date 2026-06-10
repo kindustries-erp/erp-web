@@ -183,6 +183,45 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
         </div>
       ) : null}
 
+      {/* goodsIssue if present */}
+      {result.goodsIssue ? (
+        <div className="rounded-xl border border-amber-100 bg-white px-3 py-2 text-xs space-y-1">
+          <div className="font-semibold text-amber-700 mb-1">
+            Phiếu xuất kho nguyên vật liệu
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {result.goodsIssue.issueNo ? (
+              <div className="flex gap-2">
+                <span className="text-muted-foreground">Issue No:</span>
+                <span className="font-medium">{result.goodsIssue.issueNo}</span>
+              </div>
+            ) : null}
+            {result.goodsIssue.issueDate ? (
+              <div className="flex gap-2">
+                <span className="text-muted-foreground">Ngày:</span>
+                <span className="font-medium">
+                  {fmtDate(result.goodsIssue.issueDate)}
+                </span>
+              </div>
+            ) : null}
+            {result.goodsIssue.status ? (
+              <div className="flex gap-2">
+                <span className="text-muted-foreground">Trạng thái:</span>
+                <span className="font-medium">{result.goodsIssue.status}</span>
+              </div>
+            ) : null}
+            {result.goodsIssue.issueType ? (
+              <div className="flex gap-2">
+                <span className="text-muted-foreground">Loại:</span>
+                <span className="font-medium">
+                  {result.goodsIssue.issueType}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
       {/* finishedGoodReceipt if present */}
       {result.finishedGoodReceipt ? (
         <div className="rounded-xl border border-emerald-100 bg-white px-3 py-2 text-xs space-y-1 flex justify-between items-center">
