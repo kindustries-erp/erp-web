@@ -242,6 +242,16 @@ export function ErpGoodsIssuesPage() {
   }, []);
 
   useEffect(() => {
+    const url = new URL(window.location.href);
+    const searchFromUrl = url.searchParams.get("search")?.trim() ?? "";
+    if (searchFromUrl) {
+      setSearchInput(searchFromUrl);
+      setSearch(searchFromUrl);
+      setPage(1);
+    }
+  }, []);
+
+  useEffect(() => {
     void loadIssues();
   }, [loadIssues]);
 
