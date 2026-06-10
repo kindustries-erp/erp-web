@@ -30,6 +30,27 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     group: "manufacturing",
   },
   "mfg-vehicles": { labelKey: "nav.items.mfgVehicles", group: "manufacturing" },
+  "erp-bom": { labelKey: "nav.items.erpBom", group: "manufacturing" },
+  "erp-goods-receipts": {
+    labelKey: "nav.items.erpGoodsReceipts",
+    group: "manufacturing",
+  },
+  "erp-production": {
+    labelKey: "nav.items.erpProduction",
+    group: "manufacturing",
+  },
+  "erp-sales-orders": {
+    labelKey: "nav.items.erpSalesOrders",
+    group: "manufacturing",
+  },
+  "erp-goods-issues": {
+    labelKey: "nav.items.erpGoodsIssues",
+    group: "manufacturing",
+  },
+  "erp-inventory-items": {
+    labelKey: "nav.items.erpInventoryItems",
+    group: "manufacturing",
+  },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
@@ -40,6 +61,27 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
   "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
+  "erp-bom": [["breadcrumb.manufacturing"], ["breadcrumb.erpBom"]],
+  "erp-goods-receipts": [
+    ["breadcrumb.manufacturing"],
+    ["breadcrumb.erpGoodsReceipts"],
+  ],
+  "erp-production": [
+    ["breadcrumb.manufacturing"],
+    ["breadcrumb.erpProduction"],
+  ],
+  "erp-sales-orders": [
+    ["breadcrumb.manufacturing"],
+    ["breadcrumb.erpSalesOrders"],
+  ],
+  "erp-goods-issues": [
+    ["breadcrumb.manufacturing"],
+    ["breadcrumb.erpGoodsIssues"],
+  ],
+  "erp-inventory-items": [
+    ["breadcrumb.manufacturing"],
+    ["breadcrumb.erpInventoryItems"],
+  ],
 };
 
 interface AppState {

@@ -561,7 +561,7 @@ export function ErpProductionPage() {
               type="button"
               onClick={() => void handleExecute()}
               disabled={executing}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-fg disabled:opacity-60"
             >
               {executing ? (
                 <>
@@ -661,7 +661,7 @@ export function ErpProductionPage() {
                 type="button"
                 onClick={() => void handleCreateVehicle()}
                 disabled={vehicleSaving}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-fg disabled:opacity-60"
               >
                 Tạo xe / VIN
               </button>

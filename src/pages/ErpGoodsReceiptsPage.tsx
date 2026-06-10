@@ -505,7 +505,7 @@ export function ErpGoodsReceiptsPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
         >
           <Plus className="h-3.5 w-3.5" />
           Tạo mới

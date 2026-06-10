@@ -79,16 +79,15 @@ function buildForm(bom: ErpBom): BomForm {
     effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
     effectiveTo: bom.effectiveTo ? bom.effectiveTo.slice(0, 10) : "",
     notes: bom.notes ?? "",
-    lines:
-      bom.lines?.length
-        ? bom.lines.map((line) => ({
-            componentItemId: line.componentItemId ?? "",
-            qtyRequired: line.qtyRequired ?? "1",
-            uom: line.uom ?? "PCS",
-            scrapRate: line.scrapRate ?? "0",
-            notes: line.notes ?? "",
-          }))
-        : [emptyLine()],
+    lines: bom.lines?.length
+      ? bom.lines.map((line) => ({
+          componentItemId: line.componentItemId ?? "",
+          qtyRequired: line.qtyRequired ?? "1",
+          uom: line.uom ?? "PCS",
+          scrapRate: line.scrapRate ?? "0",
+          notes: line.notes ?? "",
+        }))
+      : [emptyLine()],
   };
 }
 
@@ -252,7 +251,10 @@ export function ErpBomPage() {
       return;
     }
 
-    if (!form.lines.length || form.lines.some((line) => !line.qtyRequired.trim())) {
+    if (
+      !form.lines.length ||
+      form.lines.some((line) => !line.qtyRequired.trim())
+    ) {
       setSaveError("Mỗi dòng BOM phải có số lượng hợp lệ");
       return;
     }
@@ -370,7 +372,7 @@ export function ErpBomPage() {
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
         >
           <Plus className="h-3.5 w-3.5" />
           Tạo mới
@@ -429,9 +431,7 @@ export function ErpBomPage() {
         open={drawerOpen}
         onClose={closeDrawer}
         icon={<Boxes className="h-4 w-4" />}
-        title={
-          viewOnly ? "Xem BOM" : editing ? "Cập nhật BOM" : "Tạo BOM mới"
-        }
+        title={viewOnly ? "Xem BOM" : editing ? "Cập nhật BOM" : "Tạo BOM mới"}
         subtitle={editing ? editing.bomCode : "Định mức nguyên vật liệu"}
         actions={drawerActions}
         panelClassName="min-[1024px]:min-w-[720px]"

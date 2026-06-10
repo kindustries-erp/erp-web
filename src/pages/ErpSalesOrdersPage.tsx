@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, PackageCheck, Pencil, Plus, ReceiptText, RotateCcw } from "lucide-react";
+import {
+  Boxes,
+  PackageCheck,
+  Pencil,
+  Plus,
+  ReceiptText,
+  RotateCcw,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -65,16 +72,15 @@ function buildForm(so: ErpSalesOrder): SoForm {
     orderDate: so.orderDate ? so.orderDate.slice(0, 10) : "",
     status: so.status ?? "DRAFT",
     remarks: so.remarks ?? "",
-    lines:
-      so.lines?.length
-        ? so.lines.map((line) => ({
-            itemId: line.itemId ?? "",
-            itemName: line.itemName ?? "",
-            qtyOrdered: line.qtyOrdered ?? "1",
-            unitPrice: line.unitPrice ?? "0",
-            amount: line.amount ?? "0",
-          }))
-        : [emptyLine()],
+    lines: so.lines?.length
+      ? so.lines.map((line) => ({
+          itemId: line.itemId ?? "",
+          itemName: line.itemName ?? "",
+          qtyOrdered: line.qtyOrdered ?? "1",
+          unitPrice: line.unitPrice ?? "0",
+          amount: line.amount ?? "0",
+        }))
+      : [emptyLine()],
   };
 }
 
@@ -149,9 +155,9 @@ export function ErpSalesOrdersPage() {
   const [customerOptions, setCustomerOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
-  const [itemOptions, setItemOptions] = useState<Array<{ value: string; label: string }>>(
-    [],
-  );
+  const [itemOptions, setItemOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -238,7 +244,9 @@ export function ErpSalesOrdersPage() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết sales order");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
+      );
     }
   }
 
@@ -251,7 +259,9 @@ export function ErpSalesOrdersPage() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết sales order");
+      setError(
+        e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
+      );
     }
   }
 
@@ -294,7 +304,10 @@ export function ErpSalesOrdersPage() {
       return;
     }
 
-    if (!form.lines.length || form.lines.some((line) => !line.qtyOrdered.trim())) {
+    if (
+      !form.lines.length ||
+      form.lines.some((line) => !line.qtyOrdered.trim())
+    ) {
       setSaveError("Mỗi dòng phải có số lượng đặt hợp lệ");
       return;
     }
@@ -327,7 +340,9 @@ export function ErpSalesOrdersPage() {
       await salesOrdersCoreApi.reserve(item.id);
       await loadOrders();
     } catch (e: any) {
-      setError(e?.response?.data?.message || e?.message || "Không thể reserve SO");
+      setError(
+        e?.response?.data?.message || e?.message || "Không thể reserve SO",
+      );
     } finally {
       setActingId(null);
     }
@@ -406,7 +421,11 @@ export function ErpSalesOrdersPage() {
   );
 
   const drawerActions: DrawerAction[] = [
-    { label: viewOnly ? "Đóng" : "Hủy", onClick: closeDrawer, variant: "outline" },
+    {
+      label: viewOnly ? "Đóng" : "Hủy",
+      onClick: closeDrawer,
+      variant: "outline",
+    },
     {
       label: viewOnly ? "OK" : editing ? "Lưu thay đổi" : "Tạo SO",
       onClick: handleSave,
@@ -430,7 +449,8 @@ export function ErpSalesOrdersPage() {
               Danh sách sales orders
             </h3>
             <p className="text-sm text-muted-foreground">
-              Wire data thật cho đơn bán hàng ERP core và thao tác reserve/unreserve.
+              Wire data thật cho đơn bán hàng ERP core và thao tác
+              reserve/unreserve.
             </p>
           </div>
 
@@ -456,7 +476,7 @@ export function ErpSalesOrdersPage() {
                 <button
                   type="button"
                   onClick={openCreate}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-fg hover:opacity-90"
                 >
                   <Plus className="h-4 w-4" />
                   Tạo SO
@@ -486,7 +506,9 @@ export function ErpSalesOrdersPage() {
                       },
                       {
                         label:
-                          actingId === item.id ? "Đang unreserve..." : "Unreserve",
+                          actingId === item.id
+                            ? "Đang unreserve..."
+                            : "Unreserve",
                         icon: <RotateCcw className="h-4 w-4" />,
                         onClick: () => void handleUnreserve(item),
                       },
@@ -517,7 +539,9 @@ export function ErpSalesOrdersPage() {
             <DrawerField label="Số SO" required>
               <input
                 value={form.soNo}
-                onChange={(e) => setForm((prev) => ({ ...prev, soNo: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, soNo: e.target.value }))
+                }
                 disabled={viewOnly}
                 className={inputCls}
                 placeholder="SO-20260608-001"
@@ -526,7 +550,9 @@ export function ErpSalesOrdersPage() {
             <DrawerField label="Khách hàng">
               <Combobox
                 value={form.customerId}
-                onChange={(value) => setForm((prev) => ({ ...prev, customerId: value }))}
+                onChange={(value) =>
+                  setForm((prev) => ({ ...prev, customerId: value }))
+                }
                 options={customerOptions}
                 placeholder="Chọn khách hàng"
                 disabled={viewOnly}
@@ -546,7 +572,9 @@ export function ErpSalesOrdersPage() {
             <DrawerField label="Trạng thái">
               <input
                 value={form.status}
-                onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, status: e.target.value }))
+                }
                 disabled={viewOnly}
                 className={inputCls}
                 placeholder="DRAFT"
@@ -556,7 +584,9 @@ export function ErpSalesOrdersPage() {
               <DrawerField label="Ghi chú">
                 <textarea
                   value={form.remarks}
-                  onChange={(e) => setForm((prev) => ({ ...prev, remarks: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, remarks: e.target.value }))
+                  }
                   disabled={viewOnly}
                   className={`${inputCls} min-h-[88px]`}
                   placeholder="Ghi chú đơn bán hàng"
@@ -580,10 +610,14 @@ export function ErpSalesOrdersPage() {
                   <Combobox
                     value={line.itemId}
                     onChange={(value) => {
-                      const matched = itemOptions.find((opt) => opt.value === value);
+                      const matched = itemOptions.find(
+                        (opt) => opt.value === value,
+                      );
                       updateLine(index, {
                         itemId: value,
-                        itemName: matched?.label.split(" — ").slice(1).join(" — ") || "",
+                        itemName:
+                          matched?.label.split(" — ").slice(1).join(" — ") ||
+                          "",
                       });
                     }}
                     options={itemOptions}
@@ -597,7 +631,9 @@ export function ErpSalesOrdersPage() {
                   </label>
                   <input
                     value={line.qtyOrdered}
-                    onChange={(e) => updateLine(index, { qtyOrdered: e.target.value })}
+                    onChange={(e) =>
+                      updateLine(index, { qtyOrdered: e.target.value })
+                    }
                     disabled={viewOnly}
                     className={inputCls}
                     placeholder="1"
@@ -609,7 +645,9 @@ export function ErpSalesOrdersPage() {
                   </label>
                   <input
                     value={line.unitPrice}
-                    onChange={(e) => updateLine(index, { unitPrice: e.target.value })}
+                    onChange={(e) =>
+                      updateLine(index, { unitPrice: e.target.value })
+                    }
                     disabled={viewOnly}
                     className={inputCls}
                     placeholder="0"
@@ -668,10 +706,18 @@ export function ErpSalesOrdersPage() {
                 <tbody>
                   {editing.lines.map((line, idx) => (
                     <tr key={line.id ?? idx} className="border-t border-border">
-                      <td className="px-3 py-2">{line.itemName || line.itemId || "—"}</td>
-                      <td className="px-3 py-2 text-right">{fmtQty(line.qtyOrdered)}</td>
-                      <td className="px-3 py-2 text-right">{fmtQty(line.qtyReserved)}</td>
-                      <td className="px-3 py-2 text-right">{fmtQty(line.qtyDelivered)}</td>
+                      <td className="px-3 py-2">
+                        {line.itemName || line.itemId || "—"}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {fmtQty(line.qtyOrdered)}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {fmtQty(line.qtyReserved)}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {fmtQty(line.qtyDelivered)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
