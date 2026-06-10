@@ -12,6 +12,26 @@ export interface ErpInventoryItem {
   updatedAt?: string | null;
 }
 
+export interface InventoryMovement {
+  id: string;
+  transactionDate: string;
+  transactionType: string;
+  documentType?: string | null;
+  documentId?: string | null;
+  qtyIn: number;
+  qtyOut: number;
+  unitCost?: number | null;
+  balanceAfter: number;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+export interface InventoryMovementsPayload {
+  item: Pick<ErpInventoryItem, "id" | "sku" | "itemName" | "uom" | "itemType">;
+  currentOnHand: number;
+  movements: InventoryMovement[];
+}
+
 export interface CreateInventoryItemPayload {
   sku: string;
   itemName: string;
@@ -27,6 +47,11 @@ const BASE = "/api/v1/inventory/items";
 type InventoryItemDetailResponse = {
   message: string;
   data: ErpInventoryItem;
+};
+
+type InventoryMovementsResponse = {
+  message: string;
+  data: InventoryMovementsPayload;
 };
 
 function p(params: ListParams = {}) {
@@ -49,6 +74,12 @@ export const inventoryCoreApi = {
   get: async (id: string): Promise<ErpInventoryItem> => {
     const { data } = await axiosInstance.get<InventoryItemDetailResponse>(
       `${BASE}/${id}`,
+    );
+    return data.data;
+  },
+  movements: async (id: string): Promise<InventoryMovementsPayload> => {
+    const { data } = await axiosInstance.get<InventoryMovementsResponse>(
+      `${BASE}/${id}/movements`,
     );
     return data.data;
   },
