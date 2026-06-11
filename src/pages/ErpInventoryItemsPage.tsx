@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  Layers,
-  Pencil,
-  Plus,
-  ReceiptText,
-} from "lucide-react";
+import { Layers, Pencil, Plus, ReceiptText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -22,8 +15,6 @@ import {
   inventoryCoreApi,
   type CreateInventoryItemPayload,
   type ErpInventoryItem,
-  type InventoryMovement,
-  type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 
 // ─── Static options ────────────────────────────────────────────────────────────
@@ -106,156 +97,6 @@ function fmtDate(value?: string | Date | null) {
   return String(value).slice(0, 10);
 }
 
-function movementLabel(m: InventoryMovement) {
-  const type = m.transactionType || "—";
-  const doc = m.documentType ? ` • ${m.documentType}` : "";
-  return `${type}${doc}`;
-}
-
-// ─── Timeline component ───────────────────────────────────────────────────────
-
-function TimelineBlock({
-  itemId,
-  loadingId,
-  error,
-  data,
-}: {
-  itemId: string;
-  loadingId: string | null;
-  error: string | null;
-  data?: InventoryMovementsPayload;
-}) {
-  const isLoading = loadingId === itemId;
-
-  if (isLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
-        Đang tải lịch sử xuất nhập kho...
-      </div>
-    );
-  }
-
-  if (error && !data) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
-        {error}
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  return (
-    <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">
-            Timeline xuất / nhập kho
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {data.item.sku} — {data.item.itemName} • Tồn hiện tại:{" "}
-            <span className="font-semibold text-foreground">
-              {fmtQty(data.currentOnHand)}
-            </span>{" "}
-            {data.item.uom}
-          </div>
-        </div>
-      </div>
-
-      {data.movements.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-          Chưa có phát sinh xuất nhập kho.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {data.movements.map((m) => {
-            const isIn = Number(m.qtyIn || 0) > 0;
-            const qty = isIn ? m.qtyIn : m.qtyOut;
-            return (
-              <div
-                key={m.id}
-                className="rounded-xl border border-border bg-background px-4 py-3"
-              >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={
-                          isIn
-                            ? "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                            : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200"
-                        }
-                      >
-                        {isIn ? "Nhập" : "Xuất"}
-                      </span>
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {movementLabel(m)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Ngày giao dịch:{" "}
-                      <span className="text-foreground font-medium">
-                        {fmtDate(m.transactionDate)}
-                      </span>
-                    </div>
-                    {m.notes ? (
-                      <div className="text-xs text-muted-foreground">
-                        Ghi chú: {m.notes}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs md:min-w-[300px] shrink-0">
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        {isIn ? "Số lượng nhập" : "Số lượng xuất"}
-                      </div>
-                      <div
-                        className={
-                          isIn
-                            ? "font-semibold text-emerald-700"
-                            : "font-semibold text-amber-700"
-                        }
-                      >
-                        {isIn ? "+" : "-"}
-                        {fmtQty(qty)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Số dư sau mốc
-                      </div>
-                      <div className="font-semibold text-foreground">
-                        {fmtQty(m.balanceAfter)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Đơn giá
-                      </div>
-                      <div className="font-medium text-foreground">
-                        {m.unitCost == null ? "—" : fmtQty(m.unitCost)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Ngày ghi nhận
-                      </div>
-                      <div className="font-medium text-foreground">
-                        {fmtDate(m.createdAt)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ErpInventoryItemsPage() {
@@ -277,14 +118,6 @@ export function ErpInventoryItemsPage() {
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // Expand / timeline state
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [movLoadingId, setMovLoadingId] = useState<string | null>(null);
-  const [movError, setMovError] = useState<string | null>(null);
-  const [movMap, setMovMap] = useState<
-    Record<string, InventoryMovementsPayload>
-  >({});
 
   // ─── Load list ───────────────────────────────────────────────────────────────
 
@@ -384,59 +217,10 @@ export function ErpInventoryItemsPage() {
     }
   }
 
-  // ─── Expand / timeline ───────────────────────────────────────────────────────
-
-  async function handleToggleExpand(item: ErpInventoryItem) {
-    if (expandedId === item.id) {
-      setExpandedId(null);
-      setMovError(null);
-      return;
-    }
-    setExpandedId(item.id);
-    setMovError(null);
-    if (movMap[item.id]) return; // already cached
-    setMovLoadingId(item.id);
-    try {
-      const data = await inventoryCoreApi.movements(item.id);
-      setMovMap((prev) => ({ ...prev, [item.id]: data }));
-    } catch (e) {
-      setMovError(
-        e instanceof Error ? e.message : "Không thể tải lịch sử xuất nhập kho",
-      );
-    } finally {
-      setMovLoadingId(null);
-    }
-  }
-
   // ─── Table columns ───────────────────────────────────────────────────────────
 
   const columns: DataTableColumn<ErpInventoryItem>[] = useMemo(
     () => [
-      {
-        key: "expand",
-        header: "",
-        cell: (item) => {
-          const expanded = expandedId === item.id;
-          return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleToggleExpand(item);
-              }}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background hover:bg-muted"
-              title={expanded ? "Thu gọn" : "Xem lịch sử"}
-            >
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-          );
-        },
-        skeletonClassName: "w-8",
-      },
       {
         key: "sku",
         header: "SKU",
@@ -481,26 +265,7 @@ export function ErpInventoryItemsPage() {
       },
     ],
 
-    [expandedId],
-  );
-
-  // ─── Derived ─────────────────────────────────────────────────────────────────
-
-  const expandedRowKeys = useMemo(
-    () => (expandedId ? [expandedId] : []),
-    [expandedId],
-  );
-
-  const renderSubRow = useCallback(
-    (item: ErpInventoryItem) => (
-      <TimelineBlock
-        itemId={item.id}
-        loadingId={movLoadingId}
-        error={movError}
-        data={movMap[item.id]}
-      />
-    ),
-    [movLoadingId, movError, movMap],
+    [],
   );
 
   // ─── Filter bar ──────────────────────────────────────────────────────────────
@@ -550,7 +315,7 @@ export function ErpInventoryItemsPage() {
   return (
     <PageLayout
       title="Danh mục kho"
-      desc="Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS). Click ▶ để xem lịch sử xuất nhập."
+      desc="Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS)."
       icon={<Layers className="h-5 w-5" />}
       actions={
         <button
@@ -573,8 +338,6 @@ export function ErpInventoryItemsPage() {
         filters={filterBar}
         minWidth={980}
         loadingRows={8}
-        expandedRowKeys={expandedRowKeys}
-        renderSubRow={renderSubRow}
         actionsColumn={{
           header: "",
           className: "w-[48px]",

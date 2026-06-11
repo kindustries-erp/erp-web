@@ -151,10 +151,18 @@ export function Sidebar() {
               <NavItem
                 collapsed={c}
                 icon={<IconCart />}
-                label={t("nav.items.sales")}
-                active={currentPage === "sales"}
-                onClick={() => navTo("sales")}
-                contextPage="sales"
+                label={t("nav.items.erpSalesOrders")}
+                active={currentPage === "erp-sales-orders"}
+                onClick={() => navTo("erp-sales-orders")}
+                contextPage="erp-sales-orders"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<IconCart />}
+                label={t("nav.items.customers")}
+                active={currentPage === "erp-customers"}
+                onClick={() => navTo("erp-customers")}
+                contextPage="erp-customers"
               />
             </div>
 
@@ -173,27 +181,19 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconBox />}
-                label={t("nav.items.erpSalesOrders")}
-                active={currentPage === "erp-sales-orders"}
-                onClick={() => navTo("erp-sales-orders")}
-                contextPage="erp-sales-orders"
+                icon={<IconShop />}
+                label={t("nav.items.suppliers")}
+                active={currentPage === "erp-suppliers"}
+                onClick={() => navTo("erp-suppliers")}
+                contextPage="erp-suppliers"
               />
             </div>
 
             {/* Kho */}
             <div className="sidebar-nav-section py-2">
               <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-                Kho
+                {t("nav.sections.inventory")}
               </div>
-              <NavItem
-                collapsed={c}
-                icon={<IconBox />}
-                label={t("nav.items.erpInventoryItems")}
-                active={currentPage === "erp-inventory-items"}
-                onClick={() => navTo("erp-inventory-items")}
-                contextPage="erp-inventory-items"
-              />
               <NavItem
                 collapsed={c}
                 icon={<IconBox />}
@@ -218,28 +218,13 @@ export function Sidebar() {
                 onClick={() => navTo("inventory")}
                 contextPage="inventory"
               />
-            </div>
-
-            {/* Partners */}
-            <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-                Đối tác
-              </div>
               <NavItem
                 collapsed={c}
-                icon={<IconShop />}
-                label="Nhà cung cấp"
-                active={currentPage === "erp-suppliers"}
-                onClick={() => navTo("erp-suppliers")}
-                contextPage="erp-suppliers"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconCart />}
-                label="Khách hàng"
-                active={currentPage === "erp-customers"}
-                onClick={() => navTo("erp-customers")}
-                contextPage="erp-customers"
+                icon={<IconBox />}
+                label={t("nav.items.erpInventoryItems")}
+                active={currentPage === "erp-inventory-items"}
+                onClick={() => navTo("erp-inventory-items")}
+                contextPage="erp-inventory-items"
               />
             </div>
 
