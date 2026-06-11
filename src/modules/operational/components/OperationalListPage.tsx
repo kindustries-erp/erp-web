@@ -193,89 +193,95 @@ function InventoryTimelineBlock({
           Chưa có phát sinh xuất nhập kho.
         </div>
       ) : (
-        <div className="space-y-2">
-          {data.movements.map((m) => {
-            const isIn = Number(m.qtyIn || 0) > 0;
-            const qty = isIn ? m.qtyIn : m.qtyOut;
-            return (
-              <div
-                key={m.id}
-                className="rounded-xl border border-border bg-background px-4 py-3"
-              >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={
-                          isIn
-                            ? "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                            : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200"
-                        }
-                      >
-                        {isIn ? "Nhập" : "Xuất"}
-                      </span>
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {movementLabel(m)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Ngày giao dịch:{" "}
-                      <span className="text-foreground font-medium">
-                        {normalizeDate(m.transactionDate)}
-                      </span>
-                    </div>
-                    {m.notes ? (
-                      <div className="text-xs text-muted-foreground">
-                        Ghi chú: {m.notes}
+        <div className="relative pl-6">
+          <div className="absolute bottom-0 left-[11px] top-1 w-px bg-border" />
+          <div className="space-y-3">
+            {data.movements.map((m) => {
+              const isIn = Number(m.qtyIn || 0) > 0;
+              const qty = isIn ? m.qtyIn : m.qtyOut;
+              return (
+                <div key={m.id} className="relative">
+                  <div
+                    className={
+                      isIn
+                        ? "absolute left-[-18px] top-4 h-3 w-3 rounded-full border-2 border-emerald-200 bg-emerald-500"
+                        : "absolute left-[-18px] top-4 h-3 w-3 rounded-full border-2 border-amber-200 bg-amber-500"
+                    }
+                  />
+                  <div className="rounded-xl border border-border bg-background px-4 py-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2.2fr)_120px_140px_120px_150px] md:items-center">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={
+                              isIn
+                                ? "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+                                : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200"
+                            }
+                          >
+                            {isIn ? "Nhập" : "Xuất"}
+                          </span>
+                          <span className="truncate text-sm font-medium text-foreground">
+                            {movementLabel(m)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Ngày giao dịch:
+                          <span className="font-medium text-foreground">
+                            {normalizeDate(m.transactionDate)}
+                          </span>
+                          {m.notes ? ` • ${m.notes}` : ""}
+                        </div>
                       </div>
-                    ) : null}
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs md:min-w-[300px] shrink-0">
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        {isIn ? "Số lượng nhập" : "Số lượng xuất"}
+                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
+                        <div className="mb-0.5 text-muted-foreground md:hidden">
+                          Số lượng
+                        </div>
+                        <div
+                          className={
+                            isIn
+                              ? "font-semibold text-emerald-700"
+                              : "font-semibold text-amber-700"
+                          }
+                        >
+                          {isIn ? "+" : "-"}
+                          {fmtQty(qty)}
+                        </div>
                       </div>
-                      <div
-                        className={
-                          isIn
-                            ? "font-semibold text-emerald-700"
-                            : "font-semibold text-amber-700"
-                        }
-                      >
-                        {isIn ? "+" : "-"}
-                        {fmtQty(qty)}
+
+                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
+                        <div className="mb-0.5 text-muted-foreground md:hidden">
+                          Số dư sau mốc
+                        </div>
+                        <div className="font-semibold text-foreground">
+                          {fmtQty(m.balanceAfter)}
+                        </div>
                       </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Số dư sau mốc
+
+                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
+                        <div className="mb-0.5 text-muted-foreground md:hidden">
+                          Đơn giá
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {m.unitCost == null ? "—" : fmtQty(m.unitCost)}
+                        </div>
                       </div>
-                      <div className="font-semibold text-foreground">
-                        {fmtQty(m.balanceAfter)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Đơn giá
-                      </div>
-                      <div className="font-medium text-foreground">
-                        {m.unitCost == null ? "—" : fmtQty(m.unitCost)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Ngày ghi nhận
-                      </div>
-                      <div className="font-medium text-foreground">
-                        {normalizeDate(m.createdAt)}
+
+                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
+                        <div className="mb-0.5 text-muted-foreground md:hidden">
+                          Ngày ghi nhận
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {normalizeDate(m.createdAt)}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
