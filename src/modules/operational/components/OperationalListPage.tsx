@@ -1041,53 +1041,16 @@ export function OperationalListPage({
     { value: "WIP", label: "WIP — Bán thành phẩm" },
   ];
 
-  const filters =
-    variant === "inventory" ? (
-      <>
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setPage(1);
-              setSearch(searchInput.trim());
-            }
-          }}
-          placeholder="Tìm mã / tên vật tư"
-          className="inline-flex h-9 rounded-lg border border-border bg-surface px-3 text-xs min-w-[220px] focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        <div className="w-[180px]">
-          <Combobox
-            value={itemTypeFilter}
-            onChange={(value) => {
-              setPage(1);
-              setItemTypeFilter(value);
-            }}
-            placeholder="Tất cả loại"
-            options={ITEM_TYPE_OPTIONS}
-          />
-        </div>
-        <button
-          className="btn-secondary inline-flex items-center gap-2"
-          onClick={() => void load()}
-          disabled={loading}
-        >
-          <RefreshCcw className="h-4 w-4" />
-          Tải lại
-        </button>
-      </>
-    ) : (
-      <>
-        <button
-          className="btn-secondary inline-flex items-center gap-2"
-          onClick={() => void load()}
-          disabled={loading}
-        >
-          <RefreshCcw className="h-4 w-4" />
-          Tải lại
-        </button>
-      </>
-    );
+  const refreshButton = (
+    <button
+      className="btn-secondary inline-flex items-center gap-2"
+      onClick={() => void load()}
+      disabled={loading}
+    >
+      <RefreshCcw className="h-4 w-4" />
+      Tải lại
+    </button>
+  );
 
   const STATUS_OPTIONS = [
     { value: "DRAFT", label: "DRAFT" },
@@ -1465,10 +1428,13 @@ export function OperationalListPage({
         desc={config.desc}
         icon={<FileText className="h-4 w-4" />}
         actions={
-          <FilterButton
-            onClick={() => setFilterPanelOpen((v) => !v)}
-            activeCount={activeFilterCount}
-          />
+          <div className="flex items-center gap-2">
+            <FilterButton
+              onClick={() => setFilterPanelOpen((v) => !v)}
+              activeCount={activeFilterCount}
+            />
+            {refreshButton}
+          </div>
         }
       >
         {error ? (
@@ -1487,7 +1453,6 @@ export function OperationalListPage({
               loading={loading}
               error={error}
               emptyLabel="Chưa có tồn kho."
-              filters={filters}
               minWidth={760}
               expandedRowKeys={expandedStockRowKeys}
               renderSubRow={(row) => (
@@ -1627,7 +1592,7 @@ export function OperationalListPage({
             loading={loading}
             error={error}
             emptyLabel="Chưa có dữ liệu."
-            filters={filters}
+            filters={refreshButton}
             minWidth={980}
             actionsColumn={{
               cell: (row) => (
