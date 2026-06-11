@@ -3,7 +3,8 @@ import { Layers, Pencil, Plus, ReceiptText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -333,25 +334,19 @@ export function ErpInventoryItemsPage() {
       title="Danh mục kho"
       desc="Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS)."
       icon={<Layers className="h-5 w-5" />}
-      actions={
-        <div className="flex items-center gap-2">
-          <FilterButton
-            onClick={filter.togglePanel}
-            activeCount={filter.activeFilterCount}
-          />
-          <button
-            type="button"
-            onClick={() => void openCreate()}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Tạo item kho
-          </button>
-        </div>
-      }
     >
-      <div className="flex gap-5">
-        <div className="min-w-0 flex-1">
+      <div className="flex items-center justify-end mb-3">
+        <TableActionGroup
+          onRefresh={() => void loadItems()}
+          loading={loading}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={() => void openCreate()}
+          createLabel="Tạo item kho"
+        />
+      </div>
+      <div className="flex items-start">
+        <div className="min-w-0 flex-1 space-y-4">
           <DataTable
             items={items}
             columns={columns}

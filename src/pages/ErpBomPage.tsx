@@ -10,7 +10,8 @@ import {
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -633,24 +634,17 @@ export function ErpBomPage() {
       title="ERP BOM"
       desc="Quản lý định mức nguyên vật liệu cho thành phẩm."
       icon={<Boxes className="h-5 w-5" />}
-      actions={
-        <div className="flex items-center gap-2">
-          <FilterButton
-            onClick={filter.togglePanel}
-            activeCount={filter.activeFilterCount}
-          />
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Tạo mới
-          </button>
-        </div>
-      }
     >
-      <div className="flex gap-5">
+      <div className="flex items-center justify-end mb-3">
+        <TableActionGroup
+          onRefresh={() => void loadBoms()}
+          loading={loading}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={openCreate}
+        />
+      </div>
+      <div className="flex items-start">
         <div className="min-w-0 flex-1">
           <DataTable
             items={items}

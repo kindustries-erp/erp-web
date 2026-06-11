@@ -13,7 +13,8 @@ import {
   inputCls,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
-import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -262,24 +263,17 @@ export function ErpBusinessPartnersPage({
   ];
 
   return (
-    <PageLayout
-      title={title}
-      desc={desc}
-      icon={icon}
-      actions={
-        <div className="flex items-center gap-2">
-          <FilterButton
-            onClick={filter.togglePanel}
-            activeCount={filter.activeFilterCount}
-          />
-          <Button size="sm" onClick={openCreate} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Tạo mới
-          </Button>
-        </div>
-      }
-    >
-      <div className="flex gap-5">
+    <PageLayout title={title} desc={desc} icon={icon}>
+      <div className="flex items-center justify-end mb-3">
+        <TableActionGroup
+          onRefresh={() => void load()}
+          loading={loading}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={openCreate}
+        />
+      </div>
+      <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           {fetchError ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">

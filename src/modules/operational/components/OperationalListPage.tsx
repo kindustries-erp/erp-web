@@ -22,6 +22,8 @@ import {
   type PaymentVoucher,
 } from "@/modules/finance/api/financeApi";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
+import { Button } from "@/shared/components/ui/Button";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { Combobox } from "@/shared/components/Combobox";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -1047,17 +1049,6 @@ export function OperationalListPage({
     { value: "WIP", label: "WIP — Bán thành phẩm" },
   ];
 
-  const refreshButton = (
-    <button
-      className="btn-secondary inline-flex items-center gap-2"
-      onClick={() => void load()}
-      disabled={loading}
-    >
-      <RefreshCcw className="h-4 w-4" />
-      Tải lại
-    </button>
-  );
-
   const STATUS_OPTIONS = [
     { value: "DRAFT", label: "DRAFT" },
     { value: "CONFIRMED", label: "CONFIRMED" },
@@ -1137,6 +1128,35 @@ export function OperationalListPage({
     setItemTypeFilter("");
     setPage(1);
   }
+
+  const tableActions = (
+    <TableActionGroup
+      onRefresh={() => void load()}
+      loading={loading}
+      onFilterToggle={() => setFilterPanelOpen((v) => !v)}
+      activeFilterCount={activeFilterCount}
+      onCreate={
+        variant === "sales" || variant === "purchase" || variant === "expenses"
+          ? () => {
+              setEditingRow(null);
+              setFormOpen(true);
+            }
+          : undefined
+      }
+    >
+      {config.cta ? (
+        <Button
+          variant="secondary"
+          size="sm"
+          className="px-3 py-2"
+          onClick={() => void createSample()}
+          disabled={loading}
+        >
+          {config.cta}
+        </Button>
+      ) : undefined}
+    </TableActionGroup>
+  );
 
   const purchaseColumns = useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
@@ -1433,21 +1453,13 @@ export function OperationalListPage({
         title={config.title}
         desc={config.desc}
         icon={<FileText className="h-4 w-4" />}
-        actions={
-          <div className="flex items-center gap-2">
-            <FilterButton
-              onClick={() => setFilterPanelOpen((v) => !v)}
-              activeCount={activeFilterCount}
-            />
-            {refreshButton}
-          </div>
-        }
       >
         {error ? (
           <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         ) : null}
+        <div className="flex items-center justify-end mb-3">{tableActions}</div>
         <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
             <DataTable
@@ -1552,36 +1564,6 @@ export function OperationalListPage({
       title={config.title}
       desc={config.desc}
       icon={<FileText className="h-4 w-4" />}
-      actions={
-        <div className="flex items-center gap-2">
-          <FilterButton
-            onClick={() => setFilterPanelOpen((v) => !v)}
-            activeCount={activeFilterCount}
-          />
-          {(variant === "sales" ||
-            variant === "purchase" ||
-            variant === "expenses") && (
-            <BtnPrimary
-              onClick={() => {
-                setEditingRow(null);
-                setFormOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Tạo mới
-            </BtnPrimary>
-          )}
-          {config.cta ? (
-            <button
-              className="btn-secondary inline-flex items-center gap-2"
-              onClick={() => void createSample()}
-              disabled={loading}
-            >
-              {config.cta}
-            </button>
-          ) : undefined}
-        </div>
-      }
     >
       {error ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
@@ -1589,6 +1571,7 @@ export function OperationalListPage({
         </div>
       ) : null}
 
+      <div className="flex items-center justify-end mb-3">{tableActions}</div>
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <DataTable
@@ -1598,7 +1581,6 @@ export function OperationalListPage({
             loading={loading}
             error={error}
             emptyLabel="Chưa có dữ liệu."
-            filters={refreshButton}
             minWidth={980}
             actionsColumn={{
               cell: (row) => (

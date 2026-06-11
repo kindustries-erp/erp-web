@@ -14,8 +14,10 @@ import {
   Plus,
   ReceiptText,
   XCircle,
-  RefreshCw,
+  RefreshCcw,
 } from "lucide-react";
+import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -800,19 +802,23 @@ export function ErpWarehousePage() {
           setPage(1);
         }}
       >
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end mb-3">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
+              className="px-3 py-2"
+              disabled={loading}
               onClick={() => {
                 if (tabFilter !== "issue") void loadReceipts();
                 if (tabFilter !== "receipt") void loadIssues();
               }}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-muted"
-              title="Tải lại"
             >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+              <RefreshCcw
+                className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")}
+              />
+              <span>Tải lại</span>
+            </Button>
             <FilterButton
               onClick={() => setFilterPanelOpen((v) => !v)}
               activeCount={activeFilterCount}

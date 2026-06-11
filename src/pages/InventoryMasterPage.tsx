@@ -3,7 +3,8 @@ import { Boxes, Pencil, Plus, RefreshCw } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -293,29 +294,15 @@ export function InventoryMasterPage() {
       activeTab={activeTab}
       onTabChange={(value) => setActiveTab(value as MasterKind)}
     >
-      <div className="flex items-center justify-end">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={reloadCurrentTab}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-muted"
-            title="Tải lại"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-          <FilterButton
-            onClick={filter.togglePanel}
-            activeCount={filter.activeFilterCount}
-          />
-          <button
-            type="button"
-            onClick={() => openCreate(activeTab)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Tạo mới {activeTab === "uom" ? "đơn vị tính" : "loại item"}
-          </button>
-        </div>
+      <div className="flex items-center justify-end mb-3">
+        <TableActionGroup
+          onRefresh={() => void reloadCurrentTab()}
+          loading={currentLoading}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={() => openCreate(activeTab)}
+          createLabel={`Tạo mới ${activeTab === "uom" ? "đơn vị tính" : "loại item"}`}
+        />
       </div>
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
