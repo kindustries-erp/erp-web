@@ -96,7 +96,7 @@ export default function App() {
           <div
             ref={contentRef}
             onScroll={keepContentXLocked}
-            className="app-content flex-1 overflow-x-hidden overflow-y-auto"
+            className="app-content flex-1 overflow-x-hidden overflow-y-auto pb-10"
           >
             <>
               {openTabs.includes("dashboard") && (
