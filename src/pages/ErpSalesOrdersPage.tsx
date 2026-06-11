@@ -443,17 +443,7 @@ export function ErpSalesOrdersPage() {
       className="p-4 md:p-6"
     >
       <div className="space-y-4">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <div className="mb-3 space-y-1">
-            <h3 className="text-base font-semibold text-foreground">
-              Danh sách sales orders
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Wire data thật cho đơn bán hàng ERP core và thao tác
-              reserve/unreserve.
-            </p>
-          </div>
-
+        <div>
           <DataTable
             items={items}
             columns={columns}

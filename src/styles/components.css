@@ -70,16 +70,6 @@
   background: var(--surface) !important;
   border-color: var(--border) !important;
   box-shadow: var(--card-shadow);
-  transition:
-    box-shadow 0.2s ease,
-    transform 0.18s ease;
-}
-.card-shadow:hover {
-  box-shadow:
-    0 12px 40px rgba(100, 116, 139, 0.18),
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.92);
-  transform: translateY(-2px);
 }
 
 /* ── Popup / Dropdown Content (portal elements) ── */

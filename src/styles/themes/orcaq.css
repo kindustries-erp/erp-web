@@ -26,7 +26,7 @@
   --approve-bg: #f0fdf4;
   --approve-fg: #15803d;
 
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
 
   /* ── Glass chrome — disabled for flat look ── */
   --glass-chrome: #ffffff;
@@ -111,6 +111,7 @@
 .theme-orcaq .tab-bar-inner,
 .theme-orcaq .tab-bar-inner > div,
 .theme-orcaq .tab-bar-inner > div[data-tab-page],
-.theme-orcaq .tab-bar-inner .tab-item {
+.theme-orcaq .tab-bar-inner .tab-item,
+.theme-orcaq [role="tab"] {
   border-radius: 0 !important;
 }

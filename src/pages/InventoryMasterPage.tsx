@@ -299,20 +299,9 @@ export function InventoryMasterPage() {
       activeTab={activeTab}
       onTabChange={(value) => setActiveTab(value as MasterKind)}
     >
-      <div className="flex gap-5">
+      <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
-          <section className="rounded-2xl border border-border bg-surface/70 p-4">
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  {currentMeta.label}
-                </h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {currentMeta.description}
-                </p>
-              </div>
-            </div>
-
+          <section>
             <DataTable
               items={currentItems}
               columns={columns}
