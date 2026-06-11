@@ -650,17 +650,23 @@ export function OperationalListPage({
     setLoading(true);
     setError(null);
     try {
-      const data = await loader({
-        page,
-        pageSize,
-        search: search || undefined,
-        branch_id: branchFilter || undefined,
-        payment_status: paymentStatusFilter || undefined,
-        status: statusFilter || undefined,
-        ...(variant === "inventory" && itemTypeFilter
-          ? { item_type: itemTypeFilter }
-          : {}),
-      } as any);
+      const data =
+        variant === "inventory"
+          ? await operationalApi.listInventoryStock({
+              page,
+              pageSize,
+              search: search || undefined,
+              ...(itemTypeFilter ? { item_type: itemTypeFilter } : {}),
+            })
+          : await loader({
+              page,
+              pageSize,
+              search: search || undefined,
+              branch_id: branchFilter || undefined,
+              recurring: recurringFilter === "RECURRING",
+              payment_status: paymentStatusFilter || undefined,
+              status: statusFilter || undefined,
+            } as any);
       if (variant === "inventory") {
         setStockItems((data.items || []) as InventoryStockRow[]);
         setItems([]);
