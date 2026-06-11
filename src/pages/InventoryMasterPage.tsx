@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Pencil, Plus, RefreshCw } from "lucide-react";
+import { Boxes, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -251,6 +251,26 @@ export function InventoryMasterPage() {
     }
   }
 
+  async function handleDelete(kind: MasterKind, item: InventoryMasterOption) {
+    if (
+      !window.confirm(
+        `Xóa "${item.name}" (${item.code})? Hành động này sẽ ẩn mục này khỏi danh sách.`,
+      )
+    )
+      return;
+    try {
+      if (kind === "uom") await inventoryCoreApi.deleteUom(item.id);
+      else await inventoryCoreApi.deleteItemType(item.id);
+      showToast({ title: "Đã xóa thành công", variant: "success" });
+      await reloadCurrentTab();
+    } catch (e: any) {
+      showToast({
+        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        variant: "destructive",
+      });
+    }
+  }
+
   const columns: DataTableColumn<InventoryMasterOption>[] = useMemo(
     () => [
       {
@@ -339,6 +359,12 @@ export function InventoryMasterPage() {
                             label: "Sửa",
                             icon: <Pencil className="h-3.5 w-3.5" />,
                             onClick: () => openEdit(activeTab, row),
+                          },
+                          {
+                            label: "Xóa",
+                            icon: <Trash2 className="h-3.5 w-3.5" />,
+                            variant: "danger",
+                            onClick: () => void handleDelete(activeTab, row),
                           },
                         ]}
                       />

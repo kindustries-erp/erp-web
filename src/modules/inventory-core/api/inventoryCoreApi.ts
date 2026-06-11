@@ -18,6 +18,7 @@ export interface InventoryMasterOption {
   name: string;
   description?: string | null;
   isActive: boolean;
+  isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
 }
@@ -196,5 +197,11 @@ export const inventoryCoreApi = {
       payload,
     );
     return data.data;
+  },
+  deleteUom: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${UOM_BASE}/${id}`);
+  },
+  deleteItemType: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${ITEM_TYPE_BASE}/${id}`);
   },
 };
