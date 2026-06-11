@@ -16,6 +16,11 @@ import {
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  type FilterPanelConfig,
+  type FilterPanelReturn,
+} from "@/shared/hooks/useFilterPanel";
 import {
   type DrawerAction,
   DrawerField,
@@ -288,7 +293,8 @@ type TabFilter = "all" | "receipt" | "issue";
 export function ErpWarehousePage() {
   const showToast = useUIStore((s) => s.showToast);
 
-  // ── tab filter
+  // ── filter state (same pattern as page mua hàng)
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [tabFilter, setTabFilter] = useState<TabFilter>("all");
 
   // ── list state
@@ -657,81 +663,114 @@ export function ErpWarehousePage() {
     [],
   );
 
-  // ── Filter bar
-  const filterBar = useMemo(
-    () => (
-      <div className="flex items-center gap-2">
-        {/* Tab filter */}
-        {(
-          [
-            {
-              key: "all" as TabFilter,
-              label: "Tất cả",
-              count: grTotal + giTotal,
-            },
-            { key: "receipt" as TabFilter, label: "Nhập kho", count: grTotal },
-            { key: "issue" as TabFilter, label: "Xuất kho", count: giTotal },
-          ] as const
-        ).map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => {
-              setTabFilter(t.key);
-              setPage(1);
-            }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-              tabFilter === t.key
-                ? "bg-primary text-primary-fg"
-                : "bg-muted/40 text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {t.label}
-            <span className="ml-1 opacity-60">({t.count})</span>
-          </button>
-        ))}
-        <div className="ml-auto flex items-center gap-2">
-          <input
-            className={`${inputCls} min-w-[220px] bg-surface`}
-            placeholder="Tìm số phiếu, đối tác..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                setSearch(searchInput);
-                setPage(1);
-              }
-            }}
-          />
-          <button
-            type="button"
-            className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-            onClick={() => {
-              setSearch(searchInput);
-              setPage(1);
-            }}
-          >
-            Tìm
-          </button>
-          {search && (
-            <button
-              type="button"
-              className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-              onClick={() => {
-                setSearch("");
-                setSearchInput("");
-                setPage(1);
-              }}
-            >
-              Xóa
-            </button>
-          )}
-        </div>
-      </div>
-    ),
+  const voucherTypeOptions = [
+    { value: "receipt", label: `Nhập kho (${grTotal})` },
+    { value: "issue", label: `Xuất kho (${giTotal})` },
+  ];
 
-    [tabFilter, searchInput, search, grTotal, giTotal],
+  const filterConfig: FilterPanelConfig = {
+    search: true,
+    custom: [
+      {
+        key: "voucherType",
+        label: "Loại chứng từ",
+        placeholder: "Tất cả chứng từ",
+        options: voucherTypeOptions,
+      },
+    ],
+  };
+
+  const activeFilterCount = [!!searchInput, tabFilter !== "all"].filter(
+    Boolean,
+  ).length;
+
+  const filters: FilterPanelReturn = {
+    state: {
+      period: "",
+      dateFrom: "",
+      dateTo: "",
+      channel: "",
+      search,
+      amountMin: "",
+      amountMax: "",
+      status: "",
+      counterpartySource: "",
+      custom: {
+        voucherType: tabFilter === "all" ? "" : tabFilter,
+      },
+    },
+    inputs: {
+      search: searchInput,
+      amountMin: "",
+      amountMax: "",
+    },
+    panelOpen: filterPanelOpen,
+    openPanel: () => setFilterPanelOpen(true),
+    closePanel: () => setFilterPanelOpen(false),
+    togglePanel: () => setFilterPanelOpen((v) => !v),
+    setPeriod: () => {},
+    setDateFrom: () => {},
+    setDateTo: () => {},
+    setChannel: () => {},
+    setSearchInput: (value: string) => {
+      setSearchInput(value);
+      setSearch(value);
+      setPage(1);
+    },
+    setAmountMinInput: () => {},
+    setAmountMaxInput: () => {},
+    setStatus: () => {},
+    setCounterpartySource: () => {},
+    setCustom: (key: string, value: string) => {
+      if (key === "voucherType") {
+        setTabFilter((value as TabFilter) || "all");
+        setPage(1);
+      }
+    },
+    resetAll: () => {
+      setSearchInput("");
+      setSearch("");
+      setTabFilter("all");
+      setPage(1);
+    },
+    hasActiveFilter: activeFilterCount > 0,
+    activeFilterCount,
+  };
+
+  const tabChips = (
+    <div className="flex flex-wrap items-center gap-2">
+      {(
+        [
+          {
+            key: "all" as TabFilter,
+            label: "Tất cả",
+            count: grTotal + giTotal,
+          },
+          { key: "receipt" as TabFilter, label: "Nhập kho", count: grTotal },
+          { key: "issue" as TabFilter, label: "Xuất kho", count: giTotal },
+        ] as const
+      ).map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => {
+            setTabFilter(t.key);
+            setPage(1);
+          }}
+          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+            tabFilter === t.key
+              ? "bg-primary text-primary-fg"
+              : "bg-muted/40 text-muted-foreground hover:bg-muted"
+          }`}
+        >
+          {t.label}
+          <span className="ml-1 opacity-60">({t.count})</span>
+        </button>
+      ))}
+    </div>
   );
+
+  const tableFilters = <div className="space-y-3">{tabChips}</div>;
 
   // ── GR drawer actions
   const grDrawerActions: DrawerAction[] = grViewOnly
@@ -775,6 +814,10 @@ export function ErpWarehousePage() {
         icon={<Boxes className="h-5 w-5" />}
         actions={
           <div className="flex items-center gap-2">
+            <FilterButton
+              onClick={() => setFilterPanelOpen((v) => !v)}
+              activeCount={activeFilterCount}
+            />
             <button
               type="button"
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
@@ -800,86 +843,93 @@ export function ErpWarehousePage() {
           </div>
         )}
 
-        <DataTable
-          items={rows}
-          columns={columns}
-          getRowKey={(r) => `${r.kind}-${r.id}`}
-          loading={loading}
-          emptyLabel="Chưa có chứng từ kho."
-          filters={filterBar}
-          minWidth={780}
-          loadingRows={8}
-          actionsColumn={{
-            header: "",
-            className: "w-[48px]",
-            cell: (row) => (
-              <ActionDropdown
-                items={[
-                  {
-                    label: "Xem chi tiết",
-                    icon: <ReceiptText className="h-3.5 w-3.5" />,
-                    onClick: () => {
-                      if (row.kind === "receipt" && row._gr)
-                        void openGrDetail(row._gr, true);
-                      else if (row.kind === "issue" && row._gi)
-                        void openGiDetail(row._gi, true);
-                    },
-                  },
-                  {
-                    label: "Chỉnh sửa",
-                    icon: <Pencil className="h-3.5 w-3.5" />,
-                    hidden:
-                      row.status === "POSTED" ||
-                      row.status === "CANCELLED" ||
-                      row.status === "VOIDED",
-                    onClick: () => {
-                      if (row.kind === "receipt" && row._gr)
-                        void openGrDetail(row._gr, false);
-                      else if (row.kind === "issue" && row._gi)
-                        void openGiDetail(row._gi, false);
-                    },
-                  },
-                  {
-                    label:
-                      (row.kind === "receipt" ? grPostingId : giPostingId) ===
-                      row.id
-                        ? "Đang ghi..."
-                        : "Ghi sổ",
-                    icon: <ReceiptText className="h-3.5 w-3.5" />,
-                    hidden:
-                      row.status === "POSTED" ||
-                      row.status === "CANCELLED" ||
-                      row.status === "VOIDED",
-                    onClick: () => {
-                      if (row.kind === "receipt") void handleGrPost(row.id);
-                      else void handleGiPost(row.id);
-                    },
-                  },
-                  {
-                    label: grCancelId === row.id ? "Đang hủy..." : "Hủy phiếu",
-                    icon: <XCircle className="h-3.5 w-3.5" />,
-                    variant: "danger",
-                    hidden:
-                      row.kind !== "receipt" ||
-                      row.status === "POSTED" ||
-                      row.status === "CANCELLED" ||
-                      row.status === "VOIDED",
-                    onClick: () => void handleGrCancel(row.id),
-                  },
-                ]}
-              />
-            ),
-          }}
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          totalPages={totalPages}
-          onPage={setPage}
-          onPageSize={(v) => {
-            setPage(1);
-            setPageSize(v);
-          }}
-        />
+        <div className="flex items-start">
+          <div className="flex-1 min-w-0 space-y-4">
+            <DataTable
+              items={rows}
+              columns={columns}
+              getRowKey={(r) => `${r.kind}-${r.id}`}
+              loading={loading}
+              emptyLabel="Chưa có chứng từ kho."
+              filters={tableFilters}
+              minWidth={780}
+              loadingRows={8}
+              actionsColumn={{
+                header: "",
+                className: "w-[48px]",
+                cell: (row) => (
+                  <ActionDropdown
+                    items={[
+                      {
+                        label: "Xem chi tiết",
+                        icon: <ReceiptText className="h-3.5 w-3.5" />,
+                        onClick: () => {
+                          if (row.kind === "receipt" && row._gr)
+                            void openGrDetail(row._gr, true);
+                          else if (row.kind === "issue" && row._gi)
+                            void openGiDetail(row._gi, true);
+                        },
+                      },
+                      {
+                        label: "Chỉnh sửa",
+                        icon: <Pencil className="h-3.5 w-3.5" />,
+                        hidden:
+                          row.status === "POSTED" ||
+                          row.status === "CANCELLED" ||
+                          row.status === "VOIDED",
+                        onClick: () => {
+                          if (row.kind === "receipt" && row._gr)
+                            void openGrDetail(row._gr, false);
+                          else if (row.kind === "issue" && row._gi)
+                            void openGiDetail(row._gi, false);
+                        },
+                      },
+                      {
+                        label:
+                          (row.kind === "receipt"
+                            ? grPostingId
+                            : giPostingId) === row.id
+                            ? "Đang ghi..."
+                            : "Ghi sổ",
+                        icon: <ReceiptText className="h-3.5 w-3.5" />,
+                        hidden:
+                          row.status === "POSTED" ||
+                          row.status === "CANCELLED" ||
+                          row.status === "VOIDED",
+                        onClick: () => {
+                          if (row.kind === "receipt") void handleGrPost(row.id);
+                          else void handleGiPost(row.id);
+                        },
+                      },
+                      {
+                        label:
+                          grCancelId === row.id ? "Đang hủy..." : "Hủy phiếu",
+                        icon: <XCircle className="h-3.5 w-3.5" />,
+                        variant: "danger",
+                        hidden:
+                          row.kind !== "receipt" ||
+                          row.status === "POSTED" ||
+                          row.status === "CANCELLED" ||
+                          row.status === "VOIDED",
+                        onClick: () => void handleGrCancel(row.id),
+                      },
+                    ]}
+                  />
+                ),
+              }}
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              totalPages={totalPages}
+              onPage={setPage}
+              onPageSize={(v) => {
+                setPage(1);
+                setPageSize(v);
+              }}
+            />
+          </div>
+          <FilterPanel config={filterConfig} filter={filters} />
+        </div>
       </PageLayout>
 
       {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
