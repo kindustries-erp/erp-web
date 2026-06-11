@@ -127,6 +127,10 @@ export function ErpInventoryItemsPage() {
     }
   }, []);
 
+  async function ensureMastersFresh() {
+    await loadMasters();
+  }
+
   useEffect(() => {
     void loadItems();
   }, [loadItems]);
@@ -147,8 +151,9 @@ export function ErpInventoryItemsPage() {
     resetForm();
   }
 
-  function openCreate() {
+  async function openCreate() {
     resetForm();
+    await ensureMastersFresh();
     setDrawerOpen(true);
   }
 
@@ -156,6 +161,7 @@ export function ErpInventoryItemsPage() {
     setViewOnly(false);
     setSaveError(null);
     try {
+      await ensureMastersFresh();
       const detail = await inventoryCoreApi.get(item.id);
       setEditing(detail);
       setForm(buildForm(detail));
@@ -169,6 +175,7 @@ export function ErpInventoryItemsPage() {
     setViewOnly(true);
     setSaveError(null);
     try {
+      await ensureMastersFresh();
       const detail = await inventoryCoreApi.get(item.id);
       setEditing(detail);
       setForm(buildForm(detail));
@@ -306,7 +313,7 @@ export function ErpInventoryItemsPage() {
       actions={
         <button
           type="button"
-          onClick={openCreate}
+          onClick={() => void openCreate()}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
         >
           <Plus className="h-3.5 w-3.5" />

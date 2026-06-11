@@ -47,13 +47,9 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.erpInventoryItems",
     group: "inventory",
   },
-  "erp-inventory-uoms": {
-    labelKey: "nav.items.erpInventoryUoms",
-    group: "inventory",
-  },
-  "erp-inventory-item-types": {
-    labelKey: "nav.items.erpInventoryItemTypes",
-    group: "inventory",
+  "erp-inventory-masters": {
+    labelKey: "nav.items.erpInventoryMasters",
+    group: "catalog",
   },
   "erp-production": {
     labelKey: "nav.items.erpProduction",
@@ -99,13 +95,9 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
     ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryItems"],
   ],
-  "erp-inventory-uoms": [
-    ["breadcrumb.inventory"],
-    ["breadcrumb.erpInventoryUoms"],
-  ],
-  "erp-inventory-item-types": [
-    ["breadcrumb.inventory"],
-    ["breadcrumb.erpInventoryItemTypes"],
+  "erp-inventory-masters": [
+    ["breadcrumb.catalog"],
+    ["breadcrumb.erpInventoryMasters"],
   ],
 };
 

@@ -3,6 +3,11 @@ import { Boxes, Pencil, Plus } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import {
   DrawerAction,
   DrawerField,
@@ -17,12 +22,7 @@ import {
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 
-interface MasterConfig {
-  key: "uom" | "item-type";
-  title: string;
-  description: string;
-  createLabel: string;
-}
+type MasterKind = "uom" | "item-type";
 
 interface MasterForm {
   code: string;
@@ -34,6 +34,23 @@ interface MasterForm {
 const STATUS_OPTIONS = [
   { value: "true", label: "ACTIVE" },
   { value: "false", label: "INACTIVE" },
+];
+
+const TAB_OPTIONS: Array<{
+  key: MasterKind;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: "uom",
+    label: "Thiết lập đơn vị tính",
+    description: "Quản lý danh mục đơn vị tính dùng chung cho item kho.",
+  },
+  {
+    key: "item-type",
+    label: "Thiết lập loại item kho",
+    description: "Quản lý danh mục loại item áp dụng cho danh mục kho.",
+  },
 ];
 
 const emptyForm = (): MasterForm => ({
@@ -52,64 +69,133 @@ function buildForm(item: InventoryMasterOption): MasterForm {
   };
 }
 
-export function InventoryMasterPage({ config }: { config: MasterConfig }) {
+function statusBadge(isActive: boolean) {
+  return (
+    <span
+      className={
+        isActive
+          ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+          : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
+      }
+    >
+      {isActive ? "ACTIVE" : "INACTIVE"}
+    </span>
+  );
+}
+
+export function InventoryMasterPage() {
   const showToast = useUIStore((s) => s.showToast);
-  const [items, setItems] = useState<InventoryMasterOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<MasterKind>("uom");
+  const [uoms, setUoms] = useState<InventoryMasterOption[]>([]);
+  const [itemTypes, setItemTypes] = useState<InventoryMasterOption[]>([]);
+  const [loadingUoms, setLoadingUoms] = useState(true);
+  const [loadingItemTypes, setLoadingItemTypes] = useState(true);
+  const [uomError, setUomError] = useState<string | null>(null);
+  const [itemTypeError, setItemTypeError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingKind, setEditingKind] = useState<MasterKind>("uom");
   const [editing, setEditing] = useState<InventoryMasterOption | null>(null);
   const [form, setForm] = useState<MasterForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      status: {
+        options: [
+          { value: "true", label: "ACTIVE" },
+          { value: "false", label: "INACTIVE" },
+        ],
+        placeholder: "Tất cả trạng thái",
+      },
+    }),
+    [],
+  );
+
+  const filter = useFilterPanel(filterConfig);
+
+  const currentSearch = filter.state.search.trim();
+  const currentIsActive =
+    filter.state.status === "true"
+      ? true
+      : filter.state.status === "false"
+        ? false
+        : undefined;
+
+  const loadUoms = useCallback(async () => {
+    setLoadingUoms(true);
+    setUomError(null);
     try {
-      const res =
-        config.key === "uom"
-          ? await inventoryCoreApi.listUoms({ page, pageSize, search })
-          : await inventoryCoreApi.listItemTypes({ page, pageSize, search });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
+      const res = await inventoryCoreApi.listUoms({
+        page: 1,
+        pageSize: 200,
+        search: currentSearch || undefined,
+        isActive: currentIsActive,
+      });
+      setUoms(res.items);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải dữ liệu");
+      setUomError(e instanceof Error ? e.message : "Không thể tải đơn vị tính");
     } finally {
-      setLoading(false);
+      setLoadingUoms(false);
     }
-  }, [config.key, page, pageSize, search]);
+  }, [currentIsActive, currentSearch]);
+
+  const loadItemTypes = useCallback(async () => {
+    setLoadingItemTypes(true);
+    setItemTypeError(null);
+    try {
+      const res = await inventoryCoreApi.listItemTypes({
+        page: 1,
+        pageSize: 200,
+        search: currentSearch || undefined,
+        isActive: currentIsActive,
+      });
+      setItemTypes(res.items);
+    } catch (e) {
+      setItemTypeError(
+        e instanceof Error ? e.message : "Không thể tải loại item kho",
+      );
+    } finally {
+      setLoadingItemTypes(false);
+    }
+  }, [currentIsActive, currentSearch]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (activeTab === "uom") {
+      void loadUoms();
+      return;
+    }
+    void loadItemTypes();
+  }, [activeTab, loadItemTypes, loadUoms]);
 
   function closeDrawer() {
     setDrawerOpen(false);
     setEditing(null);
+    setEditingKind(activeTab);
     setForm(emptyForm());
     setSaveError(null);
   }
 
-  function openCreate() {
+  function openCreate(kind: MasterKind) {
+    setEditingKind(kind);
     setEditing(null);
     setForm(emptyForm());
     setSaveError(null);
     setDrawerOpen(true);
   }
 
-  function openEdit(item: InventoryMasterOption) {
+  function openEdit(kind: MasterKind, item: InventoryMasterOption) {
+    setEditingKind(kind);
     setEditing(item);
     setForm(buildForm(item));
     setSaveError(null);
     setDrawerOpen(true);
+  }
+
+  async function reloadCurrentTab() {
+    if (activeTab === "uom") await loadUoms();
+    else await loadItemTypes();
   }
 
   async function handleSave() {
@@ -124,7 +210,7 @@ export function InventoryMasterPage({ config }: { config: MasterConfig }) {
         description: form.description.trim() || undefined,
         isActive: form.isActive === "true",
       };
-      if (config.key === "uom") {
+      if (editingKind === "uom") {
         if (editing) await inventoryCoreApi.updateUom(editing.id, payload);
         else await inventoryCoreApi.createUom(payload);
       } else {
@@ -136,8 +222,7 @@ export function InventoryMasterPage({ config }: { config: MasterConfig }) {
         variant: "success",
       });
       closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else await load();
+      await reloadCurrentTab();
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
     } finally {
@@ -167,51 +252,17 @@ export function InventoryMasterPage({ config }: { config: MasterConfig }) {
       {
         key: "isActive",
         header: "Trạng thái",
-        cell: (item) => (
-          <span
-            className={
-              item.isActive
-                ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
-            }
-          >
-            {item.isActive ? "ACTIVE" : "INACTIVE"}
-          </span>
-        ),
+        cell: (item) => statusBadge(item.isActive),
       },
     ],
     [],
   );
 
-  const filterBar = useMemo(
-    () => (
-      <>
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setPage(1);
-              setSearch(searchInput.trim());
-            }
-          }}
-          placeholder="Tìm theo code hoặc tên"
-          className={`${inputCls} min-w-[240px] bg-surface`}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setPage(1);
-            setSearch(searchInput.trim());
-          }}
-          className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-        >
-          Search
-        </button>
-      </>
-    ),
-    [searchInput],
-  );
+  const currentItems = activeTab === "uom" ? uoms : itemTypes;
+  const currentLoading = activeTab === "uom" ? loadingUoms : loadingItemTypes;
+  const currentError = activeTab === "uom" ? uomError : itemTypeError;
+  const currentMeta = TAB_OPTIONS.find((tab) => tab.key === activeTab)!;
+  const currentTitle = editingKind === "uom" ? "đơn vị tính" : "loại item kho";
 
   const drawerActions: DrawerAction[] = [
     { label: "Hủy", onClick: closeDrawer, variant: "outline" },
@@ -225,65 +276,79 @@ export function InventoryMasterPage({ config }: { config: MasterConfig }) {
 
   return (
     <PageLayout
-      title={config.title}
-      desc={config.description}
+      title="Thiết lập danh mục kho"
+      desc="Quản lý tập trung đơn vị tính và loại item áp dụng cho danh mục kho."
       icon={<Boxes className="h-5 w-5" />}
       actions={
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          {config.createLabel}
-        </button>
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={filter.togglePanel}
+            activeCount={filter.activeFilterCount}
+          />
+          <button
+            type="button"
+            onClick={() => openCreate(activeTab)}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Tạo mới
+          </button>
+        </div>
       }
+      tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
+      activeTab={activeTab}
+      onTabChange={(value) => setActiveTab(value as MasterKind)}
     >
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(item) => item.id}
-        loading={loading}
-        error={error}
-        emptyLabel="Chưa có dữ liệu"
-        filters={filterBar}
-        minWidth={860}
-        loadingRows={8}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={(value) => {
-          setPage(1);
-          setPageSize(value);
-        }}
-        actionsColumn={{
-          header: "",
-          className: "w-[48px]",
-          cell: (item) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: "Sửa",
-                  onClick: () => openEdit(item),
-                  icon: <Pencil className="h-3.5 w-3.5" />,
-                },
-              ]}
+      <div className="flex gap-5">
+        <div className="min-w-0 flex-1 space-y-4">
+          <section className="rounded-2xl border border-border bg-surface/70 p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  {currentMeta.label}
+                </h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {currentMeta.description}
+                </p>
+              </div>
+            </div>
+
+            <DataTable
+              items={currentItems}
+              columns={columns}
+              getRowKey={(item) => item.id}
+              loading={currentLoading}
+              error={currentError}
+              emptyLabel="Chưa có dữ liệu"
+              minWidth={760}
+              loadingRows={6}
+              actionsColumn={{
+                header: "",
+                className: "w-[48px]",
+                cell: (item) => (
+                  <ActionDropdown
+                    items={[
+                      {
+                        label: "Sửa",
+                        onClick: () => openEdit(activeTab, item),
+                        icon: <Pencil className="h-3.5 w-3.5" />,
+                      },
+                    ]}
+                  />
+                ),
+              }}
             />
-          ),
-        }}
-      />
+          </section>
+        </div>
+
+        <FilterPanel config={filterConfig} filter={filter} />
+      </div>
 
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
         icon={<Boxes className="h-4 w-4" />}
-        title={
-          editing
-            ? `Cập nhật ${config.title.toLowerCase()}`
-            : config.createLabel
-        }
+        title={editing ? `Cập nhật ${currentTitle}` : `Tạo ${currentTitle}`}
         subtitle={editing?.code || "Cấu hình danh mục dùng chung"}
         actions={drawerActions}
         panelClassName="min-[1024px]:min-w-[620px]"
@@ -339,32 +404,5 @@ export function InventoryMasterPage({ config }: { config: MasterConfig }) {
         </DrawerSection>
       </DrawerModal>
     </PageLayout>
-  );
-}
-
-export function InventoryUomsPage() {
-  return (
-    <InventoryMasterPage
-      config={{
-        key: "uom",
-        title: "Đơn vị tính",
-        description:
-          "Cấu hình danh mục đơn vị tính dùng chung cho danh mục kho.",
-        createLabel: "Tạo đơn vị tính",
-      }}
-    />
-  );
-}
-
-export function InventoryItemTypesPage() {
-  return (
-    <InventoryMasterPage
-      config={{
-        key: "item-type",
-        title: "Loại item kho",
-        description: "Cấu hình các loại item áp dụng cho danh mục kho.",
-        createLabel: "Tạo loại item",
-      }}
-    />
   );
 }

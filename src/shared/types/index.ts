@@ -37,8 +37,7 @@ export type PageKey =
   | "erp-sales-orders"
   | "erp-goods-issues"
   | "erp-inventory-items"
-  | "erp-inventory-uoms"
-  | "erp-inventory-item-types"
+  | "erp-inventory-masters"
   | "erp-suppliers"
   | "erp-customers";
 export type TxSource = "cash-fund" | "bank-deposit";
