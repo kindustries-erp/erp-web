@@ -172,30 +172,15 @@ function InventoryTimelineBlock({
   if (!data) return null;
 
   return (
-    <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">
-            Timeline xuất / nhập kho
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {data.item.sku} — {data.item.itemName} • Tồn hiện tại:{" "}
-            <span className="font-semibold text-foreground">
-              {fmtQty(data.currentOnHand)}
-            </span>{" "}
-            {data.item.uom}
-          </div>
-        </div>
-      </div>
-
+    <div className="rounded-xl border border-border bg-muted/10 p-3">
       {data.movements.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
           Chưa có phát sinh xuất nhập kho.
         </div>
       ) : (
         <div className="relative pl-6">
-          <div className="absolute bottom-0 left-[11px] top-1 w-px bg-border" />
-          <div className="space-y-3">
+          <div className="absolute bottom-4 left-[7px] top-4 w-px bg-border" />
+          <div className="space-y-2">
             {data.movements.map((m) => {
               const isIn = Number(m.qtyIn || 0) > 0;
               const qty = isIn ? m.qtyIn : m.qtyOut;
@@ -204,13 +189,13 @@ function InventoryTimelineBlock({
                   <div
                     className={
                       isIn
-                        ? "absolute left-[-18px] top-4 h-3 w-3 rounded-full border-2 border-emerald-200 bg-emerald-500"
-                        : "absolute left-[-18px] top-4 h-3 w-3 rounded-full border-2 border-amber-200 bg-amber-500"
+                        ? "absolute left-[-22px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-emerald-200 bg-emerald-500"
+                        : "absolute left-[-22px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-amber-200 bg-amber-500"
                     }
                   />
                   <div className="rounded-xl border border-border bg-background px-4 py-3">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2.2fr)_120px_140px_120px_150px] md:items-center">
-                      <div className="min-w-0 space-y-1">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2.2fr)_180px_120px_140px_120px] md:items-center">
+                      <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
                             className={
@@ -224,13 +209,23 @@ function InventoryTimelineBlock({
                           <span className="truncate text-sm font-medium text-foreground">
                             {movementLabel(m)}
                           </span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          Ngày giao dịch:
-                          <span className="font-medium text-foreground">
-                            {normalizeDate(m.transactionDate)}
+                          <span className="text-xs text-muted-foreground">
+                            {normalizeDateTime(m.transactionDate)}
                           </span>
-                          {m.notes ? ` • ${m.notes}` : ""}
+                          {m.notes ? (
+                            <span className="truncate text-xs text-muted-foreground">
+                              • {m.notes}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
+                        <div className="mb-0.5 text-muted-foreground md:hidden">
+                          Thời gian ghi nhận
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {normalizeDateTime(m.createdAt)}
                         </div>
                       </div>
 
@@ -265,15 +260,6 @@ function InventoryTimelineBlock({
                         </div>
                         <div className="font-medium text-foreground">
                           {m.unitCost == null ? "—" : fmtQty(m.unitCost)}
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
-                        <div className="mb-0.5 text-muted-foreground md:hidden">
-                          Ngày ghi nhận
-                        </div>
-                        <div className="font-medium text-foreground">
-                          {normalizeDate(m.createdAt)}
                         </div>
                       </div>
                     </div>
@@ -1449,14 +1435,6 @@ export function OperationalListPage({
               {row.unit}
             </span>
           </span>
-        ),
-      },
-      {
-        key: "value",
-        header: "Giá trị tồn",
-        className: "align-top min-w-[150px] text-right",
-        cell: (row) => (
-          <span className="text-sm tabular-nums">{money(row.stock_value)}</span>
         ),
       },
       {
