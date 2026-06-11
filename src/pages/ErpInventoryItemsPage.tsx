@@ -3,6 +3,11 @@ import { Layers, Pencil, Plus, ReceiptText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import {
   DrawerAction,
   DrawerField,
@@ -21,6 +26,15 @@ import {
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "ACTIVE" },
   { value: "INACTIVE", label: "INACTIVE" },
+];
+
+const ITEM_TYPE_FILTER_OPTIONS = [
+  { value: "FG", label: "FG — Thành phẩm" },
+  { value: "WIP", label: "WIP — Bán thành phẩm" },
+  { value: "RAW", label: "RAW — Linh kiện" },
+  { value: "GOODS", label: "GOODS — Hàng hóa" },
+  { value: "SERVICE", label: "SERVICE — Dịch vụ" },
+  { value: "OTHER", label: "OTHER — Khác" },
 ];
 
 interface ItemForm {
@@ -76,8 +90,6 @@ export function ErpInventoryItemsPage() {
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
@@ -91,20 +103,61 @@ export function ErpInventoryItemsPage() {
     Array<{ value: string; label: string }>
   >([]);
 
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      status: {
+        options: STATUS_OPTIONS,
+        placeholder: "Tất cả trạng thái",
+      },
+      custom: [
+        {
+          key: "itemType",
+          label: "Loại item",
+          placeholder: "Tất cả loại item",
+          options: ITEM_TYPE_FILTER_OPTIONS,
+        },
+      ],
+    }),
+    [],
+  );
+  const filter = useFilterPanel(filterConfig);
+
   const loadItems = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await inventoryCoreApi.list({ page, pageSize, search });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
+      const res = await inventoryCoreApi.list({
+        page,
+        pageSize,
+        search: filter.state.search.trim() || undefined,
+      });
+      let nextItems = res.items;
+      if (filter.state.status) {
+        nextItems = nextItems.filter(
+          (item) => item.status === filter.state.status,
+        );
+      }
+      if (filter.state.custom.itemType) {
+        nextItems = nextItems.filter(
+          (item) => item.itemType === filter.state.custom.itemType,
+        );
+      }
+      setItems(nextItems);
+      setTotal(nextItems.length);
+      setTotalPages(Math.ceil(nextItems.length / pageSize));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải danh mục kho");
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [
+    filter.state.custom,
+    filter.state.search,
+    filter.state.status,
+    page,
+    pageSize,
+  ]);
 
   const loadMasters = useCallback(async () => {
     try {
@@ -265,36 +318,6 @@ export function ErpInventoryItemsPage() {
     [],
   );
 
-  const filterBar = useMemo(
-    () => (
-      <>
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setPage(1);
-              setSearch(searchInput.trim());
-            }
-          }}
-          placeholder="Tìm SKU hoặc tên item kho"
-          className={`${inputCls} min-w-[260px] bg-surface`}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setPage(1);
-            setSearch(searchInput.trim());
-          }}
-          className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-        >
-          Search
-        </button>
-      </>
-    ),
-    [searchInput],
-  );
-
   const drawerActions: DrawerAction[] = [
     { label: "Hủy", onClick: closeDrawer, variant: "outline" },
     {
@@ -311,56 +334,66 @@ export function ErpInventoryItemsPage() {
       desc="Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS)."
       icon={<Layers className="h-5 w-5" />}
       actions={
-        <button
-          type="button"
-          onClick={() => void openCreate()}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Tạo item kho
-        </button>
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={filter.togglePanel}
+            activeCount={filter.activeFilterCount}
+          />
+          <button
+            type="button"
+            onClick={() => void openCreate()}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Tạo item kho
+          </button>
+        </div>
       }
     >
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(item) => item.id}
-        loading={loading}
-        error={error}
-        emptyLabel="Chưa có item kho nào"
-        filters={filterBar}
-        minWidth={980}
-        loadingRows={8}
-        actionsColumn={{
-          header: "",
-          className: "w-[48px]",
-          cell: (item) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: "Xem",
-                  onClick: () => void openView(item),
-                  icon: <ReceiptText className="h-3.5 w-3.5" />,
-                },
-                {
-                  label: "Sửa",
-                  onClick: () => void openEdit(item),
-                  icon: <Pencil className="h-3.5 w-3.5" />,
-                },
-              ]}
-            />
-          ),
-        }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={(value) => {
-          setPage(1);
-          setPageSize(value);
-        }}
-      />
+      <div className="flex gap-5">
+        <div className="min-w-0 flex-1">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(item) => item.id}
+            loading={loading}
+            error={error}
+            emptyLabel="Chưa có item kho nào"
+            minWidth={980}
+            loadingRows={8}
+            actionsColumn={{
+              header: "",
+              className: "w-[48px]",
+              cell: (item) => (
+                <ActionDropdown
+                  items={[
+                    {
+                      label: "Xem",
+                      onClick: () => void openView(item),
+                      icon: <ReceiptText className="h-3.5 w-3.5" />,
+                    },
+                    {
+                      label: "Sửa",
+                      onClick: () => void openEdit(item),
+                      icon: <Pencil className="h-3.5 w-3.5" />,
+                    },
+                  ]}
+                />
+              ),
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(value) => {
+              setPage(1);
+              setPageSize(value);
+            }}
+          />
+        </div>
+        <FilterPanel config={filterConfig} filter={filter} />
+      </div>
 
       <DrawerModal
         open={drawerOpen}

@@ -1,19 +1,23 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Building2, Plus, Users } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import {
   DataTable,
-  type DataTableColumn,
   type ActionsColumnConfig,
+  type DataTableColumn,
 } from "@/shared/components/DataTable";
 import {
+  DrawerField,
   DrawerModal,
   DrawerSection,
-  DrawerField,
   inputCls,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
-import { SearchInput } from "@/shared/components/SearchInput";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Button } from "@/shared/components/ui/Button";
 import { extractApiError } from "@/shared/utils/apiError";
@@ -36,6 +40,11 @@ interface PartnerFormState {
   status: string;
   notes: string;
 }
+
+const PARTNER_STATUS_OPTIONS = [
+  { value: "ACTIVE", label: "Hoạt động" },
+  { value: "INACTIVE", label: "Ngưng" },
+];
 
 const emptyForm = (): PartnerFormState => ({
   code: "",
@@ -62,12 +71,25 @@ export function ErpBusinessPartnersPage({
   const [items, setItems] = useState<ErpBusinessPartner[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<ErpBusinessPartner | null>(null);
   const [form, setForm] = useState<PartnerFormState>(emptyForm());
   const showToast = useUIStore((s) => s.showToast);
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      status: {
+        options: PARTNER_STATUS_OPTIONS,
+        placeholder: "Tất cả trạng thái",
+      },
+    }),
+    [],
+  );
+  const filter = useFilterPanel(filterConfig);
+  const search = filter.state.search.trim();
+  const statusFilter = filter.state.status;
 
   const icon =
     partnerType === "VENDOR" ? (
@@ -102,6 +124,14 @@ export function ErpBusinessPartnersPage({
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filteredItems = useMemo(
+    () =>
+      statusFilter
+        ? items.filter((item) => (item.status || "") === statusFilter)
+        : items,
+    [items, statusFilter],
+  );
 
   const columns: DataTableColumn<ErpBusinessPartner>[] = [
     { key: "code", header: "Mã", cell: (item) => item.code || "—" },
@@ -237,35 +267,36 @@ export function ErpBusinessPartnersPage({
       desc={desc}
       icon={icon}
       actions={
-        <Button size="sm" onClick={openCreate} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Tạo mới
-        </Button>
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={filter.togglePanel}
+            activeCount={filter.activeFilterCount}
+          />
+          <Button size="sm" onClick={openCreate} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Tạo mới
+          </Button>
+        </div>
       }
     >
-      <div className="space-y-4">
-        <div className="w-full max-w-md">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder={`Tìm ${title.toLowerCase()} theo mã, tên...`}
+      <div className="flex gap-5">
+        <div className="min-w-0 flex-1 space-y-4">
+          {fetchError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {fetchError}
+            </div>
+          ) : null}
+
+          <DataTable<ErpBusinessPartner>
+            items={filteredItems}
+            columns={columns}
+            getRowKey={(item) => item.id}
+            loading={loading}
+            emptyLabel={`Chưa có ${title.toLowerCase()} nào.`}
+            actionsColumn={actionsColumn}
           />
         </div>
-
-        {fetchError ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {fetchError}
-          </div>
-        ) : null}
-
-        <DataTable<ErpBusinessPartner>
-          items={items}
-          columns={columns}
-          getRowKey={(item) => item.id}
-          loading={loading}
-          emptyLabel={`Chưa có ${title.toLowerCase()} nào.`}
-          actionsColumn={actionsColumn}
-        />
+        <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
       <DrawerModal

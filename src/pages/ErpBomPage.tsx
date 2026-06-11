@@ -10,6 +10,11 @@ import {
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import {
   DrawerAction,
   DrawerField,
@@ -278,9 +283,6 @@ export function ErpBomPage() {
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
-
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpBom | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
@@ -292,20 +294,47 @@ export function ErpBomPage() {
     Array<{ value: string; label: string }>
   >([]);
 
+  const BOM_STATUS_OPTIONS = [
+    { value: "ACTIVE", label: "Đang áp dụng" },
+    { value: "INACTIVE", label: "Ngừng áp dụng" },
+    { value: "DRAFT", label: "Bản nháp" },
+  ];
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      status: {
+        options: BOM_STATUS_OPTIONS,
+        placeholder: "Tất cả trạng thái",
+      },
+    }),
+    [],
+  );
+  const filter = useFilterPanel(filterConfig);
+
   const loadBoms = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await bomCoreApi.list({ page, pageSize, search });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
+      const res = await bomCoreApi.list({
+        page,
+        pageSize,
+        search: filter.state.search.trim() || undefined,
+      });
+      const nextItems = filter.state.status
+        ? res.items.filter(
+            (item) => (item.status || "") === filter.state.status,
+          )
+        : res.items;
+      setItems(nextItems);
+      setTotal(nextItems.length);
+      setTotalPages(Math.ceil(nextItems.length / pageSize));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải BOM");
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [filter.state.search, filter.state.status, page, pageSize]);
 
   const loadItemOptions = useCallback(async (keyword = "") => {
     try {
@@ -585,36 +614,6 @@ export function ErpBomPage() {
     },
   ];
 
-  const filterBar = useMemo(
-    () => (
-      <>
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setPage(1);
-              setSearch(searchInput.trim());
-            }
-          }}
-          placeholder="Tìm mã / tên BOM"
-          className={`${inputCls} min-w-[260px] bg-surface`}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setPage(1);
-            setSearch(searchInput.trim());
-          }}
-          className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-        >
-          Search
-        </button>
-      </>
-    ),
-    [searchInput],
-  );
-
   const drawerActions: DrawerAction[] = [
     {
       label: "Hủy",
@@ -635,61 +634,71 @@ export function ErpBomPage() {
       desc="Quản lý định mức nguyên vật liệu cho thành phẩm."
       icon={<Boxes className="h-5 w-5" />}
       actions={
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Tạo mới
-        </button>
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={filter.togglePanel}
+            activeCount={filter.activeFilterCount}
+          />
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Tạo mới
+          </button>
+        </div>
       }
     >
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(item) => item.id}
-        loading={loading}
-        error={error}
-        emptyLabel="Chưa có BOM"
-        filters={filterBar}
-        minWidth={980}
-        loadingRows={6}
-        actionsColumn={{
-          header: "",
-          className: "w-[48px]",
-          cell: (item) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: "Sửa",
-                  onClick: () => void openEdit(item),
-                  icon: <Pencil className="h-3.5 w-3.5" />,
-                },
-              ]}
-            />
-          ),
-        }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={(value) => {
-          setPage(1);
-          setPageSize(value);
-        }}
-        renderSubRow={(item) => (
-          <BomTree
-            bomId={item.id}
-            fgToBomMap={fgToBomMap}
-            itemsMap={itemsMap}
+      <div className="flex gap-5">
+        <div className="min-w-0 flex-1">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(item) => item.id}
+            loading={loading}
+            error={error}
+            emptyLabel="Chưa có BOM"
+            minWidth={980}
+            loadingRows={6}
+            actionsColumn={{
+              header: "",
+              className: "w-[48px]",
+              cell: (item) => (
+                <ActionDropdown
+                  items={[
+                    {
+                      label: "Sửa",
+                      onClick: () => void openEdit(item),
+                      icon: <Pencil className="h-3.5 w-3.5" />,
+                    },
+                  ]}
+                />
+              ),
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(value) => {
+              setPage(1);
+              setPageSize(value);
+            }}
+            renderSubRow={(item) => (
+              <BomTree
+                bomId={item.id}
+                fgToBomMap={fgToBomMap}
+                itemsMap={itemsMap}
+              />
+            )}
+            expandedRowKeys={Object.keys(expandedBomIds).filter(
+              (key) => expandedBomIds[key],
+            )}
           />
-        )}
-        expandedRowKeys={Object.keys(expandedBomIds).filter(
-          (key) => expandedBomIds[key],
-        )}
-      />
+        </div>
+        <FilterPanel config={filterConfig} filter={filter} />
+      </div>
 
       <DrawerModal
         open={drawerOpen}

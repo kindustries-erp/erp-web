@@ -1109,36 +1109,53 @@ export function OperationalListPage({
     { value: "NON_RECURRING", label: "Không recurring" },
   ];
 
-  const filterConfig: FilterPanelConfig = {
-    search: true,
-    channel: {
-      label: "Chi nhánh",
-      placeholder: "Tất cả chi nhánh",
-      options: branchOptions,
-    },
-    status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
-    custom: [
-      {
-        key: "paymentStatus",
-        label: "Thanh toán",
-        placeholder: "Tất cả thanh toán",
-        options: PAYMENT_STATUS_OPTIONS,
-      },
-      {
-        key: "recurring",
-        label: "Recurring",
-        placeholder: "Tất cả recurring",
-        options: RECURRING_OPTIONS,
-      },
-    ],
-  };
+  const filterConfig: FilterPanelConfig =
+    variant === "inventory"
+      ? {
+          search: true,
+          custom: [
+            {
+              key: "itemType",
+              label: "Loại item",
+              placeholder: "Tất cả loại item",
+              options: ITEM_TYPE_OPTIONS,
+            },
+          ],
+        }
+      : {
+          search: true,
+          channel: {
+            label: "Chi nhánh",
+            placeholder: "Tất cả chi nhánh",
+            options: branchOptions,
+          },
+          status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
+          custom: [
+            {
+              key: "paymentStatus",
+              label: "Thanh toán",
+              placeholder: "Tất cả thanh toán",
+              options: PAYMENT_STATUS_OPTIONS,
+            },
+            {
+              key: "recurring",
+              label: "Recurring",
+              placeholder: "Tất cả recurring",
+              options: RECURRING_OPTIONS,
+            },
+          ],
+        };
 
   const activeFilterCount = [
     !!searchInput,
-    !!branchFilter,
-    !!statusFilter,
-    !!paymentStatusFilter,
-    !!recurringFilter,
+    ...(variant === "inventory"
+      ? [!!itemTypeFilter]
+      : [
+          !!branchFilter,
+          !!statusFilter,
+          !!paymentStatusFilter,
+          !!recurringFilter,
+        ]),
   ].filter(Boolean).length;
 
   function resetAllFilters() {
@@ -1148,6 +1165,7 @@ export function OperationalListPage({
     setStatusFilter("");
     setPaymentStatusFilter("");
     setRecurringFilter("");
+    setItemTypeFilter("");
     setPage(1);
   }
 
@@ -1498,16 +1516,19 @@ export function OperationalListPage({
                 period: "",
                 dateFrom: "",
                 dateTo: "",
-                channel: branchFilter,
+                channel: variant === "inventory" ? "" : branchFilter,
                 search: searchInput,
                 amountMin: "",
                 amountMax: "",
-                status: statusFilter,
+                status: variant === "inventory" ? "" : statusFilter,
                 counterpartySource: "",
-                custom: {
-                  paymentStatus: paymentStatusFilter,
-                  recurring: recurringFilter,
-                },
+                custom:
+                  variant === "inventory"
+                    ? { itemType: itemTypeFilter }
+                    : {
+                        paymentStatus: paymentStatusFilter,
+                        recurring: recurringFilter,
+                      },
               },
               inputs: { search: searchInput, amountMin: "", amountMax: "" },
               panelOpen: filterPanelOpen,
@@ -1518,6 +1539,7 @@ export function OperationalListPage({
               setDateFrom: () => {},
               setDateTo: () => {},
               setChannel: (v: string) => {
+                if (variant === "inventory") return;
                 setBranchFilter(v);
                 setPage(1);
               },
@@ -1525,11 +1547,16 @@ export function OperationalListPage({
               setAmountMinInput: () => {},
               setAmountMaxInput: () => {},
               setStatus: (v: string) => {
+                if (variant === "inventory") return;
                 setStatusFilter(v);
                 setPage(1);
               },
               setCounterpartySource: () => {},
               setCustom: (key: string, v: string) => {
+                if (variant === "inventory" && key === "itemType") {
+                  setItemTypeFilter(v);
+                  setPage(1);
+                }
                 if (key === "paymentStatus") {
                   setPaymentStatusFilter(v);
                   setPage(1);
