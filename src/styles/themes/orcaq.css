@@ -4,57 +4,57 @@
    ══════════════════════════════════════════ */
 .theme-orcaq {
   /* ── Palette ── */
-  --background: #f2f3f5;
+  --background: #fafafa;
   --surface: #ffffff;
-  --surface-hover: #f5f6f8;
-  --border: #e0e4ea;
-  --border-light: #eef0f4;
-  --foreground: #1a1a2e;
-  --muted: #f8f9fb;
-  --muted-fg: #6b7280;
-  --faint: #9ca3af;
-  --primary: #f5a623;
-  --primary-fg: #1a1a2e;
+  --surface-hover: #f4f4f5;
+  --border: #e4e4e7;
+  --border-light: #f4f4f5;
+  --foreground: #18181b;
+  --muted: #fafafa;
+  --muted-fg: #71717a;
+  --faint: #d4d4d8;
+  --primary: #18181b;
+  --primary-fg: #ffffff;
 
   /* ── Semantic colors ── */
-  --up-bg: #ecfdf5;
-  --up-fg: #059669;
+  --up-bg: #f0fdf4;
+  --up-fg: #15803d;
   --down-bg: #fef2f2;
-  --down-fg: #dc2626;
+  --down-fg: #b91c1c;
   --warn-bg: #fffbeb;
-  --warn-fg: #d97706;
-  --approve-bg: #ecfdf5;
-  --approve-fg: #059669;
+  --warn-fg: #b45309;
+  --approve-bg: #f0fdf4;
+  --approve-fg: #15803d;
 
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
 
   /* ── Glass chrome — disabled for flat look ── */
   --glass-chrome: #ffffff;
-  --glass-border: #e0e4ea;
+  --glass-border: #e4e4e7;
   --glass-blur: 0px;
 
   /* ── Popups & dropdowns ── */
   --popup-bg: #ffffff;
-  --popup-bg-hover: #f5f6f8;
-  --popup-border: #e0e4ea;
-  --popup-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --popup-bg-hover: #f4f4f5;
+  --popup-border: #e4e4e7;
+  --popup-shadow: 0 4px 16px rgba(24, 24, 27, 0.06);
 
   /* ── App shell ── */
-  --app-shell-bg: #1e1e2e;
+  --app-shell-bg: #18181b;
   --app-shell-border: transparent;
-  --sidebar-bg: #1e1e2e;
-  --sidebar-border: #2d2d3d;
+  --sidebar-bg: #18181b;
+  --sidebar-border: #27272a;
   --main-panel-bg: var(--background);
-  --main-panel-border: #e0e4ea;
+  --main-panel-border: #e4e4e7;
 
   /* ── Orca-specific tokens ── */
-  --orcaq-tab-bg: #2d2d3d;
+  --orcaq-tab-bg: #27272a;
   --orcaq-tab-active-bg: #ffffff;
-  --orcaq-tab-active-fg: #1a1a2e;
-  --orcaq-tab-inactive-fg: #a0a0b0;
-  --orcaq-breadcrumb-bg: #f8f9fb;
-  --orcaq-breadcrumb-border: #e0e4ea;
-  --orcaq-accent: #f5a623;
+  --orcaq-tab-active-fg: #18181b;
+  --orcaq-tab-inactive-fg: #a1a1aa;
+  --orcaq-breadcrumb-bg: #fafafa;
+  --orcaq-breadcrumb-border: #e4e4e7;
+  --orcaq-accent: #18181b;
 }
 
 /* ── Orcaq: border-radius 8px globally (except tab bar) ── */
