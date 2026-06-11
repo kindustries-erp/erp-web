@@ -182,10 +182,15 @@ export function ErpSalesOrdersPage() {
         partnerType: "CUSTOMER",
       });
       setCustomerOptions(
-        res.items.map((partner) => ({
-          value: partner.id,
-          label: `${partner.code} — ${partner.display_name || partner.name}`,
-        })),
+        res.items
+          .filter(
+            (partner: any) =>
+              partner.status !== "INACTIVE" && partner.is_active !== false,
+          )
+          .map((partner) => ({
+            value: partner.id,
+            label: `${partner.code} — ${partner.display_name || partner.name}`,
+          })),
       );
     } catch {
       setCustomerOptions([]);
@@ -217,6 +222,13 @@ export function ErpSalesOrdersPage() {
     void loadCustomers();
     void loadItemsLookup();
   }, [loadCustomers, loadItemsLookup]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      void loadCustomers();
+      void loadItemsLookup();
+    }
+  }, [drawerOpen, loadCustomers, loadItemsLookup]);
 
   function resetForm() {
     setForm(emptyForm());

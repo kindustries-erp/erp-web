@@ -209,6 +209,7 @@ export function OperationalFormDrawer({
   }, [variant]);
 
   useEffect(() => {
+    if (!open) return;
     getBranchesApi()
       .then((branches) => {
         setBranchOptions(
@@ -221,9 +222,10 @@ export function OperationalFormDrawer({
         );
       })
       .catch(() => setBranchOptions([]));
-  }, []);
+  }, [open]);
 
   useEffect(() => {
+    if (!open) return;
     const partnerRole = variant === "sales" ? "CUSTOMER" : "VENDOR";
     getBusinessPartnersPagedApi({
       page: 1,
@@ -232,16 +234,21 @@ export function OperationalFormDrawer({
     })
       .then((res) => {
         setPartnerOptions(
-          (res.items || []).map((p: BusinessPartner) => ({
-            value: p.id,
-            label: p.code ? `${p.code} — ${p.name}` : p.name,
-          })),
+          (res.items || [])
+            .filter(
+              (p: any) => p.status !== "INACTIVE" && p.is_active !== false,
+            )
+            .map((p: any) => ({
+              value: p.id,
+              label: p.code ? `${p.code} — ${p.name}` : p.name,
+            })),
         );
       })
       .catch(() => setPartnerOptions([]));
-  }, [variant]);
+  }, [variant, open]);
 
   useEffect(() => {
+    if (!open) return;
     if (variant !== "purchase") {
       setInventoryItemOptions([]);
       return;
@@ -262,7 +269,7 @@ export function OperationalFormDrawer({
         setInventoryItemOptions(options);
       })
       .catch(() => setInventoryItemOptions([]));
-  }, [variant]);
+  }, [variant, open]);
 
   useEffect(() => {
     if (!open) return;

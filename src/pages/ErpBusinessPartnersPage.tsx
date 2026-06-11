@@ -23,6 +23,7 @@ import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Button } from "@/shared/components/ui/Button";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useUIStore } from "@/core/config/uiStore";
+import { Combobox } from "@/shared/components/Combobox";
 import {
   businessPartnersCoreApi,
   type CreateBusinessPartnerCoreDto,
@@ -371,16 +372,17 @@ export function ErpBusinessPartnersPage({
               />
             </DrawerField>
             <DrawerField label="Trạng thái">
-              <select
-                className={inputCls}
+              <Combobox
+                options={[
+                  { value: "ACTIVE", label: "Hoạt động (ACTIVE)" },
+                  { value: "INACTIVE", label: "Ngưng (INACTIVE)" },
+                ]}
                 value={form.status}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, status: e.target.value }))
+                onChange={(v) =>
+                  setForm((p) => ({ ...p, status: v || "ACTIVE" }))
                 }
-              >
-                <option value="ACTIVE">Hoạt động (ACTIVE)</option>
-                <option value="INACTIVE">Ngưng (INACTIVE)</option>
-              </select>
+                allowClear={false}
+              />
             </DrawerField>
           </div>
           <DrawerField label="Địa chỉ">
