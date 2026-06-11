@@ -194,7 +194,7 @@ function InventoryTimelineBlock({
                     }
                   />
                   <div className="rounded-xl border border-border bg-background px-4 py-3">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2.2fr)_180px_120px_140px_120px] md:items-center">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2.4fr)_180px_140px_140px] md:items-center">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
@@ -208,9 +208,6 @@ function InventoryTimelineBlock({
                           </span>
                           <span className="truncate text-sm font-medium text-foreground">
                             {movementLabel(m)}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {normalizeDateTime(m.transactionDate)}
                           </span>
                           {m.notes ? (
                             <span className="truncate text-xs text-muted-foreground">
@@ -251,15 +248,6 @@ function InventoryTimelineBlock({
                         </div>
                         <div className="font-semibold text-foreground">
                           {fmtQty(m.balanceAfter)}
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
-                        <div className="mb-0.5 text-muted-foreground md:hidden">
-                          Đơn giá
-                        </div>
-                        <div className="font-medium text-foreground">
-                          {m.unitCost == null ? "—" : fmtQty(m.unitCost)}
                         </div>
                       </div>
                     </div>
@@ -1407,9 +1395,9 @@ export function OperationalListPage({
       {
         key: "received_qty",
         header: "Nhập",
-        className: "align-top min-w-[100px] text-right",
+        className: "align-top min-w-[100px] text-center",
         cell: (row) => (
-          <span className="text-sm tabular-nums">
+          <span className="inline-block w-full text-center text-sm tabular-nums">
             {Number(row.received_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -1417,9 +1405,9 @@ export function OperationalListPage({
       {
         key: "issued_qty",
         header: "Xuất",
-        className: "align-top min-w-[100px] text-right",
+        className: "align-top min-w-[100px] text-center",
         cell: (row) => (
-          <span className="text-sm tabular-nums">
+          <span className="inline-block w-full text-center text-sm tabular-nums">
             {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -1427,9 +1415,9 @@ export function OperationalListPage({
       {
         key: "on_hand_qty",
         header: "Tồn",
-        className: "align-top min-w-[110px] text-right",
+        className: "align-top min-w-[110px] text-center",
         cell: (row) => (
-          <span className="text-sm font-medium tabular-nums">
+          <span className="inline-block w-full text-center text-sm font-medium tabular-nums">
             {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}{" "}
             <span className="font-normal text-xs text-[color:var(--muted-fg)]">
               {row.unit}
@@ -1440,8 +1428,8 @@ export function OperationalListPage({
       {
         key: "last",
         header: "Giao dịch cuối",
-        className: "align-top min-w-[140px]",
-        cell: (row) => normalizeDate(row.last_transaction_date) || "—",
+        className: "align-top min-w-[180px]",
+        cell: (row) => normalizeDateTime(row.last_transaction_date) || "—",
       },
     ],
     [expandedStockItemId],
