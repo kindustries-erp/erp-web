@@ -69,7 +69,7 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   dashboard: [["breadcrumb.dashboard"]],
   sales: [["breadcrumb.sales"], ["breadcrumb.salesOrders"]],
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
-  inventory: [["breadcrumb.inventory"]],
+  inventory: [["breadcrumb.inventory"], ["breadcrumb.inventoryStock"]],
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
   "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],

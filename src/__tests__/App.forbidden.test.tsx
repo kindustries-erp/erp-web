@@ -10,6 +10,7 @@ let appState = {
   isLoggedIn: true,
   syncFromUrl: mockSyncFromUrl,
   forbidden: true,
+  openTabs: ["dashboard"],
 };
 
 vi.mock("@/core/config/appStore", () => ({
@@ -105,6 +106,7 @@ describe("App forbidden handling", () => {
       isLoggedIn: true,
       syncFromUrl: mockSyncFromUrl,
       forbidden: true,
+      openTabs: ["dashboard"],
     };
   });
 

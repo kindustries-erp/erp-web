@@ -9,13 +9,15 @@ import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { NavItem } from "./SidebarPrimitives";
 import {
-  IconBox,
-  IconCart,
-  IconChevronLeft,
-  IconGrid,
-  IconPin,
-  IconShop,
-} from "./sidebarIcons";
+  LayoutDashboard,
+  Boxes,
+  Users,
+  FileText,
+  Building2,
+  Layers,
+  Car,
+} from "lucide-react";
+import { IconChevronLeft, IconPin } from "./sidebarIcons";
 import { UserMenuPopover } from "./UserMenuPopover";
 import { NotificationPopover } from "./NotificationPopover";
 
@@ -135,7 +137,9 @@ export function Sidebar() {
             <div className="sidebar-nav-section py-2">
               <NavItem
                 collapsed={c}
-                icon={<IconGrid />}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
                 label={t("nav.items.dashboard")}
                 active={currentPage === "dashboard"}
                 onClick={() => navTo("dashboard")}
@@ -150,7 +154,7 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<IconCart />}
+                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpSalesOrders")}
                 active={currentPage === "erp-sales-orders"}
                 onClick={() => navTo("erp-sales-orders")}
@@ -158,7 +162,7 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconCart />}
+                icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.customers")}
                 active={currentPage === "erp-customers"}
                 onClick={() => navTo("erp-customers")}
@@ -173,7 +177,7 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<IconShop />}
+                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.purchasing")}
                 active={currentPage === "purchasing"}
                 onClick={() => navTo("purchasing")}
@@ -181,7 +185,9 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconShop />}
+                icon={
+                  <Building2 className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
                 label={t("nav.items.suppliers")}
                 active={currentPage === "erp-suppliers"}
                 onClick={() => navTo("erp-suppliers")}
@@ -196,7 +202,7 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<IconBox />}
+                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpWarehouse")}
                 active={currentPage === "erp-warehouse"}
                 onClick={() => navTo("erp-warehouse")}
@@ -204,7 +210,7 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconBox />}
+                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.inventory")}
                 active={currentPage === "inventory"}
                 onClick={() => navTo("inventory")}
@@ -212,7 +218,7 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconBox />}
+                icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpInventoryItems")}
                 active={currentPage === "erp-inventory-items"}
                 onClick={() => navTo("erp-inventory-items")}
@@ -227,7 +233,7 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<IconCart />}
+                icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.mfgVehicles")}
                 active={currentPage === "mfg-vehicles"}
                 onClick={() => navTo("mfg-vehicles")}
@@ -235,7 +241,7 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconBox />}
+                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpBom")}
                 active={currentPage === "erp-bom"}
                 onClick={() => navTo("erp-bom")}
@@ -243,7 +249,7 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<IconGrid />}
+                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpProduction")}
                 active={currentPage === "erp-production"}
                 onClick={() => navTo("erp-production")}
