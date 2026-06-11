@@ -21,7 +21,6 @@ import { ErpGoodsReceiptsPage } from "@/pages/ErpGoodsReceiptsPage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
-import { ErpInventoryItemsPage } from "@/pages/ErpInventoryItemsPage";
 import { InventoryMasterPage } from "@/pages/InventoryMasterPage";
 import {
   ErpCustomersPage,
@@ -45,7 +44,6 @@ const CORE_PAGES = [
   "erp-production",
   "erp-sales-orders",
   "erp-goods-issues",
-  "erp-inventory-items",
   "erp-inventory-masters",
   "erp-suppliers",
   "erp-customers",
@@ -215,17 +213,7 @@ export default function App() {
                   <ErpGoodsIssuesPage />
                 </div>
               )}
-              {openTabs.includes("erp-inventory-items") && (
-                <div
-                  className={
-                    currentPage === "erp-inventory-items"
-                      ? "block h-full"
-                      : "hidden"
-                  }
-                >
-                  <ErpInventoryItemsPage />
-                </div>
-              )}
+
               {openTabs.includes("erp-inventory-masters") && (
                 <div
                   className={

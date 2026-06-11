@@ -15,6 +15,7 @@ import {
   ReceiptText,
   XCircle,
   RefreshCcw,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
@@ -790,7 +791,7 @@ export function ErpWarehousePage() {
       <PageLayout
         title="Chứng từ kho"
         desc="Quản lý phiếu nhập kho và xuất kho."
-        icon={<Boxes className="h-5 w-5" />}
+        icon={<ClipboardList className="h-5 w-5" />}
         tabs={[
           { value: "all", label: `Tất cả (${grTotal + giTotal})` },
           { value: "receipt", label: `Nhập kho (${grTotal})` },

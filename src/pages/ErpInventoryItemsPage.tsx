@@ -83,7 +83,7 @@ function buildMasterOptions(items: InventoryMasterOption[]) {
     }));
 }
 
-export function ErpInventoryItemsPage() {
+export function ErpInventoryItemsTab() {
   const [items, setItems] = useState<ErpInventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -330,11 +330,7 @@ export function ErpInventoryItemsPage() {
   ];
 
   return (
-    <PageLayout
-      title="Danh mục kho"
-      desc="Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS)."
-      icon={<Layers className="h-5 w-5" />}
-    >
+    <>
       <div className="flex items-center justify-end mb-3">
         <TableActionGroup
           onRefresh={() => void loadItems()}
@@ -512,6 +508,6 @@ export function ErpInventoryItemsPage() {
           </DrawerSection>
         )}
       </DrawerModal>
-    </PageLayout>
+    </>
   );
 }

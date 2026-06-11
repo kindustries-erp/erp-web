@@ -8,6 +8,38 @@ import { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
 import { usePageContextMenu } from "@/shared/components/ContextMenu";
 import { useT } from "@/core/i18n";
+import {
+  LayoutDashboard,
+  Boxes,
+  Users,
+  FileText,
+  Building2,
+  Layers,
+  Car,
+  ClipboardList,
+  Network,
+  Factory,
+} from "lucide-react";
+
+const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
+  dashboard: LayoutDashboard,
+  sales: Boxes,
+  "erp-sales-orders": Boxes,
+  "erp-customers": Users,
+  purchasing: FileText,
+  "erp-suppliers": Building2,
+  inventory: FileText,
+  "erp-warehouse": ClipboardList,
+  "erp-goods-receipts": ClipboardList,
+  "erp-goods-issues": ClipboardList,
+  "erp-inventory-items": Layers,
+  "erp-inventory-masters": Layers,
+  "mfg-items": Layers,
+  "mfg-purchase-orders": FileText,
+  "mfg-vehicles": Car,
+  "erp-bom": Network,
+  "erp-production": Factory,
+};
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -41,6 +73,8 @@ function TabItem({
   const label = labelKey ? t(labelKey) : tabKey;
   const closable = !STATIC_TABS[tabKey];
   const onContextMenu = usePageContextMenu(tabKey, label, undefined, "tabbar");
+
+  const Icon = TAB_ICONS[tabKey] || FileText;
 
   return (
     <div
@@ -77,6 +111,7 @@ function TabItem({
         onDrop(tabKey);
       }}
     >
+      <Icon className="w-3.5 h-3.5 opacity-70" />
       <span>{label}</span>
       {closable && (
         <span
@@ -154,7 +189,7 @@ export function TabBar() {
     <>
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
-          height: 3px;
+          height: 1px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
@@ -175,6 +210,7 @@ export function TabBar() {
         .custom-scrollbar {
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+          overflow-x: overlay;
         }
         .theme-orcaq .custom-scrollbar {
           scrollbar-color: rgba(255, 255, 255, 0.15) transparent;

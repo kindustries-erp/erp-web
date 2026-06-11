@@ -7,6 +7,8 @@ import {
   Factory,
   RotateCcw,
   ArrowRight,
+  Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -535,9 +537,9 @@ export function ErpProductionPage() {
   // ── Render ──
   return (
     <PageLayout
-      title="ERP Production"
-      desc="Thực hiện lệnh sản xuất và xuất NVL theo BOM."
-      icon={<Boxes className="h-5 w-5" />}
+      title="Sản xuất"
+      desc="Quản lý lệnh sản xuất và theo dõi tiến độ thực hiện."
+      icon={<Factory className="h-5 w-5" />}
       className="p-4 md:p-6"
     >
       <div className="space-y-4">

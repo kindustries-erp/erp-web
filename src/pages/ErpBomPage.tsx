@@ -6,6 +6,8 @@ import {
   Trash2,
   ChevronRight,
   ChevronDown,
+  RefreshCw,
+  Network,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -631,9 +633,9 @@ export function ErpBomPage() {
 
   return (
     <PageLayout
-      title="ERP BOM"
-      desc="Quản lý định mức nguyên vật liệu cho thành phẩm."
-      icon={<Boxes className="h-5 w-5" />}
+      title="BOM"
+      desc="Quản lý định mức vật tư (Bill of Materials) cho các thành phẩm."
+      icon={<Network className="h-5 w-5" />}
     >
       <div className="flex items-center justify-end mb-3">
         <TableActionGroup

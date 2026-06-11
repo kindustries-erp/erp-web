@@ -22,8 +22,9 @@ import {
   inventoryCoreApi,
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { ErpInventoryItemsTab } from "@/pages/ErpInventoryItemsPage";
 
-type MasterKind = "uom" | "item-type";
+type MasterKind = "items" | "uom" | "item-type";
 
 interface MasterForm {
   code: string;
@@ -42,6 +43,12 @@ const TAB_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
+  {
+    key: "items",
+    label: "Danh mục vật tư/kho",
+    description:
+      "Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS).",
+  },
   {
     key: "uom",
     label: "Thiết lập đơn vị tính",
@@ -86,7 +93,7 @@ function statusBadge(isActive: boolean) {
 
 export function InventoryMasterPage() {
   const showToast = useUIStore((s) => s.showToast);
-  const [activeTab, setActiveTab] = useState<MasterKind>("uom");
+  const [activeTab, setActiveTab] = useState<MasterKind>("items");
   const [uoms, setUoms] = useState<InventoryMasterOption[]>([]);
   const [itemTypes, setItemTypes] = useState<InventoryMasterOption[]>([]);
   const [loadingUoms, setLoadingUoms] = useState(true);
@@ -177,8 +184,11 @@ export function InventoryMasterPage() {
       void loadUoms();
       return;
     }
-    void loadItemTypes();
-  }, [activeTab, loadItemTypes, loadUoms]);
+    if (activeTab === "item-type") {
+      void loadItemTypes();
+      return;
+    }
+  }, [activeTab, loadItemTypes, loadItemTypes, loadUoms]);
 
   function closeDrawer() {
     setDrawerOpen(false);
@@ -206,7 +216,7 @@ export function InventoryMasterPage() {
 
   async function reloadCurrentTab() {
     if (activeTab === "uom") await loadUoms();
-    else await loadItemTypes();
+    else if (activeTab === "item-type") await loadItemTypes();
   }
 
   async function handleSave() {
@@ -272,7 +282,6 @@ export function InventoryMasterPage() {
   const currentItems = activeTab === "uom" ? uoms : itemTypes;
   const currentLoading = activeTab === "uom" ? loadingUoms : loadingItemTypes;
   const currentError = activeTab === "uom" ? uomError : itemTypeError;
-  const currentMeta = TAB_OPTIONS.find((tab) => tab.key === activeTab)!;
   const currentTitle = editingKind === "uom" ? "đơn vị tính" : "loại item kho";
 
   const drawerActions: DrawerAction[] = [
@@ -287,56 +296,61 @@ export function InventoryMasterPage() {
 
   return (
     <PageLayout
-      title="Thiết lập danh mục kho"
+      title="Thiết lập kho"
       desc="Quản lý tập trung đơn vị tính và loại item áp dụng cho danh mục kho."
       icon={<Boxes className="h-5 w-5" />}
       tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
       activeTab={activeTab}
       onTabChange={(value) => setActiveTab(value as MasterKind)}
     >
-      <div className="flex items-center justify-end mb-3">
-        <TableActionGroup
-          onRefresh={() => void reloadCurrentTab()}
-          loading={currentLoading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={() => openCreate(activeTab)}
-          createLabel={`Tạo mới ${activeTab === "uom" ? "đơn vị tính" : "loại item"}`}
-        />
-      </div>
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          <section>
-            <DataTable
-              items={currentItems}
-              columns={columns}
-              getRowKey={(item) => item.id}
+      {activeTab === "items" ? (
+        <ErpInventoryItemsTab />
+      ) : (
+        <>
+          <div className="flex items-center justify-end mb-3">
+            <TableActionGroup
+              onRefresh={() => void reloadCurrentTab()}
               loading={currentLoading}
-              error={currentError}
-              emptyLabel="Chưa có dữ liệu"
-              minWidth={760}
-              loadingRows={6}
-              actionsColumn={{
-                header: "",
-                className: "w-[48px]",
-                cell: (item) => (
-                  <ActionDropdown
-                    items={[
-                      {
-                        label: "Sửa",
-                        onClick: () => openEdit(activeTab, item),
-                        icon: <Pencil className="h-3.5 w-3.5" />,
-                      },
-                    ]}
-                  />
-                ),
-              }}
+              onFilterToggle={filter.togglePanel}
+              activeFilterCount={filter.activeFilterCount}
+              onCreate={() => openCreate(activeTab)}
+              createLabel={`Tạo mới ${activeTab === "uom" ? "đơn vị tính" : "loại item"}`}
             />
-          </section>
-        </div>
-
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
+          </div>
+          <div className="flex items-start">
+            <div className="min-w-0 flex-1 space-y-4">
+              <section>
+                <DataTable
+                  items={currentItems}
+                  columns={columns}
+                  getRowKey={(item) => item.id}
+                  loading={currentLoading}
+                  error={currentError}
+                  emptyLabel="Chưa có dữ liệu"
+                  minWidth={760}
+                  loadingRows={6}
+                  actionsColumn={{
+                    header: "",
+                    className: "w-[48px]",
+                    cell: (row) => (
+                      <ActionDropdown
+                        items={[
+                          {
+                            label: "Sửa",
+                            icon: <Pencil className="h-3.5 w-3.5" />,
+                            onClick: () => openEdit(activeTab, row),
+                          },
+                        ]}
+                      />
+                    ),
+                  }}
+                />
+              </section>
+            </div>
+            <FilterPanel config={filterConfig} filter={filter} />
+          </div>
+        </>
+      )}
 
       <DrawerModal
         open={drawerOpen}

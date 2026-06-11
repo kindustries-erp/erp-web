@@ -16,6 +16,9 @@ import {
   Building2,
   Layers,
   Car,
+  ClipboardList,
+  Network,
+  Factory,
 } from "lucide-react";
 import { IconChevronLeft, IconPin } from "./sidebarIcons";
 import { UserMenuPopover } from "./UserMenuPopover";
@@ -202,7 +205,9 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                icon={
+                  <ClipboardList className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
                 label={t("nav.items.erpWarehouse")}
                 active={currentPage === "erp-warehouse"}
                 onClick={() => navTo("erp-warehouse")}
@@ -219,10 +224,10 @@ export function Sidebar() {
               <NavItem
                 collapsed={c}
                 icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpInventoryItems")}
-                active={currentPage === "erp-inventory-items"}
-                onClick={() => navTo("erp-inventory-items")}
-                contextPage="erp-inventory-items"
+                label={t("nav.items.erpInventoryMasters")}
+                active={currentPage === "erp-inventory-masters"}
+                onClick={() => navTo("erp-inventory-masters")}
+                contextPage="erp-inventory-masters"
               />
             </div>
 
@@ -241,7 +246,7 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                icon={<Network className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpBom")}
                 active={currentPage === "erp-bom"}
                 onClick={() => navTo("erp-bom")}
@@ -249,26 +254,11 @@ export function Sidebar() {
               />
               <NavItem
                 collapsed={c}
-                icon={<Boxes className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpProduction")}
                 active={currentPage === "erp-production"}
                 onClick={() => navTo("erp-production")}
                 contextPage="erp-production"
-              />
-            </div>
-
-            {/* Thiết lập */}
-            <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-                {t("nav.items.catalog")}
-              </div>
-              <NavItem
-                collapsed={c}
-                icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpInventoryMasters")}
-                active={currentPage === "erp-inventory-masters"}
-                onClick={() => navTo("erp-inventory-masters")}
-                contextPage="erp-inventory-masters"
               />
             </div>
           </div>
