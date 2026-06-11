@@ -23,6 +23,10 @@ import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
 import { ErpInventoryItemsPage } from "@/pages/ErpInventoryItemsPage";
 import {
+  InventoryItemTypesPage,
+  InventoryUomsPage,
+} from "@/pages/InventoryMasterPage";
+import {
   ErpCustomersPage,
   ErpSuppliersPage,
 } from "@/pages/ErpBusinessPartnersPage";
@@ -45,6 +49,8 @@ const CORE_PAGES = [
   "erp-sales-orders",
   "erp-goods-issues",
   "erp-inventory-items",
+  "erp-inventory-uoms",
+  "erp-inventory-item-types",
   "erp-suppliers",
   "erp-customers",
 ] as const;
@@ -222,6 +228,28 @@ export default function App() {
                   }
                 >
                   <ErpInventoryItemsPage />
+                </div>
+              )}
+              {openTabs.includes("erp-inventory-uoms") && (
+                <div
+                  className={
+                    currentPage === "erp-inventory-uoms"
+                      ? "block h-full"
+                      : "hidden"
+                  }
+                >
+                  <InventoryUomsPage />
+                </div>
+              )}
+              {openTabs.includes("erp-inventory-item-types") && (
+                <div
+                  className={
+                    currentPage === "erp-inventory-item-types"
+                      ? "block h-full"
+                      : "hidden"
+                  }
+                >
+                  <InventoryItemTypesPage />
                 </div>
               )}
               {openTabs.includes("erp-suppliers") && (

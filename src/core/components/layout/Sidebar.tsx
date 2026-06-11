@@ -224,6 +224,22 @@ export function Sidebar() {
                 onClick={() => navTo("erp-inventory-items")}
                 contextPage="erp-inventory-items"
               />
+              <NavItem
+                collapsed={c}
+                icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.erpInventoryUoms")}
+                active={currentPage === "erp-inventory-uoms"}
+                onClick={() => navTo("erp-inventory-uoms")}
+                contextPage="erp-inventory-uoms"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.erpInventoryItemTypes")}
+                active={currentPage === "erp-inventory-item-types"}
+                onClick={() => navTo("erp-inventory-item-types")}
+                contextPage="erp-inventory-item-types"
+              />
             </div>
 
             {/* Manufacturing / BOM / Production */}

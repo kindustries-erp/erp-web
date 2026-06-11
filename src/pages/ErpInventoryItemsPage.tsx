@@ -15,34 +15,13 @@ import {
   inventoryCoreApi,
   type CreateInventoryItemPayload,
   type ErpInventoryItem,
+  type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
-
-// ─── Static options ────────────────────────────────────────────────────────────
-
-const ITEM_TYPE_OPTIONS = [
-  { value: "FG", label: "FG — Thành phẩm" },
-  { value: "RAW", label: "RAW — Nguyên vật liệu" },
-  { value: "WIP", label: "WIP — Bán thành phẩm" },
-  { value: "GOODS", label: "GOODS — Hàng hóa" },
-  { value: "SERVICE", label: "SERVICE — Dịch vụ" },
-  { value: "OTHER", label: "OTHER — Khác" },
-];
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "ACTIVE" },
   { value: "INACTIVE", label: "INACTIVE" },
 ];
-
-const UOM_OPTIONS = [
-  { value: "PCS", label: "PCS — Cái" },
-  { value: "KG", label: "KG — Kilogram" },
-  { value: "M", label: "M — Mét" },
-  { value: "L", label: "L — Lít" },
-  { value: "BOX", label: "BOX — Hộp" },
-  { value: "SET", label: "SET — Bộ" },
-];
-
-// ─── Form ─────────────────────────────────────────────────────────────────────
 
 interface ItemForm {
   sku: string;
@@ -80,27 +59,16 @@ function toPayload(form: ItemForm): CreateInventoryItemPayload {
   };
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function fmtQty(value?: number | string | null) {
-  if (value == null) return "0";
-  const n = Number(value);
-  if (Number.isNaN(n)) return String(value);
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  }).format(n);
+function buildMasterOptions(items: InventoryMasterOption[]) {
+  return items
+    .filter((item) => item.isActive)
+    .map((item) => ({
+      value: item.code,
+      label: `${item.code} — ${item.name}`,
+    }));
 }
-
-function fmtDate(value?: string | Date | null) {
-  if (!value) return "—";
-  return String(value).slice(0, 10);
-}
-
-// ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ErpInventoryItemsPage() {
-  // List state
   const [items, setItems] = useState<ErpInventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -110,16 +78,18 @@ export function ErpInventoryItemsPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-
-  // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  // ─── Load list ───────────────────────────────────────────────────────────────
+  const [uomOptions, setUomOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [itemTypeOptions, setItemTypeOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
@@ -136,11 +106,34 @@ export function ErpInventoryItemsPage() {
     }
   }, [page, pageSize, search]);
 
+  const loadMasters = useCallback(async () => {
+    try {
+      const [uoms, itemTypes] = await Promise.all([
+        inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
+        inventoryCoreApi.listItemTypes({
+          page: 1,
+          pageSize: 200,
+          isActive: true,
+        }),
+      ]);
+      setUomOptions(buildMasterOptions(uoms.items));
+      setItemTypeOptions(buildMasterOptions(itemTypes.items));
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Không thể tải cấu hình loại item/đơn vị tính",
+      );
+    }
+  }, []);
+
   useEffect(() => {
     void loadItems();
   }, [loadItems]);
 
-  // ─── Drawer helpers ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    void loadMasters();
+  }, [loadMasters]);
 
   function resetForm() {
     setForm(emptyForm());
@@ -217,8 +210,6 @@ export function ErpInventoryItemsPage() {
     }
   }
 
-  // ─── Table columns ───────────────────────────────────────────────────────────
-
   const columns: DataTableColumn<ErpInventoryItem>[] = useMemo(
     () => [
       {
@@ -264,11 +255,8 @@ export function ErpInventoryItemsPage() {
         skeletonClassName: "w-16",
       },
     ],
-
     [],
   );
-
-  // ─── Filter bar ──────────────────────────────────────────────────────────────
 
   const filterBar = useMemo(
     () => (
@@ -309,8 +297,6 @@ export function ErpInventoryItemsPage() {
       loading: saving,
     },
   ];
-
-  // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <PageLayout
@@ -410,9 +396,12 @@ export function ErpInventoryItemsPage() {
                 disabled={viewOnly}
                 allowClear={false}
                 onChange={(value) =>
-                  setForm((prev) => ({ ...prev, uom: value || "PCS" }))
+                  setForm((prev) => ({
+                    ...prev,
+                    uom: value || form.uom || "PCS",
+                  }))
                 }
-                options={UOM_OPTIONS}
+                options={uomOptions}
                 placeholder="Chọn ĐVT"
               />
             </DrawerField>
@@ -437,10 +426,10 @@ export function ErpInventoryItemsPage() {
                 onChange={(value) =>
                   setForm((prev) => ({
                     ...prev,
-                    itemType: value || "FG",
+                    itemType: value || form.itemType || "FG",
                   }))
                 }
-                options={ITEM_TYPE_OPTIONS}
+                options={itemTypeOptions}
                 placeholder="Chọn loại"
               />
             </DrawerField>

@@ -12,6 +12,16 @@ export interface ErpInventoryItem {
   updatedAt?: string | null;
 }
 
+export interface InventoryMasterOption {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string | null;
+}
+
 export interface InventoryMovement {
   id: string;
   transactionDate: string;
@@ -42,7 +52,19 @@ export interface CreateInventoryItemPayload {
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
 
+export interface CreateInventoryMasterPayload {
+  code: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export type UpdateInventoryMasterPayload =
+  Partial<CreateInventoryMasterPayload>;
+
 const BASE = "/api/v1/inventory/items";
+const UOM_BASE = "/api/v1/inventory/uoms";
+const ITEM_TYPE_BASE = "/api/v1/inventory/item-types";
 
 type InventoryItemDetailResponse = {
   message: string;
@@ -52,6 +74,11 @@ type InventoryItemDetailResponse = {
 type InventoryMovementsResponse = {
   message: string;
   data: InventoryMovementsPayload;
+};
+
+type InventoryMasterDetailResponse = {
+  message: string;
+  data: InventoryMasterOption;
 };
 
 function p(params: ListParams = {}) {
@@ -98,6 +125,74 @@ export const inventoryCoreApi = {
   ): Promise<ErpInventoryItem> => {
     const { data } = await axiosInstance.patch<InventoryItemDetailResponse>(
       `${BASE}/${id}`,
+      payload,
+    );
+    return data.data;
+  },
+  listUoms: async (
+    params?: ListParams & { isActive?: boolean },
+  ): Promise<PaginatedResponse<InventoryMasterOption>> => {
+    const { data } = await axiosInstance.get<
+      PaginatedResponse<InventoryMasterOption>
+    >(UOM_BASE, {
+      params: {
+        ...p(params),
+        ...(params?.isActive !== undefined
+          ? { isActive: params.isActive }
+          : {}),
+      },
+    });
+    return data;
+  },
+  createUom: async (
+    payload: CreateInventoryMasterPayload,
+  ): Promise<InventoryMasterOption> => {
+    const { data } = await axiosInstance.post<InventoryMasterDetailResponse>(
+      UOM_BASE,
+      payload,
+    );
+    return data.data;
+  },
+  updateUom: async (
+    id: string,
+    payload: UpdateInventoryMasterPayload,
+  ): Promise<InventoryMasterOption> => {
+    const { data } = await axiosInstance.patch<InventoryMasterDetailResponse>(
+      `${UOM_BASE}/${id}`,
+      payload,
+    );
+    return data.data;
+  },
+  listItemTypes: async (
+    params?: ListParams & { isActive?: boolean },
+  ): Promise<PaginatedResponse<InventoryMasterOption>> => {
+    const { data } = await axiosInstance.get<
+      PaginatedResponse<InventoryMasterOption>
+    >(ITEM_TYPE_BASE, {
+      params: {
+        ...p(params),
+        ...(params?.isActive !== undefined
+          ? { isActive: params.isActive }
+          : {}),
+      },
+    });
+    return data;
+  },
+  createItemType: async (
+    payload: CreateInventoryMasterPayload,
+  ): Promise<InventoryMasterOption> => {
+    const { data } = await axiosInstance.post<InventoryMasterDetailResponse>(
+      ITEM_TYPE_BASE,
+      payload,
+    );
+    return data.data;
+  },
+  updateItemType: async (
+    id: string,
+    payload: UpdateInventoryMasterPayload,
+  ): Promise<InventoryMasterOption> => {
+    const { data } = await axiosInstance.patch<InventoryMasterDetailResponse>(
+      `${ITEM_TYPE_BASE}/${id}`,
       payload,
     );
     return data.data;
