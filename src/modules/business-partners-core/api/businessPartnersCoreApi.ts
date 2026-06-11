@@ -15,6 +15,7 @@ export interface ErpBusinessPartner {
   contactName?: string | null;
   status: "ACTIVE" | "INACTIVE" | string;
   notes?: string | null;
+  isDeleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -93,6 +94,14 @@ export const businessPartnersCoreApi = {
       message: string;
       data: ErpBusinessPartner;
     }>(`${BASE}/${id}`, dto);
+    return data.data;
+  },
+
+  remove: async (id: string): Promise<ErpBusinessPartner> => {
+    const { data } = await axiosInstance.delete<{
+      message: string;
+      data: ErpBusinessPartner;
+    }>(`${BASE}/${id}`);
     return data.data;
   },
 };

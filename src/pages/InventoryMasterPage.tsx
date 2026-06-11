@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Boxes, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -16,6 +16,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
 import {
@@ -106,6 +107,11 @@ export function InventoryMasterPage() {
   const [form, setForm] = useState<MasterForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    kind: MasterKind;
+    item: InventoryMasterOption;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -188,7 +194,7 @@ export function InventoryMasterPage() {
       void loadItemTypes();
       return;
     }
-  }, [activeTab, loadItemTypes, loadItemTypes, loadUoms]);
+  }, [activeTab, loadItemTypes, loadUoms]);
 
   function closeDrawer() {
     setDrawerOpen(false);
@@ -251,23 +257,27 @@ export function InventoryMasterPage() {
     }
   }
 
-  async function handleDelete(kind: MasterKind, item: InventoryMasterOption) {
-    if (
-      !window.confirm(
-        `Xóa "${item.name}" (${item.code})? Hành động này sẽ ẩn mục này khỏi danh sách.`,
-      )
-    )
-      return;
+  function handleDelete(kind: MasterKind, item: InventoryMasterOption) {
+    setDeleteTarget({ kind, item });
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const { kind, item } = deleteTarget;
+    setDeleting(true);
     try {
       if (kind === "uom") await inventoryCoreApi.deleteUom(item.id);
       else await inventoryCoreApi.deleteItemType(item.id);
       showToast({ title: "Đã xóa thành công", variant: "success" });
+      setDeleteTarget(null);
       await reloadCurrentTab();
     } catch (e: any) {
       showToast({
         title: e?.response?.data?.message || e?.message || "Không thể xóa",
         variant: "destructive",
       });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -364,7 +374,7 @@ export function InventoryMasterPage() {
                             label: "Xóa",
                             icon: <Trash2 className="h-3.5 w-3.5" />,
                             variant: "danger",
-                            onClick: () => void handleDelete(activeTab, row),
+                            onClick: () => handleDelete(activeTab, row),
                           },
                         ]}
                       />
@@ -377,6 +387,24 @@ export function InventoryMasterPage() {
           </div>
         </>
       )}
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa "${deleteTarget.item.name}" (${deleteTarget.item.code})? Hành động này sẽ ẩn mục này khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
 
       <DrawerModal
         open={drawerOpen}

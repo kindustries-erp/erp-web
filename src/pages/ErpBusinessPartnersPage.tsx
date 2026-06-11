@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, Plus, Users } from "lucide-react";
+import { Building2, Trash2, Users } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import {
   DataTable,
@@ -20,7 +20,7 @@ import {
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { Button } from "@/shared/components/ui/Button";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useUIStore } from "@/core/config/uiStore";
 import { Combobox } from "@/shared/components/Combobox";
@@ -77,6 +77,10 @@ export function ErpBusinessPartnersPage({
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<ErpBusinessPartner | null>(null);
   const [form, setForm] = useState<PartnerFormState>(emptyForm());
+  const [deleteTarget, setDeleteTarget] = useState<ErpBusinessPartner | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -164,10 +168,37 @@ export function ErpBusinessPartnersPage({
   const actionsColumn: ActionsColumnConfig<ErpBusinessPartner> = {
     cell: (item) => (
       <ActionDropdown
-        items={[{ label: "Chỉnh sửa", onClick: () => openEdit(item) }]}
+        items={[
+          { label: "Chỉnh sửa", onClick: () => openEdit(item) },
+          {
+            label: "Xóa",
+            icon: <Trash2 className="h-3.5 w-3.5" />,
+            variant: "danger",
+            onClick: () => setDeleteTarget(item),
+          },
+        ]}
       />
     ),
   };
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await businessPartnersCoreApi.remove(deleteTarget.id);
+      showToast({ title: "Đã xóa thành công", variant: "success" });
+      setDeleteTarget(null);
+      await load();
+    } catch (err) {
+      showToast({
+        variant: "destructive",
+        title: "Xóa thất bại",
+        description: extractApiError(err, "Không xóa được đối tác."),
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -294,6 +325,24 @@ export function ErpBusinessPartnersPage({
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa ${title.toLowerCase()} "${deleteTarget.name || deleteTarget.code}"? Hành động này sẽ ẩn mục này khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
 
       <DrawerModal
         open={drawerOpen}
