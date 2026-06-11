@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertCircle,
   ChevronDown,
   ChevronRight,
   FileText,
   Link2,
+  Loader2,
   Pencil,
   Plus,
   RefreshCcw,
@@ -151,11 +153,13 @@ function InventoryTimelineBlock({
   error: string | null;
   data?: InventoryMovementsPayload;
 }) {
+  const t = useT();
   const isLoading = loadingId === itemId;
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-border bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
+      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-8 flex items-center justify-center text-sm text-muted-foreground my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Đang tải lịch sử xuất nhập kho...
       </div>
     );
@@ -163,7 +167,8 @@ function InventoryTimelineBlock({
 
   if (error && !data) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex items-center justify-center text-sm text-red-700 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md">
+        <AlertCircle className="mr-2 h-5 w-5" />
         {error}
       </div>
     );
@@ -172,92 +177,89 @@ function InventoryTimelineBlock({
   if (!data) return null;
 
   return (
-    <div className="rounded-xl border border-border bg-muted/10 p-3">
-      {data.movements.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-          Chưa có phát sinh xuất nhập kho.
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 overflow-x-auto my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+      <div className="min-w-[700px]">
+        <div className="mb-4 font-semibold text-base text-foreground">
+          {t("Lịch sử xuất nhập kho")}
         </div>
-      ) : (
-        <div className="relative pl-6">
-          <div className="absolute bottom-4 left-[7px] top-4 w-px bg-border" />
-          <div className="space-y-2">
-            {data.movements.map((m) => {
-              const isIn = Number(m.qtyIn || 0) > 0;
-              const qty = isIn ? m.qtyIn : m.qtyOut;
-              return (
-                <div key={m.id} className="relative">
+        {data.movements.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
+            Chưa có phát sinh xuất nhập kho.
+          </div>
+        ) : (
+          <div className="w-full text-sm">
+            <div className="flex items-center text-muted-foreground border-b border-border pb-2 mb-2 px-2">
+              <div className="w-[100px] font-medium">Thời gian</div>
+              <div className="flex-1 font-medium">Giao dịch</div>
+              <div className="w-[120px] text-right font-medium">Thay đổi</div>
+              <div className="w-[120px] text-right font-medium">Tồn kho</div>
+            </div>
+            <div className="space-y-1">
+              {data.movements.map((m) => {
+                const isIn = Number(m.qtyIn || 0) > 0;
+                const qty = isIn ? m.qtyIn : m.qtyOut;
+                const dt = normalizeDateTime(m.createdAt);
+                return (
                   <div
-                    className={
-                      isIn
-                        ? "absolute left-[-22px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-emerald-200 bg-emerald-500"
-                        : "absolute left-[-22px] top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-amber-200 bg-amber-500"
-                    }
-                  />
-                  <div className="rounded-xl border border-border bg-background px-4 py-3">
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,2.4fr)_180px_140px_140px] md:items-center">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={
-                              isIn
-                                ? "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                                : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200"
-                            }
-                          >
-                            {isIn ? "Nhập" : "Xuất"}
-                          </span>
-                          <span className="truncate text-sm font-medium text-foreground">
-                            {movementLabel(m)}
-                          </span>
-                          {m.notes ? (
-                            <span className="truncate text-xs text-muted-foreground">
-                              • {m.notes}
-                            </span>
-                          ) : null}
-                        </div>
+                    key={m.id}
+                    className="flex items-center hover:bg-muted/50 rounded py-2 px-2 transition-colors"
+                  >
+                    <div className="w-[100px]">
+                      <div className="text-xs font-semibold text-foreground">
+                        {dt.slice(11, 16)}
                       </div>
-
-                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
-                        <div className="mb-0.5 text-muted-foreground md:hidden">
-                          Thời gian ghi nhận
-                        </div>
-                        <div className="font-medium text-foreground">
-                          {normalizeDateTime(m.createdAt)}
-                        </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {dt.slice(0, 10)}
                       </div>
+                    </div>
 
-                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
-                        <div className="mb-0.5 text-muted-foreground md:hidden">
-                          Số lượng
-                        </div>
-                        <div
+                    <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
                           className={
                             isIn
-                              ? "font-semibold text-emerald-700"
-                              : "font-semibold text-amber-700"
+                              ? "text-[11px] font-medium text-emerald-600"
+                              : "text-[11px] font-medium text-amber-600"
                           }
                         >
-                          {isIn ? "+" : "-"}
-                          {fmtQty(qty)}
-                        </div>
+                          {isIn ? "Nhập" : "Xuất"}
+                        </span>
+                        <span className="truncate font-medium text-foreground">
+                          {movementLabel(m)}
+                        </span>
+                        {m.notes ? (
+                          <span className="truncate text-xs text-muted-foreground">
+                            • {m.notes}
+                          </span>
+                        ) : null}
                       </div>
+                    </div>
 
-                      <div className="rounded-lg bg-muted/20 px-3 py-2 text-xs md:bg-transparent md:px-0 md:py-0">
-                        <div className="mb-0.5 text-muted-foreground md:hidden">
-                          Số dư sau mốc
-                        </div>
-                        <div className="font-semibold text-foreground">
-                          {fmtQty(m.balanceAfter)}
-                        </div>
+                    <div className="w-[120px] text-right">
+                      <div
+                        className={
+                          isIn
+                            ? "font-medium text-emerald-600"
+                            : "font-medium text-amber-600"
+                        }
+                      >
+                        {isIn ? "+" : "-"}
+                        {fmtQty(qty)}
+                      </div>
+                    </div>
+
+                    <div className="w-[120px] text-right">
+                      <div className="font-medium text-foreground">
+                        {fmtQty(m.balanceAfter)}
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -514,9 +516,9 @@ export function OperationalListPage({
   const [stockItems, setStockItems] = useState<InventoryStockRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedStockItemId, setExpandedStockItemId] = useState<string | null>(
-    null,
-  );
+  const [expandedStockItemIds, setExpandedStockItemIds] = useState<
+    Record<string, boolean>
+  >({});
   const [movLoadingId, setMovLoadingId] = useState<string | null>(null);
   const [movError, setMovError] = useState<string | null>(null);
   const [movMap, setMovMap] = useState<
@@ -555,12 +557,14 @@ export function OperationalListPage({
   }
 
   async function handleToggleInventoryExpand(row: InventoryStockRow) {
-    if (expandedStockItemId === row.inventory_item_id) {
-      setExpandedStockItemId(null);
-      setMovError(null);
-      return;
-    }
-    setExpandedStockItemId(row.inventory_item_id);
+    const isExpanded = expandedStockItemIds[row.inventory_item_id];
+    setExpandedStockItemIds((prev) => ({
+      ...prev,
+      [row.inventory_item_id]: !isExpanded,
+    }));
+
+    if (isExpanded) return;
+
     setMovError(null);
     if (movMap[row.inventory_item_id]) return;
     setMovLoadingId(row.inventory_item_id);
@@ -1336,47 +1340,40 @@ export function OperationalListPage({
   const stockColumns = useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
-        key: "expand",
-        header: "",
-        className: "align-top w-[44px]",
+        key: "item",
+        header: "Vật tư",
+        className: "align-middle min-w-[220px]",
         cell: (row) => {
-          const expanded = expandedStockItemId === row.inventory_item_id;
+          const expanded = !!expandedStockItemIds[row.inventory_item_id];
           return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleToggleInventoryExpand(row);
-              }}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background hover:bg-muted"
-              title={expanded ? "Thu gọn" : "Xem lịch sử"}
-            >
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void handleToggleInventoryExpand(row);
+                }}
+                className="font-medium text-foreground hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
+              >
+                <span>{row.item_code || "—"}</span>
+                <ChevronRight
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
+                    expanded && "rotate-90",
+                  )}
+                />
+              </button>
+              <div className="text-xs text-[color:var(--muted-fg)]">
+                {row.item_name || "Chưa đặt tên"}
+              </div>
+            </div>
           );
         },
       },
       {
-        key: "item",
-        header: "Vật tư",
-        className: "align-top min-w-[220px]",
-        cell: (row) => (
-          <div className="space-y-1">
-            <div className="font-medium text-sm">{row.item_code || "—"}</div>
-            <div className="text-xs text-[color:var(--muted-fg)]">
-              {row.item_name || "Chưa đặt tên"}
-            </div>
-          </div>
-        ),
-      },
-      {
         key: "item_type",
         header: "Loại",
-        className: "align-top min-w-[90px]",
+        className: "align-middle min-w-[90px]",
         cell: (row) => {
           const t = row.item_type;
           let cls = "bg-slate-100 text-slate-600";
@@ -1395,9 +1392,9 @@ export function OperationalListPage({
       {
         key: "received_qty",
         header: "Nhập",
-        className: "align-top min-w-[100px] text-center",
+        className: "align-middle min-w-[100px] text-left",
         cell: (row) => (
-          <span className="inline-block w-full text-center text-sm tabular-nums">
+          <span className="inline-block w-full text-left text-sm tabular-nums">
             {Number(row.received_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -1405,9 +1402,9 @@ export function OperationalListPage({
       {
         key: "issued_qty",
         header: "Xuất",
-        className: "align-top min-w-[100px] text-center",
+        className: "align-middle min-w-[100px] text-left",
         cell: (row) => (
-          <span className="inline-block w-full text-center text-sm tabular-nums">
+          <span className="inline-block w-full text-left text-sm tabular-nums">
             {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -1415,9 +1412,9 @@ export function OperationalListPage({
       {
         key: "on_hand_qty",
         header: "Tồn",
-        className: "align-top min-w-[110px] text-center",
+        className: "align-middle min-w-[110px] text-left",
         cell: (row) => (
-          <span className="inline-block w-full text-center text-sm font-medium tabular-nums">
+          <span className="inline-block w-full text-left text-sm font-medium tabular-nums">
             {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}{" "}
             <span className="font-normal text-xs text-[color:var(--muted-fg)]">
               {row.unit}
@@ -1428,21 +1425,19 @@ export function OperationalListPage({
       {
         key: "last",
         header: "Giao dịch cuối",
-        className: "align-top min-w-[180px]",
+        className: "align-middle min-w-[180px]",
         cell: (row) => normalizeDateTime(row.last_transaction_date) || "—",
       },
     ],
-    [expandedStockItemId],
+    [expandedStockItemIds],
   );
 
   const expandedStockRowKeys = useMemo(
     () =>
-      expandedStockItemId
-        ? stockItems
-            .filter((row) => row.inventory_item_id === expandedStockItemId)
-            .map((row) => `${row.inventory_item_id}-${row.branch_id || "all"}`)
-        : [],
-    [expandedStockItemId, stockItems],
+      stockItems
+        .filter((row) => expandedStockItemIds[row.inventory_item_id])
+        .map((row) => `${row.inventory_item_id}-${row.branch_id || "all"}`),
+    [expandedStockItemIds, stockItems],
   );
 
   if (variant === "inventory") {
