@@ -81,8 +81,7 @@ export function PageLayout({
         <Tabs
           value={activeTab}
           onValueChange={onTabChange}
-          className="w-full sticky z-10 bg-transparent"
-          style={{ top: stickyOffset }}
+          className="w-full z-10 bg-transparent"
         >
           <TabsList className="bg-transparent border-b border-[color:var(--border)] w-full justify-start rounded-none h-auto p-0 gap-4 mb-2 shadow-[0_4px_4px_-4px_rgba(0,0,0,0.1)] overflow-x-auto scrollbar-none">
             {tabs.map((tab) => (

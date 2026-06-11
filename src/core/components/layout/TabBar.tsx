@@ -216,10 +216,10 @@ export function TabBar() {
           scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
         }
       `}</style>
-      <div className="tab-bar-wrapper absolute bottom-0 left-0 right-0 z-50">
+      <div className="tab-bar-wrapper relative z-50 shrink-0">
         <div
           ref={containerRef}
-          className="tab-bar-inner flex items-center px-2 gap-0 bg-white dark:bg-zinc-950 border-t border-border relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
+          className="tab-bar-inner flex items-center px-2 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}
