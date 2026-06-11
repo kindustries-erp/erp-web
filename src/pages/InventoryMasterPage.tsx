@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Pencil, Plus } from "lucide-react";
+import { Boxes, Pencil, Plus, RefreshCw } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -113,13 +113,23 @@ export function InventoryMasterPage() {
     [],
   );
 
-  const filter = useFilterPanel(filterConfig);
+  const filterUom = useFilterPanel(filterConfig);
+  const filterItemType = useFilterPanel(filterConfig);
+  const filter = activeTab === "uom" ? filterUom : filterItemType;
 
-  const currentSearch = filter.state.search.trim();
-  const currentIsActive =
-    filter.state.status === "true"
+  const currentSearchUom = filterUom.state.search.trim();
+  const currentIsActiveUom =
+    filterUom.state.status === "true"
       ? true
-      : filter.state.status === "false"
+      : filterUom.state.status === "false"
+        ? false
+        : undefined;
+
+  const currentSearchItemType = filterItemType.state.search.trim();
+  const currentIsActiveItemType =
+    filterItemType.state.status === "true"
+      ? true
+      : filterItemType.state.status === "false"
         ? false
         : undefined;
 
@@ -130,8 +140,8 @@ export function InventoryMasterPage() {
       const res = await inventoryCoreApi.listUoms({
         page: 1,
         pageSize: 200,
-        search: currentSearch || undefined,
-        isActive: currentIsActive,
+        search: currentSearchUom || undefined,
+        isActive: currentIsActiveUom,
       });
       setUoms(res.items);
     } catch (e) {
@@ -139,7 +149,7 @@ export function InventoryMasterPage() {
     } finally {
       setLoadingUoms(false);
     }
-  }, [currentIsActive, currentSearch]);
+  }, [currentIsActiveUom, currentSearchUom]);
 
   const loadItemTypes = useCallback(async () => {
     setLoadingItemTypes(true);
@@ -148,8 +158,8 @@ export function InventoryMasterPage() {
       const res = await inventoryCoreApi.listItemTypes({
         page: 1,
         pageSize: 200,
-        search: currentSearch || undefined,
-        isActive: currentIsActive,
+        search: currentSearchItemType || undefined,
+        isActive: currentIsActiveItemType,
       });
       setItemTypes(res.items);
     } catch (e) {
@@ -159,7 +169,7 @@ export function InventoryMasterPage() {
     } finally {
       setLoadingItemTypes(false);
     }
-  }, [currentIsActive, currentSearch]);
+  }, [currentIsActiveItemType, currentSearchItemType]);
 
   useEffect(() => {
     if (activeTab === "uom") {
@@ -279,8 +289,20 @@ export function InventoryMasterPage() {
       title="Thiết lập danh mục kho"
       desc="Quản lý tập trung đơn vị tính và loại item áp dụng cho danh mục kho."
       icon={<Boxes className="h-5 w-5" />}
-      actions={
+      tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
+      activeTab={activeTab}
+      onTabChange={(value) => setActiveTab(value as MasterKind)}
+    >
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={reloadCurrentTab}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-muted"
+            title="Tải lại"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
           <FilterButton
             onClick={filter.togglePanel}
             activeCount={filter.activeFilterCount}
@@ -288,17 +310,13 @@ export function InventoryMasterPage() {
           <button
             type="button"
             onClick={() => openCreate(activeTab)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
           >
             <Plus className="h-3.5 w-3.5" />
-            Tạo mới
+            Tạo mới {activeTab === "uom" ? "đơn vị tính" : "loại item"}
           </button>
         </div>
-      }
-      tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
-      activeTab={activeTab}
-      onTabChange={(value) => setActiveTab(value as MasterKind)}
-    >
+      </div>
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <section>

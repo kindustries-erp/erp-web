@@ -8,10 +8,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Boxes,
   PackageOpen,
+  PackagePlus,
+  PackageMinus,
   Pencil,
   Plus,
   ReceiptText,
   XCircle,
+  RefreshCw,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -307,8 +310,18 @@ export function ErpWarehousePage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchInputs, setSearchInputs] = useState<Record<TabFilter, string>>({
+    all: "",
+    receipt: "",
+    issue: "",
+  });
+  const [searches, setSearches] = useState<Record<TabFilter, string>>({
+    all: "",
+    receipt: "",
+    issue: "",
+  });
+  const searchInput = searchInputs[tabFilter];
+  const search = searches[tabFilter];
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── GR drawer state
@@ -713,8 +726,8 @@ export function ErpWarehousePage() {
     setDateTo: () => {},
     setChannel: () => {},
     setSearchInput: (value: string) => {
-      setSearchInput(value);
-      setSearch(value);
+      setSearchInputs((prev) => ({ ...prev, [tabFilter]: value }));
+      setSearches((prev) => ({ ...prev, [tabFilter]: value }));
       setPage(1);
     },
     setAmountMinInput: () => {},
@@ -728,49 +741,13 @@ export function ErpWarehousePage() {
       }
     },
     resetAll: () => {
-      setSearchInput("");
-      setSearch("");
-      setTabFilter("all");
+      setSearchInputs((prev) => ({ ...prev, [tabFilter]: "" }));
+      setSearches((prev) => ({ ...prev, [tabFilter]: "" }));
       setPage(1);
     },
     hasActiveFilter: activeFilterCount > 0,
     activeFilterCount,
   };
-
-  const tabChips = (
-    <div className="flex flex-wrap items-center gap-2">
-      {(
-        [
-          {
-            key: "all" as TabFilter,
-            label: "Tất cả",
-            count: grTotal + giTotal,
-          },
-          { key: "receipt" as TabFilter, label: "Nhập kho", count: grTotal },
-          { key: "issue" as TabFilter, label: "Xuất kho", count: giTotal },
-        ] as const
-      ).map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => {
-            setTabFilter(t.key);
-            setPage(1);
-          }}
-          className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-            tabFilter === t.key
-              ? "bg-primary text-primary-fg"
-              : "bg-muted/40 text-muted-foreground hover:bg-muted"
-          }`}
-        >
-          {t.label}
-          <span className="ml-1 opacity-60">({t.count})</span>
-        </button>
-      ))}
-    </div>
-  );
-
-  const tableFilters = <div className="space-y-3">{tabChips}</div>;
 
   // ── GR drawer actions
   const grDrawerActions: DrawerAction[] = grViewOnly
@@ -812,31 +789,60 @@ export function ErpWarehousePage() {
         title="Chứng từ kho"
         desc="Quản lý phiếu nhập kho và xuất kho."
         icon={<Boxes className="h-5 w-5" />}
-        actions={
+        tabs={[
+          { value: "all", label: `Tất cả (${grTotal + giTotal})` },
+          { value: "receipt", label: `Nhập kho (${grTotal})` },
+          { value: "issue", label: `Xuất kho (${giTotal})` },
+        ]}
+        activeTab={tabFilter}
+        onTabChange={(value) => {
+          setTabFilter(value as TabFilter);
+          setPage(1);
+        }}
+      >
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (tabFilter !== "issue") void loadReceipts();
+                if (tabFilter !== "receipt") void loadIssues();
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-muted"
+              title="Tải lại"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
             <FilterButton
               onClick={() => setFilterPanelOpen((v) => !v)}
               activeCount={activeFilterCount}
             />
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-              onClick={openGrCreate}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Nhập kho
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-              onClick={openGiCreate}
-            >
-              <PackageOpen className="h-3.5 w-3.5" />
-              Xuất kho
-            </button>
+            {tabFilter !== "issue" && (
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium ${
+                  tabFilter === "receipt"
+                    ? "bg-primary text-primary-fg hover:bg-primary/90"
+                    : "border border-border hover:bg-muted"
+                }`}
+                onClick={openGrCreate}
+              >
+                <PackagePlus className="h-3.5 w-3.5" />
+                Nhập kho
+              </button>
+            )}
+            {tabFilter !== "receipt" && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+                onClick={openGiCreate}
+              >
+                <PackageMinus className="h-3.5 w-3.5" />
+                Xuất kho
+              </button>
+            )}
           </div>
-        }
-      >
+        </div>
         {loadError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {loadError}
@@ -851,7 +857,6 @@ export function ErpWarehousePage() {
               getRowKey={(r) => `${r.kind}-${r.id}`}
               loading={loading}
               emptyLabel="Chưa có chứng từ kho."
-              filters={tableFilters}
               minWidth={780}
               loadingRows={8}
               actionsColumn={{
