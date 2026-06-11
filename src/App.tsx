@@ -16,6 +16,7 @@ import { Kho } from "@/pages/Inventory";
 import { MfgItems } from "@/pages/MfgItems";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
+import { ErpWarehousePage } from "@/pages/ErpWarehousePage";
 import { ErpGoodsReceiptsPage } from "@/pages/ErpGoodsReceiptsPage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
@@ -38,6 +39,7 @@ const CORE_PAGES = [
   "mfg-purchase-orders",
   "mfg-vehicles",
   "erp-bom",
+  "erp-warehouse",
   "erp-goods-receipts",
   "erp-production",
   "erp-sales-orders",
@@ -104,6 +106,7 @@ export default function App() {
               {currentPage === "mfg-items" && <MfgItems />}
               {currentPage === "mfg-vehicles" && <MfgVehicles />}
               {currentPage === "erp-bom" && <ErpBomPage />}
+              {currentPage === "erp-warehouse" && <ErpWarehousePage />}
               {currentPage === "erp-goods-receipts" && <ErpGoodsReceiptsPage />}
               {currentPage === "erp-production" && <ErpProductionPage />}
               {currentPage === "erp-sales-orders" && <ErpSalesOrdersPage />}

@@ -197,18 +197,10 @@ export function Sidebar() {
               <NavItem
                 collapsed={c}
                 icon={<IconBox />}
-                label={t("nav.items.erpGoodsReceipts")}
-                active={currentPage === "erp-goods-receipts"}
-                onClick={() => navTo("erp-goods-receipts")}
-                contextPage="erp-goods-receipts"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<IconShop />}
-                label={t("nav.items.erpGoodsIssues")}
-                active={currentPage === "erp-goods-issues"}
-                onClick={() => navTo("erp-goods-issues")}
-                contextPage="erp-goods-issues"
+                label={t("nav.items.erpWarehouse")}
+                active={currentPage === "erp-warehouse"}
+                onClick={() => navTo("erp-warehouse")}
+                contextPage="erp-warehouse"
               />
               <NavItem
                 collapsed={c}
