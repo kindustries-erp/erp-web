@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ChevronDown,
-  ChevronRight,
   FileText,
   Link2,
   Pencil,
@@ -10,9 +8,7 @@ import {
   Repeat,
   Warehouse,
 } from "lucide-react";
-import { cn } from "@/shared/utils";
 import { useUIStore } from "@/core/config/uiStore";
-import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import {
@@ -51,15 +47,6 @@ import {
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
-import {
-  purchaseOrdersCoreApi,
-  type ErpPoReceipt,
-} from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import {
-  inventoryCoreApi,
-  type InventoryMovement,
-  type InventoryMovementsPayload,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -73,6 +60,7 @@ const variantConfig: Record<
   purchase: {
     title: "Mua hàng nhập kho",
     desc: "Phụ tùng, nguyên vật liệu; có thể định kỳ và trigger nhập kho.",
+    cta: "Tạo đơn mua mẫu",
   },
   expenses: {
     title: "Chi phí vận hành",
@@ -108,178 +96,8 @@ function normalizeDate(value?: string | null) {
   return value ? String(value).slice(0, 10) : "";
 }
 
-function normalizeDateTime(value?: string | null) {
-  if (!value) return "";
-  try {
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  } catch {
-    return String(value);
-  }
-}
-
 function today() {
   return normalizeDate(new Date().toISOString());
-}
-
-function fmtQty(value?: number | string | null) {
-  if (value == null) return "0";
-  const n = Number(value);
-  if (Number.isNaN(n)) return String(value);
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  }).format(n);
-}
-
-function movementLabel(m: InventoryMovement) {
-  const type = m.transactionType || "—";
-  const doc = m.documentType ? ` • ${m.documentType}` : "";
-  return `${type}${doc}`;
-}
-
-function InventoryTimelineBlock({
-  itemId,
-  loadingId,
-  error,
-  data,
-}: {
-  itemId: string;
-  loadingId: string | null;
-  error: string | null;
-  data?: InventoryMovementsPayload;
-}) {
-  const isLoading = loadingId === itemId;
-
-  if (isLoading) {
-    return (
-      <div className="rounded-xl border border-border bg-muted/20 px-4 py-4 text-sm text-muted-foreground">
-        Đang tải lịch sử xuất nhập kho...
-      </div>
-    );
-  }
-
-  if (error && !data) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
-        {error}
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  return (
-    <div className="rounded-xl border border-border bg-muted/10 p-4 space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-foreground">
-            Timeline xuất / nhập kho
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {data.item.sku} — {data.item.itemName} • Tồn hiện tại:{" "}
-            <span className="font-semibold text-foreground">
-              {fmtQty(data.currentOnHand)}
-            </span>{" "}
-            {data.item.uom}
-          </div>
-        </div>
-      </div>
-
-      {data.movements.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-          Chưa có phát sinh xuất nhập kho.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {data.movements.map((m) => {
-            const isIn = Number(m.qtyIn || 0) > 0;
-            const qty = isIn ? m.qtyIn : m.qtyOut;
-            return (
-              <div
-                key={m.id}
-                className="rounded-xl border border-border bg-background px-4 py-3"
-              >
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={
-                          isIn
-                            ? "inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                            : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200"
-                        }
-                      >
-                        {isIn ? "Nhập" : "Xuất"}
-                      </span>
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {movementLabel(m)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Ngày giao dịch:{" "}
-                      <span className="text-foreground font-medium">
-                        {normalizeDate(m.transactionDate)}
-                      </span>
-                    </div>
-                    {m.notes ? (
-                      <div className="text-xs text-muted-foreground">
-                        Ghi chú: {m.notes}
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 text-xs md:min-w-[300px] shrink-0">
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        {isIn ? "Số lượng nhập" : "Số lượng xuất"}
-                      </div>
-                      <div
-                        className={
-                          isIn
-                            ? "font-semibold text-emerald-700"
-                            : "font-semibold text-amber-700"
-                        }
-                      >
-                        {isIn ? "+" : "-"}
-                        {fmtQty(qty)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Số dư sau mốc
-                      </div>
-                      <div className="font-semibold text-foreground">
-                        {fmtQty(m.balanceAfter)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Đơn giá
-                      </div>
-                      <div className="font-medium text-foreground">
-                        {m.unitCost == null ? "—" : fmtQty(m.unitCost)}
-                      </div>
-                    </div>
-                    <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-                      <div className="text-muted-foreground mb-0.5">
-                        Ngày ghi nhận
-                      </div>
-                      <div className="font-medium text-foreground">
-                        {normalizeDate(m.createdAt)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
 }
 
 function docNo(row: OperationalDocument) {
@@ -331,7 +149,7 @@ function inventoryStatusLabel(status?: string | null) {
 function canPostReceipt(row: OperationalDocument, variant: OperationalVariant) {
   return (
     variant === "purchase" &&
-    row.status === "RECEIVED" &&
+    row.status === "CONFIRMED" &&
     row.inventory_status !== "FULLY_RECEIVED"
   );
 }
@@ -365,7 +183,16 @@ function buildSamplePayload(
       ],
     };
   }
-
+  if (variant === "purchase") {
+    return {
+      supplier_name_snapshot: "Nhà cung cấp mẫu",
+      status: "CONFIRMED",
+      invoice_status: "NO_INVOICE",
+      recurrence_type: "ONE_TIME",
+      total_amount: 2500000,
+      lines: [{ item_name: "Phụ tùng mẫu", qty: 2, unit_price: 1250000 }],
+    };
+  }
   if (variant === "expenses") {
     return {
       supplier_name_snapshot: "NCC dịch vụ mẫu",
@@ -381,152 +208,12 @@ function buildSamplePayload(
   return null;
 }
 
-function PurchaseSubRow({ rowId }: { rowId: string }) {
-  const [detail, setDetail] = useState<OperationalDocument | null>(null);
-  const [receipts, setReceipts] = useState<ErpPoReceipt[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const t = useT();
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      setLoading(true);
-      try {
-        const doc = await operationalApi.getDocument("purchase_orders", rowId);
-        if (active) setDetail(doc);
-        const po = await purchaseOrdersCoreApi.get(rowId);
-        if (active) setReceipts(po.receipts || []);
-      } catch (e) {
-        if (active) setError(t("Không tải được chi tiết dòng"));
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [rowId, t]);
-
-  if (loading)
-    return (
-      <div className="pl-4 py-2 text-xs text-[color:var(--muted-fg)] animate-pulse">
-        {t("Đang tải chi tiết...")}
-      </div>
-    );
-  if (error)
-    return (
-      <div className="pl-4 py-2 text-xs text-red-500 font-medium">
-        ⚠️ {error}
-      </div>
-    );
-  if (!detail) return null;
-
-  return (
-    <div className="flex flex-col md:flex-row gap-6 pl-4 border-l border-dashed border-[color:var(--border)]/40 ml-2.5 mt-1 mb-2">
-      <div className="flex-1 space-y-1">
-        <div className="text-xs font-semibold text-[color:var(--muted-fg)] mb-1 uppercase tracking-wider">
-          {t("Chi tiết")}
-        </div>
-        {!detail.lines || detail.lines.length === 0 ? (
-          <div className="text-xs text-[color:var(--muted-fg)] italic">
-            {t("Không có dòng chi tiết.")}
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {detail.lines.map((line, idx) => (
-              <div
-                key={line.id || idx}
-                className="text-xs flex items-center justify-between py-1.5 hover:bg-[color:var(--muted)]/80 rounded px-2 transition-all duration-150 gap-4"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-4 h-4 flex items-center justify-center text-[color:var(--muted-fg)]/30 text-[10px] shrink-0">
-                    •
-                  </span>
-                  <span className="font-medium text-[color:var(--foreground)]/90 truncate">
-                    {line.item_name ||
-                      line.description ||
-                      `${t("Dòng")} ${idx + 1}`}
-                    {line.item_code && (
-                      <span className="text-[color:var(--muted-fg)] ml-1.5 font-normal">
-                        ({line.item_code})
-                      </span>
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0 text-[11px] text-[color:var(--muted-fg)]">
-                  <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full min-w-[32px] text-center">
-                    {Number(line.qty || 0).toLocaleString("vi-VN")}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="w-full md:w-72 shrink-0 space-y-1">
-        <div className="text-xs font-semibold text-[color:var(--muted-fg)] mb-1 uppercase tracking-wider">
-          {t("Lịch sử nhập kho")}
-        </div>
-        {receipts.length === 0 ? (
-          <div className="text-xs text-[color:var(--muted-fg)] italic px-2">
-            {t("Chưa có lịch sử nhập.")}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {receipts.map((receipt) => (
-              <div
-                key={receipt.id}
-                className="bg-surface border border-[color:var(--border)] rounded px-3 py-2 text-xs hover:border-primary/30 transition-colors"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-medium">{receipt.receiptNo}</span>
-                  <span className="text-[color:var(--muted-fg)]">
-                    {receipt.receiptDate
-                      ? receipt.receiptDate.slice(0, 10)
-                      : "—"}{" "}
-                    · {t(receipt.status || "—")}
-                  </span>
-                </div>
-                {receipt.remarks && (
-                  <div className="text-[color:var(--muted-fg)] mb-1.5">
-                    {receipt.remarks}
-                  </div>
-                )}
-                <div className="space-y-1 mt-1 border-t border-[color:var(--border)] pt-1.5">
-                  {(receipt.lines || []).map((line, idx) => (
-                    <div
-                      key={line.id || idx}
-                      className="flex justify-between text-[color:var(--muted-fg)]"
-                    >
-                      <span>
-                        {t("Dòng")} {line.lineNo || idx + 1}
-                      </span>
-                      <span className="font-medium text-[color:var(--foreground)]/80">
-                        {t("Nhận:")}{" "}
-                        {Number(line.qtyReceived || 0).toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function OperationalListPage({
   variant,
 }: {
   variant: OperationalVariant;
 }) {
   const t = useT();
-  const navigate = useAppStore((s) => s.navigate);
   const showToast = useUIStore((s) => s.showToast);
   const config = variantConfig[variant];
 
@@ -534,14 +221,6 @@ export function OperationalListPage({
   const [stockItems, setStockItems] = useState<InventoryStockRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expandedStockItemId, setExpandedStockItemId] = useState<string | null>(
-    null,
-  );
-  const [movLoadingId, setMovLoadingId] = useState<string | null>(null);
-  const [movError, setMovError] = useState<string | null>(null);
-  const [movMap, setMovMap] = useState<
-    Record<string, InventoryMovementsPayload>
-  >({});
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -556,45 +235,11 @@ export function OperationalListPage({
     Array<{ value: string; label: string }>
   >([]);
   const [formOpen, setFormOpen] = useState(false);
-  const [viewOnly, setViewOnly] = useState(false);
-  const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
-    {},
-  );
   const [editingRow, setEditingRow] = useState<OperationalDocument | null>(
     null,
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
-  const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
-
-  function toggleExpand(id: string) {
-    setExpandedRowIds((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  }
-
-  async function handleToggleInventoryExpand(row: InventoryStockRow) {
-    if (expandedStockItemId === row.inventory_item_id) {
-      setExpandedStockItemId(null);
-      setMovError(null);
-      return;
-    }
-    setExpandedStockItemId(row.inventory_item_id);
-    setMovError(null);
-    if (movMap[row.inventory_item_id]) return;
-    setMovLoadingId(row.inventory_item_id);
-    try {
-      const data = await inventoryCoreApi.movements(row.inventory_item_id);
-      setMovMap((prev) => ({ ...prev, [row.inventory_item_id]: data }));
-    } catch (e) {
-      setMovError(
-        e instanceof Error ? e.message : "Không thể tải lịch sử xuất nhập kho",
-      );
-    } finally {
-      setMovLoadingId(null);
-    }
-  }
 
   const {
     activeStep,
@@ -856,25 +501,6 @@ export function OperationalListPage({
   async function openDetail(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
-
-    if (variant === "purchase") {
-      setLoading(true);
-      setError(null);
-      try {
-        const document = await operationalApi.getDocument(documentType, row.id);
-        const po = await purchaseOrdersCoreApi.get(row.id);
-        setPoReceipts(po.receipts || []);
-        setEditingRow(document);
-        setViewOnly(true);
-        setFormOpen(true);
-      } catch (err) {
-        setError(extractApiError(err, t("Không tải được chi tiết chứng từ")));
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
     setRootContext(row, documentType);
     setActiveStep("detail");
     setDetailState({
@@ -886,16 +512,6 @@ export function OperationalListPage({
       const document = await operationalApi.getDocument(documentType, row.id);
       setRootContext(document, documentType);
       setDetailState({ detailDocument: document });
-      if (documentType === "purchase_orders") {
-        try {
-          const po = await purchaseOrdersCoreApi.get(row.id);
-          setPoReceipts(po.receipts || []);
-        } catch {
-          setPoReceipts([]);
-        }
-      } else {
-        setPoReceipts([]);
-      }
     } catch (err) {
       setDetailState({
         detailError: extractApiError(err, "Không tải được chi tiết chứng từ"),
@@ -912,15 +528,6 @@ export function OperationalListPage({
   async function openPostingDrawer(row: OperationalDocument) {
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
-    if (documentType === "purchase_orders") {
-      navigate("erp-goods-receipts");
-      const params = new URLSearchParams(window.location.search);
-      params.set("purchaseOrderId", row.id);
-      params.set("mode", "from-po");
-      const nextPath = `${window.location.pathname}?${params.toString()}`;
-      history.replaceState(null, "", nextPath);
-      return;
-    }
     setPostingState({ postingLoading: true });
     setError(null);
     try {
@@ -1171,32 +778,11 @@ export function OperationalListPage({
     () => [
       {
         key: "po_no",
-        header: t("Số PO"),
+        header: "Số PO",
         className: "align-top min-w-[140px]",
-        cell: (row) => {
-          const rowKey = `${row.document_type || variant}-${row.id}`;
-          const isExpanded = !!expandedRowIds[rowKey];
-          return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpand(rowKey);
-              }}
-              className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
-            >
-              <span className="font-semibold text-primary">
-                {row.purchase_no || "—"}
-              </span>
-              <ChevronRight
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
-                  isExpanded && "rotate-90 text-primary",
-                )}
-              />
-            </button>
-          );
-        },
+        cell: (row) => (
+          <span className="font-medium text-sm">{row.purchase_no || "—"}</span>
+        ),
       },
       {
         key: "supplier",
@@ -1211,14 +797,14 @@ export function OperationalListPage({
       {
         key: "order_date",
         header: "Ngày đặt",
-        className: "align-top min-w-[150px]",
-        cell: (row) => normalizeDateTime(row.document_date) || "—",
+        className: "align-top min-w-[110px]",
+        cell: (row) => normalizeDate(row.document_date) || "—",
       },
       {
         key: "expected_date",
         header: "Ngày nhận DK",
-        className: "align-top min-w-[150px]",
-        cell: (row) => normalizeDateTime(row.due_date) || "—",
+        className: "align-top min-w-[120px]",
+        cell: (row) => normalizeDate(row.due_date) || "—",
       },
       {
         key: "po_status",
@@ -1227,12 +813,21 @@ export function OperationalListPage({
         cell: (row) => (
           <div className="flex flex-col gap-1">
             <StatusBadge status={row.status} />
-            <StatusBadge status={row.payment_status} />
             {row.inventory_status ? (
               <div className="text-xs text-[color:var(--muted-fg)]">
                 Kho: {inventoryStatusLabel(row.inventory_status)}
               </div>
             ) : null}
+          </div>
+        ),
+      },
+      {
+        key: "total_amount",
+        header: "Tổng tiền",
+        className: "align-top min-w-[140px] text-right",
+        cell: (row) => (
+          <div className="text-sm font-medium text-right">
+            {money(row.total_amount)}
           </div>
         ),
       },
@@ -1356,31 +951,6 @@ export function OperationalListPage({
   const stockColumns = useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
-        key: "expand",
-        header: "",
-        className: "align-top w-[44px]",
-        cell: (row) => {
-          const expanded = expandedStockItemId === row.inventory_item_id;
-          return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void handleToggleInventoryExpand(row);
-              }}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background hover:bg-muted"
-              title={expanded ? "Thu gọn" : "Xem lịch sử"}
-            >
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-          );
-        },
-      },
-      {
         key: "item",
         header: "Vật tư",
         className: "align-top min-w-[220px]",
@@ -1460,17 +1030,7 @@ export function OperationalListPage({
         cell: (row) => normalizeDate(row.last_transaction_date) || "—",
       },
     ],
-    [expandedStockItemId],
-  );
-
-  const expandedStockRowKeys = useMemo(
-    () =>
-      expandedStockItemId
-        ? stockItems
-            .filter((row) => row.inventory_item_id === expandedStockItemId)
-            .map((row) => `${row.inventory_item_id}-${row.branch_id || "all"}`)
-        : [],
-    [expandedStockItemId, stockItems],
+    [],
   );
 
   if (variant === "inventory") {
@@ -1504,15 +1064,6 @@ export function OperationalListPage({
               emptyLabel="Chưa có tồn kho."
               filters={filters}
               minWidth={760}
-              expandedRowKeys={expandedStockRowKeys}
-              renderSubRow={(row) => (
-                <InventoryTimelineBlock
-                  itemId={row.inventory_item_id}
-                  loadingId={movLoadingId}
-                  error={movError}
-                  data={movMap[row.inventory_item_id]}
-                />
-              )}
               page={page}
               pageSize={pageSize}
               total={total}
@@ -1640,10 +1191,9 @@ export function OperationalListPage({
                 <ActionDropdown
                   items={[
                     {
-                      label: t("Chi tiết"),
+                      label: "Chi tiết",
                       icon: <FileText className="h-4 w-4" />,
                       onClick: () => void openDetail(row),
-                      hidden: variant === "purchase",
                     },
                     {
                       label: "Sửa",
@@ -1699,14 +1249,6 @@ export function OperationalListPage({
                 />
               ),
             }}
-            renderSubRow={
-              variant === "purchase"
-                ? (item) => <PurchaseSubRow rowId={item.id} />
-                : undefined
-            }
-            expandedRowKeys={Object.keys(expandedRowIds).filter(
-              (key) => expandedRowIds[key],
-            )}
             page={page}
             pageSize={pageSize}
             total={total}
@@ -1864,51 +1406,6 @@ export function OperationalListPage({
                 </div>
               )}
             </DrawerSection>
-            {rootDocumentType === "purchase_orders" ? (
-              <DrawerSection title="Lịch sử nhập kho">
-                {poReceipts.length ? (
-                  <div className="space-y-3">
-                    {poReceipts.map((receipt) => (
-                      <div
-                        key={receipt.id}
-                        className="rounded-xl border border-border p-3 text-sm"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="font-medium">{receipt.receiptNo}</div>
-                          <div className="text-xs text-[color:var(--muted-fg)]">
-                            {normalizeDate(receipt.receiptDate) || "—"} ·{" "}
-                            {receipt.status || "—"}
-                          </div>
-                        </div>
-                        {receipt.remarks ? (
-                          <div className="mt-1 text-xs text-[color:var(--muted-fg)]">
-                            {receipt.remarks}
-                          </div>
-                        ) : null}
-                        <div className="mt-2 space-y-1">
-                          {(receipt.lines || []).map((line, idx) => (
-                            <div
-                              key={line.id || `${receipt.id}-${idx}`}
-                              className="text-xs text-[color:var(--muted-fg)]"
-                            >
-                              Dòng {line.lineNo || idx + 1}: nhận{" "}
-                              {Number(line.qtyReceived || 0).toLocaleString(
-                                "vi-VN",
-                              )}{" "}
-                              đơn vị
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-sm text-[color:var(--muted-fg)]">
-                    Chưa có lần nhập kho nào cho PO này.
-                  </div>
-                )}
-              </DrawerSection>
-            ) : null}
           </>
         ) : null}
       </DrawerModal>
@@ -2154,12 +1651,9 @@ export function OperationalListPage({
           variant={variant as "sales" | "purchase" | "expenses"}
           open={formOpen}
           editing={editingRow}
-          viewOnly={viewOnly}
-          poReceipts={poReceipts}
           onClose={() => {
             setFormOpen(false);
             setEditingRow(null);
-            setViewOnly(false);
           }}
           onSaved={async () => {
             await load();
