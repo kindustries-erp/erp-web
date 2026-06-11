@@ -29,7 +29,7 @@ export const ROUTES: RouteConfig[] = [
   { key: "employees", label: "Nhân sự", group: "hr" },
   { key: "sales", label: "Bán hàng", group: "sales" },
   { key: "customers", label: "Khách hàng", group: "sales" },
-  { key: "purchasing", label: "Mua hàng", group: "purchasing" },
+  { key: "purchasing", label: "Đơn mua hàng", group: "purchasing" },
   { key: "suppliers", label: "Nhà cung cấp", group: "purchasing" },
   { key: "permissions", label: "Phân quyền & Vai trò", group: "system" },
   { key: "settings-branch", label: "Chi nhánh", group: "settings" },

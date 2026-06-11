@@ -288,6 +288,7 @@ export function ErpBusinessPartnersPage({
             getRowKey={(item) => item.id}
             loading={loading}
             emptyLabel={`Chưa có ${title.toLowerCase()} nào.`}
+            minWidth={980}
             actionsColumn={actionsColumn}
           />
         </div>

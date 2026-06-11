@@ -75,7 +75,7 @@ const variantConfig: Record<
     cta: "Tạo đơn sửa xe mẫu",
   },
   purchase: {
-    title: "Mua hàng nhập kho",
+    title: "Đơn mua hàng",
     desc: "Phụ tùng, nguyên vật liệu; có thể định kỳ và trigger nhập kho.",
   },
   expenses: {

@@ -10,6 +10,12 @@ import {
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import {
   DrawerModal,
   DrawerSection,
@@ -141,8 +147,24 @@ export function ErpSalesOrdersPage() {
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+    }),
+    [],
+  );
+  const filter = useFilterPanel(filterConfig);
+  const filterSearch = filter.state.search;
+
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch(filterSearch.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [filterSearch]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpSalesOrder | null>(null);
@@ -402,36 +424,6 @@ export function ErpSalesOrdersPage() {
     },
   ];
 
-  const filterBar = useMemo(
-    () => (
-      <>
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setPage(1);
-              setSearch(searchInput.trim());
-            }
-          }}
-          placeholder="Tìm số SO"
-          className={`${inputCls} min-w-[260px] bg-surface`}
-        />
-        <button
-          type="button"
-          onClick={() => {
-            setPage(1);
-            setSearch(searchInput.trim());
-          }}
-          className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
-        >
-          Search
-        </button>
-      </>
-    ),
-    [searchInput],
-  );
-
   const drawerActions: DrawerAction[] = [
     {
       label: viewOnly ? "Đóng" : "Hủy",
@@ -449,13 +441,22 @@ export function ErpSalesOrdersPage() {
 
   return (
     <PageLayout
-      title="ERP Sales Orders"
+      title="Đơn bán hàng"
       desc="Quản lý đơn bán hàng và reserve/unreserve tồn kho."
       icon={<Boxes className="h-5 w-5" />}
-      className="p-4 md:p-6"
     >
-      <div className="space-y-4">
-        <div>
+      <div className="flex items-center justify-end mb-3">
+        <TableActionGroup
+          onRefresh={() => void loadOrders()}
+          loading={loading}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={openCreate}
+          createLabel="Tạo mới"
+        />
+      </div>
+      <div className="flex items-start">
+        <div className="min-w-0 flex-1 space-y-4">
           <DataTable
             items={items}
             columns={columns}
@@ -463,7 +464,7 @@ export function ErpSalesOrdersPage() {
             loading={loading}
             error={error}
             emptyLabel="Chưa có sales order nào"
-            filters={filterBar}
+            minWidth={980}
             page={page}
             pageSize={pageSize}
             total={total}
@@ -474,18 +475,6 @@ export function ErpSalesOrdersPage() {
               setPage(1);
             }}
             actionsColumn={{
-              header: (
-                <button
-                  type="button"
-                  onClick={openCreate}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-fg hover:opacity-90"
-                >
-                  <Plus className="h-4 w-4" />
-                  Tạo SO
-                </button>
-              ),
-              className: "align-top",
-              headerClassName: "w-[120px] text-right",
               cell: (item: ErpSalesOrder) => (
                 <div className="flex justify-end">
                   <ActionDropdown
@@ -521,6 +510,7 @@ export function ErpSalesOrdersPage() {
             }}
           />
         </div>
+        <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
       <DrawerModal
