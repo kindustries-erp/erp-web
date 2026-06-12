@@ -829,16 +829,6 @@ export function ErpWarehousePage() {
         title="Chứng từ kho"
         desc="Quản lý phiếu nhập kho và xuất kho."
         icon={<ClipboardList className="h-5 w-5" />}
-        tabs={[
-          { value: "all", label: `Tất cả (${grTotal + giTotal})` },
-          { value: "receipt", label: `Nhập kho (${grTotal})` },
-          { value: "issue", label: `Xuất kho (${giTotal})` },
-        ]}
-        activeTab={tabFilter}
-        onTabChange={(value) => {
-          setTabFilter(value as TabFilter);
-          setPage(1);
-        }}
       >
         <div className="flex items-center justify-end mb-3">
           <div className="flex items-center gap-2">
@@ -861,30 +851,22 @@ export function ErpWarehousePage() {
               onClick={() => setFilterPanelOpen((v) => !v)}
               activeCount={activeFilterCount}
             />
-            {tabFilter !== "issue" && (
-              <button
-                type="button"
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium ${
-                  tabFilter === "receipt"
-                    ? "bg-primary text-primary-fg hover:bg-primary/90"
-                    : "border border-border hover:bg-muted"
-                }`}
-                onClick={openGrCreate}
-              >
-                <PackagePlus className="h-3.5 w-3.5" />
-                Nhập kho
-              </button>
-            )}
-            {tabFilter !== "receipt" && (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-                onClick={openGiCreate}
-              >
-                <PackageMinus className="h-3.5 w-3.5" />
-                Xuất kho
-              </button>
-            )}
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+              onClick={openGrCreate}
+            >
+              <PackagePlus className="h-3.5 w-3.5" />
+              Nhập kho
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+              onClick={openGiCreate}
+            >
+              <PackageMinus className="h-3.5 w-3.5" />
+              Xuất kho
+            </button>
           </div>
         </div>
         {loadError && (
