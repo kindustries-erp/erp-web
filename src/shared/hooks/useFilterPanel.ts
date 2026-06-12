@@ -45,6 +45,7 @@ export interface FilterPanelConfig {
     placeholder: string;
     options: FilterOption[];
     type?: "select" | "multi-select";
+    initialValue?: string;
   }>;
 }
 
@@ -113,7 +114,13 @@ export function useFilterPanel(
   const [amountMax, setAmountMax] = useState("");
   const [status, setStatusRaw] = useState("");
   const [counterpartySource, setCounterpartySourceRaw] = useState("");
-  const [custom, setCustomRaw] = useState<Record<string, string>>({});
+  const [custom, setCustomRaw] = useState<Record<string, string>>(() => {
+    const s: Record<string, string> = {};
+    config.custom?.forEach((c) => {
+      if (c.initialValue) s[c.key] = c.initialValue;
+    });
+    return s;
+  });
 
   // Input display values (before debounce)
   const [searchInput, setSearchInputRaw] = useState("");
@@ -261,9 +268,14 @@ export function useFilterPanel(
     setAmountMaxInputRaw("");
     setStatusRaw("");
     setCounterpartySourceRaw("");
-    setCustomRaw({});
+
+    const initialCustomState: Record<string, string> = {};
+    config.custom?.forEach((c) => {
+      if (c.initialValue) initialCustomState[c.key] = c.initialValue;
+    });
+    setCustomRaw(initialCustomState);
     notify();
-  }, [config.period, notify]);
+  }, [config, notify]);
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
@@ -282,7 +294,10 @@ export function useFilterPanel(
       !!amountMax ||
       !!status ||
       !!counterpartySource ||
-      Object.values(custom).some(Boolean)
+      Object.entries(custom).some(([k, v]) => {
+        const c = config.custom?.find((x) => x.key === k);
+        return c?.initialValue ? v !== c.initialValue : !!v;
+      })
     );
   }, [
     period,
@@ -314,7 +329,10 @@ export function useFilterPanel(
     if (amountMin || amountMax) count++;
     if (status) count++;
     if (counterpartySource) count++;
-    count += Object.values(custom).filter(Boolean).length;
+    count += Object.entries(custom).filter(([k, v]) => {
+      const c = config.custom?.find((x) => x.key === k);
+      return c?.initialValue ? v !== c.initialValue : !!v;
+    }).length;
     return count;
   }, [
     period,

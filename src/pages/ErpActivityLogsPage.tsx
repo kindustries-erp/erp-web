@@ -56,6 +56,7 @@ export function ErpActivityLogsPage() {
           label: "Hành động (Method)",
           placeholder: "Tất cả hành động",
           type: "multi-select",
+          initialValue: "POST,PUT,PATCH,DELETE",
           options: [
             { value: "GET", label: "GET" },
             { value: "POST", label: "POST" },
