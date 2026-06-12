@@ -29,6 +29,7 @@ import {
 import { ErpUsersPage } from "@/pages/ErpUsersPage";
 import { ErpEmployeesPage } from "@/pages/ErpEmployeesPage";
 import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
+import { ErpPermissionsCorePage } from "@/pages/ErpPermissionsCorePage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -53,6 +54,7 @@ const CORE_PAGES = [
   "erp-employees",
   "erp-users",
   "erp-activity-logs",
+  "erp-permissions-core",
 ] as const;
 
 export default function App() {
@@ -276,6 +278,17 @@ export default function App() {
                   }
                 >
                   <ErpActivityLogsPage />
+                </div>
+              )}
+              {openTabs.includes("erp-permissions-core") && (
+                <div
+                  className={
+                    currentPage === "erp-permissions-core"
+                      ? "block h-full"
+                      : "hidden"
+                  }
+                >
+                  <ErpPermissionsCorePage />
                 </div>
               )}
               {!(CORE_PAGES as readonly string[]).includes(currentPage) && (
