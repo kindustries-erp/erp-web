@@ -6,11 +6,11 @@ const mockBootstrapAction = vi.fn();
 const mockSyncFromUrl = vi.fn();
 
 let appState = {
-  currentPage: "dashboard",
+  currentPage: "purchasing",
   isLoggedIn: true,
   syncFromUrl: mockSyncFromUrl,
   forbidden: true,
-  openTabs: ["dashboard"],
+  openTabs: ["purchasing"],
 };
 
 vi.mock("@/core/config/appStore", () => ({
@@ -52,7 +52,7 @@ vi.mock("@/ReloadPrompt", () => ({
 }));
 
 vi.mock("@/shared/utils/pageUrl", () => ({
-  pathToPage: () => ({ page: "dashboard" }),
+  pathToPage: () => ({ page: "purchasing" }),
 }));
 
 vi.mock("@/pages/Dashboard", () => ({
@@ -102,18 +102,18 @@ describe("App forbidden handling", () => {
     mockBootstrapAction.mockClear();
     mockSyncFromUrl.mockClear();
     appState = {
-      currentPage: "dashboard",
+      currentPage: "purchasing",
       isLoggedIn: true,
       syncFromUrl: mockSyncFromUrl,
       forbidden: true,
-      openTabs: ["dashboard"],
+      openTabs: ["purchasing"],
     };
   });
 
   it("renders the current page instead of the 403 error page when logged in", () => {
     render(<App />);
 
-    expect(screen.getByText("dashboard-page")).toBeInTheDocument();
+    expect(screen.getByText("purchasing-page")).toBeInTheDocument();
     expect(screen.queryByText("error-page-403")).not.toBeInTheDocument();
   });
 });

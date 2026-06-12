@@ -73,7 +73,7 @@ export default function App() {
         syncFromUrl(parsed.page);
       } else {
         history.replaceState(null, "", "/");
-        syncFromUrl("dashboard");
+        syncFromUrl("purchasing");
       }
     };
     sync();
