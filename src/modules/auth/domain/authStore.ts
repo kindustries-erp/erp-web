@@ -72,6 +72,29 @@ function profileToEmployee(p: CoreProfileResponse): Employee {
   };
 }
 
+function mapCorePermissionsToEffective(
+  corePermissions?: CoreProfileResponse["permissions"],
+): EffectiveCollectionPermission[] {
+  if (!corePermissions) return [];
+
+  const map = new Map<string, Set<string>>();
+  for (const p of corePermissions) {
+    if (!map.has(p.resource)) {
+      map.set(p.resource, new Set());
+    }
+    map.get(p.resource)!.add(p.action);
+  }
+
+  const result: EffectiveCollectionPermission[] = [];
+  map.forEach((actions, resource) => {
+    result.push({
+      collection: resource,
+      actions: Array.from(actions),
+    });
+  });
+  return result;
+}
+
 // ── State interface — compat với consumers cũ ─────────────────────────────────
 
 interface AuthState {
@@ -142,7 +165,12 @@ export const useAuthStore = create<AuthState>()(
           // Best-effort: load full profile
           try {
             const raw = await getProfileApi();
-            set({ employee: profileToEmployee(raw) });
+            set({
+              employee: profileToEmployee(raw),
+              effectivePermissions: mapCorePermissionsToEffective(
+                raw.permissions,
+              ),
+            });
           } catch {
             // non-blocking
           }
@@ -204,7 +232,13 @@ export const useAuthStore = create<AuthState>()(
             email: raw.email,
             status: raw.status,
           };
-          set({ profile, employee: profileToEmployee(raw) });
+          set({
+            profile,
+            employee: profileToEmployee(raw),
+            effectivePermissions: mapCorePermissionsToEffective(
+              raw.permissions,
+            ),
+          });
           useAppStore.getState().login();
         } catch {
           useAuthStore.getState().clearAuth();
@@ -221,6 +255,7 @@ export const useAuthStore = create<AuthState>()(
         accessToken: s.accessToken,
         profile: s.profile,
         employee: s.employee,
+        effectivePermissions: s.effectivePermissions,
       }),
     },
   ),

@@ -1,16 +1,22 @@
-// ERP core hiện chưa dùng Directus RBAC.
-// Giữ API hook cũ để không vỡ component, nhưng luôn allow.
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 
-export function useHasPermission(
-  _collection: string,
-  _action = "read",
-): boolean {
-  return true;
+export function useHasPermission(collection: string, action = "read"): boolean {
+  const permissions = useAuthStore((s) => s.effectivePermissions);
+  return permissions.some(
+    (p) =>
+      (p.collection === collection || p.collection === "*") &&
+      (p.actions.includes(action) || p.actions.includes("*")),
+  );
 }
 
 export function useHasAnyPermission(
-  _collections: string[],
-  _action = "read",
+  collections: string[],
+  action = "read",
 ): boolean {
-  return true;
+  const permissions = useAuthStore((s) => s.effectivePermissions);
+  return permissions.some(
+    (p) =>
+      (collections.includes(p.collection) || p.collection === "*") &&
+      (p.actions.includes(action) || p.actions.includes("*")),
+  );
 }

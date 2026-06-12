@@ -21,6 +21,11 @@ export interface CoreProfileResponse {
   status: string;
   employeeId: string | null;
   legacyDirectusUserId: string | null;
+  permissions?: {
+    resource: string;
+    action: string;
+    conditions?: any;
+  }[];
   createdAt: string;
   updatedAt: string;
 }
