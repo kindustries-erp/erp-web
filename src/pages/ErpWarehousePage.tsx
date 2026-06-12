@@ -27,6 +27,8 @@ import {
   type FilterPanelConfig,
   type FilterPanelReturn,
 } from "@/shared/hooks/useFilterPanel";
+
+import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
 import {
   type DrawerAction,
   DrawerField,
@@ -411,6 +413,35 @@ export function ErpWarehousePage() {
   useEffect(() => {
     void loadIssues();
   }, [loadIssues]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const receiptId = params.get("receiptId");
+    const mode = params.get("mode");
+
+    if (!grDrawerOpen && receiptId && mode === "view") {
+      goodsReceiptsCoreApi
+        .get(receiptId)
+        .then((gr) => {
+          void openGrDetail(gr, true);
+        })
+        .catch(() => {
+          // silent
+        })
+        .finally(() => {
+          params.delete("receiptId");
+          params.delete("mode");
+          const nextQuery = params.toString();
+          history.replaceState(
+            null,
+            "",
+            nextQuery
+              ? `${window.location.pathname}?${nextQuery}`
+              : window.location.pathname,
+          );
+        });
+    }
+  }, [grDrawerOpen]);
 
   // ── Combine + sort by date desc
   const rows: WarehouseRow[] = useMemo(() => {
@@ -945,180 +976,194 @@ export function ErpWarehousePage() {
       </PageLayout>
 
       {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
-      <DrawerModal
-        open={grDrawerOpen}
-        onClose={() => setGrDrawerOpen(false)}
-        icon={<Boxes className="h-4 w-4" />}
-        title={
-          grEditing
-            ? grViewOnly
-              ? "Phiếu nhập kho"
-              : "Sửa nhập kho"
-            : "Tạo phiếu nhập kho"
-        }
-        subtitle={grEditing?.receiptNo ?? "Nhập kho"}
-        actions={grDrawerActions}
-      >
-        {grSaveError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {grSaveError}
-          </div>
-        )}
-        <DrawerSection title="Thông tin phiếu">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="Số phiếu">
-              <input
-                className={inputCls}
-                placeholder="Tự động nếu để trống"
-                value={grForm.receiptNo}
+      {grViewOnly && grEditing ? (
+        <GoodsReceiptViewDrawer
+          open={grDrawerOpen}
+          receiptId={grEditing.id}
+          onClose={() => setGrDrawerOpen(false)}
+        />
+      ) : (
+        <DrawerModal
+          open={grDrawerOpen}
+          onClose={() => setGrDrawerOpen(false)}
+          icon={<Boxes className="h-4 w-4" />}
+          title={
+            grEditing
+              ? grViewOnly
+                ? "Phiếu nhập kho"
+                : "Sửa nhập kho"
+              : "Tạo phiếu nhập kho"
+          }
+          subtitle={grEditing?.receiptNo ?? "Nhập kho"}
+          actions={grDrawerActions}
+        >
+          {grSaveError && (
+            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {grSaveError}
+            </div>
+          )}
+          <DrawerSection title="Thông tin phiếu">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <DrawerField label="Số phiếu">
+                <input
+                  className={inputCls}
+                  placeholder="Tự động nếu để trống"
+                  value={grForm.receiptNo}
+                  disabled={grViewOnly}
+                  onChange={(e) =>
+                    setGrForm((f) => ({ ...f, receiptNo: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Ngày nhập">
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={grForm.receiptDate}
+                  disabled={grViewOnly}
+                  onChange={(e) =>
+                    setGrForm((f) => ({ ...f, receiptDate: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Đơn mua hàng (PO)">
+                <Combobox
+                  options={poOptions}
+                  value={grForm.purchaseOrderId}
+                  disabled={grViewOnly}
+                  placeholder="Chọn PO..."
+                  onChange={(v) =>
+                    setGrForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
+                  }
+                />
+              </DrawerField>
+            </div>
+            <DrawerField label="Ghi chú">
+              <textarea
+                className={`${inputCls} min-h-[60px] resize-y`}
+                value={grForm.remarks}
                 disabled={grViewOnly}
                 onChange={(e) =>
-                  setGrForm((f) => ({ ...f, receiptNo: e.target.value }))
+                  setGrForm((f) => ({ ...f, remarks: e.target.value }))
                 }
               />
             </DrawerField>
-            <DrawerField label="Ngày nhập">
-              <input
-                type="date"
-                className={inputCls}
-                value={grForm.receiptDate}
-                disabled={grViewOnly}
-                onChange={(e) =>
-                  setGrForm((f) => ({ ...f, receiptDate: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Đơn mua hàng (PO)">
-              <Combobox
-                options={poOptions}
-                value={grForm.purchaseOrderId}
-                disabled={grViewOnly}
-                placeholder="Chọn PO..."
-                onChange={(v) =>
-                  setGrForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
-                }
-              />
-            </DrawerField>
-          </div>
-          <DrawerField label="Ghi chú">
-            <textarea
-              className={`${inputCls} min-h-[60px] resize-y`}
-              value={grForm.remarks}
-              disabled={grViewOnly}
-              onChange={(e) =>
-                setGrForm((f) => ({ ...f, remarks: e.target.value }))
-              }
-            />
-          </DrawerField>
-        </DrawerSection>
+          </DrawerSection>
 
-        <DrawerSection title={`Dòng hàng (${grForm.lines.length})`}>
-          {grPoDetail?.lines?.map((poLine) => {
-            const lineIdx = grForm.lines.findIndex(
-              (l) => l.purchaseOrderLineId === poLine.id,
-            );
-            const currentLine = lineIdx >= 0 ? grForm.lines[lineIdx] : null;
-            const ordered = Number(poLine.qtyOrdered ?? 0);
-            const received = Number(poLine.qtyReceived ?? 0);
-            const remaining = Math.max(0, ordered - received);
-            return (
-              <div
-                key={poLine.id}
-                className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-medium">
-                    {poLine.itemName ?? poLine.itemId ?? "—"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Đặt {ordered} | Đã nhận {received} | Còn {remaining}
-                  </span>
-                </div>
-                {!grViewOnly && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min={0}
-                      max={remaining}
-                      className={`${inputCls} w-28`}
-                      placeholder={`Nhận (max ${remaining})`}
-                      value={currentLine?.qtyReceived ?? ""}
-                      onChange={(e) => {
-                        const qty = e.target.value;
-                        setGrForm((f) => {
-                          const lines = [...f.lines];
-                          if (lineIdx >= 0) {
-                            lines[lineIdx] = {
-                              ...lines[lineIdx],
-                              qtyReceived: qty,
-                            };
-                          } else {
-                            lines.push({
-                              purchaseOrderLineId: poLine.id ?? "",
-                              itemId: poLine.itemId ?? "",
-                              itemName: poLine.itemName ?? "",
-                              qtyReceived: qty,
-                              unitCost: poLine.unitPrice ?? "",
-                            });
-                          }
-                          return { ...f, lines };
-                        });
-                      }}
-                    />
-                    <input
-                      type="number"
-                      className={`${inputCls} w-28`}
-                      placeholder="Đơn giá"
-                      value={currentLine?.unitCost ?? poLine.unitPrice ?? ""}
-                      onChange={(e) => {
-                        const cost = e.target.value;
-                        setGrForm((f) => {
-                          const lines = [...f.lines];
-                          if (lineIdx >= 0) {
-                            lines[lineIdx] = {
-                              ...lines[lineIdx],
-                              unitCost: cost,
-                            };
-                          }
-                          return { ...f, lines };
-                        });
-                      }}
-                    />
+          <DrawerSection title={`Dòng hàng (${grForm.lines.length})`}>
+            {grPoDetail?.lines?.map((poLine) => {
+              const lineIdx = grForm.lines.findIndex(
+                (l) => l.purchaseOrderLineId === poLine.id,
+              );
+              const currentLine = lineIdx >= 0 ? grForm.lines[lineIdx] : null;
+              const ordered = Number(poLine.qtyOrdered ?? 0);
+              const received = Number(poLine.qtyReceived ?? 0);
+              const remaining = Math.max(0, ordered - received);
+              return (
+                <div
+                  key={poLine.id}
+                  className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">
+                      {poLine.itemName ||
+                        poLine.description ||
+                        poLine.itemId ||
+                        "—"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Đặt {ordered} | Đã nhận {received} | Còn {remaining}
+                    </span>
                   </div>
-                )}
-                {grViewOnly && currentLine && (
+                  {!grViewOnly && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={0}
+                        max={remaining}
+                        className={`${inputCls} w-28`}
+                        placeholder={`Nhận (max ${remaining})`}
+                        value={currentLine?.qtyReceived ?? ""}
+                        onChange={(e) => {
+                          const qty = e.target.value;
+                          setGrForm((f) => {
+                            const lines = [...f.lines];
+                            if (lineIdx >= 0) {
+                              lines[lineIdx] = {
+                                ...lines[lineIdx],
+                                qtyReceived: qty,
+                              };
+                            } else {
+                              lines.push({
+                                purchaseOrderLineId: poLine.id ?? "",
+                                itemId: poLine.itemId ?? "",
+                                itemName: poLine.itemName ?? "",
+                                qtyReceived: qty,
+                                unitCost: poLine.unitPrice ?? "",
+                              });
+                            }
+                            return { ...f, lines };
+                          });
+                        }}
+                      />
+                      <input
+                        type="number"
+                        className={`${inputCls} w-28`}
+                        placeholder="Đơn giá"
+                        value={currentLine?.unitCost ?? poLine.unitPrice ?? ""}
+                        onChange={(e) => {
+                          const cost = e.target.value;
+                          setGrForm((f) => {
+                            const lines = [...f.lines];
+                            if (lineIdx >= 0) {
+                              lines[lineIdx] = {
+                                ...lines[lineIdx],
+                                unitCost: cost,
+                              };
+                            }
+                            return { ...f, lines };
+                          });
+                        }}
+                      />
+                    </div>
+                  )}
+                  {grViewOnly && currentLine && (
+                    <div className="text-sm text-muted-foreground">
+                      Nhận: <strong>{fmtQty(currentLine.qtyReceived)}</strong>
+                      {currentLine.unitCost
+                        ? ` | Đơn giá: ${fmtQty(currentLine.unitCost)}`
+                        : ""}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {!grPoDetail && grForm.lines.length === 0 && !grViewOnly && (
+              <p className="text-sm text-muted-foreground">
+                Chọn PO để hiện danh sách hàng cần nhận.
+              </p>
+            )}
+            {grViewOnly &&
+              !grPoDetail &&
+              grForm.lines.map((line, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-1"
+                >
+                  <div className="text-sm font-medium">
+                    {line.itemName || line.itemId || "—"}
+                  </div>
                   <div className="text-sm text-muted-foreground">
-                    Nhận: <strong>{fmtQty(currentLine.qtyReceived)}</strong>
-                    {currentLine.unitCost
-                      ? ` | Đơn giá: ${fmtQty(currentLine.unitCost)}`
+                    Số lượng: <strong>{fmtQty(line.qtyReceived)}</strong>
+                    {line.unitCost
+                      ? ` | Đơn giá: ${fmtQty(line.unitCost)}`
                       : ""}
                   </div>
-                )}
-              </div>
-            );
-          })}
-          {!grPoDetail && grForm.lines.length === 0 && !grViewOnly && (
-            <p className="text-sm text-muted-foreground">
-              Chọn PO để hiện danh sách hàng cần nhận.
-            </p>
-          )}
-          {grViewOnly &&
-            grForm.lines.map((line, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-1"
-              >
-                <div className="text-sm font-medium">
-                  {line.itemName || line.itemId || "—"}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Số lượng: <strong>{fmtQty(line.qtyReceived)}</strong>
-                  {line.unitCost ? ` | Đơn giá: ${fmtQty(line.unitCost)}` : ""}
-                </div>
-              </div>
-            ))}
-        </DrawerSection>
-      </DrawerModal>
+              ))}
+          </DrawerSection>
+        </DrawerModal>
+      )}
 
       {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
       <DrawerModal

@@ -55,9 +55,12 @@ import {
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
 import {
   purchaseOrdersCoreApi,
   type ErpPoReceipt,
+  type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import {
   inventoryCoreApi,
@@ -367,9 +370,11 @@ function buildSamplePayload(
 
 function PurchaseSubRow({ rowId }: { rowId: string }) {
   const [detail, setDetail] = useState<OperationalDocument | null>(null);
+  const [poDetail, setPoDetail] = useState<ErpPurchaseOrder | null>(null);
   const [receipts, setReceipts] = useState<ErpPoReceipt[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewingReceiptId, setViewingReceiptId] = useState<string | null>(null);
   const t = useT();
 
   useEffect(() => {
@@ -380,7 +385,10 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
         const doc = await operationalApi.getDocument("purchase_orders", rowId);
         if (active) setDetail(doc);
         const po = await purchaseOrdersCoreApi.get(rowId);
-        if (active) setReceipts(po.receipts || []);
+        if (active) {
+          setReceipts(po.receipts || []);
+          setPoDetail(po);
+        }
       } catch (e) {
         if (active) setError(t("Không tải được chi tiết dòng"));
       } finally {
@@ -395,110 +403,162 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
 
   if (loading)
     return (
-      <div className="pl-4 py-2 text-xs text-[color:var(--muted-fg)] animate-pulse">
+      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-8 flex items-center justify-center text-sm text-muted-foreground my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         {t("Đang tải chi tiết...")}
       </div>
     );
   if (error)
     return (
-      <div className="pl-4 py-2 text-xs text-red-500 font-medium">
-        ⚠️ {error}
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex items-center justify-center text-sm text-red-700 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md">
+        <AlertCircle className="mr-2 h-5 w-5" />
+        {error}
       </div>
     );
   if (!detail) return null;
 
   return (
-    <div className="flex flex-col md:flex-row gap-6 pl-4 border-l border-dashed border-[color:var(--border)]/40 ml-2.5 mt-1 mb-2">
-      <div className="flex-1 space-y-1">
-        <div className="text-xs font-semibold text-[color:var(--muted-fg)] mb-1 uppercase tracking-wider">
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 overflow-x-auto my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
+      <div className="flex-1 min-w-[400px]">
+        <div className="mb-4 font-semibold text-base text-foreground">
           {t("Chi tiết")}
         </div>
         {!detail.lines || detail.lines.length === 0 ? (
-          <div className="text-xs text-[color:var(--muted-fg)] italic">
+          <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
             {t("Không có dòng chi tiết.")}
           </div>
         ) : (
-          <div className="space-y-1">
-            {detail.lines.map((line, idx) => (
-              <div
-                key={line.id || idx}
-                className="text-xs flex items-center justify-between py-1.5 hover:bg-[color:var(--muted)]/80 rounded px-2 transition-all duration-150 gap-4"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="w-4 h-4 flex items-center justify-center text-[color:var(--muted-fg)]/30 text-[10px] shrink-0">
-                    •
-                  </span>
-                  <span className="font-medium text-[color:var(--foreground)]/90 truncate">
-                    {line.item_name ||
-                      line.description ||
-                      `${t("Dòng")} ${idx + 1}`}
-                    {line.item_code && (
-                      <span className="text-[color:var(--muted-fg)] ml-1.5 font-normal">
-                        ({line.item_code})
+          <div className="w-full text-sm">
+            <div className="flex items-center text-muted-foreground border-b border-border pb-2 mb-2 px-2">
+              <div className="flex-1 font-medium">Vật tư / Hàng hóa</div>
+              <div className="w-[80px] text-right font-medium">Số lượng</div>
+              <div className="w-[80px] text-right font-medium">Đã nhập</div>
+              <div className="w-[80px] text-right font-medium">Còn lại</div>
+            </div>
+            <div className="space-y-1">
+              {detail.lines.map((line, idx) => {
+                const poLine = poDetail?.lines?.find(
+                  (l, i) => l.id === line.id || i === idx,
+                );
+                const qtyReceived = Number(poLine?.qtyReceived || 0);
+                const qtyOrdered = Number(line.qty || poLine?.qtyOrdered || 0);
+                const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
+
+                return (
+                  <div
+                    key={line.id || idx}
+                    className="flex items-center hover:bg-muted/50 rounded py-2 px-2 transition-colors gap-4"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="font-medium text-foreground truncate">
+                        {line.item_name ||
+                          line.description ||
+                          `${t("Dòng")} ${idx + 1}`}
+                        {line.item_code && (
+                          <span className="text-muted-foreground ml-1.5 font-normal">
+                            ({line.item_code})
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 shrink-0 text-[11px] text-[color:var(--muted-fg)]">
-                  <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full min-w-[32px] text-center">
-                    {Number(line.qty || 0).toLocaleString("vi-VN")}
-                  </span>
-                </div>
-              </div>
-            ))}
+                    </div>
+                    <div className="w-[80px] text-right">
+                      <span className="font-medium text-foreground">
+                        {Number(line.qty || 0).toLocaleString("vi-VN")}
+                      </span>
+                    </div>
+                    <div className="w-[80px] text-right">
+                      <span className="font-medium text-emerald-600">
+                        {qtyReceived.toLocaleString("vi-VN")}
+                      </span>
+                    </div>
+                    <div className="w-[80px] text-right">
+                      <span className="font-medium text-amber-600">
+                        {qtyRemaining.toLocaleString("vi-VN")}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
 
-      <div className="w-full md:w-72 shrink-0 space-y-1">
-        <div className="text-xs font-semibold text-[color:var(--muted-fg)] mb-1 uppercase tracking-wider">
+      <div className="w-full md:w-96 shrink-0 md:border-l md:border-border md:pl-6">
+        <div className="mb-4 font-semibold text-base text-foreground">
           {t("Lịch sử nhập kho")}
         </div>
         {receipts.length === 0 ? (
-          <div className="text-xs text-[color:var(--muted-fg)] italic px-2">
+          <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
             {t("Chưa có lịch sử nhập.")}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {receipts.map((receipt) => (
               <div
                 key={receipt.id}
-                className="bg-surface border border-[color:var(--border)] rounded px-3 py-2 text-xs hover:border-primary/30 transition-colors"
+                className="rounded-lg border border-border bg-background p-3 hover:border-primary/30 transition-colors shadow-sm"
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-medium">{receipt.receiptNo}</span>
-                  <span className="text-[color:var(--muted-fg)]">
-                    {receipt.receiptDate
-                      ? receipt.receiptDate.slice(0, 10)
-                      : "—"}{" "}
-                    · {t(receipt.status || "—")}
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className="font-semibold text-sm text-primary cursor-pointer hover:underline"
+                    onClick={() => setViewingReceiptId(receipt.id)}
+                  >
+                    {receipt.receiptNo}
                   </span>
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-muted-foreground">
+                      {receipt.createdAt
+                        ? normalizeDateTime(receipt.createdAt)
+                        : receipt.receiptDate
+                          ? receipt.receiptDate.slice(0, 10)
+                          : "—"}
+                    </div>
+                  </div>
                 </div>
                 {receipt.remarks && (
-                  <div className="text-[color:var(--muted-fg)] mb-1.5">
+                  <div className="text-xs text-muted-foreground mb-2 italic">
                     {receipt.remarks}
                   </div>
                 )}
-                <div className="space-y-1 mt-1 border-t border-[color:var(--border)] pt-1.5">
-                  {(receipt.lines || []).map((line, idx) => (
-                    <div
-                      key={line.id || idx}
-                      className="flex justify-between text-[color:var(--muted-fg)]"
-                    >
-                      <span>
-                        {t("Dòng")} {line.lineNo || idx + 1}
-                      </span>
-                      <span className="font-medium text-[color:var(--foreground)]/80">
-                        {t("Nhận:")}{" "}
-                        {Number(line.qtyReceived || 0).toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                  ))}
+                <div className="space-y-1.5 mt-2 border-t border-border pt-2">
+                  {(receipt.lines || []).map((line, idx) => {
+                    const matchingPoLine = poDetail?.lines?.find(
+                      (l) => l.id === line.purchaseOrderLineId,
+                    );
+                    const itemName =
+                      matchingPoLine?.itemName ||
+                      matchingPoLine?.description ||
+                      `${t("Dòng")} ${line.lineNo || idx + 1}`;
+                    return (
+                      <div
+                        key={line.id || idx}
+                        className="flex justify-between items-center text-xs gap-4"
+                      >
+                        <Tooltip content={itemName}>
+                          <span className="text-muted-foreground truncate flex-1 cursor-help">
+                            {itemName}
+                          </span>
+                        </Tooltip>
+                        <span className="font-medium text-emerald-600 shrink-0">
+                          {t("Nhận:")} +
+                          {Number(line.qtyReceived || 0).toLocaleString(
+                            "vi-VN",
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
           </div>
         )}
+        <GoodsReceiptViewDrawer
+          open={!!viewingReceiptId}
+          receiptId={viewingReceiptId}
+          onClose={() => setViewingReceiptId(null)}
+        />
       </div>
     </div>
   );
@@ -1211,41 +1271,43 @@ export function OperationalListPage({
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
-      {
-        key: "po_status",
-        header: "Trạng thái",
-        className: "align-top min-w-[140px]",
-        cell: (row) => (
-          <div className="flex flex-col gap-1">
-            <StatusBadge status={row.status} />
-            <StatusBadge status={row.payment_status} />
-            {row.inventory_status ? (
-              <div className="text-xs text-[color:var(--muted-fg)]">
-                Kho: {inventoryStatusLabel(row.inventory_status)}
-              </div>
-            ) : null}
-          </div>
-        ),
-      },
+
       {
         key: "receipt_status",
         header: "Tình trạng nhập",
-        className: "align-top min-w-[140px]",
+        className: "align-top min-w-[200px]",
         cell: (row) => {
-          const status = row.inventory_status;
-          let label = "—";
-          let cls = "text-[color:var(--muted-fg)]";
-          if (status === "NOT_RECEIVED") {
-            label = "Chưa nhập kho";
-            cls = "text-orange-600";
-          } else if (status === "PARTIAL") {
-            label = "Nhập một phần";
-            cls = "text-yellow-600";
-          } else if (status === "FULLY_RECEIVED") {
-            label = "Đã nhập đủ";
-            cls = "text-green-600 font-medium";
-          }
-          return <span className={`text-xs ${cls}`}>{label}</span>;
+          if (!row.lines || row.lines.length === 0)
+            return <span className="text-[color:var(--muted-fg)]">—</span>;
+          return (
+            <div className="flex flex-col gap-1 text-xs">
+              {row.lines.map((l, i) => {
+                const qty = Number(l.qty || 0);
+                const received = Number(
+                  (l as any).qty_received ?? (l as any).qtyReceived ?? 0,
+                );
+                const name = l.item_name || l.item_code || `Dòng ${i + 1}`;
+                const isFullyReceived = received >= qty && qty > 0;
+
+                return (
+                  <div key={i} className="flex gap-1">
+                    <span className="text-foreground">
+                      {i + 1}. {name}:
+                    </span>
+                    <span
+                      className={
+                        isFullyReceived
+                          ? "text-emerald-600 font-medium"
+                          : "text-amber-600 font-medium"
+                      }
+                    >
+                      {received}/{qty}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          );
         },
       },
     ],
