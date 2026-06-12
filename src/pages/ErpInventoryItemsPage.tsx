@@ -155,8 +155,8 @@ export function ErpInventoryItemsTab() {
         );
       }
       setItems(nextItems);
-      setTotal(nextItems.length);
-      setTotalPages(Math.ceil(nextItems.length / pageSize));
+      setTotal(res.total);
+      setTotalPages(res.totalPages);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải danh mục kho");
     } finally {
