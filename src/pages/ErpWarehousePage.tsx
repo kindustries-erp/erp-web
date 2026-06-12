@@ -1050,26 +1050,24 @@ export function ErpWarehousePage() {
               return (
                 <div
                   key={poLine.id}
-                  className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
+                  className="rounded-xl border border-border bg-muted/10 p-3 mb-2"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium flex-1 truncate">
                       {poLine.itemName ||
                         poLine.description ||
                         poLine.itemId ||
                         "—"}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       Đặt {ordered} | Đã nhận {received} | Còn {remaining}
                     </span>
-                  </div>
-                  {!grViewOnly && (
-                    <div className="flex items-center gap-2">
+                    {!grViewOnly && (
                       <input
                         type="number"
                         min={0}
                         max={remaining}
-                        className={`${inputCls} w-28`}
+                        className={`${inputCls} w-24 flex-shrink-0 text-right`}
                         placeholder={`Nhận (max ${remaining})`}
                         value={currentLine?.qtyReceived ?? ""}
                         onChange={(e) => {
@@ -1094,27 +1092,8 @@ export function ErpWarehousePage() {
                           });
                         }}
                       />
-                      <input
-                        type="number"
-                        className={`${inputCls} w-28`}
-                        placeholder="Đơn giá"
-                        value={currentLine?.unitCost ?? poLine.unitPrice ?? ""}
-                        onChange={(e) => {
-                          const cost = e.target.value;
-                          setGrForm((f) => {
-                            const lines = [...f.lines];
-                            if (lineIdx >= 0) {
-                              lines[lineIdx] = {
-                                ...lines[lineIdx],
-                                unitCost: cost,
-                              };
-                            }
-                            return { ...f, lines };
-                          });
-                        }}
-                      />
-                    </div>
-                  )}
+                    )}
+                  </div>
                   {grViewOnly && currentLine && (
                     <div className="text-sm text-muted-foreground">
                       Nhận: <strong>{fmtQty(currentLine.qtyReceived)}</strong>
