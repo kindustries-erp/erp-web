@@ -300,7 +300,14 @@ export function useFilterPanel(
   const activeFilterCount = useMemo(() => {
     let count = 0;
     const defaultPeriod = config.period ? initPeriod() : "";
-    if (period !== defaultPeriod || dateFrom || dateTo) count++;
+    const defaultFrom = config.period ? initDateFrom() : "";
+    const defaultTo = config.period ? initDateTo() : "";
+    if (
+      period !== defaultPeriod ||
+      dateFrom !== defaultFrom ||
+      dateTo !== defaultTo
+    )
+      count++;
     if (channel) count++;
     if (search) count++;
     if (amountMin || amountMax) count++;

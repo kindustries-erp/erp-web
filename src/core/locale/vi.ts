@@ -53,6 +53,7 @@ export const vi = {
       erpGoodsIssues: "Xuất kho",
       erpInventoryItems: "Danh mục kho",
       activitylog: "Nhật ký hoạt động",
+      users: "Quản lý người dùng",
       phanquyen: "Phân quyền & Vai trò",
       workflowcanvas: "Sơ đồ quy trình",
       partners: "Đối tác",
@@ -75,6 +76,16 @@ export const vi = {
       userFallback: "Người dùng",
       toggleSidebar: "Thu gọn / Mở rộng",
       pinSidebar: "Giữ sidebar mở",
+    },
+  },
+  activityLogs: {
+    headers: {
+      actor: "Người thực hiện",
+      action: "Hành động",
+      module: "Phân hệ",
+      entity: "Thực thể",
+      status: "Trạng thái",
+      time: "Thời gian",
     },
   },
   breadcrumb: {

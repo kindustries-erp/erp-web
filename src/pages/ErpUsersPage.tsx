@@ -12,6 +12,12 @@ import {
 } from "@/shared/components/DrawerModal";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import { useUIStore } from "@/core/config/uiStore";
 import {
   auditCoreApi,
@@ -38,14 +44,30 @@ export function ErpUsersPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [selectedUser, setSelectedUser] = useState<CoreUserAdmin | null>(null);
   const [timeline, setTimeline] = useState<AuditLogEntry[]>([]);
   const [form, setForm] = useState({ email: "", password: "", employeeId: "" });
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      status: {
+        options: [
+          { value: "ACTIVE", label: "Hoạt động (ACTIVE)" },
+          { value: "INACTIVE", label: "Ngưng (INACTIVE)" },
+        ],
+        placeholder: "Tất cả trạng thái",
+      },
+    }),
+    [],
+  );
+
+  const filter = useFilterPanel(filterConfig, () => setPage(1));
+  const search = filter.state.search;
+  const status = filter.state.status;
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -215,101 +237,84 @@ export function ErpUsersPage() {
       title="Quản lý người dùng"
       desc="Tạo user production-grade và xem timeline audit theo từng user"
       icon={<Shield className="h-4 w-4" />}
-      actions={
-        <Button size="sm" onClick={() => setDrawerOpen(true)} className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Tạo user
-        </Button>
-      }
     >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Tìm theo email..."
-            className="w-full max-w-md"
-          />
-          <select
-            className={inputCls + " w-[180px]"}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-          </select>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => void loadUsers()}
-          >
-            Lọc
-          </Button>
-        </div>
-
-        <DataTable
-          items={items}
-          columns={columns}
-          getRowKey={(item) => item.id}
+      <div className="mb-3 flex items-center justify-end">
+        <TableActionGroup
+          onRefresh={() => void loadUsers()}
           loading={loading}
-          emptyLabel="Chưa có user"
-          actionsColumn={{
-            cell: (raw) => {
-              const item = raw as CoreUserAdmin;
-              return (
-                <ActionDropdown
-                  items={[
-                    {
-                      label: "Xem chi tiết",
-                      onClick: () => void openDetail(item),
-                    },
-                    ...(item.status === "ACTIVE"
-                      ? [
-                          {
-                            label: "Ngưng hoạt động",
-                            onClick: () => void handleDeactivate(item),
-                          },
-                        ]
-                      : [
-                          {
-                            label: "Kích hoạt",
-                            onClick: () => void handleActivate(item),
-                          },
-                        ]),
-                    {
-                      label: "Reset password",
-                      onClick: () => void handleResetPassword(item),
-                    },
-                  ]}
-                />
-              );
-            },
-          }}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={() => setDrawerOpen(true)}
+          createLabel="Tạo user"
         />
+      </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Tổng: {total}</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={items.length < pageSize}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Sau
-            </Button>
+      <div className="flex items-start">
+        <div className="min-w-0 flex-1 space-y-4">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(item) => item.id}
+            loading={loading}
+            emptyLabel="Chưa có user"
+            actionsColumn={{
+              cell: (raw) => {
+                const item = raw as CoreUserAdmin;
+                return (
+                  <ActionDropdown
+                    items={[
+                      {
+                        label: "Xem chi tiết",
+                        onClick: () => void openDetail(item),
+                      },
+                      ...(item.status === "ACTIVE"
+                        ? [
+                            {
+                              label: "Ngưng hoạt động",
+                              onClick: () => void handleDeactivate(item),
+                            },
+                          ]
+                        : [
+                            {
+                              label: "Kích hoạt",
+                              onClick: () => void handleActivate(item),
+                            },
+                          ]),
+                      {
+                        label: "Reset password",
+                        onClick: () => void handleResetPassword(item),
+                      },
+                    ]}
+                  />
+                );
+              },
+            }}
+          />
+
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Tổng: {total}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Trước
+              </Button>
+              <span>Trang {page}</span>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={items.length < pageSize}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Sau
+              </Button>
+            </div>
           </div>
         </div>
+        <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
       <DrawerModal

@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { History } from "lucide-react";
+import { History, Eye } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
-  DrawerModal,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
-import { SearchInput } from "@/shared/components/SearchInput";
+  DataTable,
+  type DataTableColumn,
+  type ActionsColumnConfig,
+} from "@/shared/components/DataTable";
+import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
+import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { FilterPanel } from "@/shared/components/FilterPanel";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import { Button } from "@/shared/components/ui/Button";
 import { useUIStore } from "@/core/config/uiStore";
+import { useT } from "@/core/i18n";
 import {
   auditCoreApi,
   type AuditLogEntry,
@@ -24,18 +31,49 @@ function formatDate(value: string | null) {
 
 export function ErpActivityLogsPage() {
   const showToast = useUIStore((s) => s.showToast);
+  const t = useT();
   const [items, setItems] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [module, setModule] = useState("");
-  const [actionType, setActionType] = useState("");
-  const [status, setStatus] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      period: true,
+      status: {
+        options: [
+          { value: "SUCCESS", label: "Thành công (SUCCESS)" },
+          { value: "FAIL", label: "Thất bại (FAIL)" },
+        ],
+        placeholder: "Tất cả trạng thái",
+      },
+      custom: [
+        {
+          key: "module",
+          label: "Module",
+          placeholder: "Tất cả phân hệ",
+          options: [
+            { value: "auth", label: "auth" },
+            { value: "users", label: "users" },
+            { value: "inventory", label: "inventory" },
+            { value: "purchase", label: "purchase" },
+          ],
+        },
+      ],
+    }),
+    [],
+  );
+
+  const filter = useFilterPanel(filterConfig, () => setPage(1));
+
+  const search = filter.state.search;
+  const statusFilter = filter.state.status;
+  const dateFrom = filter.state.dateFrom;
+  const dateTo = filter.state.dateTo;
+  const moduleFilter = filter.state.custom.module;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,9 +81,8 @@ export function ErpActivityLogsPage() {
       const res = await auditCoreApi.list({
         page,
         pageSize,
-        module: module || undefined,
-        actionType: actionType || undefined,
-        status: status || undefined,
+        module: moduleFilter || undefined,
+        status: statusFilter || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         search: search || undefined,
@@ -65,15 +102,14 @@ export function ErpActivityLogsPage() {
       setLoading(false);
     }
   }, [
-    actionType,
+    moduleFilter,
+    statusFilter,
     dateFrom,
     dateTo,
-    module,
+    search,
     page,
     pageSize,
-    search,
     showToast,
-    status,
   ]);
 
   useEffect(() => {
@@ -84,24 +120,42 @@ export function ErpActivityLogsPage() {
     () => [
       {
         key: "actorEmail",
-        header: "Actor",
+        header: t("activityLogs.headers.actor") || "Actor",
         cell: (item) => item.actorEmail || "system",
       },
       {
         key: "actionType",
-        header: "Action",
+        header: t("activityLogs.headers.action") || "Action",
         cell: (item) => <span className="font-medium">{item.actionType}</span>,
       },
-      { key: "module", header: "Module", cell: (item) => item.module },
+      {
+        key: "module",
+        header: t("activityLogs.headers.module") || "Module",
+        cell: (item) => item.module,
+      },
       {
         key: "entity",
-        header: "Entity",
-        cell: (item) =>
-          item.entityType ? `${item.entityType}:${item.entityId || "—"}` : "—",
+        header: t("activityLogs.headers.entity") || "Entity",
+        cell: (item) => {
+          if (!item.entityType) return "—";
+          const shortId = item.entityId
+            ? item.entityId.substring(0, 8) + "..."
+            : "";
+          return (
+            <div className="flex flex-col" title={item.entityId || ""}>
+              <span>{item.entityType}</span>
+              {shortId && (
+                <span className="text-[11px] font-mono text-muted-foreground">
+                  {shortId}
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         key: "status",
-        header: "Status",
+        header: t("activityLogs.headers.status") || "Status",
         cell: (item) => (
           <span
             className={
@@ -116,115 +170,77 @@ export function ErpActivityLogsPage() {
       },
       {
         key: "createdAt",
-        header: "Thời gian",
+        header: t("activityLogs.headers.time") || "Thời gian",
         cell: (item) => formatDate(item.createdAt),
       },
     ],
-    [],
+    [t],
   );
+
+  const actionsColumn: ActionsColumnConfig<AuditLogEntry> = {
+    cell: (item) => (
+      <ActionDropdown
+        items={[
+          {
+            label: "Xem chi tiết",
+            icon: <Eye className="h-3.5 w-3.5" />,
+            onClick: () => setSelected(item),
+          },
+        ]}
+      />
+    ),
+  };
 
   return (
     <PageLayout
-      title="Nhật ký hoạt động"
+      title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
       desc="Audit logs live từ ERP CORE backend"
       icon={<History className="h-4 w-4" />}
     >
-      <div className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Tìm actor, entity, route..."
-            className="w-full xl:col-span-2"
-          />
-          <input
-            type="date"
-            className={inputCls}
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-          />
-          <input
-            type="date"
-            className={inputCls}
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-          />
-          <select
-            className={inputCls}
-            value={module}
-            onChange={(e) => setModule(e.target.value)}
-          >
-            <option value="">Tất cả module</option>
-            <option value="auth">auth</option>
-            <option value="users">users</option>
-          </select>
-          <select
-            className={inputCls}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">Tất cả status</option>
-            <option value="SUCCESS">SUCCESS</option>
-            <option value="FAIL">FAIL</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            className={inputCls + " max-w-[260px]"}
-            value={actionType}
-            onChange={(e) => setActionType(e.target.value)}
-            placeholder="Ví dụ: LOGIN_SUCCESS"
-          />
-          <Button variant="secondary" size="sm" onClick={() => void load()}>
-            Lọc
-          </Button>
-        </div>
-
-        <DataTable
-          items={items}
-          columns={columns}
-          getRowKey={(item) => item.id}
+      <div className="mb-3 flex items-center justify-end">
+        <TableActionGroup
+          onRefresh={() => void load()}
           loading={loading}
-          emptyLabel="Chưa có audit logs"
-          actionsColumn={{
-            cell: (raw) => {
-              const item = raw as AuditLogEntry;
-              return (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelected(item)}
-                >
-                  Xem
-                </Button>
-              );
-            },
-          }}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
         />
+      </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Tổng: {total}</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Trước
-            </Button>
-            <span>Trang {page}</span>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={items.length < pageSize}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Sau
-            </Button>
+      <div className="flex items-start">
+        <div className="min-w-0 flex-1 space-y-4">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(item) => item.id}
+            loading={loading}
+            emptyLabel="Chưa có audit logs"
+            actionsColumn={actionsColumn}
+          />
+
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Tổng: {total}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Trước
+              </Button>
+              <span>Trang {page}</span>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={items.length < pageSize}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Sau
+              </Button>
+            </div>
           </div>
         </div>
+        <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
       <DrawerModal

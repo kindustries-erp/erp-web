@@ -53,8 +53,9 @@ export const en: Dict = {
       erpProduction: "Production",
       erpSalesOrders: "Sales Orders",
       erpGoodsIssues: "Goods Issues",
-      erpInventoryItems: "Inventory Catalog",
+      erpInventoryItems: "Inventory Items",
       activitylog: "Activity Logs",
+      users: "Users",
       phanquyen: "Roles & Permissions",
       workflowcanvas: "Workflow Canvas",
       partners: "Partners",
@@ -77,6 +78,16 @@ export const en: Dict = {
       userFallback: "User",
       toggleSidebar: "Collapse / Expand",
       pinSidebar: "Pin sidebar open",
+    },
+  },
+  activityLogs: {
+    headers: {
+      actor: "Actor",
+      action: "Action",
+      module: "Module",
+      entity: "Entity",
+      status: "Status",
+      time: "Time",
     },
   },
   breadcrumb: {
