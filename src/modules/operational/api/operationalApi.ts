@@ -235,6 +235,10 @@ function params(input: ListParams = {}) {
     ...(input.status ? { status: input.status } : {}),
     ...(input.payment_status ? { payment_status: input.payment_status } : {}),
     ...(input.invoice_status ? { invoice_status: input.invoice_status } : {}),
+    ...((input as any).date_from
+      ? { date_from: (input as any).date_from }
+      : {}),
+    ...((input as any).date_to ? { date_to: (input as any).date_to } : {}),
   };
 }
 
@@ -251,11 +255,7 @@ export const operationalApi = {
     const { data } = await axiosInstance.get<PaginatedResponse<any>>(
       "/api/v1/purchase-orders",
       {
-        params: {
-          page: input?.page ?? 1,
-          pageSize: input?.pageSize ?? 20,
-          ...(input?.search ? { search: input.search } : {}),
-        },
+        params: params(input),
       },
     );
     return {

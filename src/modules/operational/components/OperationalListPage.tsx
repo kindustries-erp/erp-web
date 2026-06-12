@@ -1190,9 +1190,7 @@ export function OperationalListPage({
 
   const activeFilterCount = [
     !!searchInput,
-    !!dateFrom,
-    !!dateTo,
-    !!period,
+    !!dateFrom || !!dateTo || !!period,
     ...(variant === "inventory"
       ? [!!itemTypeFilter]
       : variant === "purchase"
