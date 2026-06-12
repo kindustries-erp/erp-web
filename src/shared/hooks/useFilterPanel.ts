@@ -44,6 +44,7 @@ export interface FilterPanelConfig {
     label: string;
     placeholder: string;
     options: FilterOption[];
+    type?: "select" | "multi-select";
   }>;
 }
 

@@ -52,6 +52,19 @@ export function ErpActivityLogsPage() {
       },
       custom: [
         {
+          key: "actionType",
+          label: "Hành động (Method)",
+          placeholder: "Tất cả hành động",
+          type: "multi-select",
+          options: [
+            { value: "GET", label: "GET" },
+            { value: "POST", label: "POST" },
+            { value: "PUT", label: "PUT" },
+            { value: "PATCH", label: "PATCH" },
+            { value: "DELETE", label: "DELETE" },
+          ],
+        },
+        {
           key: "module",
           label: "Module",
           placeholder: "Tất cả phân hệ",
@@ -74,6 +87,7 @@ export function ErpActivityLogsPage() {
   const dateFrom = filter.state.dateFrom;
   const dateTo = filter.state.dateTo;
   const moduleFilter = filter.state.custom.module;
+  const actionTypeFilter = filter.state.custom.actionType;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,6 +96,7 @@ export function ErpActivityLogsPage() {
         page,
         pageSize,
         module: moduleFilter || undefined,
+        actionType: actionTypeFilter || undefined,
         status: statusFilter || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
@@ -103,6 +118,7 @@ export function ErpActivityLogsPage() {
     }
   }, [
     moduleFilter,
+    actionTypeFilter,
     statusFilter,
     dateFrom,
     dateTo,

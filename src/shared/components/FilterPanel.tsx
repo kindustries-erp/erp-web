@@ -2,6 +2,7 @@ import { Filter, X, RotateCcw } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
+import { MultiSelect } from "@/shared/components/MultiSelect";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import { PERIOD_OPTS } from "@/modules/finance/utils/financeHelpers";
@@ -155,13 +156,26 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
 
       {config.custom?.map((f) => (
         <FilterSection key={f.key} label={f.label}>
-          <Combobox
-            options={f.options}
-            value={filter.state.custom[f.key] ?? ""}
-            onChange={(v) => filter.setCustom(f.key, v ?? "")}
-            placeholder={f.placeholder}
-            className="w-full"
-          />
+          {f.type === "multi-select" ? (
+            <MultiSelect
+              options={f.options}
+              value={
+                filter.state.custom[f.key]
+                  ? filter.state.custom[f.key].split(",")
+                  : []
+              }
+              onChange={(v) => filter.setCustom(f.key, v.join(","))}
+              placeholder={f.placeholder}
+            />
+          ) : (
+            <Combobox
+              options={f.options}
+              value={filter.state.custom[f.key] ?? ""}
+              onChange={(v) => filter.setCustom(f.key, v ?? "")}
+              placeholder={f.placeholder}
+              className="w-full"
+            />
+          )}
         </FilterSection>
       ))}
     </div>
