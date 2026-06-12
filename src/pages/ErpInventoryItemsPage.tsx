@@ -126,11 +126,14 @@ export function ErpInventoryItemsTab() {
           key: "itemType",
           label: "Loại item",
           placeholder: "Tất cả loại item",
-          options: ITEM_TYPE_FILTER_OPTIONS,
+          options:
+            itemTypeOptions.length > 0
+              ? itemTypeOptions
+              : ITEM_TYPE_FILTER_OPTIONS,
         },
       ],
     }),
-    [],
+    [itemTypeOptions],
   );
   const filter = useFilterPanel(filterConfig);
 

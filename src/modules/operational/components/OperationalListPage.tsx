@@ -1273,45 +1273,6 @@ export function OperationalListPage({
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
-
-      {
-        key: "receipt_status",
-        header: "Tình trạng nhập",
-        className: "align-top min-w-[200px]",
-        cell: (row) => {
-          if (!row.lines || row.lines.length === 0)
-            return <span className="text-[color:var(--muted-fg)]">—</span>;
-          return (
-            <div className="flex flex-col gap-1 text-xs">
-              {row.lines.map((l, i) => {
-                const qty = Number(l.qty || 0);
-                const received = Number(
-                  (l as any).qty_received ?? (l as any).qtyReceived ?? 0,
-                );
-                const name = l.item_name || l.item_code || `Dòng ${i + 1}`;
-                const isFullyReceived = received >= qty && qty > 0;
-
-                return (
-                  <div key={i} className="flex gap-1">
-                    <span className="text-foreground">
-                      {i + 1}. {name}:
-                    </span>
-                    <span
-                      className={
-                        isFullyReceived
-                          ? "text-emerald-600 font-medium"
-                          : "text-amber-600 font-medium"
-                      }
-                    >
-                      {received}/{qty}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        },
-      },
     ],
     [],
   );
