@@ -1481,12 +1481,6 @@ export function OperationalListPage({
         ),
       },
       {
-        key: "unit",
-        header: "Đơn vị",
-        className: "align-middle min-w-[80px]",
-        cell: (row) => <span className="text-sm">{row.unit || "—"}</span>,
-      },
-      {
         key: "on_hand_qty",
         header: "Tồn",
         className: "align-middle min-w-[110px] text-left",
@@ -1497,10 +1491,32 @@ export function OperationalListPage({
         ),
       },
       {
+        key: "unit",
+        header: "Đơn vị",
+        className: "align-middle min-w-[80px]",
+        cell: (row) => <span className="text-sm">{row.unit || "—"}</span>,
+      },
+      {
         key: "last",
         header: "Giao dịch cuối",
         className: "align-middle min-w-[180px]",
         cell: (row) => normalizeDateTime(row.last_transaction_date) || "—",
+      },
+      {
+        key: "status",
+        header: "Trạng thái",
+        className: "align-middle min-w-[100px]",
+        cell: (row) => (
+          <span
+            className={
+              row.status === "ACTIVE" || !row.status
+                ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+                : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
+            }
+          >
+            {row.status || "ACTIVE"}
+          </span>
+        ),
       },
     ],
     [expandedStockItemIds],

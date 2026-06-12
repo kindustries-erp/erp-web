@@ -117,6 +117,7 @@ export interface InventoryStockRow {
   on_hand_qty: number;
   stock_value: number;
   last_transaction_date?: string | null;
+  status?: string;
 }
 
 export interface CreateOperationalPayload extends Partial<OperationalDocument> {
