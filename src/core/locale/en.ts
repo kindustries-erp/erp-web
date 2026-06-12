@@ -133,6 +133,7 @@ export const en: Dict = {
     erpInventoryMasters: "Inventory Settings",
     system: "System",
     erpEmployees: "Employees",
+    users: "Users",
     activitylog: "Activity Logs",
     attachments: "Attachments",
     phanquyen: "Roles & Permissions",

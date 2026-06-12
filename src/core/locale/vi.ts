@@ -131,6 +131,7 @@ export const vi = {
     erpInventoryMasters: "Thiết lập kho",
     system: "Hệ thống",
     erpEmployees: "Quản lý nhân viên",
+    users: "Quản lý người dùng",
     activitylog: "Nhật ký hoạt động",
     attachments: "Tài liệu",
     phanquyen: "Phân quyền & Vai trò",

@@ -10,6 +10,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -244,7 +245,10 @@ export function ErpUsersPage() {
           loading={loading}
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
-          onCreate={() => setDrawerOpen(true)}
+          onCreate={() => {
+            void loadEmployees();
+            setDrawerOpen(true);
+          }}
           createLabel="Tạo user"
         />
       </div>
@@ -333,20 +337,17 @@ export function ErpUsersPage() {
             />
           </DrawerField>
           <DrawerField label="Liên kết employee">
-            <select
-              className={inputCls}
+            <Combobox
+              options={employees.map((emp) => ({
+                value: emp.id,
+                label: `${emp.fullName} (${emp.employeeCode})`,
+              }))}
               value={form.employeeId}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, employeeId: e.target.value }))
+              onChange={(val) =>
+                setForm((prev) => ({ ...prev, employeeId: val }))
               }
-            >
-              <option value="">Không liên kết</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.fullName} ({employee.employeeCode})
-                </option>
-              ))}
-            </select>
+              placeholder="Không liên kết"
+            />
           </DrawerField>
         </DrawerSection>
       </DrawerModal>
