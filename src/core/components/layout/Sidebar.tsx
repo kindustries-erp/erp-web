@@ -205,6 +205,14 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
+                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.inventory")}
+                active={currentPage === "inventory"}
+                onClick={() => navTo("inventory")}
+                contextPage="inventory"
+              />
+              <NavItem
+                collapsed={c}
                 icon={
                   <ClipboardList className="w-4 h-4 opacity-65 flex-shrink-0" />
                 }
@@ -212,14 +220,6 @@ export function Sidebar() {
                 active={currentPage === "erp-warehouse"}
                 onClick={() => navTo("erp-warehouse")}
                 contextPage="erp-warehouse"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.inventory")}
-                active={currentPage === "inventory"}
-                onClick={() => navTo("inventory")}
-                contextPage="inventory"
               />
               <NavItem
                 collapsed={c}

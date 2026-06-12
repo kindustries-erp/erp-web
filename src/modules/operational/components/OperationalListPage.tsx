@@ -57,6 +57,7 @@ import {
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
+import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import {
   purchaseOrdersCoreApi,
   type ErpPoReceipt,
@@ -610,6 +611,7 @@ export function OperationalListPage({
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
+  const [viewingItemId, setViewingItemId] = useState<string | null>(null);
 
   function toggleExpand(id: string) {
     setExpandedRowIds((prev) => ({
@@ -1479,15 +1481,18 @@ export function OperationalListPage({
         ),
       },
       {
+        key: "unit",
+        header: "Đơn vị",
+        className: "align-middle min-w-[80px]",
+        cell: (row) => <span className="text-sm">{row.unit || "—"}</span>,
+      },
+      {
         key: "on_hand_qty",
         header: "Tồn",
         className: "align-middle min-w-[110px] text-left",
         cell: (row) => (
           <span className="inline-block w-full text-left text-sm font-medium tabular-nums">
-            {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}{" "}
-            <span className="font-normal text-xs text-[color:var(--muted-fg)]">
-              {row.unit}
-            </span>
+            {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
       },
@@ -1534,6 +1539,21 @@ export function OperationalListPage({
               error={error}
               emptyLabel="Chưa có tồn kho."
               minWidth={760}
+              actionsColumn={{
+                header: "",
+                className: "w-[48px]",
+                cell: (row) => (
+                  <ActionDropdown
+                    items={[
+                      {
+                        label: t("Chi tiết"),
+                        onClick: () => setViewingItemId(row.inventory_item_id),
+                        icon: <FileText className="h-4 w-4" />,
+                      },
+                    ]}
+                  />
+                ),
+              }}
               expandedRowKeys={expandedStockRowKeys}
               renderSubRow={(row) => (
                 <InventoryTimelineBlock
@@ -1617,6 +1637,12 @@ export function OperationalListPage({
             }}
           />
         </div>
+        <InventoryItemFormDrawer
+          open={!!viewingItemId}
+          onClose={() => setViewingItemId(null)}
+          itemId={viewingItemId}
+          onSuccess={() => void load()}
+        />
       </PageLayout>
     );
   }
