@@ -1068,7 +1068,10 @@ export function ErpWarehousePage() {
                         type="number"
                         min={0}
                         max={remaining}
-                        className={cn(inputCls, "w-28 flex-shrink-0 text-right")}
+                        className={cn(
+                          inputCls,
+                          "w-28 flex-shrink-0 text-right",
+                        )}
                         placeholder={`Nhận (max ${remaining})`}
                         value={currentLine?.qtyReceived ?? ""}
                         onChange={(e) => {
