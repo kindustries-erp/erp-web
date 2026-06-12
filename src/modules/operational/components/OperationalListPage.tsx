@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  periodFirstDay,
+  periodLastDay,
+  monthFirstDay,
+} from "@/modules/finance/utils/financeHelpers";
+import {
   AlertCircle,
   ChevronDown,
   ChevronRight,
@@ -597,6 +602,9 @@ export function OperationalListPage({
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
+  const [period, setPeriod] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [branchOptions, setBranchOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -730,6 +738,8 @@ export function OperationalListPage({
               recurring: recurringFilter === "RECURRING",
               payment_status: paymentStatusFilter || undefined,
               status: statusFilter || undefined,
+              date_from: dateFrom || undefined,
+              date_to: dateTo || undefined,
             } as any);
       if (variant === "inventory") {
         setStockItems((data.items || []) as InventoryStockRow[]);
@@ -758,6 +768,8 @@ export function OperationalListPage({
     paymentStatusFilter,
     statusFilter,
     itemTypeFilter,
+    dateFrom,
+    dateTo,
   ]);
 
   async function createSample() {
@@ -1144,40 +1156,53 @@ export function OperationalListPage({
             },
           ],
         }
-      : {
-          search: true,
-          channel: {
-            label: "Chi nhánh",
-            placeholder: "Tất cả chi nhánh",
-            options: branchOptions,
-          },
-          status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
-          custom: [
-            {
-              key: "paymentStatus",
-              label: "Thanh toán",
-              placeholder: "Tất cả thanh toán",
-              options: PAYMENT_STATUS_OPTIONS,
+      : variant === "purchase"
+        ? {
+            search: true,
+            period: true,
+          }
+        : {
+            search: true,
+            channel: {
+              label: "Chi nhánh",
+              placeholder: "Tất cả chi nhánh",
+              options: branchOptions,
             },
-            {
-              key: "recurring",
-              label: "Recurring",
-              placeholder: "Tất cả recurring",
-              options: RECURRING_OPTIONS,
+            status: {
+              options: STATUS_OPTIONS,
+              placeholder: "Tất cả trạng thái",
             },
-          ],
-        };
+            custom: [
+              {
+                key: "paymentStatus",
+                label: "Thanh toán",
+                placeholder: "Tất cả thanh toán",
+                options: PAYMENT_STATUS_OPTIONS,
+              },
+              {
+                key: "recurring",
+                label: "Recurring",
+                placeholder: "Tất cả recurring",
+                options: RECURRING_OPTIONS,
+              },
+            ],
+          };
 
   const activeFilterCount = [
     !!searchInput,
+    !!dateFrom,
+    !!dateTo,
+    !!period,
     ...(variant === "inventory"
       ? [!!itemTypeFilter]
-      : [
-          !!branchFilter,
-          !!statusFilter,
-          !!paymentStatusFilter,
-          !!recurringFilter,
-        ]),
+      : variant === "purchase"
+        ? []
+        : [
+            !!branchFilter,
+            !!statusFilter,
+            !!paymentStatusFilter,
+            !!recurringFilter,
+          ]),
   ].filter(Boolean).length;
 
   function resetAllFilters() {
@@ -1188,6 +1213,9 @@ export function OperationalListPage({
     setPaymentStatusFilter("");
     setRecurringFilter("");
     setItemTypeFilter("");
+    setPeriod("");
+    setDateFrom("");
+    setDateTo("");
     setPage(1);
   }
 
@@ -1734,9 +1762,9 @@ export function OperationalListPage({
           config={filterConfig}
           filter={{
             state: {
-              period: "",
-              dateFrom: "",
-              dateTo: "",
+              period,
+              dateFrom,
+              dateTo,
               channel: branchFilter,
               search: searchInput,
               amountMin: "",
@@ -1753,9 +1781,27 @@ export function OperationalListPage({
             openPanel: () => setFilterPanelOpen(true),
             closePanel: () => setFilterPanelOpen(false),
             togglePanel: () => setFilterPanelOpen((v) => !v),
-            setPeriod: () => {},
-            setDateFrom: () => {},
-            setDateTo: () => {},
+            setPeriod: (v) => {
+              setPeriod(v);
+              if (v) {
+                setDateFrom(periodFirstDay(v));
+                setDateTo(periodLastDay(v));
+              }
+              setPage(1);
+            },
+            setDateFrom: (v) => {
+              const newVal =
+                v && dateTo && dateTo < v ? monthFirstDay(dateTo) : v;
+              setDateFrom(newVal);
+              setPeriod("");
+              setPage(1);
+            },
+            setDateTo: (v) => {
+              setDateTo(v);
+              if (v && dateFrom && v < dateFrom) setDateFrom(monthFirstDay(v));
+              setPeriod("");
+              setPage(1);
+            },
             setChannel: (v: string) => {
               setBranchFilter(v);
               setPage(1);
