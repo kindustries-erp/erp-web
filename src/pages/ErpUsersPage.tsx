@@ -201,6 +201,19 @@ export function ErpUsersPage() {
         cell: (item) => <span className="font-medium">{item.email}</span>,
       },
       {
+        key: "employee",
+        header: "Employee linked",
+        cell: (item) =>
+          item.employee
+            ? `${item.employee.fullName} (${item.employee.employeeCode})`
+            : "—",
+      },
+      {
+        key: "lastLoginAt",
+        header: "Lần đăng nhập cuối",
+        cell: (item) => formatDate(item.lastLoginAt),
+      },
+      {
         key: "status",
         header: "Trạng thái",
         cell: (item) => (
@@ -214,19 +227,6 @@ export function ErpUsersPage() {
             {item.status}
           </span>
         ),
-      },
-      {
-        key: "employee",
-        header: "Employee linked",
-        cell: (item) =>
-          item.employee
-            ? `${item.employee.fullName} (${item.employee.employeeCode})`
-            : "—",
-      },
-      {
-        key: "lastLoginAt",
-        header: "Lần đăng nhập cuối",
-        cell: (item) => formatDate(item.lastLoginAt),
       },
     ],
     [],

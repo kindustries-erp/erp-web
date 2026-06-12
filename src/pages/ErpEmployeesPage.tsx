@@ -222,8 +222,8 @@ export function ErpEmployeesPage() {
         <span
           className={
             item.status === "ACTIVE"
-              ? "text-[color:var(--success)]"
-              : "text-[color:var(--muted-fg)]"
+              ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+              : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
           }
         >
           {item.status}

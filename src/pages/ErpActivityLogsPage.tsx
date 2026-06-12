@@ -171,6 +171,11 @@ export function ErpActivityLogsPage() {
         },
       },
       {
+        key: "createdAt",
+        header: t("activityLogs.headers.time") || "Thời gian",
+        cell: (item) => formatDate(item.createdAt),
+      },
+      {
         key: "status",
         header: t("activityLogs.headers.status") || "Status",
         cell: (item) => (
@@ -184,11 +189,6 @@ export function ErpActivityLogsPage() {
             {item.status}
           </span>
         ),
-      },
-      {
-        key: "createdAt",
-        header: t("activityLogs.headers.time") || "Thời gian",
-        cell: (item) => formatDate(item.createdAt),
       },
     ],
     [t],
