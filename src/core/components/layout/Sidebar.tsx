@@ -270,19 +270,19 @@ export function Sidebar() {
               </div>
               <NavItem
                 collapsed={c}
-                icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Quản lý người dùng"
-                active={currentPage === "erp-users"}
-                onClick={() => navTo("erp-users")}
-                contextPage="erp-users"
-              />
-              <NavItem
-                collapsed={c}
                 icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.erpEmployees")}
                 active={currentPage === "erp-employees"}
                 onClick={() => navTo("erp-employees")}
                 contextPage="erp-employees"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Quản lý người dùng"
+                active={currentPage === "erp-users"}
+                onClick={() => navTo("erp-users")}
+                contextPage="erp-users"
               />
               <NavItem
                 collapsed={c}

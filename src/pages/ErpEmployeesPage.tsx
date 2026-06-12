@@ -131,8 +131,8 @@ export function ErpEmployeesPage() {
       return;
     }
     const payload = { ...form };
-    if (!payload.startDate) delete payload.startDate;
-    if (!payload.leaveDate) delete payload.leaveDate;
+    if (!payload.startDate) payload.startDate = null as any;
+    if (!payload.leaveDate) payload.leaveDate = null as any;
 
     setSaving(true);
     try {
