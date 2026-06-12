@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, Trash2, Users } from "lucide-react";
+import { Building2, Trash2, Users, Pencil } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import {
   DataTable,
@@ -169,7 +169,11 @@ export function ErpBusinessPartnersPage({
     cell: (item) => (
       <ActionDropdown
         items={[
-          { label: "Chỉnh sửa", onClick: () => openEdit(item) },
+          {
+            label: "Chỉnh sửa",
+            icon: <Pencil className="h-3.5 w-3.5" />,
+            onClick: () => openEdit(item),
+          },
           {
             label: "Xóa",
             icon: <Trash2 className="h-3.5 w-3.5" />,

@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useT } from "@/core/i18n";
+import { Pencil, Trash2 } from "lucide-react";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
   getBusinessPartnersPagedApi,
@@ -570,9 +571,14 @@ export function RoleFilteredPartnersTab({
           cell: (bp) => (
             <ActionDropdown
               items={[
-                { label: t("common.edit"), onClick: () => openEdit(bp) },
+                {
+                  label: t("common.edit"),
+                  icon: <Pencil className="h-3.5 w-3.5" />,
+                  onClick: () => openEdit(bp),
+                },
                 {
                   label: t("common.delete"),
+                  icon: <Trash2 className="h-3.5 w-3.5" />,
                   onClick: () => setDeleteTarget(bp),
                   variant: "danger",
                 },
