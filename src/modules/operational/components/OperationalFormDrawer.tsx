@@ -265,18 +265,14 @@ export function OperationalFormDrawer({
     inventoryCoreApi
       .list({ page: 1, pageSize: 200 })
       .then((res) => {
-        const options = (res.items || [])
-          .filter((item: ErpInventoryItem) =>
-            ["RAW", "GOODS", "WIP"].includes(item.itemType || ""),
-          )
-          .map((item: ErpInventoryItem) => ({
-            value: item.id,
-            label: `${item.sku} — ${item.itemName}`,
-            sku: item.sku,
-            itemName: item.itemName,
-            itemType: item.itemType,
-            note: item.note || "",
-          }));
+        const options = (res.items || []).map((item: ErpInventoryItem) => ({
+          value: item.id,
+          label: `${item.sku} — ${item.itemName}`,
+          sku: item.sku,
+          itemName: item.itemName,
+          itemType: item.itemType,
+          note: item.note || "",
+        }));
         setInventoryItemOptions(options);
       })
       .catch(() => setInventoryItemOptions([]));

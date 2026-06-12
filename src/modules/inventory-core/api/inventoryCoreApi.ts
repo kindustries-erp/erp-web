@@ -90,6 +90,8 @@ function p(params: ListParams = {}) {
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
     ...(params.search ? { search: params.search } : {}),
+    ...(params.itemType ? { itemType: params.itemType } : {}),
+    ...(params.status ? { status: params.status } : {}),
   };
 }
 

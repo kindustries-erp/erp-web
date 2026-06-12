@@ -145,19 +145,10 @@ export function ErpInventoryItemsTab() {
         page,
         pageSize,
         search: filter.state.search.trim() || undefined,
+        status: filter.state.status || undefined,
+        itemType: filter.state.custom.itemType || undefined,
       });
-      let nextItems = res.items;
-      if (filter.state.status) {
-        nextItems = nextItems.filter(
-          (item) => item.status === filter.state.status,
-        );
-      }
-      if (filter.state.custom.itemType) {
-        nextItems = nextItems.filter(
-          (item) => item.itemType === filter.state.custom.itemType,
-        );
-      }
-      setItems(nextItems);
+      setItems(res.items);
       setTotal(res.total);
       setTotalPages(res.totalPages);
     } catch (e) {
