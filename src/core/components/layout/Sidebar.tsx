@@ -21,6 +21,7 @@ import {
   Factory,
   Shield,
   History,
+  Key,
 } from "lucide-react";
 import { IconChevronLeft, IconPin } from "./sidebarIcons";
 import { UserMenuPopover } from "./UserMenuPopover";
@@ -283,6 +284,14 @@ export function Sidebar() {
                 active={currentPage === "erp-users"}
                 onClick={() => navTo("erp-users")}
                 contextPage="erp-users"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<Key className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Phân quyền (Core)"
+                active={currentPage === "erp-permissions-core"}
+                onClick={() => navTo("erp-permissions-core")}
+                contextPage="erp-permissions-core"
               />
               <NavItem
                 collapsed={c}
