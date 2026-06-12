@@ -40,6 +40,7 @@ export type PageKey =
   | "erp-inventory-masters"
   | "erp-suppliers"
   | "erp-customers"
+  | "erp-employees"
   | "erp-users"
   | "erp-activity-logs";
 export type TxSource = "cash-fund" | "bank-deposit";

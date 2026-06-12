@@ -51,6 +51,9 @@ export interface ErpEmployee {
   employeeCode: string;
   email: string | null;
   phone: string | null;
+  address: string | null;
+  startDate: string | null;
+  leaveDate: string | null;
   status: string;
 }
 

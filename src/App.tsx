@@ -27,6 +27,7 @@ import {
   ErpSuppliersPage,
 } from "@/pages/ErpBusinessPartnersPage";
 import { ErpUsersPage } from "@/pages/ErpUsersPage";
+import { ErpEmployeesPage } from "@/pages/ErpEmployeesPage";
 import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
@@ -49,6 +50,7 @@ const CORE_PAGES = [
   "erp-inventory-masters",
   "erp-suppliers",
   "erp-customers",
+  "erp-employees",
   "erp-users",
   "erp-activity-logs",
 ] as const;
@@ -254,6 +256,15 @@ export default function App() {
                   }
                 >
                   <ErpUsersPage />
+                </div>
+              )}
+              {openTabs.includes("erp-employees") && (
+                <div
+                  className={
+                    currentPage === "erp-employees" ? "block h-full" : "hidden"
+                  }
+                >
+                  <ErpEmployeesPage />
                 </div>
               )}
               {openTabs.includes("erp-activity-logs") && (
