@@ -294,10 +294,7 @@ export function useFilterPanel(
       !!amountMax ||
       !!status ||
       !!counterpartySource ||
-      Object.entries(custom).some(([k, v]) => {
-        const c = config.custom?.find((x) => x.key === k);
-        return c?.initialValue ? v !== c.initialValue : !!v;
-      })
+      Object.values(custom).some(Boolean)
     );
   }, [
     period,
@@ -329,10 +326,7 @@ export function useFilterPanel(
     if (amountMin || amountMax) count++;
     if (status) count++;
     if (counterpartySource) count++;
-    count += Object.entries(custom).filter(([k, v]) => {
-      const c = config.custom?.find((x) => x.key === k);
-      return c?.initialValue ? v !== c.initialValue : !!v;
-    }).length;
+    count += Object.values(custom).filter(Boolean).length;
     return count;
   }, [
     period,

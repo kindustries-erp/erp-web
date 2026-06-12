@@ -208,6 +208,14 @@ export function ErpEmployeesPage() {
       cell: (item) => item.phone || "—",
     },
     {
+      key: "startDate",
+      header: "Ngày bắt đầu",
+      cell: (item) =>
+        item.startDate
+          ? new Date(item.startDate).toLocaleDateString("vi-VN")
+          : "—",
+    },
+    {
       key: "status",
       header: "Trạng thái",
       cell: (item) => (
