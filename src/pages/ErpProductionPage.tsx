@@ -18,6 +18,8 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 import {
   productionCoreApi,
   type ErpProductionOrder,
@@ -298,6 +300,8 @@ function ResultPanel({ result }: { result: ExecuteProductionResult }) {
 
 export function ErpProductionPage() {
   const showToast = useUIStore((s) => s.showToast);
+  const canRead = useHasPermission("production", "read");
+
   // ── Inventory item lookup ──
   const [itemOptions, setItemOptions] = useState<
     Array<{ value: string; label: string }>
@@ -535,6 +539,8 @@ export function ErpProductionPage() {
   );
 
   // ── Render ──
+  if (!canRead) return <Forbidden />;
+
   return (
     <PageLayout
       title="Sản xuất"

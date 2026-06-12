@@ -13,6 +13,8 @@ import { useCoreRoles } from "@/modules/system/hooks/useCoreRoles";
 import { useCorePermissionsEditor } from "@/modules/system/hooks/useCorePermissionsEditor";
 import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 import type {
   Role,
   CreateRoleDto,
@@ -61,6 +63,7 @@ const IconShield = () => (
 );
 
 export function ErpPermissionsCorePage() {
+  const canRead = useHasPermission("admin_users", "read");
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
 
@@ -254,6 +257,8 @@ export function ErpPermissionsCorePage() {
       className: "text-foreground max-w-[420px]",
     },
   ];
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout

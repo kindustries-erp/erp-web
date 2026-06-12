@@ -33,6 +33,8 @@ import {
   type ErpBom,
   type ErpBomLine,
 } from "@/modules/bom-core/api/bomCoreApi";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 import {
   inventoryCoreApi,
   type ErpInventoryItem,
@@ -279,6 +281,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
 }
 
 export function ErpBomPage() {
+  const canRead = useHasPermission("bom", "read");
   const [items, setItems] = useState<ErpBom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -630,6 +633,8 @@ export function ErpBomPage() {
       loading: saving,
     },
   ];
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout

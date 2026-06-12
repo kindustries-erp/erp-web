@@ -20,6 +20,8 @@ import {
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { PageLayout } from "@/shared/components/PageLayout";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
@@ -299,6 +301,8 @@ type TabFilter = "all" | "receipt" | "issue";
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ErpWarehousePage() {
+  const canReadReceipts = useHasPermission("goods_receipts", "read");
+  const canReadIssues = useHasPermission("goods_issues", "read");
   const showToast = useUIStore((s) => s.showToast);
 
   // ── filter state (same pattern as page mua hàng)
@@ -816,6 +820,8 @@ export function ErpWarehousePage() {
           loading: giSaving,
         },
       ];
+
+  if (!canReadReceipts && !canReadIssues) return <Forbidden />;
 
   return (
     <>

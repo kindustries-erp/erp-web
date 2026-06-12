@@ -10,6 +10,8 @@ import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -30,6 +32,7 @@ function formatDate(value: string | null) {
 }
 
 export function ErpActivityLogsPage() {
+  const canRead = useHasPermission("activity_logs", "read");
   const showToast = useUIStore((s) => s.showToast);
   const t = useT();
   const [items, setItems] = useState<AuditLogEntry[]>([]);
@@ -207,6 +210,8 @@ export function ErpActivityLogsPage() {
       />
     ),
   };
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout

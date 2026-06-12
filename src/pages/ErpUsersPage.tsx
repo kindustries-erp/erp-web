@@ -20,6 +20,8 @@ import {
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
 import { useUIStore } from "@/core/config/uiStore";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 import {
   auditCoreApi,
   employeeSelectApi,
@@ -37,6 +39,7 @@ function formatDate(value: string | null) {
 }
 
 export function ErpUsersPage() {
+  const canRead = useHasPermission("admin_users", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [items, setItems] = useState<CoreUserAdmin[]>([]);
   const [employees, setEmployees] = useState<ErpEmployee[]>([]);
@@ -250,6 +253,8 @@ export function ErpUsersPage() {
       disabled: creating,
     },
   ];
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout

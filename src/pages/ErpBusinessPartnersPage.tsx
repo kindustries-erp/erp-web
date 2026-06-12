@@ -29,6 +29,8 @@ import {
   type CreateBusinessPartnerCoreDto,
   type ErpBusinessPartner,
 } from "@/modules/business-partners-core/api/businessPartnersCoreApi";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 
 interface PartnerFormState {
   code: string;
@@ -70,6 +72,11 @@ export function ErpBusinessPartnersPage({
   title: string;
   desc: string;
 }) {
+  const canRead = useHasPermission("business_partners", "read");
+  const canCreate = useHasPermission("business_partners", "create");
+  const canUpdate = useHasPermission("business_partners", "update");
+  const canDelete = useHasPermission("business_partners", "delete");
+
   const [items, setItems] = useState<ErpBusinessPartner[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -297,6 +304,8 @@ export function ErpBusinessPartnersPage({
       primary: true,
     },
   ];
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout title={title} desc={desc} icon={icon}>
