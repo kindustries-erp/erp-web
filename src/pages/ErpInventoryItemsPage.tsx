@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Layers, Pencil, Plus, ReceiptText } from "lucide-react";
+import { Layers, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -16,6 +16,8 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { useUIStore } from "@/core/config/uiStore";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   inventoryCoreApi,
@@ -44,6 +46,7 @@ interface ItemForm {
   uom: string;
   itemType: string;
   status: string;
+  note: string;
 }
 
 const emptyForm = (): ItemForm => ({
@@ -52,6 +55,7 @@ const emptyForm = (): ItemForm => ({
   uom: "PCS",
   itemType: "FG",
   status: "ACTIVE",
+  note: "",
 });
 
 function buildForm(item: ErpInventoryItem): ItemForm {
@@ -61,6 +65,7 @@ function buildForm(item: ErpInventoryItem): ItemForm {
     uom: item.uom ?? "PCS",
     itemType: item.itemType ?? "FG",
     status: item.status ?? "ACTIVE",
+    note: item.note ?? "",
   };
 }
 
@@ -71,6 +76,7 @@ function toPayload(form: ItemForm): CreateInventoryItemPayload {
     uom: form.uom || "PCS",
     itemType: form.itemType || "FG",
     status: form.status || "ACTIVE",
+    note: form.note.trim() || undefined,
   };
 }
 
@@ -93,10 +99,14 @@ export function ErpInventoryItemsTab() {
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
-  const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ErpInventoryItem | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
+  const showToast = useUIStore((s) => s.showToast);
   const [uomOptions, setUomOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -196,7 +206,6 @@ export function ErpInventoryItemsTab() {
   function resetForm() {
     setForm(emptyForm());
     setEditing(null);
-    setViewOnly(false);
     setSaveError(null);
   }
 
@@ -212,21 +221,6 @@ export function ErpInventoryItemsTab() {
   }
 
   async function openEdit(item: ErpInventoryItem) {
-    setViewOnly(false);
-    setSaveError(null);
-    try {
-      await ensureMastersFresh();
-      const detail = await inventoryCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
-      setDrawerOpen(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết");
-    }
-  }
-
-  async function openView(item: ErpInventoryItem) {
-    setViewOnly(true);
     setSaveError(null);
     try {
       await ensureMastersFresh();
@@ -240,10 +234,6 @@ export function ErpInventoryItemsTab() {
   }
 
   async function handleSave() {
-    if (viewOnly) {
-      closeDrawer();
-      return;
-    }
     if (!form.sku.trim()) {
       setSaveError("SKU là bắt buộc");
       return;
@@ -261,6 +251,10 @@ export function ErpInventoryItemsTab() {
       } else {
         await inventoryCoreApi.create(payload);
       }
+      showToast({
+        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
+        variant: "success",
+      });
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadItems();
@@ -268,6 +262,28 @@ export function ErpInventoryItemsTab() {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function handleDelete(item: ErpInventoryItem) {
+    setDeleteTarget(item);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await inventoryCoreApi.delete(deleteTarget.id);
+      showToast({ title: "Đã xóa thành công", variant: "success" });
+      setDeleteTarget(null);
+      await loadItems();
+    } catch (e: any) {
+      showToast({
+        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -300,6 +316,19 @@ export function ErpInventoryItemsTab() {
         skeletonClassName: "w-28",
       },
       {
+        key: "note",
+        header: "Ghi chú",
+        cell: (item) => (
+          <span
+            className="text-muted-foreground truncate max-w-[150px] inline-block align-bottom"
+            title={item.note || ""}
+          >
+            {item.note || "—"}
+          </span>
+        ),
+        skeletonClassName: "w-32",
+      },
+      {
         key: "status",
         header: "Trạng thái",
         cell: (item) => (
@@ -322,7 +351,7 @@ export function ErpInventoryItemsTab() {
   const drawerActions: DrawerAction[] = [
     { label: "Hủy", onClick: closeDrawer, variant: "outline" },
     {
-      label: viewOnly ? "Đóng" : editing ? "Cập nhật" : "Tạo mới",
+      label: editing ? "Cập nhật" : "Tạo mới",
       onClick: handleSave,
       primary: true,
       loading: saving,
@@ -359,14 +388,15 @@ export function ErpInventoryItemsTab() {
                 <ActionDropdown
                   items={[
                     {
-                      label: "Xem",
-                      onClick: () => void openView(item),
-                      icon: <ReceiptText className="h-3.5 w-3.5" />,
-                    },
-                    {
                       label: "Sửa",
                       onClick: () => void openEdit(item),
                       icon: <Pencil className="h-3.5 w-3.5" />,
+                    },
+                    {
+                      label: "Xóa",
+                      onClick: () => handleDelete(item),
+                      icon: <Trash2 className="h-3.5 w-3.5" />,
+                      variant: "danger",
                     },
                   ]}
                 />
@@ -386,17 +416,29 @@ export function ErpInventoryItemsTab() {
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa "${deleteTarget.itemName}" (${deleteTarget.sku})? Hành động này sẽ ẩn item kho khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
+
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
         icon={<Layers className="h-4 w-4" />}
-        title={
-          viewOnly
-            ? "Xem item kho"
-            : editing
-              ? "Cập nhật item kho"
-              : "Tạo item kho mới"
-        }
+        title={editing ? "Cập nhật item kho" : "Tạo item kho mới"}
         subtitle={editing ? editing.sku : "Danh mục item kho dùng chung"}
         actions={drawerActions}
         panelClassName="min-[1024px]:min-w-[620px]"
@@ -412,7 +454,7 @@ export function ErpInventoryItemsTab() {
             <DrawerField label="SKU" required>
               <input
                 value={form.sku}
-                disabled={viewOnly || !!editing}
+                disabled={!!editing}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, sku: e.target.value }))
                 }
@@ -421,10 +463,20 @@ export function ErpInventoryItemsTab() {
               />
             </DrawerField>
 
+            <DrawerField label="Tên item kho" required>
+              <input
+                value={form.itemName}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, itemName: e.target.value }))
+                }
+                className={inputCls}
+                placeholder="Tên đầy đủ của item kho"
+              />
+            </DrawerField>
+
             <DrawerField label="Đơn vị tính (ĐVT)" required>
               <Combobox
                 value={form.uom}
-                disabled={viewOnly}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({
@@ -437,22 +489,9 @@ export function ErpInventoryItemsTab() {
               />
             </DrawerField>
 
-            <DrawerField label="Tên item kho" required>
-              <input
-                value={form.itemName}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, itemName: e.target.value }))
-                }
-                className={inputCls}
-                placeholder="Tên đầy đủ của item kho"
-              />
-            </DrawerField>
-
             <DrawerField label="Loại item">
               <Combobox
                 value={form.itemType}
-                disabled={viewOnly}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({
@@ -468,7 +507,6 @@ export function ErpInventoryItemsTab() {
             <DrawerField label="Trạng thái">
               <Combobox
                 value={form.status}
-                disabled={viewOnly}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
@@ -476,37 +514,21 @@ export function ErpInventoryItemsTab() {
                 options={STATUS_OPTIONS}
               />
             </DrawerField>
+
+            <div className="md:col-span-2">
+              <DrawerField label="Ghi chú">
+                <textarea
+                  value={form.note}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  className={`${inputCls} min-h-[80px] resize-y`}
+                  placeholder="Ghi chú thêm về item kho này..."
+                />
+              </DrawerField>
+            </div>
           </div>
         </DrawerSection>
-
-        {editing && (
-          <DrawerSection title="Thông tin hệ thống">
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 text-xs">
-              <div className="flex justify-between rounded-lg border border-border bg-muted/20 px-3 py-2">
-                <span className="text-muted-foreground">ID</span>
-                <span className="font-mono font-medium truncate ml-2">
-                  {editing.id}
-                </span>
-              </div>
-              {editing.createdAt && (
-                <div className="flex justify-between rounded-lg border border-border bg-muted/20 px-3 py-2">
-                  <span className="text-muted-foreground">Ngày tạo</span>
-                  <span className="font-medium">
-                    {editing.createdAt.slice(0, 10)}
-                  </span>
-                </div>
-              )}
-              {editing.updatedAt && (
-                <div className="flex justify-between rounded-lg border border-border bg-muted/20 px-3 py-2">
-                  <span className="text-muted-foreground">Cập nhật</span>
-                  <span className="font-medium">
-                    {editing.updatedAt.slice(0, 10)}
-                  </span>
-                </div>
-              )}
-            </div>
-          </DrawerSection>
-        )}
       </DrawerModal>
     </>
   );

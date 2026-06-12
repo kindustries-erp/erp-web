@@ -8,6 +8,8 @@ export interface ErpInventoryItem {
   uom: string;
   itemType: string;
   status?: string | null;
+  note?: string | null;
+  isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
 }
@@ -49,6 +51,7 @@ export interface CreateInventoryItemPayload {
   uom: string;
   itemType: string;
   status?: string;
+  note?: string;
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
@@ -203,5 +206,8 @@ export const inventoryCoreApi = {
   },
   deleteItemType: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${ITEM_TYPE_BASE}/${id}`);
+  },
+  delete: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${BASE}/${id}`);
   },
 };
