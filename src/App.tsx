@@ -26,6 +26,8 @@ import {
   ErpCustomersPage,
   ErpSuppliersPage,
 } from "@/pages/ErpBusinessPartnersPage";
+import { ErpUsersPage } from "@/pages/ErpUsersPage";
+import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -47,6 +49,8 @@ const CORE_PAGES = [
   "erp-inventory-masters",
   "erp-suppliers",
   "erp-customers",
+  "erp-users",
+  "erp-activity-logs",
 ] as const;
 
 export default function App() {
@@ -241,6 +245,26 @@ export default function App() {
                   }
                 >
                   <ErpCustomersPage />
+                </div>
+              )}
+              {openTabs.includes("erp-users") && (
+                <div
+                  className={
+                    currentPage === "erp-users" ? "block h-full" : "hidden"
+                  }
+                >
+                  <ErpUsersPage />
+                </div>
+              )}
+              {openTabs.includes("erp-activity-logs") && (
+                <div
+                  className={
+                    currentPage === "erp-activity-logs"
+                      ? "block h-full"
+                      : "hidden"
+                  }
+                >
+                  <ErpActivityLogsPage />
                 </div>
               )}
               {!(CORE_PAGES as readonly string[]).includes(currentPage) && (

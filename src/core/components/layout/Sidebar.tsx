@@ -19,6 +19,8 @@ import {
   ClipboardList,
   Network,
   Factory,
+  Shield,
+  History,
 } from "lucide-react";
 import { IconChevronLeft, IconPin } from "./sidebarIcons";
 import { UserMenuPopover } from "./UserMenuPopover";
@@ -259,6 +261,28 @@ export function Sidebar() {
                 active={currentPage === "erp-production"}
                 onClick={() => navTo("erp-production")}
                 contextPage="erp-production"
+              />
+            </div>
+            {/* Hệ thống / Admin */}
+            <div className="sidebar-nav-section py-2">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                Hệ thống
+              </div>
+              <NavItem
+                collapsed={c}
+                icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Quản lý người dùng"
+                active={currentPage === "erp-users"}
+                onClick={() => navTo("erp-users")}
+                contextPage="erp-users"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<History className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Nhật ký hoạt động"
+                active={currentPage === "erp-activity-logs"}
+                onClick={() => navTo("erp-activity-logs")}
+                contextPage="erp-activity-logs"
               />
             </div>
           </div>
