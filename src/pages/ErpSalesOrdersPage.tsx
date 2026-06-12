@@ -34,6 +34,8 @@ import {
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 
 const LOOKUP_LIMIT = 200;
 
@@ -140,6 +142,7 @@ function toPayload(form: SoForm): CreateSoPayload {
 }
 
 export function ErpSalesOrdersPage() {
+  const canRead = useHasPermission("sales_orders", "read");
   const [items, setItems] = useState<ErpSalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -438,6 +441,8 @@ export function ErpSalesOrdersPage() {
       primary: true,
     },
   ];
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout

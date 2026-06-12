@@ -24,6 +24,8 @@ import {
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { ErpInventoryItemsTab } from "@/pages/ErpInventoryItemsPage";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 
 type MasterKind = "items" | "uom" | "item-type";
 
@@ -93,6 +95,7 @@ function statusBadge(isActive: boolean) {
 }
 
 export function InventoryMasterPage() {
+  const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [activeTab, setActiveTab] = useState<MasterKind>("items");
   const [uoms, setUoms] = useState<InventoryMasterOption[]>([]);
@@ -323,6 +326,8 @@ export function InventoryMasterPage() {
       loading: saving,
     },
   ];
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout
