@@ -35,7 +35,7 @@ export function ErpActivityLogsPage() {
   const [items, setItems] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
@@ -215,30 +215,16 @@ export function ErpActivityLogsPage() {
             loading={loading}
             emptyLabel="Chưa có audit logs"
             actionsColumn={actionsColumn}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={Math.ceil(total / pageSize)}
+            onPage={setPage}
+            onPageSize={(value) => {
+              setPage(1);
+              setPageSize(value);
+            }}
           />
-
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Tổng: {total}</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Trước
-              </Button>
-              <span>Trang {page}</span>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={items.length < pageSize}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Sau
-              </Button>
-            </div>
-          </div>
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
       </div>

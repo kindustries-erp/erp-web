@@ -42,7 +42,7 @@ export function ErpUsersPage() {
   const [loading, setLoading] = useState(false);
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -257,6 +257,15 @@ export function ErpUsersPage() {
             getRowKey={(item) => item.id}
             loading={loading}
             emptyLabel="Chưa có user"
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={Math.ceil(total / pageSize)}
+            onPage={setPage}
+            onPageSize={(value) => {
+              setPage(1);
+              setPageSize(value);
+            }}
             actionsColumn={{
               cell: (raw) => {
                 const item = raw as CoreUserAdmin;
@@ -290,29 +299,6 @@ export function ErpUsersPage() {
               },
             }}
           />
-
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Tổng: {total}</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Trước
-              </Button>
-              <span>Trang {page}</span>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={items.length < pageSize}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Sau
-              </Button>
-            </div>
-          </div>
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
