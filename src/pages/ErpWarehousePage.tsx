@@ -984,6 +984,7 @@ export function ErpWarehousePage() {
           }
           subtitle={grEditing?.receiptNo ?? "Nhập kho"}
           actions={grDrawerActions}
+          panelClassName="min-[1024px]:min-w-[550px]"
         >
           {grSaveError && (
             <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -1067,7 +1068,7 @@ export function ErpWarehousePage() {
                         type="number"
                         min={0}
                         max={remaining}
-                        className={`${inputCls} w-24 flex-shrink-0 text-right`}
+                        className={cn(inputCls, "w-28 flex-shrink-0 text-right")}
                         placeholder={`Nhận (max ${remaining})`}
                         value={currentLine?.qtyReceived ?? ""}
                         onChange={(e) => {
@@ -1146,6 +1147,7 @@ export function ErpWarehousePage() {
         }
         subtitle={giEditing?.issueNo ?? "Xuất kho"}
         actions={giDrawerActions}
+        panelClassName="min-[1024px]:min-w-[550px]"
       >
         {giSaveError && (
           <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -1269,7 +1271,7 @@ export function ErpWarehousePage() {
                 <DrawerField label="Số lượng">
                   <input
                     type="number"
-                    className={`${inputCls} w-28`}
+                    className={cn(inputCls, "w-28")}
                     value={line.qtyIssued}
                     disabled={giViewOnly}
                     onChange={(e) => {
@@ -1285,7 +1287,7 @@ export function ErpWarehousePage() {
                 <DrawerField label="Đơn giá">
                   <input
                     type="number"
-                    className={`${inputCls} w-28`}
+                    className={cn(inputCls, "w-28")}
                     value={line.unitCost}
                     disabled={giViewOnly}
                     placeholder="Tùy chọn"
