@@ -130,22 +130,26 @@ export function ErpEmployeesPage() {
       });
       return;
     }
+    const payload = { ...form };
+    if (!payload.startDate) delete payload.startDate;
+    if (!payload.leaveDate) delete payload.leaveDate;
+
     setSaving(true);
     try {
       if (editing) {
         await employeesCoreApi.update(
           editing.id,
-          form as UpdateEmployeeCoreDto,
+          payload as UpdateEmployeeCoreDto,
         );
         showToast({
           title: "Đã cập nhật nhân viên",
-          description: form.fullName.trim(),
+          description: payload.fullName.trim(),
         });
       } else {
-        await employeesCoreApi.create(form);
+        await employeesCoreApi.create(payload);
         showToast({
           title: "Đã tạo nhân viên",
-          description: form.fullName.trim(),
+          description: payload.fullName.trim(),
         });
       }
       setDrawerOpen(false);

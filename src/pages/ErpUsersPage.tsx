@@ -48,6 +48,7 @@ export function ErpUsersPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingUser, setEditingUser] = useState<CoreUserAdmin | null>(null);
   const [selectedUser, setSelectedUser] = useState<CoreUserAdmin | null>(null);
   const [timeline, setTimeline] = useState<AuditLogEntry[]>([]);
   const [form, setForm] = useState({ email: "", password: "", employeeId: "" });
@@ -126,30 +127,43 @@ export function ErpUsersPage() {
     }
   }
 
-  async function handleCreate() {
-    if (!form.email.trim() || !form.password.trim()) {
-      showToast({
-        variant: "destructive",
-        title: "Thiếu thông tin",
-        description: "Cần nhập email và mật khẩu",
-      });
-      return;
+  async function handleSave() {
+    if (!editingUser) {
+      if (!form.email.trim() || !form.password.trim()) {
+        showToast({
+          variant: "destructive",
+          title: "Thiếu thông tin",
+          description: "Cần nhập email và mật khẩu",
+        });
+        return;
+      }
     }
     setCreating(true);
     try {
-      await usersAdminApi.create({
-        email: form.email.trim(),
-        password: form.password,
-        employeeId: form.employeeId || undefined,
-      });
-      showToast({ title: "Đã tạo user", description: form.email.trim() });
+      if (editingUser) {
+        await usersAdminApi.update(editingUser.id, {
+          employeeId: form.employeeId || null,
+        });
+        showToast({
+          title: "Đã cập nhật user",
+          description: form.email.trim(),
+        });
+      } else {
+        await usersAdminApi.create({
+          email: form.email.trim(),
+          password: form.password,
+          employeeId: form.employeeId || undefined,
+        });
+        showToast({ title: "Đã tạo user", description: form.email.trim() });
+      }
       setDrawerOpen(false);
       setForm({ email: "", password: "", employeeId: "" });
+      setEditingUser(null);
       await loadUsers();
     } catch (error: any) {
       showToast({
         variant: "destructive",
-        title: "Tạo user thất bại",
+        title: editingUser ? "Cập nhật user thất bại" : "Tạo user thất bại",
         description:
           error?.response?.data?.message ||
           error?.message ||
@@ -226,8 +240,12 @@ export function ErpUsersPage() {
       disabled: creating,
     },
     {
-      label: creating ? "Đang tạo..." : "Tạo user",
-      onClick: () => void handleCreate(),
+      label: creating
+        ? "Đang lưu..."
+        : editingUser
+          ? "Cập nhật user"
+          : "Tạo user",
+      onClick: () => void handleSave(),
       primary: true,
       disabled: creating,
     },
@@ -247,6 +265,8 @@ export function ErpUsersPage() {
           activeFilterCount={filter.activeFilterCount}
           onCreate={() => {
             void loadEmployees();
+            setEditingUser(null);
+            setForm({ email: "", password: "", employeeId: "" });
             setDrawerOpen(true);
           }}
           createLabel="Tạo user"
@@ -276,6 +296,19 @@ export function ErpUsersPage() {
                 return (
                   <ActionDropdown
                     items={[
+                      {
+                        label: "Chỉnh sửa",
+                        onClick: () => {
+                          void loadEmployees();
+                          setEditingUser(item);
+                          setForm({
+                            email: item.email,
+                            password: "",
+                            employeeId: item.employeeId || "",
+                          });
+                          setDrawerOpen(true);
+                        },
+                      },
                       {
                         label: "Xem chi tiết",
                         onClick: () => void openDetail(item),
@@ -310,7 +343,7 @@ export function ErpUsersPage() {
       <DrawerModal
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title="Tạo user mới"
+        title={editingUser ? "Cập nhật user" : "Tạo user mới"}
         subtitle="Flow production-grade cho ERP CORE"
         actions={drawerActions}
       >
@@ -319,23 +352,26 @@ export function ErpUsersPage() {
             <input
               className={inputCls}
               value={form.email}
+              disabled={!!editingUser}
               onChange={(e) =>
                 setForm((prev) => ({ ...prev, email: e.target.value }))
               }
               placeholder="user@example.com"
             />
           </DrawerField>
-          <DrawerField label="Mật khẩu" required>
-            <input
-              type="password"
-              className={inputCls}
-              value={form.password}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, password: e.target.value }))
-              }
-              placeholder="Tối thiểu 8 ký tự"
-            />
-          </DrawerField>
+          {!editingUser && (
+            <DrawerField label="Mật khẩu" required>
+              <input
+                type="password"
+                className={inputCls}
+                value={form.password}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, password: e.target.value }))
+                }
+                placeholder="Tối thiểu 8 ký tự"
+              />
+            </DrawerField>
+          )}
           <DrawerField label="Liên kết employee">
             <Combobox
               options={employees.map((emp) => ({
