@@ -431,8 +431,7 @@ export function ErpSalesOrdersPage() {
       title="Đơn bán hàng"
       desc="Quản lý đơn bán hàng và reserve/unreserve tồn kho."
       icon={<Boxes className="h-5 w-5" />}
-    >
-      <div className="flex items-center justify-end mb-3">
+      actions={
         <TableActionGroup
           onRefresh={() => void loadOrders()}
           loading={loading}
@@ -441,7 +440,8 @@ export function ErpSalesOrdersPage() {
           onCreate={openCreate}
           createLabel="Tạo mới"
         />
-      </div>
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <DataTable

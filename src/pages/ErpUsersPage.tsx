@@ -261,8 +261,7 @@ export function ErpUsersPage() {
       title="Quản lý người dùng"
       desc="Tạo user production-grade và xem timeline audit theo từng user"
       icon={<Shield className="h-4 w-4" />}
-    >
-      <div className="mb-3 flex items-center justify-end">
+      actions={
         <TableActionGroup
           onRefresh={() => void loadUsers()}
           loading={loading}
@@ -276,8 +275,8 @@ export function ErpUsersPage() {
           }}
           createLabel="Tạo user"
         />
-      </div>
-
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <DataTable

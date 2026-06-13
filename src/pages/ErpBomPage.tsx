@@ -643,8 +643,7 @@ export function ErpBomPage() {
       title="BOM"
       desc="Quản lý định mức vật tư (Bill of Materials) cho các thành phẩm."
       icon={<Network className="h-5 w-5" />}
-    >
-      <div className="flex items-center justify-end mb-3">
+      actions={
         <TableActionGroup
           onRefresh={() => void loadBoms()}
           loading={loading}
@@ -652,7 +651,8 @@ export function ErpBomPage() {
           activeFilterCount={filter.activeFilterCount}
           onCreate={openCreate}
         />
-      </div>
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1">
           <DataTable

@@ -956,8 +956,7 @@ export function ErpWarehousePage() {
         title="Chứng từ kho"
         desc="Quản lý phiếu nhập kho và xuất kho."
         icon={<ClipboardList className="h-5 w-5" />}
-      >
-        <div className="flex items-center justify-end mb-3">
+        actions={
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
@@ -995,7 +994,8 @@ export function ErpWarehousePage() {
               Xuất kho
             </button>
           </div>
-        </div>
+        }
+      >
         {loadError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {loadError}
