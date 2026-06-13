@@ -11,11 +11,11 @@ import {
   FileText,
   Link2,
   Loader2,
-  Pencil,
   Plus,
   RefreshCcw,
   Repeat,
   Warehouse,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { useUIStore } from "@/core/config/uiStore";
@@ -609,6 +609,7 @@ export function OperationalListPage({
     Array<{ value: string; label: string }>
   >([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [viewOnly, setViewOnly] = useState(false);
   const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
     {},
@@ -924,7 +925,7 @@ export function OperationalListPage({
     if (!documentType) return;
 
     if (variant === "purchase") {
-      setLoading(true);
+      setFormLoading(true);
       setError(null);
       try {
         const document = await operationalApi.getDocument(documentType, row.id);
@@ -936,7 +937,7 @@ export function OperationalListPage({
       } catch (err) {
         setError(extractApiError(err, t("Không tải được chi tiết chứng từ")));
       } finally {
-        setLoading(false);
+        setFormLoading(false);
       }
       return;
     }
@@ -1678,36 +1679,9 @@ export function OperationalListPage({
                 <ActionDropdown
                   items={[
                     {
-                      label: t("Chi tiết"),
-                      icon: <FileText className="h-4 w-4" />,
+                      label: t("Xem chi tiết"),
+                      icon: <Eye className="h-4 w-4" />,
                       onClick: () => void openDetail(row),
-                      hidden: variant === "purchase",
-                    },
-                    {
-                      label: "Sửa",
-                      onClick: async () => {
-                        const documentType = resolveDocumentType(row, variant);
-                        if (!documentType) return;
-                        try {
-                          const detail = await operationalApi.getDocument(
-                            documentType,
-                            row.id,
-                          );
-                          setEditingRow(detail);
-                          setFormOpen(true);
-                        } catch (err) {
-                          setError(
-                            extractApiError(
-                              err,
-                              "Không tải được dữ liệu chỉnh sửa",
-                            ),
-                          );
-                        }
-                      },
-                      icon: <Pencil className="h-4 w-4" />,
-                      hidden: !["sales", "purchase", "expenses"].includes(
-                        variant,
-                      ),
                     },
                     {
                       label: "Liên kết tiền",
@@ -2217,6 +2191,7 @@ export function OperationalListPage({
             setEditingRow(null);
             setViewOnly(false);
           }}
+          onToggleEdit={() => setViewOnly(false)}
           onSaved={async () => {
             await load();
             showToast({

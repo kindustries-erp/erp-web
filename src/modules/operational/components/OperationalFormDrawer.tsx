@@ -8,7 +8,8 @@ import {
 } from "@/shared/components/DrawerModal";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, ChevronRight, ChevronLeft } from "lucide-react";
+import { cn } from "@/shared/utils";
 import {
   getBusinessPartnersPagedApi,
   type BusinessPartner,
@@ -28,6 +29,7 @@ import {
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 
 function fmtDate(value?: string | null) {
@@ -56,6 +58,7 @@ interface Props {
   poReceipts?: ErpPoReceipt[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
+  onToggleEdit?: () => void;
 }
 
 const variantTitle: Record<Props["variant"], string> = {
@@ -152,6 +155,7 @@ export function OperationalFormDrawer({
   poReceipts,
   onClose,
   onSaved,
+  onToggleEdit,
 }: Props) {
   const t = useT();
   const purchaseStatusValue = (editing?.status || "DRAFT") as string;
@@ -199,7 +203,40 @@ export function OperationalFormDrawer({
       note?: string;
     }>
   >([]);
+  const purchaseInventoryOptions = useMemo(() => {
+    if (variant !== "purchase") return inventoryItemOptions;
+    const fallbackOptions = (editing?.lines || [])
+      .filter((line) => line.inventory_item_id)
+      .map((line, idx) => {
+        const id = line.inventory_item_id as string;
+        const existing = inventoryItemOptions.find((item) => item.value === id);
+        if (existing) return existing;
+        const fallbackName =
+          line.item_name?.trim() ||
+          line.description?.trim() ||
+          line.item_code?.trim() ||
+          `Linh kiện #${idx + 1}`;
+        const fallbackSku = line.item_code?.trim() || "";
+        return {
+          value: id,
+          label: fallbackSku
+            ? `${fallbackSku} — ${fallbackName}`
+            : fallbackName,
+          sku: fallbackSku,
+          itemName: fallbackName,
+          itemType: line.line_type,
+          note: line.description || "",
+        };
+      });
+    return [
+      ...inventoryItemOptions,
+      ...fallbackOptions.filter(
+        (opt) => !inventoryItemOptions.some((item) => item.value === opt.value),
+      ),
+    ];
+  }, [variant, inventoryItemOptions, editing]);
 
+  const [showGeneralInfo, setShowGeneralInfo] = useState(true);
   const [docNo, setDocNo] = useState("");
   const [branchId, setBranchId] = useState("");
   const [partnerId, setPartnerId] = useState("");
@@ -434,11 +471,28 @@ export function OperationalFormDrawer({
       return;
     }
 
+    const purchaseEditableLines =
+      variant === "purchase"
+        ? lines.map((line, idx) => ({
+            line_no: idx + 1,
+            line_type: line.line_type || undefined,
+            inventory_item_id: line.inventory_item_id || undefined,
+            item_code: line.item_code.trim() || undefined,
+            item_name: line.item_name.trim() || undefined,
+            description: line.description.trim() || undefined,
+            qty: Number(line.qty || 0),
+            unit_price: Number(line.unit_price || 0),
+            amount: Number(line.amount || 0),
+            notes: line.notes.trim() || undefined,
+          }))
+        : undefined;
+
     const payload: CreateOperationalPayload = isPurchaseStatusOnlyMode
       ? {
           status,
           payment_status: paymentStatus,
           notes: notes.trim() || undefined,
+          ...(purchaseEditableLines ? { lines: purchaseEditableLines } : {}),
         }
       : isPurchaseFullyLocked
         ? {
@@ -539,6 +593,13 @@ export function OperationalFormDrawer({
     <DrawerModal
       open={open}
       onClose={onClose}
+      headerExtra={
+        viewOnly && onToggleEdit ? (
+          <Button variant="secondary" size="sm" onClick={onToggleEdit}>
+            Chỉnh sửa
+          </Button>
+        ) : undefined
+      }
       panelClassName={
         variant === "purchase"
           ? "min-[1024px]:min-w-[1120px]"
@@ -575,74 +636,86 @@ export function OperationalFormDrawer({
       <div className="flex flex-col xl:flex-row gap-6 items-start">
         {/* Cột trái (4/5): Dòng chứng từ & Lịch sử nhập kho */}
         <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
-          <DrawerSection title={t("Chi tiết")}>
-            <div className="space-y-3">
-              {lines.map((line, idx) => (
-                <div
-                  key={line.tempId}
-                  className="rounded-lg border border-[color:var(--border)] p-3 space-y-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-xs font-semibold text-muted-foreground">
-                      {t("Mục")} {idx + 1}
-                    </div>
-                    {lines.length > 1 && !viewOnly && (
-                      <button
-                        className="text-xs font-medium text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 hover:text-red-700 rounded-md px-2.5 py-1.5 flex items-center gap-1.5 transition-colors disabled:opacity-50 whitespace-nowrap"
-                        disabled={isPurchaseLocked}
-                        onClick={() => removeLine(idx)}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{t("Xóa mục này")}</span>
-                      </button>
+          <DrawerSection
+            title={t("Chi tiết")}
+            titleExtra={
+              <span className="text-blue-600">
+                {t("Tổng")}: {Number(totalAmount || 0).toLocaleString("vi-VN")}{" "}
+                VND
+              </span>
+            }
+          >
+            <div className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                  <tr>
+                    <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
+                      #
+                    </th>
+                    <th className="px-3 py-2 font-medium min-w-[260px]">
+                      {t("Linh kiện / Tên hàng")}
+                    </th>
+                    <th className="px-3 py-2 font-medium min-w-[140px]">
+                      {t("Số lượng")}
+                    </th>
+                    <th className="px-3 py-2 font-medium min-w-[180px]">
+                      {t("Đơn giá")}
+                    </th>
+                    <th className="px-3 py-2 font-medium min-w-[180px]">
+                      {t("Thành tiền")}
+                    </th>
+                    <th className="px-3 py-2 font-medium min-w-[240px]">
+                      {t("Mô tả")}
+                    </th>
+                    {!viewOnly && (
+                      <th className="px-3 py-2 font-medium w-12 text-center"></th>
                     )}
-                  </div>
-                  <div className="overflow-x-auto pb-2">
-                    <div className="flex min-w-[900px] items-start gap-3">
-                      {variant === "purchase" ? (
-                        <div className="w-[220px] shrink-0">
-                          <DrawerField label={t("Linh kiện")} required>
-                            <Combobox
-                              options={inventoryItemOptions}
-                              value={line.inventory_item_id}
-                              readOnly={isPurchaseLocked}
-                              onChange={(v) => {
-                                const selected = inventoryItemOptions.find(
-                                  (item) => item.value === (v || ""),
-                                );
-                                setLines((prev) =>
-                                  prev.map((draft, i) =>
-                                    i !== idx
-                                      ? draft
-                                      : {
-                                          ...draft,
-                                          inventory_item_id: v || "",
-                                          item_code: selected?.sku || "",
-                                          item_name: selected?.itemName || "",
-                                          description: selected
-                                            ? selected.note || ""
-                                            : draft.description,
-                                          line_type: selected
-                                            ? selected.itemType === "GOODS"
-                                              ? "PRODUCT"
-                                              : "PART"
-                                            : draft.line_type,
-                                        },
-                                  ),
-                                );
-                              }}
-                              placeholder={t("Chọn linh kiện từ danh mục")}
-                              searchPlaceholder={t(
-                                "Tìm SKU / tên linh kiện...",
-                              )}
-                              emptyLabel={t("Không có linh kiện phù hợp")}
-                              allowClear={false}
-                            />
-                          </DrawerField>
-                        </div>
-                      ) : (
-                        <>
-                          <DrawerField label={t("Loại dòng")}>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-background">
+                  {lines.map((line, idx) => (
+                    <tr key={line.tempId} className="group hover:bg-muted/30">
+                      <td className="px-3 py-3 text-center text-muted-foreground align-top mt-2">
+                        {idx + 1}
+                      </td>
+                      <td className="px-3 py-2 align-top">
+                        {variant === "purchase" ? (
+                          <Combobox
+                            options={purchaseInventoryOptions}
+                            value={line.inventory_item_id}
+                            readOnly={isPurchaseLocked}
+                            onChange={(v) => {
+                              const selected = purchaseInventoryOptions.find(
+                                (item) => item.value === (v || ""),
+                              );
+                              setLines((prev) =>
+                                prev.map((draft, i) =>
+                                  i !== idx
+                                    ? draft
+                                    : {
+                                        ...draft,
+                                        inventory_item_id: v || "",
+                                        item_code: selected?.sku || "",
+                                        item_name: selected?.itemName || "",
+                                        description: selected
+                                          ? selected.note || ""
+                                          : draft.description,
+                                        line_type: selected
+                                          ? selected.itemType === "GOODS"
+                                            ? "PRODUCT"
+                                            : "PART"
+                                          : draft.line_type,
+                                      },
+                                ),
+                              );
+                            }}
+                            placeholder={t("Chọn linh kiện từ danh mục")}
+                            searchPlaceholder={t("Tìm SKU / tên linh kiện...")}
+                            emptyLabel={t("Không có linh kiện phù hợp")}
+                            allowClear={false}
+                          />
+                        ) : (
+                          <div className="space-y-2">
                             <Combobox
                               options={lineTypeOptions}
                               value={line.line_type}
@@ -652,42 +725,28 @@ export function OperationalFormDrawer({
                               }
                               allowClear={false}
                             />
-                          </DrawerField>
-                          <DrawerField label={t("Mã hàng/dịch vụ")}>
                             <input
                               className={inputCls}
+                              placeholder={t("Mã hàng/SKU")}
                               value={line.item_code}
                               disabled={isPurchaseLocked}
                               onChange={(e) =>
                                 setLine(idx, "item_code", e.target.value)
                               }
                             />
-                          </DrawerField>
-                          <DrawerField label={t("Tên hàng/dịch vụ")}>
                             <input
                               className={inputCls}
+                              placeholder={t("Tên hàng/dịch vụ")}
                               value={line.item_name}
                               disabled={isPurchaseLocked}
                               onChange={(e) =>
                                 setLine(idx, "item_name", e.target.value)
                               }
                             />
-                          </DrawerField>
-                        </>
-                      )}
-                      <div className="w-[280px] shrink-0">
-                        <DrawerField label={t("Mô tả")}>
-                          <input
-                            className={inputCls}
-                            value={line.description}
-                            disabled={purchaseFieldLocked("description")}
-                            onChange={(e) =>
-                              setLine(idx, "description", e.target.value)
-                            }
-                          />
-                        </DrawerField>
-                      </div>
-                      <DrawerField label={t("Số lượng")}>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 align-top">
                         <input
                           type="number"
                           min={0}
@@ -697,8 +756,8 @@ export function OperationalFormDrawer({
                           disabled={purchaseFieldLocked("qty")}
                           onChange={(e) => setLine(idx, "qty", e.target.value)}
                         />
-                      </DrawerField>
-                      <DrawerField label={t("Đơn giá")}>
+                      </td>
+                      <td className="px-3 py-2 align-top">
                         <input
                           type="number"
                           min={0}
@@ -710,8 +769,8 @@ export function OperationalFormDrawer({
                             setLine(idx, "unit_price", e.target.value)
                           }
                         />
-                      </DrawerField>
-                      <DrawerField label={t("Thành tiền")}>
+                      </td>
+                      <td className="px-3 py-2 align-top">
                         <input
                           type="number"
                           min={0}
@@ -723,26 +782,49 @@ export function OperationalFormDrawer({
                             setLine(idx, "amount", e.target.value)
                           }
                         />
-                      </DrawerField>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                      </td>
+                      <td className="px-3 py-2 align-top">
+                        <input
+                          className={inputCls}
+                          value={line.description}
+                          disabled={purchaseFieldLocked("description")}
+                          onChange={(e) =>
+                            setLine(idx, "description", e.target.value)
+                          }
+                          placeholder={t("Nhập mô tả")}
+                        />
+                      </td>
+                      {!viewOnly && (
+                        <td className="px-3 py-2 align-top text-center">
+                          {lines.length > 1 && !isPurchaseLocked && (
+                            <button
+                              type="button"
+                              className="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors mt-1"
+                              disabled={isPurchaseLocked}
+                              onClick={() => removeLine(idx)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
               {!viewOnly && (
-                <button
-                  className="text-xs text-blue-500 hover:underline"
-                  disabled={isPurchaseLocked}
-                  onClick={addLine}
-                >
-                  + {t("Thêm mục")}
-                </button>
+                <div className="p-3 border-t border-border bg-muted/10">
+                  <button
+                    type="button"
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1.5"
+                    disabled={isPurchaseLocked}
+                    onClick={addLine}
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t("Thêm dòng")}
+                  </button>
+                </div>
               )}
-            </div>
-          </DrawerSection>
-
-          <DrawerSection title={t("Tổng tiền")}>
-            <div className="text-sm font-semibold">
-              {Number(totalAmount || 0).toLocaleString("vi-VN")} VND
             </div>
           </DrawerSection>
 
@@ -794,244 +876,269 @@ export function OperationalFormDrawer({
         </div>
 
         {/* Cột phải (1/5): Thông tin chung */}
-        <div className="w-full shrink-0 xl:w-[320px] order-1 xl:order-2 space-y-4">
-          <DrawerSection title={t("Thông tin chung")}>
-            <div className="flex flex-col gap-3">
-              <DrawerField label={t("Số chứng từ")}>
-                <input
-                  className={inputCls}
-                  value={docNo}
-                  disabled={purchaseFieldLocked("poNo")}
-                  placeholder={
-                    variant === "purchase" ? "PO-YYYYMM001" : undefined
-                  }
-                  onChange={(e) => setDocNo(e.target.value)}
-                />
-              </DrawerField>
-              {variant !== "purchase" && (
-                <DrawerField label={t("Chi nhánh")}>
-                  <Combobox
-                    options={branchOptions}
-                    value={branchId}
-                    disabled={isPurchaseLocked}
-                    onChange={(v) => setBranchId(v || "")}
-                  />
-                </DrawerField>
-              )}
-              <DrawerField
-                label={
-                  variant === "sales" ? t("Khách hàng") : t("Nhà cung cấp")
-                }
+        <div
+          className={cn(
+            "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300",
+            showGeneralInfo ? "w-full xl:w-[320px]" : "w-auto",
+          )}
+        >
+          <DrawerSection
+            title={showGeneralInfo ? t("Thông tin chung") : ""}
+            titleExtra={
+              <button
+                type="button"
+                onClick={() => setShowGeneralInfo((s) => !s)}
+                className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+                title={showGeneralInfo ? t("Thu gọn") : t("Mở rộng")}
               >
-                <Combobox
-                  options={partnerOptions}
-                  value={partnerId}
-                  disabled={isPurchaseLocked}
-                  onChange={(v) => setPartnerId(v || "")}
-                />
-              </DrawerField>
-              {variant !== "purchase" && (
-                <DrawerField label={t("Tên snapshot")}>
+                {showGeneralInfo ? (
+                  <ChevronRight className="w-4 h-4" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4" />
+                )}
+              </button>
+            }
+          >
+            {showGeneralInfo && (
+              <div className="flex flex-col gap-3">
+                <DrawerField label={t("Số chứng từ")}>
                   <input
                     className={inputCls}
-                    value={partnerNameSnapshot}
-                    disabled={isPurchaseLocked}
-                    onChange={(e) => setPartnerNameSnapshot(e.target.value)}
+                    value={docNo}
+                    disabled={purchaseFieldLocked("poNo")}
+                    placeholder={
+                      variant === "purchase" ? "PO-YYYYMM001" : undefined
+                    }
+                    onChange={(e) => setDocNo(e.target.value)}
                   />
                 </DrawerField>
-              )}
-              <DrawerField label={t("Ngày chứng từ")} required>
-                <DatePicker
-                  className={inputCls}
-                  value={documentDate?.slice(0, 10) || ""}
-                  disabled={isPurchaseLocked}
-                  onChange={(v) => setDocumentDate(v)}
-                />
-              </DrawerField>
-              {variant === "purchase" && (
-                <DrawerField label={t("Ngày nhận dự kiến")}>
-                  <DatePicker
-                    className={inputCls}
-                    value={expectedDate?.slice(0, 10) || ""}
-                    disabled={purchaseFieldLocked("expectedDate")}
-                    onChange={(v) => setExpectedDate(v)}
-                  />
-                </DrawerField>
-              )}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Ngày đến hạn")}>
-                  <DatePicker
-                    className={inputCls}
-                    value={dueDate?.slice(0, 10) || ""}
-                    disabled={isPurchaseLocked}
-                    onChange={(v) => setDueDate(v)}
-                  />
-                </DrawerField>
-              )}
-              {variant !== "purchase" && (
-                <DrawerField label={t("Trạng thái hóa đơn")}>
+                {variant !== "purchase" && (
+                  <DrawerField label={t("Chi nhánh")}>
+                    <Combobox
+                      options={branchOptions}
+                      value={branchId}
+                      disabled={isPurchaseLocked}
+                      onChange={(v) => setBranchId(v || "")}
+                    />
+                  </DrawerField>
+                )}
+                <DrawerField
+                  label={
+                    variant === "sales" ? t("Khách hàng") : t("Nhà cung cấp")
+                  }
+                >
                   <Combobox
-                    options={invoiceOptions}
-                    value={invoiceStatus}
+                    options={partnerOptions}
+                    value={partnerId}
                     disabled={isPurchaseLocked}
-                    onChange={(v) => setInvoiceStatus(v || "NO_INVOICE")}
-                    allowClear={false}
+                    onChange={(v) => setPartnerId(v || "")}
                   />
                 </DrawerField>
-              )}
-              <DrawerField label={t("Trạng thái")}>
-                <Combobox
-                  options={statusOptions}
-                  value={status}
-                  disabled={purchaseFieldLocked("status")}
-                  onChange={(v) => setStatus(v || "DRAFT")}
-                  allowClear={false}
-                />
-              </DrawerField>
-
-              {/* T.thái thanh toán tạm ẩn theo yêu cầu */}
-
-              {variant === "sales" && (
-                <>
-                  <DrawerField label={t("Biển số xe")}>
+                {variant !== "purchase" && (
+                  <DrawerField label={t("Tên snapshot")}>
                     <input
                       className={inputCls}
-                      value={vehiclePlate}
+                      value={partnerNameSnapshot}
                       disabled={isPurchaseLocked}
-                      onChange={(e) => setVehiclePlate(e.target.value)}
+                      onChange={(e) => setPartnerNameSnapshot(e.target.value)}
                     />
                   </DrawerField>
-                  <DrawerField label="VIN">
-                    <input
-                      className={inputCls}
-                      value={vehicleVin}
-                      disabled={isPurchaseLocked}
-                      onChange={(e) => setVehicleVin(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Model xe")}>
-                    <input
-                      className={inputCls}
-                      value={vehicleModel}
-                      disabled={isPurchaseLocked}
-                      onChange={(e) => setVehicleModel(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Cố vấn dịch vụ")}>
-                    <input
-                      className={inputCls}
-                      value={serviceAdvisorName}
-                      disabled={isPurchaseLocked}
-                      onChange={(e) => setServiceAdvisorName(e.target.value)}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Ngày giao dự kiến")}>
+                )}
+                <DrawerField label={t("Ngày chứng từ")} required>
+                  <DatePicker
+                    className={inputCls}
+                    value={documentDate?.slice(0, 10) || ""}
+                    disabled={isPurchaseLocked}
+                    onChange={(v) => setDocumentDate(v)}
+                  />
+                </DrawerField>
+                {variant === "purchase" && (
+                  <DrawerField label={t("Ngày nhận dự kiến")}>
                     <DatePicker
                       className={inputCls}
                       value={expectedDate?.slice(0, 10) || ""}
-                      disabled={isPurchaseLocked}
+                      disabled={purchaseFieldLocked("expectedDate")}
                       onChange={(v) => setExpectedDate(v)}
                     />
                   </DrawerField>
-                </>
-              )}
+                )}
+                {variant !== "purchase" && (
+                  <DrawerField label={t("Ngày đến hạn")}>
+                    <DatePicker
+                      className={inputCls}
+                      value={dueDate?.slice(0, 10) || ""}
+                      disabled={isPurchaseLocked}
+                      onChange={(v) => setDueDate(v)}
+                    />
+                  </DrawerField>
+                )}
+                {variant !== "purchase" && (
+                  <DrawerField label={t("Trạng thái hóa đơn")}>
+                    <Combobox
+                      options={invoiceOptions}
+                      value={invoiceStatus}
+                      disabled={isPurchaseLocked}
+                      onChange={(v) => setInvoiceStatus(v || "NO_INVOICE")}
+                      allowClear={false}
+                    />
+                  </DrawerField>
+                )}
+                <DrawerField label={t("Trạng thái")}>
+                  <Combobox
+                    options={statusOptions}
+                    value={status}
+                    disabled={purchaseFieldLocked("status")}
+                    onChange={(v) => setStatus(v || "DRAFT")}
+                    allowClear={false}
+                  />
+                </DrawerField>
 
-              {(variant === "purchase" || variant === "expenses") && (
-                <>
-                  {variant === "expenses" && (
-                    <>
-                      <DrawerField label={t("Tiêu đề")}>
-                        <input
-                          className={inputCls}
-                          value={title}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) => setTitle(e.target.value)}
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Nhóm chi phí")}>
-                        <input
-                          className={inputCls}
-                          value={expenseCategory}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) => setExpenseCategory(e.target.value)}
-                          placeholder="VD: UTILITY"
-                        />
-                      </DrawerField>
-                    </>
-                  )}
-                  {variant === "expenses" && (
-                    <>
-                      <DrawerField label={t("Chu kỳ")}>
-                        <Combobox
-                          options={recurrenceOptions}
-                          value={recurrenceType}
-                          disabled={isPurchaseLocked}
-                          onChange={(v) => setRecurrenceType(v || "ONE_TIME")}
-                          allowClear={false}
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Khoảng lặp")}>
-                        <input
-                          type="number"
-                          min={1}
-                          className={inputCls}
-                          value={recurrenceInterval}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) =>
-                            setRecurrenceInterval(e.target.value)
-                          }
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Bắt đầu")}>
-                        <input
-                          type="date"
-                          className={inputCls}
-                          value={recurrenceStartDate}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) =>
-                            setRecurrenceStartDate(e.target.value)
-                          }
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Kết thúc")}>
-                        <input
-                          type="date"
-                          className={inputCls}
-                          value={recurrenceEndDate}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Kỳ tiếp theo")}>
-                        <input
-                          type="date"
-                          className={inputCls}
-                          value={nextDueDate}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) => setNextDueDate(e.target.value)}
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Tự sinh kỳ sau")}>
-                        <Checkbox
-                          checked={autoGenerateNext}
-                          disabled={isPurchaseLocked}
-                          onCheckedChange={(v) => setAutoGenerateNext(!!v)}
-                        />
-                      </DrawerField>
-                    </>
-                  )}
-                </>
-              )}
+                {/* T.thái thanh toán tạm ẩn theo yêu cầu */}
 
-              <DrawerField label={t("Ghi chú")}>
-                <textarea
-                  className={`${inputCls} min-h-[84px]`}
-                  value={notes}
-                  disabled={viewOnly || isPurchaseFullyLocked}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </DrawerField>
-            </div>
+                {variant === "sales" && (
+                  <>
+                    <DrawerField label={t("Biển số xe")}>
+                      <input
+                        className={inputCls}
+                        value={vehiclePlate}
+                        disabled={isPurchaseLocked}
+                        onChange={(e) => setVehiclePlate(e.target.value)}
+                      />
+                    </DrawerField>
+                    <DrawerField label="VIN">
+                      <input
+                        className={inputCls}
+                        value={vehicleVin}
+                        disabled={isPurchaseLocked}
+                        onChange={(e) => setVehicleVin(e.target.value)}
+                      />
+                    </DrawerField>
+                    <DrawerField label={t("Model xe")}>
+                      <input
+                        className={inputCls}
+                        value={vehicleModel}
+                        disabled={isPurchaseLocked}
+                        onChange={(e) => setVehicleModel(e.target.value)}
+                      />
+                    </DrawerField>
+                    <DrawerField label={t("Cố vấn dịch vụ")}>
+                      <input
+                        className={inputCls}
+                        value={serviceAdvisorName}
+                        disabled={isPurchaseLocked}
+                        onChange={(e) => setServiceAdvisorName(e.target.value)}
+                      />
+                    </DrawerField>
+                    <DrawerField label={t("Ngày giao dự kiến")}>
+                      <DatePicker
+                        className={inputCls}
+                        value={expectedDate?.slice(0, 10) || ""}
+                        disabled={isPurchaseLocked}
+                        onChange={(v) => setExpectedDate(v)}
+                      />
+                    </DrawerField>
+                  </>
+                )}
+
+                {(variant === "purchase" || variant === "expenses") && (
+                  <>
+                    {variant === "expenses" && (
+                      <>
+                        <DrawerField label={t("Tiêu đề")}>
+                          <input
+                            className={inputCls}
+                            value={title}
+                            disabled={isPurchaseLocked}
+                            onChange={(e) => setTitle(e.target.value)}
+                          />
+                        </DrawerField>
+                        <DrawerField label={t("Nhóm chi phí")}>
+                          <input
+                            className={inputCls}
+                            value={expenseCategory}
+                            disabled={isPurchaseLocked}
+                            onChange={(e) => setExpenseCategory(e.target.value)}
+                            placeholder="VD: UTILITY"
+                          />
+                        </DrawerField>
+                      </>
+                    )}
+                    {variant === "expenses" && (
+                      <>
+                        <DrawerField label={t("Chu kỳ")}>
+                          <Combobox
+                            options={recurrenceOptions}
+                            value={recurrenceType}
+                            disabled={isPurchaseLocked}
+                            onChange={(v) => setRecurrenceType(v || "ONE_TIME")}
+                            allowClear={false}
+                          />
+                        </DrawerField>
+                        <DrawerField label={t("Khoảng lặp")}>
+                          <input
+                            type="number"
+                            min={1}
+                            className={inputCls}
+                            value={recurrenceInterval}
+                            disabled={isPurchaseLocked}
+                            onChange={(e) =>
+                              setRecurrenceInterval(e.target.value)
+                            }
+                          />
+                        </DrawerField>
+                        <DrawerField label={t("Bắt đầu")}>
+                          <input
+                            type="date"
+                            className={inputCls}
+                            value={recurrenceStartDate}
+                            disabled={isPurchaseLocked}
+                            onChange={(e) =>
+                              setRecurrenceStartDate(e.target.value)
+                            }
+                          />
+                        </DrawerField>
+                        <DrawerField label={t("Kết thúc")}>
+                          <input
+                            type="date"
+                            className={inputCls}
+                            value={recurrenceEndDate}
+                            disabled={isPurchaseLocked}
+                            onChange={(e) =>
+                              setRecurrenceEndDate(e.target.value)
+                            }
+                          />
+                        </DrawerField>
+                        <DrawerField label={t("Kỳ tiếp theo")}>
+                          <input
+                            type="date"
+                            className={inputCls}
+                            value={nextDueDate}
+                            disabled={isPurchaseLocked}
+                            onChange={(e) => setNextDueDate(e.target.value)}
+                          />
+                        </DrawerField>
+                        <DrawerField label={t("Tự sinh kỳ sau")}>
+                          <Checkbox
+                            checked={autoGenerateNext}
+                            disabled={isPurchaseLocked}
+                            onCheckedChange={(v) => setAutoGenerateNext(!!v)}
+                          />
+                        </DrawerField>
+                      </>
+                    )}
+                  </>
+                )}
+
+                <DrawerField label={t("Ghi chú")}>
+                  <textarea
+                    className={`${inputCls} min-h-[84px]`}
+                    value={notes}
+                    disabled={viewOnly || isPurchaseFullyLocked}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </DrawerField>
+              </div>
+            )}
           </DrawerSection>
         </div>
       </div>

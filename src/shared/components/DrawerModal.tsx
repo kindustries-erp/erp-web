@@ -293,15 +293,22 @@ export function DrawerModal({
 
 export function DrawerSection({
   title,
+  titleExtra,
   children,
 }: {
   title: string;
+  titleExtra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="mb-3 rounded-xl border border-border bg-surface p-3 card-shadow">
-      <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)]">
-        {title}
+      <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center">
+        <span>{title}</span>
+        {titleExtra && (
+          <div className="text-foreground normal-case font-semibold text-sm">
+            {titleExtra}
+          </div>
+        )}
       </div>
       {children}
     </div>
