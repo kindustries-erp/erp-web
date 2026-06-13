@@ -300,6 +300,7 @@ export function OperationalFormDrawer({
   const [expenseCategory, setExpenseCategory] = useState("");
   const [documentDate, setDocumentDate] = useState(today());
   const [expectedDate, setExpectedDate] = useState("");
+  const [submittingStatus, setSubmittingStatus] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState("");
   const [invoiceStatus, setInvoiceStatus] = useState("NO_INVOICE");
   const [status, setStatus] = useState("DRAFT");
@@ -504,7 +505,7 @@ export function OperationalFormDrawer({
     });
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(overrideStatus?: string) {
     if (!documentDate) {
       setError("Ngày chứng từ là bắt buộc.");
       return;
@@ -540,7 +541,7 @@ export function OperationalFormDrawer({
 
     const payload: CreateOperationalPayload = isPurchaseStatusOnlyMode
       ? {
-          status,
+          status: overrideStatus || status,
           payment_status: paymentStatus,
           notes: notes.trim() || undefined,
           ...(purchaseEditableLines ? { lines: purchaseEditableLines } : {}),
@@ -555,7 +556,7 @@ export function OperationalFormDrawer({
             due_date: dueDate || undefined,
             branch_id: branchId || undefined,
             invoice_status: invoiceStatus,
-            status,
+            status: overrideStatus || status,
             payment_status: paymentStatus,
             total_amount: totalAmount,
             notes: notes.trim() || undefined,
@@ -618,6 +619,7 @@ export function OperationalFormDrawer({
       });
     }
 
+    setSubmittingStatus(overrideStatus || null);
     setSaving(true);
     setError(null);
     try {
@@ -636,6 +638,7 @@ export function OperationalFormDrawer({
     } catch (e) {
       setError(extractApiError(e, "Không thể lưu chứng từ."));
     } finally {
+      setSubmittingStatus(null);
       setSaving(false);
     }
   }
@@ -663,6 +666,13 @@ export function OperationalFormDrawer({
             ? t(`Cập nhật ${variantTitle[variant]}`)
             : t(`Tạo mới ${variantTitle[variant]}`)
       }
+      titleExtra={
+        status === "DRAFT" && (
+          <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200">
+            {t("Nháp")}
+          </span>
+        )
+      }
       subtitle={
         editing
           ? `${t("Mã")}: ${docNo || editing.id}`
@@ -678,21 +688,60 @@ export function OperationalFormDrawer({
                 disabled: loading,
               },
             ]
-          : [
-              {
-                label: t("Hủy"),
-                onClick: onClose,
-                variant: "outline",
-                disabled: saving,
-              },
-              {
-                label: editing ? t("Lưu thay đổi") : t("Tạo mới"),
-                primary: true,
-                loading: saving,
-                disabled: saving,
-                onClick: handleSubmit,
-              },
-            ]
+          : variant === "purchase"
+            ? status === "DRAFT" || !editing
+              ? [
+                  {
+                    label: t("Hủy"),
+                    onClick: onClose,
+                    variant: "outline" as const,
+                    disabled: saving,
+                  },
+                  {
+                    label: editing ? t("Lưu Nháp") : t("Tạo Nháp"),
+                    variant: "outline" as const,
+                    loading: saving && submittingStatus === "DRAFT",
+                    disabled: saving,
+                    onClick: () => handleSubmit("DRAFT"),
+                  },
+                  {
+                    label: editing ? t("Xác nhận") : t("Tạo Mới"),
+                    primary: true,
+                    loading: saving && submittingStatus === "CONFIRMED",
+                    disabled: saving,
+                    onClick: () => handleSubmit("CONFIRMED"),
+                  },
+                ]
+              : [
+                  {
+                    label: t("Hủy"),
+                    onClick: onClose,
+                    variant: "outline" as const,
+                    disabled: saving,
+                  },
+                  {
+                    label: t("Lưu thay đổi"),
+                    primary: true,
+                    loading: saving,
+                    disabled: saving,
+                    onClick: () => handleSubmit(),
+                  },
+                ]
+            : [
+                {
+                  label: t("Hủy"),
+                  onClick: onClose,
+                  variant: "outline" as const,
+                  disabled: saving,
+                },
+                {
+                  label: editing ? t("Lưu thay đổi") : t("Tạo mới"),
+                  primary: true,
+                  loading: saving,
+                  disabled: saving,
+                  onClick: () => handleSubmit(),
+                },
+              ]
       }
     >
       {loading ? (
@@ -1020,6 +1069,9 @@ export function OperationalFormDrawer({
                           ? t("Khách hàng")
                           : t("Nhà cung cấp")
                       }
+                      required={
+                        variant === "purchase" || variant === "expenses"
+                      }
                     >
                       <Combobox
                         options={partnerOptions}
@@ -1079,15 +1131,17 @@ export function OperationalFormDrawer({
                         />
                       </DrawerField>
                     )}
-                    <DrawerField label={t("Trạng thái")}>
-                      <Combobox
-                        options={statusOptions}
-                        value={status}
-                        disabled={purchaseFieldLocked("status")}
-                        onChange={(v) => setStatus(v || "DRAFT")}
-                        allowClear={false}
-                      />
-                    </DrawerField>
+                    {variant !== "purchase" && (
+                      <DrawerField label={t("Trạng thái")}>
+                        <Combobox
+                          options={statusOptions}
+                          value={status}
+                          disabled={purchaseFieldLocked("status")}
+                          onChange={(v) => setStatus(v || "DRAFT")}
+                          allowClear={false}
+                        />
+                      </DrawerField>
+                    )}
 
                     {/* T.thái thanh toán tạm ẩn theo yêu cầu */}
 
