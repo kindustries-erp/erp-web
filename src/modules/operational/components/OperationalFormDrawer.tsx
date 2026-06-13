@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   DrawerField,
@@ -237,6 +237,56 @@ export function OperationalFormDrawer({
   }, [variant, inventoryItemOptions, editing]);
 
   const [showGeneralInfo, setShowGeneralInfo] = useState(true);
+
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const bottomScrollRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [tableWidth, setTableWidth] = useState(0);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const updateWidth = () => {
+      if (bottomScrollRef.current) {
+        setTableWidth(bottomScrollRef.current.scrollWidth);
+      }
+    };
+
+    // Call immediately and after a short delay
+    updateWidth();
+    const timer = setTimeout(updateWidth, 150);
+
+    let observer: ResizeObserver | null = null;
+    if (tableRef.current) {
+      observer = new ResizeObserver(() => {
+        updateWidth();
+      });
+      observer.observe(tableRef.current);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (observer) observer.disconnect();
+    };
+  }, [open]);
+
+  const handleTopScroll = () => {
+    if (bottomScrollRef.current && topScrollRef.current) {
+      const target = topScrollRef.current.scrollLeft;
+      if (bottomScrollRef.current.scrollLeft !== target) {
+        bottomScrollRef.current.scrollLeft = target;
+      }
+    }
+  };
+
+  const handleBottomScroll = () => {
+    if (topScrollRef.current && bottomScrollRef.current) {
+      const target = bottomScrollRef.current.scrollLeft;
+      if (topScrollRef.current.scrollLeft !== target) {
+        topScrollRef.current.scrollLeft = target;
+      }
+    }
+  };
   const [docNo, setDocNo] = useState("");
   const [branchId, setBranchId] = useState("");
   const [partnerId, setPartnerId] = useState("");
@@ -645,8 +695,24 @@ export function OperationalFormDrawer({
               </span>
             }
           >
-            <div className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]">
-              <table className="w-full text-sm text-left">
+            <div
+              ref={topScrollRef}
+              className="w-full overflow-x-auto"
+              onScroll={handleTopScroll}
+            >
+              <div
+                style={{
+                  width: tableWidth ? `${tableWidth}px` : "100%",
+                  height: "1px",
+                }}
+              />
+            </div>
+            <div
+              ref={bottomScrollRef}
+              className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]"
+              onScroll={handleBottomScroll}
+            >
+              <table ref={tableRef} className="w-full text-sm text-left">
                 <thead className="bg-muted text-muted-foreground text-xs uppercase">
                   <tr>
                     <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
