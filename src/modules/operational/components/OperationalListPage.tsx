@@ -778,6 +778,11 @@ export function OperationalListPage({
     );
   }, [listQuery.error, listQuery.isFetching, listQuery.isLoading]);
 
+  useEffect(() => {
+    if (variant !== "purchase") return;
+    void listQuery.refetch();
+  }, [variant, supplierFilter]);
+
   const items = useMemo(
     () =>
       variant === "inventory"
