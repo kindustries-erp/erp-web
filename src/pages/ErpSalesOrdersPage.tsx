@@ -29,7 +29,7 @@ import {
   type CreateSoPayload,
   type ErpSalesOrder,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
-import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 
@@ -173,12 +173,50 @@ export function ErpSalesOrdersPage() {
   const [saving, setSaving] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
 
-  const [customerOptions, setCustomerOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [itemSearch, setItemSearch] = useState("");
+
+  const {
+    data: customersData,
+    fetchNextPage: fetchNextCustomers,
+    isFetchingNextPage: loadingCustomers,
+  } = useBasicMasterInfinite({
+    search: customerSearch,
+    limit: 50,
+    entities: "customers",
+  });
+
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+
+  const customerOptions = useMemo(() => {
+    return (
+      customersData?.pages.flatMap((p) =>
+        (p.items.customers || []).map((c) => ({
+          value: c.id,
+          label: `${c.code} — ${c.displayName || c.name}`,
+        })),
+      ) || []
+    );
+  }, [customersData]);
+
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -195,56 +233,9 @@ export function ErpSalesOrdersPage() {
     }
   }, [page, pageSize, search]);
 
-  const loadCustomers = useCallback(async () => {
-    try {
-      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
-      setCustomerOptions(
-        res.items.customers.map(
-          (partner: {
-            id: string;
-            code: string;
-            displayName?: string | null;
-            name: string;
-          }) => ({
-            value: partner.id,
-            label: `${partner.code} — ${partner.displayName || partner.name}`,
-          }),
-        ),
-      );
-    } catch {
-      setCustomerOptions([]);
-    }
-  }, []);
-
-  const loadItemsLookup = useCallback(async () => {
-    try {
-      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
-      setItemOptions(
-        res.items.inventoryItems.map((item) => ({
-          value: item.id,
-          label: `${item.sku} — ${item.itemName}`,
-        })),
-      );
-    } catch {
-      setItemOptions([]);
-    }
-  }, []);
-
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
-
-  useEffect(() => {
-    void loadCustomers();
-    void loadItemsLookup();
-  }, [loadCustomers, loadItemsLookup]);
-
-  useEffect(() => {
-    if (drawerOpen) {
-      void loadCustomers();
-      void loadItemsLookup();
-    }
-  }, [drawerOpen, loadCustomers, loadItemsLookup]);
 
   function resetForm() {
     setForm(emptyForm());
@@ -544,6 +535,9 @@ export function ErpSalesOrdersPage() {
                 options={customerOptions}
                 placeholder="Chọn khách hàng"
                 disabled={viewOnly}
+                onSearch={setCustomerSearch}
+                onScrollBottom={fetchNextCustomers}
+                loading={loadingCustomers}
               />
             </DrawerField>
             <DrawerField label="Ngày đơn" required>
@@ -611,6 +605,9 @@ export function ErpSalesOrdersPage() {
                     options={itemOptions}
                     placeholder="Chọn inventory item"
                     disabled={viewOnly}
+                    onSearch={setItemSearch}
+                    onScrollBottom={fetchNextItems}
+                    loading={loadingItems}
                   />
                 </div>
                 <div className="md:col-span-2">

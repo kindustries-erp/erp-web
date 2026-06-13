@@ -35,7 +35,7 @@ import {
 } from "@/modules/bom-core/api/bomCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { cn } from "@/shared/utils";
 
 const ITEM_LOOKUP_LIMIT = 200;
@@ -293,9 +293,28 @@ export function ErpBomPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [itemSearch, setItemSearch] = useState("");
+
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
 
   const BOM_STATUS_OPTIONS = [
     { value: "ACTIVE", label: "Đang áp dụng" },
@@ -339,25 +358,6 @@ export function ErpBomPage() {
     }
   }, [filter.state.search, filter.state.status, page, pageSize]);
 
-  const loadItemOptions = useCallback(async (keyword = "") => {
-    try {
-      const res = await basicMastersApi.list({
-        search: keyword || undefined,
-        limit: ITEM_LOOKUP_LIMIT,
-      });
-      setItemOptions(
-        res.items.inventoryItems.map(
-          (item: { id: string; sku: string; itemName: string }) => ({
-            value: item.id,
-            label: `${item.sku} — ${item.itemName}`,
-          }),
-        ),
-      );
-    } catch {
-      setItemOptions([]);
-    }
-  }, []);
-
   const [expandedBomIds, setExpandedBomIds] = useState<Record<string, boolean>>(
     {},
   );
@@ -379,10 +379,6 @@ export function ErpBomPage() {
   useEffect(() => {
     void loadAllBoms();
   }, [loadAllBoms]);
-
-  useEffect(() => {
-    void loadItemOptions();
-  }, [loadItemOptions]);
 
   const fgToBomMap = useMemo(() => {
     const map: Record<string, ErpBom> = {};
@@ -764,6 +760,9 @@ export function ErpBomPage() {
                             options={itemOptions}
                             placeholder="Chọn linh kiện"
                             searchPlaceholder="Tìm SKU / tên linh kiện"
+                            onSearch={setItemSearch}
+                            onScrollBottom={fetchNextItems}
+                            loading={loadingItems}
                           />
                         </DrawerField>
                       </div>

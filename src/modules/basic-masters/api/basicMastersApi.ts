@@ -24,12 +24,20 @@ export interface BasicMasterOption {
   name: string;
 }
 
+export interface BasicMasterEmployee {
+  id: string;
+  employeeCode: string;
+  fullName: string;
+  status: string;
+}
+
 export interface BasicMastersPayload {
-  customers: BasicMasterPartner[];
-  suppliers: BasicMasterPartner[];
-  inventoryItems: BasicMasterInventoryItem[];
-  uoms: BasicMasterOption[];
-  itemTypes: BasicMasterOption[];
+  customers?: BasicMasterPartner[];
+  suppliers?: BasicMasterPartner[];
+  inventoryItems?: BasicMasterInventoryItem[];
+  uoms?: BasicMasterOption[];
+  itemTypes?: BasicMasterOption[];
+  employees?: BasicMasterEmployee[];
 }
 
 interface BasicMastersResponse {
@@ -37,14 +45,23 @@ interface BasicMastersResponse {
   meta: {
     search: string | null;
     limit: number;
+    page: number;
+    entities: string[];
   };
 }
 
 export const basicMastersApi = {
-  list: async (params?: { search?: string; limit?: number }) => {
+  list: async (params?: {
+    search?: string;
+    limit?: number;
+    page?: number;
+    entities?: string;
+  }) => {
     const requestParams = {
       ...(params?.search ? { search: params.search } : {}),
       ...(params?.limit ? { limit: params.limit } : {}),
+      ...(params?.page ? { page: params.page } : {}),
+      ...(params?.entities ? { entities: params.entities } : {}),
     };
     const key = `basic-masters:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {

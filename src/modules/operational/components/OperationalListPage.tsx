@@ -76,7 +76,7 @@ import {
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useOperationalListQuery } from "../hooks/useOperationalListQuery";
-import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -641,9 +641,28 @@ export function OperationalListPage({
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("");
-  const [supplierOptions, setSupplierOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const {
+    data: suppliersData,
+    fetchNextPage: fetchNextSuppliers,
+    isFetchingNextPage: loadingSuppliers,
+  } = useBasicMasterInfinite({
+    search: supplierSearch,
+    limit: 50,
+    entities: "suppliers",
+    enabled: variant === "purchase",
+  });
+
+  const supplierOptions = useMemo(() => {
+    return (
+      suppliersData?.pages.flatMap((p) =>
+        (p.items.suppliers || []).map((s) => ({
+          value: s.id,
+          label: s.name,
+        })),
+      ) || []
+    );
+  }, [suppliersData]);
   // sort state: "field" = ASC, "-field" = DESC, "" = default (createdAt DESC)
   const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
@@ -735,20 +754,8 @@ export function OperationalListPage({
     resetFlow();
   }, [variant]);
 
-  // Load supplier options for purchase filter
   useEffect(() => {
-    if (variant !== "purchase") return;
-    basicMastersApi
-      .list({ limit: 500 })
-      .then((res) => {
-        setSupplierOptions(
-          (res.items.suppliers ?? []).map((s) => ({
-            value: s.id,
-            label: s.name,
-          })),
-        );
-      })
-      .catch(() => setSupplierOptions([]));
+    resetFlow();
   }, [variant]);
 
   const purchaseSortArray = purchaseSort ? [purchaseSort] : undefined;

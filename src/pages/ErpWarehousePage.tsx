@@ -59,12 +59,12 @@ import {
   purchaseOrdersCoreApi,
   type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useUIStore } from "@/core/config/uiStore";
 import {
   useWarehouseIssuesQuery,
@@ -357,9 +357,6 @@ export function ErpWarehousePage() {
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
-  const [supplierOptions, setSupplierOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
 
   // ── GI drawer state
   const [giDrawerOpen, setGiDrawerOpen] = useState(false);
@@ -369,12 +366,71 @@ export function ErpWarehousePage() {
   const [giSaveError, setGiSaveError] = useState<string | null>(null);
   const [giSaving, setGiSaving] = useState(false);
   const [giPostingId, setGiPostingId] = useState<string | null>(null);
-  const [customerOptions, setCustomerOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+
+  // Lookup hooks for basic masters
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const {
+    data: suppliersData,
+    fetchNextPage: fetchNextSuppliers,
+    isFetchingNextPage: loadingSuppliers,
+  } = useBasicMasterInfinite({
+    search: supplierSearch,
+    limit: 50,
+    entities: "suppliers",
+  });
+  const supplierOptions = useMemo(() => {
+    return (
+      suppliersData?.pages.flatMap((p) =>
+        (p.items.suppliers || []).map((s) => ({
+          value: s.id,
+          label: s.name,
+        })),
+      ) || []
+    );
+  }, [suppliersData]);
+
+  const [customerSearch, setCustomerSearch] = useState("");
+  const {
+    data: customersData,
+    fetchNextPage: fetchNextCustomers,
+    isFetchingNextPage: loadingCustomers,
+  } = useBasicMasterInfinite({
+    search: customerSearch,
+    limit: 50,
+    entities: "customers",
+  });
+  const customerOptions = useMemo(() => {
+    return (
+      customersData?.pages.flatMap((p) =>
+        (p.items.customers || []).map((c) => ({
+          value: c.id,
+          label: `${c.code} — ${c.displayName || c.name}`,
+        })),
+      ) || []
+    );
+  }, [customersData]);
+
+  const [itemSearch, setItemSearch] = useState("");
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
+
   const [vehicleOptions, setVehicleOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
@@ -487,28 +543,15 @@ export function ErpWarehousePage() {
   // ── Load GR lookups (PO + Supplier)
   const loadGrLookups = useCallback(async () => {
     try {
-      const [poRes, basicRes] = await Promise.all([
-        purchaseOrdersCoreApi.list({ page: 1, pageSize: 200 }),
-        basicMastersApi.list({ limit: LOOKUP_LIMIT }),
-      ]);
+      const poRes = await purchaseOrdersCoreApi.list({
+        page: 1,
+        pageSize: 200,
+      });
       setPoOptions(
         poRes.items.map((po) => ({
           value: po.id,
           label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
         })),
-      );
-      setSupplierOptions(
-        basicRes.items.suppliers.map(
-          (p: {
-            id: string;
-            code: string;
-            displayName?: string | null;
-            name: string;
-          }) => ({
-            value: p.id,
-            label: `${p.code} — ${p.displayName || p.name}`,
-          }),
-        ),
       );
     } catch {
       /* silent */
@@ -518,31 +561,10 @@ export function ErpWarehousePage() {
   // ── Load GI lookups
   const loadGiLookups = useCallback(async () => {
     try {
-      const [basicRes, vehRes] = await Promise.all([
-        basicMastersApi.list({ limit: LOOKUP_LIMIT }),
-        manufacturingApi.listVehicles({ page: 1, pageSize: LOOKUP_LIMIT }),
-      ]);
-      setCustomerOptions(
-        basicRes.items.customers.map(
-          (p: {
-            id: string;
-            code: string;
-            displayName?: string | null;
-            name: string;
-          }) => ({
-            value: p.id,
-            label: `${p.code} — ${p.displayName || p.name}`,
-          }),
-        ),
-      );
-      setItemOptions(
-        basicRes.items.inventoryItems.map(
-          (i: { id: string; sku: string; itemName: string }) => ({
-            value: i.id,
-            label: `${i.sku} — ${i.itemName}`,
-          }),
-        ),
-      );
+      const vehRes = await manufacturingApi.listVehicles({
+        page: 1,
+        pageSize: LOOKUP_LIMIT,
+      });
       const vehList = vehRes.items ?? [];
 
       setVehicleOptions(
@@ -1308,7 +1330,11 @@ export function ErpWarehousePage() {
                       options={supplierOptions}
                       value={grForm.supplierId}
                       disabled={grViewOnly || !!grForm.purchaseOrderId}
-                      placeholder="Chọn nhà cung cấp..."
+                      placeholder="Chọn NCC"
+                      searchPlaceholder="Tìm kiếm..."
+                      onSearch={setSupplierSearch}
+                      onScrollBottom={fetchNextSuppliers}
+                      loading={loadingSuppliers}
                       onChange={(v) =>
                         setGrForm((f) => ({ ...f, supplierId: v }))
                       }
@@ -1407,7 +1433,11 @@ export function ErpWarehousePage() {
                 options={customerOptions}
                 value={giForm.customerId}
                 disabled={giViewOnly}
-                placeholder="Chọn khách hàng..."
+                placeholder="Chọn khách hàng"
+                searchPlaceholder="Tìm khách hàng"
+                onSearch={setCustomerSearch}
+                onScrollBottom={fetchNextCustomers}
+                loading={loadingCustomers}
                 onChange={(v) => setGiForm((f) => ({ ...f, customerId: v }))}
               />
             </DrawerField>
@@ -1467,7 +1497,11 @@ export function ErpWarehousePage() {
                     options={itemOptions}
                     value={line.itemId}
                     disabled={giViewOnly}
-                    placeholder="Chọn hàng hóa..."
+                    placeholder="Chọn inventory item"
+                    searchPlaceholder="Tìm SKU / tên"
+                    onSearch={setItemSearch}
+                    onScrollBottom={fetchNextItems}
+                    loading={loadingItems}
                     onChange={(v) => {
                       const found = itemOptions.find((o) => o.value === v);
                       setGiForm((f) => {

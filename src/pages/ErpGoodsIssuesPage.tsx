@@ -25,10 +25,8 @@ import {
   type ErpGoodsIssue,
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
-
-const LOOKUP_LIMIT = 200;
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 
 const ISSUE_TYPE_OPTIONS = [
   { value: "SALE", label: "SALE — Xuất bán" },
@@ -166,13 +164,51 @@ export function ErpGoodsIssuesPage() {
   const [deleteTarget, setDeleteTarget] = useState<ErpGoodsIssue | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Lookup options
-  const [customerOptions, setCustomerOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [itemSearch, setItemSearch] = useState("");
+
+  const {
+    data: customersData,
+    fetchNextPage: fetchNextCustomers,
+    isFetchingNextPage: loadingCustomers,
+  } = useBasicMasterInfinite({
+    search: customerSearch,
+    limit: 50,
+    entities: "customers",
+  });
+
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+
+  const customerOptions = useMemo(() => {
+    return (
+      customersData?.pages.flatMap((p) =>
+        (p.items.customers || []).map((c) => ({
+          value: c.id,
+          label: `${c.code} — ${c.displayName || c.name}`,
+        })),
+      ) || []
+    );
+  }, [customersData]);
+
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
+
   const [vehicleOptions, setVehicleOptions] = useState<
     Array<{ value: string; label: string; itemId?: string | null }>
   >([]);
@@ -194,40 +230,7 @@ export function ErpGoodsIssuesPage() {
     }
   }, [page, pageSize, search]);
 
-  const loadCustomers = useCallback(async () => {
-    try {
-      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
-      setCustomerOptions(
-        res.items.customers.map(
-          (p: {
-            id: string;
-            code: string;
-            displayName?: string | null;
-            name: string;
-          }) => ({
-            value: p.id,
-            label: `${p.code} — ${p.displayName || p.name}`,
-          }),
-        ),
-      );
-    } catch {
-      setCustomerOptions([]);
-    }
-  }, []);
-
-  const loadItemsLookup = useCallback(async () => {
-    try {
-      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
-      setItemOptions(
-        res.items.inventoryItems.map((item) => ({
-          value: item.id,
-          label: `${item.sku} — ${item.itemName}`,
-        })),
-      );
-    } catch {
-      setItemOptions([]);
-    }
-  }, []);
+  const LOOKUP_LIMIT = 200;
 
   const loadVehicleLookup = useCallback(async () => {
     try {
@@ -266,10 +269,8 @@ export function ErpGoodsIssuesPage() {
   }, [loadIssues]);
 
   useEffect(() => {
-    void loadCustomers();
-    void loadItemsLookup();
     void loadVehicleLookup();
-  }, [loadCustomers, loadItemsLookup, loadVehicleLookup]);
+  }, [loadVehicleLookup]);
 
   // ─── Drawer helpers ──────────────────────────────────────────────────────────
 
@@ -666,6 +667,9 @@ export function ErpGoodsIssuesPage() {
                 options={customerOptions}
                 placeholder="Chọn khách hàng"
                 searchPlaceholder="Tìm khách hàng"
+                onSearch={setCustomerSearch}
+                onScrollBottom={fetchNextCustomers}
+                loading={loadingCustomers}
               />
             </DrawerField>
             <DrawerField label="Trạng thái">
@@ -754,6 +758,9 @@ export function ErpGoodsIssuesPage() {
                       options={itemOptions}
                       placeholder="Chọn inventory item"
                       searchPlaceholder="Tìm SKU / tên"
+                      onSearch={setItemSearch}
+                      onScrollBottom={fetchNextItems}
+                      loading={loadingItems}
                     />
                   </DrawerField>
                   <DrawerField label="Xe / VIN">
