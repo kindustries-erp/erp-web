@@ -1355,6 +1355,11 @@ export function OperationalListPage({
               <span className="font-semibold text-primary">
                 {row.purchase_no || "—"}
               </span>
+              {row.status === "DRAFT" && (
+                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
+                  {t("Nháp")}
+                </span>
+              )}
               <ChevronRight
                 className={cn(
                   "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
