@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Boxes, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -20,19 +19,18 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
-import {
-  inventoryCoreApi,
-  type InventoryMasterOption,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { type InventoryMasterOption } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { ErpInventoryItemsTab } from "@/pages/ErpInventoryItemsPage";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import { useAppMutation } from "@/shared/hooks/useAppQuery";
-import { createInventoryMastersKey } from "@/shared/lib/queryKeys";
 import {
   useInventoryMasterListQuery,
   type InventoryMasterQueryKind,
 } from "@/modules/inventory-core/hooks/useInventoryMasterListQuery";
+import {
+  useInventoryMasterDeleteMutation,
+  useInventoryMasterSaveMutation,
+} from "@/modules/inventory-core/hooks/useInventoryMasterMutation";
 
 type MasterKind = "items" | "uom" | "item-type";
 
@@ -108,7 +106,6 @@ function toMasterQueryKind(kind: MasterKind): InventoryMasterQueryKind {
 export function InventoryMasterPage() {
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
-  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<MasterKind>("items");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingKind, setEditingKind] = useState<MasterKind>("uom");
@@ -165,6 +162,8 @@ export function InventoryMasterPage() {
 
   const uomsQuery = useInventoryMasterListQuery(uomParams);
   const itemTypesQuery = useInventoryMasterListQuery(itemTypeParams);
+  const saveMutation = useInventoryMasterSaveMutation();
+  const deleteMutation = useInventoryMasterDeleteMutation();
 
   const currentQuery = activeTab === "uom" ? uomsQuery : itemTypesQuery;
   const currentItems = currentQuery.data?.items ?? [];
@@ -197,68 +196,29 @@ export function InventoryMasterPage() {
     setDrawerOpen(true);
   }
 
-  async function refreshKind(kind: MasterKind) {
-    const queryKind = toMasterQueryKind(kind);
-    await queryClient.invalidateQueries({
-      queryKey: ["inventory-masters", queryKind],
-    });
-  }
-
-  const saveMutation = useAppMutation({
-    mutationFn: async (payload: {
-      code: string;
-      name: string;
-      description?: string;
-      isActive: boolean;
-    }) => {
-      if (editingKind === "uom") {
-        if (editing) return inventoryCoreApi.updateUom(editing.id, payload);
-        return inventoryCoreApi.createUom(payload);
-      }
-      if (editing) return inventoryCoreApi.updateItemType(editing.id, payload);
-      return inventoryCoreApi.createItemType(payload);
-    },
-    onSuccess: async () => {
+  async function handleSave() {
+    if (!form.code.trim()) return setSaveError("Code là bắt buộc");
+    if (!form.name.trim()) return setSaveError("Tên là bắt buộc");
+    setSaveError(null);
+    try {
+      await saveMutation.mutateAsync({
+        kind: editingKind === "uom" ? "uom" : "item-type",
+        id: editing?.id,
+        payload: {
+          code: form.code.trim(),
+          name: form.name.trim(),
+          description: form.description.trim() || undefined,
+          isActive: form.isActive === "true",
+        },
+      });
       showToast({
         title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
         variant: "success",
       });
       closeDrawer();
-      await refreshKind(editingKind);
-    },
-    onError: (e: any) => {
+    } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
-    },
-  });
-
-  const deleteMutation = useAppMutation({
-    mutationFn: async ({ kind, id }: { kind: MasterKind; id: string }) => {
-      if (kind === "uom") return inventoryCoreApi.deleteUom(id);
-      return inventoryCoreApi.deleteItemType(id);
-    },
-    onSuccess: async (_data, variables) => {
-      showToast({ title: "Đã xóa thành công", variant: "success" });
-      setDeleteTarget(null);
-      await refreshKind(variables.kind);
-    },
-    onError: (e: any) => {
-      showToast({
-        title: e?.response?.data?.message || e?.message || "Không thể xóa",
-        variant: "destructive",
-      });
-    },
-  });
-
-  async function handleSave() {
-    if (!form.code.trim()) return setSaveError("Code là bắt buộc");
-    if (!form.name.trim()) return setSaveError("Tên là bắt buộc");
-    setSaveError(null);
-    await saveMutation.mutateAsync({
-      code: form.code.trim(),
-      name: form.name.trim(),
-      description: form.description.trim() || undefined,
-      isActive: form.isActive === "true",
-    });
+    }
   }
 
   function handleDelete(kind: MasterKind, item: InventoryMasterOption) {
@@ -267,10 +227,19 @@ export function InventoryMasterPage() {
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    await deleteMutation.mutateAsync({
-      kind: deleteTarget.kind,
-      id: deleteTarget.item.id,
-    });
+    try {
+      await deleteMutation.mutateAsync({
+        kind: deleteTarget.kind === "uom" ? "uom" : "item-type",
+        id: deleteTarget.item.id,
+      });
+      showToast({ title: "Đã xóa thành công", variant: "success" });
+      setDeleteTarget(null);
+    } catch (e: any) {
+      showToast({
+        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        variant: "destructive",
+      });
+    }
   }
 
   const columns: DataTableColumn<InventoryMasterOption>[] = useMemo(
