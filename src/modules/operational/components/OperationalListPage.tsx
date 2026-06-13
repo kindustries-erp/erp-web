@@ -446,6 +446,9 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
                     #
                   </th>
+                  <th className="px-3 py-2 font-medium min-w-[140px]">
+                    {t("Mã linh kiện")}
+                  </th>
                   <th className="px-3 py-2 font-medium min-w-[260px]">
                     {t("Linh kiện / Tên hàng")}
                   </th>
@@ -479,17 +482,13 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                       <td className="px-3 py-2 text-center text-muted-foreground">
                         {idx + 1}
                       </td>
+                      <td className="px-3 py-2">{line.item_code || "—"}</td>
                       <td className="px-3 py-2">
                         <div className="font-medium text-foreground">
                           {line.item_name ||
                             line.description ||
                             `${t("Dòng")} ${idx + 1}`}
                         </div>
-                        {line.item_code && (
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {line.item_code}
-                          </div>
-                        )}
                       </td>
                       <td className="px-3 py-2 text-center">
                         <div className="font-medium text-foreground">

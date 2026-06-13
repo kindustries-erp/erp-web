@@ -16,10 +16,8 @@ import {
   type BusinessPartner,
 } from "@/modules/partners/api/partnerApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import {
-  inventoryCoreApi,
-  type ErpInventoryItem,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { type ErpInventoryItem } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import {
   operationalApi,
   type CreateOperationalPayload,
@@ -362,25 +360,25 @@ export function OperationalFormDrawer({
 
   useEffect(() => {
     if (!open) return;
-    if (variant !== "purchase") {
+    if (variant !== "purchase" || viewOnly) {
       setInventoryItemOptions([]);
       return;
     }
-    inventoryCoreApi
-      .list({ page: 1, pageSize: 200 })
+    basicMastersApi
+      .list({ limit: 200, entities: "inventoryItems" })
       .then((res) => {
-        const options = (res.items || []).map((item: ErpInventoryItem) => ({
+        const options = (res.items.inventoryItems || []).map((item: any) => ({
           value: item.id,
           label: `${item.sku} — ${item.itemName}`,
           sku: item.sku,
           itemName: item.itemName,
           itemType: item.itemType,
-          note: item.note || "",
+          note: "",
         }));
         setInventoryItemOptions(options);
       })
       .catch(() => setInventoryItemOptions([]));
-  }, [variant, open]);
+  }, [variant, open, viewOnly]);
 
   useEffect(() => {
     if (!open) return;
@@ -757,6 +755,11 @@ export function OperationalFormDrawer({
                       <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
                         #
                       </th>
+                      {variant === "purchase" && (
+                        <th className="px-3 py-2 font-medium min-w-[140px]">
+                          {t("Mã linh kiện")}
+                        </th>
+                      )}
                       <th className="px-3 py-2 font-medium min-w-[260px]">
                         {t("Linh kiện / Tên hàng")}
                       </th>
@@ -783,6 +786,11 @@ export function OperationalFormDrawer({
                         <td className="px-3 py-3 text-center text-muted-foreground align-top mt-2">
                           {idx + 1}
                         </td>
+                        {variant === "purchase" && (
+                          <td className="px-3 py-3 align-top mt-2">
+                            {line.item_code || "—"}
+                          </td>
+                        )}
                         <td className="px-3 py-2 align-top">
                           {variant === "purchase" ? (
                             <Combobox

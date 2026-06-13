@@ -138,9 +138,10 @@ function normalizePurchaseRow(row: any): OperationalDocument {
     ? row.lines.map((line: any) => ({
         ...line,
         inventory_item_id: line.inventory_item_id ?? line.itemId ?? null,
-        item_code: line.item_code ?? undefined,
-        item_name: line.item_name ?? line.description ?? undefined,
-        description: line.description ?? line.item_name ?? undefined,
+        item_code: line.itemCode ?? line.item_code ?? undefined,
+        item_name:
+          line.itemName ?? line.item_name ?? line.description ?? undefined,
+        description: line.description ?? undefined,
         qty:
           line.qty !== undefined
             ? Number(line.qty)
@@ -218,8 +219,9 @@ function toCorePurchasePayload(
   if (Array.isArray(payload.lines)) {
     result.lines = payload.lines.map((line) => ({
       itemId: line.inventory_item_id || undefined,
-      description:
-        line.description || line.item_name || line.item_code || undefined,
+      itemCode: line.item_code || undefined,
+      itemName: line.item_name || undefined,
+      description: line.description || undefined,
       qtyOrdered: String(line.qty ?? 0),
       unitPrice:
         line.unit_price !== undefined ? String(line.unit_price) : undefined,
