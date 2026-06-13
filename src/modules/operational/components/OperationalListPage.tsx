@@ -1192,7 +1192,7 @@ export function OperationalListPage({
             period: true,
             custom: [
               {
-                key: "supplierId",
+                key: "supplier_id",
                 label: "Nhà cung cấp",
                 placeholder: "Tất cả nhà cung cấp",
                 options: supplierOptions,
@@ -1674,7 +1674,7 @@ export function OperationalListPage({
                   variant === "inventory"
                     ? { itemType: itemTypeFilter }
                     : variant === "purchase"
-                      ? { supplierId: supplierFilter }
+                      ? { supplier_id: supplierFilter }
                       : {
                           paymentStatus: paymentStatusFilter,
                           recurring: recurringFilter,
@@ -1707,7 +1707,7 @@ export function OperationalListPage({
                   setItemTypeFilter(v);
                   setPage(1);
                 }
-                if (key === "supplierId") {
+                if (key === "supplier_id") {
                   setSupplierFilter(v);
                   setPage(1);
                 }
