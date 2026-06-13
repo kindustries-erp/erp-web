@@ -13,6 +13,7 @@ import {
   Pencil,
   Plus,
   ReceiptText,
+  Trash2,
   XCircle,
   RefreshCcw,
   ClipboardList,
@@ -42,6 +43,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   goodsReceiptsCoreApi,
   type CreateGrPayload,
@@ -346,6 +348,8 @@ export function ErpWarehousePage() {
   const [grSaving, setGrSaving] = useState(false);
   const [grPostingId, setGrPostingId] = useState<string | null>(null);
   const [grCancelId, setGrCancelId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WarehouseRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [grPoDetail, setGrPoDetail] = useState<ErpPurchaseOrder | null>(null);
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
@@ -730,6 +734,30 @@ export function ErpWarehousePage() {
     }
   }
 
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      if (deleteTarget.kind === "receipt") {
+        await goodsReceiptsCoreApi.remove(deleteTarget.id);
+        showToast({ title: "Đã xóa phiếu nhập kho", variant: "success" });
+        void loadReceipts();
+      } else {
+        await goodsIssuesCoreApi.remove(deleteTarget.id);
+        showToast({ title: "Đã xóa phiếu xuất kho", variant: "success" });
+        void loadIssues();
+      }
+      setDeleteTarget(null);
+    } catch (e) {
+      showToast({
+        title: e instanceof Error ? e.message : "Lỗi xóa phiếu",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   // ── Columns
   const columns: DataTableColumn<WarehouseRow>[] = useMemo(
     () => [
@@ -976,6 +1004,13 @@ export function ErpWarehousePage() {
                         },
                       },
                       {
+                        label: "Xóa",
+                        icon: <Trash2 className="h-3.5 w-3.5" />,
+                        variant: "danger",
+                        hidden: row.status !== "DRAFT",
+                        onClick: () => setDeleteTarget(row),
+                      },
+                      {
                         label:
                           grCancelId === row.id ? "Đang hủy..." : "Hủy phiếu",
                         icon: <XCircle className="h-3.5 w-3.5" />,
@@ -1005,6 +1040,24 @@ export function ErpWarehousePage() {
           <FilterPanel config={filterConfig} filter={filters} />
         </div>
       </PageLayout>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa ${deleteTarget.kind === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${deleteTarget.voucherNo}"? Hành động này sẽ ẩn phiếu này khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
 
       {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
       <DrawerModal
