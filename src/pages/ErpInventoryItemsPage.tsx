@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Layers, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
+import { useMemo, useState } from "react";
+import { Layers, Pencil, Trash2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -25,6 +25,13 @@ import {
   type ErpInventoryItem,
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { useAppMutation } from "@/shared/hooks/useAppQuery";
+import {
+  createInventoryItemsListKey,
+  createInventoryMastersKey,
+} from "@/shared/lib/queryKeys";
+import { useInventoryItemsQuery } from "@/modules/inventory-core/hooks/useInventoryItemsQuery";
+import { useInventoryMastersOptionsQuery } from "@/modules/inventory-core/hooks/useInventoryMastersOptionsQuery";
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "ACTIVE" },
@@ -90,29 +97,19 @@ function buildMasterOptions(items: InventoryMasterOption[]) {
 }
 
 export function ErpInventoryItemsTab() {
-  const [items, setItems] = useState<ErpInventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ErpInventoryItem | null>(
     null,
   );
-  const [deleting, setDeleting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
-  const [uomOptions, setUomOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemTypeOptions, setItemTypeOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const queryClient = useQueryClient();
+
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -126,81 +123,83 @@ export function ErpInventoryItemsTab() {
           key: "itemType",
           label: "Loại item",
           placeholder: "Tất cả loại item",
-          options:
-            itemTypeOptions.length > 0
-              ? itemTypeOptions
-              : ITEM_TYPE_FILTER_OPTIONS,
+          options: ITEM_TYPE_FILTER_OPTIONS,
         },
       ],
     }),
-    [itemTypeOptions],
+    [],
   );
   const filter = useFilterPanel(filterConfig);
 
-  const loadItems = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryCoreApi.list({
-        page,
-        pageSize,
-        search: filter.state.search.trim() || undefined,
-        status: filter.state.status || undefined,
-        itemType: filter.state.custom.itemType || undefined,
-      });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải danh mục kho");
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    filter.state.custom,
-    filter.state.search,
-    filter.state.status,
-    page,
-    pageSize,
-  ]);
+  const listParams = useMemo(
+    () => ({
+      page,
+      pageSize,
+      search: filter.state.search.trim() || undefined,
+      status: filter.state.status || undefined,
+      itemType: filter.state.custom.itemType || undefined,
+    }),
+    [
+      filter.state.custom.itemType,
+      filter.state.search,
+      filter.state.status,
+      page,
+      pageSize,
+    ],
+  );
 
-  const loadMasters = useCallback(async () => {
-    try {
-      const [uoms, itemTypes] = await Promise.all([
-        inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
-        inventoryCoreApi.listItemTypes({
+  const itemsQuery = useInventoryItemsQuery(listParams);
+  const { uomsQuery, itemTypesQuery } = useInventoryMastersOptionsQuery();
+
+  const items = itemsQuery.data?.items ?? [];
+  const total = itemsQuery.data?.total ?? 0;
+  const totalPages = itemsQuery.data?.totalPages ?? 0;
+  const loading = itemsQuery.isLoading || itemsQuery.isFetching;
+  const error =
+    detailError ||
+    (itemsQuery.error instanceof Error
+      ? itemsQuery.error.message
+      : uomsQuery.error instanceof Error
+        ? uomsQuery.error.message
+        : itemTypesQuery.error instanceof Error
+          ? itemTypesQuery.error.message
+          : null);
+
+  const uomOptions = useMemo(
+    () => buildMasterOptions(uomsQuery.data?.items ?? []),
+    [uomsQuery.data?.items],
+  );
+  const itemTypeOptions = useMemo(
+    () => buildMasterOptions(itemTypesQuery.data?.items ?? []),
+    [itemTypesQuery.data?.items],
+  );
+
+  async function ensureMastersFresh() {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: createInventoryMastersKey("uoms", {
           page: 1,
           pageSize: 200,
           isActive: true,
         }),
-      ]);
-      setUomOptions(buildMasterOptions(uoms.items));
-      setItemTypeOptions(buildMasterOptions(itemTypes.items));
-    } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Không thể tải cấu hình loại item/đơn vị tính",
-      );
-    }
-  }, []);
-
-  async function ensureMastersFresh() {
-    await loadMasters();
+      }),
+      queryClient.invalidateQueries({
+        queryKey: createInventoryMastersKey("item-types", {
+          page: 1,
+          pageSize: 200,
+          isActive: true,
+        }),
+      }),
+      uomsQuery.refetch(),
+      itemTypesQuery.refetch(),
+    ]);
   }
-
-  useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
-
-  useEffect(() => {
-    void loadMasters();
-  }, [loadMasters]);
 
   function resetForm() {
     setForm(emptyForm());
     setEditing(null);
     setSaveError(null);
+    setDetailError(null);
   }
 
   function closeDrawer() {
@@ -216,6 +215,7 @@ export function ErpInventoryItemsTab() {
 
   async function openEdit(item: ErpInventoryItem) {
     setSaveError(null);
+    setDetailError(null);
     try {
       await ensureMastersFresh();
       const detail = await inventoryCoreApi.get(item.id);
@@ -223,9 +223,51 @@ export function ErpInventoryItemsTab() {
       setForm(buildForm(detail));
       setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết");
+      setDetailError(e instanceof Error ? e.message : "Không thể tải chi tiết");
     }
   }
+
+  const saveMutation = useAppMutation({
+    mutationFn: async (payload: CreateInventoryItemPayload) => {
+      if (editing) {
+        return inventoryCoreApi.update(editing.id, payload);
+      }
+      return inventoryCoreApi.create(payload);
+    },
+    onSuccess: async () => {
+      showToast({
+        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
+        variant: "success",
+      });
+      closeDrawer();
+      await queryClient.invalidateQueries({
+        queryKey: ["inventory-items", "list"],
+      });
+      if (!editing && page !== 1) {
+        setPage(1);
+      }
+    },
+    onError: (e: any) => {
+      setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
+    },
+  });
+
+  const deleteMutation = useAppMutation({
+    mutationFn: async (id: string) => inventoryCoreApi.delete(id),
+    onSuccess: async () => {
+      showToast({ title: "Đã xóa thành công", variant: "success" });
+      setDeleteTarget(null);
+      await queryClient.invalidateQueries({
+        queryKey: ["inventory-items", "list"],
+      });
+    },
+    onError: (e: any) => {
+      showToast({
+        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        variant: "destructive",
+      });
+    },
+  });
 
   async function handleSave() {
     if (!form.sku.trim()) {
@@ -236,27 +278,8 @@ export function ErpInventoryItemsTab() {
       setSaveError("Tên item kho là bắt buộc");
       return;
     }
-    setSaving(true);
     setSaveError(null);
-    try {
-      const payload = toPayload(form);
-      if (editing) {
-        await inventoryCoreApi.update(editing.id, payload);
-      } else {
-        await inventoryCoreApi.create(payload);
-      }
-      showToast({
-        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
-        variant: "success",
-      });
-      closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else await loadItems();
-    } catch (e: any) {
-      setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
-    } finally {
-      setSaving(false);
-    }
+    await saveMutation.mutateAsync(toPayload(form));
   }
 
   function handleDelete(item: ErpInventoryItem) {
@@ -265,20 +288,7 @@ export function ErpInventoryItemsTab() {
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await inventoryCoreApi.delete(deleteTarget.id);
-      showToast({ title: "Đã xóa thành công", variant: "success" });
-      setDeleteTarget(null);
-      await loadItems();
-    } catch (e: any) {
-      showToast({
-        title: e?.response?.data?.message || e?.message || "Không thể xóa",
-        variant: "destructive",
-      });
-    } finally {
-      setDeleting(false);
-    }
+    await deleteMutation.mutateAsync(deleteTarget.id);
   }
 
   const columns: DataTableColumn<ErpInventoryItem>[] = useMemo(
@@ -348,15 +358,18 @@ export function ErpInventoryItemsTab() {
       label: editing ? "Cập nhật" : "Tạo mới",
       onClick: handleSave,
       primary: true,
-      loading: saving,
+      loading: saveMutation.isPending,
     },
   ];
+
+  const masterFilterOptions =
+    itemTypeOptions.length > 0 ? itemTypeOptions : ITEM_TYPE_FILTER_OPTIONS;
 
   return (
     <>
       <div className="flex items-center justify-end mb-3">
         <TableActionGroup
-          onRefresh={() => void loadItems()}
+          onRefresh={() => void itemsQuery.refetch()}
           loading={loading}
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
@@ -407,7 +420,20 @@ export function ErpInventoryItemsTab() {
             }}
           />
         </div>
-        <FilterPanel config={filterConfig} filter={filter} />
+        <FilterPanel
+          config={{
+            ...filterConfig,
+            custom: [
+              {
+                key: "itemType",
+                label: "Loại item",
+                placeholder: "Tất cả loại item",
+                options: masterFilterOptions,
+              },
+            ],
+          }}
+          filter={filter}
+        />
       </div>
 
       <ConfirmModal
@@ -422,9 +448,9 @@ export function ErpInventoryItemsTab() {
         cancelLabel="Hủy"
         onConfirm={() => void confirmDelete()}
         onCancel={() => {
-          if (!deleting) setDeleteTarget(null);
+          if (!deleteMutation.isPending) setDeleteTarget(null);
         }}
-        loading={deleting}
+        loading={deleteMutation.isPending}
         danger
       />
 
