@@ -167,6 +167,20 @@ export function OperationalFormDrawer({
     ["RECEIVED", "FULLY_RECEIVED", "CANCELLED"].includes(purchaseStatusValue);
   const isPurchaseLocked =
     viewOnly || isPurchaseStatusOnlyMode || isPurchaseFullyLocked;
+  const isPurchaseHeaderEditableAfterConfirm =
+    variant === "purchase" &&
+    !!editing &&
+    !viewOnly &&
+    isPurchaseStatusOnlyMode;
+  const purchaseFieldLocked = (
+    field: "description" | "qty" | "expectedDate" | "status" | "poNo",
+  ) => {
+    if (!isPurchaseLocked) return false;
+    if (!isPurchaseHeaderEditableAfterConfirm) return true;
+    return !["description", "qty", "expectedDate", "status", "poNo"].includes(
+      field,
+    );
+  };
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [branchOptions, setBranchOptions] = useState<
@@ -586,12 +600,12 @@ export function OperationalFormDrawer({
                   <div className="overflow-x-auto pb-2">
                     <div className="flex min-w-[900px] items-start gap-3">
                       {variant === "purchase" ? (
-                        <div className="w-[300px] shrink-0">
+                        <div className="w-[220px] shrink-0">
                           <DrawerField label={t("Linh kiện")} required>
                             <Combobox
                               options={inventoryItemOptions}
                               value={line.inventory_item_id}
-                              disabled={isPurchaseLocked}
+                              readOnly={isPurchaseLocked}
                               onChange={(v) => {
                                 const selected = inventoryItemOptions.find(
                                   (item) => item.value === (v || ""),
@@ -661,16 +675,18 @@ export function OperationalFormDrawer({
                           </DrawerField>
                         </>
                       )}
-                      <DrawerField label={t("Mô tả")}>
-                        <input
-                          className={inputCls}
-                          value={line.description}
-                          disabled={isPurchaseLocked}
-                          onChange={(e) =>
-                            setLine(idx, "description", e.target.value)
-                          }
-                        />
-                      </DrawerField>
+                      <div className="w-[280px] shrink-0">
+                        <DrawerField label={t("Mô tả")}>
+                          <input
+                            className={inputCls}
+                            value={line.description}
+                            disabled={purchaseFieldLocked("description")}
+                            onChange={(e) =>
+                              setLine(idx, "description", e.target.value)
+                            }
+                          />
+                        </DrawerField>
+                      </div>
                       <DrawerField label={t("Số lượng")}>
                         <input
                           type="number"
@@ -678,7 +694,7 @@ export function OperationalFormDrawer({
                           step="0.01"
                           className={inputCls}
                           value={line.qty}
-                          disabled={isPurchaseLocked}
+                          disabled={purchaseFieldLocked("qty")}
                           onChange={(e) => setLine(idx, "qty", e.target.value)}
                         />
                       </DrawerField>
@@ -709,16 +725,6 @@ export function OperationalFormDrawer({
                         />
                       </DrawerField>
                     </div>
-                  </div>
-                  <div>
-                    <DrawerField label={t("Ghi chú dòng")}>
-                      <input
-                        className={inputCls}
-                        value={line.notes}
-                        disabled={isPurchaseLocked}
-                        onChange={(e) => setLine(idx, "notes", e.target.value)}
-                      />
-                    </DrawerField>
                   </div>
                 </div>
               ))}
@@ -795,7 +801,7 @@ export function OperationalFormDrawer({
                 <input
                   className={inputCls}
                   value={docNo}
-                  disabled={isPurchaseLocked}
+                  disabled={purchaseFieldLocked("poNo")}
                   placeholder={
                     variant === "purchase" ? "PO-YYYYMM001" : undefined
                   }
@@ -847,7 +853,7 @@ export function OperationalFormDrawer({
                   <DatePicker
                     className={inputCls}
                     value={expectedDate?.slice(0, 10) || ""}
-                    disabled={isPurchaseLocked}
+                    disabled={purchaseFieldLocked("expectedDate")}
                     onChange={(v) => setExpectedDate(v)}
                   />
                 </DrawerField>
@@ -877,7 +883,7 @@ export function OperationalFormDrawer({
                 <Combobox
                   options={statusOptions}
                   value={status}
-                  disabled={isPurchaseLocked}
+                  disabled={purchaseFieldLocked("status")}
                   onChange={(v) => setStatus(v || "DRAFT")}
                   allowClear={false}
                 />
@@ -1021,7 +1027,7 @@ export function OperationalFormDrawer({
                 <textarea
                   className={`${inputCls} min-h-[84px]`}
                   value={notes}
-                  disabled={isPurchaseLocked}
+                  disabled={viewOnly || isPurchaseFullyLocked}
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </DrawerField>

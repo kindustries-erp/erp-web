@@ -204,7 +204,7 @@ function normalizePurchaseRow(row: any): OperationalDocument {
 function toCorePurchasePayload(
   payload: Partial<CreateOperationalPayload>,
 ): Record<string, unknown> {
-  return {
+  const result: Record<string, unknown> = {
     poNo: payload.purchase_no || undefined,
     supplierId: payload.supplier_id || undefined,
     orderDate: payload.document_date,
@@ -213,7 +213,10 @@ function toCorePurchasePayload(
     status: payload.status,
     paymentStatus: payload.payment_status,
     remarks: payload.notes || undefined,
-    lines: (payload.lines || []).map((line) => ({
+  };
+
+  if (Array.isArray(payload.lines)) {
+    result.lines = payload.lines.map((line) => ({
       itemId: line.inventory_item_id || undefined,
       description:
         line.description || line.item_name || line.item_code || undefined,
@@ -221,8 +224,10 @@ function toCorePurchasePayload(
       unitPrice:
         line.unit_price !== undefined ? String(line.unit_price) : undefined,
       amount: line.amount !== undefined ? String(line.amount) : undefined,
-    })),
-  };
+    }));
+  }
+
+  return result;
 }
 
 function params(input: ListParams = {}) {

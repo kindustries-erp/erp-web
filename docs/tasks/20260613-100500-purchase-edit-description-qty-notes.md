@@ -17,10 +17,16 @@
 
 ## Acceptance
 
+## Acceptance
+
 - In purchase edit mode for statuses `CONFIRMED` / `PARTIAL_RECEIVED`:
   - line description editable
   - line quantity editable
+  - expected receipt date editable
+  - status editable
   - header notes editable
+- Remove line-note field from purchase drawer.
+- Reduce item field width and enlarge description field width.
 - Keep high-risk identity fields locked unless already allowed by current flow.
 - `bun run build` must pass.
 
@@ -30,5 +36,7 @@
 
 ## Verification
 
-- Build: pending
+## Verification
+
+- Build: PASS (`bun run build`)
 - Runtime smoke: pending
