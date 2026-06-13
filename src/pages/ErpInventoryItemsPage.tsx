@@ -25,13 +25,13 @@ import {
   type ErpInventoryItem,
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { useAppMutation } from "@/shared/hooks/useAppQuery";
-import {
-  createInventoryItemsListKey,
-  createInventoryMastersKey,
-} from "@/shared/lib/queryKeys";
+import { createInventoryMastersKey } from "@/shared/lib/queryKeys";
 import { useInventoryItemsQuery } from "@/modules/inventory-core/hooks/useInventoryItemsQuery";
 import { useInventoryMastersOptionsQuery } from "@/modules/inventory-core/hooks/useInventoryMastersOptionsQuery";
+import {
+  useInventoryItemDeleteMutation,
+  useInventoryItemSaveMutation,
+} from "@/modules/inventory-core/hooks/useInventoryItemMutations";
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "ACTIVE" },
@@ -227,47 +227,9 @@ export function ErpInventoryItemsTab() {
     }
   }
 
-  const saveMutation = useAppMutation({
-    mutationFn: async (payload: CreateInventoryItemPayload) => {
-      if (editing) {
-        return inventoryCoreApi.update(editing.id, payload);
-      }
-      return inventoryCoreApi.create(payload);
-    },
-    onSuccess: async () => {
-      showToast({
-        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
-        variant: "success",
-      });
-      closeDrawer();
-      await queryClient.invalidateQueries({
-        queryKey: ["inventory-items", "list"],
-      });
-      if (!editing && page !== 1) {
-        setPage(1);
-      }
-    },
-    onError: (e: any) => {
-      setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
-    },
-  });
+  const saveMutation = useInventoryItemSaveMutation();
 
-  const deleteMutation = useAppMutation({
-    mutationFn: async (id: string) => inventoryCoreApi.delete(id),
-    onSuccess: async () => {
-      showToast({ title: "Đã xóa thành công", variant: "success" });
-      setDeleteTarget(null);
-      await queryClient.invalidateQueries({
-        queryKey: ["inventory-items", "list"],
-      });
-    },
-    onError: (e: any) => {
-      showToast({
-        title: e?.response?.data?.message || e?.message || "Không thể xóa",
-        variant: "destructive",
-      });
-    },
-  });
+  const deleteMutation = useInventoryItemDeleteMutation();
 
   async function handleSave() {
     if (!form.sku.trim()) {
@@ -279,7 +241,22 @@ export function ErpInventoryItemsTab() {
       return;
     }
     setSaveError(null);
-    await saveMutation.mutateAsync(toPayload(form));
+    try {
+      await saveMutation.mutateAsync({
+        id: editing?.id,
+        payload: toPayload(form),
+      });
+      showToast({
+        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
+        variant: "success",
+      });
+      closeDrawer();
+      if (!editing && page !== 1) {
+        setPage(1);
+      }
+    } catch (e: any) {
+      setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
+    }
   }
 
   function handleDelete(item: ErpInventoryItem) {
@@ -288,7 +265,16 @@ export function ErpInventoryItemsTab() {
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    await deleteMutation.mutateAsync(deleteTarget.id);
+    try {
+      await deleteMutation.mutateAsync({ id: deleteTarget.id });
+      showToast({ title: "Đã xóa thành công", variant: "success" });
+      setDeleteTarget(null);
+    } catch (e: any) {
+      showToast({
+        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        variant: "destructive",
+      });
+    }
   }
 
   const columns: DataTableColumn<ErpInventoryItem>[] = useMemo(

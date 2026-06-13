@@ -426,8 +426,8 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
   if (!detail) return null;
 
   return (
-    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 overflow-x-auto my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
-      <div className="flex-1 min-w-[400px]">
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
+      <div className="flex-1 min-w-0">
         <div className="mb-4 font-semibold text-base text-foreground">
           {t("Chi tiết")}
         </div>
@@ -436,63 +436,83 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
             {t("Không có dòng chi tiết.")}
           </div>
         ) : (
-          <div className="w-full text-sm">
-            <div className="flex items-center text-muted-foreground border-b border-border pb-2 mb-2 px-2">
-              <div className="flex-1 font-medium">Vật tư / Hàng hóa</div>
-              <div className="w-[80px] text-right font-medium">Số lượng</div>
-              <div className="w-[80px] text-right font-medium">Đã nhập</div>
-              <div className="w-[80px] text-right font-medium">Còn lại</div>
-            </div>
-            <div className="space-y-1">
-              {detail.lines.map((line, idx) => {
-                const poLine = poDetail?.lines?.find(
-                  (l, i) => l.id === line.id || i === idx,
-                );
-                const qtyReceived = Number(poLine?.qtyReceived || 0);
-                const qtyOrdered = Number(line.qty || poLine?.qtyOrdered || 0);
-                const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
+          <div className="w-full overflow-x-auto overflow-y-auto max-h-[300px] rounded-lg border border-[color:var(--border)]">
+            <table className="w-full text-sm text-left relative">
+              <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
+                <tr>
+                  <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
+                    #
+                  </th>
+                  <th className="px-3 py-2 font-medium min-w-[260px]">
+                    {t("Linh kiện / Tên hàng")}
+                  </th>
+                  <th className="px-3 py-2 font-medium min-w-[100px] text-center">
+                    Số lượng
+                  </th>
+                  <th className="px-3 py-2 font-medium min-w-[100px] text-center">
+                    Đã nhập
+                  </th>
+                  <th className="px-3 py-2 font-medium min-w-[100px] text-center">
+                    Còn lại
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[color:var(--border)]">
+                {detail.lines.map((line, idx) => {
+                  const poLine = poDetail?.lines?.find(
+                    (l, i) => l.id === line.id || i === idx,
+                  );
+                  const qtyReceived = Number(poLine?.qtyReceived || 0);
+                  const qtyOrdered = Number(
+                    line.qty || poLine?.qtyOrdered || 0,
+                  );
+                  const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
 
-                return (
-                  <div
-                    key={line.id || idx}
-                    className="flex items-center hover:bg-muted/50 rounded py-2 px-2 transition-colors gap-4"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="font-medium text-foreground truncate">
-                        {line.item_name ||
-                          line.description ||
-                          `${t("Dòng")} ${idx + 1}`}
+                  return (
+                    <tr
+                      key={line.id || idx}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-3 py-2 text-center text-muted-foreground">
+                        {idx + 1}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="font-medium text-foreground">
+                          {line.item_name ||
+                            line.description ||
+                            `${t("Dòng")} ${idx + 1}`}
+                        </div>
                         {line.item_code && (
-                          <span className="text-muted-foreground ml-1.5 font-normal">
-                            ({line.item_code})
-                          </span>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {line.item_code}
+                          </div>
                         )}
-                      </span>
-                    </div>
-                    <div className="w-[80px] text-right">
-                      <span className="font-medium text-foreground">
-                        {Number(line.qty || 0).toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                    <div className="w-[80px] text-right">
-                      <span className="font-medium text-emerald-600">
-                        {qtyReceived.toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                    <div className="w-[80px] text-right">
-                      <span className="font-medium text-amber-600">
-                        {qtyRemaining.toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="font-medium text-foreground">
+                          {Number(line.qty || 0).toLocaleString("vi-VN")}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="font-medium text-emerald-600">
+                          {qtyReceived.toLocaleString("vi-VN")}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <div className="font-medium text-amber-600">
+                          {qtyRemaining.toLocaleString("vi-VN")}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      <div className="w-full md:w-96 shrink-0 md:border-l md:border-border md:pl-6">
+      <div className="w-full md:w-72 lg:w-80 shrink-0 md:border-l md:border-border md:pl-6">
         <div className="mb-4 font-semibold text-base text-foreground">
           {t("Lịch sử nhập kho")}
         </div>
@@ -1277,7 +1297,7 @@ export function OperationalListPage({
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
     ],
-    [],
+    [expandedRowIds, toggleExpand, t, variant],
   );
 
   const columns = useMemo<DataTableColumn<OperationalDocument>[]>(() => {
@@ -1500,13 +1520,13 @@ export function OperationalListPage({
         title={config.title}
         desc={config.desc}
         icon={<FileText className="h-4 w-4" />}
+        actions={tableActions}
       >
         {error ? (
           <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         ) : null}
-        <div className="flex items-center justify-end mb-3">{tableActions}</div>
         <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
             <DataTable
@@ -1632,6 +1652,7 @@ export function OperationalListPage({
       title={config.title}
       desc={config.desc}
       icon={<FileText className="h-4 w-4" />}
+      actions={tableActions}
     >
       {error ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
@@ -1639,7 +1660,6 @@ export function OperationalListPage({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-end mb-3">{tableActions}</div>
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <DataTable
@@ -1655,7 +1675,7 @@ export function OperationalListPage({
                 <ActionDropdown
                   items={[
                     {
-                      label: t("Xem chi tiết"),
+                      label: t("Chi tiết"),
                       icon: <Eye className="h-4 w-4" />,
                       onClick: () => void openDetail(row),
                     },
@@ -1786,7 +1806,7 @@ export function OperationalListPage({
         subtitle={
           detailDocument
             ? `${docNo(detailDocument)} — ${partner(detailDocument)}`
-            : "Xem chi tiết chứng từ operational"
+            : "Chi tiết chứng từ operational"
         }
         bodyClassName="space-y-4"
       >

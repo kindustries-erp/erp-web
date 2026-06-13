@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 import { useAppQuery } from "@/shared/hooks/useAppQuery";
 import {
+  createWarehouseIssuesKey,
+  createWarehouseReceiptsKey,
+} from "@/shared/lib/queryKeys";
+import {
   goodsReceiptsCoreApi,
   type ErpGoodsReceipt,
 } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
@@ -14,32 +18,6 @@ export interface WarehouseVoucherListParams {
   page: number;
   pageSize: number;
   search?: string;
-}
-
-export function createWarehouseReceiptsKey(params: WarehouseVoucherListParams) {
-  return [
-    "warehouse-vouchers",
-    "receipts",
-    normalize(params as unknown as Record<string, unknown>),
-  ] as const;
-}
-
-export function createWarehouseIssuesKey(params: WarehouseVoucherListParams) {
-  return [
-    "warehouse-vouchers",
-    "issues",
-    normalize(params as unknown as Record<string, unknown>),
-  ] as const;
-}
-
-function normalize(filters: Record<string, unknown>) {
-  return Object.fromEntries(
-    Object.entries(filters)
-      .filter(
-        ([, value]) => value !== undefined && value !== null && value !== "",
-      )
-      .sort(([a], [b]) => a.localeCompare(b)),
-  );
 }
 
 export function useWarehouseReceiptsQuery(

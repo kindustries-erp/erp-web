@@ -5,6 +5,10 @@ export interface InventoryItemListFilters extends ListParams {
   itemType?: string;
 }
 
+export interface WarehouseVoucherListFilters extends ListParams {
+  search?: string;
+}
+
 export function createInventoryItemsListKey(filters: InventoryItemListFilters) {
   return ["inventory-items", "list", normalizeFilters(filters)] as const;
 }
@@ -14,6 +18,16 @@ export function createInventoryMastersKey(
   params?: ListParams & { isActive?: boolean },
 ) {
   return ["inventory-masters", kind, normalizeFilters(params ?? {})] as const;
+}
+
+export function createWarehouseReceiptsKey(
+  filters: WarehouseVoucherListFilters,
+) {
+  return ["warehouse-vouchers", "receipts", normalizeFilters(filters)] as const;
+}
+
+export function createWarehouseIssuesKey(filters: WarehouseVoucherListFilters) {
+  return ["warehouse-vouchers", "issues", normalizeFilters(filters)] as const;
 }
 
 function normalizeFilters<T extends Record<string, unknown>>(filters: T): T {

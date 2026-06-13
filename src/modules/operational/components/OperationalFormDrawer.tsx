@@ -633,9 +633,9 @@ export function OperationalFormDrawer({
       }
     >
       {/* 4/5 và 1/5 split */}
-      <div className="flex flex-col xl:flex-row gap-6 items-start">
+      <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
         {/* Cột trái (4/5): Dòng chứng từ & Lịch sử nhập kho */}
-        <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+        <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
           <DrawerSection
             title={t("Chi tiết")}
             titleExtra={
