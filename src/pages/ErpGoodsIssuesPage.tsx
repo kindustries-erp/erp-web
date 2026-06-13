@@ -25,11 +25,7 @@ import {
   type ErpGoodsIssue,
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
-import {
-  inventoryCoreApi,
-  type ErpInventoryItem,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
 
 const LOOKUP_LIMIT = 200;
@@ -200,16 +196,19 @@ export function ErpGoodsIssuesPage() {
 
   const loadCustomers = useCallback(async () => {
     try {
-      const res = await getBusinessPartnersPagedApi({
-        page: 1,
-        pageSize: LOOKUP_LIMIT,
-        partnerType: "CUSTOMER",
-      });
+      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
       setCustomerOptions(
-        res.items.map((p) => ({
-          value: p.id,
-          label: `${p.code} — ${p.display_name || p.name}`,
-        })),
+        res.items.customers.map(
+          (p: {
+            id: string;
+            code: string;
+            displayName?: string | null;
+            name: string;
+          }) => ({
+            value: p.id,
+            label: `${p.code} — ${p.displayName || p.name}`,
+          }),
+        ),
       );
     } catch {
       setCustomerOptions([]);
@@ -218,12 +217,9 @@ export function ErpGoodsIssuesPage() {
 
   const loadItemsLookup = useCallback(async () => {
     try {
-      const res = await inventoryCoreApi.list({
-        page: 1,
-        pageSize: LOOKUP_LIMIT,
-      });
+      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
       setItemOptions(
-        res.items.map((item: ErpInventoryItem) => ({
+        res.items.inventoryItems.map((item) => ({
           value: item.id,
           label: `${item.sku} — ${item.itemName}`,
         })),

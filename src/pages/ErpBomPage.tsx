@@ -35,10 +35,7 @@ import {
 } from "@/modules/bom-core/api/bomCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import {
-  inventoryCoreApi,
-  type ErpInventoryItem,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { cn } from "@/shared/utils";
 
 const ITEM_LOOKUP_LIMIT = 200;
@@ -344,16 +341,17 @@ export function ErpBomPage() {
 
   const loadItemOptions = useCallback(async (keyword = "") => {
     try {
-      const res = await inventoryCoreApi.list({
-        page: 1,
-        pageSize: ITEM_LOOKUP_LIMIT,
-        search: keyword,
+      const res = await basicMastersApi.list({
+        search: keyword || undefined,
+        limit: ITEM_LOOKUP_LIMIT,
       });
       setItemOptions(
-        res.items.map((item: ErpInventoryItem) => ({
-          value: item.id,
-          label: `${item.sku} — ${item.itemName}`,
-        })),
+        res.items.inventoryItems.map(
+          (item: { id: string; sku: string; itemName: string }) => ({
+            value: item.id,
+            label: `${item.sku} — ${item.itemName}`,
+          }),
+        ),
       );
     } catch {
       setItemOptions([]);

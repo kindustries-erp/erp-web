@@ -59,7 +59,7 @@ import {
   purchaseOrdersCoreApi,
   type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import {
   inventoryCoreApi,
   type ErpInventoryItem,
@@ -487,14 +487,9 @@ export function ErpWarehousePage() {
   // ── Load GR lookups (PO + Supplier)
   const loadGrLookups = useCallback(async () => {
     try {
-      const [poRes, supRes] = await Promise.all([
+      const [poRes, basicRes] = await Promise.all([
         purchaseOrdersCoreApi.list({ page: 1, pageSize: 200 }),
-        getBusinessPartnersPagedApi({
-          page: 1,
-          pageSize: LOOKUP_LIMIT,
-          search: "",
-          partnerType: "VENDOR",
-        }),
+        basicMastersApi.list({ limit: LOOKUP_LIMIT }),
       ]);
       setPoOptions(
         poRes.items.map((po) => ({
@@ -503,10 +498,17 @@ export function ErpWarehousePage() {
         })),
       );
       setSupplierOptions(
-        supRes.items.map((p: { id: string; name: string }) => ({
-          value: p.id,
-          label: p.name,
-        })),
+        basicRes.items.suppliers.map(
+          (p: {
+            id: string;
+            code: string;
+            displayName?: string | null;
+            name: string;
+          }) => ({
+            value: p.id,
+            label: `${p.code} — ${p.displayName || p.name}`,
+          }),
+        ),
       );
     } catch {
       /* silent */
@@ -516,27 +518,30 @@ export function ErpWarehousePage() {
   // ── Load GI lookups
   const loadGiLookups = useCallback(async () => {
     try {
-      const [custRes, itemRes, vehRes] = await Promise.all([
-        getBusinessPartnersPagedApi({
-          page: 1,
-          pageSize: LOOKUP_LIMIT,
-          search: "",
-          partnerType: "CUSTOMER",
-        }),
-        inventoryCoreApi.list({ page: 1, pageSize: LOOKUP_LIMIT }),
+      const [basicRes, vehRes] = await Promise.all([
+        basicMastersApi.list({ limit: LOOKUP_LIMIT }),
         manufacturingApi.listVehicles({ page: 1, pageSize: LOOKUP_LIMIT }),
       ]);
       setCustomerOptions(
-        custRes.items.map((p: { id: string; name: string }) => ({
-          value: p.id,
-          label: p.name,
-        })),
+        basicRes.items.customers.map(
+          (p: {
+            id: string;
+            code: string;
+            displayName?: string | null;
+            name: string;
+          }) => ({
+            value: p.id,
+            label: `${p.code} — ${p.displayName || p.name}`,
+          }),
+        ),
       );
       setItemOptions(
-        (itemRes.items ?? []).map((i: ErpInventoryItem) => ({
-          value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
-        })),
+        basicRes.items.inventoryItems.map(
+          (i: { id: string; sku: string; itemName: string }) => ({
+            value: i.id,
+            label: `${i.sku} — ${i.itemName}`,
+          }),
+        ),
       );
       const vehList = vehRes.items ?? [];
 

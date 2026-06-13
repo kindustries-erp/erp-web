@@ -29,11 +29,7 @@ import {
   type CreateSoPayload,
   type ErpSalesOrder,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
-import {
-  inventoryCoreApi,
-  type ErpInventoryItem,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
-import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 
@@ -201,21 +197,19 @@ export function ErpSalesOrdersPage() {
 
   const loadCustomers = useCallback(async () => {
     try {
-      const res = await getBusinessPartnersPagedApi({
-        page: 1,
-        pageSize: LOOKUP_LIMIT,
-        partnerType: "CUSTOMER",
-      });
+      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
       setCustomerOptions(
-        res.items
-          .filter(
-            (partner: any) =>
-              partner.status !== "INACTIVE" && partner.is_active !== false,
-          )
-          .map((partner) => ({
+        res.items.customers.map(
+          (partner: {
+            id: string;
+            code: string;
+            displayName?: string | null;
+            name: string;
+          }) => ({
             value: partner.id,
-            label: `${partner.code} — ${partner.display_name || partner.name}`,
-          })),
+            label: `${partner.code} — ${partner.displayName || partner.name}`,
+          }),
+        ),
       );
     } catch {
       setCustomerOptions([]);
@@ -224,12 +218,9 @@ export function ErpSalesOrdersPage() {
 
   const loadItemsLookup = useCallback(async () => {
     try {
-      const res = await inventoryCoreApi.list({
-        page: 1,
-        pageSize: LOOKUP_LIMIT,
-      });
+      const res = await basicMastersApi.list({ limit: LOOKUP_LIMIT });
       setItemOptions(
-        res.items.map((item: ErpInventoryItem) => ({
+        res.items.inventoryItems.map((item) => ({
           value: item.id,
           label: `${item.sku} — ${item.itemName}`,
         })),
