@@ -296,7 +296,7 @@ export function DrawerSection({
   titleExtra,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
   titleExtra?: React.ReactNode;
   children: React.ReactNode;
 }) {
