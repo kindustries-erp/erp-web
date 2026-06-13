@@ -16,6 +16,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useUIStore } from "@/core/config/uiStore";
 import { Combobox } from "@/shared/components/Combobox";
@@ -100,6 +101,7 @@ export function ErpInventoryItemsTab() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -209,21 +211,29 @@ export function ErpInventoryItemsTab() {
 
   async function openCreate() {
     resetForm();
-    await ensureMastersFresh();
+    setDrawerLoading(true);
     setDrawerOpen(true);
+    try {
+      await ensureMastersFresh();
+    } finally {
+      setDrawerLoading(false);
+    }
   }
 
   async function openEdit(item: ErpInventoryItem) {
     setSaveError(null);
     setDetailError(null);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       await ensureMastersFresh();
       const detail = await inventoryCoreApi.get(item.id);
       setEditing(detail);
       setForm(buildForm(detail));
-      setDrawerOpen(true);
     } catch (e) {
       setDetailError(e instanceof Error ? e.message : "Không thể tải chi tiết");
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
@@ -455,86 +465,101 @@ export function ErpInventoryItemsTab() {
           </div>
         )}
 
-        <DrawerSection title="Thông tin item kho">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="SKU" required>
-              <input
-                value={form.sku}
-                disabled={!!editing}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, sku: e.target.value }))
-                }
-                className={inputCls}
-                placeholder="VD: FG-001"
-              />
-            </DrawerField>
-
-            <DrawerField label="Tên item kho" required>
-              <input
-                value={form.itemName}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, itemName: e.target.value }))
-                }
-                className={inputCls}
-                placeholder="Tên đầy đủ của item kho"
-              />
-            </DrawerField>
-
-            <DrawerField label="Đơn vị tính (ĐVT)" required>
-              <Combobox
-                value={form.uom}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    uom: value || form.uom || "PCS",
-                  }))
-                }
-                options={uomOptions}
-                placeholder="Chọn ĐVT"
-              />
-            </DrawerField>
-
-            <DrawerField label="Loại item">
-              <Combobox
-                value={form.itemType}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    itemType: value || form.itemType || "FG",
-                  }))
-                }
-                options={itemTypeOptions}
-                placeholder="Chọn loại"
-              />
-            </DrawerField>
-
-            <DrawerField label="Trạng thái">
-              <Combobox
-                value={form.status}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
-                }
-                options={STATUS_OPTIONS}
-              />
-            </DrawerField>
-
-            <div className="md:col-span-2">
-              <DrawerField label="Ghi chú">
-                <textarea
-                  value={form.note}
+        {drawerLoading ? (
+          <DrawerSection title="Thông tin item kho">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <div className="md:col-span-2">
+                <Skeleton className="h-24 w-full" />
+              </div>
+            </div>
+          </DrawerSection>
+        ) : (
+          <DrawerSection title="Thông tin item kho">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <DrawerField label="SKU" required>
+                <input
+                  value={form.sku}
+                  disabled={!!editing}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, note: e.target.value }))
+                    setForm((prev) => ({ ...prev, sku: e.target.value }))
                   }
-                  className={`${inputCls} min-h-[80px] resize-y`}
-                  placeholder="Ghi chú thêm về item kho này..."
+                  className={inputCls}
+                  placeholder="VD: FG-001"
                 />
               </DrawerField>
+
+              <DrawerField label="Tên item kho" required>
+                <input
+                  value={form.itemName}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, itemName: e.target.value }))
+                  }
+                  className={inputCls}
+                  placeholder="Tên đầy đủ của item kho"
+                />
+              </DrawerField>
+
+              <DrawerField label="Đơn vị tính (ĐVT)" required>
+                <Combobox
+                  value={form.uom}
+                  allowClear={false}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      uom: value || form.uom || "PCS",
+                    }))
+                  }
+                  options={uomOptions}
+                  placeholder="Chọn ĐVT"
+                />
+              </DrawerField>
+
+              <DrawerField label="Loại item">
+                <Combobox
+                  value={form.itemType}
+                  allowClear={false}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      itemType: value || form.itemType || "FG",
+                    }))
+                  }
+                  options={itemTypeOptions}
+                  placeholder="Chọn loại"
+                />
+              </DrawerField>
+
+              <DrawerField label="Trạng thái">
+                <Combobox
+                  value={form.status}
+                  allowClear={false}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
+                  }
+                  options={STATUS_OPTIONS}
+                />
+              </DrawerField>
+
+              <div className="md:col-span-2">
+                <DrawerField label="Ghi chú">
+                  <textarea
+                    value={form.note}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, note: e.target.value }))
+                    }
+                    className={`${inputCls} min-h-[80px] resize-y`}
+                    placeholder="Ghi chú thêm về item kho này..."
+                  />
+                </DrawerField>
+              </div>
             </div>
-          </div>
-        </DrawerSection>
+          </DrawerSection>
+        )}
       </DrawerModal>
     </>
   );

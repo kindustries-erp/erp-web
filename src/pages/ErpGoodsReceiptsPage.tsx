@@ -17,6 +17,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
@@ -112,6 +113,7 @@ export function ErpGoodsReceiptsPage() {
   const [search, setSearch] = useState("");
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpGoodsReceipt | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState<GrForm>(emptyForm);
@@ -312,32 +314,38 @@ export function ErpGoodsReceiptsPage() {
   async function openEdit(item: ErpGoodsReceipt) {
     setViewOnly(false);
     setSaveError(null);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       const detail = await goodsReceiptsCoreApi.get(item.id);
       const enriched = await enrichReceipt(detail);
       setEditing(enriched);
       setForm(buildForm(enriched));
-      setDrawerOpen(true);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Không thể tải chi tiết goods receipt",
       );
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
   async function openView(item: ErpGoodsReceipt) {
     setViewOnly(true);
     setSaveError(null);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       const detail = await goodsReceiptsCoreApi.get(item.id);
       const enriched = await enrichReceipt(detail);
       setEditing(enriched);
       setForm(buildForm(enriched));
-      setDrawerOpen(true);
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Không thể tải chi tiết goods receipt",
       );
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
@@ -635,128 +643,155 @@ export function ErpGoodsReceiptsPage() {
           </div>
         )}
 
-        <DrawerSection title="Thông tin chung">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="Số phiếu nhập">
-              <input
-                value={form.receiptNo}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, receiptNo: e.target.value }))
-                }
-                placeholder="NK-YYYYMM001 (tự động điền, có thể sửa)"
-                className={inputCls}
-              />
-            </DrawerField>
-            <DrawerField label="Ngày nhập" required>
-              <input
-                type="date"
-                value={form.receiptDate}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, receiptDate: e.target.value }))
-                }
-                className={inputCls}
-              />
-            </DrawerField>
-            <DrawerField label="Purchase Order">
-              <Combobox
-                value={form.purchaseOrderId}
-                disabled={viewOnly || !!editing}
-                onChange={(value) => {
-                  void loadPoIntoForm(value);
-                }}
-                options={poOptions}
-                placeholder="Chọn PO để lấy dòng"
-                searchPlaceholder="Tìm PO"
-              />
-            </DrawerField>
-          </div>
-
-          <DrawerField label="Ghi chú">
-            <textarea
-              value={form.remarks}
-              disabled={viewOnly}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, remarks: e.target.value }))
-              }
-              className={`${inputCls} min-h-[88px] resize-y`}
-            />
-          </DrawerField>
-        </DrawerSection>
-
-        <DrawerSection title="Dòng nhập kho từ PO">
-          <div className="space-y-3">
-            {form.lines.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
-                Chỉ hiện PO còn open qty để nhập kho. PO nháp hoặc đã hủy sẽ bị
-                loại. PO đã nhập đủ sẽ không còn trong danh sách chọn dù status
-                header là gì.
+        {drawerLoading ? (
+          <div className="space-y-6">
+            <DrawerSection title="Thông tin chung">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
               </div>
-            ) : (
-              form.lines.map((line, index) => (
-                <div
-                  key={`${index}-${line.purchaseOrderLineId}`}
-                  className="rounded-xl border border-border bg-muted/20 p-3"
-                >
-                  <div className="mb-2 text-xs font-semibold text-muted-foreground">
-                    Dòng {index + 1}
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <DrawerField label="Mặt hàng">
-                      <input
-                        value={line.itemName}
-                        disabled
-                        className={inputCls}
-                      />
-                    </DrawerField>
-                    <DrawerField label="Mô tả / tham chiếu dòng PO">
-                      <input
-                        value={line.itemDesc}
-                        disabled
-                        className={inputCls}
-                      />
-                    </DrawerField>
-                    <DrawerField label="Số lượng nhập" required>
-                      <input
-                        value={line.qtyReceived}
-                        disabled={viewOnly}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            lines: prev.lines.map((row, i) =>
-                              i === index
-                                ? { ...row, qtyReceived: e.target.value }
-                                : row,
-                            ),
-                          }))
-                        }
-                        className={inputCls}
-                      />
-                    </DrawerField>
-                    <DrawerField label="Đơn giá">
-                      <input
-                        value={line.unitCost}
-                        disabled={viewOnly}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            lines: prev.lines.map((row, i) =>
-                              i === index
-                                ? { ...row, unitCost: e.target.value }
-                                : row,
-                            ),
-                          }))
-                        }
-                        className={inputCls}
-                      />
-                    </DrawerField>
-                  </div>
-                </div>
-              ))
-            )}
+              <Skeleton className="mt-3 h-20 w-full" />
+            </DrawerSection>
+            <DrawerSection title="Dòng nhập kho từ PO">
+              <div className="space-y-3">
+                <Skeleton className="h-[120px] w-full" />
+                <Skeleton className="h-[120px] w-full" />
+              </div>
+            </DrawerSection>
           </div>
-        </DrawerSection>
+        ) : (
+          <div className="space-y-6">
+            <DrawerSection title="Thông tin chung">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <DrawerField label="Số phiếu nhập">
+                  <input
+                    value={form.receiptNo}
+                    disabled={viewOnly}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        receiptNo: e.target.value,
+                      }))
+                    }
+                    placeholder="NK-YYYYMM001 (tự động điền, có thể sửa)"
+                    className={inputCls}
+                  />
+                </DrawerField>
+                <DrawerField label="Ngày nhập" required>
+                  <input
+                    type="date"
+                    value={form.receiptDate}
+                    disabled={viewOnly}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        receiptDate: e.target.value,
+                      }))
+                    }
+                    className={inputCls}
+                  />
+                </DrawerField>
+                <DrawerField label="Purchase Order">
+                  <Combobox
+                    value={form.purchaseOrderId}
+                    disabled={viewOnly || !!editing}
+                    onChange={(value) => {
+                      void loadPoIntoForm(value);
+                    }}
+                    options={poOptions}
+                    placeholder="Chọn PO để lấy dòng"
+                    searchPlaceholder="Tìm PO"
+                  />
+                </DrawerField>
+              </div>
+
+              <DrawerField label="Ghi chú">
+                <textarea
+                  value={form.remarks}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, remarks: e.target.value }))
+                  }
+                  className={`${inputCls} min-h-[88px] resize-y`}
+                />
+              </DrawerField>
+            </DrawerSection>
+
+            <DrawerSection title="Dòng nhập kho từ PO">
+              <div className="space-y-3">
+                {form.lines.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+                    Chỉ hiện PO còn open qty để nhập kho. PO nháp hoặc đã hủy sẽ
+                    bị loại. PO đã nhập đủ sẽ không còn trong danh sách chọn dù
+                    status header là gì.
+                  </div>
+                ) : (
+                  form.lines.map((line, index) => (
+                    <div
+                      key={`${index}-${line.purchaseOrderLineId}`}
+                      className="rounded-xl border border-border bg-muted/20 p-3"
+                    >
+                      <div className="mb-2 text-xs font-semibold text-muted-foreground">
+                        Dòng {index + 1}
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <DrawerField label="Mặt hàng">
+                          <input
+                            value={line.itemName}
+                            disabled
+                            className={inputCls}
+                          />
+                        </DrawerField>
+                        <DrawerField label="Mô tả / tham chiếu dòng PO">
+                          <input
+                            value={line.itemDesc}
+                            disabled
+                            className={inputCls}
+                          />
+                        </DrawerField>
+                        <DrawerField label="Số lượng nhập" required>
+                          <input
+                            value={line.qtyReceived}
+                            disabled={viewOnly}
+                            onChange={(e) =>
+                              setForm((prev) => ({
+                                ...prev,
+                                lines: prev.lines.map((row, i) =>
+                                  i === index
+                                    ? { ...row, qtyReceived: e.target.value }
+                                    : row,
+                                ),
+                              }))
+                            }
+                            className={inputCls}
+                          />
+                        </DrawerField>
+                        <DrawerField label="Đơn giá">
+                          <input
+                            value={line.unitCost}
+                            disabled={viewOnly}
+                            onChange={(e) =>
+                              setForm((prev) => ({
+                                ...prev,
+                                lines: prev.lines.map((row, i) =>
+                                  i === index
+                                    ? { ...row, unitCost: e.target.value }
+                                    : row,
+                                ),
+                              }))
+                            }
+                            className={inputCls}
+                          />
+                        </DrawerField>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </DrawerSection>
+          </div>
+        )}
       </DrawerModal>
     </PageLayout>
   );

@@ -9,6 +9,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import {
   goodsReceiptsCoreApi,
   type ErpGoodsReceipt,
@@ -142,8 +143,26 @@ export function GoodsReceiptViewDrawer({
       )}
 
       {loading && !detail && (
-        <div className="flex justify-center p-8 text-sm text-muted-foreground">
-          Đang tải chi tiết...
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+            <DrawerSection title="Chi tiết">
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </DrawerSection>
+          </div>
+          <div className="shrink-0 order-1 xl:order-2 w-full xl:w-[320px] space-y-4">
+            <DrawerSection title="Thông tin chung">
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </DrawerSection>
+          </div>
         </div>
       )}
 

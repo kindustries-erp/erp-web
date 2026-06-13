@@ -41,6 +41,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
 import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
@@ -961,6 +962,10 @@ export function OperationalListPage({
     if (!documentType) return;
 
     if (variant === "purchase") {
+      setEditingRow(row);
+      setPoReceipts([]);
+      setViewOnly(true);
+      setFormOpen(true);
       setFormLoading(true);
       setError(null);
       try {
@@ -968,8 +973,6 @@ export function OperationalListPage({
         const po = await purchaseOrdersCoreApi.get(row.id);
         setPoReceipts(po.receipts || []);
         setEditingRow(document);
-        setViewOnly(true);
-        setFormOpen(true);
       } catch (err) {
         setError(extractApiError(err, t("Không tải được chi tiết chứng từ")));
       } finally {
@@ -1919,8 +1922,22 @@ export function OperationalListPage({
           </div>
         ) : null}
         {detailLoading ? (
-          <div className="text-sm text-[color:var(--muted-fg)]">
-            Đang tải chi tiết...
+          <div className="space-y-6">
+            <DrawerSection title="Thông tin chính">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </DrawerSection>
+            <DrawerSection title="Dòng chi tiết">
+              <div className="space-y-3">
+                <Skeleton className="h-[72px] w-full" />
+                <Skeleton className="h-[72px] w-full" />
+                <Skeleton className="h-[72px] w-full" />
+              </div>
+            </DrawerSection>
           </div>
         ) : detailDocument ? (
           <>
@@ -2282,6 +2299,7 @@ export function OperationalListPage({
         <OperationalFormDrawer
           variant={variant as "sales" | "purchase" | "expenses"}
           open={formOpen}
+          loading={formLoading}
           editing={editingRow}
           viewOnly={viewOnly}
           poReceipts={poReceipts}
