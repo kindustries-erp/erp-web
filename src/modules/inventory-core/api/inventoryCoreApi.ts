@@ -1,5 +1,14 @@
 import axiosInstance from "@/core/api/axiosInstance";
-import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
+import type {
+  PaginatedResponse,
+  ListParams as BaseListParams,
+} from "@/shared/types/pagination";
+
+export type ListParams = BaseListParams & {
+  itemType?: string;
+  status?: string;
+  ids?: string;
+};
 
 export interface ErpInventoryItem {
   id: string;
@@ -92,6 +101,7 @@ function p(params: ListParams = {}) {
     ...(params.search ? { search: params.search } : {}),
     ...(params.itemType ? { itemType: params.itemType } : {}),
     ...(params.status ? { status: params.status } : {}),
+    ...(params.ids ? { ids: params.ids } : {}),
   };
 }
 

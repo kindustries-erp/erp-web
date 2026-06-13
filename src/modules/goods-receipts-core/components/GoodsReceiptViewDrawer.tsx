@@ -82,16 +82,17 @@ export function GoodsReceiptViewDrawer({
 
         if (itemIds.length > 0) {
           const dict: Record<string, ErpInventoryItem> = {};
-          await Promise.all(
-            itemIds.map(async (id) => {
-              try {
-                const it = await inventoryCoreApi.get(id);
-                dict[id] = it;
-              } catch (err) {
-                console.warn("Failed to fetch inventory item", id, err);
-              }
-            }),
-          );
+          try {
+            const res = await inventoryCoreApi.list({
+              ids: itemIds.join(","),
+              pageSize: 1000,
+            });
+            for (const it of res.items) {
+              dict[it.id] = it;
+            }
+          } catch (err) {
+            console.warn("Failed to fetch inventory items", err);
+          }
           if (active) setItemsDict(dict);
         }
       } catch (e) {
