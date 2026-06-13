@@ -7,6 +7,7 @@ import {
 } from "@/modules/finance/utils/financeHelpers";
 import {
   AlertCircle,
+  ArrowUpDown,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -75,6 +76,7 @@ import {
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useOperationalListQuery } from "../hooks/useOperationalListQuery";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -638,6 +640,12 @@ export function OperationalListPage({
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [supplierOptions, setSupplierOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  // sort state: "field" = ASC, "-field" = DESC, "" = default (createdAt DESC)
+  const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
 
@@ -727,18 +735,38 @@ export function OperationalListPage({
     resetFlow();
   }, [variant]);
 
+  // Load supplier options for purchase filter
+  useEffect(() => {
+    if (variant !== "purchase") return;
+    basicMastersApi
+      .list({ limit: 500 })
+      .then((res) => {
+        setSupplierOptions(
+          (res.items.suppliers ?? []).map((s) => ({
+            value: s.id,
+            label: s.name,
+          })),
+        );
+      })
+      .catch(() => setSupplierOptions([]));
+  }, [variant]);
+
+  const purchaseSortArray = purchaseSort ? [purchaseSort] : undefined;
+
   const listQuery = useOperationalListQuery({
     variant,
     page,
     pageSize,
     search: search || undefined,
     branch_id: branchFilter || undefined,
+    supplier_id: supplierFilter || undefined,
     recurring: recurringFilter === "RECURRING",
     payment_status: paymentStatusFilter || undefined,
     status: statusFilter || undefined,
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
     item_type: itemTypeFilter || undefined,
+    sort: purchaseSortArray,
   });
 
   useEffect(() => {
@@ -1157,6 +1185,14 @@ export function OperationalListPage({
         ? {
             search: true,
             period: true,
+            custom: [
+              {
+                key: "supplierId",
+                label: "Nhà cung cấp",
+                placeholder: "Tất cả nhà cung cấp",
+                options: supplierOptions,
+              },
+            ],
           }
         : {
             search: true,
@@ -1191,7 +1227,7 @@ export function OperationalListPage({
     ...(variant === "inventory"
       ? [!!itemTypeFilter]
       : variant === "purchase"
-        ? []
+        ? [!!supplierFilter]
         : [
             !!branchFilter,
             !!statusFilter,
@@ -1208,10 +1244,51 @@ export function OperationalListPage({
     setPaymentStatusFilter("");
     setRecurringFilter("");
     setItemTypeFilter("");
+    setSupplierFilter("");
+    setPurchaseSort("");
     setPeriod("");
     setDateFrom("");
     setDateTo("");
     setPage(1);
+  }
+
+  function togglePurchaseSort(field: string) {
+    setPurchaseSort((prev) => {
+      if (prev === field) return `-${field}`;
+      if (prev === `-${field}`) return "";
+      return field;
+    });
+    setPage(1);
+  }
+
+  function renderPurchaseSortHeader(label: string, field: string) {
+    const active = purchaseSort === field || purchaseSort === `-${field}`;
+    const direction =
+      purchaseSort === field
+        ? "asc"
+        : purchaseSort === `-${field}`
+          ? "desc"
+          : null;
+
+    return (
+      <button
+        type="button"
+        onClick={() => togglePurchaseSort(field)}
+        className={cn(
+          "inline-flex items-center gap-1 text-left font-medium hover:text-primary transition-colors",
+          active && "text-primary",
+        )}
+      >
+        <span>{label}</span>
+        {direction === "asc" ? (
+          <span className="text-[10px]">▲</span>
+        ) : direction === "desc" ? (
+          <span className="text-[10px]">▼</span>
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
+        )}
+      </button>
+    );
   }
 
   const tableActions = (
@@ -1247,7 +1324,7 @@ export function OperationalListPage({
     () => [
       {
         key: "po_no",
-        header: t("Số PO"),
+        header: renderPurchaseSortHeader(t("Số PO"), "po_no"),
         className: "align-top min-w-[140px]",
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
@@ -1276,7 +1353,7 @@ export function OperationalListPage({
       },
       {
         key: "supplier",
-        header: "Nhà cung cấp",
+        header: renderPurchaseSortHeader("Nhà cung cấp", "supplier_id"),
         className: "align-top min-w-[200px]",
         cell: (row) => (
           <div className="space-y-0.5">
@@ -1286,18 +1363,19 @@ export function OperationalListPage({
       },
       {
         key: "order_date",
-        header: "Ngày đặt",
+        header: renderPurchaseSortHeader("Ngày đặt", "order_date"),
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.document_date) || "—",
       },
       {
         key: "expected_date",
-        header: "Ngày nhận DK",
+        header: renderPurchaseSortHeader("Ngày nhận DK", "expected_date"),
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
     ],
-    [expandedRowIds, toggleExpand, t, variant],
+
+    [expandedRowIds, toggleExpand, t, variant, purchaseSort],
   );
 
   const columns = useMemo<DataTableColumn<OperationalDocument>[]>(() => {
@@ -1590,10 +1668,12 @@ export function OperationalListPage({
                 custom:
                   variant === "inventory"
                     ? { itemType: itemTypeFilter }
-                    : {
-                        paymentStatus: paymentStatusFilter,
-                        recurring: recurringFilter,
-                      },
+                    : variant === "purchase"
+                      ? { supplierId: supplierFilter }
+                      : {
+                          paymentStatus: paymentStatusFilter,
+                          recurring: recurringFilter,
+                        },
               },
               inputs: { search: searchInput, amountMin: "", amountMax: "" },
               panelOpen: filterPanelOpen,
@@ -1618,8 +1698,12 @@ export function OperationalListPage({
               },
               setCounterpartySource: () => {},
               setCustom: (key: string, v: string) => {
-                if (variant === "inventory" && key === "itemType") {
+                if (key === "itemType" && variant === "inventory") {
                   setItemTypeFilter(v);
+                  setPage(1);
+                }
+                if (key === "supplierId") {
+                  setSupplierFilter(v);
                   setPage(1);
                 }
                 if (key === "paymentStatus") {

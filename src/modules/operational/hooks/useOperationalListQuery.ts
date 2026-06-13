@@ -14,12 +14,14 @@ export interface OperationalListQueryParams {
   pageSize: number;
   search?: string;
   branch_id?: string;
+  supplier_id?: string;
   recurring?: boolean;
   payment_status?: string;
   status?: string;
   date_from?: string;
   date_to?: string;
   item_type?: string;
+  sort?: string[];
 }
 
 function normalize(filters: Record<string, unknown>) {
@@ -48,12 +50,14 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       pageSize: params.pageSize,
       search: params.search?.trim() || undefined,
       branch_id: params.branch_id || undefined,
+      supplier_id: params.supplier_id || undefined,
       recurring: params.recurring,
       payment_status: params.payment_status || undefined,
       status: params.status || undefined,
       date_from: params.date_from || undefined,
       date_to: params.date_to || undefined,
       item_type: params.item_type || undefined,
+      sort: params.sort || undefined,
     }),
     [params],
   );

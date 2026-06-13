@@ -237,6 +237,9 @@ function params(input: ListParams = {}) {
     sort: (input.sort ?? ["-document_date"]).join(","),
     ...(input.search ? { search: input.search } : {}),
     ...(input.branch_id ? { branch_id: input.branch_id } : {}),
+    ...((input as any).supplier_id
+      ? { supplier_id: (input as any).supplier_id }
+      : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.payment_status ? { payment_status: input.payment_status } : {}),
     ...(input.invoice_status ? { invoice_status: input.invoice_status } : {}),
