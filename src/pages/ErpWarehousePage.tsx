@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Boxes,
   PackageOpen,
@@ -65,6 +66,10 @@ import {
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
 import { useUIStore } from "@/core/config/uiStore";
+import {
+  useWarehouseIssuesQuery,
+  useWarehouseReceiptsQuery,
+} from "@/modules/inventory-core/hooks/useWarehouseVoucherQueries";
 
 const LOOKUP_LIMIT = 200;
 const ISSUE_TYPE_OPTIONS = [
@@ -309,6 +314,7 @@ export function ErpWarehousePage() {
   const canReadReceipts = useHasPermission("goods_receipts", "read");
   const canReadIssues = useHasPermission("goods_issues", "read");
   const showToast = useUIStore((s) => s.showToast);
+  const queryClient = useQueryClient();
 
   // ── filter state (same pattern as page mua hàng)
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
@@ -316,13 +322,6 @@ export function ErpWarehousePage() {
   const [showGrGeneralInfo, setShowGrGeneralInfo] = useState(true);
 
   // ── list state
-  const [grItems, setGrItems] = useState<ErpGoodsReceipt[]>([]);
-  const [grLoading, setGrLoading] = useState(true);
-  const [grTotal, setGrTotal] = useState(0);
-  const [giItems, setGiItems] = useState<ErpGoodsIssue[]>([]);
-  const [giLoading, setGiLoading] = useState(true);
-  const [giTotal, setGiTotal] = useState(0);
-
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
   const [searchInputs, setSearchInputs] = useState<Record<TabFilter, string>>({
@@ -398,58 +397,31 @@ export function ErpWarehousePage() {
     }
   };
 
-  // ── Load receipts
-  const loadReceipts = useCallback(async () => {
-    if (tabFilter === "issue") {
-      setGrLoading(false);
-      return;
-    }
-    setGrLoading(true);
-    setLoadError(null);
-    try {
-      const res = await goodsReceiptsCoreApi.list({
-        page,
-        pageSize: Math.ceil(pageSize / 2),
-        search,
-      });
-      setGrItems(res.items);
-      setGrTotal(res.total);
-    } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Không thể tải nhập kho");
-    } finally {
-      setGrLoading(false);
-    }
-  }, [page, pageSize, search, tabFilter]);
+  const receiptQuery = useWarehouseReceiptsQuery(
+    {
+      page,
+      pageSize: Math.ceil(pageSize / 2),
+      search,
+    },
+    tabFilter !== "issue",
+  );
 
-  // ── Load issues
-  const loadIssues = useCallback(async () => {
-    if (tabFilter === "receipt") {
-      setGiLoading(false);
-      return;
-    }
-    setGiLoading(true);
-    setLoadError(null);
-    try {
-      const res = await goodsIssuesCoreApi.list({
-        page,
-        pageSize: Math.ceil(pageSize / 2),
-        search,
-      });
-      setGiItems(res.items);
-      setGiTotal(res.total);
-    } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Không thể tải xuất kho");
-    } finally {
-      setGiLoading(false);
-    }
-  }, [page, pageSize, search, tabFilter]);
+  const issueQuery = useWarehouseIssuesQuery(
+    {
+      page,
+      pageSize: Math.ceil(pageSize / 2),
+      search,
+    },
+    tabFilter !== "receipt",
+  );
 
   useEffect(() => {
-    void loadReceipts();
-  }, [loadReceipts]);
-  useEffect(() => {
-    void loadIssues();
-  }, [loadIssues]);
+    const receiptError =
+      receiptQuery.error instanceof Error ? receiptQuery.error.message : null;
+    const issueError =
+      issueQuery.error instanceof Error ? issueQuery.error.message : null;
+    setLoadError(receiptError || issueError);
+  }, [issueQuery.error, receiptQuery.error]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -484,22 +456,28 @@ export function ErpWarehousePage() {
   const rows: WarehouseRow[] = useMemo(() => {
     const grRows =
       tabFilter !== "issue"
-        ? grItems.map((g) => toWarehouseRow(g, "receipt"))
+        ? (receiptQuery.data?.items ?? []).map((g) =>
+            toWarehouseRow(g, "receipt"),
+          )
         : [];
     const giRows =
       tabFilter !== "receipt"
-        ? giItems.map((g) => toWarehouseRow(g, "issue"))
+        ? (issueQuery.data?.items ?? []).map((g) => toWarehouseRow(g, "issue"))
         : [];
     return [...grRows, ...giRows].sort((a, b) => b.date.localeCompare(a.date));
-  }, [grItems, giItems, tabFilter]);
+  }, [issueQuery.data?.items, receiptQuery.data?.items, tabFilter]);
 
-  const loading = grLoading || giLoading;
+  const loading =
+    receiptQuery.isLoading ||
+    receiptQuery.isFetching ||
+    issueQuery.isLoading ||
+    issueQuery.isFetching;
   const total =
     tabFilter === "receipt"
-      ? grTotal
+      ? (receiptQuery.data?.total ?? 0)
       : tabFilter === "issue"
-        ? giTotal
-        : grTotal + giTotal;
+        ? (issueQuery.data?.total ?? 0)
+        : (receiptQuery.data?.total ?? 0) + (issueQuery.data?.total ?? 0);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   // ── Load GR lookups (PO + Supplier)
@@ -656,7 +634,9 @@ export function ErpWarehousePage() {
         });
       }
       setGrDrawerOpen(false);
-      void loadReceipts();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "receipts"],
+      });
     } catch (e) {
       setGrSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu nhập kho");
     } finally {
@@ -668,7 +648,9 @@ export function ErpWarehousePage() {
     try {
       await goodsReceiptsCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu nhập kho", variant: "success" });
-      void loadReceipts();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "receipts"],
+      });
     } catch (e) {
       showToast({
         title: e instanceof Error ? e.message : "Lỗi ghi sổ",
@@ -683,7 +665,9 @@ export function ErpWarehousePage() {
     try {
       await goodsReceiptsCoreApi.cancel(id);
       showToast({ title: "Đã hủy phiếu nhập kho", variant: "success" });
-      void loadReceipts();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "receipts"],
+      });
     } catch (e) {
       showToast({
         title: e instanceof Error ? e.message : "Lỗi hủy phiếu",
@@ -711,7 +695,9 @@ export function ErpWarehousePage() {
         });
       }
       setGiDrawerOpen(false);
-      void loadIssues();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "issues"],
+      });
     } catch (e) {
       setGiSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu xuất kho");
     } finally {
@@ -723,7 +709,9 @@ export function ErpWarehousePage() {
     try {
       await goodsIssuesCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu xuất kho", variant: "success" });
-      void loadIssues();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "issues"],
+      });
     } catch (e) {
       showToast({
         title: e instanceof Error ? e.message : "Lỗi ghi sổ",
@@ -741,11 +729,15 @@ export function ErpWarehousePage() {
       if (deleteTarget.kind === "receipt") {
         await goodsReceiptsCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu nhập kho", variant: "success" });
-        void loadReceipts();
+        await queryClient.invalidateQueries({
+          queryKey: ["warehouse-vouchers", "receipts"],
+        });
       } else {
         await goodsIssuesCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu xuất kho", variant: "success" });
-        void loadIssues();
+        await queryClient.invalidateQueries({
+          queryKey: ["warehouse-vouchers", "issues"],
+        });
       }
       setDeleteTarget(null);
     } catch (e) {
@@ -800,8 +792,14 @@ export function ErpWarehousePage() {
   );
 
   const voucherTypeOptions = [
-    { value: "receipt", label: `Nhập kho (${grTotal})` },
-    { value: "issue", label: `Xuất kho (${giTotal})` },
+    {
+      value: "receipt",
+      label: `Nhập kho (${receiptQuery.data?.total ?? 0})`,
+    },
+    {
+      value: "issue",
+      label: `Xuất kho (${issueQuery.data?.total ?? 0})`,
+    },
   ];
 
   const filterConfig: FilterPanelConfig = {
@@ -923,8 +921,8 @@ export function ErpWarehousePage() {
               className="px-3 py-2"
               disabled={loading}
               onClick={() => {
-                if (tabFilter !== "issue") void loadReceipts();
-                if (tabFilter !== "receipt") void loadIssues();
+                if (tabFilter !== "issue") void receiptQuery.refetch();
+                if (tabFilter !== "receipt") void issueQuery.refetch();
               }}
             >
               <RefreshCcw

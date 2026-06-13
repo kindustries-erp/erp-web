@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   periodFirstDay,
   periodLastDay,
@@ -73,6 +74,7 @@ import {
   type InventoryMovement,
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { useOperationalListQuery } from "../hooks/useOperationalListQuery";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -578,10 +580,9 @@ export function OperationalListPage({
   const t = useT();
   const navigate = useAppStore((s) => s.navigate);
   const showToast = useUIStore((s) => s.showToast);
+  const queryClient = useQueryClient();
   const config = variantConfig[variant];
 
-  const [items, setItems] = useState<OperationalDocument[]>([]);
-  const [stockItems, setStockItems] = useState<InventoryStockRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedStockItemIds, setExpandedStockItemIds] = useState<
@@ -596,8 +597,6 @@ export function OperationalListPage({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [branchFilter, setBranchFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -708,70 +707,47 @@ export function OperationalListPage({
     resetFlow();
   }, [variant]);
 
-  const loader = useMemo(() => {
-    if (variant === "sales") return operationalApi.listSales;
-    if (variant === "purchase") return operationalApi.listPurchases;
-    if (variant === "expenses") return operationalApi.listExpenses;
-    if (variant === "receivables") return operationalApi.listReceivables;
-    if (variant === "payables") return operationalApi.listPayables;
-    if (variant === "inventory") return operationalApi.listInventoryStock;
-    return null;
-  }, [variant]);
-
-  async function load() {
-    if (!loader) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data =
-        variant === "inventory"
-          ? await operationalApi.listInventoryStock({
-              page,
-              pageSize,
-              search: search || undefined,
-              ...(itemTypeFilter ? { item_type: itemTypeFilter } : {}),
-            })
-          : await loader({
-              page,
-              pageSize,
-              search: search || undefined,
-              branch_id: branchFilter || undefined,
-              recurring: recurringFilter === "RECURRING",
-              payment_status: paymentStatusFilter || undefined,
-              status: statusFilter || undefined,
-              date_from: dateFrom || undefined,
-              date_to: dateTo || undefined,
-            } as any);
-      if (variant === "inventory") {
-        setStockItems((data.items || []) as InventoryStockRow[]);
-        setItems([]);
-      } else {
-        setItems((data.items || []) as OperationalDocument[]);
-        setStockItems([]);
-      }
-      setTotal(data.total || 0);
-      setTotalPages(data.totalPages || 0);
-    } catch (err) {
-      setError(extractApiError(err, "Không tải được dữ liệu"));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    void load();
-  }, [
-    loader,
+  const listQuery = useOperationalListQuery({
+    variant,
     page,
     pageSize,
-    search,
-    branchFilter,
-    paymentStatusFilter,
-    statusFilter,
-    itemTypeFilter,
-    dateFrom,
-    dateTo,
-  ]);
+    search: search || undefined,
+    branch_id: branchFilter || undefined,
+    recurring: recurringFilter === "RECURRING",
+    payment_status: paymentStatusFilter || undefined,
+    status: statusFilter || undefined,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
+    item_type: itemTypeFilter || undefined,
+  });
+
+  useEffect(() => {
+    setLoading(listQuery.isLoading || listQuery.isFetching);
+    setError(
+      listQuery.error
+        ? extractApiError(listQuery.error, "Không tải được dữ liệu")
+        : null,
+    );
+  }, [listQuery.error, listQuery.isFetching, listQuery.isLoading]);
+
+  const items = useMemo(
+    () =>
+      variant === "inventory"
+        ? []
+        : ((listQuery.data?.items || []) as OperationalDocument[]),
+    [listQuery.data?.items, variant],
+  );
+
+  const stockItems = useMemo(
+    () =>
+      variant === "inventory"
+        ? ((listQuery.data?.items || []) as InventoryStockRow[])
+        : [],
+    [listQuery.data?.items, variant],
+  );
+
+  const total = listQuery.data?.total || 0;
+  const totalPages = listQuery.data?.totalPages || 0;
 
   async function createSample() {
     const payload = buildSamplePayload(variant);
@@ -785,7 +761,7 @@ export function OperationalListPage({
       else if (variant === "expenses")
         await operationalApi.createExpense(payload);
       showToast({ title: "Đã tạo chứng từ mẫu", variant: "success" });
-      await load();
+      await listQuery.refetch();
     } catch (err) {
       setError(extractApiError(err, "Không tạo được chứng từ mẫu"));
     } finally {
@@ -902,7 +878,7 @@ export function OperationalListPage({
         notes: settlementForm.notes || undefined,
       });
       await refreshSettlementData();
-      await load();
+      await listQuery.refetch();
       showToast({ title: "Đã liên kết phiếu dòng tiền", variant: "success" });
       setSettlementState({
         settlementForm: {
@@ -1068,7 +1044,7 @@ export function OperationalListPage({
         } as any);
         showToast({ title: "Đã post xuất kho", variant: "success" });
       }
-      await load();
+      await listQuery.refetch();
       if (detailDocument?.id === postingDocument.id) {
         const refreshed = await operationalApi.getDocument(
           postingDocumentType,
@@ -1104,7 +1080,7 @@ export function OperationalListPage({
         linkId,
       );
       await refreshSettlementData();
-      await load();
+      await listQuery.refetch();
       showToast({ title: "Đã gỡ liên kết thanh toán", variant: "success" });
     } catch (err) {
       setSettlementState({
@@ -1220,7 +1196,7 @@ export function OperationalListPage({
 
   const tableActions = (
     <TableActionGroup
-      onRefresh={() => void load()}
+      onRefresh={() => void listQuery.refetch()}
       loading={loading}
       onFilterToggle={() => setFilterPanelOpen((v) => !v)}
       activeFilterCount={activeFilterCount}
@@ -1645,7 +1621,7 @@ export function OperationalListPage({
           open={!!viewingItemId}
           onClose={() => setViewingItemId(null)}
           itemId={viewingItemId}
-          onSuccess={() => void load()}
+          onSuccess={() => void listQuery.refetch()}
         />
       </PageLayout>
     );
@@ -2193,7 +2169,9 @@ export function OperationalListPage({
           }}
           onToggleEdit={() => setViewOnly(false)}
           onSaved={async () => {
-            await load();
+            await queryClient.invalidateQueries({
+              queryKey: ["operational-list", variant],
+            });
             showToast({
               title: editingRow
                 ? "Đã cập nhật chứng từ"
