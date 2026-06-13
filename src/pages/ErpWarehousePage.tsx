@@ -70,6 +70,10 @@ import {
   useWarehouseIssuesQuery,
   useWarehouseReceiptsQuery,
 } from "@/modules/inventory-core/hooks/useWarehouseVoucherQueries";
+import {
+  createWarehouseIssuesKey,
+  createWarehouseReceiptsKey,
+} from "@/shared/lib/queryKeys";
 
 const LOOKUP_LIMIT = 200;
 const ISSUE_TYPE_OPTIONS = [
@@ -635,7 +639,7 @@ export function ErpWarehousePage() {
       }
       setGrDrawerOpen(false);
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "receipts"],
+        queryKey: createWarehouseReceiptsKey({ page, pageSize, search }),
       });
     } catch (e) {
       setGrSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu nhập kho");
@@ -649,7 +653,7 @@ export function ErpWarehousePage() {
       await goodsReceiptsCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu nhập kho", variant: "success" });
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "receipts"],
+        queryKey: createWarehouseReceiptsKey({ page, pageSize, search }),
       });
     } catch (e) {
       showToast({
@@ -666,7 +670,7 @@ export function ErpWarehousePage() {
       await goodsReceiptsCoreApi.cancel(id);
       showToast({ title: "Đã hủy phiếu nhập kho", variant: "success" });
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "receipts"],
+        queryKey: createWarehouseReceiptsKey({ page, pageSize, search }),
       });
     } catch (e) {
       showToast({
@@ -696,7 +700,7 @@ export function ErpWarehousePage() {
       }
       setGiDrawerOpen(false);
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "issues"],
+        queryKey: createWarehouseIssuesKey({ page, pageSize, search }),
       });
     } catch (e) {
       setGiSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu xuất kho");
@@ -710,7 +714,7 @@ export function ErpWarehousePage() {
       await goodsIssuesCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu xuất kho", variant: "success" });
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "issues"],
+        queryKey: createWarehouseIssuesKey({ page, pageSize, search }),
       });
     } catch (e) {
       showToast({
