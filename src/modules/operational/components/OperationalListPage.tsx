@@ -1828,10 +1828,13 @@ export function OperationalListPage({
               amountMax: "",
               status: statusFilter,
               counterpartySource: "",
-              custom: {
-                paymentStatus: paymentStatusFilter,
-                recurring: recurringFilter,
-              },
+              custom:
+                variant === "purchase"
+                  ? { supplier_id: supplierFilter }
+                  : {
+                      paymentStatus: paymentStatusFilter,
+                      recurring: recurringFilter,
+                    },
             },
             inputs: { search: searchInput, amountMin: "", amountMax: "" },
             panelOpen: filterPanelOpen,
@@ -1872,6 +1875,10 @@ export function OperationalListPage({
             },
             setCounterpartySource: () => {},
             setCustom: (key: string, v: string) => {
+              if (key === "supplier_id") {
+                setSupplierFilter(v);
+                setPage(1);
+              }
               if (key === "paymentStatus") {
                 setPaymentStatusFilter(v);
                 setPage(1);
