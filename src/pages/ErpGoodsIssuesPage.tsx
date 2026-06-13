@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, PackageOpen, Pencil, Plus, ReceiptText } from "lucide-react";
+import {
+  Boxes,
+  PackageOpen,
+  Pencil,
+  Plus,
+  ReceiptText,
+  Trash2,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -17,6 +24,7 @@ import {
   type ErpGiLine,
   type ErpGoodsIssue,
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
 import {
   inventoryCoreApi,
@@ -159,6 +167,8 @@ export function ErpGoodsIssuesPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ErpGoodsIssue | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Lookup options
   const [customerOptions, setCustomerOptions] = useState<
@@ -402,6 +412,22 @@ export function ErpGoodsIssuesPage() {
     }
   }
 
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await goodsIssuesCoreApi.remove(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadIssues();
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message || e?.message || "Không thể xóa goods issue",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   // ─── Table columns ────────────────────────────────────────────────────────────
 
   const columns: DataTableColumn<ErpGoodsIssue>[] = [
@@ -536,6 +562,13 @@ export function ErpGoodsIssuesPage() {
                   icon: <PackageOpen className="h-3.5 w-3.5" />,
                   hidden: item.status === "POSTED",
                 },
+                {
+                  label: "Xóa",
+                  onClick: () => setDeleteTarget(item),
+                  icon: <Trash2 className="h-3.5 w-3.5" />,
+                  variant: "danger",
+                  hidden: item.status !== "DRAFT",
+                },
               ]}
             />
           ),
@@ -549,6 +582,24 @@ export function ErpGoodsIssuesPage() {
           setPage(1);
           setPageSize(value);
         }}
+      />
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa phiếu xuất "${deleteTarget.issueNo}"? Hành động này sẽ ẩn phiếu này khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
       />
 
       <DrawerModal

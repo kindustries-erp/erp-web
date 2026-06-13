@@ -21,6 +21,7 @@ export interface ErpGoodsReceipt {
   status?: string | null;
   remarks?: string | null;
   createdAt?: string;
+  isDeleted?: boolean;
   lines?: ErpGrLine[];
 }
 
@@ -90,6 +91,12 @@ export const goodsReceiptsCoreApi = {
     const { data } = await axiosInstance.post<GrDetailResponse>(
       `${BASE}/${id}/cancel`,
       {},
+    );
+    return data.data;
+  },
+  remove: async (id: string): Promise<ErpGoodsReceipt> => {
+    const { data } = await axiosInstance.delete<GrDetailResponse>(
+      `${BASE}/${id}`,
     );
     return data.data;
   },

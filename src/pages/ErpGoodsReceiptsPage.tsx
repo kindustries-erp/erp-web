@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Boxes, Pencil, Plus, ReceiptText, XCircle } from "lucide-react";
+import {
+  Boxes,
+  Pencil,
+  Plus,
+  ReceiptText,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -11,6 +18,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   goodsReceiptsCoreApi,
   type CreateGrPayload,
@@ -111,6 +119,10 @@ export function ErpGoodsReceiptsPage() {
   const [saving, setSaving] = useState(false);
   const [postingId, setPostingId] = useState<string | null>(null);
   const [cancelId, setCancelId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ErpGoodsReceipt | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
 
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
@@ -395,6 +407,23 @@ export function ErpGoodsReceiptsPage() {
     }
   }
 
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await goodsReceiptsCoreApi.remove(deleteTarget.id);
+      showToast({ title: "Đã xóa phiếu nhập", variant: "success" });
+      setDeleteTarget(null);
+      await loadReceipts();
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message || e?.message || "Không thể xóa phiếu nhập",
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const columns: DataTableColumn<ErpGoodsReceipt>[] = [
     {
       key: "receiptNo",
@@ -539,6 +568,13 @@ export function ErpGoodsReceiptsPage() {
                   icon: <Pencil className="h-3.5 w-3.5" />,
                 },
                 {
+                  label: "Xóa",
+                  onClick: () => setDeleteTarget(item),
+                  icon: <Trash2 className="h-3.5 w-3.5" />,
+                  variant: "danger",
+                  hidden: item.status !== "DRAFT",
+                },
+                {
                   label:
                     cancelId === item.id ? "Đang hủy..." : "Hủy phiếu nhập",
                   onClick: () => void handleCancel(item),
@@ -558,6 +594,24 @@ export function ErpGoodsReceiptsPage() {
           setPage(1);
           setPageSize(value);
         }}
+      />
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa phiếu nhập "${deleteTarget.receiptNo}"? Hành động này sẽ ẩn phiếu này khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
       />
 
       <DrawerModal
