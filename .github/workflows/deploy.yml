@@ -83,7 +83,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -p ${{ secrets.ELITE_PORT }} \
             ${{ secrets.ELITE_USER }}@${{ secrets.ELITE_HOST }} \
-            "GHCR_PAT='${{ secrets.GHCR_PAT }}' IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} bash /opt/erp-klotus-staging/deploy-web.sh"
+            "GHCR_PAT='${{ secrets.GHCR_PAT }}' IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} bash /opt/stacks/erp-klotus-staging/deploy-web.sh"
 
       - name: Health check
         run: |
