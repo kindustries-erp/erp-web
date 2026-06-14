@@ -142,6 +142,7 @@ export function DataTable<T>({
     getCoreRowModel: getCoreRowModel(),
     getRowId: getRowKey,
     manualPagination: true,
+    manualSorting: true,
   });
 
   return (
