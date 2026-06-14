@@ -1077,10 +1077,7 @@ export function ErpWarehousePage() {
                         icon: <XCircle className="h-3.5 w-3.5" />,
                         variant: "danger",
                         hidden:
-                          row.kind !== "receipt" ||
-                          row.status === "POSTED" ||
-                          row.status === "CANCELLED" ||
-                          row.status === "VOIDED",
+                          row.kind !== "receipt" || row.status !== "POSTED",
                         onClick: () => void handleGrCancel(row.id),
                       },
                     ]}

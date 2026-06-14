@@ -6,6 +6,7 @@ import axios, {
 import { useAppStore } from "@/core/config/appStore";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useDocumentDependencyStore } from "@/core/config/documentDependencyStore";
 import { vi } from "@/core/locale/vi";
 import { en } from "@/core/locale/en";
 
@@ -236,6 +237,20 @@ axiosInstance.interceptors.response.use(
       !originalRequest ||
       originalRequest._retry
     ) {
+      // ── Handle DOCUMENT_IN_USE ──────────────────────────────────────────
+      if (error.response?.status === 409) {
+        const data = error.response.data as any;
+        if (data?.code === "DOCUMENT_IN_USE") {
+          useDocumentDependencyStore
+            .getState()
+            .openModal(
+              data.message || tToast("saveFail"),
+              data.dependencies || [],
+            );
+          return Promise.reject(error);
+        }
+      }
+
       // ── Global error toast (non-401, non-403) ───────────────────────
       if (!originalRequest?._silentError && error.response?.status !== 401) {
         const apiMsg = (

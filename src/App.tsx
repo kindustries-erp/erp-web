@@ -7,6 +7,7 @@ import { TabBar } from "@/core/components/layout/TabBar";
 import { SlidePanel } from "@/shared/components/SlidePanel";
 import { Toast } from "@/shared/components/Toast";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
+import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
@@ -290,6 +291,7 @@ export default function App() {
         <Toast />
         <ReloadPrompt />
         <AppContextMenu />
+        <DocumentDependencyModal />
       </div>
     </TooltipProvider>
   );
