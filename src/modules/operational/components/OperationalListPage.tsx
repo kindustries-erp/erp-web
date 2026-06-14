@@ -1302,36 +1302,6 @@ export function OperationalListPage({
     setPage(1);
   }
 
-  function renderPurchaseSortHeader(label: string, field: string) {
-    const active = purchaseSort === field || purchaseSort === `-${field}`;
-    const direction =
-      purchaseSort === field
-        ? "asc"
-        : purchaseSort === `-${field}`
-          ? "desc"
-          : null;
-
-    return (
-      <button
-        type="button"
-        onClick={() => togglePurchaseSort(field)}
-        className={cn(
-          "inline-flex items-center gap-1 text-left font-medium hover:text-primary transition-colors",
-          active && "text-primary",
-        )}
-      >
-        <span>{label}</span>
-        {direction === "asc" ? (
-          <span className="text-[10px]">▲</span>
-        ) : direction === "desc" ? (
-          <span className="text-[10px]">▼</span>
-        ) : (
-          <ArrowUpDown className="h-3.5 w-3.5 opacity-60" />
-        )}
-      </button>
-    );
-  }
-
   const tableActions = (
     <TableActionGroup
       onRefresh={() => void listQuery.refetch()}
@@ -1365,7 +1335,9 @@ export function OperationalListPage({
     () => [
       {
         key: "po_no",
-        header: renderPurchaseSortHeader(t("Số PO"), "po_no"),
+        header: t("Số PO"),
+        sortable: true,
+        sortKey: "po_no",
         className: "align-top min-w-[140px]",
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
@@ -1399,7 +1371,9 @@ export function OperationalListPage({
       },
       {
         key: "supplier",
-        header: renderPurchaseSortHeader("Nhà cung cấp", "supplier_id"),
+        header: "Nhà cung cấp",
+        sortable: true,
+        sortKey: "supplier_id",
         className: "align-top min-w-[200px]",
         cell: (row) => (
           <div className="space-y-0.5">
@@ -1409,19 +1383,23 @@ export function OperationalListPage({
       },
       {
         key: "order_date",
-        header: renderPurchaseSortHeader("Ngày đặt", "order_date"),
+        header: "Ngày đặt",
+        sortable: true,
+        sortKey: "order_date",
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.document_date) || "—",
       },
       {
         key: "expected_date",
-        header: renderPurchaseSortHeader("Ngày nhận DK", "expected_date"),
+        header: "Ngày nhận DK",
+        sortable: true,
+        sortKey: "expected_date",
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
     ],
 
-    [expandedRowIds, toggleExpand, t, variant, purchaseSort],
+    [expandedRowIds, toggleExpand, t, variant],
   );
 
   const columns = useMemo<DataTableColumn<OperationalDocument>[]>(() => {
@@ -1800,6 +1778,25 @@ export function OperationalListPage({
             error={error}
             emptyLabel="Chưa có dữ liệu."
             minWidth={980}
+            sortBy={
+              variant === "purchase" && purchaseSort
+                ? purchaseSort.startsWith("-")
+                  ? purchaseSort.slice(1)
+                  : purchaseSort
+                : undefined
+            }
+            sortOrder={
+              variant === "purchase" && purchaseSort
+                ? purchaseSort.startsWith("-")
+                  ? "desc"
+                  : "asc"
+                : undefined
+            }
+            onSort={
+              variant === "purchase"
+                ? (key) => togglePurchaseSort(key)
+                : undefined
+            }
             actionsColumn={{
               cell: (row) => (
                 <ActionDropdown
