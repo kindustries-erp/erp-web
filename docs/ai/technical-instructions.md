@@ -22,16 +22,16 @@ Nếu có mâu thuẫn, ưu tiên theo thứ tự trên.
 
 Trước khi sửa API/UI, phải làm DB precheck và ghi rõ kết quả trong task:
 
-- Collections/fields liên quan
+- Tables/fields liên quan trên lane `erp-core` (Neon Postgres)
 - Data nền cần có
 - Constraint/index/default cần có
 - Kết quả bắt buộc: `DB_READY` hoặc `DB_GAP_FOUND`
 
-Nếu `DB_GAP_FOUND`: mở/hoàn tất DB task trước, sau đó mới qua API/UI.
+Nếu `DB_GAP_FOUND`: mở/hoàn tất migration/backend task trước, sau đó mới qua API/UI.
 
 ### Gate order bắt buộc
 
-1. DB / Directus staging
+1. DB / Neon Postgres
 2. Backend workflow/API
 3. UI
 

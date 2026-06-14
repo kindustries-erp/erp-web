@@ -17,7 +17,7 @@ function applyDocumentTheme(appTheme: AppTheme) {
 }
 
 export const STATIC_TABS: Record<string, TabInfo> = {
-  dashboard: { labelKey: "nav.items.dashboard", closable: false },
+  purchasing: { labelKey: "nav.items.purchasing", closable: false },
 };
 
 export const SECTION_ROOTS: Record<string, SectionRoot> = {
@@ -33,10 +33,6 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   "erp-bom": { labelKey: "nav.items.erpBom", group: "manufacturing" },
   "erp-warehouse": {
     labelKey: "nav.items.erpWarehouse",
-    group: "inventory",
-  },
-  "erp-goods-receipts": {
-    labelKey: "nav.items.erpGoodsReceipts",
     group: "inventory",
   },
   "erp-goods-issues": {
@@ -95,10 +91,6 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
   "erp-bom": [["breadcrumb.manufacturing"], ["breadcrumb.erpBom"]],
   "erp-warehouse": [["breadcrumb.inventory"], ["breadcrumb.erpWarehouse"]],
-  "erp-goods-receipts": [
-    ["breadcrumb.inventory"],
-    ["breadcrumb.erpGoodsReceipts"],
-  ],
   "erp-production": [
     ["breadcrumb.manufacturing"],
     ["breadcrumb.erpProduction"],
@@ -152,8 +144,8 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      currentPage: "dashboard",
-      openTabs: ["dashboard"],
+      currentPage: "purchasing",
+      openTabs: ["purchasing"],
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
@@ -223,7 +215,7 @@ export const useAppStore = create<AppState>()(
         const newTabs = openTabs.filter((t) => t !== key);
         if (currentPage === key) {
           const nextPage =
-            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
+            newTabs[Math.min(idx, newTabs.length - 1)] ?? "purchasing";
           const path = pageToPath(nextPage);
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
@@ -241,7 +233,7 @@ export const useAppStore = create<AppState>()(
         const { openTabs, currentPage, navigate } = get();
         const newTabs = openTabs.filter((t) => STATIC_TABS[t]);
         if (!newTabs.includes(currentPage)) {
-          navigate(newTabs[newTabs.length - 1] ?? "dashboard");
+          navigate(newTabs[newTabs.length - 1] ?? "purchasing");
         } else {
           set({ openTabs: newTabs });
         }
@@ -256,7 +248,7 @@ export const useAppStore = create<AppState>()(
           return Boolean(STATIC_TABS[tab]);
         });
         if (!keepTabs.includes(currentPage)) {
-          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "dashboard");
+          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "purchasing");
         } else {
           set({ openTabs: keepTabs });
         }
@@ -301,8 +293,8 @@ export const useAppStore = create<AppState>()(
       logout: () =>
         set({
           isLoggedIn: false,
-          currentPage: "dashboard",
-          openTabs: ["dashboard"],
+          currentPage: "purchasing",
+          openTabs: ["purchasing"],
         }),
     }),
     {

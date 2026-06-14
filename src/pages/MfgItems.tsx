@@ -17,6 +17,7 @@ import {
   inputCls,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   manufacturingApi,
@@ -229,6 +230,7 @@ export function MfgItems() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadItems();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu linh kiện",
@@ -556,8 +558,22 @@ export function MfgItems() {
         panelClassName="min-[1024px]:min-w-[760px]"
       >
         {detailLoading || !detailData ? (
-          <div className="text-sm text-muted-foreground">
-            Đang tải chi tiết...
+          <div className="space-y-6">
+            <DrawerSection title="Tồn kho hiện tại">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+                <Skeleton className="h-16 w-full" />
+              </div>
+            </DrawerSection>
+            <DrawerSection title="Lịch sử nhập / xuất gần nhất">
+              <div className="space-y-2">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </DrawerSection>
           </div>
         ) : (
           <div className="space-y-4">
@@ -677,7 +693,15 @@ export function MfgItems() {
         ]}
       >
         {poLoading || !poDetail ? (
-          <div className="text-sm text-muted-foreground">Đang tải PO...</div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-full" />
+            </div>
+            <Skeleton className="h-32 w-full" />
+          </div>
         ) : (
           <div className="space-y-3 text-xs">
             <div className="grid grid-cols-2 gap-3">
@@ -746,7 +770,14 @@ export function MfgItems() {
         ]}
       >
         {vinLoading || !vinDetail ? (
-          <div className="text-sm text-muted-foreground">Đang tải VIN...</div>
+          <div className="grid grid-cols-2 gap-3">
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+            <Skeleton className="h-6 w-full" />
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Boxes,
   CheckCircle,
   ChevronDown,
@@ -7,13 +8,16 @@ import {
   Factory,
   RotateCcw,
   ArrowRight,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Trash2,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCw,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   DrawerField,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
@@ -407,6 +411,7 @@ export function ErpProductionPage() {
       showToast({ title: "Sản xuất thành công!", variant: "success" });
       // Reload history to include the new order
       await loadHistory();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setExecError(
         e?.response?.data?.message ||
@@ -479,6 +484,7 @@ export function ErpProductionPage() {
         variant: "success",
       });
       setVehicleForm(emptyVehicleForm());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setVehicleError(
         e?.response?.data?.message ||

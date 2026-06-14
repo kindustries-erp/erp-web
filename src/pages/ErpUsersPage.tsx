@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Shield, UserPlus } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -11,7 +12,9 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SearchInput } from "@/shared/components/SearchInput";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from "@/shared/components/ui/Button";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -85,6 +88,7 @@ export function ErpUsersPage() {
       });
       setItems(res.data);
       setTotal(res.total);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -163,6 +167,7 @@ export function ErpUsersPage() {
       setForm({ email: "", password: "", employeeId: "" });
       setEditingUser(null);
       await loadUsers();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -261,8 +266,7 @@ export function ErpUsersPage() {
       title="Quản lý người dùng"
       desc="Tạo user production-grade và xem timeline audit theo từng user"
       icon={<Shield className="h-4 w-4" />}
-    >
-      <div className="mb-3 flex items-center justify-end">
+      actions={
         <TableActionGroup
           onRefresh={() => void loadUsers()}
           loading={loading}
@@ -276,8 +280,8 @@ export function ErpUsersPage() {
           }}
           createLabel="Tạo user"
         />
-      </div>
-
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <DataTable

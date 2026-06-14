@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Boxes } from "lucide-react";
+import { Boxes, ChevronRight, ChevronLeft } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
+import { cn } from "@/shared/utils";
 import {
   DrawerAction,
   DrawerField,
@@ -8,6 +9,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import {
   goodsReceiptsCoreApi,
   type ErpGoodsReceipt,
@@ -21,6 +23,7 @@ import {
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 
 interface GoodsReceiptViewDrawerProps {
   open?: boolean;
@@ -48,6 +51,7 @@ export function GoodsReceiptViewDrawer({
   const [itemsDict, setItemsDict] = useState<Record<string, ErpInventoryItem>>(
     {},
   );
+  const [showGeneralInfo, setShowGeneralInfo] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,16 +86,17 @@ export function GoodsReceiptViewDrawer({
 
         if (itemIds.length > 0) {
           const dict: Record<string, ErpInventoryItem> = {};
-          await Promise.all(
-            itemIds.map(async (id) => {
-              try {
-                const it = await inventoryCoreApi.get(id);
-                dict[id] = it;
-              } catch (err) {
-                console.warn("Failed to fetch inventory item", id, err);
-              }
-            }),
-          );
+          try {
+            const res = await inventoryCoreApi.list({
+              ids: itemIds.join(","),
+              pageSize: 1000,
+            });
+            for (const it of res.items) {
+              dict[it.id] = it;
+            }
+          } catch (err) {
+            console.warn("Failed to fetch inventory items", err);
+          }
           if (active) setItemsDict(dict);
         }
       } catch (e) {
@@ -130,6 +135,7 @@ export function GoodsReceiptViewDrawer({
       title="Phiếu nhập kho"
       subtitle={detail?.receiptNo ?? "Nhập kho"}
       actions={actions}
+      panelClassName="min-[1024px]:min-w-[1120px]"
     >
       {error && (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -138,106 +144,176 @@ export function GoodsReceiptViewDrawer({
       )}
 
       {loading && !detail && (
-        <div className="flex justify-center p-8 text-sm text-muted-foreground">
-          Đang tải chi tiết...
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+            <DrawerSection title="Chi tiết">
+              <div className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </DrawerSection>
+          </div>
+          <div className="shrink-0 order-1 xl:order-2 w-full xl:w-[320px] space-y-4">
+            <DrawerSection title="Thông tin chung">
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </DrawerSection>
+          </div>
         </div>
       )}
 
       {detail && (
-        <>
-          <DrawerSection title="THÔNG TIN PHIẾU">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <DrawerField label="Số phiếu">
-                <input
-                  className={inputCls}
-                  value={detail.receiptNo || ""}
-                  disabled
-                />
-              </DrawerField>
-              <DrawerField label="Ngày nhập">
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={
-                    detail.receiptDate ? detail.receiptDate.slice(0, 10) : ""
-                  }
-                  disabled
-                />
-              </DrawerField>
-              <DrawerField label="Đơn mua hàng (PO)">
-                <Combobox
-                  options={poOptions}
-                  value={detail.purchaseOrderId || ""}
-                  disabled
-                  placeholder=""
-                  onChange={() => {}}
-                />
-              </DrawerField>
-            </div>
-            <DrawerField label="Ghi chú">
-              <textarea
-                className={`${inputCls} min-h-[60px] resize-y`}
-                value={detail.remarks || ""}
-                disabled
+        <div className="flex flex-col xl:flex-row gap-6 items-start">
+          <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+            <DrawerSection title="Chi tiết">
+              <DocumentLineTable
+                columns={[
+                  {
+                    key: "index",
+                    header: "STT",
+                    width: 40,
+                    align: "center",
+                    cell: (_, i) => (
+                      <span className="text-muted-foreground">{i + 1}</span>
+                    ),
+                  },
+                  {
+                    key: "itemCode",
+                    header: "Mã linh kiện",
+                    minWidth: 140,
+                    cell: (
+                      line: NonNullable<ErpGoodsReceipt["lines"]>[number],
+                    ) => {
+                      const matchingPoLine = poDetail?.lines?.find(
+                        (l) => l.id === line.purchaseOrderLineId,
+                      );
+                      const itemId = line.itemId || matchingPoLine?.itemId;
+                      const itemCode =
+                        (itemId && itemsDict[itemId]?.sku) || itemId || "—";
+                      return (
+                        <Tooltip content={itemCode}>
+                          <span className="cursor-help line-clamp-2 font-medium text-xs">
+                            {itemCode}
+                          </span>
+                        </Tooltip>
+                      );
+                    },
+                  },
+                  {
+                    key: "itemName",
+                    header: "Tên linh kiện",
+                    minWidth: 260,
+                    cell: (
+                      line: NonNullable<ErpGoodsReceipt["lines"]>[number],
+                    ) => {
+                      const matchingPoLine = poDetail?.lines?.find(
+                        (l) => l.id === line.purchaseOrderLineId,
+                      );
+                      const itemName =
+                        line.itemName ||
+                        matchingPoLine?.itemName ||
+                        matchingPoLine?.description ||
+                        "—";
+                      return (
+                        <Tooltip content={itemName}>
+                          <span className="cursor-help line-clamp-2">
+                            {itemName}
+                          </span>
+                        </Tooltip>
+                      );
+                    },
+                  },
+                  {
+                    key: "qtyReceived",
+                    header: "SL thay đổi",
+                    minWidth: 140,
+                    align: "right",
+                    cell: (
+                      line: NonNullable<ErpGoodsReceipt["lines"]>[number],
+                    ) => (
+                      <span className="font-medium text-emerald-600">
+                        +{fmtQty(line.qtyReceived)}
+                      </span>
+                    ),
+                  },
+                ]}
+                data={detail.lines || []}
+                getRowKey={(line, i) => line.id || i}
+                viewOnly={true}
               />
-            </DrawerField>
-          </DrawerSection>
+            </DrawerSection>
+          </div>
 
-          <DrawerSection title="CHI TIẾT">
-            <div className="overflow-x-auto rounded-xl border border-border">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-muted/50 text-xs text-muted-foreground uppercase">
-                  <tr>
-                    <th className="px-3 py-2 font-medium w-12 text-center">
-                      STT
-                    </th>
-                    <th className="px-3 py-2 font-medium">Mã linh kiện</th>
-                    <th className="px-3 py-2 font-medium">Tên linh kiện</th>
-                    <th className="px-3 py-2 font-medium text-right">
-                      SL thay đổi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {detail.lines?.map((line, i) => {
-                    const matchingPoLine = poDetail?.lines?.find(
-                      (l) => l.id === line.purchaseOrderLineId,
-                    );
-                    const itemName =
-                      line.itemName ||
-                      matchingPoLine?.itemName ||
-                      matchingPoLine?.description ||
-                      "—";
-                    const itemId = line.itemId || matchingPoLine?.itemId;
-                    const itemCode =
-                      (itemId && itemsDict[itemId]?.sku) || itemId || "—";
-
-                    return (
-                      <tr key={line.id || i} className="bg-background">
-                        <td className="px-3 py-2 text-center text-muted-foreground">
-                          {i + 1}
-                        </td>
-                        <td className="px-3 py-2 font-medium text-xs max-w-[120px] truncate">
-                          <Tooltip content={itemCode}>
-                            <span className="cursor-help">{itemCode}</span>
-                          </Tooltip>
-                        </td>
-                        <td className="px-3 py-2 max-w-[200px] truncate">
-                          <Tooltip content={itemName}>
-                            <span className="cursor-help">{itemName}</span>
-                          </Tooltip>
-                        </td>
-                        <td className="px-3 py-2 text-right font-medium text-emerald-600">
-                          +{fmtQty(line.qtyReceived)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </DrawerSection>
-        </>
+          <div
+            className={cn(
+              "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300",
+              showGeneralInfo ? "w-full xl:w-[320px]" : "w-auto",
+            )}
+          >
+            <DrawerSection
+              title={showGeneralInfo ? "Thông tin chung" : ""}
+              titleExtra={
+                <button
+                  type="button"
+                  onClick={() => setShowGeneralInfo((s) => !s)}
+                  className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+                  title={showGeneralInfo ? "Thu gọn" : "Mở rộng"}
+                >
+                  {showGeneralInfo ? (
+                    <ChevronRight className="w-4 h-4" />
+                  ) : (
+                    <ChevronLeft className="w-4 h-4" />
+                  )}
+                </button>
+              }
+            >
+              {showGeneralInfo && (
+                <div className="flex flex-col gap-3">
+                  <DrawerField label="Số phiếu">
+                    <input
+                      className={inputCls}
+                      value={detail.receiptNo || ""}
+                      disabled
+                    />
+                  </DrawerField>
+                  <DrawerField label="Ngày nhập">
+                    <input
+                      type="date"
+                      className={inputCls}
+                      value={
+                        detail.receiptDate
+                          ? detail.receiptDate.slice(0, 10)
+                          : ""
+                      }
+                      disabled
+                    />
+                  </DrawerField>
+                  <DrawerField label="Đơn mua hàng (PO)">
+                    <Combobox
+                      options={poOptions}
+                      value={detail.purchaseOrderId || ""}
+                      disabled
+                      placeholder=""
+                      onChange={() => {}}
+                    />
+                  </DrawerField>
+                  <DrawerField label="Ghi chú">
+                    <textarea
+                      className={`${inputCls} min-h-[84px] resize-y`}
+                      value={detail.remarks || ""}
+                      disabled
+                    />
+                  </DrawerField>
+                </div>
+              )}
+            </DrawerSection>
+          </div>
+        </div>
       )}
     </DrawerModal>
   );

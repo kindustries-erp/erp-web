@@ -27,6 +27,7 @@ export interface ErpGoodsIssue {
   status?: string | null;
   remarks?: string | null;
   createdAt?: string;
+  isDeleted?: boolean;
   lines?: ErpGiLine[];
 }
 
@@ -84,6 +85,12 @@ export const goodsIssuesCoreApi = {
     const { data } = await axiosInstance.post<GiDetailResponse>(
       `${BASE}/${id}/post`,
       { warehouseCode },
+    );
+    return data.data;
+  },
+  remove: async (id: string): Promise<ErpGoodsIssue> => {
+    const { data } = await axiosInstance.delete<GiDetailResponse>(
+      `${BASE}/${id}`,
     );
     return data.data;
   },

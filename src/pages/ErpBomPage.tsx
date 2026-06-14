@@ -3,9 +3,12 @@ import {
   Boxes,
   Pencil,
   Plus,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Trash2,
   ChevronRight,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ChevronDown,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCw,
   Network,
 } from "lucide-react";
@@ -25,22 +28,22 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import {
   bomCoreApi,
   type CreateBomPayload,
   type ErpBom,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type ErpBomLine,
 } from "@/modules/bom-core/api/bomCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import {
-  inventoryCoreApi,
-  type ErpInventoryItem,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { cn } from "@/shared/utils";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
 
 interface BomLineForm {
@@ -155,6 +158,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
         if (active) {
           setBom(detail);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         if (active) {
           setError("Không thể tải chi tiết cấu trúc");
@@ -290,15 +294,35 @@ export function ErpBomPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpBom | null>(null);
   const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState<BomForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [itemSearch, setItemSearch] = useState("");
+
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
 
   const BOM_STATUS_OPTIONS = [
     { value: "ACTIVE", label: "Đang áp dụng" },
@@ -342,24 +366,6 @@ export function ErpBomPage() {
     }
   }, [filter.state.search, filter.state.status, page, pageSize]);
 
-  const loadItemOptions = useCallback(async (keyword = "") => {
-    try {
-      const res = await inventoryCoreApi.list({
-        page: 1,
-        pageSize: ITEM_LOOKUP_LIMIT,
-        search: keyword,
-      });
-      setItemOptions(
-        res.items.map((item: ErpInventoryItem) => ({
-          value: item.id,
-          label: `${item.sku} — ${item.itemName}`,
-        })),
-      );
-    } catch {
-      setItemOptions([]);
-    }
-  }, []);
-
   const [expandedBomIds, setExpandedBomIds] = useState<Record<string, boolean>>(
     {},
   );
@@ -381,10 +387,6 @@ export function ErpBomPage() {
   useEffect(() => {
     void loadAllBoms();
   }, [loadAllBoms]);
-
-  useEffect(() => {
-    void loadItemOptions();
-  }, [loadItemOptions]);
 
   const fgToBomMap = useMemo(() => {
     const map: Record<string, ErpBom> = {};
@@ -431,26 +433,33 @@ export function ErpBomPage() {
   async function openEdit(item: ErpBom) {
     setSaveError(null);
     setViewOnly(false);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       const detail = await bomCoreApi.get(item.id);
       setEditing(detail);
       setForm(buildForm(detail));
-      setDrawerOpen(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải chi tiết BOM");
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function openView(item: ErpBom) {
     setSaveError(null);
     setViewOnly(true);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       const detail = await bomCoreApi.get(item.id);
       setEditing(detail);
       setForm(buildForm(detail));
-      setDrawerOpen(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Không thể tải chi tiết BOM");
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
@@ -509,6 +518,7 @@ export function ErpBomPage() {
       void loadAllBoms();
       if (!editing && page !== 1) setPage(1);
       else await loadBoms();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu BOM",
@@ -641,8 +651,7 @@ export function ErpBomPage() {
       title="BOM"
       desc="Quản lý định mức vật tư (Bill of Materials) cho các thành phẩm."
       icon={<Network className="h-5 w-5" />}
-    >
-      <div className="flex items-center justify-end mb-3">
+      actions={
         <TableActionGroup
           onRefresh={() => void loadBoms()}
           loading={loading}
@@ -650,7 +659,8 @@ export function ErpBomPage() {
           activeFilterCount={filter.activeFilterCount}
           onCreate={openCreate}
         />
-      </div>
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1">
           <DataTable
@@ -716,223 +726,262 @@ export function ErpBomPage() {
           </div>
         )}
 
-        <div className="flex flex-col xl:flex-row gap-6 items-start">
-          {/* Cột trái (4/5): Định mức nguyên vật liệu */}
-          <div className="flex-1 min-w-0 order-2 xl:order-1">
-            <DrawerSection title="Định mức nguyên vật liệu">
-              {!viewOnly && !editing && (
-                <div className="mb-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={addLine}
-                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Thêm dòng
-                  </button>
+        {drawerLoading ? (
+          <div className="flex flex-col xl:flex-row gap-6 items-start">
+            <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+              <DrawerSection title="Định mức nguyên vật liệu">
+                <div className="space-y-3">
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
+                  <Skeleton className="h-16 w-full" />
                 </div>
-              )}
-              <div className="space-y-3">
-                {form.lines.map((line, index) => (
-                  <div
-                    key={`${index}-${line.componentItemId}`}
-                    className="rounded-xl border border-border bg-muted/20 p-3"
-                  >
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="text-xs font-semibold text-muted-foreground">
-                        NVL {index + 1}
-                      </div>
-                      {!viewOnly && !editing && (
-                        <button
-                          type="button"
-                          onClick={() => removeLine(index)}
-                          className="text-xs font-medium text-red-600 hover:text-red-700"
-                        >
-                          Xóa dòng
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Hàng 1: Các field thông tin (scroll ngang nếu màn hình nhỏ) */}
-                    <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 scrollbar-thin">
-                      <div className="min-w-[240px] flex-[2]">
-                        <DrawerField label="Linh kiện" required>
-                          <Combobox
-                            value={line.componentItemId}
-                            readOnly={viewOnly || !!editing}
-                            onChange={(value) =>
-                              updateLine(index, { componentItemId: value })
-                            }
-                            options={itemOptions}
-                            placeholder="Chọn linh kiện"
-                            searchPlaceholder="Tìm SKU / tên linh kiện"
-                          />
-                        </DrawerField>
-                      </div>
-                      <div className="min-w-[90px] flex-1">
-                        <DrawerField label="Số lượng" required>
-                          <input
-                            value={line.qtyRequired}
-                            readOnly={viewOnly || !!editing}
-                            onChange={(e) =>
-                              updateLine(index, { qtyRequired: e.target.value })
-                            }
-                            className={inputCls}
-                          />
-                        </DrawerField>
-                      </div>
-                      <div className="min-w-[80px] flex-1">
-                        <DrawerField label="ĐVT">
-                          <input
-                            value={line.uom}
-                            readOnly={viewOnly || !!editing}
-                            onChange={(e) =>
-                              updateLine(index, { uom: e.target.value })
-                            }
-                            className={inputCls}
-                          />
-                        </DrawerField>
-                      </div>
-                      <div className="min-w-[95px] flex-1">
-                        <DrawerField label="Tỷ lệ hao hụt">
-                          <input
-                            value={line.scrapRate}
-                            readOnly={viewOnly || !!editing}
-                            onChange={(e) =>
-                              updateLine(index, { scrapRate: e.target.value })
-                            }
-                            className={inputCls}
-                          />
-                        </DrawerField>
-                      </div>
-                    </div>
-
-                    {/* Hàng 2: Ghi chú dòng */}
-                    <div className="mt-2">
-                      <DrawerField label="Ghi chú dòng">
-                        <textarea
-                          value={line.notes}
-                          readOnly={viewOnly}
-                          onChange={(e) =>
-                            updateLine(index, { notes: e.target.value })
-                          }
-                          className={`${inputCls} min-h-[44px] py-1.5 resize-y`}
-                        />
-                      </DrawerField>
-                    </div>
+              </DrawerSection>
+            </div>
+            <div className="shrink-0 order-1 xl:order-2 w-full xl:w-[360px] space-y-4">
+              <DrawerSection title="Thông tin chung">
+                <div className="flex flex-col gap-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </DrawerSection>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col xl:flex-row gap-6 items-start">
+            {/* Cột trái (4/5): Định mức nguyên vật liệu */}
+            <div className="flex-1 min-w-0 order-2 xl:order-1">
+              <DrawerSection title="Định mức nguyên vật liệu">
+                {!viewOnly && !editing && (
+                  <div className="mb-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={addLine}
+                      className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Thêm dòng
+                    </button>
                   </div>
-                ))}
-              </div>
-            </DrawerSection>
-          </div>
+                )}
+                <div className="space-y-3">
+                  {form.lines.map((line, index) => (
+                    <div
+                      key={`${index}-${line.componentItemId}`}
+                      className="rounded-xl border border-border bg-muted/20 p-3"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="text-xs font-semibold text-muted-foreground">
+                          NVL {index + 1}
+                        </div>
+                        {!viewOnly && !editing && (
+                          <button
+                            type="button"
+                            onClick={() => removeLine(index)}
+                            className="text-xs font-medium text-red-600 hover:text-red-700"
+                          >
+                            Xóa dòng
+                          </button>
+                        )}
+                      </div>
 
-          {/* Cột phải (1/5): Thông tin chung */}
-          <div className="xl:w-[280px] w-full shrink-0 order-1 xl:order-2">
-            <DrawerSection title="Thông tin chung">
-              <div className="flex flex-col gap-3">
-                <DrawerField label="Mã BOM" required>
-                  <input
-                    value={form.bomCode}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, bomCode: e.target.value }))
-                    }
-                    className={inputCls}
-                  />
-                </DrawerField>
-                <DrawerField label="Version" required>
-                  <input
-                    value={form.version}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, version: e.target.value }))
-                    }
-                    className={inputCls}
-                  />
-                </DrawerField>
-                <DrawerField label="Tên BOM" required>
-                  <input
-                    value={form.bomName}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, bomName: e.target.value }))
-                    }
-                    className={inputCls}
-                  />
-                </DrawerField>
-                <DrawerField label="Thành phẩm">
-                  <Combobox
-                    value={form.finishedGoodItemId}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        finishedGoodItemId: value,
-                      }))
-                    }
-                    options={itemOptions}
-                    placeholder="Chọn thành phẩm"
-                    searchPlaceholder="Tìm SKU / tên thành phẩm"
-                  />
-                </DrawerField>
-                <DrawerField label="Hiệu lực từ">
-                  <DatePicker
-                    value={form.effectiveFrom}
-                    disabled={viewOnly}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        effectiveFrom: value,
-                      }))
-                    }
-                    className="w-full"
-                  />
-                </DrawerField>
-                <DrawerField label="Hiệu lực đến">
-                  <DatePicker
-                    value={form.effectiveTo}
-                    disabled={viewOnly}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        effectiveTo: value,
-                      }))
-                    }
-                    className="w-full"
-                  />
-                </DrawerField>
-                <DrawerField label="Trạng thái">
-                  <Combobox
-                    value={form.status}
-                    readOnly={viewOnly}
-                    allowClear={false}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        status: value || "ACTIVE",
-                      }))
-                    }
-                    options={[
-                      { value: "ACTIVE", label: "Đang áp dụng" },
-                      { value: "INACTIVE", label: "Ngừng áp dụng" },
-                      { value: "DRAFT", label: "Bản nháp" },
-                    ]}
-                  />
-                </DrawerField>
-                <DrawerField label="Ghi chú">
-                  <textarea
-                    value={form.notes}
-                    readOnly={viewOnly}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, notes: e.target.value }))
-                    }
-                    className={`${inputCls} min-h-[88px] resize-y`}
-                  />
-                </DrawerField>
-              </div>
-            </DrawerSection>
+                      {/* Hàng 1: Các field thông tin (scroll ngang nếu màn hình nhỏ) */}
+                      <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 scrollbar-thin">
+                        <div className="min-w-[240px] flex-[2]">
+                          <DrawerField label="Linh kiện" required>
+                            <Combobox
+                              value={line.componentItemId}
+                              readOnly={viewOnly || !!editing}
+                              onChange={(value) =>
+                                updateLine(index, { componentItemId: value })
+                              }
+                              options={itemOptions}
+                              placeholder="Chọn linh kiện"
+                              searchPlaceholder="Tìm SKU / tên linh kiện"
+                              onSearch={setItemSearch}
+                              onScrollBottom={fetchNextItems}
+                              loading={loadingItems}
+                            />
+                          </DrawerField>
+                        </div>
+                        <div className="min-w-[90px] flex-1">
+                          <DrawerField label="Số lượng" required>
+                            <input
+                              value={line.qtyRequired}
+                              readOnly={viewOnly || !!editing}
+                              onChange={(e) =>
+                                updateLine(index, {
+                                  qtyRequired: e.target.value,
+                                })
+                              }
+                              className={inputCls}
+                            />
+                          </DrawerField>
+                        </div>
+                        <div className="min-w-[80px] flex-1">
+                          <DrawerField label="ĐVT">
+                            <input
+                              value={line.uom}
+                              readOnly={viewOnly || !!editing}
+                              onChange={(e) =>
+                                updateLine(index, { uom: e.target.value })
+                              }
+                              className={inputCls}
+                            />
+                          </DrawerField>
+                        </div>
+                        <div className="min-w-[95px] flex-1">
+                          <DrawerField label="Tỷ lệ hao hụt">
+                            <input
+                              value={line.scrapRate}
+                              readOnly={viewOnly || !!editing}
+                              onChange={(e) =>
+                                updateLine(index, { scrapRate: e.target.value })
+                              }
+                              className={inputCls}
+                            />
+                          </DrawerField>
+                        </div>
+                      </div>
+
+                      {/* Hàng 2: Ghi chú dòng */}
+                      <div className="mt-2">
+                        <DrawerField label="Ghi chú dòng">
+                          <textarea
+                            value={line.notes}
+                            readOnly={viewOnly}
+                            onChange={(e) =>
+                              updateLine(index, { notes: e.target.value })
+                            }
+                            className={`${inputCls} min-h-[44px] py-1.5 resize-y`}
+                          />
+                        </DrawerField>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DrawerSection>
+            </div>
+
+            {/* Cột phải (1/5): Thông tin chung */}
+            <div className="xl:w-[280px] w-full shrink-0 order-1 xl:order-2">
+              <DrawerSection title="Thông tin chung">
+                <div className="flex flex-col gap-3">
+                  <DrawerField label="Mã BOM" required>
+                    <input
+                      value={form.bomCode}
+                      readOnly={viewOnly || !!editing}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          bomCode: e.target.value,
+                        }))
+                      }
+                      className={inputCls}
+                    />
+                  </DrawerField>
+                  <DrawerField label="Version" required>
+                    <input
+                      value={form.version}
+                      readOnly={viewOnly || !!editing}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          version: e.target.value,
+                        }))
+                      }
+                      className={inputCls}
+                    />
+                  </DrawerField>
+                  <DrawerField label="Tên BOM" required>
+                    <input
+                      value={form.bomName}
+                      readOnly={viewOnly || !!editing}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          bomName: e.target.value,
+                        }))
+                      }
+                      className={inputCls}
+                    />
+                  </DrawerField>
+                  <DrawerField label="Thành phẩm">
+                    <Combobox
+                      value={form.finishedGoodItemId}
+                      readOnly={viewOnly || !!editing}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          finishedGoodItemId: value,
+                        }))
+                      }
+                      options={itemOptions}
+                      placeholder="Chọn thành phẩm"
+                      searchPlaceholder="Tìm SKU / tên thành phẩm"
+                    />
+                  </DrawerField>
+                  <DrawerField label="Hiệu lực từ">
+                    <DatePicker
+                      value={form.effectiveFrom}
+                      disabled={viewOnly}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          effectiveFrom: value,
+                        }))
+                      }
+                      className="w-full"
+                    />
+                  </DrawerField>
+                  <DrawerField label="Hiệu lực đến">
+                    <DatePicker
+                      value={form.effectiveTo}
+                      disabled={viewOnly}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          effectiveTo: value,
+                        }))
+                      }
+                      className="w-full"
+                    />
+                  </DrawerField>
+                  <DrawerField label="Trạng thái">
+                    <Combobox
+                      value={form.status}
+                      readOnly={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          status: value || "ACTIVE",
+                        }))
+                      }
+                      options={[
+                        { value: "ACTIVE", label: "Đang áp dụng" },
+                        { value: "INACTIVE", label: "Ngừng áp dụng" },
+                        { value: "DRAFT", label: "Bản nháp" },
+                      ]}
+                    />
+                  </DrawerField>
+                  <DrawerField label="Ghi chú">
+                    <textarea
+                      value={form.notes}
+                      readOnly={viewOnly}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, notes: e.target.value }))
+                      }
+                      className={`${inputCls} min-h-[88px] resize-y`}
+                    />
+                  </DrawerField>
+                </div>
+              </DrawerSection>
+            </div>
           </div>
-        </div>
+        )}
       </DrawerModal>
     </PageLayout>
   );

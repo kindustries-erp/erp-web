@@ -16,6 +16,7 @@ import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from "@/shared/components/ui/Button";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
@@ -108,6 +109,7 @@ export function ErpActivityLogsPage() {
       });
       setItems(res.data);
       setTotal(res.total);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -218,16 +220,15 @@ export function ErpActivityLogsPage() {
       title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
       desc="Audit logs live từ ERP CORE backend"
       icon={<History className="h-4 w-4" />}
-    >
-      <div className="mb-3 flex items-center justify-end">
+      actions={
         <TableActionGroup
           onRefresh={() => void load()}
           loading={loading}
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
         />
-      </div>
-
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <DataTable

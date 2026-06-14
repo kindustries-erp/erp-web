@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Building2, Trash2, Users, Pencil } from "lucide-react";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Building2, Trash2, Users, Pencil, Eye } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { PageLayout } from "@/shared/components/PageLayout";
 import {
   DataTable,
@@ -73,8 +75,11 @@ export function ErpBusinessPartnersPage({
   desc: string;
 }) {
   const canRead = useHasPermission("business_partners", "read");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canCreate = useHasPermission("business_partners", "create");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canUpdate = useHasPermission("business_partners", "update");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canDelete = useHasPermission("business_partners", "delete");
 
   const [items, setItems] = useState<ErpBusinessPartner[]>([]);
@@ -83,6 +88,7 @@ export function ErpBusinessPartnersPage({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState<ErpBusinessPartner | null>(null);
+  const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState<PartnerFormState>(emptyForm());
   const [deleteTarget, setDeleteTarget] = useState<ErpBusinessPartner | null>(
     null,
@@ -177,9 +183,9 @@ export function ErpBusinessPartnersPage({
       <ActionDropdown
         items={[
           {
-            label: "Chỉnh sửa",
-            icon: <Pencil className="h-3.5 w-3.5" />,
-            onClick: () => openEdit(item),
+            label: "Chi tiết",
+            icon: <Eye className="h-3.5 w-3.5" />,
+            onClick: () => openView(item),
           },
           {
             label: "Xóa",
@@ -214,9 +220,11 @@ export function ErpBusinessPartnersPage({
   function openCreate() {
     setEditing(null);
     setForm(emptyForm());
+    setViewOnly(false);
     setDrawerOpen(true);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function openEdit(item: ErpBusinessPartner) {
     setEditing(item);
     setForm({
@@ -231,6 +239,25 @@ export function ErpBusinessPartnersPage({
       status: item.status ?? "ACTIVE",
       notes: item.notes ?? "",
     });
+    setViewOnly(false);
+    setDrawerOpen(true);
+  }
+
+  function openView(item: ErpBusinessPartner) {
+    setEditing(item);
+    setForm({
+      code: item.code ?? "",
+      name: item.name ?? "",
+      displayName: item.displayName ?? "",
+      taxCode: item.taxCode ?? "",
+      phone: item.phone ?? "",
+      email: item.email ?? "",
+      address: item.address ?? "",
+      contactName: item.contactName ?? "",
+      status: item.status ?? "ACTIVE",
+      notes: item.notes ?? "",
+    });
+    setViewOnly(true);
     setDrawerOpen(true);
   }
 
@@ -290,26 +317,37 @@ export function ErpBusinessPartnersPage({
     }
   }
 
-  const drawerActions: DrawerAction[] = [
-    {
-      label: "Đóng",
-      onClick: () => setDrawerOpen(false),
-      disabled: saving,
-      variant: "outline",
-    },
-    {
-      label: saving ? "Đang lưu..." : editing ? "Cập nhật" : "Tạo mới",
-      onClick: () => void handleSave(),
-      disabled: saving,
-      primary: true,
-    },
-  ];
+  const drawerActions: DrawerAction[] = viewOnly
+    ? [
+        {
+          label: "Đóng",
+          onClick: () => setDrawerOpen(false),
+          variant: "outline",
+        },
+      ]
+    : [
+        {
+          label: "Hủy",
+          onClick: () => setDrawerOpen(false),
+          disabled: saving,
+          variant: "outline",
+        },
+        {
+          label: saving ? "Đang lưu..." : editing ? "Cập nhật" : "Tạo mới",
+          onClick: () => void handleSave(),
+          disabled: saving,
+          primary: true,
+        },
+      ];
 
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout title={title} desc={desc} icon={icon}>
-      <div className="flex items-center justify-end mb-3">
+    <PageLayout
+      title={title}
+      desc={desc}
+      icon={icon}
+      actions={
         <TableActionGroup
           onRefresh={() => void load()}
           loading={loading}
@@ -317,7 +355,8 @@ export function ErpBusinessPartnersPage({
           activeFilterCount={filter.activeFilterCount}
           onCreate={openCreate}
         />
-      </div>
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           {fetchError ? (
@@ -361,9 +400,22 @@ export function ErpBusinessPartnersPage({
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={
-          editing
-            ? `Chỉnh sửa ${title.toLowerCase()}`
-            : `Tạo ${title.toLowerCase()}`
+          viewOnly
+            ? `Chi tiết ${title.toLowerCase()}`
+            : editing
+              ? `Chỉnh sửa ${title.toLowerCase()}`
+              : `Tạo ${title.toLowerCase()}`
+        }
+        headerExtra={
+          viewOnly ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setViewOnly(false)}
+            >
+              Chỉnh sửa
+            </Button>
+          ) : undefined
         }
         actions={drawerActions}
       >
@@ -373,6 +425,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.code}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, code: e.target.value }))
                 }
@@ -383,6 +436,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.name}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, name: e.target.value }))
                 }
@@ -393,6 +447,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.displayName}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, displayName: e.target.value }))
                 }
@@ -402,6 +457,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.taxCode}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, taxCode: e.target.value }))
                 }
@@ -411,6 +467,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.phone}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, phone: e.target.value }))
                 }
@@ -420,6 +477,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.email}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, email: e.target.value }))
                 }
@@ -429,6 +487,7 @@ export function ErpBusinessPartnersPage({
               <input
                 className={inputCls}
                 value={form.contactName}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((p) => ({ ...p, contactName: e.target.value }))
                 }
@@ -441,6 +500,7 @@ export function ErpBusinessPartnersPage({
                   { value: "INACTIVE", label: "Ngưng (INACTIVE)" },
                 ]}
                 value={form.status}
+                disabled={viewOnly}
                 onChange={(v) =>
                   setForm((p) => ({ ...p, status: v || "ACTIVE" }))
                 }
@@ -452,6 +512,7 @@ export function ErpBusinessPartnersPage({
             <textarea
               className={`${inputCls} min-h-[80px]`}
               value={form.address}
+              disabled={viewOnly}
               onChange={(e) =>
                 setForm((p) => ({ ...p, address: e.target.value }))
               }
@@ -461,6 +522,7 @@ export function ErpBusinessPartnersPage({
             <textarea
               className={`${inputCls} min-h-[80px]`}
               value={form.notes}
+              disabled={viewOnly}
               onChange={(e) =>
                 setForm((p) => ({ ...p, notes: e.target.value }))
               }

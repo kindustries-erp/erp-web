@@ -9,12 +9,14 @@ import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { NavItem } from "./SidebarPrimitives";
 import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   LayoutDashboard,
   Boxes,
   Users,
   FileText,
   Building2,
   Layers,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Car,
   ClipboardList,
   Network,
@@ -140,7 +142,7 @@ export function Sidebar() {
           {/* Nav */}
           <div className="flex-1 overflow-y-auto overflow-x-hidden">
             {/* Dashboard */}
-            <div className="sidebar-nav-section py-2">
+            {/* <div className="sidebar-nav-section py-2">
               <NavItem
                 collapsed={c}
                 icon={
@@ -151,7 +153,7 @@ export function Sidebar() {
                 onClick={() => navTo("dashboard")}
                 contextPage="dashboard"
               />
-            </div>
+            </div> */}
 
             {/* Sales */}
             <div className="sidebar-nav-section py-2">
@@ -239,14 +241,14 @@ export function Sidebar() {
               <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
                 {t("nav.sections.manufacturing")}
               </div>
-              <NavItem
+              {/* <NavItem
                 collapsed={c}
                 icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.mfgVehicles")}
                 active={currentPage === "mfg-vehicles"}
                 onClick={() => navTo("mfg-vehicles")}
                 contextPage="mfg-vehicles"
-              />
+              /> */}
               <NavItem
                 collapsed={c}
                 icon={<Network className="w-4 h-4 opacity-65 flex-shrink-0" />}

@@ -29,14 +29,11 @@ import {
   type CreateSoPayload,
   type ErpSalesOrder,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
-import {
-  inventoryCoreApi,
-  type ErpInventoryItem,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
-import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LOOKUP_LIMIT = 200;
 
 interface SoLineForm {
@@ -177,12 +174,50 @@ export function ErpSalesOrdersPage() {
   const [saving, setSaving] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
 
-  const [customerOptions, setCustomerOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [itemSearch, setItemSearch] = useState("");
+
+  const {
+    data: customersData,
+    fetchNextPage: fetchNextCustomers,
+    isFetchingNextPage: loadingCustomers,
+  } = useBasicMasterInfinite({
+    search: customerSearch,
+    limit: 50,
+    entities: "customers",
+  });
+
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+
+  const customerOptions = useMemo(() => {
+    return (
+      customersData?.pages.flatMap((p) =>
+        (p.items.customers || []).map((c) => ({
+          value: c.id,
+          label: `${c.code} — ${c.displayName || c.name}`,
+        })),
+      ) || []
+    );
+  }, [customersData]);
+
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -199,61 +234,9 @@ export function ErpSalesOrdersPage() {
     }
   }, [page, pageSize, search]);
 
-  const loadCustomers = useCallback(async () => {
-    try {
-      const res = await getBusinessPartnersPagedApi({
-        page: 1,
-        pageSize: LOOKUP_LIMIT,
-        partnerType: "CUSTOMER",
-      });
-      setCustomerOptions(
-        res.items
-          .filter(
-            (partner: any) =>
-              partner.status !== "INACTIVE" && partner.is_active !== false,
-          )
-          .map((partner) => ({
-            value: partner.id,
-            label: `${partner.code} — ${partner.display_name || partner.name}`,
-          })),
-      );
-    } catch {
-      setCustomerOptions([]);
-    }
-  }, []);
-
-  const loadItemsLookup = useCallback(async () => {
-    try {
-      const res = await inventoryCoreApi.list({
-        page: 1,
-        pageSize: LOOKUP_LIMIT,
-      });
-      setItemOptions(
-        res.items.map((item: ErpInventoryItem) => ({
-          value: item.id,
-          label: `${item.sku} — ${item.itemName}`,
-        })),
-      );
-    } catch {
-      setItemOptions([]);
-    }
-  }, []);
-
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
-
-  useEffect(() => {
-    void loadCustomers();
-    void loadItemsLookup();
-  }, [loadCustomers, loadItemsLookup]);
-
-  useEffect(() => {
-    if (drawerOpen) {
-      void loadCustomers();
-      void loadItemsLookup();
-    }
-  }, [drawerOpen, loadCustomers, loadItemsLookup]);
 
   function resetForm() {
     setForm(emptyForm());
@@ -361,6 +344,7 @@ export function ErpSalesOrdersPage() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu sales order",
@@ -376,6 +360,7 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.reserve(item.id);
       await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể reserve SO",
@@ -391,6 +376,7 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.unreserve(item.id);
       await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể unreserve SO",
@@ -449,8 +435,7 @@ export function ErpSalesOrdersPage() {
       title="Đơn bán hàng"
       desc="Quản lý đơn bán hàng và reserve/unreserve tồn kho."
       icon={<Boxes className="h-5 w-5" />}
-    >
-      <div className="flex items-center justify-end mb-3">
+      actions={
         <TableActionGroup
           onRefresh={() => void loadOrders()}
           loading={loading}
@@ -459,7 +444,8 @@ export function ErpSalesOrdersPage() {
           onCreate={openCreate}
           createLabel="Tạo mới"
         />
-      </div>
+      }
+    >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <DataTable
@@ -553,6 +539,9 @@ export function ErpSalesOrdersPage() {
                 options={customerOptions}
                 placeholder="Chọn khách hàng"
                 disabled={viewOnly}
+                onSearch={setCustomerSearch}
+                onScrollBottom={fetchNextCustomers}
+                loading={loadingCustomers}
               />
             </DrawerField>
             <DrawerField label="Ngày đơn" required>
@@ -620,6 +609,9 @@ export function ErpSalesOrdersPage() {
                     options={itemOptions}
                     placeholder="Chọn inventory item"
                     disabled={viewOnly}
+                    onSearch={setItemSearch}
+                    onScrollBottom={fetchNextItems}
+                    loading={loadingItems}
                   />
                 </div>
                 <div className="md:col-span-2">

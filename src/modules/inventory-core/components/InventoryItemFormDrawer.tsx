@@ -7,6 +7,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
 import {
@@ -108,6 +109,7 @@ export function InventoryItemFormDrawer({
       ]);
       setUomOptions(buildMasterOptions(uoms.items));
       setItemTypeOptions(buildMasterOptions(itemTypes.items));
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Ignore
     }
@@ -172,6 +174,7 @@ export function InventoryItemFormDrawer({
       });
       onSuccess?.();
       onClose();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
     } finally {
@@ -207,9 +210,18 @@ export function InventoryItemFormDrawer({
       )}
 
       {loading ? (
-        <div className="flex justify-center p-8 text-sm text-muted-foreground">
-          Đang tải...
-        </div>
+        <DrawerSection title="Thông tin item kho">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <div className="md:col-span-2">
+              <Skeleton className="h-20 w-full" />
+            </div>
+          </div>
+        </DrawerSection>
       ) : (
         <DrawerSection title="Thông tin item kho">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

@@ -1,5 +1,15 @@
 import axiosInstance from "@/core/api/axiosInstance";
-import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
+import { dedupeRequest } from "@/shared/utils/requestCache";
+import type {
+  PaginatedResponse,
+  ListParams as BaseListParams,
+} from "@/shared/types/pagination";
+
+export type ListParams = BaseListParams & {
+  itemType?: string;
+  status?: string;
+  ids?: string;
+};
 
 export interface ErpInventoryItem {
   id: string;
@@ -90,6 +100,9 @@ function p(params: ListParams = {}) {
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
     ...(params.search ? { search: params.search } : {}),
+    ...(params.itemType ? { itemType: params.itemType } : {}),
+    ...(params.status ? { status: params.status } : {}),
+    ...(params.ids ? { ids: params.ids } : {}),
   };
 }
 
@@ -97,10 +110,14 @@ export const inventoryCoreApi = {
   list: async (
     params?: ListParams,
   ): Promise<PaginatedResponse<ErpInventoryItem>> => {
-    const { data } = await axiosInstance.get<
-      PaginatedResponse<ErpInventoryItem>
-    >(BASE, { params: p(params) });
-    return data;
+    const requestParams = p(params);
+    const key = `inventory-items:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<
+        PaginatedResponse<ErpInventoryItem>
+      >(BASE, { params: requestParams });
+      return data;
+    });
   },
   get: async (id: string): Promise<ErpInventoryItem> => {
     const { data } = await axiosInstance.get<InventoryItemDetailResponse>(
@@ -136,17 +153,19 @@ export const inventoryCoreApi = {
   listUoms: async (
     params?: ListParams & { isActive?: boolean },
   ): Promise<PaginatedResponse<InventoryMasterOption>> => {
-    const { data } = await axiosInstance.get<
-      PaginatedResponse<InventoryMasterOption>
-    >(UOM_BASE, {
-      params: {
-        ...p(params),
-        ...(params?.isActive !== undefined
-          ? { isActive: params.isActive }
-          : {}),
-      },
+    const requestParams = {
+      ...p(params),
+      ...(params?.isActive !== undefined ? { isActive: params.isActive } : {}),
+    };
+    const key = `inventory-uoms:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<
+        PaginatedResponse<InventoryMasterOption>
+      >(UOM_BASE, {
+        params: requestParams,
+      });
+      return data;
     });
-    return data;
   },
   createUom: async (
     payload: CreateInventoryMasterPayload,
@@ -170,17 +189,19 @@ export const inventoryCoreApi = {
   listItemTypes: async (
     params?: ListParams & { isActive?: boolean },
   ): Promise<PaginatedResponse<InventoryMasterOption>> => {
-    const { data } = await axiosInstance.get<
-      PaginatedResponse<InventoryMasterOption>
-    >(ITEM_TYPE_BASE, {
-      params: {
-        ...p(params),
-        ...(params?.isActive !== undefined
-          ? { isActive: params.isActive }
-          : {}),
-      },
+    const requestParams = {
+      ...p(params),
+      ...(params?.isActive !== undefined ? { isActive: params.isActive } : {}),
+    };
+    const key = `inventory-item-types:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<
+        PaginatedResponse<InventoryMasterOption>
+      >(ITEM_TYPE_BASE, {
+        params: requestParams,
+      });
+      return data;
     });
-    return data;
   },
   createItemType: async (
     payload: CreateInventoryMasterPayload,

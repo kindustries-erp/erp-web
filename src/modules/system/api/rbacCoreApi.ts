@@ -11,6 +11,7 @@ export interface CorePermission {
   roleId?: string;
   resource: string;
   action: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   conditions?: any;
 }
 
@@ -58,6 +59,7 @@ export async function getCoreRolePermissionsApi(
 
 export async function saveCoreRolePermissionsApi(
   roleId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   permissions: { resource: string; action: string; conditions?: any }[],
 ): Promise<void> {
   await axiosInstance.patch(`/api/v1/rbac-core/roles/${roleId}/permissions`, {

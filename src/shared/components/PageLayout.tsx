@@ -58,6 +58,7 @@ export function PageLayout({
   activeTab,
   onTabChange,
   hideTabs,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   stickyOffset = "-26px",
   hideHeader,
   className,

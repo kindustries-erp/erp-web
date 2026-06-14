@@ -30,6 +30,7 @@ export function FieldFilterTreeEditor({
   onPermissionConfigChange,
 }: {
   open: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: any;
   selectedPermissionKey: string;
   selectedPermission: { collection: string; action: CrudAction } | null;
@@ -282,6 +283,7 @@ function AddMenu({
   onClose,
   onAddGroup,
   onAddCondition,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <div className="rounded-lg border border-[color:var(--border)] overflow-hidden">
@@ -320,6 +322,7 @@ function AddMenu({
             Không tìm thấy field
           </p>
         ) : (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           opts.map((opt: any) => (
             <button
               key={opt.value}

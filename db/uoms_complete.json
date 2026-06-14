@@ -1,0 +1,52 @@
+[
+  {
+    "id": "ff52bb9b-e759-404c-be48-e44ddd6193de",
+    "code": "BỘ",
+    "name": "Bộ",
+    "description": "Bộ",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.073Z",
+    "updated_at": "2026-06-12T17:06:23.073Z",
+    "is_deleted": false
+  },
+  {
+    "id": "69ec2708-101c-4566-bf23-703f20ff3e9c",
+    "code": "CON",
+    "name": "Con",
+    "description": "Con",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.112Z",
+    "updated_at": "2026-06-12T17:06:23.112Z",
+    "is_deleted": false
+  },
+  {
+    "id": "166f2abc-c526-43e2-8180-4caa29b72ba6",
+    "code": "CÁI",
+    "name": "Cái",
+    "description": "Cái",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.032Z",
+    "updated_at": "2026-06-12T17:06:23.032Z",
+    "is_deleted": false
+  },
+  {
+    "id": "09686dd0-c269-4033-8b65-50a468bbb11b",
+    "code": "GRAM",
+    "name": "Gram",
+    "description": "Gram",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.189Z",
+    "updated_at": "2026-06-12T17:06:23.189Z",
+    "is_deleted": false
+  },
+  {
+    "id": "2ce1b79d-b6c3-4fa5-9de0-42badad9cc84",
+    "code": "SỢI",
+    "name": "Sợi",
+    "description": "Sợi",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.151Z",
+    "updated_at": "2026-06-12T17:06:23.151Z",
+    "is_deleted": false
+  }
+]

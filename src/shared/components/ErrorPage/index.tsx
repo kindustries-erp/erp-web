@@ -24,7 +24,7 @@ export function ErrorPage({ code, children }: ErrorPageProps) {
         {dict.errorPages[code].description}
       </p>
       {children}
-      <BtnPrimary onClick={() => navigate("dashboard")}>
+      <BtnPrimary onClick={() => navigate("purchasing")}>
         {dict.errorPages[code].backHome}
       </BtnPrimary>
     </div>

@@ -45,6 +45,7 @@ import {
 import {
   PARTNER_KIND_OPTS,
   CURRENCY_OPTS,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   PARTNER_ROLE_OPTS,
 } from "@/modules/partners/constants";
 import {

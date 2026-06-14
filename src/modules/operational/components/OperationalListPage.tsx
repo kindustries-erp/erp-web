@@ -1,16 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  periodFirstDay,
+  periodLastDay,
+  monthFirstDay,
+} from "@/modules/finance/utils/financeHelpers";
 import {
   AlertCircle,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  ArrowUpDown,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ChevronDown,
   ChevronRight,
   FileText,
   Link2,
   Loader2,
-  Pencil,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Plus,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCcw,
   Repeat,
   Warehouse,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { useUIStore } from "@/core/config/uiStore";
@@ -19,8 +30,10 @@ import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import {
   getPaymentVouchersPagedApi,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type PaymentVoucher,
 } from "@/modules/finance/api/financeApi";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { Button } from "@/shared/components/ui/Button";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -34,7 +47,9 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { PageLayout } from "@/shared/components/PageLayout";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
 import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import { StatusBadge } from "@/shared/components/badges";
@@ -45,6 +60,7 @@ import {
   type CreateOperationalPayload,
   InventoryStockRow,
   OperationalDocument,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type OperationalDocumentPaymentLink,
   OperationalDocumentType,
   OperationalVariant,
@@ -52,6 +68,7 @@ import {
 import {
   useOperationalFlowStore,
   type InventoryPostingLineForm,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
@@ -68,6 +85,9 @@ import {
   type InventoryMovement,
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { useOperationalListQuery } from "../hooks/useOperationalListQuery";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -390,6 +410,7 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
           setReceipts(po.receipts || []);
           setPoDetail(po);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         if (active) setError(t("Không tải được chi tiết dòng"));
       } finally {
@@ -419,8 +440,8 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
   if (!detail) return null;
 
   return (
-    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 overflow-x-auto my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
-      <div className="flex-1 min-w-[400px]">
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
+      <div className="flex-1 min-w-0">
         <div className="mb-4 font-semibold text-base text-foreground">
           {t("Chi tiết")}
         </div>
@@ -429,63 +450,108 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
             {t("Không có dòng chi tiết.")}
           </div>
         ) : (
-          <div className="w-full text-sm">
-            <div className="flex items-center text-muted-foreground border-b border-border pb-2 mb-2 px-2">
-              <div className="flex-1 font-medium">Vật tư / Hàng hóa</div>
-              <div className="w-[80px] text-right font-medium">Số lượng</div>
-              <div className="w-[80px] text-right font-medium">Đã nhập</div>
-              <div className="w-[80px] text-right font-medium">Còn lại</div>
-            </div>
-            <div className="space-y-1">
-              {detail.lines.map((line, idx) => {
-                const poLine = poDetail?.lines?.find(
-                  (l, i) => l.id === line.id || i === idx,
-                );
-                const qtyReceived = Number(poLine?.qtyReceived || 0);
-                const qtyOrdered = Number(line.qty || poLine?.qtyOrdered || 0);
-                const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
-
-                return (
-                  <div
-                    key={line.id || idx}
-                    className="flex items-center hover:bg-muted/50 rounded py-2 px-2 transition-colors gap-4"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="font-medium text-foreground truncate">
-                        {line.item_name ||
-                          line.description ||
-                          `${t("Dòng")} ${idx + 1}`}
-                        {line.item_code && (
-                          <span className="text-muted-foreground ml-1.5 font-normal">
-                            ({line.item_code})
-                          </span>
-                        )}
-                      </span>
+          <div className="w-full overflow-y-auto max-h-[300px]">
+            <DocumentLineTable
+              columns={[
+                {
+                  key: "index",
+                  header: "#",
+                  width: 40,
+                  align: "center",
+                  cell: (_, idx) => (
+                    <span className="text-muted-foreground">{idx + 1}</span>
+                  ),
+                },
+                {
+                  key: "itemCode",
+                  header: t("Mã linh kiện"),
+                  minWidth: 140,
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                  ) => line.item_code || "—",
+                },
+                {
+                  key: "itemName",
+                  header: t("Linh kiện / Tên hàng"),
+                  minWidth: 260,
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                    idx: number,
+                  ) => (
+                    <div className="font-medium text-foreground">
+                      {line.item_name ||
+                        line.description ||
+                        `${t("Dòng")} ${idx + 1}`}
                     </div>
-                    <div className="w-[80px] text-right">
-                      <span className="font-medium text-foreground">
-                        {Number(line.qty || 0).toLocaleString("vi-VN")}
-                      </span>
+                  ),
+                },
+                {
+                  key: "qtyOrdered",
+                  header: t("Số lượng"),
+                  minWidth: 100,
+                  align: "center",
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                  ) => (
+                    <div className="font-medium text-foreground">
+                      {Number(line.qty || 0).toLocaleString("vi-VN")}
                     </div>
-                    <div className="w-[80px] text-right">
-                      <span className="font-medium text-emerald-600">
+                  ),
+                },
+                {
+                  key: "qtyReceived",
+                  header: t("Đã nhập"),
+                  minWidth: 100,
+                  align: "center",
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                    idx: number,
+                  ) => {
+                    const poLine = poDetail?.lines?.find(
+                      (l, i) => l.id === line.id || i === idx,
+                    );
+                    const qtyReceived = Number(poLine?.qtyReceived || 0);
+                    return (
+                      <div className="font-medium text-emerald-600">
                         {qtyReceived.toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                    <div className="w-[80px] text-right">
-                      <span className="font-medium text-amber-600">
+                      </div>
+                    );
+                  },
+                },
+                {
+                  key: "qtyRemaining",
+                  header: t("Còn lại"),
+                  minWidth: 100,
+                  align: "center",
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                    idx: number,
+                  ) => {
+                    const poLine = poDetail?.lines?.find(
+                      (l, i) => l.id === line.id || i === idx,
+                    );
+                    const qtyReceived = Number(poLine?.qtyReceived || 0);
+                    const qtyOrdered = Number(
+                      line.qty || poLine?.qtyOrdered || 0,
+                    );
+                    const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
+                    return (
+                      <div className="font-medium text-amber-600">
                         {qtyRemaining.toLocaleString("vi-VN")}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                      </div>
+                    );
+                  },
+                },
+              ]}
+              data={detail.lines || []}
+              getRowKey={(line, idx) => line.id || idx}
+              viewOnly={true}
+            />
           </div>
         )}
       </div>
 
-      <div className="w-full md:w-96 shrink-0 md:border-l md:border-border md:pl-6">
+      <div className="w-full md:w-72 lg:w-80 shrink-0 md:border-l md:border-border md:pl-6">
         <div className="mb-4 font-semibold text-base text-foreground">
           {t("Lịch sử nhập kho")}
         </div>
@@ -573,10 +639,9 @@ export function OperationalListPage({
   const t = useT();
   const navigate = useAppStore((s) => s.navigate);
   const showToast = useUIStore((s) => s.showToast);
+  const queryClient = useQueryClient();
   const config = variantConfig[variant];
 
-  const [items, setItems] = useState<OperationalDocument[]>([]);
-  const [stockItems, setStockItems] = useState<InventoryStockRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedStockItemIds, setExpandedStockItemIds] = useState<
@@ -591,16 +656,18 @@ export function OperationalListPage({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [branchFilter, setBranchFilter] = useState("");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [recurringFilter, setRecurringFilter] = useState("");
+  const [period, setPeriod] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [branchOptions, setBranchOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
   const [formOpen, setFormOpen] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [viewOnly, setViewOnly] = useState(false);
   const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
     {},
@@ -610,6 +677,34 @@ export function OperationalListPage({
   );
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const {
+    data: suppliersData,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    fetchNextPage: fetchNextSuppliers,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    isFetchingNextPage: loadingSuppliers,
+  } = useBasicMasterInfinite({
+    search: supplierSearch,
+    limit: 50,
+    entities: "suppliers",
+    enabled: variant === "purchase",
+  });
+
+  const supplierOptions = useMemo(() => {
+    return (
+      suppliersData?.pages.flatMap((p) =>
+        (p.items.suppliers || []).map((s) => ({
+          value: s.id,
+          label: s.name,
+        })),
+      ) || []
+    );
+  }, [suppliersData]);
+  // sort state: "field" = ASC, "-field" = DESC, "" = default (createdAt DESC)
+  const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
 
@@ -699,66 +794,60 @@ export function OperationalListPage({
     resetFlow();
   }, [variant]);
 
-  const loader = useMemo(() => {
-    if (variant === "sales") return operationalApi.listSales;
-    if (variant === "purchase") return operationalApi.listPurchases;
-    if (variant === "expenses") return operationalApi.listExpenses;
-    if (variant === "receivables") return operationalApi.listReceivables;
-    if (variant === "payables") return operationalApi.listPayables;
-    if (variant === "inventory") return operationalApi.listInventoryStock;
-    return null;
+  useEffect(() => {
+    resetFlow();
   }, [variant]);
 
-  async function load() {
-    if (!loader) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data =
-        variant === "inventory"
-          ? await operationalApi.listInventoryStock({
-              page,
-              pageSize,
-              search: search || undefined,
-              ...(itemTypeFilter ? { item_type: itemTypeFilter } : {}),
-            })
-          : await loader({
-              page,
-              pageSize,
-              search: search || undefined,
-              branch_id: branchFilter || undefined,
-              recurring: recurringFilter === "RECURRING",
-              payment_status: paymentStatusFilter || undefined,
-              status: statusFilter || undefined,
-            } as any);
-      if (variant === "inventory") {
-        setStockItems((data.items || []) as InventoryStockRow[]);
-        setItems([]);
-      } else {
-        setItems((data.items || []) as OperationalDocument[]);
-        setStockItems([]);
-      }
-      setTotal(data.total || 0);
-      setTotalPages(data.totalPages || 0);
-    } catch (err) {
-      setError(extractApiError(err, "Không tải được dữ liệu"));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const purchaseSortArray = purchaseSort ? [purchaseSort] : undefined;
 
-  useEffect(() => {
-    void load();
-  }, [
-    loader,
+  const listQuery = useOperationalListQuery({
+    variant,
     page,
     pageSize,
-    search,
-    branchFilter,
-    paymentStatusFilter,
-    statusFilter,
-    itemTypeFilter,
-  ]);
+    search: search || undefined,
+    branch_id: branchFilter || undefined,
+    supplier_id: supplierFilter || undefined,
+    recurring: recurringFilter === "RECURRING",
+    payment_status: paymentStatusFilter || undefined,
+    status: statusFilter || undefined,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
+    item_type: itemTypeFilter || undefined,
+    sort: purchaseSortArray,
+  });
+
+  useEffect(() => {
+    setLoading(listQuery.isLoading || listQuery.isFetching);
+    setError(
+      listQuery.error
+        ? extractApiError(listQuery.error, "Không tải được dữ liệu")
+        : null,
+    );
+  }, [listQuery.error, listQuery.isFetching, listQuery.isLoading]);
+
+  useEffect(() => {
+    if (variant !== "purchase") return;
+    void listQuery.refetch();
+  }, [variant, supplierFilter]);
+
+  const items = useMemo(
+    () =>
+      variant === "inventory"
+        ? []
+        : ((listQuery.data?.items || []) as OperationalDocument[]),
+    [listQuery.data?.items, variant],
+  );
+
+  const stockItems = useMemo(
+    () =>
+      variant === "inventory"
+        ? ((listQuery.data?.items || []) as InventoryStockRow[])
+        : [],
+    [listQuery.data?.items, variant],
+  );
+
+  const total = listQuery.data?.total || 0;
+  const totalPages = listQuery.data?.totalPages || 0;
 
   async function createSample() {
     const payload = buildSamplePayload(variant);
@@ -772,7 +861,7 @@ export function OperationalListPage({
       else if (variant === "expenses")
         await operationalApi.createExpense(payload);
       showToast({ title: "Đã tạo chứng từ mẫu", variant: "success" });
-      await load();
+      await listQuery.refetch();
     } catch (err) {
       setError(extractApiError(err, "Không tạo được chứng từ mẫu"));
     } finally {
@@ -889,7 +978,7 @@ export function OperationalListPage({
         notes: settlementForm.notes || undefined,
       });
       await refreshSettlementData();
-      await load();
+      await listQuery.refetch();
       showToast({ title: "Đã liên kết phiếu dòng tiền", variant: "success" });
       setSettlementState({
         settlementForm: {
@@ -912,19 +1001,21 @@ export function OperationalListPage({
     if (!documentType) return;
 
     if (variant === "purchase") {
-      setLoading(true);
+      setEditingRow(row);
+      setPoReceipts([]);
+      setViewOnly(true);
+      setFormOpen(true);
+      setFormLoading(true);
       setError(null);
       try {
         const document = await operationalApi.getDocument(documentType, row.id);
         const po = await purchaseOrdersCoreApi.get(row.id);
         setPoReceipts(po.receipts || []);
         setEditingRow(document);
-        setViewOnly(true);
-        setFormOpen(true);
       } catch (err) {
         setError(extractApiError(err, t("Không tải được chi tiết chứng từ")));
       } finally {
-        setLoading(false);
+        setFormLoading(false);
       }
       return;
     }
@@ -967,7 +1058,7 @@ export function OperationalListPage({
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
     if (documentType === "purchase_orders") {
-      navigate("erp-goods-receipts");
+      navigate("erp-warehouse");
       const params = new URLSearchParams(window.location.search);
       params.set("purchaseOrderId", row.id);
       params.set("mode", "from-po");
@@ -1045,6 +1136,7 @@ export function OperationalListPage({
           transaction_date: today(),
           notes: postingNotes || undefined,
           receipt_lines: selectedLines,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
         showToast({ title: "Đã post nhập kho", variant: "success" });
       } else if (postingDocumentType === "sales_service_orders") {
@@ -1052,10 +1144,11 @@ export function OperationalListPage({
           transaction_date: today(),
           notes: postingNotes || undefined,
           issue_lines: selectedLines,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
         showToast({ title: "Đã post xuất kho", variant: "success" });
       }
-      await load();
+      await listQuery.refetch();
       if (detailDocument?.id === postingDocument.id) {
         const refreshed = await operationalApi.getDocument(
           postingDocumentType,
@@ -1091,7 +1184,7 @@ export function OperationalListPage({
         linkId,
       );
       await refreshSettlementData();
-      await load();
+      await listQuery.refetch();
       showToast({ title: "Đã gỡ liên kết thanh toán", variant: "success" });
     } catch (err) {
       setSettlementState({
@@ -1144,40 +1237,59 @@ export function OperationalListPage({
             },
           ],
         }
-      : {
-          search: true,
-          channel: {
-            label: "Chi nhánh",
-            placeholder: "Tất cả chi nhánh",
-            options: branchOptions,
-          },
-          status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
-          custom: [
-            {
-              key: "paymentStatus",
-              label: "Thanh toán",
-              placeholder: "Tất cả thanh toán",
-              options: PAYMENT_STATUS_OPTIONS,
+      : variant === "purchase"
+        ? {
+            search: true,
+            period: true,
+            custom: [
+              {
+                key: "supplier_id",
+                label: "Nhà cung cấp",
+                placeholder: "Tất cả nhà cung cấp",
+                options: supplierOptions,
+              },
+            ],
+          }
+        : {
+            search: true,
+            channel: {
+              label: "Chi nhánh",
+              placeholder: "Tất cả chi nhánh",
+              options: branchOptions,
             },
-            {
-              key: "recurring",
-              label: "Recurring",
-              placeholder: "Tất cả recurring",
-              options: RECURRING_OPTIONS,
+            status: {
+              options: STATUS_OPTIONS,
+              placeholder: "Tất cả trạng thái",
             },
-          ],
-        };
+            custom: [
+              {
+                key: "paymentStatus",
+                label: "Thanh toán",
+                placeholder: "Tất cả thanh toán",
+                options: PAYMENT_STATUS_OPTIONS,
+              },
+              {
+                key: "recurring",
+                label: "Recurring",
+                placeholder: "Tất cả recurring",
+                options: RECURRING_OPTIONS,
+              },
+            ],
+          };
 
   const activeFilterCount = [
     !!searchInput,
+    !!dateFrom || !!dateTo || !!period,
     ...(variant === "inventory"
       ? [!!itemTypeFilter]
-      : [
-          !!branchFilter,
-          !!statusFilter,
-          !!paymentStatusFilter,
-          !!recurringFilter,
-        ]),
+      : variant === "purchase"
+        ? [!!supplierFilter]
+        : [
+            !!branchFilter,
+            !!statusFilter,
+            !!paymentStatusFilter,
+            !!recurringFilter,
+          ]),
   ].filter(Boolean).length;
 
   function resetAllFilters() {
@@ -1188,12 +1300,26 @@ export function OperationalListPage({
     setPaymentStatusFilter("");
     setRecurringFilter("");
     setItemTypeFilter("");
+    setSupplierFilter("");
+    setPurchaseSort("");
+    setPeriod("");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  }
+
+  function togglePurchaseSort(field: string) {
+    setPurchaseSort((prev) => {
+      if (prev === field) return `-${field}`;
+      if (prev === `-${field}`) return "";
+      return field;
+    });
     setPage(1);
   }
 
   const tableActions = (
     <TableActionGroup
-      onRefresh={() => void load()}
+      onRefresh={() => void listQuery.refetch()}
       loading={loading}
       onFilterToggle={() => setFilterPanelOpen((v) => !v)}
       activeFilterCount={activeFilterCount}
@@ -1225,6 +1351,8 @@ export function OperationalListPage({
       {
         key: "po_no",
         header: t("Số PO"),
+        sortable: true,
+        sortKey: "po_no",
         className: "align-top min-w-[140px]",
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
@@ -1241,6 +1369,11 @@ export function OperationalListPage({
               <span className="font-semibold text-primary">
                 {row.purchase_no || "—"}
               </span>
+              {row.status === "DRAFT" && (
+                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
+                  {t("Nháp")}
+                </span>
+              )}
               <ChevronRight
                 className={cn(
                   "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
@@ -1254,6 +1387,8 @@ export function OperationalListPage({
       {
         key: "supplier",
         header: "Nhà cung cấp",
+        sortable: true,
+        sortKey: "supplier_id",
         className: "align-top min-w-[200px]",
         cell: (row) => (
           <div className="space-y-0.5">
@@ -1264,56 +1399,22 @@ export function OperationalListPage({
       {
         key: "order_date",
         header: "Ngày đặt",
+        sortable: true,
+        sortKey: "order_date",
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.document_date) || "—",
       },
       {
         key: "expected_date",
         header: "Ngày nhận DK",
+        sortable: true,
+        sortKey: "expected_date",
         className: "align-top min-w-[150px]",
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
-
-      {
-        key: "receipt_status",
-        header: "Tình trạng nhập",
-        className: "align-top min-w-[200px]",
-        cell: (row) => {
-          if (!row.lines || row.lines.length === 0)
-            return <span className="text-[color:var(--muted-fg)]">—</span>;
-          return (
-            <div className="flex flex-col gap-1 text-xs">
-              {row.lines.map((l, i) => {
-                const qty = Number(l.qty || 0);
-                const received = Number(
-                  (l as any).qty_received ?? (l as any).qtyReceived ?? 0,
-                );
-                const name = l.item_name || l.item_code || `Dòng ${i + 1}`;
-                const isFullyReceived = received >= qty && qty > 0;
-
-                return (
-                  <div key={i} className="flex gap-1">
-                    <span className="text-foreground">
-                      {i + 1}. {name}:
-                    </span>
-                    <span
-                      className={
-                        isFullyReceived
-                          ? "text-emerald-600 font-medium"
-                          : "text-amber-600 font-medium"
-                      }
-                    >
-                      {received}/{qty}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        },
-      },
     ],
-    [],
+
+    [expandedRowIds, toggleExpand, t, variant],
   );
 
   const columns = useMemo<DataTableColumn<OperationalDocument>[]>(() => {
@@ -1536,13 +1637,13 @@ export function OperationalListPage({
         title={config.title}
         desc={config.desc}
         icon={<FileText className="h-4 w-4" />}
+        actions={tableActions}
       >
         {error ? (
           <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             {error}
           </div>
         ) : null}
-        <div className="flex items-center justify-end mb-3">{tableActions}</div>
         <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
             <DataTable
@@ -1606,10 +1707,12 @@ export function OperationalListPage({
                 custom:
                   variant === "inventory"
                     ? { itemType: itemTypeFilter }
-                    : {
-                        paymentStatus: paymentStatusFilter,
-                        recurring: recurringFilter,
-                      },
+                    : variant === "purchase"
+                      ? { supplier_id: supplierFilter }
+                      : {
+                          paymentStatus: paymentStatusFilter,
+                          recurring: recurringFilter,
+                        },
               },
               inputs: { search: searchInput, amountMin: "", amountMax: "" },
               panelOpen: filterPanelOpen,
@@ -1634,8 +1737,12 @@ export function OperationalListPage({
               },
               setCounterpartySource: () => {},
               setCustom: (key: string, v: string) => {
-                if (variant === "inventory" && key === "itemType") {
+                if (key === "itemType" && variant === "inventory") {
                   setItemTypeFilter(v);
+                  setPage(1);
+                }
+                if (key === "supplier_id") {
+                  setSupplierFilter(v);
                   setPage(1);
                 }
                 if (key === "paymentStatus") {
@@ -1657,7 +1764,7 @@ export function OperationalListPage({
           open={!!viewingItemId}
           onClose={() => setViewingItemId(null)}
           itemId={viewingItemId}
-          onSuccess={() => void load()}
+          onSuccess={() => void listQuery.refetch()}
         />
       </PageLayout>
     );
@@ -1668,6 +1775,7 @@ export function OperationalListPage({
       title={config.title}
       desc={config.desc}
       icon={<FileText className="h-4 w-4" />}
+      actions={tableActions}
     >
       {error ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
@@ -1675,7 +1783,6 @@ export function OperationalListPage({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-end mb-3">{tableActions}</div>
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <DataTable
@@ -1686,41 +1793,33 @@ export function OperationalListPage({
             error={error}
             emptyLabel="Chưa có dữ liệu."
             minWidth={980}
+            sortBy={
+              variant === "purchase" && purchaseSort
+                ? purchaseSort.startsWith("-")
+                  ? purchaseSort.slice(1)
+                  : purchaseSort
+                : undefined
+            }
+            sortOrder={
+              variant === "purchase" && purchaseSort
+                ? purchaseSort.startsWith("-")
+                  ? "desc"
+                  : "asc"
+                : undefined
+            }
+            onSort={
+              variant === "purchase"
+                ? (key) => togglePurchaseSort(key)
+                : undefined
+            }
             actionsColumn={{
               cell: (row) => (
                 <ActionDropdown
                   items={[
                     {
                       label: t("Chi tiết"),
-                      icon: <FileText className="h-4 w-4" />,
+                      icon: <Eye className="h-4 w-4" />,
                       onClick: () => void openDetail(row),
-                      hidden: variant === "purchase",
-                    },
-                    {
-                      label: "Sửa",
-                      onClick: async () => {
-                        const documentType = resolveDocumentType(row, variant);
-                        if (!documentType) return;
-                        try {
-                          const detail = await operationalApi.getDocument(
-                            documentType,
-                            row.id,
-                          );
-                          setEditingRow(detail);
-                          setFormOpen(true);
-                        } catch (err) {
-                          setError(
-                            extractApiError(
-                              err,
-                              "Không tải được dữ liệu chỉnh sửa",
-                            ),
-                          );
-                        }
-                      },
-                      icon: <Pencil className="h-4 w-4" />,
-                      hidden: !["sales", "purchase", "expenses"].includes(
-                        variant,
-                      ),
                     },
                     {
                       label: "Liên kết tiền",
@@ -1773,28 +1872,49 @@ export function OperationalListPage({
           config={filterConfig}
           filter={{
             state: {
-              period: "",
-              dateFrom: "",
-              dateTo: "",
+              period,
+              dateFrom,
+              dateTo,
               channel: branchFilter,
               search: searchInput,
               amountMin: "",
               amountMax: "",
               status: statusFilter,
               counterpartySource: "",
-              custom: {
-                paymentStatus: paymentStatusFilter,
-                recurring: recurringFilter,
-              },
+              custom:
+                variant === "purchase"
+                  ? { supplier_id: supplierFilter }
+                  : {
+                      paymentStatus: paymentStatusFilter,
+                      recurring: recurringFilter,
+                    },
             },
             inputs: { search: searchInput, amountMin: "", amountMax: "" },
             panelOpen: filterPanelOpen,
             openPanel: () => setFilterPanelOpen(true),
             closePanel: () => setFilterPanelOpen(false),
             togglePanel: () => setFilterPanelOpen((v) => !v),
-            setPeriod: () => {},
-            setDateFrom: () => {},
-            setDateTo: () => {},
+            setPeriod: (v) => {
+              setPeriod(v);
+              if (v) {
+                setDateFrom(periodFirstDay(v));
+                setDateTo(periodLastDay(v));
+              }
+              setPage(1);
+            },
+            setDateFrom: (v) => {
+              const newVal =
+                v && dateTo && dateTo < v ? monthFirstDay(dateTo) : v;
+              setDateFrom(newVal);
+              setPeriod("");
+              setPage(1);
+            },
+            setDateTo: (v) => {
+              setDateTo(v);
+              if (v && dateFrom && v < dateFrom) setDateFrom(monthFirstDay(v));
+              setPeriod("");
+              setPage(1);
+            },
             setChannel: (v: string) => {
               setBranchFilter(v);
               setPage(1);
@@ -1808,6 +1928,10 @@ export function OperationalListPage({
             },
             setCounterpartySource: () => {},
             setCustom: (key: string, v: string) => {
+              if (key === "supplier_id") {
+                setSupplierFilter(v);
+                setPage(1);
+              }
               if (key === "paymentStatus") {
                 setPaymentStatusFilter(v);
                 setPage(1);
@@ -1831,7 +1955,7 @@ export function OperationalListPage({
         subtitle={
           detailDocument
             ? `${docNo(detailDocument)} — ${partner(detailDocument)}`
-            : "Xem chi tiết chứng từ operational"
+            : "Chi tiết chứng từ operational"
         }
         bodyClassName="space-y-4"
       >
@@ -1841,8 +1965,22 @@ export function OperationalListPage({
           </div>
         ) : null}
         {detailLoading ? (
-          <div className="text-sm text-[color:var(--muted-fg)]">
-            Đang tải chi tiết...
+          <div className="space-y-6">
+            <DrawerSection title="Thông tin chính">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </DrawerSection>
+            <DrawerSection title="Dòng chi tiết">
+              <div className="space-y-3">
+                <Skeleton className="h-[72px] w-full" />
+                <Skeleton className="h-[72px] w-full" />
+                <Skeleton className="h-[72px] w-full" />
+              </div>
+            </DrawerSection>
           </div>
         ) : detailDocument ? (
           <>
@@ -1880,7 +2018,9 @@ export function OperationalListPage({
                 </DrawerField>
               </div>
             </DrawerSection>
-            <DrawerSection title="Dòng chi tiết">
+            <DrawerSection
+              title={`Dòng chi tiết (${detailDocument.lines?.length || 0})`}
+            >
               {detailDocument.lines?.length ? (
                 <div className="space-y-2">
                   {detailDocument.lines.map((line, index) => (
@@ -2204,6 +2344,7 @@ export function OperationalListPage({
         <OperationalFormDrawer
           variant={variant as "sales" | "purchase" | "expenses"}
           open={formOpen}
+          loading={formLoading}
           editing={editingRow}
           viewOnly={viewOnly}
           poReceipts={poReceipts}
@@ -2212,8 +2353,11 @@ export function OperationalListPage({
             setEditingRow(null);
             setViewOnly(false);
           }}
+          onToggleEdit={() => setViewOnly(false)}
           onSaved={async () => {
-            await load();
+            await queryClient.invalidateQueries({
+              queryKey: ["operational-list", variant],
+            });
             showToast({
               title: editingRow
                 ? "Đã cập nhật chứng từ"

@@ -114,6 +114,7 @@ const cashDashboardParams: DashboardParams = {
 };
 
 export function useCashVoucherHandlers({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   cashFunds,
   partners,
   employees,

@@ -5,17 +5,26 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Boxes,
   PackageOpen,
   PackagePlus,
   PackageMinus,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Pencil,
   Plus,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ReceiptText,
+  Trash2,
   XCircle,
   RefreshCcw,
   ClipboardList,
+  Eye,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  BookCheck,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
@@ -25,12 +34,12 @@ import { Forbidden } from "@/pages/Forbidden";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import {
+  useFilterPanel,
   type FilterPanelConfig,
-  type FilterPanelReturn,
 } from "@/shared/hooks/useFilterPanel";
 
-import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
 import {
   type DrawerAction,
   DrawerField,
@@ -38,7 +47,9 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   goodsReceiptsCoreApi,
   type CreateGrPayload,
@@ -53,13 +64,15 @@ import {
   purchaseOrdersCoreApi,
   type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
 import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useUIStore } from "@/core/config/uiStore";
+import { useWarehouseVouchersQuery } from "@/modules/inventory-core/hooks/useWarehouseVoucherQueries";
+import type { WarehouseRow } from "@/modules/inventory-core/api/warehouseVouchersCoreApi";
 
 const LOOKUP_LIMIT = 200;
 const ISSUE_TYPE_OPTIONS = [
@@ -67,58 +80,12 @@ const ISSUE_TYPE_OPTIONS = [
   { value: "OTHER", label: "OTHER — Xuất khác" },
 ];
 const STATUS_OPTIONS = [
-  { value: "DRAFT", label: "DRAFT" },
-  { value: "POSTED", label: "POSTED" },
+  { value: "DRAFT", label: "Nháp" },
+  { value: "POSTED", label: "Đã vào sổ" },
+  { value: "CANCELLED", label: "Đã hủy" },
 ];
 
-// ─── Combined row type ────────────────────────────────────────────────────────
-
-type VoucherKind = "receipt" | "issue";
-
-interface WarehouseRow {
-  kind: VoucherKind;
-  id: string;
-  voucherNo: string;
-  date: string;
-  status: string | null | undefined;
-  partnerName: string | null | undefined;
-  lineCount: number;
-  remarks: string | null | undefined;
-  _gr?: ErpGoodsReceipt;
-  _gi?: ErpGoodsIssue;
-}
-
-function toWarehouseRow(
-  item: ErpGoodsReceipt | ErpGoodsIssue,
-  kind: VoucherKind,
-): WarehouseRow {
-  if (kind === "receipt") {
-    const gr = item as ErpGoodsReceipt;
-    return {
-      kind,
-      id: gr.id,
-      voucherNo: gr.receiptNo,
-      date: gr.receiptDate,
-      status: gr.status,
-      partnerName: gr.supplierName,
-      lineCount: gr.lines?.length ?? 0,
-      remarks: gr.remarks,
-      _gr: gr,
-    };
-  }
-  const gi = item as ErpGoodsIssue;
-  return {
-    kind,
-    id: gi.id,
-    voucherNo: gi.issueNo,
-    date: gi.issueDate,
-    status: gi.status,
-    partnerName: gi.customerName,
-    lineCount: gi.lines?.length ?? 0,
-    remarks: gi.remarks,
-    _gi: gi,
-  };
-}
+// ─── Combined row type provided by API ───
 
 // ─── GR Form types ────────────────────────────────────────────────────────────
 
@@ -273,6 +240,7 @@ function fmtQty(value?: string | null) {
   }).format(n);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StatusBadge({ status }: { status?: string | null }) {
   const s = status ?? "DRAFT";
   let cls =
@@ -284,7 +252,7 @@ function StatusBadge({ status }: { status?: string | null }) {
   return <span className={cls}>{s}</span>;
 }
 
-function KindBadge({ kind }: { kind: VoucherKind }) {
+function KindBadge({ kind }: { kind: "receipt" | "issue" }) {
   return kind === "receipt" ? (
     <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-200">
       Nhập kho
@@ -304,44 +272,39 @@ export function ErpWarehousePage() {
   const canReadReceipts = useHasPermission("goods_receipts", "read");
   const canReadIssues = useHasPermission("goods_issues", "read");
   const showToast = useUIStore((s) => s.showToast);
+  const queryClient = useQueryClient();
 
   // ── filter state (same pattern as page mua hàng)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tabFilter, setTabFilter] = useState<TabFilter>("all");
+  const [showGrGeneralInfo, setShowGrGeneralInfo] = useState(true);
 
   // ── list state
-  const [grItems, setGrItems] = useState<ErpGoodsReceipt[]>([]);
-  const [grLoading, setGrLoading] = useState(true);
-  const [grTotal, setGrTotal] = useState(0);
-  const [giItems, setGiItems] = useState<ErpGoodsIssue[]>([]);
-  const [giLoading, setGiLoading] = useState(true);
-  const [giTotal, setGiTotal] = useState(0);
-
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
-  const [searchInputs, setSearchInputs] = useState<Record<TabFilter, string>>({
-    all: "",
-    receipt: "",
-    issue: "",
-  });
-  const [searches, setSearches] = useState<Record<TabFilter, string>>({
-    all: "",
-    receipt: "",
-    issue: "",
-  });
-  const searchInput = searchInputs[tabFilter];
-  const search = searches[tabFilter];
+  const [sortBy, setSortBy] = useState<string>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  // activeSortKey: column đang được user chọn sort; null = default (không có active sort)
+  const [activeSortKey, setActiveSortKey] = useState<string | null>(null);
+  const [activeSortOrder, setActiveSortOrder] = useState<"asc" | "desc">("asc");
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── GR drawer state
   const [grDrawerOpen, setGrDrawerOpen] = useState(false);
+  const [grDrawerLoading, setGrDrawerLoading] = useState(false);
   const [grEditing, setGrEditing] = useState<ErpGoodsReceipt | null>(null);
   const [grViewOnly, setGrViewOnly] = useState(false);
   const [grForm, setGrForm] = useState<GrForm>(emptyGrForm);
   const [grSaveError, setGrSaveError] = useState<string | null>(null);
   const [grSaving, setGrSaving] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [grPostingId, setGrPostingId] = useState<string | null>(null);
   const [grCancelId, setGrCancelId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WarehouseRow | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<WarehouseRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [grPoDetail, setGrPoDetail] = useState<ErpPurchaseOrder | null>(null);
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
@@ -349,85 +312,160 @@ export function ErpWarehousePage() {
 
   // ── GI drawer state
   const [giDrawerOpen, setGiDrawerOpen] = useState(false);
+  const [giDrawerLoading, setGiDrawerLoading] = useState(false);
   const [giEditing, setGiEditing] = useState<ErpGoodsIssue | null>(null);
   const [giViewOnly, setGiViewOnly] = useState(false);
   const [giForm, setGiForm] = useState<GiForm>(emptyGiForm);
   const [giSaveError, setGiSaveError] = useState<string | null>(null);
   const [giSaving, setGiSaving] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [giPostingId, setGiPostingId] = useState<string | null>(null);
-  const [customerOptions, setCustomerOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemOptions, setItemOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+
+  // Lookup hooks for basic masters
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const {
+    data: suppliersData,
+    fetchNextPage: fetchNextSuppliers,
+    isFetchingNextPage: loadingSuppliers,
+  } = useBasicMasterInfinite({
+    search: supplierSearch,
+    limit: 50,
+    entities: "suppliers",
+  });
+  const supplierOptions = useMemo(() => {
+    return (
+      suppliersData?.pages.flatMap((p) =>
+        (p.items.suppliers || []).map((s) => ({
+          value: s.id,
+          label: s.name,
+        })),
+      ) || []
+    );
+  }, [suppliersData]);
+
+  const [customerSearch, setCustomerSearch] = useState("");
+  const {
+    data: customersData,
+    fetchNextPage: fetchNextCustomers,
+    isFetchingNextPage: loadingCustomers,
+  } = useBasicMasterInfinite({
+    search: customerSearch,
+    limit: 50,
+    entities: "customers",
+  });
+  const customerOptions = useMemo(() => {
+    return (
+      customersData?.pages.flatMap((p) =>
+        (p.items.customers || []).map((c) => ({
+          value: c.id,
+          label: `${c.code} — ${c.displayName || c.name}`,
+        })),
+      ) || []
+    );
+  }, [customersData]);
+
+  const [itemSearch, setItemSearch] = useState("");
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+  });
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
+
   const [vehicleOptions, setVehicleOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
 
-  // ── Load receipts
-  const loadReceipts = useCallback(async () => {
-    if (tabFilter === "issue") {
-      setGrLoading(false);
-      return;
-    }
-    setGrLoading(true);
-    setLoadError(null);
+  // ── Items Dict (for SKUs)
+  const [itemsDict, setItemsDict] = useState<Record<string, ErpInventoryItem>>(
+    {},
+  );
+  const fetchItemsDict = async (itemIds: string[]) => {
+    const ids = [...new Set(itemIds)].filter(Boolean);
+    if (ids.length === 0) return;
     try {
-      const res = await goodsReceiptsCoreApi.list({
-        page,
-        pageSize: Math.ceil(pageSize / 2),
-        search,
+      const res = await inventoryCoreApi.list({
+        ids: ids.join(","),
+        pageSize: 1000,
       });
-      setGrItems(res.items);
-      setGrTotal(res.total);
+      setItemsDict((prev) => {
+        const next = { ...prev };
+        for (const it of res.items) next[it.id] = it;
+        return next;
+      });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Không thể tải nhập kho");
-    } finally {
-      setGrLoading(false);
+      /* ignore */
     }
-  }, [page, pageSize, search, tabFilter]);
+  };
 
-  // ── Load issues
-  const loadIssues = useCallback(async () => {
-    if (tabFilter === "receipt") {
-      setGiLoading(false);
-      return;
-    }
-    setGiLoading(true);
-    setLoadError(null);
-    try {
-      const res = await goodsIssuesCoreApi.list({
-        page,
-        pageSize: Math.ceil(pageSize / 2),
-        search,
-      });
-      setGiItems(res.items);
-      setGiTotal(res.total);
-    } catch (e) {
-      setLoadError(e instanceof Error ? e.message : "Không thể tải xuất kho");
-    } finally {
-      setGiLoading(false);
-    }
-  }, [page, pageSize, search, tabFilter]);
+  const filterConfig: FilterPanelConfig = {
+    search: true,
+    period: true,
+    status: {
+      placeholder: "Trạng thái",
+      options: STATUS_OPTIONS,
+    },
+    custom: [
+      {
+        key: "partnerId",
+        label: "Đối tác",
+        placeholder: "Tất cả đối tác",
+        type: "select",
+        options: [...supplierOptions, ...customerOptions],
+      },
+    ],
+  };
+
+  const filterPanel = useFilterPanel(filterConfig);
+
+  const dateFrom = filterPanel.state.dateFrom;
+  const dateTo = filterPanel.state.dateTo;
+  const status = filterPanel.state.status;
+  const partnerId = filterPanel.state.custom?.partnerId;
+
+  const vouchersQuery = useWarehouseVouchersQuery({
+    page,
+    pageSize,
+    search: filterPanel.state.search || undefined,
+    type: tabFilter === "all" ? undefined : tabFilter,
+    dateFrom,
+    dateTo,
+    status,
+    partnerId,
+    sort: sortOrder === "desc" ? [`-${sortBy}`] : [sortBy],
+  });
 
   useEffect(() => {
-    void loadReceipts();
-  }, [loadReceipts]);
-  useEffect(() => {
-    void loadIssues();
-  }, [loadIssues]);
+    const error =
+      vouchersQuery.error instanceof Error ? vouchersQuery.error.message : null;
+    setLoadError(error);
+  }, [vouchersQuery.error]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const receiptId = params.get("receiptId");
+    const purchaseOrderId = params.get("purchaseOrderId");
     const mode = params.get("mode");
 
     if (!grDrawerOpen && receiptId && mode === "view") {
       goodsReceiptsCoreApi
         .get(receiptId)
         .then((gr) => {
-          void openGrDetail(gr, true);
+          void openGrDetail(gr.id, true);
         })
         .catch(() => {
           // silent
@@ -444,37 +482,38 @@ export function ErpWarehousePage() {
               : window.location.pathname,
           );
         });
+    } else if (!grDrawerOpen && purchaseOrderId && mode === "from-po") {
+      openGrCreate();
+      setGrForm((f) => ({ ...f, purchaseOrderId }));
+      params.delete("purchaseOrderId");
+      params.delete("mode");
+      const nextQuery = params.toString();
+      history.replaceState(
+        null,
+        "",
+        nextQuery
+          ? `${window.location.pathname}?${nextQuery}`
+          : window.location.pathname,
+      );
     }
   }, [grDrawerOpen]);
 
-  // ── Combine + sort by date desc
-  const rows: WarehouseRow[] = useMemo(() => {
-    const grRows =
-      tabFilter !== "issue"
-        ? grItems.map((g) => toWarehouseRow(g, "receipt"))
-        : [];
-    const giRows =
-      tabFilter !== "receipt"
-        ? giItems.map((g) => toWarehouseRow(g, "issue"))
-        : [];
-    return [...grRows, ...giRows].sort((a, b) => b.date.localeCompare(a.date));
-  }, [grItems, giItems, tabFilter]);
+  // ── Unified rows
+  const rows: WarehouseRow[] = vouchersQuery.data?.items ?? [];
 
-  const loading = grLoading || giLoading;
-  const total =
-    tabFilter === "receipt"
-      ? grTotal
-      : tabFilter === "issue"
-        ? giTotal
-        : grTotal + giTotal;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const loading = vouchersQuery.isLoading || vouchersQuery.isFetching;
+  const total = vouchersQuery.data?.total ?? 0;
+  const totalPages = vouchersQuery.data?.totalPages ?? 1;
 
-  // ── Load PO options
-  const loadPoOptions = useCallback(async () => {
+  // ── Load GR lookups (PO + Supplier)
+  const loadGrLookups = useCallback(async () => {
     try {
-      const res = await purchaseOrdersCoreApi.list({ page: 1, pageSize: 200 });
+      const poRes = await purchaseOrdersCoreApi.list({
+        page: 1,
+        pageSize: 200,
+      });
       setPoOptions(
-        res.items.map((po) => ({
+        poRes.items.map((po) => ({
           value: po.id,
           label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
         })),
@@ -487,31 +526,14 @@ export function ErpWarehousePage() {
   // ── Load GI lookups
   const loadGiLookups = useCallback(async () => {
     try {
-      const [custRes, itemRes, vehRes] = await Promise.all([
-        getBusinessPartnersPagedApi({
-          page: 1,
-          pageSize: LOOKUP_LIMIT,
-          search: "",
-          partnerType: "CUSTOMER",
-        }),
-        inventoryCoreApi.list({ page: 1, pageSize: LOOKUP_LIMIT }),
-        manufacturingApi.listVehicles({ page: 1, pageSize: LOOKUP_LIMIT }),
-      ]);
-      setCustomerOptions(
-        custRes.items.map((p: { id: string; name: string }) => ({
-          value: p.id,
-          label: p.name,
-        })),
-      );
-      setItemOptions(
-        (itemRes.items ?? []).map((i: ErpInventoryItem) => ({
-          value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
-        })),
-      );
+      const vehRes = await manufacturingApi.listVehicles({
+        page: 1,
+        pageSize: LOOKUP_LIMIT,
+      });
       const vehList = vehRes.items ?? [];
 
       setVehicleOptions(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         vehList.map((v: any) => ({
           value: v.id,
           label: `${v.frame_no ?? v.vin ?? v.id}${v.engine_no ? ` / ${v.engine_no}` : ""}`,
@@ -530,7 +552,15 @@ export function ErpWarehousePage() {
     }
     purchaseOrdersCoreApi
       .get(grForm.purchaseOrderId)
-      .then(setGrPoDetail)
+      .then((po) => {
+        setGrPoDetail(po);
+        if (po.supplierId) {
+          setGrForm((f) => ({ ...f, supplierId: po.supplierId || "" }));
+        }
+        if (po.lines) {
+          void fetchItemsDict(po.lines.map((l) => l.itemId || ""));
+        }
+      })
       .catch(() => setGrPoDetail(null));
   }, [grForm.purchaseOrderId]);
 
@@ -540,18 +570,25 @@ export function ErpWarehousePage() {
     setGrViewOnly(false);
     setGrForm(emptyGrForm());
     setGrSaveError(null);
-    void loadPoOptions();
+    void loadGrLookups();
     setGrDrawerOpen(true);
   }
-  async function openGrDetail(gr: ErpGoodsReceipt, viewOnly: boolean) {
+  async function openGrDetail(id: string, viewOnly: boolean) {
     setGrViewOnly(viewOnly);
     setGrSaveError(null);
-    void loadPoOptions();
-    let detail = gr;
-    if (!detail.lines) detail = await goodsReceiptsCoreApi.get(gr.id);
-    setGrEditing(detail);
-    setGrForm(buildGrForm(detail));
+    setGrDrawerLoading(true);
     setGrDrawerOpen(true);
+    void loadGrLookups();
+    try {
+      const detail = await goodsReceiptsCoreApi.get(id);
+      if (detail.lines) {
+        void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
+      }
+      setGrEditing(detail);
+      setGrForm(buildGrForm(detail));
+    } finally {
+      setGrDrawerLoading(false);
+    }
   }
 
   // ── GI open helpers
@@ -563,51 +600,73 @@ export function ErpWarehousePage() {
     void loadGiLookups();
     setGiDrawerOpen(true);
   }
-  async function openGiDetail(gi: ErpGoodsIssue, viewOnly: boolean) {
+  async function openGiDetail(id: string, viewOnly: boolean) {
     setGiViewOnly(viewOnly);
     setGiSaveError(null);
-    void loadGiLookups();
-    let detail = gi;
-    if (!detail.lines) detail = await goodsIssuesCoreApi.get(gi.id);
-    setGiEditing(detail);
-    setGiForm(buildGiForm(detail));
+    setGiDrawerLoading(true);
     setGiDrawerOpen(true);
+    void loadGiLookups();
+    try {
+      const detail = await goodsIssuesCoreApi.get(id);
+      if (detail.lines) {
+        void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
+      }
+      setGiEditing(detail);
+      setGiForm(buildGiForm(detail));
+    } finally {
+      setGiDrawerLoading(false);
+    }
   }
 
   // ── GR save / post / cancel
-  async function handleGrSave() {
+  async function handleGrSave(statusOverride?: string) {
     setGrSaving(true);
     setGrSaveError(null);
     try {
       const payload = buildGrPayload(grForm);
+      if (statusOverride) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload as any).status = statusOverride;
+      }
       if (grEditing) {
         await goodsReceiptsCoreApi.update(grEditing.id, payload);
+        if (statusOverride === "POSTED") {
+          await goodsReceiptsCoreApi.post(grEditing.id);
+        }
         showToast({ title: "Đã cập nhật phiếu nhập kho", variant: "success" });
       } else {
         if (!payload.receiptNo)
           payload.receiptNo = await goodsReceiptsCoreApi.nextNo(
             grForm.receiptDate,
           );
-        await goodsReceiptsCoreApi.create(payload);
+        const created = await goodsReceiptsCoreApi.create(payload);
+        if (statusOverride === "POSTED") {
+          await goodsReceiptsCoreApi.post(created.id);
+        }
         showToast({
           title: "Tạo phiếu nhập kho thành công",
           variant: "success",
         });
       }
       setGrDrawerOpen(false);
-      void loadReceipts();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "unified"],
+      });
     } catch (e) {
       setGrSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu nhập kho");
     } finally {
       setGrSaving(false);
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function handleGrPost(id: string) {
     setGrPostingId(id);
     try {
       await goodsReceiptsCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu nhập kho", variant: "success" });
-      void loadReceipts();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "unified"],
+      });
     } catch (e) {
       showToast({
         title: e instanceof Error ? e.message : "Lỗi ghi sổ",
@@ -622,7 +681,10 @@ export function ErpWarehousePage() {
     try {
       await goodsReceiptsCoreApi.cancel(id);
       showToast({ title: "Đã hủy phiếu nhập kho", variant: "success" });
-      void loadReceipts();
+      setCancelTarget(null);
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "unified"],
+      });
     } catch (e) {
       showToast({
         title: e instanceof Error ? e.message : "Lỗi hủy phiếu",
@@ -634,35 +696,50 @@ export function ErpWarehousePage() {
   }
 
   // ── GI save / post
-  async function handleGiSave() {
+  async function handleGiSave(statusOverride?: string) {
     setGiSaving(true);
     setGiSaveError(null);
     try {
       const payload = buildGiPayload(giForm);
+      if (statusOverride) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (payload as any).status = statusOverride;
+      }
       if (giEditing) {
         await goodsIssuesCoreApi.update(giEditing.id, payload);
+        if (statusOverride === "POSTED") {
+          await goodsIssuesCoreApi.post(giEditing.id);
+        }
         showToast({ title: "Đã cập nhật phiếu xuất kho", variant: "success" });
       } else {
-        await goodsIssuesCoreApi.create(payload);
+        const created = await goodsIssuesCoreApi.create(payload);
+        if (statusOverride === "POSTED") {
+          await goodsIssuesCoreApi.post(created.id);
+        }
         showToast({
           title: "Tạo phiếu xuất kho thành công",
           variant: "success",
         });
       }
       setGiDrawerOpen(false);
-      void loadIssues();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "unified"],
+      });
     } catch (e) {
       setGiSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu xuất kho");
     } finally {
       setGiSaving(false);
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function handleGiPost(id: string) {
     setGiPostingId(id);
     try {
       await goodsIssuesCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu xuất kho", variant: "success" });
-      void loadIssues();
+      await queryClient.invalidateQueries({
+        queryKey: ["warehouse-vouchers", "unified"],
+      });
     } catch (e) {
       showToast({
         title: e instanceof Error ? e.message : "Lỗi ghi sổ",
@@ -673,37 +750,77 @@ export function ErpWarehousePage() {
     }
   }
 
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      if (deleteTarget.type === "receipt") {
+        await goodsReceiptsCoreApi.remove(deleteTarget.id);
+        showToast({ title: "Đã xóa phiếu nhập kho", variant: "success" });
+        await queryClient.invalidateQueries({
+          queryKey: ["warehouse-vouchers", "unified"],
+        });
+      } else {
+        await goodsIssuesCoreApi.remove(deleteTarget.id);
+        showToast({ title: "Đã xóa phiếu xuất kho", variant: "success" });
+        await queryClient.invalidateQueries({
+          queryKey: ["warehouse-vouchers", "unified"],
+        });
+      }
+      setDeleteTarget(null);
+    } catch (e) {
+      showToast({
+        title: e instanceof Error ? e.message : "Lỗi xóa phiếu",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   // ── Columns
   const columns: DataTableColumn<WarehouseRow>[] = useMemo(
     () => [
       {
-        key: "kind",
+        key: "type",
         header: "Loại",
         className: "w-[110px]",
-        cell: (row) => <KindBadge kind={row.kind} />,
+        cell: (row) => <KindBadge kind={row.type} />,
       },
       {
         key: "voucherNo",
         header: "Số phiếu",
         className: "w-[160px] font-mono text-sm",
-        cell: (row) => row.voucherNo,
+        sortable: true,
+        sortKey: "voucherNo",
+        cell: (row) => (
+          <div className="flex items-center gap-2">
+            <span>{row.voucherNo}</span>
+            {row.status === "DRAFT" && (
+              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                Nháp
+              </span>
+            )}
+            {row.status === "CANCELLED" && (
+              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+                Đã Hủy
+              </span>
+            )}
+          </div>
+        ),
       },
       {
         key: "date",
         header: "Ngày",
         className: "w-[110px]",
+        sortable: true,
+        sortKey: "date",
         cell: (row) => fmtDate(row.date),
       },
       {
         key: "partnerName",
         header: "Đối tác",
         cell: (row) => row.partnerName ?? "—",
-      },
-      {
-        key: "status",
-        header: "Trạng thái",
-        className: "w-[110px]",
-        cell: (row) => <StatusBadge status={row.status} />,
       },
       {
         key: "remarks",
@@ -713,79 +830,6 @@ export function ErpWarehousePage() {
     ],
     [],
   );
-
-  const voucherTypeOptions = [
-    { value: "receipt", label: `Nhập kho (${grTotal})` },
-    { value: "issue", label: `Xuất kho (${giTotal})` },
-  ];
-
-  const filterConfig: FilterPanelConfig = {
-    search: true,
-    custom: [
-      {
-        key: "voucherType",
-        label: "Loại chứng từ",
-        placeholder: "Tất cả chứng từ",
-        options: voucherTypeOptions,
-      },
-    ],
-  };
-
-  const activeFilterCount = [!!searchInput, tabFilter !== "all"].filter(
-    Boolean,
-  ).length;
-
-  const filters: FilterPanelReturn = {
-    state: {
-      period: "",
-      dateFrom: "",
-      dateTo: "",
-      channel: "",
-      search,
-      amountMin: "",
-      amountMax: "",
-      status: "",
-      counterpartySource: "",
-      custom: {
-        voucherType: tabFilter === "all" ? "" : tabFilter,
-      },
-    },
-    inputs: {
-      search: searchInput,
-      amountMin: "",
-      amountMax: "",
-    },
-    panelOpen: filterPanelOpen,
-    openPanel: () => setFilterPanelOpen(true),
-    closePanel: () => setFilterPanelOpen(false),
-    togglePanel: () => setFilterPanelOpen((v) => !v),
-    setPeriod: () => {},
-    setDateFrom: () => {},
-    setDateTo: () => {},
-    setChannel: () => {},
-    setSearchInput: (value: string) => {
-      setSearchInputs((prev) => ({ ...prev, [tabFilter]: value }));
-      setSearches((prev) => ({ ...prev, [tabFilter]: value }));
-      setPage(1);
-    },
-    setAmountMinInput: () => {},
-    setAmountMaxInput: () => {},
-    setStatus: () => {},
-    setCounterpartySource: () => {},
-    setCustom: (key: string, value: string) => {
-      if (key === "voucherType") {
-        setTabFilter((value as TabFilter) || "all");
-        setPage(1);
-      }
-    },
-    resetAll: () => {
-      setSearchInputs((prev) => ({ ...prev, [tabFilter]: "" }));
-      setSearches((prev) => ({ ...prev, [tabFilter]: "" }));
-      setPage(1);
-    },
-    hasActiveFilter: activeFilterCount > 0,
-    activeFilterCount,
-  };
 
   // ── GR drawer actions
   const grDrawerActions: DrawerAction[] = grViewOnly
@@ -797,8 +841,14 @@ export function ErpWarehousePage() {
           variant: "outline",
         },
         {
+          label: "Lưu nháp",
+          onClick: () => void handleGrSave("DRAFT"),
+          variant: "secondary",
+          loading: grSaving,
+        },
+        {
           label: grEditing ? "Cập nhật" : "Tạo mới",
-          onClick: () => void handleGrSave(),
+          onClick: () => void handleGrSave("POSTED"),
           primary: true,
           loading: grSaving,
         },
@@ -814,8 +864,14 @@ export function ErpWarehousePage() {
           variant: "outline",
         },
         {
+          label: "Lưu nháp",
+          onClick: () => void handleGiSave("DRAFT"),
+          variant: "secondary",
+          loading: giSaving,
+        },
+        {
           label: giEditing ? "Cập nhật" : "Tạo mới",
-          onClick: () => void handleGiSave(),
+          onClick: () => void handleGiSave("POSTED"),
           primary: true,
           loading: giSaving,
         },
@@ -829,28 +885,14 @@ export function ErpWarehousePage() {
         title="Chứng từ kho"
         desc="Quản lý phiếu nhập kho và xuất kho."
         icon={<ClipboardList className="h-5 w-5" />}
-        tabs={[
-          { value: "all", label: `Tất cả (${grTotal + giTotal})` },
-          { value: "receipt", label: `Nhập kho (${grTotal})` },
-          { value: "issue", label: `Xuất kho (${giTotal})` },
-        ]}
-        activeTab={tabFilter}
-        onTabChange={(value) => {
-          setTabFilter(value as TabFilter);
-          setPage(1);
-        }}
-      >
-        <div className="flex items-center justify-end mb-3">
+        actions={
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
               className="px-3 py-2"
               disabled={loading}
-              onClick={() => {
-                if (tabFilter !== "issue") void loadReceipts();
-                if (tabFilter !== "receipt") void loadIssues();
-              }}
+              onClick={() => void vouchersQuery.refetch()}
             >
               <RefreshCcw
                 className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")}
@@ -858,35 +900,28 @@ export function ErpWarehousePage() {
               <span>Tải lại</span>
             </Button>
             <FilterButton
-              onClick={() => setFilterPanelOpen((v) => !v)}
-              activeCount={activeFilterCount}
+              onClick={() => filterPanel.togglePanel()}
+              activeCount={filterPanel.activeFilterCount}
             />
-            {tabFilter !== "issue" && (
-              <button
-                type="button"
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium ${
-                  tabFilter === "receipt"
-                    ? "bg-primary text-primary-fg hover:bg-primary/90"
-                    : "border border-border hover:bg-muted"
-                }`}
-                onClick={openGrCreate}
-              >
-                <PackagePlus className="h-3.5 w-3.5" />
-                Nhập kho
-              </button>
-            )}
-            {tabFilter !== "receipt" && (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-                onClick={openGiCreate}
-              >
-                <PackageMinus className="h-3.5 w-3.5" />
-                Xuất kho
-              </button>
-            )}
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+              onClick={openGrCreate}
+            >
+              <PackagePlus className="h-3.5 w-3.5" />
+              Nhập kho
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+              onClick={openGiCreate}
+            >
+              <PackageMinus className="h-3.5 w-3.5" />
+              Xuất kho
+            </button>
           </div>
-        </div>
+        }
+      >
         {loadError && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {loadError}
@@ -898,8 +933,30 @@ export function ErpWarehousePage() {
             <DataTable
               items={rows}
               columns={columns}
-              getRowKey={(r) => `${r.kind}-${r.id}`}
+              getRowKey={(r) => `${r.type}-${r.id}`}
               loading={loading}
+              sortBy={activeSortKey ?? ""}
+              sortOrder={activeSortOrder}
+              onSort={(key) => {
+                if (activeSortKey === key) {
+                  if (activeSortOrder === "asc") {
+                    // lần 2: chuyển sang desc
+                    setActiveSortOrder("desc");
+                    setSortOrder("desc");
+                  } else {
+                    // lần 3: reset về default
+                    setActiveSortKey(null);
+                    setSortBy("date");
+                    setSortOrder("desc");
+                  }
+                } else {
+                  // click column mới: bắt đầu từ asc
+                  setActiveSortKey(key);
+                  setActiveSortOrder("asc");
+                  setSortBy(key);
+                  setSortOrder("asc");
+                }
+              }}
               emptyLabel="Chưa có chứng từ kho."
               minWidth={780}
               loadingRows={8}
@@ -910,45 +967,21 @@ export function ErpWarehousePage() {
                   <ActionDropdown
                     items={[
                       {
-                        label: "Xem chi tiết",
-                        icon: <ReceiptText className="h-3.5 w-3.5" />,
+                        label: "Chi tiết",
+                        icon: <Eye className="h-3.5 w-3.5" />,
                         onClick: () => {
-                          if (row.kind === "receipt" && row._gr)
-                            void openGrDetail(row._gr, true);
-                          else if (row.kind === "issue" && row._gi)
-                            void openGiDetail(row._gi, true);
+                          if (row.type === "receipt")
+                            void openGrDetail(row.id, true);
+                          else if (row.type === "issue")
+                            void openGiDetail(row.id, true);
                         },
                       },
                       {
-                        label: "Chỉnh sửa",
-                        icon: <Pencil className="h-3.5 w-3.5" />,
-                        hidden:
-                          row.status === "POSTED" ||
-                          row.status === "CANCELLED" ||
-                          row.status === "VOIDED",
-                        onClick: () => {
-                          if (row.kind === "receipt" && row._gr)
-                            void openGrDetail(row._gr, false);
-                          else if (row.kind === "issue" && row._gi)
-                            void openGiDetail(row._gi, false);
-                        },
-                      },
-                      {
-                        label:
-                          (row.kind === "receipt"
-                            ? grPostingId
-                            : giPostingId) === row.id
-                            ? "Đang ghi..."
-                            : "Ghi sổ",
-                        icon: <ReceiptText className="h-3.5 w-3.5" />,
-                        hidden:
-                          row.status === "POSTED" ||
-                          row.status === "CANCELLED" ||
-                          row.status === "VOIDED",
-                        onClick: () => {
-                          if (row.kind === "receipt") void handleGrPost(row.id);
-                          else void handleGiPost(row.id);
-                        },
+                        label: "Xóa",
+                        icon: <Trash2 className="h-3.5 w-3.5" />,
+                        variant: "danger",
+                        hidden: row.status !== "DRAFT",
+                        onClick: () => setDeleteTarget(row),
                       },
                       {
                         label:
@@ -956,11 +989,8 @@ export function ErpWarehousePage() {
                         icon: <XCircle className="h-3.5 w-3.5" />,
                         variant: "danger",
                         hidden:
-                          row.kind !== "receipt" ||
-                          row.status === "POSTED" ||
-                          row.status === "CANCELLED" ||
-                          row.status === "VOIDED",
-                        onClick: () => void handleGrCancel(row.id),
+                          row.type !== "receipt" || row.status !== "POSTED",
+                        onClick: () => setCancelTarget(row),
                       },
                     ]}
                   />
@@ -977,199 +1007,532 @@ export function ErpWarehousePage() {
               }}
             />
           </div>
-          <FilterPanel config={filterConfig} filter={filters} />
+          <FilterPanel config={filterConfig} filter={filterPanel} />
         </div>
       </PageLayout>
 
-      {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
-      {grViewOnly && grEditing ? (
-        <GoodsReceiptViewDrawer
-          open={grDrawerOpen}
-          receiptId={grEditing.id}
-          onClose={() => setGrDrawerOpen(false)}
-        />
-      ) : (
-        <DrawerModal
-          open={grDrawerOpen}
-          onClose={() => setGrDrawerOpen(false)}
-          icon={<Boxes className="h-4 w-4" />}
-          title={
-            grEditing
-              ? grViewOnly
-                ? "Phiếu nhập kho"
-                : "Sửa nhập kho"
-              : "Tạo phiếu nhập kho"
-          }
-          subtitle={grEditing?.receiptNo ?? "Nhập kho"}
-          actions={grDrawerActions}
-        >
-          {grSaveError && (
-            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-              {grSaveError}
-            </div>
-          )}
-          <DrawerSection title="Thông tin phiếu">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <DrawerField label="Số phiếu">
-                <input
-                  className={inputCls}
-                  placeholder="Tự động nếu để trống"
-                  value={grForm.receiptNo}
-                  disabled={grViewOnly}
-                  onChange={(e) =>
-                    setGrForm((f) => ({ ...f, receiptNo: e.target.value }))
-                  }
-                />
-              </DrawerField>
-              <DrawerField label="Ngày nhập">
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={grForm.receiptDate}
-                  disabled={grViewOnly}
-                  onChange={(e) =>
-                    setGrForm((f) => ({ ...f, receiptDate: e.target.value }))
-                  }
-                />
-              </DrawerField>
-              <DrawerField label="Đơn mua hàng (PO)">
-                <Combobox
-                  options={poOptions}
-                  value={grForm.purchaseOrderId}
-                  disabled={grViewOnly}
-                  placeholder="Chọn PO..."
-                  onChange={(v) =>
-                    setGrForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
-                  }
-                />
-              </DrawerField>
-            </div>
-            <DrawerField label="Ghi chú">
-              <textarea
-                className={`${inputCls} min-h-[60px] resize-y`}
-                value={grForm.remarks}
-                disabled={grViewOnly}
-                onChange={(e) =>
-                  setGrForm((f) => ({ ...f, remarks: e.target.value }))
-                }
-              />
-            </DrawerField>
-          </DrawerSection>
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={
+          deleteTarget
+            ? `Xóa ${deleteTarget.type === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${deleteTarget.voucherNo}"? Hành động này sẽ ẩn phiếu này khỏi danh sách.`
+            : ""
+        }
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
 
-          <DrawerSection title={`Dòng hàng (${grForm.lines.length})`}>
-            {grPoDetail?.lines?.map((poLine) => {
-              const lineIdx = grForm.lines.findIndex(
-                (l) => l.purchaseOrderLineId === poLine.id,
-              );
-              const currentLine = lineIdx >= 0 ? grForm.lines[lineIdx] : null;
-              const ordered = Number(poLine.qtyOrdered ?? 0);
-              const received = Number(poLine.qtyReceived ?? 0);
-              const remaining = Math.max(0, ordered - received);
-              return (
-                <div
-                  key={poLine.id}
-                  className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium">
-                      {poLine.itemName ||
-                        poLine.description ||
-                        poLine.itemId ||
-                        "—"}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      Đặt {ordered} | Đã nhận {received} | Còn {remaining}
-                    </span>
-                  </div>
-                  {!grViewOnly && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={0}
-                        max={remaining}
-                        className={`${inputCls} w-28`}
-                        placeholder={`Nhận (max ${remaining})`}
-                        value={currentLine?.qtyReceived ?? ""}
-                        onChange={(e) => {
-                          const qty = e.target.value;
-                          setGrForm((f) => {
-                            const lines = [...f.lines];
-                            if (lineIdx >= 0) {
-                              lines[lineIdx] = {
-                                ...lines[lineIdx],
-                                qtyReceived: qty,
-                              };
-                            } else {
-                              lines.push({
-                                purchaseOrderLineId: poLine.id ?? "",
-                                itemId: poLine.itemId ?? "",
-                                itemName: poLine.itemName ?? "",
-                                qtyReceived: qty,
-                                unitCost: poLine.unitPrice ?? "",
-                              });
-                            }
-                            return { ...f, lines };
-                          });
-                        }}
-                      />
-                      <input
-                        type="number"
-                        className={`${inputCls} w-28`}
-                        placeholder="Đơn giá"
-                        value={currentLine?.unitCost ?? poLine.unitPrice ?? ""}
-                        onChange={(e) => {
-                          const cost = e.target.value;
-                          setGrForm((f) => {
-                            const lines = [...f.lines];
-                            if (lineIdx >= 0) {
-                              lines[lineIdx] = {
-                                ...lines[lineIdx],
-                                unitCost: cost,
-                              };
-                            }
-                            return { ...f, lines };
-                          });
-                        }}
-                      />
-                    </div>
-                  )}
-                  {grViewOnly && currentLine && (
-                    <div className="text-sm text-muted-foreground">
-                      Nhận: <strong>{fmtQty(currentLine.qtyReceived)}</strong>
-                      {currentLine.unitCost
-                        ? ` | Đơn giá: ${fmtQty(currentLine.unitCost)}`
-                        : ""}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {!grPoDetail && grForm.lines.length === 0 && !grViewOnly && (
-              <p className="text-sm text-muted-foreground">
-                Chọn PO để hiện danh sách hàng cần nhận.
-              </p>
+      <ConfirmModal
+        open={!!cancelTarget}
+        title="Xác nhận hủy phiếu"
+        message={
+          cancelTarget
+            ? `Hủy ${cancelTarget.type === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${cancelTarget.voucherNo}"? Hệ thống sẽ tạo một bút toán đảo để cân bằng giá trị.`
+            : ""
+        }
+        confirmLabel="Hủy phiếu"
+        cancelLabel="Đóng"
+        onConfirm={() => {
+          if (cancelTarget && cancelTarget.type === "receipt") {
+            void handleGrCancel(cancelTarget.id);
+          }
+        }}
+        onCancel={() => {
+          if (!grCancelId) setCancelTarget(null);
+        }}
+        loading={!!grCancelId}
+        danger
+      />
+
+      {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
+      <DrawerModal
+        open={grDrawerOpen}
+        onClose={() => setGrDrawerOpen(false)}
+        icon={<Boxes className="h-4 w-4" />}
+        title={
+          grEditing
+            ? grViewOnly
+              ? "Phiếu nhập kho"
+              : "Sửa nhập kho"
+            : "Tạo phiếu nhập kho"
+        }
+        subtitle={
+          <div className="flex items-center gap-2">
+            <span>{grEditing?.receiptNo ?? "Nhập kho"}</span>
+            {grEditing?.status === "DRAFT" && (
+              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                Nháp
+              </span>
             )}
-            {grViewOnly &&
-              !grPoDetail &&
-              grForm.lines.map((line, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-1"
-                >
-                  <div className="text-sm font-medium">
-                    {line.itemName || line.itemId || "—"}
+            {grEditing?.status === "CANCELLED" && (
+              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+                Đã hủy
+              </span>
+            )}
+          </div>
+        }
+        actions={grDrawerActions}
+        headerExtra={
+          grViewOnly &&
+          grEditing &&
+          !["POSTED", "CANCELLED", "VOIDED"].includes(
+            grEditing.status || "DRAFT",
+          ) ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setGrViewOnly(false)}
+            >
+              Chỉnh sửa
+            </Button>
+          ) : null
+        }
+        panelClassName="min-[1024px]:min-w-[1120px]"
+      >
+        {grSaveError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {grSaveError}
+          </div>
+        )}
+
+        {grDrawerLoading ? (
+          <div className="flex flex-col xl:flex-row gap-6 items-start">
+            <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+              <DrawerSection title="Chi tiết">
+                <div className="space-y-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </DrawerSection>
+            </div>
+            <div className="shrink-0 order-1 xl:order-2 space-y-4 w-full xl:w-[320px]">
+              <DrawerSection title="Thông tin chung">
+                <div className="flex flex-col gap-3">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </div>
+              </DrawerSection>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col xl:flex-row gap-6 items-start">
+            <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+              <DrawerSection
+                title={`Chi tiết (${grForm.lines.length})`}
+                titleExtra={
+                  !grViewOnly && grPoDetail ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-[11px] px-2 leading-none text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setGrForm((f) => ({
+                            ...f,
+                            lines: f.lines.map((l) => ({
+                              ...l,
+                              qtyReceived: "",
+                            })),
+                          }));
+                        }}
+                      >
+                        Đặt lại
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-[11px] px-2 leading-none"
+                        onClick={() => {
+                          setGrForm((f) => {
+                            const newLines = (grPoDetail.lines || []).map(
+                              (poLine) => {
+                                const ordered = Number(poLine.qtyOrdered ?? 0);
+                                const received = Number(
+                                  poLine.qtyReceived ?? 0,
+                                );
+                                const remaining = Math.max(
+                                  0,
+                                  ordered - received,
+                                );
+                                return {
+                                  purchaseOrderLineId: poLine.id ?? "",
+                                  itemId: poLine.itemId ?? "",
+                                  itemName: poLine.itemName ?? "",
+                                  qtyReceived:
+                                    remaining > 0 ? remaining.toString() : "",
+                                  unitCost: poLine.unitPrice ?? "",
+                                };
+                              },
+                            );
+                            return { ...f, lines: newLines };
+                          });
+                        }}
+                      >
+                        Nhập hết
+                      </Button>
+                    </div>
+                  ) : undefined
+                }
+              >
+                {grPoDetail ? (
+                  <DocumentLineTable
+                    data={grPoDetail.lines || []}
+                    getRowKey={(line) => line.id || ""}
+                    viewOnly={true}
+                    columns={[
+                      {
+                        key: "index",
+                        header: "#",
+                        width: 40,
+                        align: "center",
+                        cell: (_, idx) => (
+                          <span className="text-muted-foreground">
+                            {idx + 1}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "itemCode",
+                        header: "Mã linh kiện",
+                        minWidth: 140,
+                        cell: (poLine) => {
+                          const itemCode =
+                            poLine.itemId && itemsDict[poLine.itemId]
+                              ? itemsDict[poLine.itemId].sku
+                              : "—";
+                          return <span>{itemCode}</span>;
+                        },
+                      },
+                      {
+                        key: "itemName",
+                        header: "Tên linh kiện",
+                        minWidth: 260,
+                        cell: (poLine) => {
+                          const itemName =
+                            poLine.itemName ||
+                            poLine.description ||
+                            poLine.itemId ||
+                            "—";
+                          return (
+                            <div
+                              className="font-medium text-foreground truncate max-w-[260px]"
+                              title={itemName}
+                            >
+                              {itemName}
+                            </div>
+                          );
+                        },
+                      },
+                      {
+                        key: "ordered",
+                        header: "Đã đặt",
+                        minWidth: 100,
+                        align: "center",
+                        cell: (poLine) => (
+                          <div className="font-medium text-foreground">
+                            {Number(poLine.qtyOrdered ?? 0).toLocaleString(
+                              "vi-VN",
+                            )}
+                          </div>
+                        ),
+                      },
+                      {
+                        key: "remaining",
+                        header: "Còn lại",
+                        minWidth: 100,
+                        align: "center",
+                        cell: (poLine) => {
+                          const ordered = Number(poLine.qtyOrdered ?? 0);
+                          const received = Number(poLine.qtyReceived ?? 0);
+                          const remaining = Math.max(0, ordered - received);
+                          return (
+                            <div className="font-medium text-amber-600">
+                              {remaining.toLocaleString("vi-VN")}
+                            </div>
+                          );
+                        },
+                      },
+                      {
+                        key: "qtyInput",
+                        header: "SL Nhập",
+                        minWidth: 140,
+                        align: "center",
+                        cell: (poLine) => {
+                          const lineIdx = grForm.lines.findIndex(
+                            (l) => l.purchaseOrderLineId === poLine.id,
+                          );
+                          const currentLine =
+                            lineIdx >= 0 ? grForm.lines[lineIdx] : null;
+
+                          if (!grViewOnly) {
+                            const ordered = Number(poLine.qtyOrdered ?? 0);
+                            const received = Number(poLine.qtyReceived ?? 0);
+                            const remaining = Math.max(0, ordered - received);
+
+                            return (
+                              <input
+                                type="number"
+                                min={0}
+                                max={remaining}
+                                className={cn(
+                                  inputCls,
+                                  "w-28 flex-shrink-0 text-right mx-auto",
+                                )}
+                                placeholder={`Max ${remaining}`}
+                                value={currentLine?.qtyReceived ?? ""}
+                                onChange={(e) => {
+                                  const qty = e.target.value;
+                                  setGrForm((f) => {
+                                    const lines = [...f.lines];
+                                    if (lineIdx >= 0) {
+                                      lines[lineIdx] = {
+                                        ...lines[lineIdx],
+                                        qtyReceived: qty,
+                                      };
+                                    } else {
+                                      lines.push({
+                                        purchaseOrderLineId: poLine.id ?? "",
+                                        itemId: poLine.itemId ?? "",
+                                        itemName: poLine.itemName ?? "",
+                                        qtyReceived: qty,
+                                        unitCost: poLine.unitPrice ?? "",
+                                      });
+                                    }
+                                    return { ...f, lines };
+                                  });
+                                }}
+                              />
+                            );
+                          }
+                          return currentLine &&
+                            Number(currentLine.qtyReceived) > 0 ? (
+                            <div className="font-medium text-emerald-600">
+                              +{fmtQty(currentLine.qtyReceived)}
+                            </div>
+                          ) : null;
+                        },
+                      },
+                    ]}
+                  />
+                ) : grViewOnly ? (
+                  <DocumentLineTable
+                    data={grForm.lines.filter((l) => Number(l.qtyReceived) > 0)}
+                    getRowKey={(_, i) => i}
+                    viewOnly={true}
+                    columns={[
+                      {
+                        key: "index",
+                        header: "#",
+                        width: 40,
+                        align: "center",
+                        cell: (_, i) => (
+                          <span className="text-muted-foreground">{i + 1}</span>
+                        ),
+                      },
+                      {
+                        key: "itemCode",
+                        header: "Mã linh kiện",
+                        minWidth: 140,
+                        cell: (line) => {
+                          const itemCode =
+                            line.itemId && itemsDict[line.itemId]
+                              ? itemsDict[line.itemId].sku
+                              : "—";
+                          return <span>{itemCode}</span>;
+                        },
+                      },
+                      {
+                        key: "itemName",
+                        header: "Tên linh kiện",
+                        minWidth: 260,
+                        cell: (line) => {
+                          const itemName = line.itemName || line.itemId || "—";
+                          return (
+                            <div
+                              className="font-medium text-foreground truncate max-w-[260px]"
+                              title={itemName}
+                            >
+                              {itemName}
+                            </div>
+                          );
+                        },
+                      },
+                      {
+                        key: "ordered",
+                        header: "Đã đặt",
+                        minWidth: 100,
+                        align: "center",
+                        cell: () => "—",
+                      },
+                      {
+                        key: "remaining",
+                        header: "Còn lại",
+                        minWidth: 100,
+                        align: "center",
+                        cell: () => "—",
+                      },
+                      {
+                        key: "qtyReceived",
+                        header: "SL Nhập",
+                        minWidth: 140,
+                        align: "center",
+                        cell: (line) => (
+                          <div className="font-medium text-emerald-600">
+                            +{fmtQty(line.qtyReceived)}
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-center text-muted-foreground">
+                    Chọn PO để hiện danh sách hàng cần nhận.
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Số lượng: <strong>{fmtQty(line.qtyReceived)}</strong>
-                    {line.unitCost
-                      ? ` | Đơn giá: ${fmtQty(line.unitCost)}`
-                      : ""}
+                )}
+              </DrawerSection>
+            </div>
+
+            <div
+              className={cn(
+                "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
+                showGrGeneralInfo
+                  ? "w-full xl:w-[320px]"
+                  : "w-full xl:w-[52px]",
+              )}
+            >
+              <DrawerSection
+                title={
+                  <span
+                    className={cn(
+                      "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
+                      showGrGeneralInfo
+                        ? "max-w-[200px] opacity-100"
+                        : "max-w-0 opacity-0",
+                    )}
+                  >
+                    Thông tin chung
+                  </span>
+                }
+                titleExtra={
+                  <button
+                    type="button"
+                    onClick={() => setShowGrGeneralInfo((s) => !s)}
+                    className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+                    title={showGrGeneralInfo ? "Thu gọn" : "Mở rộng"}
+                  >
+                    {showGrGeneralInfo ? (
+                      <ChevronRight className="w-4 h-4" />
+                    ) : (
+                      <ChevronLeft className="w-4 h-4" />
+                    )}
+                  </button>
+                }
+              >
+                <div
+                  className={cn(
+                    "grid transition-all duration-300 ease-in-out",
+                    showGrGeneralInfo ? "opacity-100" : "opacity-0",
+                  )}
+                  style={{
+                    gridTemplateRows: showGrGeneralInfo ? "1fr" : "0fr",
+                  }}
+                >
+                  <div
+                    className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)]"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
+                      <DrawerField label="Số phiếu">
+                        <input
+                          className={inputCls}
+                          placeholder="Tự động nếu để trống"
+                          value={grForm.receiptNo}
+                          disabled={grViewOnly}
+                          onChange={(e) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              receiptNo: e.target.value,
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Ngày nhập">
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={grForm.receiptDate}
+                          disabled={grViewOnly}
+                          onChange={(e) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              receiptDate: e.target.value,
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Đơn mua hàng (PO)">
+                        <Combobox
+                          options={poOptions}
+                          value={grForm.purchaseOrderId}
+                          disabled={grViewOnly}
+                          placeholder="Chọn PO..."
+                          onChange={(v) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              purchaseOrderId: v,
+                              lines: [],
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Nhà cung cấp">
+                        <Combobox
+                          options={supplierOptions}
+                          value={grForm.supplierId}
+                          disabled={grViewOnly || !!grForm.purchaseOrderId}
+                          placeholder="Chọn NCC"
+                          searchPlaceholder="Tìm kiếm..."
+                          onSearch={setSupplierSearch}
+                          onScrollBottom={fetchNextSuppliers}
+                          loading={loadingSuppliers}
+                          onChange={(v) =>
+                            setGrForm((f) => ({ ...f, supplierId: v }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Ghi chú">
+                        <textarea
+                          className={`${inputCls} min-h-[60px] resize-y`}
+                          value={grForm.remarks}
+                          disabled={grViewOnly}
+                          onChange={(e) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              remarks: e.target.value,
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                    </div>
                   </div>
                 </div>
-              ))}
-          </DrawerSection>
-        </DrawerModal>
-      )}
+              </DrawerSection>
+            </div>
+          </div>
+        )}
+      </DrawerModal>
 
       {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
       <DrawerModal
@@ -1183,194 +1546,265 @@ export function ErpWarehousePage() {
               : "Sửa xuất kho"
             : "Tạo phiếu xuất kho"
         }
-        subtitle={giEditing?.issueNo ?? "Xuất kho"}
+        subtitle={
+          <div className="flex items-center gap-2">
+            <span>{giEditing?.issueNo ?? "Xuất kho"}</span>
+            {giEditing?.status === "DRAFT" && (
+              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                Nháp
+              </span>
+            )}
+            {giEditing?.status === "CANCELLED" && (
+              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+                Đã hủy
+              </span>
+            )}
+          </div>
+        }
         actions={giDrawerActions}
+        headerExtra={
+          giViewOnly &&
+          giEditing &&
+          !["POSTED", "CANCELLED", "VOIDED"].includes(
+            giEditing.status || "DRAFT",
+          ) ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setGiViewOnly(false)}
+            >
+              Chỉnh sửa
+            </Button>
+          ) : null
+        }
+        panelClassName="min-[1024px]:min-w-[550px]"
       >
         {giSaveError && (
           <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
             {giSaveError}
           </div>
         )}
-        <DrawerSection title="Thông tin phiếu">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="Số phiếu xuất" required>
-              <input
-                className={inputCls}
-                value={giForm.issueNo}
-                disabled={giViewOnly || !!giEditing}
-                onChange={(e) =>
-                  setGiForm((f) => ({ ...f, issueNo: e.target.value }))
-                }
-                placeholder="GI-YYYYMMDD-001"
-              />
-            </DrawerField>
-            <DrawerField label="Ngày xuất" required>
-              <input
-                type="date"
-                className={inputCls}
-                value={giForm.issueDate}
-                disabled={giViewOnly}
-                onChange={(e) =>
-                  setGiForm((f) => ({ ...f, issueDate: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Loại xuất" required>
-              <Combobox
-                options={ISSUE_TYPE_OPTIONS}
-                value={giForm.issueType}
-                disabled={giViewOnly}
-                allowClear={false}
-                onChange={(v) =>
-                  setGiForm((f) => ({ ...f, issueType: v || "SALE" }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Khách hàng">
-              <Combobox
-                options={customerOptions}
-                value={giForm.customerId}
-                disabled={giViewOnly}
-                placeholder="Chọn khách hàng..."
-                onChange={(v) => setGiForm((f) => ({ ...f, customerId: v }))}
-              />
-            </DrawerField>
-            <DrawerField label="Trạng thái">
-              <Combobox
-                options={STATUS_OPTIONS}
-                value={giForm.status}
-                disabled={giViewOnly}
-                allowClear={false}
-                onChange={(v) =>
-                  setGiForm((f) => ({ ...f, status: v || "DRAFT" }))
-                }
-              />
-            </DrawerField>
-          </div>
-          <DrawerField label="Ghi chú">
-            <textarea
-              className={`${inputCls} min-h-[60px] resize-y`}
-              value={giForm.remarks}
-              disabled={giViewOnly}
-              onChange={(e) =>
-                setGiForm((f) => ({ ...f, remarks: e.target.value }))
-              }
-            />
-          </DrawerField>
-        </DrawerSection>
 
-        <DrawerSection title={`Dòng xuất kho (${giForm.lines.length})`}>
-          {giForm.lines.map((line, idx) => (
-            <div
-              key={idx}
-              className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">
-                  Dòng {idx + 1}
-                </span>
-                {!giViewOnly && (
-                  <button
-                    type="button"
-                    className="text-xs text-red-500 hover:underline"
-                    onClick={() =>
-                      setGiForm((f) => ({
-                        ...f,
-                        lines: f.lines.filter((_, i) => i !== idx),
-                      }))
-                    }
-                  >
-                    Xóa
-                  </button>
-                )}
+        {giDrawerLoading ? (
+          <div className="space-y-4">
+            <DrawerSection title="Thông tin phiếu">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
               </div>
-              <DrawerField label="Hàng hóa">
-                <Combobox
-                  options={itemOptions}
-                  value={line.itemId}
+            </DrawerSection>
+            <DrawerSection title="Dòng xuất kho">
+              <div className="space-y-3">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            </DrawerSection>
+          </div>
+        ) : (
+          <>
+            <DrawerSection title="Thông tin phiếu">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <DrawerField label="Số phiếu xuất" required>
+                  <input
+                    className={inputCls}
+                    value={giForm.issueNo}
+                    disabled={giViewOnly || !!giEditing}
+                    onChange={(e) =>
+                      setGiForm((f) => ({ ...f, issueNo: e.target.value }))
+                    }
+                    placeholder="GI-YYYYMMDD-001"
+                  />
+                </DrawerField>
+                <DrawerField label="Ngày xuất" required>
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={giForm.issueDate}
+                    disabled={giViewOnly}
+                    onChange={(e) =>
+                      setGiForm((f) => ({ ...f, issueDate: e.target.value }))
+                    }
+                  />
+                </DrawerField>
+                <DrawerField label="Loại xuất" required>
+                  <Combobox
+                    options={ISSUE_TYPE_OPTIONS}
+                    value={giForm.issueType}
+                    disabled={giViewOnly}
+                    allowClear={false}
+                    onChange={(v) =>
+                      setGiForm((f) => ({ ...f, issueType: v || "SALE" }))
+                    }
+                  />
+                </DrawerField>
+                <DrawerField label="Khách hàng">
+                  <Combobox
+                    options={customerOptions}
+                    value={giForm.customerId}
+                    disabled={giViewOnly}
+                    placeholder="Chọn khách hàng"
+                    searchPlaceholder="Tìm khách hàng"
+                    onSearch={setCustomerSearch}
+                    onScrollBottom={fetchNextCustomers}
+                    loading={loadingCustomers}
+                    onChange={(v) =>
+                      setGiForm((f) => ({ ...f, customerId: v }))
+                    }
+                  />
+                </DrawerField>
+                <DrawerField label="Trạng thái">
+                  <Combobox
+                    options={STATUS_OPTIONS}
+                    value={giForm.status}
+                    disabled={giViewOnly}
+                    allowClear={false}
+                    onChange={(v) =>
+                      setGiForm((f) => ({ ...f, status: v || "DRAFT" }))
+                    }
+                  />
+                </DrawerField>
+              </div>
+              <DrawerField label="Ghi chú">
+                <textarea
+                  className={`${inputCls} min-h-[60px] resize-y`}
+                  value={giForm.remarks}
                   disabled={giViewOnly}
-                  placeholder="Chọn hàng hóa..."
-                  onChange={(v) => {
-                    const found = itemOptions.find((o) => o.value === v);
-                    setGiForm((f) => {
-                      const lines = [...f.lines];
-                      lines[idx] = {
-                        ...lines[idx],
-                        itemId: v,
-                        itemName: found?.label ?? "",
-                      };
-                      return { ...f, lines };
-                    });
-                  }}
+                  onChange={(e) =>
+                    setGiForm((f) => ({ ...f, remarks: e.target.value }))
+                  }
                 />
               </DrawerField>
-              <div className="flex gap-2">
-                <DrawerField label="Số lượng">
-                  <input
-                    type="number"
-                    className={`${inputCls} w-28`}
-                    value={line.qtyIssued}
-                    disabled={giViewOnly}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setGiForm((f) => {
-                        const lines = [...f.lines];
-                        lines[idx] = { ...lines[idx], qtyIssued: v };
-                        return { ...f, lines };
-                      });
-                    }}
-                  />
-                </DrawerField>
-                <DrawerField label="Đơn giá">
-                  <input
-                    type="number"
-                    className={`${inputCls} w-28`}
-                    value={line.unitCost}
-                    disabled={giViewOnly}
-                    placeholder="Tùy chọn"
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setGiForm((f) => {
-                        const lines = [...f.lines];
-                        lines[idx] = { ...lines[idx], unitCost: v };
-                        return { ...f, lines };
-                      });
-                    }}
-                  />
-                </DrawerField>
-              </div>
-              {vehicleOptions.length > 0 && (
-                <DrawerField label="Xe (tùy chọn)">
-                  <Combobox
-                    options={vehicleOptions}
-                    value={line.vehicleId}
-                    disabled={giViewOnly}
-                    placeholder="Chọn xe..."
-                    onChange={(v) => {
-                      setGiForm((f) => {
-                        const lines = [...f.lines];
-                        lines[idx] = { ...lines[idx], vehicleId: v };
-                        return { ...f, lines };
-                      });
-                    }}
-                  />
-                </DrawerField>
+            </DrawerSection>
+
+            <DrawerSection title={`Dòng xuất kho (${giForm.lines.length})`}>
+              {giForm.lines.map((line, idx) => {
+                if (giViewOnly && Number(line.qtyIssued) <= 0) return null;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        Dòng {idx + 1}
+                      </span>
+                      {!giViewOnly && (
+                        <button
+                          type="button"
+                          className="text-xs text-red-500 hover:underline"
+                          onClick={() =>
+                            setGiForm((f) => ({
+                              ...f,
+                              lines: f.lines.filter((_, i) => i !== idx),
+                            }))
+                          }
+                        >
+                          Xóa
+                        </button>
+                      )}
+                    </div>
+                    <DrawerField label="Hàng hóa">
+                      <Combobox
+                        options={itemOptions}
+                        value={line.itemId}
+                        disabled={giViewOnly}
+                        placeholder="Chọn inventory item"
+                        searchPlaceholder="Tìm SKU / tên"
+                        onSearch={setItemSearch}
+                        onScrollBottom={fetchNextItems}
+                        loading={loadingItems}
+                        onChange={(v) => {
+                          const found = itemOptions.find((o) => o.value === v);
+                          setGiForm((f) => {
+                            const lines = [...f.lines];
+                            lines[idx] = {
+                              ...lines[idx],
+                              itemId: v,
+                              itemName: found?.label ?? "",
+                            };
+                            return { ...f, lines };
+                          });
+                        }}
+                      />
+                    </DrawerField>
+                    <div className="flex gap-2">
+                      <DrawerField label="Số lượng">
+                        <input
+                          type="number"
+                          className={cn(inputCls, "w-28")}
+                          value={line.qtyIssued}
+                          disabled={giViewOnly}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setGiForm((f) => {
+                              const lines = [...f.lines];
+                              lines[idx] = { ...lines[idx], qtyIssued: v };
+                              return { ...f, lines };
+                            });
+                          }}
+                        />
+                      </DrawerField>
+                      <DrawerField label="Đơn giá">
+                        <input
+                          type="number"
+                          className={cn(inputCls, "w-28")}
+                          value={line.unitCost}
+                          disabled={giViewOnly}
+                          placeholder="Tùy chọn"
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setGiForm((f) => {
+                              const lines = [...f.lines];
+                              lines[idx] = { ...lines[idx], unitCost: v };
+                              return { ...f, lines };
+                            });
+                          }}
+                        />
+                      </DrawerField>
+                    </div>
+                    {vehicleOptions.length > 0 && (
+                      <DrawerField label="Xe (tùy chọn)">
+                        <Combobox
+                          options={vehicleOptions}
+                          value={line.vehicleId}
+                          disabled={giViewOnly}
+                          placeholder="Chọn xe..."
+                          onChange={(v) => {
+                            setGiForm((f) => {
+                              const lines = [...f.lines];
+                              lines[idx] = { ...lines[idx], vehicleId: v };
+                              return { ...f, lines };
+                            });
+                          }}
+                        />
+                      </DrawerField>
+                    )}
+                  </div>
+                );
+              })}
+              {!giViewOnly && (
+                <button
+                  type="button"
+                  className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
+                  onClick={() =>
+                    setGiForm((f) => ({
+                      ...f,
+                      lines: [...f.lines, emptyGiLine()],
+                    }))
+                  }
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Thêm dòng hàng
+                </button>
               )}
-            </div>
-          ))}
-          {!giViewOnly && (
-            <button
-              type="button"
-              className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
-              onClick={() =>
-                setGiForm((f) => ({ ...f, lines: [...f.lines, emptyGiLine()] }))
-              }
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Thêm dòng hàng
-            </button>
-          )}
-        </DrawerSection>
+            </DrawerSection>
+          </>
+        )}
       </DrawerModal>
     </>
   );

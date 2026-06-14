@@ -16,7 +16,7 @@ export interface DrawerAction {
   /** When 'left', button is pushed to the left side of the footer */
   align?: "left" | "right";
   /** Visual variant — 'outline' renders a distinct outlined style */
-  variant?: "default" | "outline";
+  variant?: "danger" | "outline" | "secondary" | "ghost" | "link";
 }
 
 export const DEFAULT_STACK_OFFSET = -2;
@@ -34,7 +34,7 @@ export interface DrawerModalProps {
   title: string;
   /** Inline element rendered right after the title text (e.g. status badge) */
   titleExtra?: React.ReactNode;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   /** Extra element rendered to the right of title+subtitle, before the × button */
   headerExtra?: React.ReactNode;
 
@@ -60,8 +60,8 @@ export interface DrawerModalProps {
 function Btn({ action }: { action: DrawerAction }) {
   const variant = action.primary
     ? "primary"
-    : action.variant === "outline"
-      ? "outline"
+    : action.variant
+      ? action.variant
       : "secondary";
 
   return (
@@ -293,15 +293,22 @@ export function DrawerModal({
 
 export function DrawerSection({
   title,
+  titleExtra,
   children,
 }: {
-  title: string;
+  title: React.ReactNode;
+  titleExtra?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="mb-3 rounded-xl border border-border bg-surface p-3 card-shadow">
-      <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)]">
-        {title}
+      <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-[10px] pb-[6px] border-b border-[color:var(--border)] flex justify-between items-center">
+        <span>{title}</span>
+        {titleExtra && (
+          <div className="text-foreground normal-case font-semibold text-sm">
+            {titleExtra}
+          </div>
+        )}
       </div>
       {children}
     </div>

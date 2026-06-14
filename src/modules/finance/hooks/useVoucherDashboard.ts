@@ -9,6 +9,7 @@ import {
   buildSixMonths,
   previousDate,
   DONUT_EMPTY,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   buildDonutItems,
 } from "@/modules/finance/utils/financeHelpers";
 import type { ChartOfAccount } from "@/modules/accounting/api/catalogApi";

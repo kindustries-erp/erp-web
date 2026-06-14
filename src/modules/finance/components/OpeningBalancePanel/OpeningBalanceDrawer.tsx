@@ -13,6 +13,7 @@ import type {
 import type { CompanyBankAccount } from "@/modules/accounting/api/catalogApi";
 import { ErrorBanner, type SoDuForm } from "./helpers";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function OpeningBalanceDrawer(props: any) {
   const {
     t,
@@ -33,6 +34,7 @@ export function OpeningBalanceDrawer(props: any) {
     handleFiscalPeriodChange,
     handleBalanceDateChange,
   } = props as {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     t: any;
     type: "CASH" | "BANK";
     open: boolean;

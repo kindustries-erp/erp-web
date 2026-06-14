@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Layers, Pencil, Plus, ReceiptText, Trash2 } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
+import { useMemo, useState } from "react";
+import { Layers, Pencil, Trash2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -16,6 +16,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useUIStore } from "@/core/config/uiStore";
 import { Combobox } from "@/shared/components/Combobox";
@@ -25,6 +26,13 @@ import {
   type ErpInventoryItem,
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { createInventoryMastersKey } from "@/shared/lib/queryKeys";
+import { useInventoryItemsQuery } from "@/modules/inventory-core/hooks/useInventoryItemsQuery";
+import { useInventoryMastersOptionsQuery } from "@/modules/inventory-core/hooks/useInventoryMastersOptionsQuery";
+import {
+  useInventoryItemDeleteMutation,
+  useInventoryItemSaveMutation,
+} from "@/modules/inventory-core/hooks/useInventoryItemMutations";
 
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "ACTIVE" },
@@ -90,29 +98,20 @@ function buildMasterOptions(items: InventoryMasterOption[]) {
 }
 
 export function ErpInventoryItemsTab() {
-  const [items, setItems] = useState<ErpInventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [form, setForm] = useState<ItemForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ErpInventoryItem | null>(
     null,
   );
-  const [deleting, setDeleting] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
-  const [uomOptions, setUomOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-  const [itemTypeOptions, setItemTypeOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const queryClient = useQueryClient();
+
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -134,79 +133,75 @@ export function ErpInventoryItemsTab() {
   );
   const filter = useFilterPanel(filterConfig);
 
-  const loadItems = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await inventoryCoreApi.list({
-        page,
-        pageSize,
-        search: filter.state.search.trim() || undefined,
-      });
-      let nextItems = res.items;
-      if (filter.state.status) {
-        nextItems = nextItems.filter(
-          (item) => item.status === filter.state.status,
-        );
-      }
-      if (filter.state.custom.itemType) {
-        nextItems = nextItems.filter(
-          (item) => item.itemType === filter.state.custom.itemType,
-        );
-      }
-      setItems(nextItems);
-      setTotal(nextItems.length);
-      setTotalPages(Math.ceil(nextItems.length / pageSize));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải danh mục kho");
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    filter.state.custom,
-    filter.state.search,
-    filter.state.status,
-    page,
-    pageSize,
-  ]);
+  const listParams = useMemo(
+    () => ({
+      page,
+      pageSize,
+      search: filter.state.search.trim() || undefined,
+      status: filter.state.status || undefined,
+      itemType: filter.state.custom.itemType || undefined,
+    }),
+    [
+      filter.state.custom.itemType,
+      filter.state.search,
+      filter.state.status,
+      page,
+      pageSize,
+    ],
+  );
 
-  const loadMasters = useCallback(async () => {
-    try {
-      const [uoms, itemTypes] = await Promise.all([
-        inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
-        inventoryCoreApi.listItemTypes({
+  const itemsQuery = useInventoryItemsQuery(listParams);
+  const { uomsQuery, itemTypesQuery } = useInventoryMastersOptionsQuery();
+
+  const items = itemsQuery.data?.items ?? [];
+  const total = itemsQuery.data?.total ?? 0;
+  const totalPages = itemsQuery.data?.totalPages ?? 0;
+  const loading = itemsQuery.isLoading || itemsQuery.isFetching;
+  const error =
+    detailError ||
+    (itemsQuery.error instanceof Error
+      ? itemsQuery.error.message
+      : uomsQuery.error instanceof Error
+        ? uomsQuery.error.message
+        : itemTypesQuery.error instanceof Error
+          ? itemTypesQuery.error.message
+          : null);
+
+  const uomOptions = useMemo(
+    () => buildMasterOptions(uomsQuery.data?.items ?? []),
+    [uomsQuery.data?.items],
+  );
+  const itemTypeOptions = useMemo(
+    () => buildMasterOptions(itemTypesQuery.data?.items ?? []),
+    [itemTypesQuery.data?.items],
+  );
+
+  async function ensureMastersFresh() {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: createInventoryMastersKey("uoms", {
           page: 1,
           pageSize: 200,
           isActive: true,
         }),
-      ]);
-      setUomOptions(buildMasterOptions(uoms.items));
-      setItemTypeOptions(buildMasterOptions(itemTypes.items));
-    } catch (e) {
-      setError(
-        e instanceof Error
-          ? e.message
-          : "Không thể tải cấu hình loại item/đơn vị tính",
-      );
-    }
-  }, []);
-
-  async function ensureMastersFresh() {
-    await loadMasters();
+      }),
+      queryClient.invalidateQueries({
+        queryKey: createInventoryMastersKey("item-types", {
+          page: 1,
+          pageSize: 200,
+          isActive: true,
+        }),
+      }),
+      uomsQuery.refetch(),
+      itemTypesQuery.refetch(),
+    ]);
   }
-
-  useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
-
-  useEffect(() => {
-    void loadMasters();
-  }, [loadMasters]);
 
   function resetForm() {
     setForm(emptyForm());
     setEditing(null);
     setSaveError(null);
+    setDetailError(null);
   }
 
   function closeDrawer() {
@@ -216,22 +211,35 @@ export function ErpInventoryItemsTab() {
 
   async function openCreate() {
     resetForm();
-    await ensureMastersFresh();
+    setDrawerLoading(true);
     setDrawerOpen(true);
+    try {
+      await ensureMastersFresh();
+    } finally {
+      setDrawerLoading(false);
+    }
   }
 
   async function openEdit(item: ErpInventoryItem) {
     setSaveError(null);
+    setDetailError(null);
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       await ensureMastersFresh();
       const detail = await inventoryCoreApi.get(item.id);
       setEditing(detail);
       setForm(buildForm(detail));
-      setDrawerOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết");
+      setDetailError(e instanceof Error ? e.message : "Không thể tải chi tiết");
+    } finally {
+      setDrawerLoading(false);
     }
   }
+
+  const saveMutation = useInventoryItemSaveMutation();
+
+  const deleteMutation = useInventoryItemDeleteMutation();
 
   async function handleSave() {
     if (!form.sku.trim()) {
@@ -242,26 +250,23 @@ export function ErpInventoryItemsTab() {
       setSaveError("Tên item kho là bắt buộc");
       return;
     }
-    setSaving(true);
     setSaveError(null);
     try {
-      const payload = toPayload(form);
-      if (editing) {
-        await inventoryCoreApi.update(editing.id, payload);
-      } else {
-        await inventoryCoreApi.create(payload);
-      }
+      await saveMutation.mutateAsync({
+        id: editing?.id,
+        payload: toPayload(form),
+      });
       showToast({
         title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
         variant: "success",
       });
       closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else await loadItems();
+      if (!editing && page !== 1) {
+        setPage(1);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -271,19 +276,16 @@ export function ErpInventoryItemsTab() {
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    setDeleting(true);
     try {
-      await inventoryCoreApi.delete(deleteTarget.id);
+      await deleteMutation.mutateAsync({ id: deleteTarget.id });
       showToast({ title: "Đã xóa thành công", variant: "success" });
       setDeleteTarget(null);
-      await loadItems();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       showToast({
         title: e?.response?.data?.message || e?.message || "Không thể xóa",
         variant: "destructive",
       });
-    } finally {
-      setDeleting(false);
     }
   }
 
@@ -354,15 +356,18 @@ export function ErpInventoryItemsTab() {
       label: editing ? "Cập nhật" : "Tạo mới",
       onClick: handleSave,
       primary: true,
-      loading: saving,
+      loading: saveMutation.isPending,
     },
   ];
+
+  const masterFilterOptions =
+    itemTypeOptions.length > 0 ? itemTypeOptions : ITEM_TYPE_FILTER_OPTIONS;
 
   return (
     <>
       <div className="flex items-center justify-end mb-3">
         <TableActionGroup
-          onRefresh={() => void loadItems()}
+          onRefresh={() => void itemsQuery.refetch()}
           loading={loading}
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
@@ -413,7 +418,20 @@ export function ErpInventoryItemsTab() {
             }}
           />
         </div>
-        <FilterPanel config={filterConfig} filter={filter} />
+        <FilterPanel
+          config={{
+            ...filterConfig,
+            custom: [
+              {
+                key: "itemType",
+                label: "Loại item",
+                placeholder: "Tất cả loại item",
+                options: masterFilterOptions,
+              },
+            ],
+          }}
+          filter={filter}
+        />
       </div>
 
       <ConfirmModal
@@ -428,9 +446,9 @@ export function ErpInventoryItemsTab() {
         cancelLabel="Hủy"
         onConfirm={() => void confirmDelete()}
         onCancel={() => {
-          if (!deleting) setDeleteTarget(null);
+          if (!deleteMutation.isPending) setDeleteTarget(null);
         }}
-        loading={deleting}
+        loading={deleteMutation.isPending}
         danger
       />
 
@@ -449,86 +467,101 @@ export function ErpInventoryItemsTab() {
           </div>
         )}
 
-        <DrawerSection title="Thông tin item kho">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="SKU" required>
-              <input
-                value={form.sku}
-                disabled={!!editing}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, sku: e.target.value }))
-                }
-                className={inputCls}
-                placeholder="VD: FG-001"
-              />
-            </DrawerField>
-
-            <DrawerField label="Tên item kho" required>
-              <input
-                value={form.itemName}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, itemName: e.target.value }))
-                }
-                className={inputCls}
-                placeholder="Tên đầy đủ của item kho"
-              />
-            </DrawerField>
-
-            <DrawerField label="Đơn vị tính (ĐVT)" required>
-              <Combobox
-                value={form.uom}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    uom: value || form.uom || "PCS",
-                  }))
-                }
-                options={uomOptions}
-                placeholder="Chọn ĐVT"
-              />
-            </DrawerField>
-
-            <DrawerField label="Loại item">
-              <Combobox
-                value={form.itemType}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    itemType: value || form.itemType || "FG",
-                  }))
-                }
-                options={itemTypeOptions}
-                placeholder="Chọn loại"
-              />
-            </DrawerField>
-
-            <DrawerField label="Trạng thái">
-              <Combobox
-                value={form.status}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
-                }
-                options={STATUS_OPTIONS}
-              />
-            </DrawerField>
-
-            <div className="md:col-span-2">
-              <DrawerField label="Ghi chú">
-                <textarea
-                  value={form.note}
+        {drawerLoading ? (
+          <DrawerSection title="Thông tin item kho">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <div className="md:col-span-2">
+                <Skeleton className="h-24 w-full" />
+              </div>
+            </div>
+          </DrawerSection>
+        ) : (
+          <DrawerSection title="Thông tin item kho">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <DrawerField label="SKU" required>
+                <input
+                  value={form.sku}
+                  disabled={!!editing}
                   onChange={(e) =>
-                    setForm((prev) => ({ ...prev, note: e.target.value }))
+                    setForm((prev) => ({ ...prev, sku: e.target.value }))
                   }
-                  className={`${inputCls} min-h-[80px] resize-y`}
-                  placeholder="Ghi chú thêm về item kho này..."
+                  className={inputCls}
+                  placeholder="VD: FG-001"
                 />
               </DrawerField>
+
+              <DrawerField label="Tên item kho" required>
+                <input
+                  value={form.itemName}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, itemName: e.target.value }))
+                  }
+                  className={inputCls}
+                  placeholder="Tên đầy đủ của item kho"
+                />
+              </DrawerField>
+
+              <DrawerField label="Đơn vị tính (ĐVT)" required>
+                <Combobox
+                  value={form.uom}
+                  allowClear={false}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      uom: value || form.uom || "PCS",
+                    }))
+                  }
+                  options={uomOptions}
+                  placeholder="Chọn ĐVT"
+                />
+              </DrawerField>
+
+              <DrawerField label="Loại item">
+                <Combobox
+                  value={form.itemType}
+                  allowClear={false}
+                  onChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      itemType: value || form.itemType || "FG",
+                    }))
+                  }
+                  options={itemTypeOptions}
+                  placeholder="Chọn loại"
+                />
+              </DrawerField>
+
+              <DrawerField label="Trạng thái">
+                <Combobox
+                  value={form.status}
+                  allowClear={false}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
+                  }
+                  options={STATUS_OPTIONS}
+                />
+              </DrawerField>
+
+              <div className="md:col-span-2">
+                <DrawerField label="Ghi chú">
+                  <textarea
+                    value={form.note}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, note: e.target.value }))
+                    }
+                    className={`${inputCls} min-h-[80px] resize-y`}
+                    placeholder="Ghi chú thêm về item kho này..."
+                  />
+                </DrawerField>
+              </div>
             </div>
-          </div>
-        </DrawerSection>
+          </DrawerSection>
+        )}
       </DrawerModal>
     </>
   );

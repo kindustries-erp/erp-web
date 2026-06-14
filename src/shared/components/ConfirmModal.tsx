@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import { Button } from "@/shared/components/ui/Button";

@@ -18,9 +18,11 @@ interface ComboboxProps {
   emptyLabel?: string;
   className?: string;
   disabled?: boolean;
-  /** Show a "clear / no selection" row at the top. Default: true */
   allowClear?: boolean;
   readOnly?: boolean;
+  onScrollBottom?: () => void;
+  loading?: boolean;
+  onSearch?: (query: string) => void;
 }
 
 export function Combobox({
@@ -34,6 +36,9 @@ export function Combobox({
   disabled,
   readOnly,
   allowClear = true,
+  onScrollBottom,
+  loading,
+  onSearch,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -45,6 +50,15 @@ export function Combobox({
     ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
     : options;
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollHeight - target.scrollTop <= target.clientHeight + 10) {
+      if (onScrollBottom && !loading) {
+        onScrollBottom();
+      }
+    }
+  };
+
   useEffect(() => {
     if (open) {
       setQuery("");
@@ -53,6 +67,13 @@ export function Combobox({
       return () => cancelAnimationFrame(id);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (onSearch) {
+      const id = setTimeout(() => onSearch(query), 300);
+      return () => clearTimeout(id);
+    }
+  }, [query, onSearch]);
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
@@ -118,7 +139,7 @@ export function Combobox({
           </div>
 
           {/* Options */}
-          <div className="overflow-y-auto flex-1">
+          <div className="overflow-y-auto flex-1" onScroll={handleScroll}>
             {/* Clear / placeholder option */}
             {allowClear && (
               <button
@@ -176,6 +197,12 @@ export function Combobox({
                   </button>
                 </Tooltip>
               ))
+            )}
+
+            {loading && (
+              <div className="px-3 py-2 text-xs text-center text-[color:var(--muted-fg)]">
+                Đang tải...
+              </div>
             )}
           </div>
         </Popover.Content>
