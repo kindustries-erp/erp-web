@@ -77,8 +77,9 @@ const ISSUE_TYPE_OPTIONS = [
   { value: "OTHER", label: "OTHER — Xuất khác" },
 ];
 const STATUS_OPTIONS = [
-  { value: "DRAFT", label: "DRAFT" },
-  { value: "POSTED", label: "POSTED" },
+  { value: "DRAFT", label: "Nháp" },
+  { value: "POSTED", label: "Đã vào sổ" },
+  { value: "CANCELLED", label: "Đã hủy" },
 ];
 
 // ─── Combined row type provided by API ───
@@ -635,7 +636,7 @@ export function ErpWarehousePage() {
       }
       setGrDrawerOpen(false);
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "receipts"],
+        queryKey: ["warehouse-vouchers", "unified"],
       });
     } catch (e) {
       setGrSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu nhập kho");
@@ -667,7 +668,7 @@ export function ErpWarehousePage() {
       showToast({ title: "Đã hủy phiếu nhập kho", variant: "success" });
       setCancelTarget(null);
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "receipts"],
+        queryKey: ["warehouse-vouchers", "unified"],
       });
     } catch (e) {
       showToast({
@@ -706,7 +707,7 @@ export function ErpWarehousePage() {
       }
       setGiDrawerOpen(false);
       await queryClient.invalidateQueries({
-        queryKey: ["warehouse-vouchers", "issues"],
+        queryKey: ["warehouse-vouchers", "unified"],
       });
     } catch (e) {
       setGiSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu xuất kho");
@@ -740,13 +741,13 @@ export function ErpWarehousePage() {
         await goodsReceiptsCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu nhập kho", variant: "success" });
         await queryClient.invalidateQueries({
-          queryKey: ["warehouse-vouchers", "receipts"],
+          queryKey: ["warehouse-vouchers", "unified"],
         });
       } else {
         await goodsIssuesCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu xuất kho", variant: "success" });
         await queryClient.invalidateQueries({
-          queryKey: ["warehouse-vouchers", "issues"],
+          queryKey: ["warehouse-vouchers", "unified"],
         });
       }
       setDeleteTarget(null);
@@ -1039,6 +1040,11 @@ export function ErpWarehousePage() {
             {grEditing?.status === "DRAFT" && (
               <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
                 Nháp
+              </span>
+            )}
+            {grEditing?.status === "CANCELLED" && (
+              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+                Đã hủy
               </span>
             )}
           </div>
@@ -1517,6 +1523,11 @@ export function ErpWarehousePage() {
             {giEditing?.status === "DRAFT" && (
               <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
                 Nháp
+              </span>
+            )}
+            {giEditing?.status === "CANCELLED" && (
+              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+                Đã hủy
               </span>
             )}
           </div>
