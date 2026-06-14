@@ -191,14 +191,14 @@ export function DataTable<T>({
                               strokeWidth={
                                 sortBy === meta.sortKey && sortOrder === "asc"
                                   ? 3.5
-                                  : 2.5
+                                  : 1.5
                               }
                               className={cn(
                                 "transition-all duration-150",
                                 sortBy === meta.sortKey
                                   ? sortOrder === "asc"
                                     ? "text-foreground"
-                                    : "text-muted-foreground/15"
+                                    : "text-muted-foreground/5"
                                   : "text-muted-foreground/35",
                               )}
                             >
@@ -216,14 +216,14 @@ export function DataTable<T>({
                               strokeWidth={
                                 sortBy === meta.sortKey && sortOrder === "desc"
                                   ? 3.5
-                                  : 2.5
+                                  : 1.5
                               }
                               className={cn(
                                 "transition-all duration-150",
                                 sortBy === meta.sortKey
                                   ? sortOrder === "desc"
                                     ? "text-foreground"
-                                    : "text-muted-foreground/15"
+                                    : "text-muted-foreground/5"
                                   : "text-muted-foreground/35",
                               )}
                             >
