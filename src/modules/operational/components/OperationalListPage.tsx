@@ -1045,7 +1045,7 @@ export function OperationalListPage({
     const documentType = resolveDocumentType(row, variant);
     if (!documentType) return;
     if (documentType === "purchase_orders") {
-      navigate("erp-goods-receipts");
+      navigate("erp-warehouse");
       const params = new URLSearchParams(window.location.search);
       params.set("purchaseOrderId", row.id);
       params.set("mode", "from-po");
@@ -2006,7 +2006,9 @@ export function OperationalListPage({
                 </DrawerField>
               </div>
             </DrawerSection>
-            <DrawerSection title="Dòng chi tiết">
+            <DrawerSection
+              title={`Dòng chi tiết (${detailDocument.lines?.length || 0})`}
+            >
               {detailDocument.lines?.length ? (
                 <div className="space-y-2">
                   {detailDocument.lines.map((line, index) => (

@@ -31,6 +31,7 @@ import { Forbidden } from "@/pages/Forbidden";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import {
   type FilterPanelConfig,
   type FilterPanelReturn,
@@ -489,6 +490,7 @@ export function ErpWarehousePage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const receiptId = params.get("receiptId");
+    const purchaseOrderId = params.get("purchaseOrderId");
     const mode = params.get("mode");
 
     if (!grDrawerOpen && receiptId && mode === "view") {
@@ -512,6 +514,19 @@ export function ErpWarehousePage() {
               : window.location.pathname,
           );
         });
+    } else if (!grDrawerOpen && purchaseOrderId && mode === "from-po") {
+      openGrCreate();
+      setGrForm((f) => ({ ...f, purchaseOrderId }));
+      params.delete("purchaseOrderId");
+      params.delete("mode");
+      const nextQuery = params.toString();
+      history.replaceState(
+        null,
+        "",
+        nextQuery
+          ? `${window.location.pathname}?${nextQuery}`
+          : window.location.pathname,
+      );
     }
   }, [grDrawerOpen]);
 
@@ -1154,7 +1169,7 @@ export function ErpWarehousePage() {
         {grDrawerLoading ? (
           <div className="flex flex-col xl:flex-row gap-6 items-start">
             <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
-              <DrawerSection title="Chi tiết hàng hóa">
+              <DrawerSection title="Chi tiết">
                 <div className="space-y-3">
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
@@ -1179,7 +1194,7 @@ export function ErpWarehousePage() {
           <div className="flex flex-col xl:flex-row gap-6 items-start">
             <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
               <DrawerSection
-                title={`Chi tiết hàng hóa (${grForm.lines.length})`}
+                title={`Chi tiết (${grForm.lines.length})`}
                 titleExtra={
                   !grViewOnly && grPoDetail ? (
                     <div className="flex items-center gap-2">
@@ -1235,186 +1250,245 @@ export function ErpWarehousePage() {
                   ) : undefined
                 }
               >
-                <div className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]">
-                  <table className="w-full text-sm text-left relative">
-                    <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
-                      <tr>
-                        <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
-                          #
-                        </th>
-                        <th className="px-3 py-2 font-medium min-w-[140px]">
-                          Mã linh kiện
-                        </th>
-                        <th className="px-3 py-2 font-medium w-[260px] max-w-[260px]">
-                          Tên linh kiện
-                        </th>
-                        <th className="px-3 py-2 font-medium min-w-[100px] text-center">
-                          Đã đặt
-                        </th>
-                        <th className="px-3 py-2 font-medium min-w-[100px] text-center">
-                          Còn lại
-                        </th>
-                        <th className="px-3 py-2 font-medium min-w-[140px] text-center">
-                          SL Nhập
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[color:var(--border)]">
-                      {grPoDetail?.lines?.map((poLine, idx) => {
-                        const lineIdx = grForm.lines.findIndex(
-                          (l) => l.purchaseOrderLineId === poLine.id,
-                        );
-                        const currentLine =
-                          lineIdx >= 0 ? grForm.lines[lineIdx] : null;
-                        if (
-                          grViewOnly &&
-                          (!currentLine || Number(currentLine.qtyReceived) <= 0)
-                        ) {
-                          return null;
-                        }
-                        const ordered = Number(poLine.qtyOrdered ?? 0);
-                        const received = Number(poLine.qtyReceived ?? 0);
-                        const remaining = Math.max(0, ordered - received);
-
-                        const itemName =
-                          poLine.itemName ||
-                          poLine.description ||
-                          poLine.itemId ||
-                          "—";
-                        const itemCode =
-                          poLine.itemId && itemsDict[poLine.itemId]
-                            ? itemsDict[poLine.itemId].sku
-                            : "—";
-
-                        return (
-                          <tr
-                            key={poLine.id}
-                            className="hover:bg-muted/50 transition-colors"
-                          >
-                            <td className="px-3 py-2 text-center text-muted-foreground">
-                              {idx + 1}
-                            </td>
-                            <td className="px-3 py-2">{itemCode}</td>
-                            <td className="px-3 py-2 max-w-[260px]">
-                              <div
-                                className="font-medium text-foreground truncate"
-                                title={itemName}
-                              >
-                                {itemName}
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <div className="font-medium text-foreground">
-                                {ordered.toLocaleString("vi-VN")}
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <div className="font-medium text-amber-600">
-                                {remaining.toLocaleString("vi-VN")}
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 align-middle text-center">
-                              {!grViewOnly ? (
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={remaining}
-                                  className={cn(
-                                    inputCls,
-                                    "w-28 flex-shrink-0 text-right mx-auto",
-                                  )}
-                                  placeholder={`Max ${remaining}`}
-                                  value={currentLine?.qtyReceived ?? ""}
-                                  onChange={(e) => {
-                                    const qty = e.target.value;
-                                    setGrForm((f) => {
-                                      const lines = [...f.lines];
-                                      if (lineIdx >= 0) {
-                                        lines[lineIdx] = {
-                                          ...lines[lineIdx],
-                                          qtyReceived: qty,
-                                        };
-                                      } else {
-                                        lines.push({
-                                          purchaseOrderLineId: poLine.id ?? "",
-                                          itemId: poLine.itemId ?? "",
-                                          itemName: poLine.itemName ?? "",
-                                          qtyReceived: qty,
-                                          unitCost: poLine.unitPrice ?? "",
-                                        });
-                                      }
-                                      return { ...f, lines };
-                                    });
-                                  }}
-                                />
-                              ) : currentLine ? (
-                                <div className="font-medium text-emerald-600">
-                                  +{fmtQty(currentLine.qtyReceived)}
-                                </div>
-                              ) : null}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {!grPoDetail &&
-                        grForm.lines.length === 0 &&
-                        !grViewOnly && (
-                          <tr>
-                            <td
-                              colSpan={6}
-                              className="px-3 py-8 text-center text-sm text-muted-foreground"
+                {grPoDetail ? (
+                  <DocumentLineTable
+                    data={grPoDetail.lines || []}
+                    getRowKey={(line) => line.id || ""}
+                    viewOnly={true}
+                    columns={[
+                      {
+                        key: "index",
+                        header: "#",
+                        width: 40,
+                        align: "center",
+                        cell: (_, idx) => (
+                          <span className="text-muted-foreground">
+                            {idx + 1}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "itemCode",
+                        header: "Mã linh kiện",
+                        minWidth: 140,
+                        cell: (poLine) => {
+                          const itemCode =
+                            poLine.itemId && itemsDict[poLine.itemId]
+                              ? itemsDict[poLine.itemId].sku
+                              : "—";
+                          return <span>{itemCode}</span>;
+                        },
+                      },
+                      {
+                        key: "itemName",
+                        header: "Tên linh kiện",
+                        minWidth: 260,
+                        cell: (poLine) => {
+                          const itemName =
+                            poLine.itemName ||
+                            poLine.description ||
+                            poLine.itemId ||
+                            "—";
+                          return (
+                            <div
+                              className="font-medium text-foreground truncate max-w-[260px]"
+                              title={itemName}
                             >
-                              Chọn PO để hiện danh sách hàng cần nhận.
-                            </td>
-                          </tr>
-                        )}
-                      {grViewOnly &&
-                        !grPoDetail &&
-                        grForm.lines.map((line, i) => {
-                          if (Number(line.qtyReceived) <= 0) return null;
+                              {itemName}
+                            </div>
+                          );
+                        },
+                      },
+                      {
+                        key: "ordered",
+                        header: "Đã đặt",
+                        minWidth: 100,
+                        align: "center",
+                        cell: (poLine) => (
+                          <div className="font-medium text-foreground">
+                            {Number(poLine.qtyOrdered ?? 0).toLocaleString(
+                              "vi-VN",
+                            )}
+                          </div>
+                        ),
+                      },
+                      {
+                        key: "remaining",
+                        header: "Còn lại",
+                        minWidth: 100,
+                        align: "center",
+                        cell: (poLine) => {
+                          const ordered = Number(poLine.qtyOrdered ?? 0);
+                          const received = Number(poLine.qtyReceived ?? 0);
+                          const remaining = Math.max(0, ordered - received);
+                          return (
+                            <div className="font-medium text-amber-600">
+                              {remaining.toLocaleString("vi-VN")}
+                            </div>
+                          );
+                        },
+                      },
+                      {
+                        key: "qtyInput",
+                        header: "SL Nhập",
+                        minWidth: 140,
+                        align: "center",
+                        cell: (poLine) => {
+                          const lineIdx = grForm.lines.findIndex(
+                            (l) => l.purchaseOrderLineId === poLine.id,
+                          );
+                          const currentLine =
+                            lineIdx >= 0 ? grForm.lines[lineIdx] : null;
+
+                          if (!grViewOnly) {
+                            const ordered = Number(poLine.qtyOrdered ?? 0);
+                            const received = Number(poLine.qtyReceived ?? 0);
+                            const remaining = Math.max(0, ordered - received);
+
+                            return (
+                              <input
+                                type="number"
+                                min={0}
+                                max={remaining}
+                                className={cn(
+                                  inputCls,
+                                  "w-28 flex-shrink-0 text-right mx-auto",
+                                )}
+                                placeholder={`Max ${remaining}`}
+                                value={currentLine?.qtyReceived ?? ""}
+                                onChange={(e) => {
+                                  const qty = e.target.value;
+                                  setGrForm((f) => {
+                                    const lines = [...f.lines];
+                                    if (lineIdx >= 0) {
+                                      lines[lineIdx] = {
+                                        ...lines[lineIdx],
+                                        qtyReceived: qty,
+                                      };
+                                    } else {
+                                      lines.push({
+                                        purchaseOrderLineId: poLine.id ?? "",
+                                        itemId: poLine.itemId ?? "",
+                                        itemName: poLine.itemName ?? "",
+                                        qtyReceived: qty,
+                                        unitCost: poLine.unitPrice ?? "",
+                                      });
+                                    }
+                                    return { ...f, lines };
+                                  });
+                                }}
+                              />
+                            );
+                          }
+                          return currentLine &&
+                            Number(currentLine.qtyReceived) > 0 ? (
+                            <div className="font-medium text-emerald-600">
+                              +{fmtQty(currentLine.qtyReceived)}
+                            </div>
+                          ) : null;
+                        },
+                      },
+                    ]}
+                  />
+                ) : grViewOnly ? (
+                  <DocumentLineTable
+                    data={grForm.lines.filter((l) => Number(l.qtyReceived) > 0)}
+                    getRowKey={(_, i) => i}
+                    viewOnly={true}
+                    columns={[
+                      {
+                        key: "index",
+                        header: "#",
+                        width: 40,
+                        align: "center",
+                        cell: (_, i) => (
+                          <span className="text-muted-foreground">{i + 1}</span>
+                        ),
+                      },
+                      {
+                        key: "itemCode",
+                        header: "Mã linh kiện",
+                        minWidth: 140,
+                        cell: (line) => {
                           const itemCode =
                             line.itemId && itemsDict[line.itemId]
                               ? itemsDict[line.itemId].sku
                               : "—";
+                          return <span>{itemCode}</span>;
+                        },
+                      },
+                      {
+                        key: "itemName",
+                        header: "Tên linh kiện",
+                        minWidth: 260,
+                        cell: (line) => {
+                          const itemName = line.itemName || line.itemId || "—";
                           return (
-                            <tr
-                              key={i}
-                              className="hover:bg-muted/50 transition-colors"
+                            <div
+                              className="font-medium text-foreground truncate max-w-[260px]"
+                              title={itemName}
                             >
-                              <td className="px-3 py-2 text-center text-muted-foreground">
-                                {i + 1}
-                              </td>
-                              <td className="px-3 py-2">{itemCode}</td>
-                              <td className="px-3 py-2 max-w-[260px]">
-                                <div
-                                  className="font-medium text-foreground truncate"
-                                  title={line.itemName || line.itemId || "—"}
-                                >
-                                  {line.itemName || line.itemId || "—"}
-                                </div>
-                              </td>
-                              <td className="px-3 py-2 text-center">—</td>
-                              <td className="px-3 py-2 text-center">—</td>
-                              <td className="px-3 py-2 text-center font-medium text-emerald-600 align-middle">
-                                +{fmtQty(line.qtyReceived)}
-                              </td>
-                            </tr>
+                              {itemName}
+                            </div>
                           );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
+                        },
+                      },
+                      {
+                        key: "ordered",
+                        header: "Đã đặt",
+                        minWidth: 100,
+                        align: "center",
+                        cell: () => "—",
+                      },
+                      {
+                        key: "remaining",
+                        header: "Còn lại",
+                        minWidth: 100,
+                        align: "center",
+                        cell: () => "—",
+                      },
+                      {
+                        key: "qtyReceived",
+                        header: "SL Nhập",
+                        minWidth: 140,
+                        align: "center",
+                        cell: (line) => (
+                          <div className="font-medium text-emerald-600">
+                            +{fmtQty(line.qtyReceived)}
+                          </div>
+                        ),
+                      },
+                    ]}
+                  />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-center text-muted-foreground">
+                    Chọn PO để hiện danh sách hàng cần nhận.
+                  </div>
+                )}
               </DrawerSection>
             </div>
 
             <div
               className={cn(
-                "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300",
-                showGrGeneralInfo ? "w-full xl:w-[320px]" : "w-auto",
+                "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
+                showGrGeneralInfo
+                  ? "w-full xl:w-[320px]"
+                  : "w-full xl:w-[52px]",
               )}
             >
               <DrawerSection
-                title={showGrGeneralInfo ? "Thông tin chung" : ""}
+                title={
+                  <span
+                    className={cn(
+                      "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
+                      showGrGeneralInfo
+                        ? "max-w-[200px] opacity-100"
+                        : "max-w-0 opacity-0",
+                    )}
+                  >
+                    Thông tin chung
+                  </span>
+                }
                 titleExtra={
                   <button
                     type="button"
@@ -1430,78 +1504,94 @@ export function ErpWarehousePage() {
                   </button>
                 }
               >
-                {showGrGeneralInfo && (
-                  <div className="flex flex-col gap-3">
-                    <DrawerField label="Số phiếu">
-                      <input
-                        className={inputCls}
-                        placeholder="Tự động nếu để trống"
-                        value={grForm.receiptNo}
-                        disabled={grViewOnly}
-                        onChange={(e) =>
-                          setGrForm((f) => ({
-                            ...f,
-                            receiptNo: e.target.value,
-                          }))
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Ngày nhập">
-                      <input
-                        type="date"
-                        className={inputCls}
-                        value={grForm.receiptDate}
-                        disabled={grViewOnly}
-                        onChange={(e) =>
-                          setGrForm((f) => ({
-                            ...f,
-                            receiptDate: e.target.value,
-                          }))
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Đơn mua hàng (PO)">
-                      <Combobox
-                        options={poOptions}
-                        value={grForm.purchaseOrderId}
-                        disabled={grViewOnly}
-                        placeholder="Chọn PO..."
-                        onChange={(v) =>
-                          setGrForm((f) => ({
-                            ...f,
-                            purchaseOrderId: v,
-                            lines: [],
-                          }))
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Nhà cung cấp">
-                      <Combobox
-                        options={supplierOptions}
-                        value={grForm.supplierId}
-                        disabled={grViewOnly || !!grForm.purchaseOrderId}
-                        placeholder="Chọn NCC"
-                        searchPlaceholder="Tìm kiếm..."
-                        onSearch={setSupplierSearch}
-                        onScrollBottom={fetchNextSuppliers}
-                        loading={loadingSuppliers}
-                        onChange={(v) =>
-                          setGrForm((f) => ({ ...f, supplierId: v }))
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Ghi chú">
-                      <textarea
-                        className={`${inputCls} min-h-[60px] resize-y`}
-                        value={grForm.remarks}
-                        disabled={grViewOnly}
-                        onChange={(e) =>
-                          setGrForm((f) => ({ ...f, remarks: e.target.value }))
-                        }
-                      />
-                    </DrawerField>
+                <div
+                  className={cn(
+                    "grid transition-all duration-300 ease-in-out",
+                    showGrGeneralInfo ? "opacity-100" : "opacity-0",
+                  )}
+                  style={{
+                    gridTemplateRows: showGrGeneralInfo ? "1fr" : "0fr",
+                  }}
+                >
+                  <div
+                    className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)]"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
+                      <DrawerField label="Số phiếu">
+                        <input
+                          className={inputCls}
+                          placeholder="Tự động nếu để trống"
+                          value={grForm.receiptNo}
+                          disabled={grViewOnly}
+                          onChange={(e) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              receiptNo: e.target.value,
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Ngày nhập">
+                        <input
+                          type="date"
+                          className={inputCls}
+                          value={grForm.receiptDate}
+                          disabled={grViewOnly}
+                          onChange={(e) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              receiptDate: e.target.value,
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Đơn mua hàng (PO)">
+                        <Combobox
+                          options={poOptions}
+                          value={grForm.purchaseOrderId}
+                          disabled={grViewOnly}
+                          placeholder="Chọn PO..."
+                          onChange={(v) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              purchaseOrderId: v,
+                              lines: [],
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Nhà cung cấp">
+                        <Combobox
+                          options={supplierOptions}
+                          value={grForm.supplierId}
+                          disabled={grViewOnly || !!grForm.purchaseOrderId}
+                          placeholder="Chọn NCC"
+                          searchPlaceholder="Tìm kiếm..."
+                          onSearch={setSupplierSearch}
+                          onScrollBottom={fetchNextSuppliers}
+                          loading={loadingSuppliers}
+                          onChange={(v) =>
+                            setGrForm((f) => ({ ...f, supplierId: v }))
+                          }
+                        />
+                      </DrawerField>
+                      <DrawerField label="Ghi chú">
+                        <textarea
+                          className={`${inputCls} min-h-[60px] resize-y`}
+                          value={grForm.remarks}
+                          disabled={grViewOnly}
+                          onChange={(e) =>
+                            setGrForm((f) => ({
+                              ...f,
+                              remarks: e.target.value,
+                            }))
+                          }
+                        />
+                      </DrawerField>
+                    </div>
                   </div>
-                )}
+                </div>
               </DrawerSection>
             </div>
           </div>

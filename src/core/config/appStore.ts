@@ -35,10 +35,6 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.erpWarehouse",
     group: "inventory",
   },
-  "erp-goods-receipts": {
-    labelKey: "nav.items.erpGoodsReceipts",
-    group: "inventory",
-  },
   "erp-goods-issues": {
     labelKey: "nav.items.erpGoodsIssues",
     group: "inventory",
@@ -95,10 +91,6 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
   "erp-bom": [["breadcrumb.manufacturing"], ["breadcrumb.erpBom"]],
   "erp-warehouse": [["breadcrumb.inventory"], ["breadcrumb.erpWarehouse"]],
-  "erp-goods-receipts": [
-    ["breadcrumb.inventory"],
-    ["breadcrumb.erpGoodsReceipts"],
-  ],
   "erp-production": [
     ["breadcrumb.manufacturing"],
     ["breadcrumb.erpProduction"],

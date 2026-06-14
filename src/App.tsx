@@ -17,7 +17,6 @@ import { MfgItems } from "@/pages/MfgItems";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
 import { ErpWarehousePage } from "@/pages/ErpWarehousePage";
-import { ErpGoodsReceiptsPage } from "@/pages/ErpGoodsReceiptsPage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
@@ -44,7 +43,6 @@ const CORE_PAGES = [
   "mfg-vehicles",
   "erp-bom",
   "erp-warehouse",
-  "erp-goods-receipts",
   "erp-production",
   "erp-sales-orders",
   "erp-goods-issues",
@@ -179,17 +177,7 @@ export default function App() {
                   <ErpWarehousePage />
                 </div>
               )}
-              {openTabs.includes("erp-goods-receipts") && (
-                <div
-                  className={
-                    currentPage === "erp-goods-receipts"
-                      ? "block h-full"
-                      : "hidden"
-                  }
-                >
-                  <ErpGoodsReceiptsPage />
-                </div>
-              )}
+
               {openTabs.includes("erp-production") && (
                 <div
                   className={

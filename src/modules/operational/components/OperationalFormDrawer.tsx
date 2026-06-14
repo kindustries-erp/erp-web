@@ -729,7 +729,7 @@ export function OperationalFormDrawer({
           {/* Cột trái (4/5): Dòng chứng từ & Lịch sử nhập kho */}
           <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
             <DrawerSection
-              title={t("Chi tiết")}
+              title={`${t("Chi tiết")} (${lines.length})`}
               titleExtra={
                 <span className="text-foreground font-semibold">
                   {t("Tổng")}:{" "}
