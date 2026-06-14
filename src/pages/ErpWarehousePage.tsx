@@ -658,11 +658,14 @@ export function ErpWarehousePage() {
   }
 
   // ── GR save / post / cancel
-  async function handleGrSave() {
+  async function handleGrSave(statusOverride?: string) {
     setGrSaving(true);
     setGrSaveError(null);
     try {
       const payload = buildGrPayload(grForm);
+      if (statusOverride) {
+        (payload as any).status = statusOverride;
+      }
       if (grEditing) {
         await goodsReceiptsCoreApi.update(grEditing.id, payload);
         showToast({ title: "Đã cập nhật phiếu nhập kho", variant: "success" });
@@ -679,7 +682,7 @@ export function ErpWarehousePage() {
       }
       setGrDrawerOpen(false);
       await queryClient.invalidateQueries({
-        queryKey: createWarehouseReceiptsKey({ page, pageSize, search }),
+        queryKey: ["warehouse-vouchers", "receipts"],
       });
     } catch (e) {
       setGrSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu nhập kho");
@@ -723,11 +726,14 @@ export function ErpWarehousePage() {
   }
 
   // ── GI save / post
-  async function handleGiSave() {
+  async function handleGiSave(statusOverride?: string) {
     setGiSaving(true);
     setGiSaveError(null);
     try {
       const payload = buildGiPayload(giForm);
+      if (statusOverride) {
+        (payload as any).status = statusOverride;
+      }
       if (giEditing) {
         await goodsIssuesCoreApi.update(giEditing.id, payload);
         showToast({ title: "Đã cập nhật phiếu xuất kho", variant: "success" });
@@ -740,7 +746,7 @@ export function ErpWarehousePage() {
       }
       setGiDrawerOpen(false);
       await queryClient.invalidateQueries({
-        queryKey: createWarehouseIssuesKey({ page, pageSize, search }),
+        queryKey: ["warehouse-vouchers", "issues"],
       });
     } catch (e) {
       setGiSaveError(e instanceof Error ? e.message : "Lỗi lưu phiếu xuất kho");
@@ -807,7 +813,16 @@ export function ErpWarehousePage() {
         key: "voucherNo",
         header: "Số phiếu",
         className: "w-[160px] font-mono text-sm",
-        cell: (row) => row.voucherNo,
+        cell: (row) => (
+          <div className="flex items-center gap-2">
+            <span>{row.voucherNo}</span>
+            {row.status === "DRAFT" && (
+              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                Nháp
+              </span>
+            )}
+          </div>
+        ),
       },
       {
         key: "date",
@@ -819,12 +834,6 @@ export function ErpWarehousePage() {
         key: "partnerName",
         header: "Đối tác",
         cell: (row) => row.partnerName ?? "—",
-      },
-      {
-        key: "status",
-        header: "Trạng thái",
-        className: "w-[110px]",
-        cell: (row) => <StatusBadge status={row.status} />,
       },
       {
         key: "remarks",
@@ -924,8 +933,14 @@ export function ErpWarehousePage() {
           variant: "outline",
         },
         {
+          label: "Lưu nháp",
+          onClick: () => void handleGrSave("DRAFT"),
+          variant: "secondary",
+          loading: grSaving,
+        },
+        {
           label: grEditing ? "Cập nhật" : "Tạo mới",
-          onClick: () => void handleGrSave(),
+          onClick: () => void handleGrSave("POSTED"),
           primary: true,
           loading: grSaving,
         },
@@ -941,8 +956,14 @@ export function ErpWarehousePage() {
           variant: "outline",
         },
         {
+          label: "Lưu nháp",
+          onClick: () => void handleGiSave("DRAFT"),
+          variant: "secondary",
+          loading: giSaving,
+        },
+        {
           label: giEditing ? "Cập nhật" : "Tạo mới",
-          onClick: () => void handleGiSave(),
+          onClick: () => void handleGiSave("POSTED"),
           primary: true,
           loading: giSaving,
         },
@@ -1019,30 +1040,13 @@ export function ErpWarehousePage() {
                   <ActionDropdown
                     items={[
                       {
-                        label: "Xem chi tiết",
+                        label: "Chi tiết",
                         icon: <Eye className="h-3.5 w-3.5" />,
                         onClick: () => {
                           if (row.kind === "receipt" && row._gr)
                             void openGrDetail(row._gr, true);
                           else if (row.kind === "issue" && row._gi)
                             void openGiDetail(row._gi, true);
-                        },
-                      },
-                      {
-                        label:
-                          (row.kind === "receipt"
-                            ? grPostingId
-                            : giPostingId) === row.id
-                            ? "Đang ghi..."
-                            : "Ghi sổ",
-                        icon: <BookCheck className="h-3.5 w-3.5" />,
-                        hidden:
-                          row.status === "POSTED" ||
-                          row.status === "CANCELLED" ||
-                          row.status === "VOIDED",
-                        onClick: () => {
-                          if (row.kind === "receipt") void handleGrPost(row.id);
-                          else void handleGiPost(row.id);
                         },
                       },
                       {
@@ -1113,7 +1117,16 @@ export function ErpWarehousePage() {
               : "Sửa nhập kho"
             : "Tạo phiếu nhập kho"
         }
-        subtitle={grEditing?.receiptNo ?? "Nhập kho"}
+        subtitle={
+          <div className="flex items-center gap-2">
+            <span>{grEditing?.receiptNo ?? "Nhập kho"}</span>
+            {grEditing?.status === "DRAFT" && (
+              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                Nháp
+              </span>
+            )}
+          </div>
+        }
         actions={grDrawerActions}
         headerExtra={
           grViewOnly &&
@@ -1167,21 +1180,87 @@ export function ErpWarehousePage() {
             <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
               <DrawerSection
                 title={`Chi tiết hàng hóa (${grForm.lines.length})`}
+                titleExtra={
+                  !grViewOnly && grPoDetail ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-[11px] px-2 leading-none text-muted-foreground hover:text-foreground"
+                        onClick={() => {
+                          setGrForm((f) => ({
+                            ...f,
+                            lines: f.lines.map((l) => ({
+                              ...l,
+                              qtyReceived: "",
+                            })),
+                          }));
+                        }}
+                      >
+                        Đặt lại
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-6 text-[11px] px-2 leading-none"
+                        onClick={() => {
+                          setGrForm((f) => {
+                            const newLines = (grPoDetail.lines || []).map(
+                              (poLine) => {
+                                const ordered = Number(poLine.qtyOrdered ?? 0);
+                                const received = Number(
+                                  poLine.qtyReceived ?? 0,
+                                );
+                                const remaining = Math.max(
+                                  0,
+                                  ordered - received,
+                                );
+                                return {
+                                  purchaseOrderLineId: poLine.id ?? "",
+                                  itemId: poLine.itemId ?? "",
+                                  itemName: poLine.itemName ?? "",
+                                  qtyReceived:
+                                    remaining > 0 ? remaining.toString() : "",
+                                  unitCost: poLine.unitPrice ?? "",
+                                };
+                              },
+                            );
+                            return { ...f, lines: newLines };
+                          });
+                        }}
+                      >
+                        Nhập hết
+                      </Button>
+                    </div>
+                  ) : undefined
+                }
               >
                 <div className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                  <table className="w-full text-sm text-left relative">
+                    <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
                       <tr>
-                        <th className="px-3 py-2 font-medium min-w-[260px]">
-                          Linh kiện / Tên hàng
+                        <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
+                          #
                         </th>
-                        <th className="px-3 py-2 font-medium min-w-[140px] text-right">
-                          SL Thay đổi
+                        <th className="px-3 py-2 font-medium min-w-[140px]">
+                          Mã linh kiện
+                        </th>
+                        <th className="px-3 py-2 font-medium w-[260px] max-w-[260px]">
+                          Tên linh kiện
+                        </th>
+                        <th className="px-3 py-2 font-medium min-w-[100px] text-center">
+                          Đã đặt
+                        </th>
+                        <th className="px-3 py-2 font-medium min-w-[100px] text-center">
+                          Còn lại
+                        </th>
+                        <th className="px-3 py-2 font-medium min-w-[140px] text-center">
+                          SL Nhập
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
-                      {grPoDetail?.lines?.map((poLine) => {
+                    <tbody className="divide-y divide-[color:var(--border)]">
+                      {grPoDetail?.lines?.map((poLine, idx) => {
                         const lineIdx = grForm.lines.findIndex(
                           (l) => l.purchaseOrderLineId === poLine.id,
                         );
@@ -1202,24 +1281,39 @@ export function ErpWarehousePage() {
                           poLine.description ||
                           poLine.itemId ||
                           "—";
-                        const sku =
+                        const itemCode =
                           poLine.itemId && itemsDict[poLine.itemId]
-                            ? `[${itemsDict[poLine.itemId].sku}] `
-                            : "";
+                            ? itemsDict[poLine.itemId].sku
+                            : "—";
 
                         return (
-                          <tr key={poLine.id} className="bg-background">
-                            <td className="px-3 py-2 align-top">
-                              <div className="font-medium">
-                                {sku}
+                          <tr
+                            key={poLine.id}
+                            className="hover:bg-muted/50 transition-colors"
+                          >
+                            <td className="px-3 py-2 text-center text-muted-foreground">
+                              {idx + 1}
+                            </td>
+                            <td className="px-3 py-2">{itemCode}</td>
+                            <td className="px-3 py-2 max-w-[260px]">
+                              <div
+                                className="font-medium text-foreground truncate"
+                                title={itemName}
+                              >
                                 {itemName}
                               </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Đặt {ordered} | Đã nhận {received} | Còn{" "}
-                                {remaining}
+                            </td>
+                            <td className="px-3 py-2 text-center">
+                              <div className="font-medium text-foreground">
+                                {ordered.toLocaleString("vi-VN")}
                               </div>
                             </td>
-                            <td className="px-3 py-2 align-top text-right">
+                            <td className="px-3 py-2 text-center">
+                              <div className="font-medium text-amber-600">
+                                {remaining.toLocaleString("vi-VN")}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 align-middle text-center">
                               {!grViewOnly ? (
                                 <input
                                   type="number"
@@ -1227,7 +1321,7 @@ export function ErpWarehousePage() {
                                   max={remaining}
                                   className={cn(
                                     inputCls,
-                                    "w-28 flex-shrink-0 text-right ml-auto",
+                                    "w-28 flex-shrink-0 text-right mx-auto",
                                   )}
                                   placeholder={`Max ${remaining}`}
                                   value={currentLine?.qtyReceived ?? ""}
@@ -1254,7 +1348,7 @@ export function ErpWarehousePage() {
                                   }}
                                 />
                               ) : currentLine ? (
-                                <div className="font-medium text-emerald-600 mt-1">
+                                <div className="font-medium text-emerald-600">
                                   +{fmtQty(currentLine.qtyReceived)}
                                 </div>
                               ) : null}
@@ -1267,8 +1361,8 @@ export function ErpWarehousePage() {
                         !grViewOnly && (
                           <tr>
                             <td
-                              colSpan={2}
-                              className="px-3 py-4 text-center text-sm text-muted-foreground"
+                              colSpan={6}
+                              className="px-3 py-8 text-center text-sm text-muted-foreground"
                             >
                               Chọn PO để hiện danh sách hàng cần nhận.
                             </td>
@@ -1278,17 +1372,30 @@ export function ErpWarehousePage() {
                         !grPoDetail &&
                         grForm.lines.map((line, i) => {
                           if (Number(line.qtyReceived) <= 0) return null;
-                          const sku =
+                          const itemCode =
                             line.itemId && itemsDict[line.itemId]
-                              ? `[${itemsDict[line.itemId].sku}] `
-                              : "";
+                              ? itemsDict[line.itemId].sku
+                              : "—";
                           return (
-                            <tr key={i} className="bg-background">
-                              <td className="px-3 py-2 align-top font-medium text-xs">
-                                {sku}
-                                {line.itemName || line.itemId || "—"}
+                            <tr
+                              key={i}
+                              className="hover:bg-muted/50 transition-colors"
+                            >
+                              <td className="px-3 py-2 text-center text-muted-foreground">
+                                {i + 1}
                               </td>
-                              <td className="px-3 py-2 align-top text-right font-medium text-emerald-600">
+                              <td className="px-3 py-2">{itemCode}</td>
+                              <td className="px-3 py-2 max-w-[260px]">
+                                <div
+                                  className="font-medium text-foreground truncate"
+                                  title={line.itemName || line.itemId || "—"}
+                                >
+                                  {line.itemName || line.itemId || "—"}
+                                </div>
+                              </td>
+                              <td className="px-3 py-2 text-center">—</td>
+                              <td className="px-3 py-2 text-center">—</td>
+                              <td className="px-3 py-2 text-center font-medium text-emerald-600 align-middle">
                                 +{fmtQty(line.qtyReceived)}
                               </td>
                             </tr>
@@ -1413,7 +1520,16 @@ export function ErpWarehousePage() {
               : "Sửa xuất kho"
             : "Tạo phiếu xuất kho"
         }
-        subtitle={giEditing?.issueNo ?? "Xuất kho"}
+        subtitle={
+          <div className="flex items-center gap-2">
+            <span>{giEditing?.issueNo ?? "Xuất kho"}</span>
+            {giEditing?.status === "DRAFT" && (
+              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                Nháp
+              </span>
+            )}
+          </div>
+        }
         actions={giDrawerActions}
         headerExtra={
           giViewOnly &&

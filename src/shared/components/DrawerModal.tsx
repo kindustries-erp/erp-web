@@ -16,7 +16,7 @@ export interface DrawerAction {
   /** When 'left', button is pushed to the left side of the footer */
   align?: "left" | "right";
   /** Visual variant — 'outline' renders a distinct outlined style */
-  variant?: "default" | "outline";
+  variant?: "danger" | "outline" | "secondary" | "ghost" | "link";
 }
 
 export const DEFAULT_STACK_OFFSET = -2;
@@ -34,7 +34,7 @@ export interface DrawerModalProps {
   title: string;
   /** Inline element rendered right after the title text (e.g. status badge) */
   titleExtra?: React.ReactNode;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   /** Extra element rendered to the right of title+subtitle, before the × button */
   headerExtra?: React.ReactNode;
 
@@ -60,8 +60,8 @@ export interface DrawerModalProps {
 function Btn({ action }: { action: DrawerAction }) {
   const variant = action.primary
     ? "primary"
-    : action.variant === "outline"
-      ? "outline"
+    : action.variant
+      ? action.variant
       : "secondary";
 
   return (
