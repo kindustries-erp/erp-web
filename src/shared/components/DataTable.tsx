@@ -24,6 +24,8 @@ export interface DataTableColumn<T> {
   className?: string;
   headerClassName?: string;
   skeletonClassName?: string;
+  sortable?: boolean;
+  sortKey?: string;
 }
 
 export interface ActionsColumnConfig<T> {
@@ -37,6 +39,8 @@ interface DataTableRowMeta {
   className?: string;
   headerClassName?: string;
   skeletonClassName?: string;
+  sortable?: boolean;
+  sortKey?: string;
 }
 
 interface DataTableProps<T> {
@@ -61,6 +65,9 @@ interface DataTableProps<T> {
   onRowClick?: (item: T) => void;
   renderSubRow?: (item: T) => ReactNode;
   expandedRowKeys?: string[];
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  onSort?: (key: string) => void;
 }
 
 export function DataTable<T>({
@@ -85,6 +92,9 @@ export function DataTable<T>({
   onRowClick,
   renderSubRow,
   expandedRowKeys,
+  sortBy,
+  sortOrder,
+  onSort,
 }: DataTableProps<T>) {
   const showPagination =
     page != null &&
@@ -107,6 +117,8 @@ export function DataTable<T>({
         className: column.className,
         headerClassName: column.headerClassName,
         skeletonClassName: column.skeletonClassName,
+        sortable: column.sortable,
+        sortKey: column.sortKey || column.key,
       } satisfies DataTableRowMeta,
     }),
   );
@@ -156,12 +168,62 @@ export function DataTable<T>({
                       key={header.id}
                       className={meta?.headerClassName}
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                      {header.isPlaceholder ? null : meta.sortable ? (
+                        <div
+                          className="flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors"
+                          onClick={() => onSort?.(meta.sortKey!)}
+                        >
+                          {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
+                          <div className="flex flex-col -space-y-[3px]">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="10"
+                              height="10"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={cn(
+                                "text-muted-foreground/30",
+                                sortBy === meta.sortKey &&
+                                  sortOrder === "asc" &&
+                                  "text-foreground",
+                              )}
+                            >
+                              <path d="m18 15-6-6-6 6" />
+                            </svg>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="10"
+                              height="10"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={cn(
+                                "text-muted-foreground/30",
+                                sortBy === meta.sortKey &&
+                                  sortOrder === "desc" &&
+                                  "text-foreground",
+                              )}
+                            >
+                              <path d="m6 9 6 6 6-6" />
+                            </svg>
+                          </div>
+                        </div>
+                      ) : (
+                        flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )
+                      )}
                     </TableHead>
                   );
                 })}

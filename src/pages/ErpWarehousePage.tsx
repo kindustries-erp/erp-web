@@ -33,8 +33,8 @@ import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import {
+  useFilterPanel,
   type FilterPanelConfig,
-  type FilterPanelReturn,
 } from "@/shared/hooks/useFilterPanel";
 
 import {
@@ -68,14 +68,8 @@ import {
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useUIStore } from "@/core/config/uiStore";
-import {
-  useWarehouseIssuesQuery,
-  useWarehouseReceiptsQuery,
-} from "@/modules/inventory-core/hooks/useWarehouseVoucherQueries";
-import {
-  createWarehouseIssuesKey,
-  createWarehouseReceiptsKey,
-} from "@/shared/lib/queryKeys";
+import { useWarehouseVouchersQuery } from "@/modules/inventory-core/hooks/useWarehouseVoucherQueries";
+import type { WarehouseRow } from "@/modules/inventory-core/api/warehouseVouchersCoreApi";
 
 const LOOKUP_LIMIT = 200;
 const ISSUE_TYPE_OPTIONS = [
@@ -87,54 +81,7 @@ const STATUS_OPTIONS = [
   { value: "POSTED", label: "POSTED" },
 ];
 
-// ─── Combined row type ────────────────────────────────────────────────────────
-
-type VoucherKind = "receipt" | "issue";
-
-interface WarehouseRow {
-  kind: VoucherKind;
-  id: string;
-  voucherNo: string;
-  date: string;
-  status: string | null | undefined;
-  partnerName: string | null | undefined;
-  lineCount: number;
-  remarks: string | null | undefined;
-  _gr?: ErpGoodsReceipt;
-  _gi?: ErpGoodsIssue;
-}
-
-function toWarehouseRow(
-  item: ErpGoodsReceipt | ErpGoodsIssue,
-  kind: VoucherKind,
-): WarehouseRow {
-  if (kind === "receipt") {
-    const gr = item as ErpGoodsReceipt;
-    return {
-      kind,
-      id: gr.id,
-      voucherNo: gr.receiptNo,
-      date: gr.receiptDate,
-      status: gr.status,
-      partnerName: gr.supplierName,
-      lineCount: gr.lines?.length ?? 0,
-      remarks: gr.remarks,
-      _gr: gr,
-    };
-  }
-  const gi = item as ErpGoodsIssue;
-  return {
-    kind,
-    id: gi.id,
-    voucherNo: gi.issueNo,
-    date: gi.issueDate,
-    status: gi.status,
-    partnerName: gi.customerName,
-    lineCount: gi.lines?.length ?? 0,
-    remarks: gi.remarks,
-    _gi: gi,
-  };
-}
+// ─── Combined row type provided by API ───
 
 // ─── GR Form types ────────────────────────────────────────────────────────────
 
@@ -300,7 +247,7 @@ function StatusBadge({ status }: { status?: string | null }) {
   return <span className={cls}>{s}</span>;
 }
 
-function KindBadge({ kind }: { kind: VoucherKind }) {
+function KindBadge({ kind }: { kind: "receipt" | "issue" }) {
   return kind === "receipt" ? (
     <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-200">
       Nhập kho
@@ -330,18 +277,8 @@ export function ErpWarehousePage() {
   // ── list state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(40);
-  const [searchInputs, setSearchInputs] = useState<Record<TabFilter, string>>({
-    all: "",
-    receipt: "",
-    issue: "",
-  });
-  const [searches, setSearches] = useState<Record<TabFilter, string>>({
-    all: "",
-    receipt: "",
-    issue: "",
-  });
-  const searchInput = searchInputs[tabFilter];
-  const search = searches[tabFilter];
+  const [sortBy, setSortBy] = useState<string>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── GR drawer state
@@ -462,31 +399,48 @@ export function ErpWarehousePage() {
     }
   };
 
-  const receiptQuery = useWarehouseReceiptsQuery(
-    {
-      page,
-      pageSize: Math.ceil(pageSize / 2),
-      search,
+  const filterConfig: FilterPanelConfig = {
+    search: true,
+    period: true,
+    status: {
+      placeholder: "Trạng thái",
+      options: STATUS_OPTIONS,
     },
-    tabFilter !== "issue",
-  );
+    custom: [
+      {
+        key: "partnerId",
+        label: "Đối tác",
+        placeholder: "Tất cả đối tác",
+        type: "select",
+        options: [...supplierOptions, ...customerOptions],
+      },
+    ],
+  };
 
-  const issueQuery = useWarehouseIssuesQuery(
-    {
-      page,
-      pageSize: Math.ceil(pageSize / 2),
-      search,
-    },
-    tabFilter !== "receipt",
-  );
+  const filterPanel = useFilterPanel(filterConfig);
+
+  const dateFrom = filterPanel.state.dateFrom;
+  const dateTo = filterPanel.state.dateTo;
+  const status = filterPanel.state.status;
+  const partnerId = filterPanel.state.custom?.partnerId;
+
+  const vouchersQuery = useWarehouseVouchersQuery({
+    page,
+    pageSize,
+    search: filterPanel.state.search || undefined,
+    type: tabFilter === "all" ? undefined : tabFilter,
+    dateFrom,
+    dateTo,
+    status,
+    partnerId,
+    sort: sortOrder === "desc" ? [`-${sortBy}`] : [sortBy],
+  });
 
   useEffect(() => {
-    const receiptError =
-      receiptQuery.error instanceof Error ? receiptQuery.error.message : null;
-    const issueError =
-      issueQuery.error instanceof Error ? issueQuery.error.message : null;
-    setLoadError(receiptError || issueError);
-  }, [issueQuery.error, receiptQuery.error]);
+    const error =
+      vouchersQuery.error instanceof Error ? vouchersQuery.error.message : null;
+    setLoadError(error);
+  }, [vouchersQuery.error]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -498,7 +452,7 @@ export function ErpWarehousePage() {
       goodsReceiptsCoreApi
         .get(receiptId)
         .then((gr) => {
-          void openGrDetail(gr, true);
+          void openGrDetail(gr.id, true);
         })
         .catch(() => {
           // silent
@@ -531,33 +485,12 @@ export function ErpWarehousePage() {
     }
   }, [grDrawerOpen]);
 
-  // ── Combine + sort by date desc
-  const rows: WarehouseRow[] = useMemo(() => {
-    const grRows =
-      tabFilter !== "issue"
-        ? (receiptQuery.data?.items ?? []).map((g) =>
-            toWarehouseRow(g, "receipt"),
-          )
-        : [];
-    const giRows =
-      tabFilter !== "receipt"
-        ? (issueQuery.data?.items ?? []).map((g) => toWarehouseRow(g, "issue"))
-        : [];
-    return [...grRows, ...giRows].sort((a, b) => b.date.localeCompare(a.date));
-  }, [issueQuery.data?.items, receiptQuery.data?.items, tabFilter]);
+  // ── Unified rows
+  const rows: WarehouseRow[] = vouchersQuery.data?.items ?? [];
 
-  const loading =
-    receiptQuery.isLoading ||
-    receiptQuery.isFetching ||
-    issueQuery.isLoading ||
-    issueQuery.isFetching;
-  const total =
-    tabFilter === "receipt"
-      ? (receiptQuery.data?.total ?? 0)
-      : tabFilter === "issue"
-        ? (issueQuery.data?.total ?? 0)
-        : (receiptQuery.data?.total ?? 0) + (issueQuery.data?.total ?? 0);
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const loading = vouchersQuery.isLoading || vouchersQuery.isFetching;
+  const total = vouchersQuery.data?.total ?? 0;
+  const totalPages = vouchersQuery.data?.totalPages ?? 1;
 
   // ── Load GR lookups (PO + Supplier)
   const loadGrLookups = useCallback(async () => {
@@ -626,15 +559,14 @@ export function ErpWarehousePage() {
     void loadGrLookups();
     setGrDrawerOpen(true);
   }
-  async function openGrDetail(gr: ErpGoodsReceipt, viewOnly: boolean) {
+  async function openGrDetail(id: string, viewOnly: boolean) {
     setGrViewOnly(viewOnly);
     setGrSaveError(null);
     setGrDrawerLoading(true);
     setGrDrawerOpen(true);
     void loadGrLookups();
     try {
-      let detail = gr;
-      if (!detail.lines) detail = await goodsReceiptsCoreApi.get(gr.id);
+      const detail = await goodsReceiptsCoreApi.get(id);
       if (detail.lines) {
         void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
       }
@@ -654,15 +586,14 @@ export function ErpWarehousePage() {
     void loadGiLookups();
     setGiDrawerOpen(true);
   }
-  async function openGiDetail(gi: ErpGoodsIssue, viewOnly: boolean) {
+  async function openGiDetail(id: string, viewOnly: boolean) {
     setGiViewOnly(viewOnly);
     setGiSaveError(null);
     setGiDrawerLoading(true);
     setGiDrawerOpen(true);
     void loadGiLookups();
     try {
-      let detail = gi;
-      if (!detail.lines) detail = await goodsIssuesCoreApi.get(gi.id);
+      const detail = await goodsIssuesCoreApi.get(id);
       if (detail.lines) {
         void fetchItemsDict(detail.lines.map((l) => l.itemId || ""));
       }
@@ -718,7 +649,7 @@ export function ErpWarehousePage() {
       await goodsReceiptsCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu nhập kho", variant: "success" });
       await queryClient.invalidateQueries({
-        queryKey: createWarehouseReceiptsKey({ page, pageSize, search }),
+        queryKey: ["warehouse-vouchers", "unified"],
       });
     } catch (e) {
       showToast({
@@ -789,7 +720,7 @@ export function ErpWarehousePage() {
       await goodsIssuesCoreApi.post(id);
       showToast({ title: "Đã ghi sổ phiếu xuất kho", variant: "success" });
       await queryClient.invalidateQueries({
-        queryKey: createWarehouseIssuesKey({ page, pageSize, search }),
+        queryKey: ["warehouse-vouchers", "unified"],
       });
     } catch (e) {
       showToast({
@@ -805,7 +736,7 @@ export function ErpWarehousePage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      if (deleteTarget.kind === "receipt") {
+      if (deleteTarget.type === "receipt") {
         await goodsReceiptsCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu nhập kho", variant: "success" });
         await queryClient.invalidateQueries({
@@ -833,15 +764,17 @@ export function ErpWarehousePage() {
   const columns: DataTableColumn<WarehouseRow>[] = useMemo(
     () => [
       {
-        key: "kind",
+        key: "type",
         header: "Loại",
         className: "w-[110px]",
-        cell: (row) => <KindBadge kind={row.kind} />,
+        cell: (row) => <KindBadge kind={row.type} />,
       },
       {
         key: "voucherNo",
         header: "Số phiếu",
         className: "w-[160px] font-mono text-sm",
+        sortable: true,
+        sortKey: "voucherNo",
         cell: (row) => (
           <div className="flex items-center gap-2">
             <span>{row.voucherNo}</span>
@@ -862,6 +795,8 @@ export function ErpWarehousePage() {
         key: "date",
         header: "Ngày",
         className: "w-[110px]",
+        sortable: true,
+        sortKey: "date",
         cell: (row) => fmtDate(row.date),
       },
       {
@@ -877,85 +812,6 @@ export function ErpWarehousePage() {
     ],
     [],
   );
-
-  const voucherTypeOptions = [
-    {
-      value: "receipt",
-      label: `Nhập kho (${receiptQuery.data?.total ?? 0})`,
-    },
-    {
-      value: "issue",
-      label: `Xuất kho (${issueQuery.data?.total ?? 0})`,
-    },
-  ];
-
-  const filterConfig: FilterPanelConfig = {
-    search: true,
-    custom: [
-      {
-        key: "voucherType",
-        label: "Loại chứng từ",
-        placeholder: "Tất cả chứng từ",
-        options: voucherTypeOptions,
-      },
-    ],
-  };
-
-  const activeFilterCount = [!!searchInput, tabFilter !== "all"].filter(
-    Boolean,
-  ).length;
-
-  const filters: FilterPanelReturn = {
-    state: {
-      period: "",
-      dateFrom: "",
-      dateTo: "",
-      channel: "",
-      search,
-      amountMin: "",
-      amountMax: "",
-      status: "",
-      counterpartySource: "",
-      custom: {
-        voucherType: tabFilter === "all" ? "" : tabFilter,
-      },
-    },
-    inputs: {
-      search: searchInput,
-      amountMin: "",
-      amountMax: "",
-    },
-    panelOpen: filterPanelOpen,
-    openPanel: () => setFilterPanelOpen(true),
-    closePanel: () => setFilterPanelOpen(false),
-    togglePanel: () => setFilterPanelOpen((v) => !v),
-    setPeriod: () => {},
-    setDateFrom: () => {},
-    setDateTo: () => {},
-    setChannel: () => {},
-    setSearchInput: (value: string) => {
-      setSearchInputs((prev) => ({ ...prev, [tabFilter]: value }));
-      setSearches((prev) => ({ ...prev, [tabFilter]: value }));
-      setPage(1);
-    },
-    setAmountMinInput: () => {},
-    setAmountMaxInput: () => {},
-    setStatus: () => {},
-    setCounterpartySource: () => {},
-    setCustom: (key: string, value: string) => {
-      if (key === "voucherType") {
-        setTabFilter((value as TabFilter) || "all");
-        setPage(1);
-      }
-    },
-    resetAll: () => {
-      setSearchInputs((prev) => ({ ...prev, [tabFilter]: "" }));
-      setSearches((prev) => ({ ...prev, [tabFilter]: "" }));
-      setPage(1);
-    },
-    hasActiveFilter: activeFilterCount > 0,
-    activeFilterCount,
-  };
 
   // ── GR drawer actions
   const grDrawerActions: DrawerAction[] = grViewOnly
@@ -1018,10 +874,7 @@ export function ErpWarehousePage() {
               size="sm"
               className="px-3 py-2"
               disabled={loading}
-              onClick={() => {
-                if (tabFilter !== "issue") void receiptQuery.refetch();
-                if (tabFilter !== "receipt") void issueQuery.refetch();
-              }}
+              onClick={() => void vouchersQuery.refetch()}
             >
               <RefreshCcw
                 className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")}
@@ -1029,8 +882,8 @@ export function ErpWarehousePage() {
               <span>Tải lại</span>
             </Button>
             <FilterButton
-              onClick={() => setFilterPanelOpen((v) => !v)}
-              activeCount={activeFilterCount}
+              onClick={() => filterPanel.togglePanel()}
+              activeCount={filterPanel.activeFilterCount}
             />
             <button
               type="button"
@@ -1062,8 +915,18 @@ export function ErpWarehousePage() {
             <DataTable
               items={rows}
               columns={columns}
-              getRowKey={(r) => `${r.kind}-${r.id}`}
+              getRowKey={(r) => `${r.type}-${r.id}`}
               loading={loading}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={(key) => {
+                if (sortBy === key) {
+                  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+                } else {
+                  setSortBy(key);
+                  setSortOrder("asc");
+                }
+              }}
               emptyLabel="Chưa có chứng từ kho."
               minWidth={780}
               loadingRows={8}
@@ -1077,10 +940,10 @@ export function ErpWarehousePage() {
                         label: "Chi tiết",
                         icon: <Eye className="h-3.5 w-3.5" />,
                         onClick: () => {
-                          if (row.kind === "receipt" && row._gr)
-                            void openGrDetail(row._gr, true);
-                          else if (row.kind === "issue" && row._gi)
-                            void openGiDetail(row._gi, true);
+                          if (row.type === "receipt")
+                            void openGrDetail(row.id, true);
+                          else if (row.type === "issue")
+                            void openGiDetail(row.id, true);
                         },
                       },
                       {
@@ -1096,7 +959,7 @@ export function ErpWarehousePage() {
                         icon: <XCircle className="h-3.5 w-3.5" />,
                         variant: "danger",
                         hidden:
-                          row.kind !== "receipt" || row.status !== "POSTED",
+                          row.type !== "receipt" || row.status !== "POSTED",
                         onClick: () => setCancelTarget(row),
                       },
                     ]}
@@ -1114,7 +977,7 @@ export function ErpWarehousePage() {
               }}
             />
           </div>
-          <FilterPanel config={filterConfig} filter={filters} />
+          <FilterPanel config={filterConfig} filter={filterPanel} />
         </div>
       </PageLayout>
 
@@ -1123,7 +986,7 @@ export function ErpWarehousePage() {
         title="Xác nhận xóa"
         message={
           deleteTarget
-            ? `Xóa ${deleteTarget.kind === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${deleteTarget.voucherNo}"? Hành động này sẽ ẩn phiếu này khỏi danh sách.`
+            ? `Xóa ${deleteTarget.type === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${deleteTarget.voucherNo}"? Hành động này sẽ ẩn phiếu này khỏi danh sách.`
             : ""
         }
         confirmLabel="Xóa"
@@ -1141,13 +1004,13 @@ export function ErpWarehousePage() {
         title="Xác nhận hủy phiếu"
         message={
           cancelTarget
-            ? `Hủy ${cancelTarget.kind === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${cancelTarget.voucherNo}"? Hệ thống sẽ tạo một bút toán đảo để cân bằng giá trị.`
+            ? `Hủy ${cancelTarget.type === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${cancelTarget.voucherNo}"? Hệ thống sẽ tạo một bút toán đảo để cân bằng giá trị.`
             : ""
         }
         confirmLabel="Hủy phiếu"
         cancelLabel="Đóng"
         onConfirm={() => {
-          if (cancelTarget && cancelTarget.kind === "receipt") {
+          if (cancelTarget && cancelTarget.type === "receipt") {
             void handleGrCancel(cancelTarget.id);
           }
         }}
