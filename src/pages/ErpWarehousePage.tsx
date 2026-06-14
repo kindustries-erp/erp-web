@@ -355,6 +355,7 @@ export function ErpWarehousePage() {
   const [grPostingId, setGrPostingId] = useState<string | null>(null);
   const [grCancelId, setGrCancelId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WarehouseRow | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<WarehouseRow | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [grPoDetail, setGrPoDetail] = useState<ErpPurchaseOrder | null>(null);
   const [poOptions, setPoOptions] = useState<
@@ -683,13 +684,19 @@ export function ErpWarehousePage() {
       }
       if (grEditing) {
         await goodsReceiptsCoreApi.update(grEditing.id, payload);
+        if (statusOverride === "POSTED") {
+          await goodsReceiptsCoreApi.post(grEditing.id);
+        }
         showToast({ title: "Đã cập nhật phiếu nhập kho", variant: "success" });
       } else {
         if (!payload.receiptNo)
           payload.receiptNo = await goodsReceiptsCoreApi.nextNo(
             grForm.receiptDate,
           );
-        await goodsReceiptsCoreApi.create(payload);
+        const created = await goodsReceiptsCoreApi.create(payload);
+        if (statusOverride === "POSTED") {
+          await goodsReceiptsCoreApi.post(created.id);
+        }
         showToast({
           title: "Tạo phiếu nhập kho thành công",
           variant: "success",
@@ -727,8 +734,9 @@ export function ErpWarehousePage() {
     try {
       await goodsReceiptsCoreApi.cancel(id);
       showToast({ title: "Đã hủy phiếu nhập kho", variant: "success" });
+      setCancelTarget(null);
       await queryClient.invalidateQueries({
-        queryKey: createWarehouseReceiptsKey({ page, pageSize, search }),
+        queryKey: ["warehouse-vouchers", "receipts"],
       });
     } catch (e) {
       showToast({
@@ -751,9 +759,15 @@ export function ErpWarehousePage() {
       }
       if (giEditing) {
         await goodsIssuesCoreApi.update(giEditing.id, payload);
+        if (statusOverride === "POSTED") {
+          await goodsIssuesCoreApi.post(giEditing.id);
+        }
         showToast({ title: "Đã cập nhật phiếu xuất kho", variant: "success" });
       } else {
-        await goodsIssuesCoreApi.create(payload);
+        const created = await goodsIssuesCoreApi.create(payload);
+        if (statusOverride === "POSTED") {
+          await goodsIssuesCoreApi.post(created.id);
+        }
         showToast({
           title: "Tạo phiếu xuất kho thành công",
           variant: "success",
@@ -834,6 +848,11 @@ export function ErpWarehousePage() {
             {row.status === "DRAFT" && (
               <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
                 Nháp
+              </span>
+            )}
+            {row.status === "CANCELLED" && (
+              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+                Đã Hủy
               </span>
             )}
           </div>
@@ -1078,7 +1097,7 @@ export function ErpWarehousePage() {
                         variant: "danger",
                         hidden:
                           row.kind !== "receipt" || row.status !== "POSTED",
-                        onClick: () => void handleGrCancel(row.id),
+                        onClick: () => setCancelTarget(row),
                       },
                     ]}
                   />
@@ -1114,6 +1133,28 @@ export function ErpWarehousePage() {
           if (!deleting) setDeleteTarget(null);
         }}
         loading={deleting}
+        danger
+      />
+
+      <ConfirmModal
+        open={!!cancelTarget}
+        title="Xác nhận hủy phiếu"
+        message={
+          cancelTarget
+            ? `Hủy ${cancelTarget.kind === "receipt" ? "phiếu nhập" : "phiếu xuất"} "${cancelTarget.voucherNo}"? Hệ thống sẽ tạo một bút toán đảo để cân bằng giá trị.`
+            : ""
+        }
+        confirmLabel="Hủy phiếu"
+        cancelLabel="Đóng"
+        onConfirm={() => {
+          if (cancelTarget && cancelTarget.kind === "receipt") {
+            void handleGrCancel(cancelTarget.id);
+          }
+        }}
+        onCancel={() => {
+          if (!grCancelId) setCancelTarget(null);
+        }}
+        loading={!!grCancelId}
         danger
       />
 
