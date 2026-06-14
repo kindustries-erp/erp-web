@@ -3,7 +3,7 @@ name: Build & Deploy Web
 on:
   push:
     branches:
-      - erp-klotus-staging
+      - erp-core
 
 env:
   REGISTRY: ghcr.io
@@ -45,8 +45,8 @@ jobs:
           file: ./Dockerfile
           push: true
           build-args: |
-            VITE_APP_NAME=${{ secrets.KLOTUS_STAGING_WEB_APP_NAME }}
-            VITE_API_BASE_URL=${{ secrets.KLOTUS_STAGING_WEB_API_BASE_URL }}
+            VITE_APP_NAME=${{ vars.ERP_CORE_WEB_APP_NAME }}
+            VITE_API_BASE_URL=${{ vars.ERP_CORE_WEB_API_BASE_URL }}
             VITE_APP_ENV=production
           tags: |
             ${{ env.IMAGE_NAME }}:latest
@@ -83,7 +83,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -p ${{ secrets.ELITE_PORT }} \
             ${{ secrets.ELITE_USER }}@${{ secrets.ELITE_HOST }} \
-            "GHCR_PAT='${{ secrets.GHCR_PAT }}' IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} bash /opt/stacks/erp-klotus-staging/deploy-web.sh"
+            "cd /opt/stacks/liouni-erp-core-web && IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} docker compose up -d --force-recreate"
 
       - name: Health check
         run: |
@@ -93,7 +93,7 @@ jobs:
             ${{ secrets.ELITE_USER }}@${{ secrets.ELITE_HOST }} \
             '
               for i in $(seq 1 20); do
-                code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8810/ || true)
+                code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8020/ || true)
                 if [ "$code" = "200" ]; then
                   echo "✅ Web health OK"
                   exit 0
