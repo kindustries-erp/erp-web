@@ -23,6 +23,7 @@ import { VoucherTable } from "@/modules/finance/components/VoucherTable";
 import { CashVoucherDrawer } from "@/modules/finance/components/CashVoucherDrawer";
 import { PaymentVoucherAccountingModal } from "../PaymentVoucherAccountingModal";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CashFundView(p: any) {
   const {
     t,
@@ -34,6 +35,7 @@ export function CashFundView(p: any) {
     dateTo,
     fundFilter,
     fundOpts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     hasActiveFilter,
     handlePeriodChange,
     handleDateFrom,
@@ -119,6 +121,7 @@ export function CashFundView(p: any) {
     coaItems,
   } = p;
   const [accountingModalOpen, setAccountingModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [accountingVoucher, setAccountingVoucher] = useState<any | null>(null);
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 

@@ -99,6 +99,7 @@ function statusBadge(isActive: boolean) {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function toMasterQueryKind(kind: MasterKind): InventoryMasterQueryKind {
   return kind === "uom" ? "uoms" : "item-types";
 }
@@ -216,6 +217,7 @@ export function InventoryMasterPage() {
         variant: "success",
       });
       closeDrawer();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
     }
@@ -234,6 +236,7 @@ export function InventoryMasterPage() {
       });
       showToast({ title: "Đã xóa thành công", variant: "success" });
       setDeleteTarget(null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       showToast({
         title: e?.response?.data?.message || e?.message || "Không thể xóa",

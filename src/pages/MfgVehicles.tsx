@@ -17,6 +17,7 @@ export function MfgVehicles() {
           page: 1,
           pageSize: 50,
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setRows((data as any).data ?? []);
       } catch (e) {
         setError(

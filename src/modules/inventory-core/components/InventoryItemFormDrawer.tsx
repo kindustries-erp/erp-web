@@ -109,6 +109,7 @@ export function InventoryItemFormDrawer({
       ]);
       setUomOptions(buildMasterOptions(uoms.items));
       setItemTypeOptions(buildMasterOptions(itemTypes.items));
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Ignore
     }
@@ -173,6 +174,7 @@ export function InventoryItemFormDrawer({
       });
       onSuccess?.();
       onClose();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
     } finally {

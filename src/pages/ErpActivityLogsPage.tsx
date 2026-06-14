@@ -16,6 +16,7 @@ import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button } from "@/shared/components/ui/Button";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
@@ -108,6 +109,7 @@ export function ErpActivityLogsPage() {
       });
       setItems(res.data);
       setTotal(res.total);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",

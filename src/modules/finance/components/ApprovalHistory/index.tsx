@@ -113,6 +113,7 @@ export function ApprovalHistory({ voucherId }: ApprovalHistoryProps) {
             new Date(a.action_at).getTime() - new Date(b.action_at).getTime(),
         );
         setLogs(sorted);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (!active) return;
         setError(

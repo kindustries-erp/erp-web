@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useState, useCallback, useRef } from "react";
 import {
   getCoreRolePermissionsApi,

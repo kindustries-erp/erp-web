@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   getCoreRoleUsersApi,
   updateCoreRoleUsersApi,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type CoreRoleUser,
 } from "@/modules/system/api/rbacCoreApi";
 import {

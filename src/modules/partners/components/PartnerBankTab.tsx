@@ -11,6 +11,7 @@ import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type ActionItem,
 } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";

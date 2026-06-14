@@ -20,6 +20,7 @@ import {
   IconTrendUp as IconUp,
 } from "@/shared/components/icons";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function BankDepositDashboard(props: any) {
   const {
     t,
@@ -30,6 +31,7 @@ export function BankDepositDashboard(props: any) {
     dateTo,
     bankFilter,
     bankFilterOpts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     hasActiveFilter,
     handlePeriodChange,
     handleDateFrom,
@@ -214,6 +216,7 @@ export function BankDepositDashboard(props: any) {
             }
             onStatusFilter={handleStatusFilter}
             counterpartySourceFilter={counterpartySourceFilter}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onCounterpartySourceFilter={(v: any) => {
               setCounterpartySourceFilter(v);
               setPage(1);

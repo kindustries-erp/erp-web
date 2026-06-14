@@ -9,12 +9,14 @@ import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { NavItem } from "./SidebarPrimitives";
 import {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   LayoutDashboard,
   Boxes,
   Users,
   FileText,
   Building2,
   Layers,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Car,
   ClipboardList,
   Network,

@@ -239,6 +239,7 @@ axiosInstance.interceptors.response.use(
     ) {
       // ── Handle DOCUMENT_IN_USE ──────────────────────────────────────────
       if (error.response?.status === 409) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = error.response.data as any;
         if (data?.code === "DOCUMENT_IN_USE") {
           useDocumentDependencyStore

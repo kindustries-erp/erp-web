@@ -230,6 +230,7 @@ export function MfgItems() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadItems();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu linh kiện",

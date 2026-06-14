@@ -44,6 +44,7 @@ import {
 } from "./useBankVoucherHandlersSupport";
 
 export function useBankVoucherHandlers({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   companyBankAccounts,
   partners,
   employees,

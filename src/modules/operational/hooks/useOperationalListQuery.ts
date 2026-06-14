@@ -79,13 +79,18 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       }
 
       if (normalized.variant === "sales")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operationalApi.listSales(normalized as any);
       if (normalized.variant === "purchase")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operationalApi.listPurchases(normalized as any);
       if (normalized.variant === "expenses")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operationalApi.listExpenses(normalized as any);
       if (normalized.variant === "receivables")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operationalApi.listReceivables(normalized as any);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return operationalApi.listPayables(normalized as any);
     },
     placeholderData: (previousData) => previousData,

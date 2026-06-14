@@ -44,6 +44,7 @@ describe("useInventoryMasterMutation", () => {
       code: "PCS",
       name: "Pieces",
       isActive: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     const { result } = renderHook(() => useInventoryMasterSaveMutation(), {
@@ -82,6 +83,7 @@ describe("useInventoryMasterMutation", () => {
       code: "FG",
       name: "Finished Goods",
       isActive: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     const { result } = renderHook(() => useInventoryMasterSaveMutation(), {

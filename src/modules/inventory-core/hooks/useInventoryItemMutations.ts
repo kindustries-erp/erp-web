@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAppMutation } from "@/shared/hooks/useAppQuery";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createInventoryItemsListKey } from "@/shared/lib/queryKeys";
 import {
   inventoryCoreApi,

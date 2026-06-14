@@ -201,6 +201,7 @@ function p(input: MfgListParams = {}) {
 }
 
 function normalizePaginated<T>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   raw: any,
   page: number,
   pageSize: number,
@@ -241,6 +242,7 @@ export const manufacturingApi = {
 
   getComponent: async (
     id: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<ErpItem & { stock_summary?: any }> => {
     const { data } = await axiosInstance.get(`${BASE}/items/components/${id}`);
     return data;

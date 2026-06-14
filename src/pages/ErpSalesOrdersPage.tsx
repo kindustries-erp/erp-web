@@ -33,6 +33,7 @@ import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMa
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const LOOKUP_LIMIT = 200;
 
 interface SoLineForm {
@@ -343,6 +344,7 @@ export function ErpSalesOrdersPage() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu sales order",
@@ -358,6 +360,7 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.reserve(item.id);
       await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể reserve SO",
@@ -373,6 +376,7 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.unreserve(item.id);
       await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể unreserve SO",

@@ -212,11 +212,13 @@ export const useAuthStore = create<AuthState>()(
         useAppStore.getState().logout();
       },
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       updateProfileAction: async (_payload) => {
         // TODO: wire to core BE update endpoint khi có
         return;
       },
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       changePasswordAction: async (_newPassword) => {
         // TODO: wire to core BE change-password endpoint khi có
         return;

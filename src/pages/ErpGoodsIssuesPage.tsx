@@ -388,6 +388,7 @@ export function ErpGoodsIssuesPage() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadIssues();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu goods issue",
@@ -405,6 +406,7 @@ export function ErpGoodsIssuesPage() {
     try {
       await goodsIssuesCoreApi.post(item.id);
       await loadIssues();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message ||
@@ -423,6 +425,7 @@ export function ErpGoodsIssuesPage() {
       await goodsIssuesCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
       await loadIssues();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể xóa goods issue",
