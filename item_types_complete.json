@@ -1,0 +1,22 @@
+[
+  {
+    "id": "2829b847-bd30-49a3-b59e-668372a0aaac",
+    "code": "FG",
+    "name": "Thành phẩm",
+    "description": "Finished Goods",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.229Z",
+    "updated_at": "2026-06-12T17:06:23.229Z",
+    "is_deleted": false
+  },
+  {
+    "id": "16b49fe8-2368-4131-a89e-c0ef1df9e5bc",
+    "code": "RAW",
+    "name": "Linh kiện",
+    "description": "Components",
+    "is_active": true,
+    "created_at": "2026-06-12T17:06:23.271Z",
+    "updated_at": "2026-06-12T18:47:40.168Z",
+    "is_deleted": false
+  }
+]

@@ -1,0 +1,1954 @@
+{
+  "id": "08d446db-e8f0-431f-9c81-4fd13826f813",
+  "bomCode": "K LOTUS-SX-BM-01-04",
+  "bomName": "BOM K LOTUS/ PACEO",
+  "finishedGoodItemId": "e9ce6b20-297c-45b1-8f24-8929bdde2deb",
+  "finishedGoodSku": "FG-KLOTUS-PACEO",
+  "version": "1.0",
+  "status": "ACTIVE",
+  "effectiveFrom": "2026-04-23",
+  "effectiveTo": null,
+  "notes": "Complete BOM K LOTUS/ PACEO with active DB mappings",
+  "lines": [
+    {
+      "lineNo": 1,
+      "componentItemId": "7c644fec-4afc-42b6-9bdf-c69a80400a19",
+      "componentSku": "D02LD001",
+      "componentName": "Dây điện chính",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 2,
+      "componentItemId": "5f82070a-3c2d-4773-823f-07081709db3c",
+      "componentSku": "D02LD002",
+      "componentName": "Dây sạc xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 3,
+      "componentItemId": "6cba55ae-fcff-4d31-82c9-97a874a3041e",
+      "componentSku": "D02LD003",
+      "componentName": "Dây sạc USB",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 4,
+      "componentItemId": "2fcc8a28-efa9-442c-af5c-b5230db4382e",
+      "componentSku": "D02LD004",
+      "componentName": "Dây điện đơn CP",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 5,
+      "componentItemId": "32f744c7-6bbe-47de-944f-cd75ba759457",
+      "componentSku": "D02LD005",
+      "componentName": "Bộ dây điện có cầu chì câu bình",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 6,
+      "componentItemId": "3572f705-ab4e-41c2-976a-1964b224b521",
+      "componentSku": "D02LD006",
+      "componentName": "Bộ điều khiển IC (5 con ốc - 10 nắp chụp nhựa)",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 7,
+      "componentItemId": "e8211736-e564-4b8c-9c8f-4593d11a7756",
+      "componentSku": "D02LD007",
+      "componentName": "Chip",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 8,
+      "componentItemId": "5752a0a4-678f-438c-b84d-b92b17f271c1",
+      "componentSku": "D02LD008",
+      "componentName": "Cục sạc xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 9,
+      "componentItemId": "508000fc-e0f6-4e99-8d69-e1e547444675",
+      "componentSku": "D02LD009",
+      "componentName": "Đế gắn CP",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 10,
+      "componentItemId": "80f7192c-9bb7-40ae-9956-57730171a146",
+      "componentSku": "D02LD010",
+      "componentName": "CP (APTOMAT)",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 11,
+      "componentItemId": "0216e41f-f3dd-4c08-9787-8a589075fc21",
+      "componentSku": "D02LD011",
+      "componentName": "Cục đổi nguồn",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 12,
+      "componentItemId": "58ae09e8-c812-49e2-9403-d32d9104dc9e",
+      "componentSku": "D02LD012",
+      "componentName": "Bộ công tắc trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 13,
+      "componentItemId": "9a9e70a8-ab10-4661-841c-a4287748db8a",
+      "componentSku": "D02LD013",
+      "componentName": "Bộ công tắc phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 14,
+      "componentItemId": "0c3a6fc6-d3ae-4183-b7bc-1861fbc9d919",
+      "componentSku": "D02LD014",
+      "componentName": "Còi xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 15,
+      "componentItemId": "bc0c4bf5-ec48-4e9a-83f0-02dcb939756b",
+      "componentSku": "D02LD015",
+      "componentName": "Công tắc còi xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 16,
+      "componentItemId": "a46937d7-44a1-45d4-bff2-6639bfb5dffb",
+      "componentSku": "D02LD016",
+      "componentName": "Dây chuyển đổi Trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 17,
+      "componentItemId": "89e5eb79-7789-4571-bfaa-53cb1b850024",
+      "componentSku": "D02LD017",
+      "componentName": "Xi nhan Trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 18,
+      "componentItemId": "a3a100c0-dbc0-4245-b4f8-05244f11542d",
+      "componentSku": "D02LD018",
+      "componentName": "Xi nhan Phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 19,
+      "componentItemId": "3f1a0d84-a498-4ccd-a2ee-6f23d03f4152",
+      "componentSku": "D02LD019",
+      "componentName": "Đèn pha",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 20,
+      "componentItemId": "9f2008dd-fddd-4bcb-8e7b-08a7fb7a858c",
+      "componentSku": "D02LD020",
+      "componentName": "Đèn hậu",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 21,
+      "componentItemId": "a296cf09-95bc-49e3-8b54-a57ec6d34f73",
+      "componentSku": "D02LD021",
+      "componentName": "Đèn biển số",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 22,
+      "componentItemId": "17790aae-7d9d-4963-8a56-ee88f6f23473",
+      "componentSku": "D02LD022",
+      "componentName": "Đồng hồ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 23,
+      "componentItemId": "40338787-66c7-4e00-83ec-07d69d2dcb33",
+      "componentSku": "D02LD023",
+      "componentName": "Tay ga trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 24,
+      "componentItemId": "c1b10ce6-a842-4333-bd83-f53a29abb978",
+      "componentSku": "D02LD024",
+      "componentName": "Tay ga phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 25,
+      "componentItemId": "067774f1-46ab-477d-a660-3d14181af459",
+      "componentSku": "D02LD025",
+      "componentName": "Tay thắng trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 26,
+      "componentItemId": "dbb08111-0e9a-4996-ab61-2ba4ebb60f2b",
+      "componentSku": "D02LD026",
+      "componentName": "Tay thắng phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 27,
+      "componentItemId": "e726385b-dcfd-49e1-898a-88f8e422f749",
+      "componentSku": "D02LD027",
+      "componentName": "Đĩa phanh trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 28,
+      "componentItemId": "05cb8ded-e588-4b63-a4a1-ecb2af8a019e",
+      "componentSku": "D02LD028",
+      "componentName": "Ốc đĩa phanh",
+      "qtyRequired": "3",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 29,
+      "componentItemId": "d9718c55-d2fa-4302-b044-736859d23874",
+      "componentSku": "D02LD029",
+      "componentName": "Cụm phanh sau",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 30,
+      "componentItemId": "e04f71d8-dead-415a-b9db-a766000d4881",
+      "componentSku": "D02LD030",
+      "componentName": "Thanh nẹp dây phanh trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 31,
+      "componentItemId": "4efcfa74-2322-41de-b0d7-04e4873f0633",
+      "componentSku": "D02LD031",
+      "componentName": "Bộ ổ khóa",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 32,
+      "componentItemId": "5ba7781e-5086-4e3f-a853-d36ac60fe371",
+      "componentSku": "D02LD032",
+      "componentName": "Phuộc trước",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 33,
+      "componentItemId": "e2358fcf-a4e8-49bb-aef3-c896ef101bd4",
+      "componentSku": "D02LD033",
+      "componentName": "Phuộc sau",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 34,
+      "componentItemId": "852129a5-83bb-4bfc-857e-22c08649fce1",
+      "componentSku": "D02LD034",
+      "componentName": "Mâm trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 35,
+      "componentItemId": "bf86742e-1ac0-4727-9fce-cd63354e9557",
+      "componentSku": "D02LD035",
+      "componentName": "Động cơ sau",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 36,
+      "componentItemId": "ec887679-811c-4537-9898-7aea516d0877",
+      "componentSku": "D02LD036",
+      "componentName": "Bộ ốc gắn động cơ (Mỗi loại 2 cái)",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 37,
+      "componentItemId": "d3f6e595-3246-455a-8011-7f11ca572eb4",
+      "componentSku": "D02LD037",
+      "componentName": "Bộ bi chén cồ",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 38,
+      "componentItemId": "84e9f334-f082-4746-8d9f-1c0c52221c76",
+      "componentSku": "D02LD038",
+      "componentName": "Chảng 3",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 39,
+      "componentItemId": "52f0cf6f-c358-42f3-ad27-149976628cd5",
+      "componentSku": "D02LD039",
+      "componentName": "Ghi đông",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 40,
+      "componentItemId": "4ab2df1e-1557-4579-8318-2a23cba112fb",
+      "componentSku": "D02LD040",
+      "componentName": "Gắp",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 41,
+      "componentItemId": "f4cbecde-d139-4da5-8319-8d6b32d3cc4a",
+      "componentSku": "D02LD041",
+      "componentName": "Chân chống nghiêng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 42,
+      "componentItemId": "0027d58b-b439-42cf-a76f-bbbb57985d54",
+      "componentSku": "D02LD042",
+      "componentName": "Lò xo chân chống nghiêng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 43,
+      "componentItemId": "61049696-893f-41ef-8bda-d8aa895142e0",
+      "componentSku": "D02LD043",
+      "componentName": "Chân chống giữa",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 44,
+      "componentItemId": "8191a62c-a028-4940-baaf-5642d9b230f8",
+      "componentSku": "D02LD044",
+      "componentName": "Lò xo chân chống giữa",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 45,
+      "componentItemId": "5d4f3155-7d4c-4ef9-8ed2-cc047e00d22d",
+      "componentSku": "D02LD045",
+      "componentName": "Tay dắt nhôm (cảng sau)",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 46,
+      "componentItemId": "5816da37-b492-4982-aff4-c02bdc8311a8",
+      "componentSku": "D02LD046",
+      "componentName": "Thanh nẹp bình",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 47,
+      "componentItemId": "e1610211-36f2-4297-8f77-105aa48ee3cc",
+      "componentSku": "D02LD047",
+      "componentName": "Dây thắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 48,
+      "componentItemId": "da9cd8b8-3280-447c-8df6-ef44987c54a6",
+      "componentSku": "D02LD048",
+      "componentName": "Dây khóa yên",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 49,
+      "componentItemId": "6e745305-9972-47c9-bb2f-428e54fe8163",
+      "componentSku": "D02LD049",
+      "componentName": "Móc treo đồ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 50,
+      "componentItemId": "517bae53-c9f3-4715-a6a6-971b66ac828c",
+      "componentSku": "D02LD050",
+      "componentName": "Ốp đồng hồ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 51,
+      "componentItemId": "e8478cc1-c632-447c-be14-7bebfa601427",
+      "componentSku": "D02LD051",
+      "componentName": "Thanh logo mặt nạ xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 52,
+      "componentItemId": "b72418bc-2984-424d-a771-04ea5776f9d8",
+      "componentSku": "D02LD052",
+      "componentName": "Vành đèn pha Xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 53,
+      "componentItemId": "8e94ea6a-956f-4439-afb5-50ce9e5f732e",
+      "componentSku": "D02LD053",
+      "componentName": "Yên xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 54,
+      "componentItemId": "5dd439e0-af71-4df0-bc27-b5af6690d47a",
+      "componentSku": "D02LD054",
+      "componentName": "Bas gắn yên xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 55,
+      "componentItemId": "6bd85aa8-f0a0-4b76-a29d-0bd5324690f6",
+      "componentSku": "D02LD055",
+      "componentName": "Khóa yên",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 56,
+      "componentItemId": "a5f1d971-05c5-4c53-94c3-46fcb6f39350",
+      "componentSku": "D02LD056",
+      "componentName": "Hộp dụng cụ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 57,
+      "componentItemId": "62491277-e8f9-4cd0-a261-2cd1ae662e06",
+      "componentSku": "D02LD057",
+      "componentName": "Hộc để đồ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 58,
+      "componentItemId": "8593ee5a-18b2-412f-b6e3-6f46844cd4de",
+      "componentSku": "D02LD058",
+      "componentName": "Ốp trước cốp",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 59,
+      "componentItemId": "87cf5163-8132-4ee6-a73f-d9ba6b34c20f",
+      "componentSku": "D02LD059",
+      "componentName": "Cảnh báo tròn vàng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 60,
+      "componentItemId": "4de7f880-b741-43e6-bf2d-51388b612745",
+      "componentSku": "D02LD060",
+      "componentName": "Cảnh báo đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 61,
+      "componentItemId": "74f4b76d-7ed5-45e1-8e8b-0dcde2e47499",
+      "componentSku": "D02LD061",
+      "componentName": "Đuôi gắn biển số",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 62,
+      "componentItemId": "4faf2c09-14e6-4957-aaf9-25fa7a558ec9",
+      "componentSku": "D02LD062",
+      "componentName": "Để chân trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 63,
+      "componentItemId": "33c644ba-522e-43ae-add2-ea67401f0547",
+      "componentSku": "D02LD063",
+      "componentName": "Để chân phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 64,
+      "componentItemId": "1b46ec92-8157-451e-9125-898135627a0b",
+      "componentSku": "D02LD064",
+      "componentName": "Van hơi 50",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 65,
+      "componentItemId": "fa2c10f3-7876-41f9-a667-2bbc02b2bb8b",
+      "componentSku": "D02LD065",
+      "componentName": "Van hơi 70",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 66,
+      "componentItemId": "65613617-ff9d-4897-9a51-c6c85fd840e4",
+      "componentSku": "D02LD066",
+      "componentName": "Nắp che số khung",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 67,
+      "componentItemId": "6425663d-7531-4c83-b796-9eba0c7efe6f",
+      "componentSku": "D02LD067",
+      "componentName": "Nối hộp dụng cụ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 68,
+      "componentItemId": "84d8ce9a-5a55-49bc-a302-60e3a719b157",
+      "componentSku": "D02LD068",
+      "componentName": "Cao su bịt sàn để chân",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 69,
+      "componentItemId": "ea491df4-3c66-464a-87c6-5e6595678fac",
+      "componentSku": "D02LD069",
+      "componentName": "Nút bịt trục giữa",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 70,
+      "componentItemId": "7ee24ae1-ed4b-431b-8262-330a2ea1e28c",
+      "componentSku": "D02LD070",
+      "componentName": "Sàn để chân",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 71,
+      "componentItemId": "f0df3a00-a339-40d3-823b-73d422178577",
+      "componentSku": "D02LD071",
+      "componentName": "Ốp gầm xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 72,
+      "componentItemId": "1aa0d2e6-ed74-4473-8d7c-74d24d439c3d",
+      "componentSku": "D02LD072",
+      "componentName": "Cốp xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 73,
+      "componentItemId": "eae5d95a-2cff-40f8-81df-ee7d8f82e283",
+      "componentSku": "D02LD073",
+      "componentName": "Chắn bùn sau bên ngoài",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 74,
+      "componentItemId": "302a2641-0ced-4751-95da-506ec24f51ff",
+      "componentSku": "D02LD074",
+      "componentName": "Chắn bùn sau bên trong",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 75,
+      "componentItemId": "f14f4479-7537-44c7-8384-ab7caad7ee93",
+      "componentSku": "D02LD075",
+      "componentName": "Chắn bùn trước bên trong",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 76,
+      "componentItemId": "74259642-b7a9-4ce0-ae63-98b13cafe3d4",
+      "componentSku": "D02LD076",
+      "componentName": "Khung xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 77,
+      "componentItemId": "d8550a63-e64e-4f91-ae6c-57ab30c4d973",
+      "componentSku": "D02DT077",
+      "componentName": "Gương xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 78,
+      "componentItemId": "99f1e5c9-5420-4d8d-bbfa-c3899ec72d82",
+      "componentSku": "D02KD078",
+      "componentName": "Lốp xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 79,
+      "componentItemId": "13c9f590-f04d-4531-b5d9-9b74eb702ee0",
+      "componentSku": "COMP-NOCODE-1",
+      "componentName": "Thanh logo mặt nạ Đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 80,
+      "componentItemId": "7db63737-d5f9-482d-8df4-08d69dddf27a",
+      "componentSku": "COMP-NOCODE-2",
+      "componentName": "Vành đèn pha Đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 81,
+      "componentItemId": "8fbcb5e0-ad02-4a60-8622-e26fc7df0a50",
+      "componentSku": "D02LD079",
+      "componentName": "Ốp đầu trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 82,
+      "componentItemId": "fa43a220-aeb7-453f-a951-4058fc045261",
+      "componentSku": "D02LD080",
+      "componentName": "Ốp chắn gió trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 83,
+      "componentItemId": "c7809e14-fab5-4aa0-8833-8a6fda844eb8",
+      "componentSku": "D02LD081",
+      "componentName": "Tấm nối chắn gió trước bên trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 84,
+      "componentItemId": "57eb138a-2dd9-4364-9492-0990ea0a2dc3",
+      "componentSku": "D02LD082",
+      "componentName": "Tấm nối chắn gió trước bên phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 85,
+      "componentItemId": "03c3669b-54c8-4711-8411-6701919c95fa",
+      "componentSku": "D02LD083",
+      "componentName": "Chắn bùn trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 86,
+      "componentItemId": "3513c097-f67e-4707-8df0-370e9edb3ee6",
+      "componentSku": "D02LD084",
+      "componentName": "Ốp để chân trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 87,
+      "componentItemId": "d2eeb4b1-f605-49ad-8272-ceadd0b0af6b",
+      "componentSku": "D02LD085",
+      "componentName": "Ốp để chân phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 88,
+      "componentItemId": "b626fab5-8a0d-468f-b803-9ba949b1fe36",
+      "componentSku": "D02LD086",
+      "componentName": "Ốp thân trái",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 89,
+      "componentItemId": "d8a2369d-553c-4a6d-a743-13f519379c22",
+      "componentSku": "D02LD087",
+      "componentName": "Ốp thân phải",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 90,
+      "componentItemId": "4094ca2a-4e03-4804-ad11-eeb2e4320c2d",
+      "componentSku": "D02LD088",
+      "componentName": "Ốp trung tâm",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 91,
+      "componentItemId": "3a230a3a-e297-4061-ab2d-c3b094496529",
+      "componentSku": "D02LD089",
+      "componentName": "Tấm nối ốp thân xe",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 92,
+      "componentItemId": "6c4f66d3-8b5b-4da2-a0fc-23760ac66e47",
+      "componentSku": "D02LD079TRG",
+      "componentName": "Ốp đầu trước trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 93,
+      "componentItemId": "fe8206dd-9a35-4d1d-8282-37845e964349",
+      "componentSku": "D02LD080TRG",
+      "componentName": "Ốp chắn gió trước trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 94,
+      "componentItemId": "44cedcf8-ea41-4b0f-b871-c1de1c6ff9d1",
+      "componentSku": "D02LD081TRG",
+      "componentName": "Tấm nối chắn gió trước bên trái trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 95,
+      "componentItemId": "7c1f918f-a0bf-4b2e-ae5f-e0e3e22bac0f",
+      "componentSku": "D02LD082TRG",
+      "componentName": "Tấm nối chắn gió trước bên phải trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 96,
+      "componentItemId": "0c94ca23-6d81-4d1a-b0aa-40dcdcd431db",
+      "componentSku": "D02LD083TRG",
+      "componentName": "Chắn bùn trước trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 97,
+      "componentItemId": "a75f4cc0-3d6c-421c-8645-95443f018d3a",
+      "componentSku": "D02LD084TRG",
+      "componentName": "Ốp để chân trái trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 98,
+      "componentItemId": "aa935d83-9cff-4e3d-8dc3-66e2e1dfa2a7",
+      "componentSku": "D02LD085TRG",
+      "componentName": "Ốp để chân phải trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 99,
+      "componentItemId": "062dd3dd-6778-43b7-b244-0e4ff8dc670b",
+      "componentSku": "D02LD086TRG",
+      "componentName": "Ốp thân trái trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 100,
+      "componentItemId": "f59b9457-6819-479f-9abf-6b2cf454b057",
+      "componentSku": "D02LD087TRG",
+      "componentName": "Ốp thân phải trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 101,
+      "componentItemId": "f4c92569-3566-4d92-ab05-57f3717a296a",
+      "componentSku": "D02LD088TRG",
+      "componentName": "Ốp trung tâm trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 102,
+      "componentItemId": "4a9d3e56-4662-45b2-a96f-a224ce11639b",
+      "componentSku": "D02LD089TRG",
+      "componentName": "Tấm nối ốp thân xe trắng",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 103,
+      "componentItemId": "3c60a537-df34-43f0-9d71-3492e722cabf",
+      "componentSku": "D02LD079XL",
+      "componentName": "Ốp đầu trước xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 104,
+      "componentItemId": "aa3e42ba-c007-4023-8122-f0e578b9507f",
+      "componentSku": "D02LD080XL",
+      "componentName": "Ốp chắn gió trước xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 105,
+      "componentItemId": "54a65bc6-6c20-4c20-bb77-1247d018424d",
+      "componentSku": "D02LD081XL",
+      "componentName": "Tấm nối chắn gió trước bên trái xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 106,
+      "componentItemId": "87180069-8b71-4cdd-b9f3-e201780e3d7c",
+      "componentSku": "D02LD082XL",
+      "componentName": "Tấm nối chắn gió trước bên phải xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 107,
+      "componentItemId": "869e01b3-3d72-4f59-8135-4d0649964ac2",
+      "componentSku": "D02LD083XL",
+      "componentName": "Chắn bùn trước xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 108,
+      "componentItemId": "61d01a91-d3e1-48bf-bfab-602113f2b125",
+      "componentSku": "D02LD084XL",
+      "componentName": "Ốp để chân trái xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 109,
+      "componentItemId": "3fab11c7-845b-491c-927e-633042dbd246",
+      "componentSku": "D02LD085XL",
+      "componentName": "Ốp để chân phải xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 110,
+      "componentItemId": "d700d630-da1b-46ae-bcd5-ead1b7f7e843",
+      "componentSku": "D02LD086XL",
+      "componentName": "Ốp thân trái xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 111,
+      "componentItemId": "5b1b7b84-2ffb-44ed-8b3d-00bbca177b88",
+      "componentSku": "D02LD087XL",
+      "componentName": "Ốp thân phải xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 112,
+      "componentItemId": "72ceadd5-a0aa-4849-b918-2e27974002f8",
+      "componentSku": "D02LD088XL",
+      "componentName": "Ốp trung tâm xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 113,
+      "componentItemId": "0ecb9990-b76d-44ab-abfb-62f96223dfb6",
+      "componentSku": "D02LD089XL",
+      "componentName": "Tấm nối ốp thân xe xanh",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 114,
+      "componentItemId": "458f11fa-c933-4017-b84c-0defb86e0677",
+      "componentSku": "D02LD079DO",
+      "componentName": "Ốp đầu trước đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 115,
+      "componentItemId": "32d5c35f-7749-475d-8070-8b6071ce0a7e",
+      "componentSku": "D02LD080DO",
+      "componentName": "Ốp chắn gió trước đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 116,
+      "componentItemId": "0cf6792b-f87a-4524-b76f-0f4b1bda6d96",
+      "componentSku": "D02LD081DO",
+      "componentName": "Tấm nối chắn gió trước bên trái đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 117,
+      "componentItemId": "62f6111c-11c4-4a16-a7a8-31a86741ca15",
+      "componentSku": "D02LD082DO",
+      "componentName": "Tấm nối chắn gió trước bên phải đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 118,
+      "componentItemId": "131607d4-b28a-4526-85c5-1bb89910b8f9",
+      "componentSku": "D02LD083DO",
+      "componentName": "Chắn bùn trước đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 119,
+      "componentItemId": "5c798604-c875-4355-a21e-15d37647d02e",
+      "componentSku": "D02LD084DO",
+      "componentName": "Ốp để chân trái đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 120,
+      "componentItemId": "4960d6ae-e14f-46f4-89ce-255b3d84d68c",
+      "componentSku": "D02LD085DO",
+      "componentName": "Ốp để chân phải đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 121,
+      "componentItemId": "5d79d11c-4aab-4fcd-85e9-653ba6a74702",
+      "componentSku": "D02LD086DO",
+      "componentName": "Ốp thân trái đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 122,
+      "componentItemId": "83f2a464-efbc-45b7-af94-d1a7cf89c083",
+      "componentSku": "D02LD087DO",
+      "componentName": "Ốp thân phải đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 123,
+      "componentItemId": "939b602f-a375-4f55-b233-383f9c178592",
+      "componentSku": "D02LD088DO",
+      "componentName": "Ốp trung tâm đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 124,
+      "componentItemId": "57f1ecab-534c-4d3e-a9cc-ce7e847a119f",
+      "componentSku": "D02LD089DO",
+      "componentName": "Tấm nối ốp thân xe đỏ",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 125,
+      "componentItemId": "14265d32-0f9e-45bd-86d8-c456414cc042",
+      "componentSku": "D02LD079XAM",
+      "componentName": "Ốp đầu trước xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 126,
+      "componentItemId": "c67a8924-038f-4663-bad5-7f0eac440734",
+      "componentSku": "D02LD080XAM",
+      "componentName": "Ốp chắn gió trước xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 127,
+      "componentItemId": "de8f0673-e52b-4fd1-97f6-4a23dc386e76",
+      "componentSku": "D02LD081XAM",
+      "componentName": "Tấm nối chắn gió trước bên trái xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 128,
+      "componentItemId": "7d4dd81c-a9bb-433f-8bc3-89e2ab00afc6",
+      "componentSku": "D02LD082XAM",
+      "componentName": "Tấm nối chắn gió trước bên phải xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 129,
+      "componentItemId": "e3e18f98-7c17-48e8-8db8-62a802e66dec",
+      "componentSku": "D02LD083XAM",
+      "componentName": "Chắn bùn trước xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 130,
+      "componentItemId": "5c228cde-7989-4ccf-8d27-733513a82cd2",
+      "componentSku": "D02LD084XAM",
+      "componentName": "Ốp để chân trái xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 131,
+      "componentItemId": "8998fd41-f2d6-45c4-9316-0e3ee2ed7676",
+      "componentSku": "D02LD085XAM",
+      "componentName": "Ốp để chân phải xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 132,
+      "componentItemId": "8bf516da-ca8f-4857-a46b-2442404fa2fb",
+      "componentSku": "D02LD086XAM",
+      "componentName": "Ốp thân trái xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 133,
+      "componentItemId": "e040eca1-3354-41b5-9815-3d5b2cf75a50",
+      "componentSku": "D02LD087XAM",
+      "componentName": "Ốp thân phải xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 134,
+      "componentItemId": "923065f5-e67c-4ca5-8260-1f4ee5ca22a7",
+      "componentSku": "D02LD088XAM",
+      "componentName": "Ốp trung tâm xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 135,
+      "componentItemId": "f8fb8048-c9b6-454b-8486-d49599fdd954",
+      "componentSku": "D02LD089XAM",
+      "componentName": "Tấm nối ốp thân xe xám",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 136,
+      "componentItemId": "30d3c247-6c96-491b-ac09-233edd09de00",
+      "componentSku": "D02LD079DEN",
+      "componentName": "Ốp đầu trước đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 137,
+      "componentItemId": "8167fe1c-5a3f-471b-aba4-4c7473aa260f",
+      "componentSku": "D02LD080DEN",
+      "componentName": "Ốp chắn gió trước đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 138,
+      "componentItemId": "e51d5518-6061-4761-8bd9-74e54e88f1f6",
+      "componentSku": "D02LD081DEN",
+      "componentName": "Tấm nối chắn gió trước bên trái đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 139,
+      "componentItemId": "01abe7bd-9572-41b3-9a3e-f4804b6c35b1",
+      "componentSku": "D02LD082DEN",
+      "componentName": "Tấm nối chắn gió trước bên phải đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 140,
+      "componentItemId": "83be0733-da65-4912-a123-8555db3a71ae",
+      "componentSku": "D02LD083DEN",
+      "componentName": "Chắn bùn trước đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 141,
+      "componentItemId": "c248a733-b05d-48c6-a00c-ecda4b0626dc",
+      "componentSku": "D02LD084DEN",
+      "componentName": "Ốp để chân trái đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 142,
+      "componentItemId": "25670eb9-74b1-4bd0-8f6e-7f96620aa727",
+      "componentSku": "D02LD085DEN",
+      "componentName": "Ốp để chân phải đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 143,
+      "componentItemId": "11ac6f31-d084-4e94-b02a-039003b08599",
+      "componentSku": "D02LD086DEN",
+      "componentName": "Ốp thân trái đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 144,
+      "componentItemId": "056cb4b0-609c-4eaa-874f-a911db8099a7",
+      "componentSku": "D02LD087DEN",
+      "componentName": "Ốp thân phải đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 145,
+      "componentItemId": "db116b7e-b8b9-4826-93ad-55b32b8ddf4e",
+      "componentSku": "D02LD088DEN",
+      "componentName": "Ốp trung tâm đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 146,
+      "componentItemId": "685123df-688f-4fe1-851a-65b9b6caacf8",
+      "componentSku": "D02LD089DEN",
+      "componentName": "Tấm nối ốp thân xe đen",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 147,
+      "componentItemId": "4adc007d-542c-4d7b-a761-f52a3d861d70",
+      "componentSku": "D02LD090",
+      "componentName": "Trục M12 x 190",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 148,
+      "componentItemId": "ef2579d5-57f5-407a-8e2b-55da1ff30eb9",
+      "componentSku": "D02LD091",
+      "componentName": "Trục M12 x 224",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 149,
+      "componentItemId": "11ca8b08-045d-4654-ac58-953b98408aa6",
+      "componentSku": "D02LD092",
+      "componentName": "Bu lông M8 x 20",
+      "qtyRequired": "4",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 150,
+      "componentItemId": "6182b8c1-fa31-4256-b6fd-95c17369a06f",
+      "componentSku": "D02LD093",
+      "componentName": "Bu lông M8 x 30",
+      "qtyRequired": "4",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 151,
+      "componentItemId": "71e64874-c1b9-465e-8fe4-ee378c8359ec",
+      "componentSku": "D02LD094",
+      "componentName": "Bu lông M10 x 25 chống nghiêng",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 152,
+      "componentItemId": "6d99150f-927c-4d2c-974c-28a5bcd3a4a3",
+      "componentSku": "D02LD095",
+      "componentName": "Bu lông M6 x 12",
+      "qtyRequired": "50",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "329G/XE"
+    },
+    {
+      "lineNo": 153,
+      "componentItemId": "746f1d66-0cfd-494c-a76f-e284c3434036",
+      "componentSku": "D02LD096",
+      "componentName": "Bu lông M10 x 40",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 154,
+      "componentItemId": "d615e201-0e53-469c-98e3-f77be67ddb1b",
+      "componentSku": "D02LD097",
+      "componentName": "Bu lông M8 x 37",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 155,
+      "componentItemId": "ec90fbde-a900-41f3-9ec4-f79f8d104392",
+      "componentSku": "D02LD098",
+      "componentName": "Bu lông M6 x 16",
+      "qtyRequired": "20",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "148G/XE"
+    },
+    {
+      "lineNo": 156,
+      "componentItemId": "32acfdb7-fcb7-472a-8b74-a42519a0086c",
+      "componentSku": "D02LD099",
+      "componentName": "Bu lông M10 x 25",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 157,
+      "componentItemId": "d4448d48-efe2-493a-b6c2-9827acebc364",
+      "componentSku": "D02LD100",
+      "componentName": "Bu lông M3 x 25",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "ĐUÔI SẠC"
+    },
+    {
+      "lineNo": 158,
+      "componentItemId": "446f2a4d-355b-4399-9b6a-e20c6601a306",
+      "componentSku": "D02LD101",
+      "componentName": "Ecu M3",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 159,
+      "componentItemId": "5503b9aa-d9a5-4c7b-a6f5-62ff1d0d201c",
+      "componentSku": "D02LD102",
+      "componentName": "Bu lông M10 x 45",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "GẮN CỔ"
+    },
+    {
+      "lineNo": 160,
+      "componentItemId": "ab25e9ee-59f0-47b6-803e-7951163b3ac1",
+      "componentSku": "D02LD103",
+      "componentName": "Bu lông M10 x 35",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 161,
+      "componentItemId": "efd23bde-2d98-42dd-8d98-becb243f338c",
+      "componentSku": "D02LD104",
+      "componentName": "Bu lông ốc vít M6 x 12 ren mịn",
+      "qtyRequired": "3",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 162,
+      "componentItemId": "87dc9ea0-dd94-4501-8c03-11bc2e67d684",
+      "componentSku": "D02LD105",
+      "componentName": "Ốc Vít M4 x 12",
+      "qtyRequired": "60",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "73G/XE"
+    },
+    {
+      "lineNo": 163,
+      "componentItemId": "c4863812-a2b4-4175-99a9-79334ef73558",
+      "componentSku": "D02LD106",
+      "componentName": "Ốc vít M4.8 x 14",
+      "qtyRequired": "20",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 164,
+      "componentItemId": "eb4c2f31-9631-4528-a611-230f89f6027c",
+      "componentSku": "D02LD107",
+      "componentName": "Ốc vít M4 x 14",
+      "qtyRequired": "30",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "93G/XE"
+    },
+    {
+      "lineNo": 165,
+      "componentItemId": "706861ba-9b19-44c3-b39a-6a784dea661f",
+      "componentSku": "D02LD108",
+      "componentName": "Ecu M6",
+      "qtyRequired": "15",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "47G/XE"
+    },
+    {
+      "lineNo": 166,
+      "componentItemId": "c60b68de-c3e5-4de2-988d-81cf54eebed6",
+      "componentSku": "D02LD109",
+      "componentName": "Ecu M10 có khóa ren",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "GẮN CỔ"
+    },
+    {
+      "lineNo": 167,
+      "componentItemId": "c2ea38ba-14dc-4ee5-a537-05f2c7114871",
+      "componentSku": "D02LD110",
+      "componentName": "Ecu m10",
+      "qtyRequired": "4",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 168,
+      "componentItemId": "3585605d-5eef-4e65-b4d7-de79dd716b01",
+      "componentSku": "D02LD111",
+      "componentName": "Ecu m12 có khóa ren",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 169,
+      "componentItemId": "63340c2b-89be-44fb-b362-aba78296f8b0",
+      "componentSku": "D02LD112",
+      "componentName": "Khâu dài trục m13 x 20",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 170,
+      "componentItemId": "36c6e426-6906-4587-855c-f3bca1edd708",
+      "componentSku": "D02LD113",
+      "componentName": "Khâu ngắn trục m13 x 17",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 171,
+      "componentItemId": "a603aa8f-a144-4e6e-b21a-05471550b83a",
+      "componentSku": "D02LD114",
+      "componentName": "Khâu cổ",
+      "qtyRequired": "1",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 172,
+      "componentItemId": "324074aa-c604-43a8-8bbd-2c5cff726ee0",
+      "componentSku": "D02LD115",
+      "componentName": "Khâu chống giữa",
+      "qtyRequired": "2",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 173,
+      "componentItemId": "ff3e0b1a-7f57-46cf-ad64-881d461e9eab",
+      "componentSku": "D02LD116",
+      "componentName": "Nẹp bắt vít 4 ly",
+      "qtyRequired": "50",
+      "uom": "Con",
+      "scrapRate": "0",
+      "notes": "81G/XE"
+    },
+    {
+      "lineNo": 174,
+      "componentItemId": "09f33a6e-a830-43ac-bd3d-5911943eeabc",
+      "componentSku": "DR117",
+      "componentName": "Dây rút R3",
+      "qtyRequired": "8",
+      "uom": "Sợi",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 175,
+      "componentItemId": "519f8f6b-c9e5-482b-92fb-b74270b0250a",
+      "componentSku": "MB118",
+      "componentName": "Mỡ bò",
+      "qtyRequired": "10",
+      "uom": "Gram",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 176,
+      "componentItemId": "0a962e14-6575-4811-b543-9d3b5c8d22f3",
+      "componentSku": "TC119",
+      "componentName": "Tem nhãn hiệu PACEO",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 177,
+      "componentItemId": "7ed2c048-2543-42db-9f3f-3c0c11e7b0f9",
+      "componentSku": "TC120",
+      "componentName": "Tem logo K Lotus",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 178,
+      "componentItemId": "51ff92f2-55fa-47eb-96cc-6af6db41b910",
+      "componentSku": "TC121",
+      "componentName": "Tem thông số kỹ thuật xe ( trắng đen )",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 179,
+      "componentItemId": "85b4c99e-051e-40f1-91d5-a25a9a48dd13",
+      "componentSku": "TC122",
+      "componentName": "Tem nhãn năng lượng ( xanh )",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 180,
+      "componentItemId": "294970cc-bec4-4600-b120-3ad295be5434",
+      "componentSku": "DO2DM121",
+      "componentName": "Gia công sơn",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 181,
+      "componentItemId": "f1fd2d62-bc48-4770-8dd4-ed4f6106d654",
+      "componentSku": "BBBS122",
+      "componentName": "Bảng bắt biển số",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 182,
+      "componentItemId": "96d4176d-781b-42f2-b5f0-436365f4b35a",
+      "componentSku": "ZIP1117",
+      "componentName": "Túi Zip 11x17",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 183,
+      "componentItemId": "b513c1d0-b0dc-4e87-952f-ab91ebfa1649",
+      "componentSku": "ZIP1522",
+      "componentName": "Túi Zip 15x22",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 184,
+      "componentItemId": "a29afa17-267f-48e3-a5e2-d0bdfb72302f",
+      "componentSku": "ZIP1727",
+      "componentName": "Túi Zip 17x27",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 185,
+      "componentItemId": "6d4c1186-199d-4d44-a746-13ad4d9720fb",
+      "componentSku": "TEMP41TG",
+      "componentName": "trục giữa",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 186,
+      "componentItemId": "ac4bdff7-92df-4390-ae3e-51a873c289ec",
+      "componentSku": "TEMP42DBD",
+      "componentName": "đùi bàn đạp",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 187,
+      "componentItemId": "9235c430-9d0c-4681-aa0b-d4fa340241d7",
+      "componentSku": "TEMP43BRT",
+      "componentName": "bánh răng trước",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 188,
+      "componentItemId": "2242e731-4109-435d-be32-8a432c190572",
+      "componentSku": "TEMP44BD",
+      "componentName": "bàn đạp",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 189,
+      "componentItemId": "a848dd6f-334c-4ffb-9526-01d386d2cda8",
+      "componentSku": "TEMP45XX",
+      "componentName": "xích xe",
+      "qtyRequired": "1",
+      "uom": "Sợi",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 190,
+      "componentItemId": "934e5dec-1bc2-4c6a-a6d2-47c9fc736496",
+      "componentSku": "TEMP46BCNG",
+      "componentName": "bộ côn nồi giữa",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 191,
+      "componentItemId": "43abd05c-56a8-4098-bdea-b419a866aaf1",
+      "componentSku": "TEMP47BRS",
+      "componentName": "bánh răng sau",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 192,
+      "componentItemId": "734680e9-1c75-4c06-b419-1a8d988ab1e4",
+      "componentSku": "TEMP48BKCDLKL",
+      "componentName": "bộ khoá có đèn logo K LOTUS",
+      "qtyRequired": "1",
+      "uom": "Bộ",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 193,
+      "componentItemId": "701e7174-07b2-433c-87c8-9a2248753e61",
+      "componentSku": "TEMP1BONNIUB",
+      "componentName": "Bảng ốp nhôm nhựa in UV BN5",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    },
+    {
+      "lineNo": 194,
+      "componentItemId": "e7d726ed-d697-43fb-8822-8e6e4b3ceccf",
+      "componentSku": "ZIP1527",
+      "componentName": "Túi Zip 15x27",
+      "qtyRequired": "1",
+      "uom": "Cái",
+      "scrapRate": "0",
+      "notes": null
+    }
+  ]
+}
