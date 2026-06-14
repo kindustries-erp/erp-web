@@ -17,6 +17,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -727,30 +728,48 @@ export function ErpGoodsReceiptsPage() {
                     status header là gì.
                   </div>
                 ) : (
-                  form.lines.map((line, index) => (
-                    <div
-                      key={`${index}-${line.purchaseOrderLineId}`}
-                      className="rounded-xl border border-border bg-muted/20 p-3"
-                    >
-                      <div className="mb-2 text-xs font-semibold text-muted-foreground">
-                        Dòng {index + 1}
-                      </div>
-                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <DrawerField label="Mặt hàng">
+                  <DocumentLineTable
+                    columns={[
+                      {
+                        key: "index",
+                        header: "STT",
+                        width: 40,
+                        align: "center",
+                        cell: (_, index) => (
+                          <span className="text-muted-foreground">
+                            {index + 1}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "itemName",
+                        header: "Mặt hàng",
+                        minWidth: 200,
+                        cell: (line) => (
                           <input
                             value={line.itemName}
                             disabled
                             className={inputCls}
                           />
-                        </DrawerField>
-                        <DrawerField label="Mô tả / tham chiếu dòng PO">
+                        ),
+                      },
+                      {
+                        key: "itemDesc",
+                        header: "Mô tả / tham chiếu dòng PO",
+                        minWidth: 200,
+                        cell: (line) => (
                           <input
                             value={line.itemDesc}
                             disabled
                             className={inputCls}
                           />
-                        </DrawerField>
-                        <DrawerField label="Số lượng nhập" required>
+                        ),
+                      },
+                      {
+                        key: "qtyReceived",
+                        header: "Số lượng nhập",
+                        minWidth: 140,
+                        cell: (line, index) => (
                           <input
                             value={line.qtyReceived}
                             disabled={viewOnly}
@@ -766,8 +785,13 @@ export function ErpGoodsReceiptsPage() {
                             }
                             className={inputCls}
                           />
-                        </DrawerField>
-                        <DrawerField label="Đơn giá">
+                        ),
+                      },
+                      {
+                        key: "unitCost",
+                        header: "Đơn giá",
+                        minWidth: 140,
+                        cell: (line, index) => (
                           <input
                             value={line.unitCost}
                             disabled={viewOnly}
@@ -783,10 +807,16 @@ export function ErpGoodsReceiptsPage() {
                             }
                             className={inputCls}
                           />
-                        </DrawerField>
-                      </div>
-                    </div>
-                  ))
+                        ),
+                      },
+                    ]}
+                    data={form.lines}
+                    getRowKey={(line, index) =>
+                      `${index}-${line.purchaseOrderLineId}`
+                    }
+                    viewOnly={viewOnly}
+                    disabled={viewOnly}
+                  />
                 )}
               </div>
             </DrawerSection>

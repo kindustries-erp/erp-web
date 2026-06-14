@@ -78,6 +78,7 @@ import {
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useOperationalListQuery } from "../hooks/useOperationalListQuery";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -439,77 +440,103 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
             {t("Không có dòng chi tiết.")}
           </div>
         ) : (
-          <div className="w-full overflow-x-auto overflow-y-auto max-h-[300px] rounded-lg border border-[color:var(--border)]">
-            <table className="w-full text-sm text-left relative">
-              <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
-                <tr>
-                  <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
-                    #
-                  </th>
-                  <th className="px-3 py-2 font-medium min-w-[140px]">
-                    {t("Mã linh kiện")}
-                  </th>
-                  <th className="px-3 py-2 font-medium min-w-[260px]">
-                    {t("Linh kiện / Tên hàng")}
-                  </th>
-                  <th className="px-3 py-2 font-medium min-w-[100px] text-center">
-                    Số lượng
-                  </th>
-                  <th className="px-3 py-2 font-medium min-w-[100px] text-center">
-                    Đã nhập
-                  </th>
-                  <th className="px-3 py-2 font-medium min-w-[100px] text-center">
-                    Còn lại
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[color:var(--border)]">
-                {detail.lines.map((line, idx) => {
-                  const poLine = poDetail?.lines?.find(
-                    (l, i) => l.id === line.id || i === idx,
-                  );
-                  const qtyReceived = Number(poLine?.qtyReceived || 0);
-                  const qtyOrdered = Number(
-                    line.qty || poLine?.qtyOrdered || 0,
-                  );
-                  const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
-
-                  return (
-                    <tr
-                      key={line.id || idx}
-                      className="hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="px-3 py-2 text-center text-muted-foreground">
-                        {idx + 1}
-                      </td>
-                      <td className="px-3 py-2">{line.item_code || "—"}</td>
-                      <td className="px-3 py-2">
-                        <div className="font-medium text-foreground">
-                          {line.item_name ||
-                            line.description ||
-                            `${t("Dòng")} ${idx + 1}`}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <div className="font-medium text-foreground">
-                          {Number(line.qty || 0).toLocaleString("vi-VN")}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <div className="font-medium text-emerald-600">
-                          {qtyReceived.toLocaleString("vi-VN")}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-center">
-                        <div className="font-medium text-amber-600">
-                          {qtyRemaining.toLocaleString("vi-VN")}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="w-full overflow-y-auto max-h-[300px]">
+            <DocumentLineTable
+              columns={[
+                {
+                  key: "index",
+                  header: "#",
+                  width: 40,
+                  align: "center",
+                  cell: (_, idx) => (
+                    <span className="text-muted-foreground">{idx + 1}</span>
+                  ),
+                },
+                {
+                  key: "itemCode",
+                  header: t("Mã linh kiện"),
+                  minWidth: 140,
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                  ) => line.item_code || "—",
+                },
+                {
+                  key: "itemName",
+                  header: t("Linh kiện / Tên hàng"),
+                  minWidth: 260,
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                    idx: number,
+                  ) => (
+                    <div className="font-medium text-foreground">
+                      {line.item_name ||
+                        line.description ||
+                        `${t("Dòng")} ${idx + 1}`}
+                    </div>
+                  ),
+                },
+                {
+                  key: "qtyOrdered",
+                  header: t("Số lượng"),
+                  minWidth: 100,
+                  align: "center",
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                  ) => (
+                    <div className="font-medium text-foreground">
+                      {Number(line.qty || 0).toLocaleString("vi-VN")}
+                    </div>
+                  ),
+                },
+                {
+                  key: "qtyReceived",
+                  header: t("Đã nhập"),
+                  minWidth: 100,
+                  align: "center",
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                    idx: number,
+                  ) => {
+                    const poLine = poDetail?.lines?.find(
+                      (l, i) => l.id === line.id || i === idx,
+                    );
+                    const qtyReceived = Number(poLine?.qtyReceived || 0);
+                    return (
+                      <div className="font-medium text-emerald-600">
+                        {qtyReceived.toLocaleString("vi-VN")}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  key: "qtyRemaining",
+                  header: t("Còn lại"),
+                  minWidth: 100,
+                  align: "center",
+                  cell: (
+                    line: NonNullable<OperationalDocument["lines"]>[number],
+                    idx: number,
+                  ) => {
+                    const poLine = poDetail?.lines?.find(
+                      (l, i) => l.id === line.id || i === idx,
+                    );
+                    const qtyReceived = Number(poLine?.qtyReceived || 0);
+                    const qtyOrdered = Number(
+                      line.qty || poLine?.qtyOrdered || 0,
+                    );
+                    const qtyRemaining = Math.max(0, qtyOrdered - qtyReceived);
+                    return (
+                      <div className="font-medium text-amber-600">
+                        {qtyRemaining.toLocaleString("vi-VN")}
+                      </div>
+                    );
+                  },
+                },
+              ]}
+              data={detail.lines || []}
+              getRowKey={(line, idx) => line.id || idx}
+              viewOnly={true}
+            />
           </div>
         )}
       </div>

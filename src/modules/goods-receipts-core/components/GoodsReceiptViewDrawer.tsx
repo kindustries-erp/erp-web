@@ -23,6 +23,7 @@ import {
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 
 interface GoodsReceiptViewDrawerProps {
   open?: boolean;
@@ -170,26 +171,46 @@ export function GoodsReceiptViewDrawer({
         <div className="flex flex-col xl:flex-row gap-6 items-start">
           <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
             <DrawerSection title="Chi tiết">
-              <div className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-muted text-muted-foreground text-xs uppercase">
-                    <tr>
-                      <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
-                        STT
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[140px]">
-                        Mã linh kiện
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[260px]">
-                        Tên linh kiện
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[140px] text-right">
-                        SL thay đổi
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {detail.lines?.map((line, i) => {
+              <DocumentLineTable
+                columns={[
+                  {
+                    key: "index",
+                    header: "STT",
+                    width: 40,
+                    align: "center",
+                    cell: (_, i) => (
+                      <span className="text-muted-foreground">{i + 1}</span>
+                    ),
+                  },
+                  {
+                    key: "itemCode",
+                    header: "Mã linh kiện",
+                    minWidth: 140,
+                    cell: (
+                      line: NonNullable<ErpGoodsReceipt["lines"]>[number],
+                    ) => {
+                      const matchingPoLine = poDetail?.lines?.find(
+                        (l) => l.id === line.purchaseOrderLineId,
+                      );
+                      const itemId = line.itemId || matchingPoLine?.itemId;
+                      const itemCode =
+                        (itemId && itemsDict[itemId]?.sku) || itemId || "—";
+                      return (
+                        <Tooltip content={itemCode}>
+                          <span className="cursor-help line-clamp-2 font-medium text-xs">
+                            {itemCode}
+                          </span>
+                        </Tooltip>
+                      );
+                    },
+                  },
+                  {
+                    key: "itemName",
+                    header: "Tên linh kiện",
+                    minWidth: 260,
+                    cell: (
+                      line: NonNullable<ErpGoodsReceipt["lines"]>[number],
+                    ) => {
                       const matchingPoLine = poDetail?.lines?.find(
                         (l) => l.id === line.purchaseOrderLineId,
                       );
@@ -198,37 +219,33 @@ export function GoodsReceiptViewDrawer({
                         matchingPoLine?.itemName ||
                         matchingPoLine?.description ||
                         "—";
-                      const itemId = line.itemId || matchingPoLine?.itemId;
-                      const itemCode =
-                        (itemId && itemsDict[itemId]?.sku) || itemId || "—";
                       return (
-                        <tr key={line.id || i} className="bg-background">
-                          <td className="px-3 py-2 text-center align-top text-muted-foreground">
-                            {i + 1}
-                          </td>
-                          <td className="px-3 py-2 font-medium text-xs align-top">
-                            <Tooltip content={itemCode}>
-                              <span className="cursor-help line-clamp-2">
-                                {itemCode}
-                              </span>
-                            </Tooltip>
-                          </td>
-                          <td className="px-3 py-2 align-top">
-                            <Tooltip content={itemName}>
-                              <span className="cursor-help line-clamp-2">
-                                {itemName}
-                              </span>
-                            </Tooltip>
-                          </td>
-                          <td className="px-3 py-2 text-right font-medium text-emerald-600 align-top">
-                            +{fmtQty(line.qtyReceived)}
-                          </td>
-                        </tr>
+                        <Tooltip content={itemName}>
+                          <span className="cursor-help line-clamp-2">
+                            {itemName}
+                          </span>
+                        </Tooltip>
                       );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                    },
+                  },
+                  {
+                    key: "qtyReceived",
+                    header: "SL thay đổi",
+                    minWidth: 140,
+                    align: "right",
+                    cell: (
+                      line: NonNullable<ErpGoodsReceipt["lines"]>[number],
+                    ) => (
+                      <span className="font-medium text-emerald-600">
+                        +{fmtQty(line.qtyReceived)}
+                      </span>
+                    ),
+                  },
+                ]}
+                data={detail.lines || []}
+                getRowKey={(line, i) => line.id || i}
+                viewOnly={true}
+              />
             </DrawerSection>
           </div>
 

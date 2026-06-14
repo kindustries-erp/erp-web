@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { Combobox } from "@/shared/components/Combobox";
 import {
+  DrawerAction,
   DrawerField,
   DrawerModal,
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
+import {
+  DocumentLineTable,
+  type DocumentLineTableColumn,
+} from "@/shared/components/DocumentLineTable";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Trash2, Plus, ChevronRight, ChevronLeft } from "lucide-react";
@@ -239,55 +244,6 @@ export function OperationalFormDrawer({
 
   const [showGeneralInfo, setShowGeneralInfo] = useState(true);
 
-  const topScrollRef = useRef<HTMLDivElement>(null);
-  const bottomScrollRef = useRef<HTMLDivElement>(null);
-  const tableRef = useRef<HTMLTableElement>(null);
-  const [tableWidth, setTableWidth] = useState(0);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const updateWidth = () => {
-      if (bottomScrollRef.current) {
-        setTableWidth(bottomScrollRef.current.scrollWidth);
-      }
-    };
-
-    // Call immediately and after a short delay
-    updateWidth();
-    const timer = setTimeout(updateWidth, 150);
-
-    let observer: ResizeObserver | null = null;
-    if (tableRef.current) {
-      observer = new ResizeObserver(() => {
-        updateWidth();
-      });
-      observer.observe(tableRef.current);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      if (observer) observer.disconnect();
-    };
-  }, [open]);
-
-  const handleTopScroll = () => {
-    if (bottomScrollRef.current && topScrollRef.current) {
-      const target = topScrollRef.current.scrollLeft;
-      if (bottomScrollRef.current.scrollLeft !== target) {
-        bottomScrollRef.current.scrollLeft = target;
-      }
-    }
-  };
-
-  const handleBottomScroll = () => {
-    if (topScrollRef.current && bottomScrollRef.current) {
-      const target = bottomScrollRef.current.scrollLeft;
-      if (topScrollRef.current.scrollLeft !== target) {
-        topScrollRef.current.scrollLeft = target;
-      }
-    }
-  };
   const [docNo, setDocNo] = useState("");
   const [branchId, setBranchId] = useState("");
   const [partnerId, setPartnerId] = useState("");
@@ -781,217 +737,176 @@ export function OperationalFormDrawer({
                 </span>
               }
             >
-              <div
-                ref={topScrollRef}
-                className="w-full overflow-x-auto"
-                onScroll={handleTopScroll}
-              >
-                <div
-                  style={{
-                    width: tableWidth ? `${tableWidth}px` : "100%",
-                    height: "1px",
-                  }}
-                />
-              </div>
-              <div
-                ref={bottomScrollRef}
-                className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]"
-                onScroll={handleBottomScroll}
-              >
-                <table ref={tableRef} className="w-full text-sm text-left">
-                  <thead className="bg-muted text-muted-foreground text-xs uppercase">
-                    <tr>
-                      <th className="px-3 py-2 font-medium w-10 text-center shrink-0">
-                        #
-                      </th>
-                      {variant === "purchase" && (
-                        <th className="px-3 py-2 font-medium min-w-[140px]">
-                          {t("Mã linh kiện")}
-                        </th>
-                      )}
-                      <th className="px-3 py-2 font-medium min-w-[260px]">
-                        {t("Linh kiện / Tên hàng")}
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[140px]">
-                        {t("Số lượng")}
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[180px]">
-                        {t("Đơn giá")}
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[180px]">
-                        {t("Thành tiền")}
-                      </th>
-                      <th className="px-3 py-2 font-medium min-w-[240px]">
-                        {t("Mô tả")}
-                      </th>
-                      {!viewOnly && (
-                        <th className="px-3 py-2 font-medium w-12 text-center"></th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-background">
-                    {lines.map((line, idx) => (
-                      <tr key={line.tempId} className="group hover:bg-muted/30">
-                        <td className="px-3 py-3 text-center text-muted-foreground align-top mt-2">
-                          {idx + 1}
-                        </td>
-                        {variant === "purchase" && (
-                          <td className="px-3 py-3 align-top mt-2">
-                            {line.item_code || "—"}
-                          </td>
-                        )}
-                        <td className="px-3 py-2 align-top">
-                          {variant === "purchase" ? (
-                            <Combobox
-                              options={purchaseInventoryOptions}
-                              value={line.inventory_item_id}
-                              readOnly={isPurchaseLocked}
-                              onChange={(v) => {
-                                const selected = purchaseInventoryOptions.find(
-                                  (item) => item.value === (v || ""),
-                                );
-                                setLines((prev) =>
-                                  prev.map((draft, i) =>
-                                    i !== idx
-                                      ? draft
-                                      : {
-                                          ...draft,
-                                          inventory_item_id: v || "",
-                                          item_code: selected?.sku || "",
-                                          item_name: selected?.itemName || "",
-                                          description: selected
-                                            ? selected.note || ""
-                                            : draft.description,
-                                          line_type: selected
-                                            ? selected.itemType === "GOODS"
-                                              ? "PRODUCT"
-                                              : "PART"
-                                            : draft.line_type,
-                                        },
-                                  ),
-                                );
-                              }}
-                              placeholder={t("Chọn linh kiện từ danh mục")}
-                              searchPlaceholder={t(
-                                "Tìm SKU / tên linh kiện...",
-                              )}
-                              emptyLabel={t("Không có linh kiện phù hợp")}
-                              allowClear={false}
-                            />
-                          ) : (
-                            <div className="space-y-2">
-                              <Combobox
-                                options={lineTypeOptions}
-                                value={line.line_type}
-                                disabled={isPurchaseLocked}
-                                onChange={(v) =>
-                                  setLine(idx, "line_type", v || "SERVICE")
-                                }
-                                allowClear={false}
-                              />
-                              <input
-                                className={inputCls}
-                                placeholder={t("Mã hàng/SKU")}
-                                value={line.item_code}
-                                disabled={isPurchaseLocked}
-                                onChange={(e) =>
-                                  setLine(idx, "item_code", e.target.value)
-                                }
-                              />
-                              <input
-                                className={inputCls}
-                                placeholder={t("Tên hàng/dịch vụ")}
-                                value={line.item_name}
-                                disabled={isPurchaseLocked}
-                                onChange={(e) =>
-                                  setLine(idx, "item_name", e.target.value)
-                                }
-                              />
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <input
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            className={inputCls}
-                            value={line.qty}
-                            disabled={purchaseFieldLocked("qty")}
-                            onChange={(e) =>
-                              setLine(idx, "qty", e.target.value)
+              <DocumentLineTable
+                columns={[
+                  {
+                    key: "index",
+                    header: "#",
+                    width: 40,
+                    align: "center",
+                    cell: (_, idx) => (
+                      <span className="text-muted-foreground">{idx + 1}</span>
+                    ),
+                  },
+                  ...(variant === "purchase"
+                    ? [
+                        {
+                          key: "item_code",
+                          header: t("Mã linh kiện"),
+                          minWidth: 140,
+                          cell: (line: LineDraft) => line.item_code || "—",
+                        },
+                      ]
+                    : []),
+                  {
+                    key: "item_name",
+                    header: t("Linh kiện / Tên hàng"),
+                    minWidth: 260,
+                    cell: (line: LineDraft, idx: number) => {
+                      return variant === "purchase" ? (
+                        <Combobox
+                          options={purchaseInventoryOptions}
+                          value={line.inventory_item_id}
+                          readOnly={isPurchaseLocked}
+                          onChange={(v) => {
+                            const selected = purchaseInventoryOptions.find(
+                              (item) => item.value === (v || ""),
+                            );
+                            setLines((prev) =>
+                              prev.map((draft, i) =>
+                                i !== idx
+                                  ? draft
+                                  : {
+                                      ...draft,
+                                      inventory_item_id: v || "",
+                                      item_code: selected?.sku || "",
+                                      item_name: selected?.itemName || "",
+                                      description: selected
+                                        ? selected.note || ""
+                                        : draft.description,
+                                      line_type: selected
+                                        ? selected.itemType === "GOODS"
+                                          ? "PRODUCT"
+                                          : "PART"
+                                        : draft.line_type,
+                                    },
+                              ),
+                            );
+                          }}
+                          placeholder={t("Chọn linh kiện từ danh mục")}
+                          searchPlaceholder={t("Tìm SKU / tên linh kiện...")}
+                          emptyLabel={t("Không có linh kiện phù hợp")}
+                          allowClear={false}
+                        />
+                      ) : (
+                        <div className="space-y-2">
+                          <Combobox
+                            options={lineTypeOptions}
+                            value={line.line_type}
+                            disabled={isPurchaseLocked}
+                            onChange={(v) =>
+                              setLine(idx, "line_type", v || "SERVICE")
                             }
+                            allowClear={false}
                           />
-                        </td>
-                        <td className="px-3 py-2 align-top">
                           <input
-                            type="number"
-                            min={0}
-                            step="0.01"
                             className={inputCls}
-                            value={line.unit_price}
+                            placeholder={t("Mã hàng/SKU")}
+                            value={line.item_code}
                             disabled={isPurchaseLocked}
                             onChange={(e) =>
-                              setLine(idx, "unit_price", e.target.value)
+                              setLine(idx, "item_code", e.target.value)
                             }
                           />
-                        </td>
-                        <td className="px-3 py-2 align-top">
                           <input
-                            type="number"
-                            min={0}
-                            step="0.01"
                             className={inputCls}
-                            value={line.amount}
+                            placeholder={t("Tên hàng/dịch vụ")}
+                            value={line.item_name}
                             disabled={isPurchaseLocked}
                             onChange={(e) =>
-                              setLine(idx, "amount", e.target.value)
+                              setLine(idx, "item_name", e.target.value)
                             }
                           />
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <input
-                            className={inputCls}
-                            value={line.description}
-                            disabled={purchaseFieldLocked("description")}
-                            onChange={(e) =>
-                              setLine(idx, "description", e.target.value)
-                            }
-                            placeholder={t("Nhập mô tả")}
-                          />
-                        </td>
-                        {!viewOnly && (
-                          <td className="px-3 py-2 align-top text-center">
-                            {lines.length > 1 && !isPurchaseLocked && (
-                              <button
-                                type="button"
-                                className="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors mt-1"
-                                disabled={isPurchaseLocked}
-                                onClick={() => removeLine(idx)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {!viewOnly && !isPurchaseLocked && (
-                  <div className="p-3 border-t border-border bg-muted/10">
-                    <button
-                      type="button"
-                      className="text-sm font-medium text-muted-foreground hover:text-foreground bg-background hover:bg-muted border border-border px-3 py-1.5 rounded-md flex items-center gap-1.5 transition-colors w-fit shadow-sm"
-                      disabled={isPurchaseLocked}
-                      onClick={addLine}
-                    >
-                      <Plus className="w-4 h-4" />
-                      {t("Thêm dòng")}
-                    </button>
-                  </div>
-                )}
-              </div>
+                        </div>
+                      );
+                    },
+                  },
+                  {
+                    key: "qty",
+                    header: t("Số lượng"),
+                    minWidth: 140,
+                    cell: (line: LineDraft, idx: number) => (
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className={inputCls}
+                        value={line.qty}
+                        disabled={purchaseFieldLocked("qty")}
+                        onChange={(e) => setLine(idx, "qty", e.target.value)}
+                      />
+                    ),
+                  },
+                  {
+                    key: "unit_price",
+                    header: t("Đơn giá"),
+                    minWidth: 180,
+                    cell: (line: LineDraft, idx: number) => (
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className={inputCls}
+                        value={line.unit_price}
+                        disabled={isPurchaseLocked}
+                        onChange={(e) =>
+                          setLine(idx, "unit_price", e.target.value)
+                        }
+                      />
+                    ),
+                  },
+                  {
+                    key: "amount",
+                    header: t("Thành tiền"),
+                    minWidth: 180,
+                    cell: (line: LineDraft, idx: number) => (
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        className={inputCls}
+                        value={line.amount}
+                        disabled={isPurchaseLocked}
+                        onChange={(e) => setLine(idx, "amount", e.target.value)}
+                      />
+                    ),
+                  },
+                  {
+                    key: "description",
+                    header: t("Mô tả"),
+                    minWidth: 240,
+                    cell: (line: LineDraft, idx: number) => (
+                      <input
+                        className={inputCls}
+                        value={line.description}
+                        disabled={purchaseFieldLocked("description")}
+                        onChange={(e) =>
+                          setLine(idx, "description", e.target.value)
+                        }
+                        placeholder={t("Nhập mô tả")}
+                      />
+                    ),
+                  },
+                ]}
+                data={lines}
+                getRowKey={(line) => line.tempId}
+                onAddLine={addLine}
+                onRemoveLine={
+                  lines.length > 1 && !isPurchaseLocked ? removeLine : undefined
+                }
+                disabled={isPurchaseLocked}
+                viewOnly={viewOnly}
+              />
             </DrawerSection>
           </div>
 
