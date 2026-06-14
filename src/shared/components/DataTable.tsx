@@ -186,14 +186,20 @@ export function DataTable<T>({
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"
-                              strokeWidth="3"
                               strokeLinecap="round"
                               strokeLinejoin="round"
+                              strokeWidth={
+                                sortBy === meta.sortKey && sortOrder === "asc"
+                                  ? 3.5
+                                  : 2.5
+                              }
                               className={cn(
-                                "text-muted-foreground/30",
-                                sortBy === meta.sortKey &&
-                                  sortOrder === "asc" &&
-                                  "text-foreground",
+                                "transition-all duration-150",
+                                sortBy === meta.sortKey
+                                  ? sortOrder === "asc"
+                                    ? "text-foreground"
+                                    : "text-muted-foreground/15"
+                                  : "text-muted-foreground/35",
                               )}
                             >
                               <path d="m18 15-6-6-6 6" />
@@ -205,14 +211,20 @@ export function DataTable<T>({
                               viewBox="0 0 24 24"
                               fill="none"
                               stroke="currentColor"
-                              strokeWidth="3"
                               strokeLinecap="round"
                               strokeLinejoin="round"
+                              strokeWidth={
+                                sortBy === meta.sortKey && sortOrder === "desc"
+                                  ? 3.5
+                                  : 2.5
+                              }
                               className={cn(
-                                "text-muted-foreground/30",
-                                sortBy === meta.sortKey &&
-                                  sortOrder === "desc" &&
-                                  "text-foreground",
+                                "transition-all duration-150",
+                                sortBy === meta.sortKey
+                                  ? sortOrder === "desc"
+                                    ? "text-foreground"
+                                    : "text-muted-foreground/15"
+                                  : "text-muted-foreground/35",
                               )}
                             >
                               <path d="m6 9 6 6 6-6" />

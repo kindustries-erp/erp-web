@@ -280,6 +280,9 @@ export function ErpWarehousePage() {
   const [pageSize, setPageSize] = useState(40);
   const [sortBy, setSortBy] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  // activeSortKey: column đang được user chọn sort; null = default (không có active sort)
+  const [activeSortKey, setActiveSortKey] = useState<string | null>(null);
+  const [activeSortOrder, setActiveSortOrder] = useState<"asc" | "desc">("asc");
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── GR drawer state
@@ -918,12 +921,24 @@ export function ErpWarehousePage() {
               columns={columns}
               getRowKey={(r) => `${r.type}-${r.id}`}
               loading={loading}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
+              sortBy={activeSortKey ?? ""}
+              sortOrder={activeSortOrder}
               onSort={(key) => {
-                if (sortBy === key) {
-                  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+                if (activeSortKey === key) {
+                  if (activeSortOrder === "asc") {
+                    // lần 2: chuyển sang desc
+                    setActiveSortOrder("desc");
+                    setSortOrder("desc");
+                  } else {
+                    // lần 3: reset về default
+                    setActiveSortKey(null);
+                    setSortBy("date");
+                    setSortOrder("desc");
+                  }
                 } else {
+                  // click column mới: bắt đầu từ asc
+                  setActiveSortKey(key);
+                  setActiveSortOrder("asc");
                   setSortBy(key);
                   setSortOrder("asc");
                 }
