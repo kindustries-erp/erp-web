@@ -83,7 +83,10 @@ jobs:
             -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "cd /home/lio/opt/stacks/erp/erp-web-master && docker compose up -d --build --force-recreate"
+            "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+             docker pull ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha }} && \
+             docker rm -f erp-web-master || true && \
+             docker run -d --name erp-web-master --restart always -p 8010:80 ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha }}"
 
       - name: Health check
         run: |
