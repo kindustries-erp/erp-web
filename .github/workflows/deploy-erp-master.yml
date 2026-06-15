@@ -83,10 +83,10 @@ jobs:
           sshpass -e ssh -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
-             docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} && \
-             docker rm -f erp-web-master || true && \
-             docker run -d --name erp-web-master --restart always --add-host liouni-erp-core-api:host-gateway -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
+            "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin ; \
+             docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} || true ; \
+             docker rm -f erp-web-master || true ; \
+             docker run -d --name erp-web-master --restart always --add-host erp-api-master:host-gateway -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check
         env:
