@@ -21,6 +21,7 @@ export interface OperationalListQueryParams {
   date_from?: string;
   date_to?: string;
   item_type?: string;
+  inventory_item_id?: string;
   sort?: string[];
 }
 
@@ -57,6 +58,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       date_from: params.date_from || undefined,
       date_to: params.date_to || undefined,
       item_type: params.item_type || undefined,
+      inventory_item_id: params.inventory_item_id || undefined,
       sort: params.sort || undefined,
     }),
     [params],

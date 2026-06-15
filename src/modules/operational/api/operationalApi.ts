@@ -257,6 +257,11 @@ function params(input: ListParams = {}) {
       : {}),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ...((input as any).date_to ? { date_to: (input as any).date_to } : {}),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...((input as any).inventory_item_id
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { inventory_item_id: (input as any).inventory_item_id }
+      : {}),
   };
 }
 
