@@ -227,10 +227,6 @@ function buildGiPayload(form: GiForm): CreateGiPayload {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function fmtDate(value?: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
 function fmtQty(value?: string | null) {
   if (!value) return "0";
   const n = Number(value);
