@@ -83,7 +83,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -p ${{ vars.ELITE_PORT }} \
             ${{ vars.ELITE_USER }}@${{ vars.ELITE_HOST }} \
-            "cd /opt/stacks/liouni-erp-core-web && IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} docker compose up -d --force-recreate"
+            "cd /opt/stacks/erp-core-web && IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} docker compose up -d --force-recreate"
 
       - name: Health check
         run: |

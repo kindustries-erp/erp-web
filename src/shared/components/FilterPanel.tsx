@@ -167,6 +167,17 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
               onChange={(v) => filter.setCustom(f.key, v.join(","))}
               placeholder={f.placeholder}
             />
+          ) : f.type === "combobox" ? (
+            <Combobox
+              options={f.options}
+              value={filter.state.custom[f.key] ?? ""}
+              onChange={(v) => filter.setCustom(f.key, v ?? "")}
+              placeholder={f.placeholder}
+              className="w-full"
+              onSearch={f.onSearch}
+              onScrollBottom={f.onLoadMore}
+              loading={f.loading}
+            />
           ) : (
             <Combobox
               options={f.options}

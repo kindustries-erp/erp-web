@@ -678,13 +678,14 @@ export function OperationalListPage({
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [supplierFilter, setSupplierFilter] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [itemFilter, setItemFilter] = useState("");
+
   const [supplierSearch, setSupplierSearch] = useState("");
   const {
     data: suppliersData,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     fetchNextPage: fetchNextSuppliers,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     isFetchingNextPage: loadingSuppliers,
   } = useBasicMasterInfinite({
     search: supplierSearch,
@@ -703,6 +704,30 @@ export function OperationalListPage({
       ) || []
     );
   }, [suppliersData]);
+
+  const [itemSearch, setItemSearch] = useState("");
+  const {
+    data: itemsData,
+    fetchNextPage: fetchNextItems,
+    isFetchingNextPage: loadingItems,
+  } = useBasicMasterInfinite({
+    search: itemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+    enabled: variant === "purchase",
+  });
+
+  const itemOptions = useMemo(() => {
+    return (
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map((i) => ({
+          value: i.id,
+          label: `${i.sku} — ${i.itemName}`,
+        })),
+      ) || []
+    );
+  }, [itemsData]);
+
   // sort state: "field" = ASC, "-field" = DESC, "" = default (createdAt DESC)
   const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
@@ -813,6 +838,7 @@ export function OperationalListPage({
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
     item_type: itemTypeFilter || undefined,
+    inventory_item_id: itemFilter || undefined,
     sort: purchaseSortArray,
   });
 
@@ -828,7 +854,7 @@ export function OperationalListPage({
   useEffect(() => {
     if (variant !== "purchase") return;
     void listQuery.refetch();
-  }, [variant, supplierFilter]);
+  }, [variant, supplierFilter, itemFilter]);
 
   const items = useMemo(
     () =>
@@ -1247,6 +1273,20 @@ export function OperationalListPage({
                 label: "Nhà cung cấp",
                 placeholder: "Tất cả nhà cung cấp",
                 options: supplierOptions,
+                type: "combobox" as const,
+                onSearch: setSupplierSearch,
+                onLoadMore: fetchNextSuppliers,
+                loading: loadingSuppliers,
+              },
+              {
+                key: "inventory_item_id",
+                label: "Linh kiện",
+                placeholder: "Tất cả linh kiện",
+                options: itemOptions,
+                type: "combobox" as const,
+                onSearch: setItemSearch,
+                onLoadMore: fetchNextItems,
+                loading: loadingItems,
               },
             ],
           }
@@ -1283,7 +1323,7 @@ export function OperationalListPage({
     ...(variant === "inventory"
       ? [!!itemTypeFilter]
       : variant === "purchase"
-        ? [!!supplierFilter]
+        ? [!!supplierFilter, !!itemFilter]
         : [
             !!branchFilter,
             !!statusFilter,
@@ -1708,7 +1748,10 @@ export function OperationalListPage({
                   variant === "inventory"
                     ? { itemType: itemTypeFilter }
                     : variant === "purchase"
-                      ? { supplier_id: supplierFilter }
+                      ? {
+                          supplier_id: supplierFilter,
+                          inventory_item_id: itemFilter,
+                        }
                       : {
                           paymentStatus: paymentStatusFilter,
                           recurring: recurringFilter,
@@ -1743,6 +1786,10 @@ export function OperationalListPage({
                 }
                 if (key === "supplier_id") {
                   setSupplierFilter(v);
+                  setPage(1);
+                }
+                if (key === "inventory_item_id") {
+                  setItemFilter(v);
                   setPage(1);
                 }
                 if (key === "paymentStatus") {
@@ -1883,7 +1930,10 @@ export function OperationalListPage({
               counterpartySource: "",
               custom:
                 variant === "purchase"
-                  ? { supplier_id: supplierFilter }
+                  ? {
+                      supplier_id: supplierFilter,
+                      inventory_item_id: itemFilter,
+                    }
                   : {
                       paymentStatus: paymentStatusFilter,
                       recurring: recurringFilter,
@@ -1930,6 +1980,10 @@ export function OperationalListPage({
             setCustom: (key: string, v: string) => {
               if (key === "supplier_id") {
                 setSupplierFilter(v);
+                setPage(1);
+              }
+              if (key === "inventory_item_id") {
+                setItemFilter(v);
                 setPage(1);
               }
               if (key === "paymentStatus") {
