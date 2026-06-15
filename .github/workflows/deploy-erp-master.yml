@@ -8,6 +8,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-master
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-and-push:
@@ -99,6 +100,7 @@ jobs:
                 code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8010/ || true)
                 if [ "$code" = "200" ]; then
                   echo "✅ Web health OK"
+                  docker image prune -af
                   exit 0
                 fi
                 echo "Attempt $i: got $code, retrying..."
