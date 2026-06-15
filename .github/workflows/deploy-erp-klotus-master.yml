@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/kindustries-erp/erp-web
+  IMAGE_NAME: ghcr.io/kindustries-erp/erp-klotus-web
 
 jobs:
   build-and-push:
