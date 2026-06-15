@@ -83,7 +83,7 @@ jobs:
             -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "docker login ghcr.io -u github --password-stdin <<'EOF'\n${{ secrets.GITHUB_TOKEN }}\nEOF\ncd /opt/stacks/erp-klotus-web && IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} docker compose up -d --no-build --force-recreate"
+            "echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u kindustries-erp --password-stdin && cd /opt/stacks/erp-klotus-web && IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} docker compose pull && IMAGE_TAG=${{ needs.build-and-push.outputs.sha }} docker compose up -d --no-build --force-recreate"
 
       - name: Health check
         run: |
