@@ -314,15 +314,40 @@ export function ErpBomPage() {
   });
 
   const itemOptions = useMemo(() => {
-    return (
+    const opts =
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i) => ({
           value: i.id,
           label: `${i.sku} — ${i.itemName}`,
         })),
-      ) || []
-    );
-  }, [itemsData]);
+      ) || [];
+
+    if (editing) {
+      if (
+        editing.finishedGoodItemId &&
+        !opts.some((o) => o.value === editing.finishedGoodItemId)
+      ) {
+        opts.push({
+          value: editing.finishedGoodItemId,
+          label: editing.finishedGoodItemName || "Thành phẩm hiện tại",
+        });
+      }
+
+      editing.lines?.forEach((line) => {
+        if (
+          line.componentItemId &&
+          !opts.some((o) => o.value === line.componentItemId)
+        ) {
+          opts.push({
+            value: line.componentItemId,
+            label: line.componentItemName || "Linh kiện hiện tại",
+          });
+        }
+      });
+    }
+
+    return opts;
+  }, [itemsData, editing]);
 
   const BOM_STATUS_OPTIONS = [
     { value: "ACTIVE", label: "Đang áp dụng" },
@@ -921,6 +946,9 @@ export function ErpBomPage() {
                       options={itemOptions}
                       placeholder="Chọn thành phẩm"
                       searchPlaceholder="Tìm SKU / tên thành phẩm"
+                      onSearch={setItemSearch}
+                      onScrollBottom={fetchNextItems}
+                      loading={loadingItems}
                     />
                   </DrawerField>
                   <DrawerField label="Hiệu lực từ">
