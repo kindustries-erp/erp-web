@@ -67,20 +67,19 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.HEAD_SSH_KEY }}" | base64 -d > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Guard deploy secrets
         run: |
           test -n "${{ secrets.GHCR_PAT }}" || (echo "GHCR_PAT missing" && exit 1)
+          test -n "${{ secrets.HEAD_PASSWORD }}" || (echo "HEAD_PASSWORD missing" && exit 1)
 
       - name: Run deploy script
+        env:
+          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o StrictHostKeyChecking=no \
+          sshpass -e ssh -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
             "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
@@ -89,9 +88,10 @@ jobs:
              docker run -d --name erp-web-master --restart always --add-host liouni-erp-core-api:host-gateway -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check
+        env:
+          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o StrictHostKeyChecking=no \
+          sshpass -e ssh -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
             '
