@@ -1,4 +1,4 @@
-name: Build & Deploy Web
+name: Build & Deploy Web (K-Lotus)
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/kindustries-erp/erp-klotus-web
+  IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-klotus-master
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build-and-push:
@@ -45,8 +46,8 @@ jobs:
           file: ./Dockerfile
           push: true
           build-args: |
-            VITE_APP_NAME=${{ vars.KLOTUS_MASTER_WEB_APP_NAME }}
-            VITE_API_BASE_URL=${{ vars.KLOTUS_MASTER_WEB_API_BASE_URL }}
+            VITE_APP_NAME=${{ vars.MASTER_WEB_APP_NAME }}
+            VITE_API_BASE_URL=${{ vars.MASTER_WEB_API_BASE_URL }}
             VITE_APP_ENV=production
           tags: |
             ${{ env.IMAGE_NAME }}:latest
@@ -67,35 +68,39 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
           tags: tag:ci
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.HEAD_SSH_KEY }}" | base64 -d > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Guard deploy secrets
         run: |
           test -n "${{ secrets.GHCR_PAT }}" || (echo "GHCR_PAT missing" && exit 1)
+          test -n "${{ secrets.HEAD_PASSWORD }}" || (echo "HEAD_PASSWORD missing" && exit 1)
 
       - name: Run deploy script
+        env:
+          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o StrictHostKeyChecking=no \
+          sshpass -e ssh -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "cd /opt/stacks/erp-klotus-web && docker compose up -d --build --force-recreate"
+            "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin ; \
+             docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} || true ; \
+             docker rm -f erp-web-klotus-master || true ; \
+             docker run -d --name erp-web-klotus-master --restart always --add-host erp-api-klotus-master:host-gateway -p 8012:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check
+        env:
+          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o StrictHostKeyChecking=no \
+          sshpass -e ssh -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
             '
               for i in $(seq 1 20); do
-                code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8022/ || true)
+                code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8012/ || true)
                 if [ "$code" = "200" ]; then
                   echo "✅ Web health OK"
+                  docker image prune -af
                   exit 0
                 fi
                 echo "Attempt $i: got $code, retrying..."
