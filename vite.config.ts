@@ -8,6 +8,18 @@ const buildVersion =
   `${new Date().toISOString()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export default defineConfig({
+  server: {
+    watch: {
+      ignored: [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/.git/**",
+        "**/db/**",
+        "**/docs/**",
+        "**/.vscode/**",
+      ],
+    },
+  },
   define: {
     __APP_BUILD_VERSION__: JSON.stringify(buildVersion),
   },

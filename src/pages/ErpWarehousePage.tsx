@@ -26,6 +26,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { PageLayout } from "@/shared/components/PageLayout";
@@ -788,6 +789,14 @@ export function ErpWarehousePage() {
         cell: (row) => <KindBadge kind={row.type} />,
       },
       {
+        key: "date",
+        header: "Ngày",
+        className: "w-[160px]",
+        sortable: true,
+        sortKey: "date",
+        cell: (row) => format(new Date(row.createdAt), "dd/MM/yyyy HH:mm:ss"),
+      },
+      {
         key: "voucherNo",
         header: "Số phiếu",
         className: "w-[160px] font-mono text-sm",
@@ -810,12 +819,10 @@ export function ErpWarehousePage() {
         ),
       },
       {
-        key: "date",
-        header: "Ngày",
-        className: "w-[110px]",
-        sortable: true,
-        sortKey: "date",
-        cell: (row) => fmtDate(row.date),
+        key: "poNo",
+        header: "Số PO",
+        className: "w-[160px] font-mono text-sm",
+        cell: (row) => row.poNo ?? "—",
       },
       {
         key: "partnerName",
@@ -1094,7 +1101,7 @@ export function ErpWarehousePage() {
             </Button>
           ) : null
         }
-        panelClassName="min-[1024px]:min-w-[1120px]"
+        panelClassName="min-[1024px]:min-w-[1240px]"
       >
         {grSaveError && (
           <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">

@@ -9,6 +9,7 @@ export interface WarehouseRow {
   status: string | null;
   partnerId: string | null;
   partnerName: string | null;
+  poNo?: string | null;
   remarks: string | null;
   createdAt: string;
 }
