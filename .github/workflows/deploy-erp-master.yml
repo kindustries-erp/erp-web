@@ -86,7 +86,7 @@ jobs:
             "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
              docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} && \
              docker rm -f erp-web-master || true && \
-             docker run -d --name erp-web-master --restart always -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
+             docker run -d --name erp-web-master --restart always --add-host liouni-erp-core-api:host-gateway -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check
         run: |
