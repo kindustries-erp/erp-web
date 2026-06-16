@@ -43,7 +43,9 @@ export type PageKey =
   | "erp-users"
   | "erp-activity-logs"
   | "erp-permissions-core"
-  | "erp-invoices";
+  | "erp-invoices"
+  | "erp-accounting-journal"
+  | "erp-accounting-config";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

@@ -25,6 +25,8 @@ import {
   History,
   Key,
   Receipt,
+  BookText,
+  Settings2,
 } from "lucide-react";
 import { IconChevronLeft, IconPin } from "./sidebarIcons";
 import { UserMenuPopover } from "./UserMenuPopover";
@@ -279,6 +281,24 @@ export function Sidebar() {
                 active={currentPage === "erp-invoices"}
                 onClick={() => navTo("erp-invoices")}
                 contextPage="erp-invoices"
+              />
+              <NavItem
+                collapsed={c}
+                icon={<BookText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Nhật ký chung"
+                active={currentPage === "erp-accounting-journal"}
+                onClick={() => navTo("erp-accounting-journal")}
+                contextPage="erp-accounting-journal"
+              />
+              <NavItem
+                collapsed={c}
+                icon={
+                  <Settings2 className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label="Cấu hình tài khoản"
+                active={currentPage === "erp-accounting-config"}
+                onClick={() => navTo("erp-accounting-config")}
+                contextPage="erp-accounting-config"
               />
             </div>
             {/* Hệ thống / Admin */}
