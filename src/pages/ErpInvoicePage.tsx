@@ -286,19 +286,23 @@ export function ErpInvoicePage() {
       key: "invoiceDate",
       header: "Ngày HĐ",
       sortable: true,
+      headerClassName: "min-w-[100px]",
+      className: "min-w-[100px]",
       cell: (inv) => inv.invoiceDate,
     },
     {
       key: "invoiceNo",
       header: "Số HĐ",
       sortable: true,
-      className: "font-medium text-primary",
+      headerClassName: "min-w-[110px]",
+      className: "font-medium text-primary min-w-[110px]",
       cell: (inv) => inv.invoiceNo,
     },
     {
       key: "serialNo",
       header: "Ký hiệu",
-      className: "text-muted-foreground",
+      headerClassName: "min-w-[100px]",
+      className: "text-muted-foreground min-w-[100px]",
       cell: (inv) => inv.serialNo || "—",
     },
     {
@@ -306,49 +310,64 @@ export function ErpInvoicePage() {
       header: direction === "IN" ? "Bên bán" : "Bên mua",
       sortable: true,
       sortKey: direction === "IN" ? "sellerName" : "buyerName",
-      cell: (inv) =>
-        direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—",
+      headerClassName: "min-w-[200px]",
+      className: "min-w-[200px] max-w-[250px]",
+      cell: (inv) => {
+        const text =
+          direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
+        return (
+          <div
+            className="truncate w-full"
+            title={text !== "—" ? text : undefined}
+          >
+            {text}
+          </div>
+        );
+      },
     },
     {
       key: "taxCode",
       header: "MST",
-      className: "text-muted-foreground text-xs",
+      headerClassName: "min-w-[120px]",
+      className: "text-muted-foreground text-xs min-w-[120px]",
       cell: (inv) =>
         direction === "IN" ? inv.sellerTaxCode || "—" : inv.buyerTaxCode || "—",
     },
     {
       key: "preVatAmount",
       header: "Trước VAT",
-      headerClassName: "text-right",
-      className: "text-right",
+      headerClassName: "text-right min-w-[110px]",
+      className: "text-right min-w-[110px]",
       cell: (inv) => fmtAmt(inv.preVatAmount),
     },
     {
       key: "vatAmount",
       header: "Thuế VAT",
-      headerClassName: "text-right",
-      className: "text-right",
+      headerClassName: "text-right min-w-[100px]",
+      className: "text-right min-w-[100px]",
       cell: (inv) => fmtAmt(inv.vatAmount),
     },
     {
       key: "discountAmount",
       header: "Chiết khấu",
-      headerClassName: "text-right",
-      className: "text-right",
+      headerClassName: "text-right min-w-[100px]",
+      className: "text-right min-w-[100px]",
       cell: (inv) => fmtAmt(inv.discountAmount),
     },
     {
       key: "totalAmount",
       header: "Thành tiền",
       sortable: true,
-      headerClassName: "text-right",
-      className: "text-right font-semibold",
+      headerClassName: "text-right min-w-[120px]",
+      className: "text-right font-semibold min-w-[120px]",
       cell: (inv) => fmtAmt(inv.totalAmount),
     },
     {
       key: "status",
       header: "Trạng thái",
       sortable: true,
+      headerClassName: "min-w-[110px]",
+      className: "min-w-[110px]",
       cell: (inv) => (
         <span
           className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
@@ -370,7 +389,8 @@ export function ErpInvoicePage() {
     {
       key: "link",
       header: "Chứng từ",
-      className: "text-xs text-muted-foreground",
+      headerClassName: "min-w-[90px]",
+      className: "text-xs text-muted-foreground min-w-[90px]",
       cell: (inv) =>
         inv.purchaseOrderId ? (
           <button
@@ -491,6 +511,7 @@ export function ErpInvoicePage() {
         <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
             <DataTable<ErpInvoice>
+              minWidth={1200}
               items={invoices}
               columns={columns}
               getRowKey={(inv) => inv.id}
