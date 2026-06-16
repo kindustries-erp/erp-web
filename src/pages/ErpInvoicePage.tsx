@@ -17,7 +17,14 @@ import {
   type ErpInvoice,
   type CreateErpInvoicePayload,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { PlusCircle, Receipt, ExternalLink } from "lucide-react";
+import { InvoiceXmlUploadModal } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadModal";
+import {
+  PlusCircle,
+  Receipt,
+  ExternalLink,
+  FileUp,
+  Download,
+} from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -86,6 +93,9 @@ export function ErpInvoicePage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+
+  // XML Upload modal state
+  const [xmlModalOpen, setXmlModalOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Load invoices
@@ -314,10 +324,20 @@ export function ErpInvoicePage() {
             </span>
           )}
         </div>
-        <Button size="sm" onClick={openNew}>
-          <PlusCircle className="w-4 h-4 mr-1.5" />
-          Tạo hóa đơn
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setXmlModalOpen(true)}
+          >
+            <FileUp className="w-4 h-4 mr-1.5" />
+            Import XML
+          </Button>
+          <Button size="sm" onClick={openNew}>
+            <PlusCircle className="w-4 h-4 mr-1.5" />
+            Tạo hóa đơn
+          </Button>
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -766,6 +786,54 @@ export function ErpInvoicePage() {
                   </div>
                 </DrawerSection>
               )}
+
+              {/* Section: File hóa đơn */}
+              {(detailInvoice.xmlFileKey || detailInvoice.pdfFileKey) && (
+                <DrawerSection title="File hóa đơn">
+                  <div className="flex flex-wrap gap-2">
+                    {detailInvoice.xmlFileKey && (
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+                        onClick={async () => {
+                          try {
+                            const { url } =
+                              await erpInvoicesCoreApi.getDownloadUrl(
+                                detailInvoice.id,
+                                "xml",
+                              );
+                            window.open(url, "_blank");
+                          } catch {
+                            alert("Không thể tải file XML.");
+                          }
+                        }}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Tải XML
+                      </button>
+                    )}
+                    {detailInvoice.pdfFileKey && (
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+                        onClick={async () => {
+                          try {
+                            const { url } =
+                              await erpInvoicesCoreApi.getDownloadUrl(
+                                detailInvoice.id,
+                                "pdf",
+                              );
+                            window.open(url, "_blank");
+                          } catch {
+                            alert("Không thể tải file PDF.");
+                          }
+                        }}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Tải PDF
+                      </button>
+                    )}
+                  </div>
+                </DrawerSection>
+              )}
             </>
           )}
 
@@ -998,6 +1066,15 @@ export function ErpInvoicePage() {
           )}
         </div>
       </DrawerModal>
+
+      {/* XML Upload Modal */}
+      <InvoiceXmlUploadModal
+        open={xmlModalOpen}
+        onClose={() => setXmlModalOpen(false)}
+        onImported={(_importId, _dir) => {
+          void loadInvoices();
+        }}
+      />
     </div>
   );
 }

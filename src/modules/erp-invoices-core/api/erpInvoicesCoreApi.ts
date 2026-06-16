@@ -1,4 +1,5 @@
 import axiosInstance from "@/core/api/axiosInstance";
+import type { PaginatedResponse } from "@/shared/types/pagination";
 
 export interface ErpInvoice {
   id: string;
@@ -23,6 +24,10 @@ export interface ErpInvoice {
   purchaseOrderId?: string | null;
   salesOrderId?: string | null;
   notes?: string | null;
+  // R2 Storage
+  pdfFileKey?: string | null;
+  xmlFileKey?: string | null;
+  xmlImportId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -112,4 +117,83 @@ export const erpInvoicesCoreApi = {
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },
+
+  // ---------------------------------------------------------------------------
+  // Bulk XML import
+  // ---------------------------------------------------------------------------
+
+  bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+    const { data } = await axiosInstance.post<BulkImportResult>(
+      `${BASE}/bulk-import-xml/buyer`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data;
+  },
+
+  bulkImportSellerXml: async (files: File[]): Promise<BulkImportResult> => {
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+    const { data } = await axiosInstance.post<BulkImportResult>(
+      `${BASE}/bulk-import-xml/seller`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data;
+  },
+
+  // ---------------------------------------------------------------------------
+  // Pre-signed URLs
+  // ---------------------------------------------------------------------------
+
+  getDownloadUrl: async (
+    id: string,
+    type: "pdf" | "xml",
+  ): Promise<{ url: string; expiresAt: string }> => {
+    const { data } = await axiosInstance.get<{
+      url: string;
+      expiresAt: string;
+    }>(`${BASE}/${id}/download-url`, { params: { type } });
+    return data;
+  },
+
+  getUploadUrl: async (
+    id: string,
+    fileType: "pdf" | "xml",
+  ): Promise<{ url: string; key: string; expiresAt: string }> => {
+    const { data } = await axiosInstance.post<{
+      url: string;
+      key: string;
+      expiresAt: string;
+    }>(`${BASE}/${id}/upload-url`, { fileType });
+    return data;
+  },
 };
+
+// ---------------------------------------------------------------------------
+// Bulk Import types
+// ---------------------------------------------------------------------------
+
+export interface BulkImportSkippedItem {
+  filename: string;
+  invoiceNo: string;
+  sellerName: string | null;
+  sellerTaxCode: string | null;
+  reason: "DUPLICATE";
+}
+
+export interface BulkImportErrorItem {
+  filename: string;
+  reason: string;
+}
+
+export interface BulkImportResult {
+  importId: string;
+  direction: "IN" | "OUT";
+  total: number;
+  created: number;
+  skipped: BulkImportSkippedItem[];
+  errors: BulkImportErrorItem[];
+}
