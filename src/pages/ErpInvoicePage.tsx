@@ -1097,7 +1097,7 @@ export function ErpInvoicePage() {
       <InvoiceXmlUploadModal
         open={xmlModalOpen}
         onClose={() => setXmlModalOpen(false)}
-        onImported={(_importId, _dir) => {
+        onImported={() => {
           void loadInvoices();
         }}
       />

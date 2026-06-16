@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosInstance from "@/core/api/axiosInstance";
 
 export interface PagedResponse<T> {

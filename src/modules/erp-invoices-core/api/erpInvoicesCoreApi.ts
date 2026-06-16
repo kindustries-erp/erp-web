@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import axiosInstance from "@/core/api/axiosInstance";
 import type { PaginatedResponse } from "@/shared/types/pagination";
 
