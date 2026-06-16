@@ -487,7 +487,7 @@ export function ErpUsersPage() {
           try {
             await impersonateAction(impersonateTarget.id);
             setImpersonateTarget(null);
-          } catch (err) {
+          } catch {
             // Error is handled in authStore
           }
         }}
