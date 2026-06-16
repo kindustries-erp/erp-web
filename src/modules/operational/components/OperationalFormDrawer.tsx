@@ -7,9 +7,13 @@ import {
   DrawerField,
   DrawerModal,
   DrawerSection,
+  DrawerRow,
   inputCls,
+  selectCls,
 } from "@/shared/components/DrawerModal";
+import { PurchaseReceiptHistory } from "./PurchaseReceiptHistory";
 import { Skeleton } from "@/shared/components/Skeleton";
+import { SearchInput } from "@/shared/components/SearchInput";
 import {
   DocumentLineTable,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -231,9 +235,8 @@ export function OperationalFormDrawer({
         const fallbackSku = line.item_code?.trim() || "";
         return {
           value: id,
-          label: fallbackSku
-            ? `${fallbackSku} — ${fallbackName}`
-            : fallbackName,
+          label: fallbackName,
+          searchText: `${fallbackSku} ${fallbackName}`,
           sku: fallbackSku,
           itemName: fallbackName,
           itemType: line.line_type,
@@ -275,6 +278,69 @@ export function OperationalFormDrawer({
   const [autoGenerateNext, setAutoGenerateNext] = useState(false);
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<LineDraft[]>([emptyLine(variant)]);
+  const [detailSearch, setDetailSearch] = useState("");
+  const [detailSortConfig, setDetailSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+
+  const handleDetailSort = (key: string) => {
+    let direction: "asc" | "desc" | null = "asc";
+    if (detailSortConfig?.key === key) {
+      if (detailSortConfig.direction === "asc") direction = "desc";
+      else direction = null;
+    }
+    setDetailSortConfig(direction ? { key, direction } : null);
+  };
+
+  const filteredLines = useMemo(() => {
+    let result = [...lines];
+    if (variant !== "purchase") return result;
+
+    if (detailSearch) {
+      const q = detailSearch.toLowerCase();
+      result = result.filter(
+        (line) =>
+          (line.item_code || "").toLowerCase().includes(q) ||
+          (line.item_name || "").toLowerCase().includes(q) ||
+          (line.description || "").toLowerCase().includes(q) ||
+          String(line.qty || "").includes(q) ||
+          String(line.unit_price || "").includes(q),
+      );
+    }
+    if (detailSortConfig) {
+      const { key, direction } = detailSortConfig;
+      result.sort((a, b) => {
+        let aVal: string | number = "";
+        let bVal: string | number = "";
+        if (key === "item_code") {
+          aVal = a.item_code || "";
+          bVal = b.item_code || "";
+        }
+        if (key === "item_name") {
+          aVal = a.item_name || a.description || "";
+          bVal = b.item_name || b.description || "";
+        }
+        if (key === "qty") {
+          aVal = Number(a.qty || 0);
+          bVal = Number(b.qty || 0);
+        }
+        if (key === "unit_price") {
+          aVal = Number(a.unit_price || 0);
+          bVal = Number(b.unit_price || 0);
+        }
+        if (key === "amount") {
+          aVal = Number(a.amount || 0);
+          bVal = Number(b.amount || 0);
+        }
+
+        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return result;
+  }, [lines, variant, detailSearch, detailSortConfig]);
 
   const statusOptions = useMemo(() => {
     if (variant === "sales") return salesStatusOptions;
@@ -335,7 +401,8 @@ export function OperationalFormDrawer({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const options = (res.items.inventoryItems || []).map((item: any) => ({
           value: item.id,
-          label: `${item.sku} — ${item.itemName}`,
+          label: item.itemName || "(Chưa có tên)",
+          searchText: `${item.sku} ${item.itemName}`,
           sku: item.sku,
           itemName: item.itemName,
           itemType: item.itemType,
@@ -446,14 +513,21 @@ export function OperationalFormDrawer({
     return lines.reduce((sum, line) => sum + Number(line.amount || 0), 0);
   }, [lines]);
 
+  const filteredTotalAmount = useMemo(() => {
+    return filteredLines.reduce(
+      (sum, line) => sum + Number(line.amount || 0),
+      0,
+    );
+  }, [filteredLines]);
+
   function setLine<K extends keyof LineDraft>(
-    idx: number,
+    tempId: string,
     key: K,
     value: LineDraft[K],
   ) {
     setLines((prev) =>
-      prev.map((line, i) => {
-        if (i !== idx) return line;
+      prev.map((line) => {
+        if (line.tempId !== tempId) return line;
         const next = { ...line, [key]: value };
         const qty = Number(next.qty || 0);
         const unit = Number(next.unit_price || 0);
@@ -469,9 +543,9 @@ export function OperationalFormDrawer({
     setLines((prev) => [...prev, emptyLine(variant)]);
   }
 
-  function removeLine(idx: number) {
+  function removeLine(tempId: string) {
     setLines((prev) => {
-      const next = prev.filter((_, i) => i !== idx);
+      const next = prev.filter((line) => line.tempId !== tempId);
       return next.length ? next : [emptyLine(variant)];
     });
   }
@@ -627,7 +701,7 @@ export function OperationalFormDrawer({
       }
       panelClassName={
         variant === "purchase"
-          ? "min-[1024px]:min-w-[1120px]"
+          ? "min-[1024px]:min-w-[1400px]"
           : "min-[1024px]:min-w-[920px]"
       }
       title={
@@ -744,11 +818,36 @@ export function OperationalFormDrawer({
           {/* Cột trái (4/5): Dòng chứng từ & Lịch sử nhập kho */}
           <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
             <DrawerSection
-              title={`${t("Chi tiết")} (${lines.length})`}
+              title={
+                variant === "purchase" ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:justify-between pr-4 mt-2 sm:mt-0">
+                    <span className="shrink-0 mb-2 sm:mb-0">
+                      {t("Chi tiết")} (
+                      {detailSearch
+                        ? `${filteredLines.length}/${lines.length}`
+                        : lines.length}
+                      )
+                    </span>
+                    <div className="w-full sm:w-64 relative font-normal text-sm">
+                      <SearchInput
+                        className="w-full"
+                        placeholder={t("Tìm mã/tên, SL...")}
+                        value={detailSearch}
+                        onChange={setDetailSearch}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  `${t("Chi tiết")} (${lines.length})`
+                )
+              }
               titleExtra={
-                <span className="text-foreground font-semibold">
+                <span className="text-foreground font-semibold shrink-0">
                   {t("Tổng")}:{" "}
-                  {Number(totalAmount || 0).toLocaleString("vi-VN")} VND
+                  {Number(
+                    variant === "purchase" ? filteredTotalAmount : totalAmount,
+                  ).toLocaleString("vi-VN")}{" "}
+                  VND
                 </span>
               }
             >
@@ -769,6 +868,7 @@ export function OperationalFormDrawer({
                           key: "item_code",
                           header: t("Mã linh kiện"),
                           minWidth: 140,
+                          sortable: true,
                           cell: (line: LineDraft) => line.item_code || "—",
                         },
                       ]
@@ -776,8 +876,10 @@ export function OperationalFormDrawer({
                   {
                     key: "item_name",
                     header: t("Linh kiện / Tên hàng"),
-                    minWidth: 260,
-                    cell: (line: LineDraft, idx: number) => {
+                    minWidth: 160,
+                    width: 180,
+                    sortable: true,
+                    cell: (line: LineDraft) => {
                       return variant === "purchase" ? (
                         <Combobox
                           options={purchaseInventoryOptions}
@@ -788,8 +890,8 @@ export function OperationalFormDrawer({
                               (item) => item.value === (v || ""),
                             );
                             setLines((prev) =>
-                              prev.map((draft, i) =>
-                                i !== idx
+                              prev.map((draft) =>
+                                draft.tempId !== line.tempId
                                   ? draft
                                   : {
                                       ...draft,
@@ -820,7 +922,7 @@ export function OperationalFormDrawer({
                             value={line.line_type}
                             disabled={isPurchaseLocked}
                             onChange={(v) =>
-                              setLine(idx, "line_type", v || "SERVICE")
+                              setLine(line.tempId, "line_type", v || "SERVICE")
                             }
                             allowClear={false}
                           />
@@ -830,7 +932,7 @@ export function OperationalFormDrawer({
                             value={line.item_code}
                             disabled={isPurchaseLocked}
                             onChange={(e) =>
-                              setLine(idx, "item_code", e.target.value)
+                              setLine(line.tempId, "item_code", e.target.value)
                             }
                           />
                           <input
@@ -839,7 +941,7 @@ export function OperationalFormDrawer({
                             value={line.item_name}
                             disabled={isPurchaseLocked}
                             onChange={(e) =>
-                              setLine(idx, "item_name", e.target.value)
+                              setLine(line.tempId, "item_name", e.target.value)
                             }
                           />
                         </div>
@@ -850,7 +952,8 @@ export function OperationalFormDrawer({
                     key: "qty",
                     header: t("Số lượng"),
                     minWidth: 140,
-                    cell: (line: LineDraft, idx: number) => (
+                    sortable: true,
+                    cell: (line: LineDraft) => (
                       <input
                         type="number"
                         min={0}
@@ -858,7 +961,9 @@ export function OperationalFormDrawer({
                         className={inputCls}
                         value={line.qty}
                         disabled={purchaseFieldLocked("qty")}
-                        onChange={(e) => setLine(idx, "qty", e.target.value)}
+                        onChange={(e) =>
+                          setLine(line.tempId, "qty", e.target.value)
+                        }
                       />
                     ),
                   },
@@ -866,7 +971,8 @@ export function OperationalFormDrawer({
                     key: "unit_price",
                     header: t("Đơn giá"),
                     minWidth: 180,
-                    cell: (line: LineDraft, idx: number) => (
+                    sortable: true,
+                    cell: (line: LineDraft) => (
                       <input
                         type="number"
                         min={0}
@@ -875,7 +981,7 @@ export function OperationalFormDrawer({
                         value={line.unit_price}
                         disabled={isPurchaseLocked}
                         onChange={(e) =>
-                          setLine(idx, "unit_price", e.target.value)
+                          setLine(line.tempId, "unit_price", e.target.value)
                         }
                       />
                     ),
@@ -884,7 +990,8 @@ export function OperationalFormDrawer({
                     key: "amount",
                     header: t("Thành tiền"),
                     minWidth: 180,
-                    cell: (line: LineDraft, idx: number) => (
+                    sortable: true,
+                    cell: (line: LineDraft) => (
                       <input
                         type="number"
                         min={0}
@@ -892,7 +999,9 @@ export function OperationalFormDrawer({
                         className={inputCls}
                         value={line.amount}
                         disabled={isPurchaseLocked}
-                        onChange={(e) => setLine(idx, "amount", e.target.value)}
+                        onChange={(e) =>
+                          setLine(line.tempId, "amount", e.target.value)
+                        }
                       />
                     ),
                   },
@@ -900,24 +1009,37 @@ export function OperationalFormDrawer({
                     key: "description",
                     header: t("Mô tả"),
                     minWidth: 240,
-                    cell: (line: LineDraft, idx: number) => (
+                    sortable: false,
+                    cell: (line: LineDraft) => (
                       <input
                         className={inputCls}
                         value={line.description}
                         disabled={purchaseFieldLocked("description")}
                         onChange={(e) =>
-                          setLine(idx, "description", e.target.value)
+                          setLine(line.tempId, "description", e.target.value)
                         }
                         placeholder={t("Nhập mô tả")}
                       />
                     ),
                   },
                 ]}
-                data={lines}
+                data={variant === "purchase" ? filteredLines : lines}
                 getRowKey={(line) => line.tempId}
+                sortConfig={
+                  variant === "purchase" ? detailSortConfig : undefined
+                }
+                onSort={variant === "purchase" ? handleDetailSort : undefined}
                 onAddLine={addLine}
                 onRemoveLine={
-                  lines.length > 1 && !isPurchaseLocked ? removeLine : undefined
+                  lines.length > 1 && !isPurchaseLocked
+                    ? (idx) => {
+                        const targetId =
+                          variant === "purchase"
+                            ? filteredLines[idx].tempId
+                            : lines[idx].tempId;
+                        removeLine(targetId);
+                      }
+                    : undefined
                 }
                 disabled={isPurchaseLocked}
                 viewOnly={viewOnly}
@@ -1229,53 +1351,7 @@ export function OperationalFormDrawer({
                     {/* Lịch sử nhập kho (di chuyển vào đây) */}
                     {variant === "purchase" && viewOnly && poReceipts && (
                       <div className="mt-2 border-t border-border pt-4">
-                        <div className="text-[11px] font-bold text-foreground/80 uppercase tracking-[0.06em] mb-3">
-                          {t("Lịch sử nhập kho")}
-                        </div>
-                        {poReceipts.length ? (
-                          <div className="space-y-3">
-                            {poReceipts.map((receipt) => (
-                              <div
-                                key={receipt.id}
-                                className="rounded-xl border border-border p-3 text-sm bg-muted/10"
-                              >
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                  <div className="font-medium">
-                                    {receipt.receiptNo}
-                                  </div>
-                                  <div className="text-xs text-[color:var(--muted-fg)]">
-                                    {fmtDate(receipt.receiptDate)} ·{" "}
-                                    {receipt.status || "—"}
-                                  </div>
-                                </div>
-                                {receipt.remarks ? (
-                                  <div className="mt-1 text-xs text-[color:var(--muted-fg)]">
-                                    {receipt.remarks}
-                                  </div>
-                                ) : null}
-                                <div className="mt-2 space-y-1">
-                                  {(receipt.lines || []).map((line, idx) => (
-                                    <div
-                                      key={line.id || `${receipt.id}-${idx}`}
-                                      className="text-xs text-[color:var(--muted-fg)]"
-                                    >
-                                      {t("Mục")} {line.lineNo || idx + 1}:{" "}
-                                      {t("nhận")}{" "}
-                                      {Number(
-                                        line.qtyReceived || 0,
-                                      ).toLocaleString("vi-VN")}{" "}
-                                      {t("đơn vị")}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-[color:var(--muted-fg)]">
-                            {t("Chưa có lần nhập kho nào cho PO này.")}
-                          </div>
-                        )}
+                        <PurchaseReceiptHistory receipts={poReceipts} />
                       </div>
                     )}
                   </div>
