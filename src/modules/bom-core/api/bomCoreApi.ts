@@ -52,9 +52,9 @@ export const bomCoreApi = {
   list: async (params?: ListParams): Promise<PaginatedResponse<ErpBom>> => {
     const { data } = await axiosInstance.get<PaginatedResponse<ErpBom>>(BASE, {
       params: {
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? 20,
-        ...(params?.search ? { search: params.search } : {}),
+        page: 1,
+        pageSize: 20,
+        ...params,
       },
     });
     return data;
