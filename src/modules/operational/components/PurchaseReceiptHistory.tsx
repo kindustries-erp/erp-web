@@ -1,20 +1,10 @@
 import { useState, useMemo } from "react";
 import { useT } from "@/core/i18n";
+import { normalizeDateTime } from "@/shared/utils/format";
 import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
-
-function normalizeDateTime(value?: string | null) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value;
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${d.getFullYear()}-${mm}-${dd} ${hh}:${min}`;
-}
 
 export function PurchaseReceiptHistory({
   receipts,
