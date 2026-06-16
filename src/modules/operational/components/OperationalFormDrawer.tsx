@@ -7,9 +7,7 @@ import {
   DrawerField,
   DrawerModal,
   DrawerSection,
-  DrawerRow,
   inputCls,
-  selectCls,
 } from "@/shared/components/DrawerModal";
 import { PurchaseReceiptHistory } from "./PurchaseReceiptHistory";
 import { Skeleton } from "@/shared/components/Skeleton";
@@ -46,10 +44,16 @@ import { useT } from "@/core/i18n";
 import { Button } from "@/shared/components/ui/Button";
 import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 
-function fmtDate(value?: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
-}
+import { today } from "@/shared/utils/format";
+import {
+  invoiceOptions,
+  salesStatusOptions,
+  purchaseStatusOptions,
+  expenseStatusOptions,
+  recurrenceOptions,
+  lineTypeOptions,
+  newTempId,
+} from "../utils/operationalHelpers";
 
 interface LineDraft {
   tempId: string;
@@ -81,53 +85,6 @@ const variantTitle: Record<Props["variant"], string> = {
   purchase: "Mua hàng",
   expenses: "Chi phí vận hành",
 };
-
-const invoiceOptions = [
-  { value: "NO_INVOICE", label: "Chưa có hóa đơn" },
-  { value: "HAS_INVOICE", label: "Đã có hóa đơn" },
-  { value: "NOT_REQUIRED", label: "Không yêu cầu" },
-];
-
-const salesStatusOptions = [
-  { value: "DRAFT", label: "Nháp" },
-  { value: "CONFIRMED", label: "Xác nhận" },
-  { value: "IN_PROGRESS", label: "Đang xử lý" },
-  { value: "COMPLETED", label: "Hoàn tất" },
-  { value: "CANCELLED", label: "Hủy" },
-];
-
-const purchaseStatusOptions = [
-  { value: "DRAFT", label: "Nháp" },
-  { value: "CONFIRMED", label: "Đã xác nhận" },
-];
-
-const expenseStatusOptions = [
-  { value: "DRAFT", label: "Nháp" },
-  { value: "CONFIRMED", label: "Xác nhận" },
-  { value: "CANCELLED", label: "Hủy" },
-];
-
-const recurrenceOptions = [
-  { value: "ONE_TIME", label: "Một lần" },
-  { value: "MONTHLY", label: "Hàng tháng" },
-  { value: "QUARTERLY", label: "Hàng quý" },
-  { value: "YEARLY", label: "Hàng năm" },
-];
-
-const lineTypeOptions = [
-  { value: "SERVICE", label: "Dịch vụ" },
-  { value: "PRODUCT", label: "Hàng hóa" },
-  { value: "PART", label: "Phụ tùng" },
-  { value: "EXPENSE", label: "Chi phí" },
-];
-
-const today = () => {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
-};
-const newTempId = () =>
-  `line-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 function emptyLine(variant: Props["variant"]): LineDraft {
   return {

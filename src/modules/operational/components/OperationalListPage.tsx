@@ -73,7 +73,6 @@ import {
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
-import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
 import { PurchaseReceiptHistory } from "./PurchaseReceiptHistory";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import {
@@ -125,44 +124,14 @@ const variantConfig: Record<
   },
 };
 
-function money(value: unknown) {
-  const n = Number(value || 0);
-  return n.toLocaleString("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  });
-}
-
-function normalizeDate(value?: string | null) {
-  return value ? String(value).slice(0, 10) : "";
-}
-
-function normalizeDateTime(value?: string | null) {
-  if (!value) return "";
-  try {
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  } catch {
-    return String(value);
-  }
-}
-
-function today() {
-  return normalizeDate(new Date().toISOString());
-}
-
-function fmtQty(value?: number | string | null) {
-  if (value == null) return "0";
-  const n = Number(value);
-  if (Number.isNaN(n)) return String(value);
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  }).format(n);
-}
+import {
+  money,
+  normalizeDate,
+  normalizeDateTime,
+  today,
+  fmtQty,
+} from "@/shared/utils/format";
+import { getDocNo, getPartner } from "../utils/operationalHelpers";
 
 function movementLabel(m: InventoryMovement) {
   const type = m.transactionType || "—";
@@ -289,16 +258,6 @@ function InventoryTimelineBlock({
         )}
       </div>
     </div>
-  );
-}
-
-function docNo(row: OperationalDocument) {
-  return row.order_no || row.purchase_no || row.expense_no || "—";
-}
-
-function partner(row: OperationalDocument) {
-  return (
-    row.customer_name_snapshot || row.supplier_name_snapshot || row.title || "—"
   );
 }
 
@@ -1528,7 +1487,7 @@ export function OperationalListPage({
         headerClassName: "w-[180px]",
         cell: (row) => (
           <div className="space-y-1">
-            <div className="font-medium text-sm">{docNo(row)}</div>
+            <div className="font-medium text-sm">{getDocNo(row)}</div>
             <div className="text-xs text-[color:var(--muted-fg)]">
               {sourceLabel(row, variant)}
             </div>
@@ -1545,7 +1504,7 @@ export function OperationalListPage({
         headerClassName: "min-w-[220px]",
         cell: (row) => (
           <div className="space-y-1">
-            <div>{partner(row)}</div>
+            <div>{getPartner(row)}</div>
             {row.vehicle_plate ? (
               <div className="text-xs text-[color:var(--muted-fg)]">
                 Xe: {row.vehicle_plate}
@@ -2073,7 +2032,7 @@ export function OperationalListPage({
         title="Chi tiết chứng từ"
         subtitle={
           detailDocument
-            ? `${docNo(detailDocument)} — ${partner(detailDocument)}`
+            ? `${getDocNo(detailDocument)} — ${getPartner(detailDocument)}`
             : "Chi tiết chứng từ operational"
         }
         bodyClassName="space-y-4"
@@ -2106,10 +2065,10 @@ export function OperationalListPage({
             <DrawerSection title="Thông tin chính">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <DrawerField label="Số chứng từ">
-                  <div>{docNo(detailDocument)}</div>
+                  <div>{getDocNo(detailDocument)}</div>
                 </DrawerField>
                 <DrawerField label="Đối tác/Nội dung">
-                  <div>{partner(detailDocument)}</div>
+                  <div>{getPartner(detailDocument)}</div>
                 </DrawerField>
                 <DrawerField label="Ngày chứng từ">
                   <div>
@@ -2233,7 +2192,7 @@ export function OperationalListPage({
         }
         subtitle={
           postingDocument
-            ? `${docNo(postingDocument)} — ${partner(postingDocument)}`
+            ? `${getDocNo(postingDocument)} — ${getPartner(postingDocument)}`
             : "Chọn số lượng theo từng dòng chứng từ"
         }
         actions={[
@@ -2309,7 +2268,7 @@ export function OperationalListPage({
         title="Liên kết phiếu dòng tiền"
         subtitle={
           rootDocument
-            ? `${docNo(rootDocument)} — Còn mở ${money(rootDocument.open_amount)}`
+            ? `${getDocNo(rootDocument)} — Còn mở ${money(rootDocument.open_amount)}`
             : "Liên kết thanh toán cho chứng từ operational"
         }
         actions={[

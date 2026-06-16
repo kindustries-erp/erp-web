@@ -4,6 +4,7 @@ import { Shield, UserPlus } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   DrawerAction,
   DrawerField,
@@ -23,6 +24,7 @@ import {
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
 import { useUIStore } from "@/core/config/uiStore";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import {
@@ -58,6 +60,11 @@ export function ErpUsersPage() {
   const [selectedUser, setSelectedUser] = useState<CoreUserAdmin | null>(null);
   const [timeline, setTimeline] = useState<AuditLogEntry[]>([]);
   const [form, setForm] = useState({ email: "", password: "", employeeId: "" });
+  const [impersonateTarget, setImpersonateTarget] =
+    useState<CoreUserAdmin | null>(null);
+
+  const canImpersonate = useAuthStore((s) => s.canImpersonate);
+  const impersonateAction = useAuthStore((s) => s.impersonateAction);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -322,6 +329,16 @@ export function ErpUsersPage() {
                         label: "Xem chi tiết",
                         onClick: () => void openDetail(item),
                       },
+                      ...(canImpersonate &&
+                      item.email !== "admin@liouni.com" &&
+                      item.status === "ACTIVE"
+                        ? [
+                            {
+                              label: "Login as user",
+                              onClick: () => setImpersonateTarget(item),
+                            },
+                          ]
+                        : []),
                       ...(item.status === "ACTIVE"
                         ? [
                             {
@@ -459,6 +476,23 @@ export function ErpUsersPage() {
           )}
         </DrawerSection>
       </DrawerModal>
+
+      <ConfirmModal
+        open={!!impersonateTarget}
+        title="Xác nhận Login as"
+        message={`Bạn có chắc chắn muốn đăng nhập dưới quyền user ${impersonateTarget?.email}? Hành động này sẽ được ghi log.`}
+        confirmLabel="Login as"
+        onConfirm={async () => {
+          if (!impersonateTarget) return;
+          try {
+            await impersonateAction(impersonateTarget.id);
+            setImpersonateTarget(null);
+          } catch (err) {
+            // Error is handled in authStore
+          }
+        }}
+        onCancel={() => setImpersonateTarget(null)}
+      />
     </PageLayout>
   );
 }

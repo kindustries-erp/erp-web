@@ -7,6 +7,7 @@ import { persist } from "zustand/middleware";
 import {
   loginApi,
   getProfileApi,
+  impersonateApi,
   type CoreLoginResponse,
   type CoreProfileResponse,
 } from "@/modules/auth/api/auth.core";
@@ -106,7 +107,7 @@ interface AuthState {
   effectivePermissions: EffectiveCollectionPermission[]; // luôn [] — no Directus RBAC
   loading: boolean;
   error: string | null;
-  canImpersonate: false;
+  canImpersonate: boolean;
   impersonation: ImpersonationMetadata | null;
   actorAccessToken: string | null;
   actorRefreshToken: string | null;
@@ -127,7 +128,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       refreshToken: null,
       expiresAt: null,
@@ -159,6 +160,7 @@ export const useAuthStore = create<AuthState>()(
             loading: false,
             error: null,
             impersonation: { active: false },
+            canImpersonate: profile.email === "admin@liouni.com",
           });
           useUIStore.getState().resetShellState();
           useAppStore.getState().login();
@@ -170,6 +172,7 @@ export const useAuthStore = create<AuthState>()(
               effectivePermissions: mapCorePermissionsToEffective(
                 raw.permissions,
               ),
+              canImpersonate: raw.email === "admin@liouni.com",
             });
           } catch {
             // non-blocking
@@ -240,6 +243,7 @@ export const useAuthStore = create<AuthState>()(
             effectivePermissions: mapCorePermissionsToEffective(
               raw.permissions,
             ),
+            canImpersonate: raw.email === "admin@liouni.com",
           });
           useAppStore.getState().login();
         } catch {
@@ -247,9 +251,103 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // no-op stubs — core không có impersonation
-      stopImpersonationAction: async () => {},
-      impersonateAction: async () => {},
+      stopImpersonationAction: async () => {
+        const {
+          actorAccessToken,
+          actorRefreshToken,
+          actorExpiresAt,
+          impersonation,
+        } = get();
+        if (!impersonation?.active || !actorAccessToken) return;
+
+        try {
+          const raw = localStorage.getItem("erp-auth");
+          const obj = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+          obj.state = {
+            ...(obj.state as object | undefined),
+            accessToken: actorAccessToken,
+            refreshToken: actorRefreshToken,
+            expiresAt: actorExpiresAt,
+            actorAccessToken: null,
+            actorRefreshToken: null,
+            actorExpiresAt: null,
+            impersonation: null,
+          };
+          localStorage.setItem("erp-auth", JSON.stringify(obj));
+        } catch {
+          // silent
+        }
+
+        set({
+          accessToken: actorAccessToken,
+          refreshToken: actorRefreshToken,
+          expiresAt: actorExpiresAt,
+          actorAccessToken: null,
+          actorRefreshToken: null,
+          actorExpiresAt: null,
+          impersonation: { active: false },
+        });
+
+        useUIStore.getState().resetShellState();
+        await get().bootstrapAction();
+        useUIStore.getState().showToast({
+          title: "Đã quay lại admin",
+        });
+      },
+
+      impersonateAction: async (targetUserId: string) => {
+        const { profile, accessToken, refreshToken, expiresAt } = get();
+        if (!profile || profile.email !== "admin@liouni.com") return;
+
+        try {
+          const data = await impersonateApi(targetUserId);
+
+          try {
+            const raw = localStorage.getItem("erp-auth");
+            const obj = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+            obj.state = {
+              ...(obj.state as object | undefined),
+              actorAccessToken: accessToken,
+              actorRefreshToken: refreshToken,
+              actorExpiresAt: expiresAt,
+              impersonation: {
+                active: true,
+                actor: { id: profile.id, email: profile.email },
+              },
+            };
+            localStorage.setItem("erp-auth", JSON.stringify(obj));
+          } catch {
+            // silent
+          }
+
+          set({
+            accessToken: data.accessToken,
+            actorAccessToken: accessToken,
+            actorRefreshToken: refreshToken,
+            actorExpiresAt: expiresAt,
+            impersonation: {
+              active: true,
+              actor: { id: profile.id, email: profile.email },
+            },
+          });
+
+          useUIStore.getState().resetShellState();
+          await get().bootstrapAction();
+          useUIStore.getState().showToast({
+            title: "Đã đăng nhập dưới quyền user khác",
+          });
+        } catch (err: unknown) {
+          const message =
+            (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message ?? "Chuyển đổi user thất bại";
+          useUIStore.getState().showToast({
+            title: "Lỗi",
+            description: message,
+            variant: "destructive",
+          });
+          throw err;
+        }
+      },
     }),
     {
       name: "erp-auth",
