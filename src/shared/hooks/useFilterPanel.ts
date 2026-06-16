@@ -18,6 +18,8 @@ export interface FilterOption {
 export interface FilterPanelConfig {
   /** Enable period/date range filter */
   period?: boolean;
+  /** Do not set default period (this month) when period is enabled */
+  noDefaultPeriod?: boolean;
   /** Enable channel filter (fund, bank, branch, etc.) */
   channel?: {
     label: string;
@@ -106,11 +108,15 @@ export function useFilterPanel(
   const [panelOpen, setPanelOpen] = useState(false);
 
   // Core filter state
-  const [period, setPeriodRaw] = useState(config.period ? initPeriod : "");
-  const [dateFrom, setDateFromRaw] = useState(
-    config.period ? initDateFrom : "",
+  const [period, setPeriodRaw] = useState(
+    config.period && !config.noDefaultPeriod ? initPeriod : "",
   );
-  const [dateTo, setDateToRaw] = useState(config.period ? initDateTo : "");
+  const [dateFrom, setDateFromRaw] = useState(
+    config.period && !config.noDefaultPeriod ? initDateFrom : "",
+  );
+  const [dateTo, setDateToRaw] = useState(
+    config.period && !config.noDefaultPeriod ? initDateTo : "",
+  );
   const [channel, setChannelRaw] = useState("");
   const [search, setSearch] = useState("");
   const [amountMin, setAmountMin] = useState("");
@@ -253,7 +259,7 @@ export function useFilterPanel(
   // ── Reset ────────────────────────────────────────────────────────────────
 
   const resetAll = useCallback(() => {
-    if (config.period) {
+    if (config.period && !config.noDefaultPeriod) {
       const p = initPeriod();
       setPeriodRaw(p);
       setDateFromRaw(periodFirstDay(p));
@@ -284,9 +290,12 @@ export function useFilterPanel(
   // ── Derived ──────────────────────────────────────────────────────────────
 
   const hasActiveFilter = useMemo(() => {
-    const defaultPeriod = config.period ? initPeriod() : "";
-    const defaultFrom = config.period ? initDateFrom() : "";
-    const defaultTo = config.period ? initDateTo() : "";
+    const defaultPeriod =
+      config.period && !config.noDefaultPeriod ? initPeriod() : "";
+    const defaultFrom =
+      config.period && !config.noDefaultPeriod ? initDateFrom() : "";
+    const defaultTo =
+      config.period && !config.noDefaultPeriod ? initDateTo() : "";
 
     return (
       period !== defaultPeriod ||
@@ -316,9 +325,12 @@ export function useFilterPanel(
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    const defaultPeriod = config.period ? initPeriod() : "";
-    const defaultFrom = config.period ? initDateFrom() : "";
-    const defaultTo = config.period ? initDateTo() : "";
+    const defaultPeriod =
+      config.period && !config.noDefaultPeriod ? initPeriod() : "";
+    const defaultFrom =
+      config.period && !config.noDefaultPeriod ? initDateFrom() : "";
+    const defaultTo =
+      config.period && !config.noDefaultPeriod ? initDateTo() : "";
     if (
       period !== defaultPeriod ||
       dateFrom !== defaultFrom ||

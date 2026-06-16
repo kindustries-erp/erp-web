@@ -93,6 +93,7 @@ export function ErpInvoicePage() {
     {
       search: true,
       period: true,
+      noDefaultPeriod: true,
       status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
     },
     () => setPage(1),
@@ -519,6 +520,7 @@ export function ErpInvoicePage() {
             config={{
               search: true,
               period: true,
+              noDefaultPeriod: true,
               status: {
                 options: STATUS_OPTIONS,
                 placeholder: "Tất cả trạng thái",
