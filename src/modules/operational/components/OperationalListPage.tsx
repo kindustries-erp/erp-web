@@ -26,6 +26,7 @@ import {
 import { cn } from "@/shared/utils";
 import { useUIStore } from "@/core/config/uiStore";
 import { useAppStore } from "@/core/config/appStore";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import {
@@ -567,7 +568,11 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
       <div className="flex-1 min-w-0">
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="font-semibold text-base text-foreground whitespace-nowrap shrink-0">
-            {t("Chi tiết")} ({detail?.lines?.length || 0})
+            {t("Chi tiết")} (
+            {detailSearch
+              ? `${filteredLines.length}/${detail?.lines?.length || 0}`
+              : detail?.lines?.length || 0}
+            )
           </div>
           <SearchInput
             className="w-full sm:w-64"
@@ -692,7 +697,11 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
       <div className="w-full md:w-80 lg:w-96 shrink-0 md:border-l md:border-border md:pl-6">
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="font-semibold text-base text-foreground whitespace-nowrap shrink-0">
-            {t("Lịch sử nhập kho")} ({receipts.length})
+            {t("Lịch sử nhập kho")} (
+            {receiptSearch
+              ? `${filteredReceipts.length}/${receipts.length}`
+              : receipts.length}
+            )
           </div>
           <SearchInput
             className="w-full sm:w-48"
@@ -737,15 +746,36 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   header: t("Thời gian"),
                   minWidth: 140,
                   sortable: true,
-                  cell: (receipt: ErpPoReceipt) => (
-                    <span className="text-muted-foreground whitespace-nowrap">
-                      {receipt.createdAt
-                        ? normalizeDateTime(receipt.createdAt)
-                        : receipt.receiptDate
-                          ? receipt.receiptDate.slice(0, 10)
-                          : "—"}
-                    </span>
-                  ),
+                  cell: (receipt: ErpPoReceipt) => {
+                    const dt = receipt.createdAt
+                      ? normalizeDateTime(receipt.createdAt)
+                      : receipt.receiptDate
+                        ? receipt.receiptDate.slice(0, 10)
+                        : "—";
+                    if (!dt || dt === "—")
+                      return (
+                        <span className="text-muted-foreground whitespace-nowrap">
+                          —
+                        </span>
+                      );
+                    const [d, time] = dt.split(" ");
+                    if (!time)
+                      return (
+                        <span className="font-semibold text-foreground whitespace-nowrap">
+                          {d}
+                        </span>
+                      );
+                    return (
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-foreground whitespace-nowrap">
+                          {d}
+                        </span>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          {time}
+                        </span>
+                      </div>
+                    );
+                  },
                 },
               ]}
               data={filteredReceipts}
@@ -1532,47 +1562,48 @@ export function OperationalListPage({
       },
       {
         key: "po_no",
-        header: t("Số PO"),
+        header: "Số PO",
         sortable: true,
-        sortKey: "po_no",
-        className: "align-top",
-        headerClassName: "min-w-[150px]",
+        sortKey: "purchase_no",
+        className: "align-top font-medium",
+        headerClassName: "min-w-[160px]",
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
           const isExpanded = !!expandedRowIds[rowKey];
           return (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpand(rowKey);
-              }}
-              className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
-            >
-              <span className="font-semibold text-primary">
-                {row.purchase_no || "—"}
-              </span>
-              {row.status === "DRAFT" && (
-                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
-                  {t("Nháp")}
+            <div className="flex flex-col items-start gap-1">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand(rowKey);
+                }}
+                className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
+              >
+                <span className="font-semibold text-primary">
+                  {row.purchase_no || "—"}
                 </span>
-              )}
+                {row.status === "DRAFT" && (
+                  <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
+                    {t("Nháp")}
+                  </span>
+                )}
+                <ChevronRight
+                  className={cn(
+                    "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)] shrink-0",
+                    isExpanded && "rotate-90 text-primary",
+                  )}
+                />
+              </button>
               {row.inventory_status &&
                 row.inventory_status !== "NOT_RECEIVED" && (
-                  <div
-                    title={t("Có lịch sử nhập kho")}
-                    className="flex items-center justify-center text-muted-foreground/60 ml-0.5"
-                  >
-                    <Warehouse className="w-3.5 h-3.5" />
-                  </div>
+                  <Tooltip content={t("Có lịch sử nhập kho")}>
+                    <div className="flex items-center text-muted-foreground/80 text-xs mt-0.5 cursor-help">
+                      <Warehouse className="w-3.5 h-3.5" />
+                    </div>
+                  </Tooltip>
                 )}
-              <ChevronRight
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
-                  isExpanded && "rotate-90 text-primary",
-                )}
-              />
-            </button>
+            </div>
           );
         },
       },
@@ -1596,7 +1627,18 @@ export function OperationalListPage({
         sortKey: "order_date",
         className: "align-top",
         headerClassName: "min-w-[150px]",
-        cell: (row) => normalizeDateTime(row.document_date) || "—",
+        cell: (row) => {
+          const dt = normalizeDateTime(row.document_date);
+          if (!dt || dt === "—") return "—";
+          const [d, time] = dt.split(" ");
+          if (!time) return <span className="font-semibold">{d}</span>;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold">{d}</span>
+              <span className="text-xs text-muted-foreground">{time}</span>
+            </div>
+          );
+        },
       },
       {
         key: "expected_date",
@@ -1605,7 +1647,18 @@ export function OperationalListPage({
         sortKey: "expected_date",
         className: "align-top",
         headerClassName: "min-w-[150px]",
-        cell: (row) => normalizeDateTime(row.due_date) || "—",
+        cell: (row) => {
+          const dt = normalizeDateTime(row.due_date);
+          if (!dt || dt === "—") return "—";
+          const [d, time] = dt.split(" ");
+          if (!time) return <span className="font-semibold">{d}</span>;
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold">{d}</span>
+              <span className="text-xs text-muted-foreground">{time}</span>
+            </div>
+          );
+        },
       },
     ],
 
