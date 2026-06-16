@@ -45,6 +45,7 @@ interface OperationalFormState {
   nextDueDate: string;
   autoGenerateNext: boolean;
   notes: string;
+  supplierInvoiceNo: string;
 
   // Form fields — lines
   lines: LineDraft[];
@@ -101,6 +102,7 @@ interface OperationalFormActions {
   setNextDueDate: (v: string) => void;
   setAutoGenerateNext: (v: boolean) => void;
   setNotes: (v: string) => void;
+  setSupplierInvoiceNo: (v: string) => void;
 
   // Line operations
   setLine: <K extends keyof LineDraft>(
@@ -161,6 +163,7 @@ const defaultState = (): OperationalFormState => ({
   nextDueDate: "",
   autoGenerateNext: false,
   notes: "",
+  supplierInvoiceNo: "",
   lines: [],
   showGeneralInfo: true,
   saving: false,
@@ -204,6 +207,7 @@ export const useOperationalFormStore = create<
   setNextDueDate: (v) => set({ nextDueDate: v }),
   setAutoGenerateNext: (v) => set({ autoGenerateNext: v }),
   setNotes: (v) => set({ notes: v }),
+  setSupplierInvoiceNo: (v) => set({ supplierInvoiceNo: v }),
 
   setLine: (tempId, key, value) => {
     set((state) => ({
@@ -301,6 +305,8 @@ export const useOperationalFormStore = create<
       nextDueDate: String(doc.next_due_date || "").slice(0, 10),
       autoGenerateNext: Boolean(doc.auto_generate_next),
       notes: doc.notes || "",
+      supplierInvoiceNo:
+        (doc as never as Record<string, string>)["supplier_invoice_no"] || "",
       lines,
       error: null,
     });

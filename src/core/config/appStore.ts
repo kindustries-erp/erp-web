@@ -79,6 +79,10 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.phanquyen",
     group: "system",
   },
+  "erp-invoices": {
+    labelKey: "nav.items.erpInvoices",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
@@ -111,6 +115,7 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
+  "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
 };
 
 interface AppState {

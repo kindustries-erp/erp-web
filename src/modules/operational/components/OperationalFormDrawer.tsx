@@ -345,6 +345,7 @@ export function OperationalFormDrawer({
         recurrence_end_date: store.recurrenceEndDate || undefined,
         next_due_date: store.nextDueDate || undefined,
         auto_generate_next: store.autoGenerateNext,
+        supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
       });
     }
 

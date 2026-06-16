@@ -41,6 +41,7 @@ export interface ErpPurchaseOrder {
   expectedDate?: string | null;
   status?: string | null;
   remarks?: string | null;
+  supplierInvoiceNo?: string | null;
   createdAt?: string;
   inventoryStatus?: string | null;
   receipts?: ErpPoReceipt[];
@@ -54,6 +55,7 @@ export interface CreatePoPayload {
   expectedDate?: string;
   status?: string;
   remarks?: string;
+  supplierInvoiceNo?: string;
   lines?: Omit<ErpPoLine, "id" | "qtyReceived">[];
 }
 

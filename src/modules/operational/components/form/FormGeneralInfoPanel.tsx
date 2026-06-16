@@ -99,6 +99,8 @@ export function FormGeneralInfoPanel({
     setNextDueDate,
     autoGenerateNext,
     setAutoGenerateNext,
+    supplierInvoiceNo,
+    setSupplierInvoiceNo,
   } = useOperationalFormStore();
 
   const statusOptions =
@@ -225,6 +227,19 @@ export function FormGeneralInfoPanel({
                     value={expectedDate?.slice(0, 10) || ""}
                     disabled={purchaseFieldLocked("expectedDate")}
                     onChange={(v) => setExpectedDate(v)}
+                  />
+                </DrawerField>
+              )}
+
+              {/* Số HĐ nhà cung cấp — chỉ purchase */}
+              {variant === "purchase" && (
+                <DrawerField label={t("Số HĐ nhà cung cấp")}>
+                  <input
+                    className={inputCls}
+                    value={supplierInvoiceNo}
+                    disabled={isPurchaseFullyLocked}
+                    placeholder="Số hóa đơn VAT từ nhà cung cấp"
+                    onChange={(e) => setSupplierInvoiceNo(e.target.value)}
                   />
                 </DrawerField>
               )}
