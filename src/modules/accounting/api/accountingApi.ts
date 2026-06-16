@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import axiosInstance from "@/core/api/axiosInstance";
 
 export interface PagedResponse<T> {
@@ -15,6 +14,39 @@ export interface BaseQuery {
   search?: string;
   sort?: string;
 }
+
+export interface AccountOption {
+  id: string;
+  account_code: string;
+  account_name: string;
+}
+
+export interface PeriodOption {
+  id: string;
+  period_code: string;
+}
+
+export type JournalEntryPayload = {
+  date?: string;
+  description?: string;
+  lines?: Array<{
+    id?: string;
+    account_id: string;
+    debit?: number;
+    credit?: number;
+    description?: string;
+    sort?: number;
+  }>;
+};
+
+export type AccountingConfigPayload = {
+  module?: string;
+  action?: string;
+  debit_account_id?: string | null;
+  credit_account_id?: string | null;
+  description?: string;
+  is_active?: boolean;
+};
 
 export interface ErpJournalEntryLine {
   id: string;
@@ -105,7 +137,7 @@ export const accountingApi = {
     return res.data.data;
   },
 
-  createJournalEntry: async (payload: any) => {
+  createJournalEntry: async (payload: JournalEntryPayload) => {
     const res = await axiosInstance.post<{ data: ErpJournalEntry }>(
       "/journal-entries",
       payload,
@@ -113,7 +145,7 @@ export const accountingApi = {
     return res.data.data;
   },
 
-  updateJournalEntry: async (id: string, payload: any) => {
+  updateJournalEntry: async (id: string, payload: JournalEntryPayload) => {
     const res = await axiosInstance.patch<{ data: ErpJournalEntry }>(
       `/journal-entries/${id}`,
       payload,
@@ -122,7 +154,7 @@ export const accountingApi = {
   },
 
   getSourceDocument: async (id: string) => {
-    const res = await axiosInstance.get<{ data: any }>(
+    const res = await axiosInstance.get<{ data: Record<string, unknown> }>(
       `/journal-entries/${id}/source-document`,
     );
     return res.data.data;
@@ -156,14 +188,14 @@ export const accountingApi = {
   },
 
   getPeriodOptions: async () => {
-    const res = await axiosInstance.get<{ items: any[] }>(
+    const res = await axiosInstance.get<{ items: PeriodOption[] }>(
       "/journal-entries/options/periods",
     );
     return res.data.items;
   },
 
   getAccountOptions: async (search?: string) => {
-    const res = await axiosInstance.get<{ items: any[] }>(
+    const res = await axiosInstance.get<{ items: AccountOption[] }>(
       "/journal-entries/options/accounts",
       { params: { search } },
     );
@@ -179,7 +211,7 @@ export const accountingApi = {
     return res.data;
   },
 
-  createConfig: async (payload: any) => {
+  createConfig: async (payload: AccountingConfigPayload) => {
     const res = await axiosInstance.post<{ data: ErpAccountingConfig }>(
       "/accounting-configs-core",
       payload,
@@ -187,7 +219,7 @@ export const accountingApi = {
     return res.data.data;
   },
 
-  updateConfig: async (id: string, payload: any) => {
+  updateConfig: async (id: string, payload: AccountingConfigPayload) => {
     const res = await axiosInstance.patch<{ data: ErpAccountingConfig }>(
       `/accounting-configs-core/${id}`,
       payload,

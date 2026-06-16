@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
@@ -8,6 +7,7 @@ import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { useAccountingConfigListStore } from "@/modules/accounting/hooks/useAccountingConfigListStore";
 import { useAccountingConfigListQuery } from "@/modules/accounting/hooks/useAccountingConfigListQuery";
 import { AccountingConfigFormModal } from "@/modules/accounting/components/AccountingConfigFormModal";
+import type { ErpAccountingConfig } from "@/modules/accounting/api/accountingApi";
 
 export function ErpAccountingConfigPage() {
   const store = useAccountingConfigListStore();
@@ -42,23 +42,23 @@ export function ErpAccountingConfigPage() {
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
 
-  const columns: DataTableColumn<any>[] = [
+  const columns: DataTableColumn<ErpAccountingConfig>[] = [
     {
       key: "module",
       header: "Phân hệ",
-      cell: (val: any) => (
+      cell: (val) => (
         <span className="font-semibold uppercase">{val.module}</span>
       ),
     },
     {
       key: "action",
       header: "Hành động (Action)",
-      cell: (val: any) => <span className="uppercase">{val.action}</span>,
+      cell: (val) => <span className="uppercase">{val.action}</span>,
     },
     {
       key: "debit_account",
       header: "Tài khoản Nợ",
-      cell: (val: any) =>
+      cell: (val) =>
         val.debit_account
           ? `${val.debit_account.account_code} - ${val.debit_account.account_name}`
           : "-",
@@ -66,7 +66,7 @@ export function ErpAccountingConfigPage() {
     {
       key: "credit_account",
       header: "Tài khoản Có",
-      cell: (val: any) =>
+      cell: (val) =>
         val.credit_account
           ? `${val.credit_account.account_code} - ${val.credit_account.account_name}`
           : "-",
@@ -74,7 +74,7 @@ export function ErpAccountingConfigPage() {
     {
       key: "description",
       header: "Mô tả",
-      cell: (val: any) => (
+      cell: (val) => (
         <span className="text-sm truncate max-w-[200px] inline-block">
           {val.description}
         </span>
@@ -83,7 +83,7 @@ export function ErpAccountingConfigPage() {
     {
       key: "is_active",
       header: "Trạng thái",
-      cell: (val: any) => (
+      cell: (val) => (
         <span
           className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
             val.is_active
@@ -126,7 +126,7 @@ export function ErpAccountingConfigPage() {
           <DataTable
             columns={columns}
             items={items}
-            getRowKey={(item: any) => item.id}
+            getRowKey={(item) => item.id}
             emptyLabel="Không có cấu hình nào"
             loading={listQuery.isFetching}
             page={store.page}
@@ -135,7 +135,7 @@ export function ErpAccountingConfigPage() {
             totalPages={totalPages}
             onPage={store.setPage}
             onPageSize={store.setPageSize}
-            onRowClick={(row: any) => {
+            onRowClick={(row) => {
               setEditingId(row.id);
               setModalOpen(true);
             }}

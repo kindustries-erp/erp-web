@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
@@ -11,6 +10,7 @@ import { useAccountingJournalListQuery } from "@/modules/accounting/hooks/useAcc
 import { JournalEntryFormModal } from "@/modules/accounting/components/JournalEntryFormModal";
 import { JournalEntryDetailModal } from "@/modules/accounting/components/JournalEntryDetailModal";
 import { money } from "@/shared/utils/format";
+import type { ErpJournalEntry } from "@/modules/accounting/api/accountingApi";
 
 export function ErpAccountingJournalPage() {
   const store = useAccountingJournalListStore();
@@ -66,11 +66,11 @@ export function ErpAccountingJournalPage() {
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
 
-  const columns: DataTableColumn<any>[] = [
+  const columns: DataTableColumn<ErpJournalEntry>[] = [
     {
       key: "voucher_no",
       header: "Số chứng từ",
-      cell: (item: any) => (
+      cell: (item) => (
         <span className="font-semibold text-primary cursor-pointer hover:underline">
           {item.voucher_no}
         </span>
@@ -79,7 +79,7 @@ export function ErpAccountingJournalPage() {
     {
       key: "date",
       header: "Ngày hạch toán",
-      cell: (item: any) => {
+      cell: (item) => {
         if (!item.date) return "";
         try {
           return format(new Date(item.date), "dd/MM/yyyy");
@@ -91,7 +91,7 @@ export function ErpAccountingJournalPage() {
     {
       key: "description",
       header: "Diễn giải",
-      cell: (item: any) => (
+      cell: (item) => (
         <span className="text-sm truncate max-w-[300px] inline-block">
           {item.description}
         </span>
@@ -102,14 +102,14 @@ export function ErpAccountingJournalPage() {
       header: "Tổng phát sinh",
       className: "text-right",
       headerClassName: "text-right",
-      cell: (item: any) => (
+      cell: (item) => (
         <span className="font-medium">{money(item.total_debit)}</span>
       ),
     },
     {
       key: "status",
       header: "Trạng thái",
-      cell: (item: any) => (
+      cell: (item) => (
         <span
           className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
             item.status === "POSTED"
@@ -149,7 +149,7 @@ export function ErpAccountingJournalPage() {
           <DataTable
             columns={columns}
             items={items}
-            getRowKey={(item: any) => item.id}
+            getRowKey={(item) => item.id}
             emptyLabel="Không có bút toán nào"
             loading={listQuery.isFetching}
             page={store.page}
@@ -158,7 +158,7 @@ export function ErpAccountingJournalPage() {
             totalPages={totalPages}
             onPage={store.setPage}
             onPageSize={store.setPageSize}
-            onRowClick={(row: any) => {
+            onRowClick={(row) => {
               setSelectedJournalId(row.id);
               setDetailModalOpen(true);
             }}

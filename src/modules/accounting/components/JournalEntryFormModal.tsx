@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useMemo } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { accountingApi } from "../api/accountingApi";
-import { useT } from "@/core/i18n";
+import type { AccountOption } from "../api/accountingApi";
 import {
   DrawerModal,
   DrawerSection,
@@ -20,16 +18,23 @@ interface JournalEntryFormModalProps {
   onClose: () => void;
 }
 
+interface LineState {
+  id: number;
+  account_id: string;
+  debit: number;
+  credit: number;
+  description: string;
+}
+
 export function JournalEntryFormModal({
   open,
   onClose,
 }: JournalEntryFormModalProps) {
-  const t = useT();
   const queryClient = useQueryClient();
 
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
-  const [lines, setLines] = useState<any[]>([
+  const [lines, setLines] = useState<LineState[]>([
     { id: 1, account_id: "", debit: 0, credit: 0, description: "" },
     { id: 2, account_id: "", debit: 0, credit: 0, description: "" },
   ]);
@@ -45,7 +50,7 @@ export function JournalEntryFormModal({
 
   const accountOptions = useMemo(() => {
     if (!accountsData) return [];
-    return accountsData.map((a: any) => ({
+    return (accountsData as AccountOption[]).map((a) => ({
       value: a.id,
       label: `${a.account_code} - ${a.account_name}`,
     }));
@@ -62,7 +67,11 @@ export function JournalEntryFormModal({
     setLines(lines.filter((l) => l.id !== id));
   };
 
-  const updateLine = (id: number, field: string, value: any) => {
+  const updateLine = (
+    id: number,
+    field: keyof LineState,
+    value: string | number,
+  ) => {
     setLines(lines.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
   };
 
@@ -107,9 +116,9 @@ export function JournalEntryFormModal({
         { id: 2, account_id: "", debit: 0, credit: 0, description: "" },
       ]);
     },
-    onError: (err: any) => {
+    onError: (err: Error & { response?: { data?: { message?: string } } }) => {
       setSaveError(
-        err?.response?.data?.message || err.message || "Lỗi tạo bút toán",
+        err?.response?.data?.message ?? err.message ?? "Lỗi tạo bút toán",
       );
     },
   });

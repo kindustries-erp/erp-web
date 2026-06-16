@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { accountingApi, type ErpAccountingConfig } from "../api/accountingApi";
-import { useT } from "@/core/i18n";
+import { accountingApi } from "../api/accountingApi";
+import type { AccountOption } from "../api/accountingApi";
 import {
   DrawerModal,
   DrawerSection,
@@ -35,7 +33,6 @@ export function AccountingConfigFormModal({
   onClose,
   configId,
 }: AccountingConfigFormModalProps) {
-  const t = useT();
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
@@ -53,11 +50,9 @@ export function AccountingConfigFormModal({
     queryKey: ["accounting-configs", configId],
     queryFn: async () => {
       if (!configId) return null;
-      // We could fetch one by ID, but accountingApi only has getConfigs list.
-      // Wait, we didn't expose get getConfig(id), so we can just find it from the list query cache
-      // or we can refetch the list. Let's just fetch the list and filter.
-      const res = await accountingApi.getConfigs({ search: configId }); // This is a hack, ideally we should pass it as a prop or fetch it correctly.
-      return res.items.find((x: any) => x.id === configId) || null;
+      // Fetch list and filter by id (API doesn't expose single-item endpoint yet)
+      const res = await accountingApi.getConfigs({ search: configId });
+      return res.items.find((x) => x.id === configId) ?? null;
     },
     enabled: !!configId && open,
   });
@@ -70,7 +65,7 @@ export function AccountingConfigFormModal({
 
   const accountOptions = useMemo(() => {
     if (!accountsData) return [];
-    return accountsData.map((a: any) => ({
+    return (accountsData as AccountOption[]).map((a) => ({
       value: a.id,
       label: `${a.account_code} - ${a.account_name}`,
     }));
@@ -101,8 +96,10 @@ export function AccountingConfigFormModal({
     }
   }, [open, configData, configId]);
 
-  const setField = (key: keyof typeof form, value: any) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  const setField = <K extends keyof typeof form>(
+    key: K,
+    value: (typeof form)[K],
+  ) => setForm((f) => ({ ...f, [key]: value }));
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -124,9 +121,9 @@ export function AccountingConfigFormModal({
       queryClient.invalidateQueries({ queryKey: ["accounting-configs"] });
       onClose();
     },
-    onError: (err: any) => {
+    onError: (err: Error & { response?: { data?: { message?: string } } }) => {
       setSaveError(
-        err?.response?.data?.message || err.message || "Lỗi lưu cấu hình",
+        err?.response?.data?.message ?? err.message ?? "Lỗi lưu cấu hình",
       );
     },
   });

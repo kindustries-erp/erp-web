@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, ExternalLink, FileText, Trash2 } from "lucide-react";
+import { Download, FileText, Trash2 } from "lucide-react";
 import { accountingApi } from "../api/accountingApi";
-import { useT } from "@/core/i18n";
+import type { AccountOption } from "../api/accountingApi";
 import {
   DrawerModal,
   DrawerSection,
@@ -22,6 +20,14 @@ function fDate(d: string | null | undefined) {
   return fmtDate(d);
 }
 
+interface LineEditState {
+  id: string;
+  account_id: string;
+  debit: number;
+  credit: number;
+  description: string;
+}
+
 interface JournalEntryDetailModalProps {
   open: boolean;
   onClose: () => void;
@@ -33,10 +39,9 @@ export function JournalEntryDetailModal({
   onClose,
   journalId,
 }: JournalEntryDetailModalProps) {
-  const t = useT();
   const queryClient = useQueryClient();
 
-  const [lines, setLines] = useState<any[]>([]);
+  const [lines, setLines] = useState<LineEditState[]>([]);
   const [description, setDescription] = useState("");
   const [editing, setEditing] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -70,7 +75,7 @@ export function JournalEntryDetailModal({
 
   const accountOptions = useMemo(() => {
     if (!accountsData) return [];
-    return accountsData.map((a: any) => ({
+    return (accountsData as AccountOption[]).map((a) => ({
       value: a.id,
       label: `${a.account_code} - ${a.account_name}`,
     }));
@@ -79,13 +84,13 @@ export function JournalEntryDetailModal({
   useEffect(() => {
     if (open && journal) {
       setLines(
-        journal.lines?.map((l: any) => ({
+        journal.lines?.map((l) => ({
           id: l.id,
           account_id: l.account_id,
           debit: l.debit,
           credit: l.credit,
-          description: l.description || "",
-        })) || [],
+          description: l.description ?? "",
+        })) ?? [],
       );
       setDescription(journal.description || "");
       setFilesToAdd([]);
@@ -94,7 +99,11 @@ export function JournalEntryDetailModal({
     }
   }, [open, journal]);
 
-  const updateLine = (id: string, field: string, value: any) => {
+  const updateLine = (
+    id: string,
+    field: keyof LineEditState,
+    value: string | number,
+  ) => {
     setLines(lines.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
   };
 
@@ -123,9 +132,9 @@ export function JournalEntryDetailModal({
       setEditing(false);
       setFilesToAdd([]);
     },
-    onError: (err: any) => {
+    onError: (err: Error & { response?: { data?: { message?: string } } }) => {
       setSaveError(
-        err?.response?.data?.message || err.message || "Lỗi cập nhật bút toán",
+        err?.response?.data?.message ?? err.message ?? "Lỗi cập nhật bút toán",
       );
     },
   });
@@ -282,7 +291,7 @@ export function JournalEntryDetailModal({
       <DrawerSection title="Tệp đính kèm">
         {journal?.attachments && journal.attachments.length > 0 && (
           <div className="space-y-2 mb-4">
-            {journal.attachments.map((att: any) => (
+            {journal.attachments.map((att) => (
               <div
                 key={att.id}
                 className="flex items-center justify-between p-2 rounded-lg border border-border bg-surface text-xs"
