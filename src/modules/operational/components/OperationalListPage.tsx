@@ -72,7 +72,6 @@ import {
   type SettlementFormState,
 } from "../hooks/useOperationalFlowStore";
 import { OperationalFormDrawer } from "./OperationalFormDrawer";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import {
@@ -88,6 +87,7 @@ import {
 import { useOperationalListQuery } from "../hooks/useOperationalListQuery";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { SearchInput } from "@/shared/components/SearchInput";
 
 const variantConfig: Record<
   OperationalVariant,
@@ -396,7 +396,130 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewingReceiptId, setViewingReceiptId] = useState<string | null>(null);
+  const [detailSearch, setDetailSearch] = useState("");
+  const [receiptSearch, setReceiptSearch] = useState("");
+  const [detailSortConfig, setDetailSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [receiptSortConfig, setReceiptSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
   const t = useT();
+
+  const handleDetailSort = (key: string) => {
+    let direction: "asc" | "desc" | null = "asc";
+    if (detailSortConfig?.key === key) {
+      if (detailSortConfig.direction === "asc") direction = "desc";
+      else direction = null;
+    }
+    setDetailSortConfig(direction ? { key, direction } : null);
+  };
+
+  const handleReceiptSort = (key: string) => {
+    let direction: "asc" | "desc" | null = "asc";
+    if (receiptSortConfig?.key === key) {
+      if (receiptSortConfig.direction === "asc") direction = "desc";
+      else direction = null;
+    }
+    setReceiptSortConfig(direction ? { key, direction } : null);
+  };
+
+  const filteredLines = useMemo(() => {
+    const srcLines = detail?.lines;
+    if (!srcLines) return [];
+    let lines = [...srcLines];
+    if (detailSearch) {
+      const q = detailSearch.toLowerCase();
+      lines = lines.filter(
+        (line) =>
+          (line.item_code || "").toLowerCase().includes(q) ||
+          (line.item_name || "").toLowerCase().includes(q) ||
+          (line.description || "").toLowerCase().includes(q) ||
+          String(line.qty || "").includes(q),
+      );
+    }
+    if (detailSortConfig) {
+      const { key, direction } = detailSortConfig;
+      lines.sort((a, b) => {
+        let aVal: string | number = "";
+        let bVal: string | number = "";
+        if (key === "itemCode") {
+          aVal = a.item_code || "";
+          bVal = b.item_code || "";
+        }
+        if (key === "itemName") {
+          aVal = a.item_name || a.description || "";
+          bVal = b.item_name || b.description || "";
+        }
+        if (key === "qtyOrdered") {
+          aVal = Number(a.qty || 0);
+          bVal = Number(b.qty || 0);
+        }
+        if (key === "qtyReceived") {
+          const poLineA = poDetail?.lines?.find((l) => l.id === a.id);
+          const poLineB = poDetail?.lines?.find((l) => l.id === b.id);
+          aVal = Number(poLineA?.qtyReceived || 0);
+          bVal = Number(poLineB?.qtyReceived || 0);
+        }
+        if (key === "qtyRemaining") {
+          const poLineA = poDetail?.lines?.find((l) => l.id === a.id);
+          const poLineB = poDetail?.lines?.find((l) => l.id === b.id);
+          const aRcv = Number(poLineA?.qtyReceived || 0);
+          const bRcv = Number(poLineB?.qtyReceived || 0);
+          const aOrd = Number(a.qty || poLineA?.qtyOrdered || 0);
+          const bOrd = Number(b.qty || poLineB?.qtyOrdered || 0);
+          aVal = Math.max(0, aOrd - aRcv);
+          bVal = Math.max(0, bOrd - bRcv);
+        }
+
+        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return lines;
+  }, [detail?.lines, detailSearch, detailSortConfig, poDetail?.lines]);
+
+  const filteredReceipts = useMemo(() => {
+    if (!receipts) return [];
+    let list = [...receipts];
+    if (receiptSearch) {
+      const q = receiptSearch.toLowerCase();
+      list = list.filter((receipt) =>
+        (receipt.receiptNo || "").toLowerCase().includes(q),
+      );
+    }
+    if (receiptSortConfig) {
+      const { key, direction } = receiptSortConfig;
+      list.sort((a, b) => {
+        let aVal: string | number = "";
+        let bVal: string | number = "";
+        if (key === "receiptNo") {
+          aVal = a.receiptNo || "";
+          bVal = b.receiptNo || "";
+        }
+        if (key === "time") {
+          aVal = a.createdAt
+            ? new Date(a.createdAt).getTime()
+            : a.receiptDate
+              ? new Date(a.receiptDate).getTime()
+              : 0;
+          bVal = b.createdAt
+            ? new Date(b.createdAt).getTime()
+            : b.receiptDate
+              ? new Date(b.receiptDate).getTime()
+              : 0;
+        }
+
+        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return list;
+  }, [receipts, receiptSearch, receiptSortConfig]);
 
   useEffect(() => {
     let active = true;
@@ -442,8 +565,16 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
   return (
     <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
       <div className="flex-1 min-w-0">
-        <div className="mb-4 font-semibold text-base text-foreground">
-          {t("Chi tiết")}
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="font-semibold text-base text-foreground whitespace-nowrap shrink-0">
+            {t("Chi tiết")} ({detail?.lines?.length || 0})
+          </div>
+          <SearchInput
+            className="w-full sm:w-64"
+            placeholder={t("Tìm mã/tên linh kiện, SL...")}
+            value={detailSearch}
+            onChange={setDetailSearch}
+          />
         </div>
         {!detail.lines || detail.lines.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
@@ -466,6 +597,7 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   key: "itemCode",
                   header: t("Mã linh kiện"),
                   minWidth: 140,
+                  sortable: true,
                   cell: (
                     line: NonNullable<OperationalDocument["lines"]>[number],
                   ) => line.item_code || "—",
@@ -474,6 +606,7 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   key: "itemName",
                   header: t("Linh kiện / Tên hàng"),
                   minWidth: 260,
+                  sortable: true,
                   cell: (
                     line: NonNullable<OperationalDocument["lines"]>[number],
                     idx: number,
@@ -490,6 +623,7 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   header: t("Số lượng"),
                   minWidth: 100,
                   align: "center",
+                  sortable: true,
                   cell: (
                     line: NonNullable<OperationalDocument["lines"]>[number],
                   ) => (
@@ -503,6 +637,7 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   header: t("Đã nhập"),
                   minWidth: 100,
                   align: "center",
+                  sortable: true,
                   cell: (
                     line: NonNullable<OperationalDocument["lines"]>[number],
                     idx: number,
@@ -523,6 +658,7 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   header: t("Còn lại"),
                   minWidth: 100,
                   align: "center",
+                  sortable: true,
                   cell: (
                     line: NonNullable<OperationalDocument["lines"]>[number],
                     idx: number,
@@ -543,82 +679,81 @@ function PurchaseSubRow({ rowId }: { rowId: string }) {
                   },
                 },
               ]}
-              data={detail.lines || []}
+              data={filteredLines}
               getRowKey={(line, idx) => line.id || idx}
               viewOnly={true}
+              sortConfig={detailSortConfig}
+              onSort={handleDetailSort}
             />
           </div>
         )}
       </div>
 
-      <div className="w-full md:w-72 lg:w-80 shrink-0 md:border-l md:border-border md:pl-6">
-        <div className="mb-4 font-semibold text-base text-foreground">
-          {t("Lịch sử nhập kho")}
+      <div className="w-full md:w-80 lg:w-96 shrink-0 md:border-l md:border-border md:pl-6">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="font-semibold text-base text-foreground whitespace-nowrap shrink-0">
+            {t("Lịch sử nhập kho")} ({receipts.length})
+          </div>
+          <SearchInput
+            className="w-full sm:w-48"
+            placeholder={t("Tìm mã phiếu...")}
+            value={receiptSearch}
+            onChange={setReceiptSearch}
+          />
         </div>
         {receipts.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
             {t("Chưa có lịch sử nhập.")}
           </div>
         ) : (
-          <div className="space-y-3">
-            {receipts.map((receipt) => (
-              <div
-                key={receipt.id}
-                className="rounded-lg border border-border bg-background p-3 hover:border-primary/30 transition-colors shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span
-                    className="font-semibold text-sm text-primary cursor-pointer hover:underline"
-                    onClick={() => setViewingReceiptId(receipt.id)}
-                  >
-                    {receipt.receiptNo}
-                  </span>
-                  <div className="text-right">
-                    <div className="text-xs font-medium text-muted-foreground">
+          <div className="w-full overflow-x-auto max-h-[300px]">
+            <DocumentLineTable
+              columns={[
+                {
+                  key: "index",
+                  header: "#",
+                  width: 40,
+                  align: "center",
+                  cell: (_, idx) => (
+                    <span className="text-muted-foreground">{idx + 1}</span>
+                  ),
+                },
+                {
+                  key: "receiptNo",
+                  header: t("Mã phiếu"),
+                  minWidth: 100,
+                  sortable: true,
+                  cell: (receipt: ErpPoReceipt) => (
+                    <span
+                      className="font-medium text-primary cursor-pointer hover:underline whitespace-nowrap"
+                      onClick={() => setViewingReceiptId(receipt.id)}
+                    >
+                      {receipt.receiptNo}
+                    </span>
+                  ),
+                },
+                {
+                  key: "time",
+                  header: t("Thời gian"),
+                  minWidth: 140,
+                  sortable: true,
+                  cell: (receipt: ErpPoReceipt) => (
+                    <span className="text-muted-foreground whitespace-nowrap">
                       {receipt.createdAt
                         ? normalizeDateTime(receipt.createdAt)
                         : receipt.receiptDate
                           ? receipt.receiptDate.slice(0, 10)
                           : "—"}
-                    </div>
-                  </div>
-                </div>
-                {receipt.remarks && (
-                  <div className="text-xs text-muted-foreground mb-2 italic">
-                    {receipt.remarks}
-                  </div>
-                )}
-                <div className="space-y-1.5 mt-2 border-t border-border pt-2">
-                  {(receipt.lines || []).map((line, idx) => {
-                    const matchingPoLine = poDetail?.lines?.find(
-                      (l) => l.id === line.purchaseOrderLineId,
-                    );
-                    const itemName =
-                      matchingPoLine?.itemName ||
-                      matchingPoLine?.description ||
-                      `${t("Dòng")} ${line.lineNo || idx + 1}`;
-                    return (
-                      <div
-                        key={line.id || idx}
-                        className="flex justify-between items-center text-xs gap-4"
-                      >
-                        <Tooltip content={itemName}>
-                          <span className="text-muted-foreground truncate flex-1 cursor-help">
-                            {itemName}
-                          </span>
-                        </Tooltip>
-                        <span className="font-medium text-emerald-600 shrink-0">
-                          {t("Nhận:")} +
-                          {Number(line.qtyReceived || 0).toLocaleString(
-                            "vi-VN",
-                          )}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+                    </span>
+                  ),
+                },
+              ]}
+              data={filteredReceipts}
+              getRowKey={(receipt) => receipt.id}
+              viewOnly={true}
+              sortConfig={receiptSortConfig}
+              onSort={handleReceiptSort}
+            />
           </div>
         )}
         <GoodsReceiptViewDrawer
@@ -1389,11 +1524,19 @@ export function OperationalListPage({
   const purchaseColumns = useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
       {
+        key: "stt",
+        header: <div className="text-center">#</div>,
+        className: "align-top text-center font-medium text-muted-foreground",
+        headerClassName: "w-[48px] text-center",
+        cell: (_, index) => index,
+      },
+      {
         key: "po_no",
         header: t("Số PO"),
         sortable: true,
         sortKey: "po_no",
-        className: "align-top min-w-[140px]",
+        className: "align-top",
+        headerClassName: "min-w-[150px]",
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
           const isExpanded = !!expandedRowIds[rowKey];
@@ -1414,6 +1557,15 @@ export function OperationalListPage({
                   {t("Nháp")}
                 </span>
               )}
+              {row.inventory_status &&
+                row.inventory_status !== "NOT_RECEIVED" && (
+                  <div
+                    title={t("Có lịch sử nhập kho")}
+                    className="flex items-center justify-center text-muted-foreground/60 ml-0.5"
+                  >
+                    <Warehouse className="w-3.5 h-3.5" />
+                  </div>
+                )}
               <ChevronRight
                 className={cn(
                   "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
@@ -1429,7 +1581,8 @@ export function OperationalListPage({
         header: "Nhà cung cấp",
         sortable: true,
         sortKey: "supplier_id",
-        className: "align-top min-w-[200px]",
+        className: "align-top",
+        headerClassName: "min-w-[150px]",
         cell: (row) => (
           <div className="space-y-0.5">
             <div>{row.supplier_name_snapshot || "—"}</div>
@@ -1441,7 +1594,8 @@ export function OperationalListPage({
         header: "Ngày đặt",
         sortable: true,
         sortKey: "order_date",
-        className: "align-top min-w-[150px]",
+        className: "align-top",
+        headerClassName: "min-w-[150px]",
         cell: (row) => normalizeDateTime(row.document_date) || "—",
       },
       {
@@ -1449,7 +1603,8 @@ export function OperationalListPage({
         header: "Ngày nhận DK",
         sortable: true,
         sortKey: "expected_date",
-        className: "align-top min-w-[150px]",
+        className: "align-top",
+        headerClassName: "min-w-[150px]",
         cell: (row) => normalizeDateTime(row.due_date) || "—",
       },
     ],
@@ -1464,7 +1619,8 @@ export function OperationalListPage({
       {
         key: "document",
         header: "Chứng từ",
-        className: "align-top min-w-[180px]",
+        className: "align-top",
+        headerClassName: "w-[180px]",
         cell: (row) => (
           <div className="space-y-1">
             <div className="font-medium text-sm">{docNo(row)}</div>
@@ -1480,7 +1636,8 @@ export function OperationalListPage({
           variant === "receivables"
             ? "Khách hàng/Nội dung"
             : "Đối tác/Nội dung",
-        className: "align-top min-w-[220px]",
+        className: "align-top",
+        headerClassName: "min-w-[220px]",
         cell: (row) => (
           <div className="space-y-1">
             <div>{partner(row)}</div>
@@ -1495,7 +1652,8 @@ export function OperationalListPage({
       {
         key: "dates",
         header: "Ngày",
-        className: "align-top min-w-[140px]",
+        className: "align-top",
+        headerClassName: "w-[140px]",
         cell: (row) => (
           <div className="space-y-1 text-sm">
             <div>CT: {normalizeDate(row.document_date) || "—"}</div>
@@ -1519,7 +1677,8 @@ export function OperationalListPage({
       {
         key: "amounts",
         header: "Số tiền",
-        className: "align-top min-w-[180px]",
+        className: "align-top",
+        headerClassName: "w-[180px]",
         cell: (row) => (
           <div className="space-y-1 text-sm">
             <div>Tổng: {money(row.total_amount)}</div>
@@ -1531,7 +1690,8 @@ export function OperationalListPage({
       {
         key: "status",
         header: "Trạng thái",
-        className: "align-top min-w-[170px]",
+        className: "align-top",
+        headerClassName: "w-[170px]",
         cell: (row) => (
           <div className="flex flex-col gap-1">
             <StatusBadge status={row.status} />

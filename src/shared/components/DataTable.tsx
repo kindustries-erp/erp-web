@@ -20,7 +20,7 @@ import { cn } from "@/shared/utils";
 export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
-  cell: (item: T) => ReactNode;
+  cell: (item: T, index: number) => ReactNode;
   className?: string;
   headerClassName?: string;
   skeletonClassName?: string;
@@ -29,7 +29,7 @@ export interface DataTableColumn<T> {
 }
 
 export interface ActionsColumnConfig<T> {
-  cell: (item: T) => ReactNode;
+  cell: (item: T, index: number) => ReactNode;
   header?: ReactNode;
   className?: string;
   headerClassName?: string;
@@ -112,7 +112,13 @@ export function DataTable<T>({
     (column) => ({
       id: column.key,
       header: () => column.header,
-      cell: ({ row }) => column.cell(row.original),
+      cell: ({ row }) =>
+        column.cell(
+          row.original,
+          page && pageSize
+            ? (page - 1) * pageSize + row.index + 1
+            : row.index + 1,
+        ),
       meta: {
         className: column.className,
         headerClassName: column.headerClassName,
@@ -127,7 +133,13 @@ export function DataTable<T>({
     tableColumns.unshift({
       id: "__actions",
       header: () => actionsColumn.header ?? "",
-      cell: ({ row }) => actionsColumn.cell(row.original),
+      cell: ({ row }) =>
+        actionsColumn.cell(
+          row.original,
+          page && pageSize
+            ? (page - 1) * pageSize + row.index + 1
+            : row.index + 1,
+        ),
       meta: {
         className: actionsColumn.className,
         headerClassName: actionsColumn.headerClassName ?? "w-[48px]",
@@ -155,7 +167,7 @@ export function DataTable<T>({
           containerClassName,
         )}
       >
-        <Table style={{ minWidth }}>
+        <Table style={{ minWidth }} className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
