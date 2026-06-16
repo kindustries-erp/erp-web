@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Boxes,
   Pencil,
   Plus,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -188,7 +187,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
           }));
           setFlatNodes(rootNodes);
         }
-      } catch (e) {
+      } catch {
         if (active) setInitialError(t("Không thể tải chi tiết cấu trúc"));
       } finally {
         if (active) setInitialLoading(false);
@@ -238,7 +237,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
             next.splice(idx + 1, 0, ...newNodes);
             return next;
           });
-        } catch (e) {
+        } catch {
           setFlatNodes((prev) =>
             prev.map((n) =>
               n.uniqueId === nodeId
