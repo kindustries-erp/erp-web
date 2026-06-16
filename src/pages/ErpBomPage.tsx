@@ -527,6 +527,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
 }
 
 export function ErpBomPage() {
+  const t = useT();
   const canRead = useHasPermission("bom", "read");
   const [items, setItems] = useState<ErpBom[]>([]);
   const [loading, setLoading] = useState(true);
@@ -542,6 +543,9 @@ export function ErpBomPage() {
   const [form, setForm] = useState<BomForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const [itemSearch, setItemSearch] = useState("");
 
@@ -571,7 +575,7 @@ export function ErpBomPage() {
       ) {
         opts.push({
           value: editing.finishedGoodItemId,
-          label: editing.finishedGoodItemName || "Thành phẩm hiện tại",
+          label: editing.finishedGoodItemName || t("Thành phẩm hiện tại"),
         });
       }
 
@@ -582,19 +586,19 @@ export function ErpBomPage() {
         ) {
           opts.push({
             value: line.componentItemId,
-            label: line.componentItemName || "Linh kiện hiện tại",
+            label: line.componentItemName || t("Linh kiện hiện tại"),
           });
         }
       });
     }
 
     return opts;
-  }, [itemsData, editing]);
+  }, [itemsData, editing, t]);
 
   const BOM_STATUS_OPTIONS = [
-    { value: "ACTIVE", label: "Đang áp dụng" },
-    { value: "INACTIVE", label: "Ngừng áp dụng" },
-    { value: "DRAFT", label: "Bản nháp" },
+    { value: "ACTIVE", label: t("Đang áp dụng") },
+    { value: "INACTIVE", label: t("Ngừng áp dụng") },
+    { value: "DRAFT", label: t("Bản nháp") },
   ];
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -602,10 +606,22 @@ export function ErpBomPage() {
       search: true,
       status: {
         options: BOM_STATUS_OPTIONS,
-        placeholder: "Tất cả trạng thái",
+        placeholder: t("Tất cả trạng thái"),
       },
+      custom: [
+        {
+          key: "finishedGoodItemId",
+          label: t("Thành phẩm"),
+          placeholder: t("Tất cả thành phẩm"),
+          options: itemOptions,
+          type: "combobox" as const,
+          onSearch: setItemSearch,
+          onLoadMore: fetchNextItems,
+          loading: loadingItems,
+        },
+      ],
     }),
-    [],
+    [itemOptions, fetchNextItems, loadingItems],
   );
   const filter = useFilterPanel(filterConfig);
 
@@ -617,21 +633,41 @@ export function ErpBomPage() {
         page,
         pageSize,
         search: filter.state.search.trim() || undefined,
+        sort: sortBy
+          ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`]
+          : undefined,
+        finishedGoodItemId:
+          filter.state.custom?.finishedGoodItemId || undefined,
       });
-      const nextItems = filter.state.status
-        ? res.items.filter(
-            (item) => (item.status || "") === filter.state.status,
-          )
-        : res.items;
+      let nextItems = res.items;
+      if (filter.state.status) {
+        nextItems = nextItems.filter(
+          (item) => (item.status || "") === filter.state.status,
+        );
+      }
+      if (filter.state.custom?.finishedGoodItemId) {
+        nextItems = nextItems.filter(
+          (item) =>
+            item.finishedGoodItemId === filter.state.custom?.finishedGoodItemId,
+        );
+      }
       setItems(nextItems);
       setTotal(nextItems.length);
       setTotalPages(Math.ceil(nextItems.length / pageSize));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải BOM");
+      setError(e instanceof Error ? e.message : t("Không thể tải BOM"));
     } finally {
       setLoading(false);
     }
-  }, [filter.state.search, filter.state.status, page, pageSize]);
+  }, [
+    filter.state.search,
+    filter.state.status,
+    filter.state.custom?.finishedGoodItemId,
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+  ]);
 
   const [expandedBomIds, setExpandedBomIds] = useState<Record<string, boolean>>(
     {},
@@ -643,7 +679,7 @@ export function ErpBomPage() {
       const res = await bomCoreApi.list({ page: 1, pageSize: 1000 });
       setAllBoms(res.items);
     } catch (e) {
-      console.error("Không thể tải danh sách BOM cho cấu trúc cây", e);
+      console.error(t("Không thể tải danh sách BOM cho cấu trúc cây"), e);
     }
   }, []);
 
@@ -672,6 +708,20 @@ export function ErpBomPage() {
     });
     return map;
   }, [itemOptions]);
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) {
+      if (sortOrder === "asc") setSortOrder("desc");
+      else {
+        setSortBy(undefined);
+        setSortOrder("asc");
+      }
+    } else {
+      setSortBy(key);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
 
   function toggleExpand(id: string) {
     setExpandedBomIds((prev) => ({
@@ -707,7 +757,9 @@ export function ErpBomPage() {
       setEditing(detail);
       setForm(buildForm(detail));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết BOM");
+      setError(
+        e instanceof Error ? e.message : t("Không thể tải chi tiết BOM"),
+      );
     } finally {
       setDrawerLoading(false);
     }
@@ -724,7 +776,9 @@ export function ErpBomPage() {
       setEditing(detail);
       setForm(buildForm(detail));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải chi tiết BOM");
+      setError(
+        e instanceof Error ? e.message : t("Không thể tải chi tiết BOM"),
+      );
     } finally {
       setDrawerLoading(false);
     }
@@ -760,7 +814,7 @@ export function ErpBomPage() {
     }
 
     if (!form.bomCode.trim() || !form.bomName.trim()) {
-      setSaveError("Mã BOM và tên BOM là bắt buộc");
+      setSaveError(t("Mã BOM và tên BOM là bắt buộc"));
       return;
     }
 
@@ -768,7 +822,7 @@ export function ErpBomPage() {
       !form.lines.length ||
       form.lines.some((line) => !line.qtyRequired.trim())
     ) {
-      setSaveError("Mỗi dòng BOM phải có số lượng hợp lệ");
+      setSaveError(t("Mỗi dòng BOM phải có số lượng hợp lệ"));
       return;
     }
 
@@ -788,7 +842,7 @@ export function ErpBomPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
-        e?.response?.data?.message || e?.message || "Không thể lưu BOM",
+        e?.response?.data?.message || e?.message || t("Không thể lưu BOM"),
       );
     } finally {
       setSaving(false);
@@ -797,8 +851,17 @@ export function ErpBomPage() {
 
   const columns: DataTableColumn<ErpBom>[] = [
     {
+      key: "stt",
+      header: <div className="text-center">#</div>,
+      className: "text-center font-medium text-muted-foreground",
+      headerClassName: "w-[48px] text-center",
+      cell: (_, index) => index,
+    },
+    {
       key: "bomCode",
-      header: "Mã BOM",
+      header: t("Mã BOM"),
+      sortable: true,
+      sortKey: "bomCode",
       cell: (item) => {
         const isExpanded = !!expandedBomIds[item.id];
         return (
@@ -824,13 +887,17 @@ export function ErpBomPage() {
     },
     {
       key: "bomName",
-      header: "Tên BOM",
+      header: t("Tên BOM"),
+      sortable: true,
+      sortKey: "bomName",
       cell: (item) => item.bomName,
       skeletonClassName: "w-40",
     },
     {
       key: "finishedGoodItemName",
-      header: "Thành phẩm",
+      header: t("Thành phẩm"),
+      sortable: true,
+      sortKey: "finishedGoodItemName",
       cell: (item) => {
         const name =
           item.finishedGoodItemName ||
@@ -856,20 +923,27 @@ export function ErpBomPage() {
     {
       key: "version",
       header: "Version",
+      sortable: true,
+      sortKey: "version",
       cell: (item) => item.version || "—",
       skeletonClassName: "w-16",
     },
     {
       key: "status",
-      header: "Trạng thái",
+      header: t("Trạng thái"),
+      sortable: true,
+      sortKey: "status",
       cell: (item) => {
         const statusMap = {
-          ACTIVE: { label: "Đang áp dụng", cls: "bg-green-100 text-green-700" },
+          ACTIVE: {
+            label: t("Đang áp dụng"),
+            cls: "bg-green-100 text-green-700",
+          },
           INACTIVE: {
-            label: "Ngừng áp dụng",
+            label: t("Ngừng áp dụng"),
             cls: "bg-red-100 text-red-700",
           },
-          DRAFT: { label: "Bản nháp", cls: "bg-gray-100 text-gray-700" },
+          DRAFT: { label: t("Bản nháp"), cls: "bg-gray-100 text-gray-700" },
         };
         const s =
           statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
@@ -885,13 +959,17 @@ export function ErpBomPage() {
     },
     {
       key: "effectiveFrom",
-      header: "Hiệu lực từ",
+      header: t("Hiệu lực từ"),
+      sortable: true,
+      sortKey: "effectiveFrom",
       cell: (item) => fmtDate(item.effectiveFrom),
       skeletonClassName: "w-20",
     },
     {
       key: "effectiveTo",
-      header: "Hiệu lực đến",
+      header: t("Hiệu lực đến"),
+      sortable: true,
+      sortKey: "effectiveTo",
       cell: (item) => fmtDate(item.effectiveTo),
       skeletonClassName: "w-20",
     },
@@ -899,15 +977,16 @@ export function ErpBomPage() {
 
   const drawerActions: DrawerAction[] = [
     {
-      label: "Hủy",
+      label: t("Hủy"),
       onClick: closeDrawer,
       variant: "outline",
+      disabled: saving,
     },
     {
-      label: viewOnly ? "Đóng" : editing ? "Cập nhật" : "Tạo mới",
-      onClick: handleSave,
+      label: viewOnly ? t("Đóng") : editing ? t("Cập nhật") : t("Tạo mới"),
+      onClick: viewOnly ? closeDrawer : () => void handleSave(),
       primary: true,
-      loading: saving,
+      disabled: saving || viewOnly,
     },
   ];
 
@@ -916,8 +995,10 @@ export function ErpBomPage() {
   return (
     <PageLayout
       title="BOM"
-      desc="Quản lý định mức vật tư (Bill of Materials) cho các thành phẩm."
-      icon={<Network className="h-5 w-5" />}
+      desc={t(
+        "Quản lý định mức vật tư (Bill of Materials) cho các thành phẩm.",
+      )}
+      icon={<Network className="h-4 w-4" />}
       actions={
         <TableActionGroup
           onRefresh={() => void loadBoms()}
@@ -936,7 +1017,7 @@ export function ErpBomPage() {
             getRowKey={(item) => item.id}
             loading={loading}
             error={error}
-            emptyLabel="Chưa có BOM"
+            emptyLabel={t("Chưa có BOM")}
             minWidth={980}
             loadingRows={6}
             actionsColumn={{
@@ -946,7 +1027,7 @@ export function ErpBomPage() {
                 <ActionDropdown
                   items={[
                     {
-                      label: "Sửa",
+                      label: t("Sửa"),
                       onClick: () => void openEdit(item),
                       icon: <Pencil className="h-3.5 w-3.5" />,
                     },
@@ -973,6 +1054,9 @@ export function ErpBomPage() {
             expandedRowKeys={Object.keys(expandedBomIds).filter(
               (key) => expandedBomIds[key],
             )}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSort={handleSort}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
@@ -981,9 +1065,14 @@ export function ErpBomPage() {
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
-        icon={<Boxes className="h-4 w-4" />}
-        title={viewOnly ? "Xem BOM" : editing ? "Cập nhật BOM" : "Tạo BOM mới"}
-        subtitle={editing ? editing.bomCode : "Định mức nguyên vật liệu"}
+        title={
+          viewOnly
+            ? t("Xem BOM")
+            : editing
+              ? t("Cập nhật BOM")
+              : t("Tạo BOM mới")
+        }
+        subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
         actions={drawerActions}
         panelClassName="min-[1024px]:min-w-[1100px] min-[1280px]:min-w-[1280px]"
       >
@@ -996,7 +1085,7 @@ export function ErpBomPage() {
         {drawerLoading ? (
           <div className="flex flex-col xl:flex-row gap-6 items-start">
             <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
-              <DrawerSection title="Định mức nguyên vật liệu">
+              <DrawerSection title={t("Định mức nguyên vật liệu")}>
                 <div className="space-y-3">
                   <Skeleton className="h-16 w-full" />
                   <Skeleton className="h-16 w-full" />
@@ -1005,7 +1094,7 @@ export function ErpBomPage() {
               </DrawerSection>
             </div>
             <div className="shrink-0 order-1 xl:order-2 w-full xl:w-[360px] space-y-4">
-              <DrawerSection title="Thông tin chung">
+              <DrawerSection title={t("Thông tin chung")}>
                 <div className="flex flex-col gap-3">
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
@@ -1018,9 +1107,8 @@ export function ErpBomPage() {
           </div>
         ) : (
           <div className="flex flex-col xl:flex-row gap-6 items-start">
-            {/* Cột trái (4/5): Định mức nguyên vật liệu */}
             <div className="flex-1 min-w-0 order-2 xl:order-1">
-              <DrawerSection title="Định mức nguyên vật liệu">
+              <DrawerSection title={t("Định mức nguyên vật liệu")}>
                 {!viewOnly && !editing && (
                   <div className="mb-3 flex justify-end">
                     <button
@@ -1029,7 +1117,7 @@ export function ErpBomPage() {
                       className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
                     >
                       <Plus className="h-3.5 w-3.5" />
-                      Thêm dòng
+                      {t("Thêm dòng")}
                     </button>
                   </div>
                 )}
@@ -1041,7 +1129,7 @@ export function ErpBomPage() {
                     >
                       <div className="mb-2 flex items-center justify-between">
                         <div className="text-xs font-semibold text-muted-foreground">
-                          NVL {index + 1}
+                          {t("NVL")} {index + 1}
                         </div>
                         {!viewOnly && !editing && (
                           <button
@@ -1049,15 +1137,14 @@ export function ErpBomPage() {
                             onClick={() => removeLine(index)}
                             className="text-xs font-medium text-red-600 hover:text-red-700"
                           >
-                            Xóa dòng
+                            {t("Xóa dòng")}
                           </button>
                         )}
                       </div>
 
-                      {/* Hàng 1: Các field thông tin (scroll ngang nếu màn hình nhỏ) */}
                       <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 scrollbar-thin">
                         <div className="min-w-[240px] flex-[2]">
-                          <DrawerField label="Linh kiện" required>
+                          <DrawerField label={t("Linh kiện")} required>
                             <Combobox
                               value={line.componentItemId}
                               readOnly={viewOnly || !!editing}
@@ -1065,8 +1152,8 @@ export function ErpBomPage() {
                                 updateLine(index, { componentItemId: value })
                               }
                               options={itemOptions}
-                              placeholder="Chọn linh kiện"
-                              searchPlaceholder="Tìm SKU / tên linh kiện"
+                              placeholder={t("Chọn linh kiện")}
+                              searchPlaceholder={t("Tìm SKU / tên linh kiện")}
                               onSearch={setItemSearch}
                               onScrollBottom={fetchNextItems}
                               loading={loadingItems}
@@ -1074,7 +1161,7 @@ export function ErpBomPage() {
                           </DrawerField>
                         </div>
                         <div className="min-w-[90px] flex-1">
-                          <DrawerField label="Số lượng" required>
+                          <DrawerField label={t("Số lượng")} required>
                             <input
                               value={line.qtyRequired}
                               readOnly={viewOnly || !!editing}
@@ -1088,7 +1175,7 @@ export function ErpBomPage() {
                           </DrawerField>
                         </div>
                         <div className="min-w-[80px] flex-1">
-                          <DrawerField label="ĐVT">
+                          <DrawerField label={t("ĐVT")}>
                             <input
                               value={line.uom}
                               readOnly={viewOnly || !!editing}
@@ -1100,7 +1187,7 @@ export function ErpBomPage() {
                           </DrawerField>
                         </div>
                         <div className="min-w-[95px] flex-1">
-                          <DrawerField label="Tỷ lệ hao hụt">
+                          <DrawerField label={t("Tỷ lệ hao hụt")}>
                             <input
                               value={line.scrapRate}
                               readOnly={viewOnly || !!editing}
@@ -1113,9 +1200,8 @@ export function ErpBomPage() {
                         </div>
                       </div>
 
-                      {/* Hàng 2: Ghi chú dòng */}
                       <div className="mt-2">
-                        <DrawerField label="Ghi chú dòng">
+                        <DrawerField label={t("Ghi chú dòng")}>
                           <textarea
                             value={line.notes}
                             readOnly={viewOnly}
@@ -1132,11 +1218,10 @@ export function ErpBomPage() {
               </DrawerSection>
             </div>
 
-            {/* Cột phải (1/5): Thông tin chung */}
             <div className="xl:w-[280px] w-full shrink-0 order-1 xl:order-2">
-              <DrawerSection title="Thông tin chung">
+              <DrawerSection title={t("Thông tin chung")}>
                 <div className="flex flex-col gap-3">
-                  <DrawerField label="Mã BOM" required>
+                  <DrawerField label={t("Mã BOM")} required>
                     <input
                       value={form.bomCode}
                       readOnly={viewOnly || !!editing}
@@ -1149,7 +1234,7 @@ export function ErpBomPage() {
                       className={inputCls}
                     />
                   </DrawerField>
-                  <DrawerField label="Version" required>
+                  <DrawerField label={t("Version")} required>
                     <input
                       value={form.version}
                       readOnly={viewOnly || !!editing}
@@ -1162,7 +1247,7 @@ export function ErpBomPage() {
                       className={inputCls}
                     />
                   </DrawerField>
-                  <DrawerField label="Tên BOM" required>
+                  <DrawerField label={t("Tên BOM")} required>
                     <input
                       value={form.bomName}
                       readOnly={viewOnly || !!editing}
@@ -1175,7 +1260,7 @@ export function ErpBomPage() {
                       className={inputCls}
                     />
                   </DrawerField>
-                  <DrawerField label="Thành phẩm">
+                  <DrawerField label={t("Thành phẩm")}>
                     <Combobox
                       value={form.finishedGoodItemId}
                       readOnly={viewOnly || !!editing}
@@ -1186,14 +1271,15 @@ export function ErpBomPage() {
                         }))
                       }
                       options={itemOptions}
-                      placeholder="Chọn thành phẩm"
-                      searchPlaceholder="Tìm SKU / tên thành phẩm"
+                      placeholder={t("Chọn thành phẩm")}
+                      searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
                       onSearch={setItemSearch}
                       onScrollBottom={fetchNextItems}
                       loading={loadingItems}
+                      allowClear
                     />
                   </DrawerField>
-                  <DrawerField label="Hiệu lực từ">
+                  <DrawerField label={t("Hiệu lực từ")}>
                     <DatePicker
                       value={form.effectiveFrom}
                       disabled={viewOnly}
@@ -1204,9 +1290,10 @@ export function ErpBomPage() {
                         }))
                       }
                       className="w-full"
+                      placeholder="DD/MM/YYYY"
                     />
                   </DrawerField>
-                  <DrawerField label="Hiệu lực đến">
+                  <DrawerField label={t("Hiệu lực đến")}>
                     <DatePicker
                       value={form.effectiveTo}
                       disabled={viewOnly}
@@ -1217,9 +1304,10 @@ export function ErpBomPage() {
                         }))
                       }
                       className="w-full"
+                      placeholder="DD/MM/YYYY"
                     />
                   </DrawerField>
-                  <DrawerField label="Trạng thái">
+                  <DrawerField label={t("Trạng thái")}>
                     <Combobox
                       value={form.status}
                       readOnly={viewOnly}
@@ -1231,13 +1319,13 @@ export function ErpBomPage() {
                         }))
                       }
                       options={[
-                        { value: "ACTIVE", label: "Đang áp dụng" },
-                        { value: "INACTIVE", label: "Ngừng áp dụng" },
-                        { value: "DRAFT", label: "Bản nháp" },
+                        { value: "ACTIVE", label: t("Đang áp dụng") },
+                        { value: "INACTIVE", label: t("Ngừng áp dụng") },
+                        { value: "DRAFT", label: t("Bản nháp") },
                       ]}
                     />
                   </DrawerField>
-                  <DrawerField label="Ghi chú">
+                  <DrawerField label={t("Ghi chú")}>
                     <textarea
                       value={form.notes}
                       readOnly={viewOnly}

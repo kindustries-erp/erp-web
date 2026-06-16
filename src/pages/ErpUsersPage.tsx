@@ -35,6 +35,7 @@ import {
   type ErpEmployee,
   usersAdminApi,
 } from "@/modules/system/api/usersCoreApi";
+import { useT } from "@/core/i18n";
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -44,6 +45,7 @@ function formatDate(value: string | null) {
 }
 
 export function ErpUsersPage() {
+  const t = useT();
   const canRead = useHasPermission("admin_users", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [items, setItems] = useState<CoreUserAdmin[]>([]);
@@ -71,13 +73,13 @@ export function ErpUsersPage() {
       search: true,
       status: {
         options: [
-          { value: "ACTIVE", label: "Hoạt động (ACTIVE)" },
-          { value: "INACTIVE", label: "Ngưng (INACTIVE)" },
+          { value: "ACTIVE", label: t("Hoạt động (ACTIVE)") },
+          { value: "INACTIVE", label: t("Ngưng (INACTIVE)") },
         ],
-        placeholder: "Tất cả trạng thái",
+        placeholder: t("Tất cả trạng thái"),
       },
     }),
-    [],
+    [t],
   );
 
   const filter = useFilterPanel(filterConfig, () => setPage(1));
@@ -99,11 +101,11 @@ export function ErpUsersPage() {
     } catch (error: any) {
       showToast({
         variant: "destructive",
-        title: "Không tải được user",
+        title: t("Không tải được user"),
         description:
           error?.response?.data?.message ||
           error?.message ||
-          "Lỗi không xác định",
+          t("Lỗi không xác định"),
       });
     } finally {
       setLoading(false);
@@ -146,8 +148,8 @@ export function ErpUsersPage() {
       if (!form.email.trim() || !form.password.trim()) {
         showToast({
           variant: "destructive",
-          title: "Thiếu thông tin",
-          description: "Cần nhập email và mật khẩu",
+          title: t("Thiếu thông tin"),
+          description: t("Cần nhập email và mật khẩu"),
         });
         return;
       }
@@ -159,7 +161,7 @@ export function ErpUsersPage() {
           employeeId: form.employeeId || null,
         });
         showToast({
-          title: "Đã cập nhật user",
+          title: t("Đã cập nhật user"),
           description: form.email.trim(),
         });
       } else {
@@ -168,7 +170,7 @@ export function ErpUsersPage() {
           password: form.password,
           employeeId: form.employeeId || undefined,
         });
-        showToast({ title: "Đã tạo user", description: form.email.trim() });
+        showToast({ title: t("Đã tạo user"), description: form.email.trim() });
       }
       setDrawerOpen(false);
       setForm({ email: "", password: "", employeeId: "" });
@@ -178,11 +180,13 @@ export function ErpUsersPage() {
     } catch (error: any) {
       showToast({
         variant: "destructive",
-        title: editingUser ? "Cập nhật user thất bại" : "Tạo user thất bại",
+        title: editingUser
+          ? t("Cập nhật user thất bại")
+          : t("Tạo user thất bại"),
         description:
           error?.response?.data?.message ||
           error?.message ||
-          "Lỗi không xác định",
+          t("Lỗi không xác định"),
       });
     } finally {
       setCreating(false);
@@ -191,21 +195,23 @@ export function ErpUsersPage() {
 
   async function handleActivate(user: CoreUserAdmin) {
     await usersAdminApi.activate(user.id);
-    showToast({ title: "Đã kích hoạt user", description: user.email });
+    showToast({ title: t("Đã kích hoạt user"), description: user.email });
     await loadUsers();
   }
 
   async function handleDeactivate(user: CoreUserAdmin) {
     await usersAdminApi.deactivate(user.id);
-    showToast({ title: "Đã ngưng user", description: user.email });
+    showToast({ title: t("Đã ngưng user"), description: user.email });
     await loadUsers();
   }
 
   async function handleResetPassword(user: CoreUserAdmin) {
-    const nextPassword = window.prompt(`Nhập mật khẩu mới cho ${user.email}`);
+    const nextPassword = window.prompt(
+      `${t("Nhập mật khẩu mới cho")} ${user.email}`,
+    );
     if (!nextPassword) return;
     await usersAdminApi.resetPassword(user.id, nextPassword);
-    showToast({ title: "Đã reset password", description: user.email });
+    showToast({ title: t("Đã reset password"), description: user.email });
   }
 
   const columns: DataTableColumn<CoreUserAdmin>[] = useMemo(
@@ -225,12 +231,12 @@ export function ErpUsersPage() {
       },
       {
         key: "lastLoginAt",
-        header: "Lần đăng nhập cuối",
+        header: t("Lần đăng nhập cuối"),
         cell: (item) => formatDate(item.lastLoginAt),
       },
       {
         key: "status",
-        header: "Trạng thái",
+        header: t("Trạng thái"),
         cell: (item) => (
           <span
             className={
@@ -249,17 +255,17 @@ export function ErpUsersPage() {
 
   const drawerActions: DrawerAction[] = [
     {
-      label: "Đóng",
+      label: t("Đóng"),
       onClick: () => setDrawerOpen(false),
       variant: "outline",
       disabled: creating,
     },
     {
       label: creating
-        ? "Đang lưu..."
+        ? t("Đang lưu...")
         : editingUser
-          ? "Cập nhật user"
-          : "Tạo user",
+          ? t("Cập nhật user")
+          : t("Tạo user"),
       onClick: () => void handleSave(),
       primary: true,
       disabled: creating,
@@ -270,8 +276,8 @@ export function ErpUsersPage() {
 
   return (
     <PageLayout
-      title="Quản lý người dùng"
-      desc="Tạo user production-grade và xem timeline audit theo từng user"
+      title={t("Quản lý người dùng")}
+      desc={t("Tạo user production-grade và xem timeline audit theo từng user")}
       icon={<Shield className="h-4 w-4" />}
       actions={
         <TableActionGroup
@@ -285,7 +291,7 @@ export function ErpUsersPage() {
             setForm({ email: "", password: "", employeeId: "" });
             setDrawerOpen(true);
           }}
-          createLabel="Tạo user"
+          createLabel={t("Tạo user")}
         />
       }
     >
@@ -296,7 +302,7 @@ export function ErpUsersPage() {
             columns={columns}
             getRowKey={(item) => item.id}
             loading={loading}
-            emptyLabel="Chưa có user"
+            emptyLabel={t("Chưa có user")}
             page={page}
             pageSize={pageSize}
             total={total}
@@ -313,7 +319,7 @@ export function ErpUsersPage() {
                   <ActionDropdown
                     items={[
                       {
-                        label: "Chỉnh sửa",
+                        label: t("Chỉnh sửa"),
                         onClick: () => {
                           void loadEmployees();
                           setEditingUser(item);
@@ -326,7 +332,7 @@ export function ErpUsersPage() {
                         },
                       },
                       {
-                        label: "Xem chi tiết",
+                        label: t("Xem chi tiết"),
                         onClick: () => void openDetail(item),
                       },
                       ...(canImpersonate &&
@@ -334,7 +340,7 @@ export function ErpUsersPage() {
                       item.status === "ACTIVE"
                         ? [
                             {
-                              label: "Login as user",
+                              label: t("Login as user"),
                               onClick: () => setImpersonateTarget(item),
                             },
                           ]
@@ -342,18 +348,18 @@ export function ErpUsersPage() {
                       ...(item.status === "ACTIVE"
                         ? [
                             {
-                              label: "Ngưng hoạt động",
+                              label: t("Ngưng hoạt động"),
                               onClick: () => void handleDeactivate(item),
                             },
                           ]
                         : [
                             {
-                              label: "Kích hoạt",
+                              label: t("Kích hoạt"),
                               onClick: () => void handleActivate(item),
                             },
                           ]),
                       {
-                        label: "Reset password",
+                        label: t("Reset password"),
                         onClick: () => void handleResetPassword(item),
                       },
                     ]}
@@ -369,11 +375,11 @@ export function ErpUsersPage() {
       <DrawerModal
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={editingUser ? "Cập nhật user" : "Tạo user mới"}
-        subtitle="Flow production-grade cho ERP CORE"
+        title={editingUser ? t("Cập nhật user") : t("Tạo user mới")}
+        subtitle={t("Flow production-grade cho ERP CORE")}
         actions={drawerActions}
       >
-        <DrawerSection title="Thông tin user">
+        <DrawerSection title={t("Thông tin user")}>
           <DrawerField label="Email" required>
             <input
               className={inputCls}
@@ -386,7 +392,7 @@ export function ErpUsersPage() {
             />
           </DrawerField>
           {!editingUser && (
-            <DrawerField label="Mật khẩu" required>
+            <DrawerField label={t("Mật khẩu")} required>
               <input
                 type="password"
                 className={inputCls}
@@ -394,11 +400,11 @@ export function ErpUsersPage() {
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, password: e.target.value }))
                 }
-                placeholder="Tối thiểu 8 ký tự"
+                placeholder={t("Tối thiểu 8 ký tự")}
               />
             </DrawerField>
           )}
-          <DrawerField label="Liên kết employee">
+          <DrawerField label={t("Liên kết employee")}>
             <Combobox
               options={employees.map((emp) => ({
                 value: emp.id,
@@ -408,7 +414,7 @@ export function ErpUsersPage() {
               onChange={(val) =>
                 setForm((prev) => ({ ...prev, employeeId: val }))
               }
-              placeholder="Không liên kết"
+              placeholder={t("Không liên kết")}
             />
           </DrawerField>
         </DrawerSection>
@@ -417,19 +423,23 @@ export function ErpUsersPage() {
       <DrawerModal
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        title={selectedUser?.email || "Chi tiết user"}
-        subtitle="Timeline audit theo core_user"
+        title={selectedUser?.email || t("Chi tiết user")}
+        subtitle={t("Timeline audit theo core_user")}
         actions={[
-          { label: "Đóng", onClick: () => setDetailOpen(false), primary: true },
+          {
+            label: t("Đóng"),
+            onClick: () => setDetailOpen(false),
+            primary: true,
+          },
         ]}
       >
-        <DrawerSection title="Thông tin hiện tại">
+        <DrawerSection title={t("Thông tin hiện tại")}>
           <div className="space-y-2 text-sm">
             <div>
               <span className="font-medium">Email:</span> {selectedUser?.email}
             </div>
             <div>
-              <span className="font-medium">Trạng thái:</span>{" "}
+              <span className="font-medium">{t("Trạng thái:")}</span>{" "}
               {selectedUser?.status}
             </div>
             <div>
@@ -444,13 +454,15 @@ export function ErpUsersPage() {
             </div>
           </div>
         </DrawerSection>
-        <DrawerSection title="Timeline audit">
+        <DrawerSection title={t("Timeline audit")}>
           {timelineLoading ? (
             <div className="text-sm text-muted-foreground">
-              Đang tải timeline...
+              {t("Đang tải timeline...")}
             </div>
           ) : timeline.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Chưa có log</div>
+            <div className="text-sm text-muted-foreground">
+              {t("Chưa có log")}
+            </div>
           ) : (
             <div className="space-y-3">
               {timeline.map((entry) => (
@@ -479,8 +491,8 @@ export function ErpUsersPage() {
 
       <ConfirmModal
         open={!!impersonateTarget}
-        title="Xác nhận Login as"
-        message={`Bạn có chắc chắn muốn đăng nhập dưới quyền user ${impersonateTarget?.email}? Hành động này sẽ được ghi log.`}
+        title={t("Xác nhận Login as")}
+        message={`${t("Bạn có chắc chắn muốn đăng nhập dưới quyền user")} ${impersonateTarget?.email}? ${t("Hành động này sẽ được ghi log.")}`}
         confirmLabel="Login as"
         onConfirm={async () => {
           if (!impersonateTarget) return;
