@@ -66,6 +66,8 @@ export interface ErpInvoiceListParams {
   status?: string;
   page?: number;
   pageSize?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
 }
 
 export interface ErpInvoiceListResponse {

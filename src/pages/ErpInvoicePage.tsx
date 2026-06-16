@@ -10,6 +10,10 @@ import {
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
+import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
+import { PageLayout } from "@/shared/components/PageLayout";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { extractApiError } from "@/shared/utils/apiError";
 import { money, today } from "@/shared/utils/format";
 import {
@@ -37,9 +41,9 @@ const STATUS_OPTIONS = [
   { value: "CANCELLED", label: "Đã hủy" },
 ];
 
-const DIRECTION_TABS: { key: Direction; label: string }[] = [
-  { key: "IN", label: "Hóa đơn đầu vào" },
-  { key: "OUT", label: "Hóa đơn đầu ra" },
+const DIRECTION_TABS: { value: Direction; label: string }[] = [
+  { value: "IN", label: "Hóa đơn mua vào" },
+  { value: "OUT", label: "Hóa đơn bán ra" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -77,13 +81,22 @@ export function ErpInvoicePage() {
   // List state
   const [direction, setDirection] = useState<Direction>("IN");
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const [invoices, setInvoices] = useState<ErpInvoice[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [sortBy, setSortBy] = useState<string>("invoiceDate");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+
+  const filterPanel = useFilterPanel(
+    {
+      search: true,
+      period: true,
+      status: { options: STATUS_OPTIONS, placeholder: "Tất cả trạng thái" },
+    },
+    () => setPage(1),
+  );
 
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -103,13 +116,17 @@ export function ErpInvoicePage() {
   const loadInvoices = useCallback(async () => {
     setLoading(true);
     try {
+      const { search, dateFrom, dateTo, status } = filterPanel.state;
       const res = await erpInvoicesCoreApi.list({
         direction,
         search: search || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
+        status: status || undefined,
         page,
         pageSize: 40,
+        sort_by: sortBy || undefined,
+        sort_order: sortOrder || undefined,
       });
       setInvoices(res.items);
       setTotal(res.total);
@@ -119,11 +136,20 @@ export function ErpInvoicePage() {
     } finally {
       setLoading(false);
     }
-  }, [direction, search, dateFrom, dateTo, page]);
+  }, [
+    direction,
+    filterPanel.state.search,
+    filterPanel.state.dateFrom,
+    filterPanel.state.dateTo,
+    filterPanel.state.status,
+    sortBy,
+    sortOrder,
+    page,
+  ]);
 
   useEffect(() => {
     setPage(1);
-  }, [direction, search, dateFrom, dateTo]);
+  }, [direction]);
 
   useEffect(() => {
     void loadInvoices();
@@ -252,6 +278,126 @@ export function ErpInvoicePage() {
   }
 
   // ---------------------------------------------------------------------------
+  // Columns
+  // ---------------------------------------------------------------------------
+  const columns: DataTableColumn<ErpInvoice>[] = [
+    {
+      key: "invoiceDate",
+      header: "Ngày HĐ",
+      sortable: true,
+      cell: (inv) => inv.invoiceDate,
+    },
+    {
+      key: "invoiceNo",
+      header: "Số HĐ",
+      sortable: true,
+      className: "font-medium text-primary",
+      cell: (inv) => inv.invoiceNo,
+    },
+    {
+      key: "serialNo",
+      header: "Ký hiệu",
+      className: "text-muted-foreground",
+      cell: (inv) => inv.serialNo || "—",
+    },
+    {
+      key: "partner",
+      header: direction === "IN" ? "Bên bán" : "Bên mua",
+      sortable: true,
+      sortKey: direction === "IN" ? "sellerName" : "buyerName",
+      cell: (inv) =>
+        direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—",
+    },
+    {
+      key: "taxCode",
+      header: "MST",
+      className: "text-muted-foreground text-xs",
+      cell: (inv) =>
+        direction === "IN" ? inv.sellerTaxCode || "—" : inv.buyerTaxCode || "—",
+    },
+    {
+      key: "preVatAmount",
+      header: "Trước VAT",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (inv) => fmtAmt(inv.preVatAmount),
+    },
+    {
+      key: "vatAmount",
+      header: "Thuế VAT",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (inv) => fmtAmt(inv.vatAmount),
+    },
+    {
+      key: "discountAmount",
+      header: "Chiết khấu",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (inv) => fmtAmt(inv.discountAmount),
+    },
+    {
+      key: "totalAmount",
+      header: "Thành tiền",
+      sortable: true,
+      headerClassName: "text-right",
+      className: "text-right font-semibold",
+      cell: (inv) => fmtAmt(inv.totalAmount),
+    },
+    {
+      key: "status",
+      header: "Trạng thái",
+      sortable: true,
+      cell: (inv) => (
+        <span
+          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+            inv.status === "CONFIRMED"
+              ? "bg-green-100 text-green-800"
+              : inv.status === "CANCELLED"
+                ? "bg-red-100 text-red-800"
+                : "bg-amber-100 text-amber-800"
+          }`}
+        >
+          {inv.status === "CONFIRMED"
+            ? "Đã xác nhận"
+            : inv.status === "CANCELLED"
+              ? "Đã hủy"
+              : "Nháp"}
+        </span>
+      ),
+    },
+    {
+      key: "link",
+      header: "Chứng từ",
+      className: "text-xs text-muted-foreground",
+      cell: (inv) =>
+        inv.purchaseOrderId ? (
+          <button
+            className="flex items-center gap-1 text-primary hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("purchasing");
+            }}
+          >
+            PO <ExternalLink className="w-3 h-3" />
+          </button>
+        ) : inv.salesOrderId ? (
+          <button
+            className="flex items-center gap-1 text-primary hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("erp-sales-orders");
+            }}
+          >
+            SO <ExternalLink className="w-3 h-3" />
+          </button>
+        ) : (
+          "—"
+        ),
+    },
+  ];
+
+  // ---------------------------------------------------------------------------
   // Drawer actions
   // ---------------------------------------------------------------------------
   const viewActions = [
@@ -312,240 +458,76 @@ export function ErpInvoicePage() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className="erp-page-root flex flex-col h-full">
-      {/* Header */}
-      <div className="page-header flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
-        <div className="flex items-center gap-2">
-          <Receipt className="w-5 h-5 text-primary" />
-          <h1 className="text-lg font-semibold">Hóa đơn</h1>
-          {total > 0 && (
-            <span className="text-xs text-muted-foreground">
-              ({total} hóa đơn)
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setXmlModalOpen(true)}
-          >
-            <FileUp className="w-4 h-4 mr-1.5" />
-            Import XML
-          </Button>
-          <Button size="sm" onClick={openNew}>
-            <PlusCircle className="w-4 h-4 mr-1.5" />
-            Tạo hóa đơn
-          </Button>
-        </div>
-      </div>
-
-      {/* Tab bar */}
-      <div className="flex gap-0 border-b border-border px-6 shrink-0">
-        {DIRECTION_TABS.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setDirection(tab.key)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-              direction === tab.key
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-3 px-6 py-3 border-b border-border shrink-0">
-        <input
-          className="h-8 rounded-md border border-input bg-background px-3 text-sm w-48 focus:outline-none focus:ring-1 focus:ring-primary"
-          placeholder="Tìm số HĐ, đối tác, MST..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <DatePicker
-          className="h-8 rounded-md border border-input bg-background px-3 text-sm w-36"
-          value={dateFrom}
-          onChange={setDateFrom}
-          placeholder="Từ ngày"
-        />
-        <DatePicker
-          className="h-8 rounded-md border border-input bg-background px-3 text-sm w-36"
-          value={dateTo}
-          onChange={setDateTo}
-          placeholder="Đến ngày"
-        />
-        {(search || dateFrom || dateTo) && (
-          <button
-            className="text-xs text-muted-foreground hover:text-foreground underline"
-            onClick={() => {
-              setSearch("");
-              setDateFrom("");
-              setDateTo("");
+    <div className="erp-page-root h-full">
+      <PageLayout
+        title="Hóa đơn"
+        desc="Quản lý hóa đơn đầu vào, đầu ra"
+        icon={<Receipt className="h-4 w-4" />}
+        actions={
+          <div className="flex items-center gap-2">
+            <FilterButton
+              onClick={filterPanel.togglePanel}
+              activeCount={filterPanel.activeFilterCount}
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setXmlModalOpen(true)}
+            >
+              <FileUp className="w-4 h-4 mr-1.5" />
+              Import XML
+            </Button>
+            <Button size="sm" onClick={openNew}>
+              <PlusCircle className="w-4 h-4 mr-1.5" />
+              Tạo hóa đơn
+            </Button>
+          </div>
+        }
+        tabs={DIRECTION_TABS}
+        activeTab={direction}
+        onTabChange={(v) => setDirection(v as Direction)}
+      >
+        <div className="flex items-start">
+          <div className="flex-1 min-w-0 space-y-4">
+            <DataTable<ErpInvoice>
+              items={invoices}
+              columns={columns}
+              getRowKey={(inv) => inv.id}
+              loading={loading}
+              emptyLabel="Chưa có hóa đơn nào."
+              page={page}
+              pageSize={40}
+              total={total}
+              totalPages={totalPages}
+              onPage={setPage}
+              onPageSize={() => {}}
+              onRowClick={openDetail}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={(key) => {
+                if (sortBy === key) {
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+                } else {
+                  setSortBy(key);
+                  setSortOrder("desc");
+                }
+                setPage(1);
+              }}
+            />
+          </div>
+          <FilterPanel
+            config={{
+              search: true,
+              period: true,
+              status: {
+                options: STATUS_OPTIONS,
+                placeholder: "Tất cả trạng thái",
+              },
             }}
-          >
-            Xóa bộ lọc
-          </button>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="flex-1 overflow-auto px-6 py-4">
-        {loading ? (
-          <div className="text-sm text-muted-foreground py-8 text-center">
-            Đang tải...
-          </div>
-        ) : invoices.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-16 text-center">
-            <Receipt className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>Chưa có hóa đơn nào.</p>
-            <button
-              className="mt-2 text-primary underline text-xs"
-              onClick={openNew}
-            >
-              Tạo hóa đơn đầu tiên
-            </button>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-border text-xs text-muted-foreground">
-                  <th className="text-left py-2 px-3 font-medium">Ngày HĐ</th>
-                  <th className="text-left py-2 px-3 font-medium">Số HĐ</th>
-                  <th className="text-left py-2 px-3 font-medium">Ký hiệu</th>
-                  <th className="text-left py-2 px-3 font-medium">
-                    {direction === "IN" ? "Bên bán" : "Bên mua"}
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium">MST</th>
-                  <th className="text-right py-2 px-3 font-medium">
-                    Trước VAT
-                  </th>
-                  <th className="text-right py-2 px-3 font-medium">Thuế VAT</th>
-                  <th className="text-right py-2 px-3 font-medium">
-                    Chiết khấu
-                  </th>
-                  <th className="text-right py-2 px-3 font-medium">
-                    Thành tiền
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium">
-                    Trạng thái
-                  </th>
-                  <th className="text-left py-2 px-3 font-medium">Chứng từ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr
-                    key={inv.id}
-                    className="border-b border-border/50 hover:bg-muted/40 cursor-pointer transition-colors"
-                    onClick={() => openDetail(inv)}
-                  >
-                    <td className="py-2 px-3 whitespace-nowrap">
-                      {inv.invoiceDate}
-                    </td>
-                    <td className="py-2 px-3 font-medium text-primary">
-                      {inv.invoiceNo}
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground">
-                      {inv.serialNo || "—"}
-                    </td>
-                    <td className="py-2 px-3">
-                      {direction === "IN"
-                        ? inv.sellerName
-                        : inv.buyerName || "—"}
-                    </td>
-                    <td className="py-2 px-3 text-muted-foreground text-xs">
-                      {direction === "IN"
-                        ? inv.sellerTaxCode
-                        : inv.buyerTaxCode || "—"}
-                    </td>
-                    <td className="py-2 px-3 text-right">
-                      {fmtAmt(inv.preVatAmount)}
-                    </td>
-                    <td className="py-2 px-3 text-right">
-                      {fmtAmt(inv.vatAmount)}
-                    </td>
-                    <td className="py-2 px-3 text-right">
-                      {fmtAmt(inv.discountAmount)}
-                    </td>
-                    <td className="py-2 px-3 text-right font-semibold">
-                      {fmtAmt(inv.totalAmount)}
-                    </td>
-                    <td className="py-2 px-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                          inv.status === "CONFIRMED"
-                            ? "bg-green-100 text-green-800"
-                            : inv.status === "CANCELLED"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {inv.status === "CONFIRMED"
-                          ? "Đã xác nhận"
-                          : inv.status === "CANCELLED"
-                            ? "Đã hủy"
-                            : "Nháp"}
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 text-xs text-muted-foreground">
-                      {inv.purchaseOrderId ? (
-                        <button
-                          className="flex items-center gap-1 text-primary hover:underline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate("purchasing");
-                          }}
-                        >
-                          PO <ExternalLink className="w-3 h-3" />
-                        </button>
-                      ) : inv.salesOrderId ? (
-                        <button
-                          className="flex items-center gap-1 text-primary hover:underline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate("erp-sales-orders");
-                          }}
-                        >
-                          SO <ExternalLink className="w-3 h-3" />
-                        </button>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-end gap-2 mt-4 text-sm">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-              className="px-3 py-1 rounded border border-border disabled:opacity-40 hover:bg-muted"
-            >
-              ← Trước
-            </button>
-            <span className="text-muted-foreground">
-              {page} / {totalPages}
-            </span>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-1 rounded border border-border disabled:opacity-40 hover:bg-muted"
-            >
-              Sau →
-            </button>
-          </div>
-        )}
-      </div>
+            filter={filterPanel}
+          />
+        </div>
+      </PageLayout>
 
       {/* Drawer */}
       <DrawerModal
