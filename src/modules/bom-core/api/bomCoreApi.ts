@@ -4,6 +4,7 @@ import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 export interface ErpBomLine {
   id?: string;
   componentItemId?: string;
+  componentItemCode?: string;
   componentItemName?: string;
   qtyRequired: string;
   uom: string;

@@ -11,8 +11,11 @@ import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCw,
   Network,
+  Loader2,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { SearchInput } from "@/shared/components/SearchInput";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -35,13 +38,14 @@ import {
   bomCoreApi,
   type CreateBomPayload,
   type ErpBom,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type ErpBomLine,
 } from "@/modules/bom-core/api/bomCoreApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { cn } from "@/shared/utils";
+import { useT } from "@/core/i18n";
+import { extractItemCodeAndName } from "@/shared/utils/format";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
@@ -140,146 +144,384 @@ interface BomTreeProps {
   level?: number;
 }
 
-function BomTree({ bomId, fgToBomMap, itemsMap, level = 0 }: BomTreeProps) {
-  const [bom, setBom] = useState<ErpBom | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [expandedLines, setExpandedLines] = useState<Record<string, boolean>>(
-    {},
-  );
+interface FlatNode {
+  uniqueId: string;
+  parentId: string | null;
+  line: ErpBomLine;
+  level: number;
+  isExpanded: boolean;
+  isLoading: boolean;
+  isError: boolean;
+  subBomId: string | null;
+}
+
+function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
+  const t = useT();
+  const [flatNodes, setFlatNodes] = useState<FlatNode[]>([]);
+  const [initialLoading, setInitialLoading] = useState(false);
+  const [initialError, setInitialError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
-    async function fetchDetail() {
-      setLoading(true);
-      setError(null);
+    async function loadRoot() {
+      setInitialLoading(true);
       try {
         const detail = await bomCoreApi.get(bomId);
         if (active) {
-          setBom(detail);
+          const rootNodes: FlatNode[] = (detail.lines || []).map((l) => ({
+            uniqueId: l.id || crypto.randomUUID(),
+            parentId: null,
+            line: l,
+            level: 0,
+            isExpanded: false,
+            isLoading: false,
+            isError: false,
+            subBomId: l.componentItemId
+              ? fgToBomMap[l.componentItemId]?.id || null
+              : null,
+          }));
+          setFlatNodes(rootNodes);
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        if (active) {
-          setError("Không thể tải chi tiết cấu trúc");
-        }
+      } catch (e) {
+        if (active) setInitialError(t("Không thể tải chi tiết cấu trúc"));
       } finally {
-        if (active) {
-          setLoading(false);
-        }
+        if (active) setInitialLoading(false);
       }
     }
-    void fetchDetail();
+    void loadRoot();
     return () => {
       active = false;
     };
-  }, [bomId]);
+  }, [bomId, fgToBomMap, t]);
 
-  if (loading) {
+  const toggleExpand = async (nodeId: string, subBomId: string) => {
+    setFlatNodes((prev) =>
+      prev.map((n) =>
+        n.uniqueId === nodeId ? { ...n, isExpanded: !n.isExpanded } : n,
+      ),
+    );
+
+    const node = flatNodes.find((n) => n.uniqueId === nodeId);
+    if (!node?.isExpanded) {
+      const hasChildren = flatNodes.some((n) => n.parentId === nodeId);
+      if (!hasChildren) {
+        setFlatNodes((prev) =>
+          prev.map((n) =>
+            n.uniqueId === nodeId ? { ...n, isLoading: true } : n,
+          ),
+        );
+        try {
+          const detail = await bomCoreApi.get(subBomId);
+          setFlatNodes((prev) => {
+            const idx = prev.findIndex((n) => n.uniqueId === nodeId);
+            if (idx === -1) return prev;
+            const newNodes: FlatNode[] = (detail.lines || []).map((l) => ({
+              uniqueId: `${nodeId}_${l.id || crypto.randomUUID()}`,
+              parentId: nodeId,
+              line: l,
+              level: prev[idx].level + 1,
+              isExpanded: false,
+              isLoading: false,
+              isError: false,
+              subBomId: l.componentItemId
+                ? fgToBomMap[l.componentItemId]?.id || null
+                : null,
+            }));
+            const next = [...prev];
+            next[idx] = { ...next[idx], isLoading: false };
+            next.splice(idx + 1, 0, ...newNodes);
+            return next;
+          });
+        } catch (e) {
+          setFlatNodes((prev) =>
+            prev.map((n) =>
+              n.uniqueId === nodeId
+                ? { ...n, isLoading: false, isError: true }
+                : n,
+            ),
+          );
+        }
+      }
+    }
+  };
+
+  const visibleNodes = useMemo(() => {
+    return flatNodes.filter((n) => {
+      if (n.parentId === null) return true;
+      let curr = flatNodes.find((p) => p.uniqueId === n.parentId);
+      while (curr) {
+        if (!curr.isExpanded) return false;
+        curr = flatNodes.find((p) => p.uniqueId === curr!.parentId);
+      }
+      return true;
+    });
+  }, [flatNodes]);
+
+  const filteredAndSorted = useMemo(() => {
+    let arr = [...visibleNodes];
+    if (search) {
+      const q = search.toLowerCase();
+      arr = arr.filter((n) => {
+        const itemId = n.line.componentItemId;
+        const fallbackLabel = itemId ? itemsMap[itemId] || "" : "";
+        const { code, name } = extractItemCodeAndName(
+          n.line.componentItemCode,
+          n.line.componentItemName,
+          fallbackLabel,
+        );
+        return (
+          code.toLowerCase().includes(q) ||
+          name.toLowerCase().includes(q) ||
+          String(n.line.qtyRequired || "").includes(q)
+        );
+      });
+    }
+    if (sortConfig) {
+      const { key, direction } = sortConfig;
+      arr.sort((a, b) => {
+        let aVal: string | number = "";
+        let bVal: string | number = "";
+        if (key === "sku" || key === "name") {
+          const fallbackLabelA = a.line.componentItemId
+            ? itemsMap[a.line.componentItemId] || ""
+            : "";
+          const fallbackLabelB = b.line.componentItemId
+            ? itemsMap[b.line.componentItemId] || ""
+            : "";
+          const extractedA = extractItemCodeAndName(
+            a.line.componentItemCode,
+            a.line.componentItemName,
+            fallbackLabelA,
+          );
+          const extractedB = extractItemCodeAndName(
+            b.line.componentItemCode,
+            b.line.componentItemName,
+            fallbackLabelB,
+          );
+
+          aVal = key === "sku" ? extractedA.code : extractedA.name;
+          bVal = key === "sku" ? extractedB.code : extractedB.name;
+        }
+        if (key === "qty") {
+          aVal = parseFloat(a.line.qtyRequired || "0");
+          bVal = parseFloat(b.line.qtyRequired || "0");
+        }
+        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return arr;
+  }, [visibleNodes, search, sortConfig, itemsMap]);
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" | null = "asc";
+    if (sortConfig?.key === key) {
+      if (sortConfig.direction === "asc") direction = "desc";
+      else direction = null;
+    }
+    setSortConfig(direction ? { key, direction } : null);
+  };
+
+  if (initialLoading) {
     return (
-      <div className="pl-4 py-2 text-xs text-muted-foreground animate-pulse">
-        Đang tải cấu trúc NVL...
+      <div className="pl-4 py-4 text-xs text-muted-foreground animate-pulse">
+        {t("Đang tải cấu trúc NVL...")}
       </div>
     );
   }
 
-  if (error) {
+  if (initialError) {
     return (
-      <div className="pl-4 py-2 text-xs text-red-500 font-medium">
-        ⚠️ {error}
+      <div className="pl-4 py-4 text-xs text-red-500 font-medium">
+        ⚠️ {initialError}
       </div>
     );
   }
 
-  if (!bom || !bom.lines || bom.lines.length === 0) {
+  if (flatNodes.length === 0) {
     return (
-      <div className="pl-4 py-2 text-xs text-muted-foreground italic">
-        Không có nguyên vật liệu bên trong.
+      <div className="pl-4 py-4 text-xs text-muted-foreground italic">
+        {t("Không có nguyên vật liệu bên trong.")}
       </div>
     );
   }
 
   return (
-    <div className="space-y-1 pl-4 border-l border-dashed border-border/40 ml-2.5 mt-1">
-      {bom.lines.map((line, idx) => {
-        const itemId = line.componentItemId;
-        const itemName =
-          line.componentItemName ||
-          (itemId ? itemsMap[itemId] : "Linh kiện không xác định");
-        const subBom = itemId ? fgToBomMap[itemId] : null;
-        const isExpanded = itemId ? !!expandedLines[itemId] : false;
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 my-2 shadow-sm border border-border flex flex-col gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="font-semibold text-base text-foreground whitespace-nowrap shrink-0">
+          {t("Chi tiết")} (
+          {search
+            ? `${filteredAndSorted.length}/${visibleNodes.length}`
+            : visibleNodes.length}
+          )
+        </div>
+        <SearchInput
+          className="w-full sm:w-64"
+          placeholder={t("Tìm mã/tên linh kiện, SL...")}
+          value={search}
+          onChange={setSearch}
+        />
+      </div>
+      <div className="w-full overflow-y-auto max-h-[300px]">
+        <DocumentLineTable
+          columns={[
+            {
+              key: "index",
+              header: "#",
+              width: 50,
+              align: "center",
+              cell: (_, idx) => (
+                <span className="text-muted-foreground">{idx + 1}</span>
+              ),
+            },
+            {
+              key: "sku",
+              header: t("Mã linh kiện"),
+              minWidth: 140,
+              sortable: true,
+              cell: (node: FlatNode) => {
+                const itemId = node.line.componentItemId;
+                const fallbackLabel = itemId ? itemsMap[itemId] || "" : "";
+                const { code } = extractItemCodeAndName(
+                  node.line.componentItemCode,
+                  node.line.componentItemName,
+                  fallbackLabel,
+                );
+                return (
+                  <span className="font-medium text-foreground">
+                    {code || "—"}
+                  </span>
+                );
+              },
+            },
+            {
+              key: "name",
+              header: t("Tên linh kiện / Tên hàng"),
+              minWidth: 260,
+              sortable: true,
+              cell: (node: FlatNode) => {
+                const itemId = node.line.componentItemId;
+                const fallbackLabel = itemId ? itemsMap[itemId] || "" : "";
+                const { name } = extractItemCodeAndName(
+                  node.line.componentItemCode,
+                  node.line.componentItemName,
+                  fallbackLabel,
+                );
 
-        const formattedQty = parseFloat(line.qtyRequired || "0").toFixed(1);
-        const hasScrap = line.scrapRate && parseFloat(line.scrapRate) > 0;
-        const formattedScrap = hasScrap
-          ? parseFloat(line.scrapRate || "0").toFixed(1)
-          : "";
-
-        return (
-          <div key={line.id || idx} className="text-xs">
-            <div className="flex items-center justify-between py-1 hover:bg-muted/80 rounded px-2 transition-all duration-150 gap-4">
-              <div className="flex items-center gap-2 min-w-0">
-                {subBom ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (itemId) {
-                        setExpandedLines((prev) => ({
-                          ...prev,
-                          [itemId]: !prev[itemId],
-                        }));
-                      }
-                    }}
-                    className="p-0.5 hover:bg-muted rounded text-muted-foreground transition-colors flex items-center justify-center shrink-0"
+                return (
+                  <div
+                    className="flex items-center gap-1.5"
+                    style={{ paddingLeft: `${node.level * 1.5}rem` }}
                   >
-                    <ChevronRight
-                      className={cn(
-                        "h-3 w-3 transform transition-transform",
-                        isExpanded && "rotate-90",
+                    {node.subBomId ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleExpand(node.uniqueId, node.subBomId!)
+                        }
+                        className="p-0.5 hover:bg-muted rounded text-muted-foreground transition-colors flex items-center justify-center shrink-0"
+                      >
+                        {node.isLoading ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        ) : (
+                          <ChevronRight
+                            className={cn(
+                              "h-4 w-4 transform transition-transform",
+                              node.isExpanded && "rotate-90",
+                            )}
+                          />
+                        )}
+                      </button>
+                    ) : (
+                      <span className="w-5 h-5 flex items-center justify-center text-muted-foreground/30 text-[10px] shrink-0">
+                        •
+                      </span>
+                    )}
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-foreground/90">
+                        {name || t("Linh kiện không xác định")}
+                      </span>
+                      {node.isError && (
+                        <span className="text-[10px] text-red-500 font-medium mt-0.5">
+                          {t("Lỗi tải chi tiết")}
+                        </span>
                       )}
-                    />
-                  </button>
-                ) : (
-                  <span className="w-4 h-4 flex items-center justify-center text-muted-foreground/30 text-[10px] shrink-0">
-                    •
-                  </span>
-                )}
-                <span className="font-medium text-foreground/90 truncate">
-                  {itemName}
-                  {line.notes && (
-                    <span className="italic text-muted-foreground ml-1.5 font-normal">
-                      ({line.notes})
-                    </span>
+                    </div>
+                  </div>
+                );
+              },
+            },
+            {
+              key: "qty",
+              header: t("Số lượng"),
+              minWidth: 100,
+              align: "center",
+              sortable: true,
+              cell: (node: FlatNode) => (
+                <div className="font-semibold text-primary">
+                  {parseFloat(node.line.qtyRequired || "0").toLocaleString(
+                    "vi-VN",
                   )}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 shrink-0 text-[11px] text-muted-foreground">
-                <span className="font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full min-w-[32px] text-center">
-                  {formattedQty}
-                </span>
-                <span className="font-medium text-foreground/75 w-10 truncate">
-                  {line.uom}
-                </span>
-                {hasScrap && (
-                  <span className="text-amber-700 bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 rounded-full text-[9px] font-medium shrink-0">
-                    Hao hụt {formattedScrap}%
+                </div>
+              ),
+            },
+            {
+              key: "uom",
+              header: t("ĐVT"),
+              minWidth: 80,
+              align: "center",
+              cell: (node: FlatNode) => (
+                <span className="text-muted-foreground">{node.line.uom}</span>
+              ),
+            },
+            {
+              key: "scrap",
+              header: t("Hao hụt"),
+              minWidth: 100,
+              align: "center",
+              cell: (node: FlatNode) => {
+                const hasScrap =
+                  node.line.scrapRate && parseFloat(node.line.scrapRate) > 0;
+                const formattedScrap = hasScrap
+                  ? parseFloat(node.line.scrapRate || "0").toLocaleString(
+                      "vi-VN",
+                    )
+                  : "";
+                return hasScrap ? (
+                  <span className="text-amber-700 bg-amber-50 border border-amber-200/50 px-1.5 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap">
+                    {formattedScrap}%
                   </span>
-                )}
-              </div>
-            </div>
-
-            {subBom && isExpanded && itemId && (
-              <BomTree
-                bomId={subBom.id}
-                fgToBomMap={fgToBomMap}
-                itemsMap={itemsMap}
-                level={level + 1}
-              />
-            )}
-          </div>
-        );
-      })}
+                ) : (
+                  <span className="text-muted-foreground/50">—</span>
+                );
+              },
+            },
+            {
+              key: "notes",
+              header: t("Ghi chú"),
+              minWidth: 120,
+              cell: (node: FlatNode) => (
+                <span className="text-muted-foreground italic text-[11px]">
+                  {node.line.notes || "—"}
+                </span>
+              ),
+            },
+          ]}
+          data={filteredAndSorted}
+          getRowKey={(node) => node.uniqueId}
+          viewOnly={true}
+          sortConfig={sortConfig}
+          onSort={handleSort}
+        />
+      </div>
     </div>
   );
 }

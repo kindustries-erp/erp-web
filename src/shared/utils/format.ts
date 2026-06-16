@@ -43,3 +43,28 @@ export function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
 }
+
+export function extractItemCodeAndName(
+  code?: string | null,
+  name?: string | null,
+  fallbackLabel?: string | null,
+) {
+  let finalCode = code || "";
+  let finalName = name || "";
+
+  if (!finalCode && fallbackLabel) {
+    const parts = fallbackLabel.split(" — ");
+    if (parts.length > 1) {
+      finalCode = parts[0];
+      finalName = parts.slice(1).join(" — ");
+    } else {
+      finalName = fallbackLabel;
+    }
+  } else if (finalCode && finalName.startsWith(`${finalCode} — `)) {
+    finalName = finalName.substring(finalCode.length + 3);
+  } else if (finalCode && finalName.startsWith(`${finalCode}-`)) {
+    finalName = finalName.substring(finalCode.length + 1).trim();
+  }
+
+  return { code: finalCode, name: finalName };
+}
