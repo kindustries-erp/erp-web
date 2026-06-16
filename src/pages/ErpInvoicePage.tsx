@@ -11,6 +11,7 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
@@ -21,6 +22,7 @@ import {
   type ErpInvoice,
   type CreateErpInvoicePayload,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { InvoiceXmlUploadModal } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadModal";
 import {
   PlusCircle,
@@ -28,6 +30,7 @@ import {
   ExternalLink,
   FileUp,
   Download,
+  Eye,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -291,6 +294,13 @@ export function ErpInvoicePage() {
       cell: (inv) => inv.invoiceDate,
     },
     {
+      key: "serialNo",
+      header: "Ký hiệu",
+      headerClassName: "min-w-[100px]",
+      className: "text-muted-foreground min-w-[100px]",
+      cell: (inv) => inv.serialNo || "—",
+    },
+    {
       key: "invoiceNo",
       header: "Số HĐ",
       sortable: true,
@@ -310,18 +320,15 @@ export function ErpInvoicePage() {
       header: direction === "IN" ? "Bên bán" : "Bên mua",
       sortable: true,
       sortKey: direction === "IN" ? "sellerName" : "buyerName",
-      headerClassName: "min-w-[200px]",
-      className: "min-w-[200px] max-w-[250px]",
+      headerClassName: "min-w-[500px]",
+      className: "min-w-[500px] max-w-[625px]",
       cell: (inv) => {
         const text =
           direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
         return (
-          <div
-            className="truncate w-full"
-            title={text !== "—" ? text : undefined}
-          >
-            {text}
-          </div>
+          <Tooltip content={text !== "—" ? text : ""}>
+            <div className="truncate w-full cursor-pointer">{text}</div>
+          </Tooltip>
         );
       },
     },
@@ -515,6 +522,20 @@ export function ErpInvoicePage() {
               items={invoices}
               columns={columns}
               getRowKey={(inv) => inv.id}
+              actionsColumn={{
+                headerClassName: "w-[48px] text-center",
+                cell: (inv) => (
+                  <ActionDropdown
+                    items={[
+                      {
+                        label: t("common.edit"),
+                        icon: <Eye className="w-4 h-4" />,
+                        onClick: () => openDetail(inv),
+                      },
+                    ]}
+                  />
+                ),
+              }}
               loading={loading}
               emptyLabel="Chưa có hóa đơn nào."
               page={page}
