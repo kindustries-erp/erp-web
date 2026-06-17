@@ -300,6 +300,16 @@ export function Sidebar() {
                 onClick={() => navTo("erp-accounting-config")}
                 contextPage="erp-accounting-config"
               />
+              <NavItem
+                collapsed={c}
+                icon={
+                  <Settings2 className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label="Thiết lập kế toán"
+                active={currentPage === "erp-accounting-settings"}
+                onClick={() => navTo("erp-accounting-settings")}
+                contextPage="erp-accounting-settings"
+              />
             </div>
             {/* Hệ thống / Admin */}
             <div className="sidebar-nav-section py-2">

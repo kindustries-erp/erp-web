@@ -91,6 +91,10 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.accountingConfig",
     group: "accounting",
   },
+  "erp-accounting-settings": {
+    labelKey: "nav.items.accountingSettings",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
@@ -131,6 +135,10 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "erp-accounting-config": [
     ["breadcrumb.accounting"],
     ["breadcrumb.accountingConfig"],
+  ],
+  "erp-accounting-settings": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.accountingSettings"],
   ],
 };
 
