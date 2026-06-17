@@ -189,14 +189,14 @@ export const accountingApi = {
 
   getPeriodOptions: async () => {
     const res = await axiosInstance.get<{ items: PeriodOption[] }>(
-      "/journal-entries/options/periods",
+      "/journal-entries/lookup/periods",
     );
     return res.data.items;
   },
 
   getAccountOptions: async (search?: string) => {
     const res = await axiosInstance.get<{ items: AccountOption[] }>(
-      "/journal-entries/options/accounts",
+      "/journal-entries/lookup/accounts",
       { params: { search } },
     );
     return res.data.items;
