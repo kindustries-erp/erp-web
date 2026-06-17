@@ -3,10 +3,12 @@
 ## Start here (for AI agents and developers)
 
 1. `../AGENTS.md`
-2. `ai/technical-instructions.md`
-3. `erp-core-index.md` _(ERP CORE lane bootstrap / active-vs-legacy docs guide)_
-4. `app-structure.md`
-5. Relevant file in `tasks/`
+2. `ai/current-truth-context.md`
+3. `web-current-truth-index.md` _(current-truth lane entrypoint)_
+4. `ai/technical-instructions.md`
+5. `app-structure.md`
+6. Relevant file in `tasks/`
+7. `erp-core-index.md` _(historical lane index / lineage reference only)_
 
 ## Main sections
 

@@ -1,5 +1,9 @@
 # Task — Cashflow Vouchers Greenfield (Web)
 
+> **HISTORICAL REFERENCE ONLY**
+> Task này thuộc Directus / cashflow-vouchers era cũ. Không dùng làm default implementation guidance cho lane `erp-master` hiện tại nếu user không mở lại scope finance legacy.
+
+
 - Type: FEATURE
 - Mục tiêu: Tạo mới surface `cashflow_vouchers` trong ERP Web.
 - Bối cảnh: Plan canonical tại `/opt/docs/ai/liouni-erp/tasks/20260524.2047.2328 - cashflow-vouchers-greenfield.md`

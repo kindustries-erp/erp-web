@@ -4,9 +4,13 @@ This file is the entrypoint for any AI agent/model working in this repository.
 
 ## Required reading order
 
-1. `docs/ai/technical-instructions.md` (canonical rules)
-2. `docs/app-structure.md` (architecture and layering)
-3. Relevant task file in `docs/tasks/`
+1. `.agents/README.md`
+2. `.agents/context/current-truth.md`
+3. `.agents/context/working-contract.md`
+4. `.agents/tasks/current-lane.md`
+5. `docs/ai/technical-instructions.md` (canonical rules)
+6. `docs/app-structure.md` (architecture and layering)
+7. Relevant task file in `docs/tasks/`
 
 ## Mandatory execution contract
 
