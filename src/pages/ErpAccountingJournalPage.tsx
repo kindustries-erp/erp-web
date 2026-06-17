@@ -13,14 +13,28 @@ import { money } from "@/shared/utils/format";
 import type { ErpJournalEntry } from "@/modules/accounting/api/accountingApi";
 
 export function ErpAccountingJournalPage() {
-  const store = useAccountingJournalListStore();
+  const page = useAccountingJournalListStore((s) => s.page);
+  const pageSize = useAccountingJournalListStore((s) => s.pageSize);
+  const search = useAccountingJournalListStore((s) => s.search);
+  const statusFilter = useAccountingJournalListStore((s) => s.statusFilter);
+  const dateFrom = useAccountingJournalListStore((s) => s.dateFrom);
+  const dateTo = useAccountingJournalListStore((s) => s.dateTo);
+  const setPage = useAccountingJournalListStore((s) => s.setPage);
+  const setPageSize = useAccountingJournalListStore((s) => s.setPageSize);
+  const setSearch = useAccountingJournalListStore((s) => s.setSearch);
+  const setStatusFilter = useAccountingJournalListStore(
+    (s) => s.setStatusFilter,
+  );
+  const setDateFrom = useAccountingJournalListStore((s) => s.setDateFrom);
+  const setDateTo = useAccountingJournalListStore((s) => s.setDateTo);
+
   const listQuery = useAccountingJournalListQuery({
-    page: store.page,
-    pageSize: store.pageSize,
-    search: store.search || undefined,
-    status: store.statusFilter || undefined,
-    date_from: store.dateFrom || undefined,
-    date_to: store.dateTo || undefined,
+    page,
+    pageSize,
+    search: search || undefined,
+    status: statusFilter || undefined,
+    date_from: dateFrom || undefined,
+    date_to: dateTo || undefined,
   });
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -45,21 +59,24 @@ export function ErpAccountingJournalPage() {
   );
 
   const filterPanel = useFilterPanel(filterConfig, () => {
-    store.setPage(1);
+    setPage(1);
   });
 
   // Sync filterPanel state back to store
   useEffect(() => {
-    store.setSearch(filterPanel.state.search);
-    store.setDateFrom(filterPanel.state.dateFrom);
-    store.setDateTo(filterPanel.state.dateTo);
-    store.setStatusFilter(filterPanel.state.status);
+    setSearch(filterPanel.state.search);
+    setDateFrom(filterPanel.state.dateFrom);
+    setDateTo(filterPanel.state.dateTo);
+    setStatusFilter(filterPanel.state.status);
   }, [
     filterPanel.state.search,
     filterPanel.state.dateFrom,
     filterPanel.state.dateTo,
     filterPanel.state.status,
-    store,
+    setSearch,
+    setDateFrom,
+    setDateTo,
+    setStatusFilter,
   ]);
 
   const items = useMemo(() => listQuery.data?.items || [], [listQuery.data]);
@@ -152,12 +169,12 @@ export function ErpAccountingJournalPage() {
             getRowKey={(item) => item.id}
             emptyLabel="Không có bút toán nào"
             loading={listQuery.isFetching}
-            page={store.page}
-            pageSize={store.pageSize}
+            page={page}
+            pageSize={pageSize}
             total={total}
             totalPages={totalPages}
-            onPage={store.setPage}
-            onPageSize={store.setPageSize}
+            onPage={setPage}
+            onPageSize={setPageSize}
             onRowClick={(row) => {
               setSelectedJournalId(row.id);
               setDetailModalOpen(true);

@@ -10,11 +10,17 @@ import { AccountingConfigFormModal } from "@/modules/accounting/components/Accou
 import type { ErpAccountingConfig } from "@/modules/accounting/api/accountingApi";
 
 export function ErpAccountingConfigPage() {
-  const store = useAccountingConfigListStore();
+  const page = useAccountingConfigListStore((s) => s.page);
+  const pageSize = useAccountingConfigListStore((s) => s.pageSize);
+  const search = useAccountingConfigListStore((s) => s.search);
+  const setPage = useAccountingConfigListStore((s) => s.setPage);
+  const setPageSize = useAccountingConfigListStore((s) => s.setPageSize);
+  const setSearch = useAccountingConfigListStore((s) => s.setSearch);
+
   const listQuery = useAccountingConfigListQuery({
-    page: store.page,
-    pageSize: store.pageSize,
-    search: store.search || undefined,
+    page,
+    pageSize,
+    search: search || undefined,
   });
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -28,13 +34,13 @@ export function ErpAccountingConfigPage() {
   );
 
   const filterPanel = useFilterPanel(filterConfig, () => {
-    store.setPage(1);
+    setPage(1);
   });
 
   // Sync filterPanel state back to store
   useEffect(() => {
-    store.setSearch(filterPanel.state.search);
-  }, [filterPanel.state.search, store]);
+    setSearch(filterPanel.state.search);
+  }, [filterPanel.state.search, setSearch]);
 
   // Debounce search is handled by useFilterPanel natively
 
@@ -129,12 +135,12 @@ export function ErpAccountingConfigPage() {
             getRowKey={(item) => item.id}
             emptyLabel="Không có cấu hình nào"
             loading={listQuery.isFetching}
-            page={store.page}
-            pageSize={store.pageSize}
+            page={page}
+            pageSize={pageSize}
             total={total}
             totalPages={totalPages}
-            onPage={store.setPage}
-            onPageSize={store.setPageSize}
+            onPage={setPage}
+            onPageSize={setPageSize}
             onRowClick={(row) => {
               setEditingId(row.id);
               setModalOpen(true);
