@@ -40,7 +40,10 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
           {visibleItems.map((item) => (
             <DropdownMenu.Item
               key={item.label}
-              onClick={item.onClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                item.onClick();
+              }}
               className={cn(
                 "flex items-center gap-2 px-3 py-[6px] rounded-md text-xs cursor-pointer outline-none select-none",
                 "hover:bg-[color:var(--popup-bg-hover)]",

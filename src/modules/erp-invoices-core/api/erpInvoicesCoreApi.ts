@@ -1,5 +1,16 @@
 import axiosInstance from "@/core/api/axiosInstance";
 
+export interface ErpInvoiceItem {
+  id?: string;
+  invoiceId?: string;
+  description?: string;
+  preVatAmount: number | string;
+  vatRate?: number | string | null;
+  vatAmount: number | string;
+  discountAmount: number | string;
+  totalAmount: number | string;
+}
+
 export interface ErpInvoice {
   id: string;
   invoiceNo: string;
@@ -29,6 +40,7 @@ export interface ErpInvoice {
   xmlImportId?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  items?: ErpInvoiceItem[];
 }
 
 export interface CreateErpInvoicePayload {
@@ -53,6 +65,7 @@ export interface CreateErpInvoicePayload {
   purchaseOrderId?: string;
   salesOrderId?: string;
   notes?: string;
+  items?: ErpInvoiceItem[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;

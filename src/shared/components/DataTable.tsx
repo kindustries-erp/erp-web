@@ -183,7 +183,13 @@ export function DataTable<T>({
                     >
                       {header.isPlaceholder ? null : meta.sortable ? (
                         <div
-                          className="flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors"
+                          className={cn(
+                            "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors",
+                            meta.headerClassName?.includes("text-right") &&
+                              "justify-end",
+                            meta.headerClassName?.includes("text-center") &&
+                              "justify-center",
+                          )}
                           onClick={() => onSort?.(meta.sortKey!)}
                         >
                           {flexRender(

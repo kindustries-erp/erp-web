@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { useAppStore } from "@/core/config/appStore";
 
 import {
@@ -23,7 +23,12 @@ import {
   type CreateErpInvoicePayload,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { InvoiceXmlUploadModal } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadModal";
+import {
+  DocumentLineTable,
+  DocumentLineTableColumn,
+} from "@/shared/components/DocumentLineTable";
 import {
   PlusCircle,
   Receipt,
@@ -33,6 +38,8 @@ import {
   Eye,
   Trash,
   Ban,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -73,6 +80,7 @@ function emptyForm(): CreateErpInvoicePayload {
     vatAmount: 0,
     discountAmount: 0,
     totalAmount: 0,
+    items: [],
   };
 }
 
@@ -106,11 +114,13 @@ export function ErpInvoicePage() {
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detailInvoice, setDetailInvoice] = useState<ErpInvoice | null>(null);
+  const [showGeneralInfo, setShowGeneralInfo] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState<CreateErpInvoicePayload>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [cancelConfirm, setCancelConfirm] = useState(false);
 
   // XML Upload modal state
   const [xmlModalOpen, setXmlModalOpen] = useState(false);
@@ -206,6 +216,19 @@ export function ErpInvoicePage() {
       purchaseOrderId: detailInvoice.purchaseOrderId ?? undefined,
       salesOrderId: detailInvoice.salesOrderId ?? undefined,
       notes: detailInvoice.notes ?? "",
+      items:
+        detailInvoice.items && detailInvoice.items.length > 0
+          ? detailInvoice.items
+          : [
+              {
+                description: detailInvoice.description || "",
+                preVatAmount: detailInvoice.preVatAmount,
+                vatRate: detailInvoice.vatRate,
+                vatAmount: detailInvoice.vatAmount,
+                discountAmount: detailInvoice.discountAmount,
+                totalAmount: detailInvoice.totalAmount,
+              },
+            ],
     });
     setFormError(null);
     setEditMode(true);
@@ -269,19 +292,26 @@ export function ErpInvoicePage() {
       setFormError(extractApiError(e, "Không thể xóa hóa đơn."));
     } finally {
       setSaving(false);
+      setDeleteConfirm(false);
     }
   }
 
   // ---------------------------------------------------------------------------
   // Cancel
   // ---------------------------------------------------------------------------
-  async function handleCancel(inv: ErpInvoice) {
-    if (!confirm("Bạn có chắc muốn hủy hóa đơn này?")) return;
+  async function handleCancel() {
+    if (!detailInvoice) return;
+    setSaving(true);
     try {
-      await erpInvoicesCoreApi.update(inv.id, { status: "CANCELLED" });
+      await erpInvoicesCoreApi.update(detailInvoice.id, {
+        status: "CANCELLED",
+      });
+      setCancelConfirm(false);
       await loadInvoices();
-    } catch {
-      alert("Không thể hủy hóa đơn.");
+    } catch (e) {
+      setFormError(extractApiError(e, "Không thể hủy hóa đơn."));
+    } finally {
+      setSaving(false);
     }
   }
   // ---------------------------------------------------------------------------
@@ -301,65 +331,53 @@ export function ErpInvoicePage() {
   }
 
   // ---------------------------------------------------------------------------
-  // Columns
   // ---------------------------------------------------------------------------
   const columns: DataTableColumn<ErpInvoice>[] = [
     {
       key: "invoiceDate",
       header: "Ngày HĐ",
       sortable: true,
-      headerClassName: "min-w-[100px]",
-      className: "min-w-[100px]",
+      headerClassName: "w-[100px]",
+      className: "w-[100px]",
       cell: (inv) => inv.invoiceDate,
     },
     {
       key: "serialNo",
       header: "Ký hiệu",
-      headerClassName: "min-w-[100px]",
-      className: "text-muted-foreground min-w-[100px]",
+      headerClassName: "w-[100px]",
+      className: "text-muted-foreground w-[100px]",
       cell: (inv) => inv.serialNo || "—",
     },
     {
       key: "invoiceNo",
       header: "Số HĐ",
       sortable: true,
-      headerClassName: "min-w-[110px]",
-      className: "font-medium text-primary min-w-[110px]",
+      headerClassName: "w-[130px]",
+      className: "font-medium text-primary w-[130px]",
       cell: (inv) => (
         <div className="flex items-center gap-2">
           <span>{inv.invoiceNo}</span>
-          <span
-            className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
-              inv.status === "CONFIRMED"
-                ? "bg-green-100 text-green-800"
-                : inv.status === "CANCELLED"
+          {inv.status !== "CONFIRMED" && (
+            <span
+              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
+                inv.status === "CANCELLED"
                   ? "bg-red-100 text-red-800"
                   : "bg-amber-100 text-amber-800"
-            }`}
-          >
-            {inv.status === "CONFIRMED"
-              ? "Đã xác nhận"
-              : inv.status === "CANCELLED"
-                ? "Đã hủy"
-                : "Nháp"}
-          </span>
+              }`}
+            >
+              {inv.status === "CANCELLED" ? "Đã hủy" : "Nháp"}
+            </span>
+          )}
         </div>
       ),
-    },
-    {
-      key: "serialNo",
-      header: "Ký hiệu",
-      headerClassName: "min-w-[100px]",
-      className: "text-muted-foreground min-w-[100px]",
-      cell: (inv) => inv.serialNo || "—",
     },
     {
       key: "partner",
       header: direction === "IN" ? "Bên bán" : "Bên mua",
       sortable: true,
       sortKey: direction === "IN" ? "sellerName" : "buyerName",
-      headerClassName: "min-w-[500px]",
-      className: "min-w-[500px] max-w-[625px]",
+      headerClassName: "w-[320px]",
+      className: "w-[320px]",
       cell: (inv) => {
         const text =
           direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
@@ -373,70 +391,39 @@ export function ErpInvoicePage() {
     {
       key: "taxCode",
       header: "MST",
-      headerClassName: "min-w-[120px]",
-      className: "text-muted-foreground text-xs min-w-[120px]",
+      headerClassName: "w-[110px]",
+      className: "text-muted-foreground text-xs w-[110px]",
       cell: (inv) =>
         direction === "IN" ? inv.sellerTaxCode || "—" : inv.buyerTaxCode || "—",
     },
     {
       key: "preVatAmount",
       header: "Trước VAT",
-      headerClassName: "text-right min-w-[110px]",
-      className: "text-right min-w-[110px]",
+      headerClassName: "text-right w-[110px]",
+      className: "text-right w-[110px]",
       cell: (inv) => fmtAmt(inv.preVatAmount),
     },
     {
       key: "vatAmount",
       header: "Thuế VAT",
-      headerClassName: "text-right min-w-[100px]",
-      className: "text-right min-w-[100px]",
+      headerClassName: "text-right w-[100px]",
+      className: "text-right w-[100px]",
       cell: (inv) => fmtAmt(inv.vatAmount),
     },
     {
       key: "discountAmount",
       header: "Chiết khấu",
-      headerClassName: "text-right min-w-[100px]",
-      className: "text-right min-w-[100px]",
+      headerClassName: "text-right w-[100px]",
+      className: "text-right w-[100px]",
       cell: (inv) => fmtAmt(inv.discountAmount),
     },
     {
       key: "totalAmount",
       header: "Thành tiền",
       sortable: true,
-      headerClassName: "text-right min-w-[120px]",
-      className: "text-right font-semibold min-w-[120px]",
+      headerClassName: "text-right w-[120px]",
+      className: "text-right font-semibold w-[120px]",
       cell: (inv) => fmtAmt(inv.totalAmount),
-    },
-
-    {
-      key: "link",
-      header: "Chứng từ",
-      headerClassName: "min-w-[90px]",
-      className: "text-xs text-muted-foreground min-w-[90px]",
-      cell: (inv) =>
-        inv.purchaseOrderId ? (
-          <button
-            className="flex items-center gap-1 text-primary hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate("purchasing");
-            }}
-          >
-            PO <ExternalLink className="w-3 h-3" />
-          </button>
-        ) : inv.salesOrderId ? (
-          <button
-            className="flex items-center gap-1 text-primary hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate("erp-sales-orders");
-            }}
-          >
-            SO <ExternalLink className="w-3 h-3" />
-          </button>
-        ) : (
-          "—"
-        ),
     },
   ];
 
@@ -468,12 +455,16 @@ export function ErpInvoicePage() {
           },
         ]
       : []),
-    {
-      label: "Lưu Nháp",
-      variant: "secondary" as const,
-      disabled: saving,
-      onClick: () => handleSave("DRAFT"),
-    },
+    ...(!detailInvoice || detailInvoice.status === "DRAFT"
+      ? [
+          {
+            label: "Lưu nháp",
+            variant: "secondary" as const,
+            disabled: saving,
+            onClick: () => handleSave("DRAFT"),
+          },
+        ]
+      : []),
     {
       label: saving
         ? "Đang lưu..."
@@ -490,6 +481,23 @@ export function ErpInvoicePage() {
   // ---------------------------------------------------------------------------
   // Drawer title
   // ---------------------------------------------------------------------------
+  const displayItems = useMemo(() => {
+    if (editMode) return form.items || [];
+    if (!detailInvoice) return [];
+    if (detailInvoice.items && detailInvoice.items.length > 0)
+      return detailInvoice.items;
+    return [
+      {
+        description: detailInvoice.description || "",
+        preVatAmount: detailInvoice.preVatAmount,
+        vatRate: detailInvoice.vatRate,
+        vatAmount: detailInvoice.vatAmount,
+        discountAmount: detailInvoice.discountAmount,
+        totalAmount: detailInvoice.totalAmount,
+      },
+    ];
+  }, [editMode, form.items, detailInvoice]);
+
   const drawerTitle = editMode
     ? detailInvoice
       ? `Chỉnh sửa: ${detailInvoice.invoiceNo}`
@@ -557,7 +565,6 @@ export function ErpInvoicePage() {
                               onClick: () => {
                                 setDetailInvoice(inv);
                                 setDeleteConfirm(true);
-                                setDrawerOpen(true);
                               },
                             },
                           ]
@@ -568,7 +575,10 @@ export function ErpInvoicePage() {
                               label: "Hủy",
                               icon: <Ban className="w-4 h-4 text-red-600" />,
                               variant: "danger" as const,
-                              onClick: () => handleCancel(inv),
+                              onClick: () => {
+                                setDetailInvoice(inv);
+                                setCancelConfirm(true);
+                              },
                             },
                           ]
                         : []),
@@ -625,523 +635,580 @@ export function ErpInvoicePage() {
           ) : undefined
         }
         title={drawerTitle}
-        panelClassName="min-[1024px]:min-w-[920px]"
+        panelClassName="min-[1024px]:w-[1400px]"
         actions={editMode ? editActions : viewActions}
       >
-        {/* Delete confirm */}
-        {deleteConfirm && (
-          <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 flex items-center justify-between gap-3">
-            <span className="text-sm text-red-800">
-              Xóa hóa đơn này? Hành động không thể hoàn tác.
-            </span>
-            <div className="flex gap-2">
-              <button
-                className="text-xs px-3 py-1 rounded border border-border"
-                onClick={() => setDeleteConfirm(false)}
-              >
-                Hủy
-              </button>
-              <button
-                className="text-xs px-3 py-1 rounded bg-red-600 text-white"
-                onClick={handleDelete}
-                disabled={saving}
-              >
-                Xóa
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-col gap-5">
-          {/* VIEW MODE */}
-          {!editMode && detailInvoice && (
-            <>
-              <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
-                {/* Cột trái: Chi tiết */}
-                <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
-                  {/* Section: Bên bán */}
-                  <DrawerSection title="Bên bán">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="col-span-2">
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Tên
-                        </div>
-                        <div className="font-medium">
-                          {detailInvoice.sellerName || "—"}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          MST
-                        </div>
-                        <div>{detailInvoice.sellerTaxCode || "—"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Ngân hàng
-                        </div>
-                        <div>{detailInvoice.sellerBank || "—"}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Địa chỉ
-                        </div>
-                        <div>{detailInvoice.sellerAddress || "—"}</div>
-                      </div>
-                    </div>
-                  </DrawerSection>
-
-                  {/* Section: Bên mua */}
-                  <DrawerSection title="Bên mua">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="col-span-2">
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Tên
-                        </div>
-                        <div className="font-medium">
-                          {detailInvoice.buyerName || "—"}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          MST
-                        </div>
-                        <div>{detailInvoice.buyerTaxCode || "—"}</div>
-                      </div>
-                      <div className="col-span-2">
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Địa chỉ
-                        </div>
-                        <div>{detailInvoice.buyerAddress || "—"}</div>
-                      </div>
-                    </div>
-                  </DrawerSection>
-
-                  {/* Section: Tài chính */}
-                  <DrawerSection title="Tài chính">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="col-span-2">
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Diễn giải
-                        </div>
-                        <div>{detailInvoice.description || "—"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Giá trước VAT
-                        </div>
-                        <div className="font-medium">
-                          {fmtAmt(detailInvoice.preVatAmount)}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Thuế suất (%)
-                        </div>
-                        <div>
-                          {detailInvoice.vatRate != null
-                            ? `${(Number(detailInvoice.vatRate) * 100).toFixed(0)}%`
-                            : "—"}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Tiền thuế VAT
-                        </div>
-                        <div>{fmtAmt(detailInvoice.vatAmount)}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Chiết khấu
-                        </div>
-                        <div>{fmtAmt(detailInvoice.discountAmount)}</div>
-                      </div>
-                      <div className="col-span-2 border-t border-border pt-2">
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Thành tiền
-                        </div>
-                        <div className="text-lg font-bold text-primary">
-                          {fmtAmt(detailInvoice.totalAmount)}
-                        </div>
-                      </div>
-                    </div>
-                  </DrawerSection>
-                </div>
-
-                {/* Cột phải: Thông tin chung */}
-                <div className="w-full xl:w-[320px] shrink-0 order-1 xl:order-2 space-y-4">
-                  <DrawerSection title="Thông tin chung">
-                    <div className="grid grid-cols-1 gap-3 text-sm">
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Số hóa đơn
-                        </div>
-                        <div className="font-semibold">
-                          {detailInvoice.invoiceNo}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Ký hiệu
-                        </div>
-                        <div>{detailInvoice.serialNo || "—"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Ngày hóa đơn
-                        </div>
-                        <div>{detailInvoice.invoiceDate}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Trạng thái
-                        </div>
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                            detailInvoice.status === "CONFIRMED"
-                              ? "bg-green-100 text-green-800"
-                              : detailInvoice.status === "CANCELLED"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {detailInvoice.status === "CONFIRMED"
-                            ? "Đã xác nhận"
-                            : detailInvoice.status === "CANCELLED"
-                              ? "Đã hủy"
-                              : "Nháp"}
-                        </span>
-                      </div>
-                    </div>
-                  </DrawerSection>
-
-                  {/* Section: Chứng từ liên quan */}
-                  {(detailInvoice.purchaseOrderId ||
-                    detailInvoice.salesOrderId ||
-                    detailInvoice.notes) && (
-                    <DrawerSection title="Liên kết & Ghi chú">
-                      <div className="flex flex-col gap-2 text-sm">
-                        {detailInvoice.purchaseOrderId && (
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-0.5">
-                              Chứng từ mua hàng
-                            </div>
-                            <button
-                              className="flex items-center gap-1.5 text-primary hover:underline font-medium"
-                              onClick={() => navigate("purchasing")}
-                            >
-                              Xem đơn mua hàng{" "}
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                        {detailInvoice.salesOrderId && (
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-0.5">
-                              Chứng từ bán hàng
-                            </div>
-                            <button
-                              className="flex items-center gap-1.5 text-primary hover:underline font-medium"
-                              onClick={() => navigate("erp-sales-orders")}
-                            >
-                              Xem đơn bán hàng{" "}
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                        {detailInvoice.notes && (
-                          <div>
-                            <div className="text-xs text-muted-foreground mb-0.5">
-                              Ghi chú
-                            </div>
-                            <div className="whitespace-pre-wrap">
-                              {detailInvoice.notes}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </DrawerSection>
-                  )}
-
-                  {/* Section: File hóa đơn */}
-                  {(detailInvoice.xmlFileKey || detailInvoice.pdfFileKey) && (
-                    <DrawerSection title="File hóa đơn">
-                      <div className="flex flex-wrap gap-2">
-                        {detailInvoice.xmlFileKey && (
-                          <button
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
-                            onClick={async () => {
-                              try {
-                                const { url } =
-                                  await erpInvoicesCoreApi.getDownloadUrl(
-                                    detailInvoice.id,
-                                    "xml",
-                                  );
-                                window.open(url, "_blank");
-                              } catch {
-                                alert("Không thể tải file XML.");
-                              }
+          <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
+            {/* Cột trái: Bảng Diễn giải (Tài chính) */}
+            <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
+              <DrawerSection title="Chi tiết hóa đơn">
+                <DocumentLineTable<any>
+                  columns={[
+                    {
+                      key: "description",
+                      header: "Diễn giải",
+                      width: "300px",
+                      cell: (row: any, index: number) =>
+                        editMode ? (
+                          <input
+                            className={inputCls}
+                            value={row.description || ""}
+                            onChange={(e) => {
+                              const newItems = [...(form.items || [])];
+                              newItems[index] = {
+                                ...newItems[index],
+                                description: e.target.value,
+                              };
+                              setForm({ ...form, items: newItems });
                             }}
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            Tải XML
-                          </button>
-                        )}
-                        {detailInvoice.pdfFileKey && (
-                          <button
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
-                            onClick={async () => {
-                              try {
-                                const { url } =
-                                  await erpInvoicesCoreApi.getDownloadUrl(
-                                    detailInvoice.id,
-                                    "pdf",
-                                  );
-                                window.open(url, "_blank");
-                              } catch {
-                                alert("Không thể tải file PDF.");
-                              }
-                            }}
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            Tải PDF
-                          </button>
-                        )}
-                      </div>
-                    </DrawerSection>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
+                          />
+                        ) : (
+                          <div className="min-w-[200px]">
+                            {row.description || "—"}
+                          </div>
+                        ),
+                    },
+                    {
+                      key: "preVatAmount",
+                      header: "Trước VAT",
+                      width: "120px",
+                      align: "right",
+                      cell: (row: any, index: number) =>
+                        editMode ? (
+                          <input
+                            className={`${inputCls} text-right`}
+                            type="number"
+                            value={row.preVatAmount || ""}
+                            onChange={(e) => {
+                              const newItems = [...(form.items || [])];
+                              newItems[index] = {
+                                ...newItems[index],
+                                preVatAmount: Number(e.target.value),
+                              };
 
-          {/* EDIT / CREATE MODE */}
-          {editMode && (
-            <>
-              {/* Thông tin hóa đơn */}
-              <DrawerSection title="Thông tin hóa đơn">
-                <div className="flex flex-col gap-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <DrawerField label="Số hóa đơn" required>
-                      <input
-                        className={inputCls}
-                        value={form.invoiceNo}
-                        placeholder="HD-001"
-                        onChange={(e) => fieldSet("invoiceNo", e.target.value)}
-                      />
-                    </DrawerField>
-                    <DrawerField label="Ký hiệu">
-                      <input
-                        className={inputCls}
-                        value={form.serialNo || ""}
-                        placeholder="1C25TAA"
-                        onChange={(e) =>
-                          fieldSet("serialNo", e.target.value || undefined)
-                        }
-                      />
-                    </DrawerField>
+                              const preVatAmount = newItems.reduce(
+                                (acc, curr) =>
+                                  acc + Number(curr.preVatAmount || 0),
+                                0,
+                              );
+                              setForm({
+                                ...form,
+                                items: newItems,
+                                preVatAmount,
+                              });
+                            }}
+                          />
+                        ) : (
+                          <div className="font-medium">
+                            {fmtAmt(String(row.preVatAmount || 0))}
+                          </div>
+                        ),
+                    },
+                    {
+                      key: "vatRate",
+                      header: "Thuế suất",
+                      width: "100px",
+                      align: "right",
+                      cell: (row: any, index: number) =>
+                        editMode ? (
+                          <input
+                            className={`${inputCls} text-right`}
+                            type="number"
+                            step="0.01"
+                            value={row.vatRate || ""}
+                            onChange={(e) => {
+                              const newItems = [...(form.items || [])];
+                              newItems[index] = {
+                                ...newItems[index],
+                                vatRate: Number(e.target.value),
+                              };
+                              setForm({ ...form, items: newItems });
+                            }}
+                          />
+                        ) : (
+                          <div>
+                            {row.vatRate != null
+                              ? `${(Number(row.vatRate) * 100).toFixed(0)}%`
+                              : "—"}
+                          </div>
+                        ),
+                    },
+                    {
+                      key: "vatAmount",
+                      header: "Tiền thuế VAT",
+                      width: "120px",
+                      align: "right",
+                      cell: (row: any, index: number) =>
+                        editMode ? (
+                          <input
+                            className={`${inputCls} text-right`}
+                            type="number"
+                            value={row.vatAmount || ""}
+                            onChange={(e) => {
+                              const newItems = [...(form.items || [])];
+                              newItems[index] = {
+                                ...newItems[index],
+                                vatAmount: Number(e.target.value),
+                              };
+                              const vatAmount = newItems.reduce(
+                                (acc, curr) =>
+                                  acc + Number(curr.vatAmount || 0),
+                                0,
+                              );
+                              setForm({ ...form, items: newItems, vatAmount });
+                            }}
+                          />
+                        ) : (
+                          <div>{fmtAmt(String(row.vatAmount || 0))}</div>
+                        ),
+                    },
+
+                    {
+                      key: "totalAmount",
+                      header: "Thành tiền",
+                      width: "120px",
+                      align: "right",
+                      cell: (row: any, index: number) =>
+                        editMode ? (
+                          <input
+                            className={`${inputCls} text-right font-bold text-primary`}
+                            type="number"
+                            value={row.totalAmount || ""}
+                            onChange={(e) => {
+                              const newItems = [...(form.items || [])];
+                              newItems[index] = {
+                                ...newItems[index],
+                                totalAmount: Number(e.target.value),
+                              };
+                              const totalAmount = newItems.reduce(
+                                (acc, curr) =>
+                                  acc + Number(curr.totalAmount || 0),
+                                0,
+                              );
+                              setForm({
+                                ...form,
+                                items: newItems,
+                                totalAmount,
+                              });
+                            }}
+                          />
+                        ) : (
+                          <div className="font-bold text-primary">
+                            {fmtAmt(String(row.totalAmount || 0))}
+                          </div>
+                        ),
+                    },
+                  ]}
+                  data={displayItems}
+                  getRowKey={(row: any, idx: number) => row.id || idx}
+                  viewOnly={!editMode}
+                  onAddLine={() => {
+                    setForm({
+                      ...form,
+                      items: [
+                        ...(form.items || []),
+                        {
+                          description: "",
+                          preVatAmount: 0,
+                          vatRate: 0,
+                          vatAmount: 0,
+                          discountAmount: 0,
+                          totalAmount: 0,
+                        },
+                      ],
+                    });
+                  }}
+                  onRemoveLine={(index) => {
+                    const newItems = [...(form.items || [])];
+                    newItems.splice(index, 1);
+                    const preVatAmount = newItems.reduce(
+                      (acc, curr) => acc + Number(curr.preVatAmount || 0),
+                      0,
+                    );
+                    const vatAmount = newItems.reduce(
+                      (acc, curr) => acc + Number(curr.vatAmount || 0),
+                      0,
+                    );
+                    const discountAmount = newItems.reduce(
+                      (acc, curr) => acc + Number(curr.discountAmount || 0),
+                      0,
+                    );
+                    const totalAmount = newItems.reduce(
+                      (acc, curr) => acc + Number(curr.totalAmount || 0),
+                      0,
+                    );
+                    setForm({
+                      ...form,
+                      items: newItems,
+                      preVatAmount,
+                      vatAmount,
+                      discountAmount,
+                      totalAmount,
+                    });
+                  }}
+                  addLabel="Thêm dòng"
+                />
+              </DrawerSection>
+            </div>
+
+            {/* Cột phải: Thông tin & Các panel */}
+            <div
+              className={`shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300 xl:sticky xl:top-0 ${
+                showGeneralInfo ? "w-full xl:w-[320px]" : "w-full xl:w-[52px]"
+              }`}
+            >
+              {/* Thông tin chung */}
+              <DrawerSection
+                title={
+                  <span
+                    className={`transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle ${
+                      showGeneralInfo
+                        ? "max-w-[200px] opacity-100"
+                        : "max-w-0 opacity-0"
+                    }`}
+                  >
+                    Thông tin chung
+                  </span>
+                }
+                titleExtra={
+                  <button
+                    type="button"
+                    onClick={() => setShowGeneralInfo((s) => !s)}
+                    className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+                    title={showGeneralInfo ? "Thu gọn" : "Mở rộng"}
+                  >
+                    {showGeneralInfo ? (
+                      <ChevronRight className="w-4 h-4" />
+                    ) : (
+                      <ChevronLeft className="w-4 h-4" />
+                    )}
+                  </button>
+                }
+              >
+                <div
+                  className={`grid transition-all duration-300 ease-in-out ${
+                    showGeneralInfo ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
+                >
+                  <div
+                    className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)]"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
+                      {/* Ngày hóa đơn -> Ký hiệu -> Số hóa đơn */}
+                      <DrawerField label="Ngày hóa đơn" required={editMode}>
+                        {editMode ? (
+                          <DatePicker
+                            className={inputCls}
+                            value={form.invoiceDate?.slice(0, 10) || ""}
+                            onChange={(v) => fieldSet("invoiceDate", v)}
+                          />
+                        ) : (
+                          <div>{detailInvoice?.invoiceDate}</div>
+                        )}
+                      </DrawerField>
+
+                      <DrawerField label="Ký hiệu">
+                        {editMode ? (
+                          <input
+                            className={inputCls}
+                            value={form.serialNo || ""}
+                            placeholder="1C25TAA"
+                            onChange={(e) =>
+                              fieldSet("serialNo", e.target.value || undefined)
+                            }
+                          />
+                        ) : (
+                          <div>{detailInvoice?.serialNo || "—"}</div>
+                        )}
+                      </DrawerField>
+
+                      <DrawerField label="Số hóa đơn" required={editMode}>
+                        {editMode ? (
+                          <input
+                            className={inputCls}
+                            value={form.invoiceNo}
+                            placeholder="HD-001"
+                            onChange={(e) =>
+                              fieldSet("invoiceNo", e.target.value)
+                            }
+                          />
+                        ) : (
+                          <div className="font-semibold">
+                            {detailInvoice?.invoiceNo}
+                          </div>
+                        )}
+                      </DrawerField>
+
+                      {editMode ? (
+                        <DrawerField label="Loại hóa đơn">
+                          <Combobox
+                            options={[
+                              { value: "IN", label: "Đầu vào (Mua)" },
+                              { value: "OUT", label: "Đầu ra (Bán)" },
+                            ]}
+                            value={form.direction}
+                            onChange={(v) =>
+                              fieldSet("direction", v as Direction)
+                            }
+                            allowClear={false}
+                          />
+                        </DrawerField>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <DrawerField label="Ngày hóa đơn" required>
-                      <DatePicker
-                        className={inputCls}
-                        value={form.invoiceDate?.slice(0, 10) || ""}
-                        onChange={(v) => fieldSet("invoiceDate", v)}
-                      />
-                    </DrawerField>
-                    <DrawerField label="Loại hóa đơn">
-                      <Combobox
-                        options={[
-                          { value: "IN", label: "Đầu vào (Mua)" },
-                          { value: "OUT", label: "Đầu ra (Bán)" },
-                        ]}
-                        value={form.direction}
-                        onChange={(v) =>
-                          fieldSet("direction", (v || "IN") as Direction)
-                        }
-                        allowClear={false}
-                      />
-                    </DrawerField>
-                  </div>
-                  <DrawerField label="Trạng thái">
-                    <Combobox
-                      options={STATUS_OPTIONS}
-                      value={form.status || "DRAFT"}
-                      onChange={(v) => fieldSet("status", v || "DRAFT")}
-                      allowClear={false}
-                    />
-                  </DrawerField>
                 </div>
               </DrawerSection>
 
               {/* Bên bán */}
-              <DrawerSection title="Bên bán">
-                <div className="flex flex-col gap-3">
-                  <DrawerField label="Tên">
-                    <input
-                      className={inputCls}
-                      value={form.sellerName || ""}
-                      onChange={(e) => fieldSet("sellerName", e.target.value)}
-                    />
-                  </DrawerField>
-                  <div className="grid grid-cols-2 gap-3">
-                    <DrawerField label="MST">
-                      <input
-                        className={inputCls}
-                        value={form.sellerTaxCode || ""}
-                        onChange={(e) =>
-                          fieldSet("sellerTaxCode", e.target.value)
-                        }
-                      />
+              {showGeneralInfo && (
+                <DrawerSection title="Bên bán">
+                  <div className="flex flex-col gap-3 text-sm">
+                    <DrawerField label="Tên" required={editMode}>
+                      {editMode ? (
+                        <input
+                          className={inputCls}
+                          value={form.sellerName || ""}
+                          placeholder="Công ty A..."
+                          onChange={(e) =>
+                            fieldSet("sellerName", e.target.value)
+                          }
+                        />
+                      ) : (
+                        <div className="font-medium text-foreground">
+                          {detailInvoice?.sellerName || "—"}
+                        </div>
+                      )}
                     </DrawerField>
-                    <DrawerField label="Ngân hàng">
-                      <input
-                        className={inputCls}
-                        value={form.sellerBank || ""}
-                        onChange={(e) => fieldSet("sellerBank", e.target.value)}
-                      />
+                    <DrawerField label="MST">
+                      {editMode ? (
+                        <input
+                          className={inputCls}
+                          value={form.sellerTaxCode || ""}
+                          placeholder="0101234567"
+                          onChange={(e) =>
+                            fieldSet("sellerTaxCode", e.target.value)
+                          }
+                        />
+                      ) : (
+                        <div>{detailInvoice?.sellerTaxCode || "—"}</div>
+                      )}
+                    </DrawerField>
+                    <DrawerField label="Địa chỉ">
+                      {editMode ? (
+                        <input
+                          className={inputCls}
+                          value={form.sellerAddress || ""}
+                          placeholder="Số 1, Đường 2..."
+                          onChange={(e) =>
+                            fieldSet("sellerAddress", e.target.value)
+                          }
+                        />
+                      ) : (
+                        <div>{detailInvoice?.sellerAddress || "—"}</div>
+                      )}
                     </DrawerField>
                   </div>
-                  <DrawerField label="Địa chỉ">
-                    <input
-                      className={inputCls}
-                      value={form.sellerAddress || ""}
-                      onChange={(e) =>
-                        fieldSet("sellerAddress", e.target.value)
-                      }
-                    />
-                  </DrawerField>
-                </div>
-              </DrawerSection>
+                </DrawerSection>
+              )}
 
               {/* Bên mua */}
-              <DrawerSection title="Bên mua">
-                <div className="flex flex-col gap-3">
-                  <DrawerField label="Tên">
-                    <input
-                      className={inputCls}
-                      value={form.buyerName || ""}
-                      onChange={(e) => fieldSet("buyerName", e.target.value)}
-                    />
-                  </DrawerField>
-                  <div className="grid grid-cols-2 gap-3">
+              {showGeneralInfo && (
+                <DrawerSection title="Bên mua">
+                  <div className="flex flex-col gap-3 text-sm">
+                    <DrawerField label="Tên" required={editMode}>
+                      {editMode ? (
+                        <input
+                          className={inputCls}
+                          value={form.buyerName || ""}
+                          placeholder="Công ty B..."
+                          onChange={(e) =>
+                            fieldSet("buyerName", e.target.value)
+                          }
+                        />
+                      ) : (
+                        <div className="font-medium text-foreground">
+                          {detailInvoice?.buyerName || "—"}
+                        </div>
+                      )}
+                    </DrawerField>
                     <DrawerField label="MST">
-                      <input
-                        className={inputCls}
-                        value={form.buyerTaxCode || ""}
-                        onChange={(e) =>
-                          fieldSet("buyerTaxCode", e.target.value)
-                        }
-                      />
+                      {editMode ? (
+                        <input
+                          className={inputCls}
+                          value={form.buyerTaxCode || ""}
+                          placeholder="0101234567"
+                          onChange={(e) =>
+                            fieldSet("buyerTaxCode", e.target.value)
+                          }
+                        />
+                      ) : (
+                        <div>{detailInvoice?.buyerTaxCode || "—"}</div>
+                      )}
+                    </DrawerField>
+                    <DrawerField label="Địa chỉ">
+                      {editMode ? (
+                        <input
+                          className={inputCls}
+                          value={form.buyerAddress || ""}
+                          placeholder="Số 1, Đường 2..."
+                          onChange={(e) =>
+                            fieldSet("buyerAddress", e.target.value)
+                          }
+                        />
+                      ) : (
+                        <div>{detailInvoice?.buyerAddress || "—"}</div>
+                      )}
                     </DrawerField>
                   </div>
-                  <DrawerField label="Địa chỉ">
-                    <input
-                      className={inputCls}
-                      value={form.buyerAddress || ""}
-                      onChange={(e) => fieldSet("buyerAddress", e.target.value)}
-                    />
-                  </DrawerField>
-                </div>
-              </DrawerSection>
+                </DrawerSection>
+              )}
 
-              {/* Tài chính */}
-              <DrawerSection title="Tài chính">
-                <div className="flex flex-col gap-3">
-                  <DrawerField label="Diễn giải">
-                    <textarea
-                      className={`${inputCls} min-h-[60px]`}
-                      value={form.description || ""}
-                      onChange={(e) => fieldSet("description", e.target.value)}
-                    />
-                  </DrawerField>
-                  <div className="grid grid-cols-2 gap-3">
-                    <DrawerField label="Giá trước VAT">
-                      <input
-                        className={inputCls}
-                        type="number"
-                        min={0}
-                        value={form.preVatAmount ?? ""}
-                        onChange={(e) =>
-                          fieldSet("preVatAmount", Number(e.target.value))
-                        }
+              {/* Section: Liên kết & Ghi chú */}
+              {showGeneralInfo &&
+              !editMode &&
+              (detailInvoice?.purchaseOrderId ||
+                detailInvoice?.salesOrderId ||
+                detailInvoice?.notes) ? (
+                <DrawerSection title="Liên kết & Ghi chú">
+                  <div className="flex flex-col gap-2 text-sm">
+                    {detailInvoice?.purchaseOrderId && (
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Chứng từ mua hàng
+                        </div>
+                        <button
+                          className="flex items-center gap-1.5 text-primary hover:underline font-medium"
+                          onClick={() =>
+                            window.open("/operational/purchasing", "_blank")
+                          }
+                        >
+                          Xem đơn mua hàng{" "}
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    {detailInvoice?.salesOrderId && (
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Chứng từ bán hàng
+                        </div>
+                        <button
+                          className="flex items-center gap-1.5 text-primary hover:underline font-medium"
+                          onClick={() =>
+                            window.open("/operational/sales", "_blank")
+                          }
+                        >
+                          Xem đơn bán hàng{" "}
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    {detailInvoice?.notes && (
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Ghi chú
+                        </div>
+                        <div className="whitespace-pre-wrap">
+                          {detailInvoice?.notes}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </DrawerSection>
+              ) : null}
+
+              {/* Edit Mode: Ghi chú & Liên kết */}
+              {showGeneralInfo && editMode ? (
+                <DrawerSection title="Ghi chú & Liên kết">
+                  <div className="flex flex-col gap-3">
+                    <DrawerField label="Ghi chú">
+                      <textarea
+                        className={`${inputCls} min-h-[80px]`}
+                        value={form.notes || ""}
+                        onChange={(e) => fieldSet("notes", e.target.value)}
                       />
                     </DrawerField>
-                    <DrawerField label="Thuế suất (0-1)">
+                    <DrawerField label="Chứng từ mua hàng">
                       <input
                         className={inputCls}
-                        type="number"
-                        step="0.01"
-                        min={0}
-                        max={1}
-                        placeholder="0.1 = 10%"
-                        value={form.vatRate ?? ""}
+                        value={form.purchaseOrderId || ""}
+                        placeholder="ID hoặc mã PO..."
                         onChange={(e) =>
                           fieldSet(
-                            "vatRate",
-                            e.target.value ? Number(e.target.value) : undefined,
+                            "purchaseOrderId",
+                            e.target.value || undefined,
                           )
                         }
                       />
                     </DrawerField>
-                    <DrawerField label="Tiền thuế VAT">
+                    <DrawerField label="Chứng từ bán hàng">
                       <input
                         className={inputCls}
-                        type="number"
-                        min={0}
-                        value={form.vatAmount ?? ""}
+                        value={form.salesOrderId || ""}
+                        placeholder="ID hoặc mã SO..."
                         onChange={(e) =>
-                          fieldSet("vatAmount", Number(e.target.value))
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Chiết khấu">
-                      <input
-                        className={inputCls}
-                        type="number"
-                        min={0}
-                        value={form.discountAmount ?? ""}
-                        onChange={(e) =>
-                          fieldSet("discountAmount", Number(e.target.value))
-                        }
-                      />
-                    </DrawerField>
-                    <DrawerField label="Thành tiền" required>
-                      <input
-                        className={inputCls}
-                        type="number"
-                        min={0}
-                        value={form.totalAmount ?? ""}
-                        onChange={(e) =>
-                          fieldSet("totalAmount", Number(e.target.value))
+                          fieldSet("salesOrderId", e.target.value || undefined)
                         }
                       />
                     </DrawerField>
                   </div>
-                </div>
-              </DrawerSection>
+                </DrawerSection>
+              ) : null}
 
-              {/* Ghi chú */}
-              <DrawerSection title="Ghi chú">
-                <DrawerField label="Ghi chú">
-                  <textarea
-                    className={`${inputCls} min-h-[60px]`}
-                    value={form.notes || ""}
-                    onChange={(e) =>
-                      fieldSet("notes", e.target.value || undefined)
-                    }
-                  />
-                </DrawerField>
-              </DrawerSection>
-            </>
-          )}
-
-          {/* Error */}
-          {formError && (
-            <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">
-              {formError}
+              {/* Section: File hóa đơn */}
+              {showGeneralInfo &&
+                !editMode &&
+                (detailInvoice?.xmlFileKey || detailInvoice?.pdfFileKey) && (
+                  <DrawerSection title="File hóa đơn">
+                    <div className="flex flex-wrap gap-2">
+                      {detailInvoice?.xmlFileKey && (
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+                          onClick={async () => {
+                            try {
+                              const { url } =
+                                await erpInvoicesCoreApi.getDownloadUrl(
+                                  detailInvoice.id,
+                                  "xml",
+                                );
+                              window.open(url, "_blank");
+                            } catch {
+                              alert("Không thể tải file XML.");
+                            }
+                          }}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Tải XML
+                        </button>
+                      )}
+                      {detailInvoice?.pdfFileKey && (
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+                          onClick={async () => {
+                            try {
+                              const { url } =
+                                await erpInvoicesCoreApi.getDownloadUrl(
+                                  detailInvoice.id,
+                                  "pdf",
+                                );
+                              window.open(url, "_blank");
+                            } catch {
+                              alert("Không thể tải file PDF.");
+                            }
+                          }}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          Tải PDF
+                        </button>
+                      )}
+                    </div>
+                  </DrawerSection>
+                )}
             </div>
-          )}
+          </div>
         </div>
       </DrawerModal>
 
@@ -1152,6 +1219,26 @@ export function ErpInvoicePage() {
         onImported={() => {
           void loadInvoices();
         }}
+      />
+
+      <ConfirmModal
+        open={deleteConfirm}
+        title="Xác nhận xóa hóa đơn"
+        message={`Xóa hóa đơn "${detailInvoice?.invoiceNo}"? Hành động không thể hoàn tác.`}
+        confirmLabel="Xóa hóa đơn"
+        onCancel={() => setDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        loading={saving}
+      />
+
+      <ConfirmModal
+        open={cancelConfirm}
+        title="Xác nhận hủy hóa đơn"
+        message={`Bạn có chắc muốn hủy hóa đơn "${detailInvoice?.invoiceNo}"?`}
+        confirmLabel="Hủy hóa đơn"
+        onCancel={() => setCancelConfirm(false)}
+        onConfirm={handleCancel}
+        loading={saving}
       />
     </div>
   );
