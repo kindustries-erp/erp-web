@@ -8,7 +8,11 @@ import { useAccountingConfigListStore } from "@/modules/accounting/hooks/useAcco
 import { useAccountingConfigListQuery } from "@/modules/accounting/hooks/useAccountingConfigListQuery";
 import { AccountingConfigFormModal } from "@/modules/accounting/components/AccountingConfigFormModal";
 import type { ErpAccountingConfig } from "@/modules/accounting/api/accountingApi";
+import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { TKTab } from "@/modules/settings/components/ChartOfAccountsTab";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 type TabKey = "chart-of-accounts" | "accounting-config";
@@ -41,6 +45,18 @@ export function AccountingConfigTab({
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: accountingApi.deleteConfig,
+    onSuccess: () => {
+      toast.success("Đã xóa cấu hình thành công");
+      queryClient.invalidateQueries({ queryKey: ["accounting-configs"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Lỗi khi xóa cấu hình");
+    },
+  });
 
   const filterConfig = useMemo(() => ({ search: true }), []);
   const filterPanel = useFilterPanel(filterConfig, () => setPage(1));
@@ -100,6 +116,25 @@ export function AccountingConfigTab({
         >
           {val.is_active ? "Hoạt động" : "Ngưng"}
         </span>
+      ),
+    },
+    {
+      key: "actions",
+      header: "",
+      cell: (val) => (
+        <ActionDropdown
+          items={[
+            {
+              label: "Xóa",
+              variant: "danger",
+              onClick: () => {
+                if (window.confirm("Bạn có chắc chắn muốn xóa cấu hình này?")) {
+                  deleteMutation.mutate(val.id);
+                }
+              },
+            },
+          ]}
+        />
       ),
     },
   ];
