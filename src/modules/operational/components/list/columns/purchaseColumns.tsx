@@ -29,13 +29,6 @@ export function usePurchaseColumns({
   return useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
       {
-        key: "stt",
-        header: <div className="text-center">#</div>,
-        className: "align-top text-center font-medium text-muted-foreground",
-        headerClassName: "w-[48px] text-center",
-        cell: (_, index) => index,
-      },
-      {
         key: "po_no",
         header: t("Số PO"),
         sortable: true,

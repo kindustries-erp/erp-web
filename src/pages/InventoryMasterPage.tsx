@@ -113,6 +113,7 @@ export function InventoryMasterPage() {
   const [editing, setEditing] = useState<InventoryMasterOption | null>(null);
   const [form, setForm] = useState<MasterForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [itemsActions, setItemsActions] = useState<React.ReactNode>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
     kind: MasterKind;
     item: InventoryMasterOption;
@@ -293,21 +294,25 @@ export function InventoryMasterPage() {
       tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
       activeTab={activeTab}
       onTabChange={(value) => setActiveTab(value as MasterKind)}
+      actions={
+        activeTab === "items" ? (
+          itemsActions
+        ) : (
+          <TableActionGroup
+            onRefresh={() => void currentQuery.refetch()}
+            loading={currentLoading}
+            onFilterToggle={filter.togglePanel}
+            activeFilterCount={filter.activeFilterCount}
+            onCreate={() => openCreate(activeTab)}
+            createLabel={`Tạo mới ${activeTab === "uom" ? "đơn vị tính" : "loại item"}`}
+          />
+        )
+      }
     >
       {activeTab === "items" ? (
-        <ErpInventoryItemsTab />
+        <ErpInventoryItemsTab setActions={setItemsActions} />
       ) : (
         <>
-          <div className="flex items-center justify-end mb-3">
-            <TableActionGroup
-              onRefresh={() => void currentQuery.refetch()}
-              loading={currentLoading}
-              onFilterToggle={filter.togglePanel}
-              activeFilterCount={filter.activeFilterCount}
-              onCreate={() => openCreate(activeTab)}
-              createLabel={`Tạo mới ${activeTab === "uom" ? "đơn vị tính" : "loại item"}`}
-            />
-          </div>
           <div className="flex items-start">
             <div className="min-w-0 flex-1 space-y-4">
               <section>

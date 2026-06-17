@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Layers, Pencil, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -97,7 +97,11 @@ function buildMasterOptions(items: InventoryMasterOption[]) {
     }));
 }
 
-export function ErpInventoryItemsTab() {
+export function ErpInventoryItemsTab({
+  setActions,
+}: {
+  setActions?: (node: React.ReactNode) => void;
+}) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -363,18 +367,35 @@ export function ErpInventoryItemsTab() {
   const masterFilterOptions =
     itemTypeOptions.length > 0 ? itemTypeOptions : ITEM_TYPE_FILTER_OPTIONS;
 
+  const actionsNode = useMemo(
+    () => (
+      <TableActionGroup
+        onRefresh={() => void itemsQuery.refetch()}
+        loading={loading}
+        onFilterToggle={filter.togglePanel}
+        activeFilterCount={filter.activeFilterCount}
+        onCreate={() => void openCreate()}
+        createLabel="Tạo item kho"
+      />
+    ),
+
+    [loading, filter.activeFilterCount, filter.togglePanel],
+  );
+
+  useEffect(() => {
+    if (setActions) {
+      setActions(actionsNode);
+    }
+    return () => {
+      if (setActions) setActions(null);
+    };
+  }, [actionsNode, setActions]);
+
   return (
     <>
-      <div className="flex items-center justify-end mb-3">
-        <TableActionGroup
-          onRefresh={() => void itemsQuery.refetch()}
-          loading={loading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={() => void openCreate()}
-          createLabel="Tạo item kho"
-        />
-      </div>
+      {!setActions && (
+        <div className="flex items-center justify-end mb-3">{actionsNode}</div>
+      )}
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
           <DataTable
