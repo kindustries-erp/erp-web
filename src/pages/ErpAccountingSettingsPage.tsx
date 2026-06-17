@@ -61,11 +61,7 @@ export function AccountingConfigTab({
         <span className="font-semibold uppercase">{val.module}</span>
       ),
     },
-    {
-      key: "action",
-      header: "Hành động",
-      cell: (val) => <span className="uppercase">{val.action}</span>,
-    },
+
     {
       key: "debit_account",
       header: "Tài khoản Nợ",

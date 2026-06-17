@@ -41,7 +41,6 @@ export type JournalEntryPayload = {
 
 export type AccountingConfigPayload = {
   module?: string;
-  action?: string;
   debit_account_id?: string | null;
   credit_account_id?: string | null;
   description?: string;
@@ -103,7 +102,6 @@ export interface JournalEntryQuery extends BaseQuery {
 export interface ErpAccountingConfig {
   id: string;
   module: string;
-  action: string;
   debit_account_id: string | null;
   credit_account_id: string | null;
   is_active: boolean;

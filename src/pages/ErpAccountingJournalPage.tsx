@@ -116,7 +116,10 @@ export function ErpAccountingJournalPage() {
       cell: (item) => {
         const debitLines = item.lines?.filter((l) => l.debit > 0) || [];
         const accounts = debitLines
-          .map((l) => l.account?.account_code || "")
+          .map(
+            (l) =>
+              (l.account as any)?.accountCode || l.account?.account_code || "",
+          )
           .filter(Boolean);
         return (
           <span className="font-medium text-sm">
@@ -131,7 +134,10 @@ export function ErpAccountingJournalPage() {
       cell: (item) => {
         const creditLines = item.lines?.filter((l) => l.credit > 0) || [];
         const accounts = creditLines
-          .map((l) => l.account?.account_code || "")
+          .map(
+            (l) =>
+              (l.account as any)?.accountCode || l.account?.account_code || "",
+          )
           .filter(Boolean);
         return (
           <span className="font-medium text-sm">

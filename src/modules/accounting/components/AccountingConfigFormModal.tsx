@@ -23,11 +23,6 @@ const MODULE_OPTIONS = [
   { value: "invoices", label: "Hóa đơn (Invoices)" },
 ];
 
-const ACTION_OPTIONS = [
-  { value: "post", label: "Ghi sổ (Post)" },
-  { value: "cancel", label: "Hủy (Cancel)" },
-];
-
 export function AccountingConfigFormModal({
   open,
   onClose,
@@ -37,7 +32,6 @@ export function AccountingConfigFormModal({
 
   const [form, setForm] = useState({
     module: "",
-    action: "",
     debit_account_id: "",
     credit_account_id: "",
     description: "",
@@ -108,7 +102,6 @@ export function AccountingConfigFormModal({
       if (configData) {
         setForm({
           module: configData.module,
-          action: configData.action,
           debit_account_id: configData.debit_account_id || "",
           credit_account_id: configData.credit_account_id || "",
           description: configData.description || "",
@@ -117,7 +110,6 @@ export function AccountingConfigFormModal({
       } else if (!configId) {
         setForm({
           module: "",
-          action: "",
           debit_account_id: "",
           credit_account_id: "",
           description: "",
@@ -136,7 +128,6 @@ export function AccountingConfigFormModal({
     mutationFn: async () => {
       const payload = {
         module: form.module,
-        action: form.action,
         debit_account_id: form.debit_account_id || null,
         credit_account_id: form.credit_account_id || null,
         description: form.description,
@@ -183,16 +174,6 @@ export function AccountingConfigFormModal({
             value={form.module}
             onChange={(v) => setField("module", v)}
             placeholder="Chọn phân hệ"
-            disabled={!!configId}
-          />
-        </DrawerField>
-
-        <DrawerField label="Hành động (Action)" required>
-          <Combobox
-            options={ACTION_OPTIONS}
-            value={form.action}
-            onChange={(v) => setField("action", v)}
-            placeholder="Chọn hành động"
             disabled={!!configId}
           />
         </DrawerField>
