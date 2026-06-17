@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { useAppStore } from "@/core/config/appStore";
 
 import {
   DrawerModal,
@@ -22,13 +21,13 @@ import {
   type ErpInvoice,
   type CreateErpInvoicePayload,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+
+type InvoiceItem = NonNullable<CreateErpInvoicePayload["items"]>[number];
+
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { InvoiceXmlUploadModal } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadModal";
-import {
-  DocumentLineTable,
-  DocumentLineTableColumn,
-} from "@/shared/components/DocumentLineTable";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import {
   PlusCircle,
   Receipt,
@@ -88,8 +87,6 @@ function emptyForm(): CreateErpInvoicePayload {
 // Main Page
 // ---------------------------------------------------------------------------
 export function ErpInvoicePage() {
-  const { navigate } = useAppStore();
-
   // List state
   const [direction, setDirection] = useState<Direction>("IN");
   const [page, setPage] = useState(1);
@@ -639,17 +636,22 @@ export function ErpInvoicePage() {
         actions={editMode ? editActions : viewActions}
       >
         <div className="flex flex-col gap-5">
+          {formError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+              {formError}
+            </div>
+          )}
           <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
             {/* Cột trái: Bảng Diễn giải (Tài chính) */}
             <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
               <DrawerSection title="Chi tiết hóa đơn">
-                <DocumentLineTable<any>
+                <DocumentLineTable<InvoiceItem>
                   columns={[
                     {
                       key: "description",
                       header: "Diễn giải",
                       width: "300px",
-                      cell: (row: any, index: number) =>
+                      cell: (row: InvoiceItem, index: number) =>
                         editMode ? (
                           <input
                             className={inputCls}
@@ -674,7 +676,7 @@ export function ErpInvoicePage() {
                       header: "Trước VAT",
                       width: "120px",
                       align: "right",
-                      cell: (row: any, index: number) =>
+                      cell: (row: InvoiceItem, index: number) =>
                         editMode ? (
                           <input
                             className={`${inputCls} text-right`}
@@ -710,7 +712,7 @@ export function ErpInvoicePage() {
                       header: "Thuế suất",
                       width: "100px",
                       align: "right",
-                      cell: (row: any, index: number) =>
+                      cell: (row: InvoiceItem, index: number) =>
                         editMode ? (
                           <input
                             className={`${inputCls} text-right`}
@@ -739,7 +741,7 @@ export function ErpInvoicePage() {
                       header: "Tiền thuế VAT",
                       width: "120px",
                       align: "right",
-                      cell: (row: any, index: number) =>
+                      cell: (row: InvoiceItem, index: number) =>
                         editMode ? (
                           <input
                             className={`${inputCls} text-right`}
@@ -769,7 +771,7 @@ export function ErpInvoicePage() {
                       header: "Thành tiền",
                       width: "120px",
                       align: "right",
-                      cell: (row: any, index: number) =>
+                      cell: (row: InvoiceItem, index: number) =>
                         editMode ? (
                           <input
                             className={`${inputCls} text-right font-bold text-primary`}
@@ -801,7 +803,9 @@ export function ErpInvoicePage() {
                     },
                   ]}
                   data={displayItems}
-                  getRowKey={(row: any, idx: number) => row.id || idx}
+                  getRowKey={(row: InvoiceItem, idx: number) =>
+                    (row as InvoiceItem & { id?: string | number }).id || idx
+                  }
                   viewOnly={!editMode}
                   onAddLine={() => {
                     setForm({
