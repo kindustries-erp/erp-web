@@ -120,11 +120,14 @@ export interface ErpAccountingConfig {
   };
 }
 
+const BASE_J = "/api/v1/journal-entries";
+const BASE_C = "/api/v1/accounting-configs-core";
+
 export const accountingApi = {
   // --- Journal Entries ---
   getJournalEntries: async (params: JournalEntryQuery) => {
     const res = await axiosInstance.get<PagedResponse<ErpJournalEntry>>(
-      "/journal-entries",
+      BASE_J,
       { params },
     );
     return res.data;
@@ -132,14 +135,14 @@ export const accountingApi = {
 
   getJournalEntry: async (id: string) => {
     const res = await axiosInstance.get<{ data: ErpJournalEntry }>(
-      `/journal-entries/${id}`,
+      `${BASE_J}/${id}`,
     );
     return res.data.data;
   },
 
   createJournalEntry: async (payload: JournalEntryPayload) => {
     const res = await axiosInstance.post<{ data: ErpJournalEntry }>(
-      "/journal-entries",
+      BASE_J,
       payload,
     );
     return res.data.data;
@@ -147,7 +150,7 @@ export const accountingApi = {
 
   updateJournalEntry: async (id: string, payload: JournalEntryPayload) => {
     const res = await axiosInstance.patch<{ data: ErpJournalEntry }>(
-      `/journal-entries/${id}`,
+      `${BASE_J}/${id}`,
       payload,
     );
     return res.data.data;
@@ -155,7 +158,7 @@ export const accountingApi = {
 
   getSourceDocument: async (id: string) => {
     const res = await axiosInstance.get<{ data: Record<string, unknown> }>(
-      `/journal-entries/${id}/source-document`,
+      `${BASE_J}/${id}/source-document`,
     );
     return res.data.data;
   },
@@ -164,7 +167,7 @@ export const accountingApi = {
     const formData = new FormData();
     formData.append("file", file);
     const res = await axiosInstance.post(
-      `/journal-entries/${id}/attachments`,
+      `${BASE_J}/${id}/attachments`,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
@@ -175,28 +178,28 @@ export const accountingApi = {
 
   deleteAttachment: async (id: string, attachmentId: string) => {
     const res = await axiosInstance.delete(
-      `/journal-entries/${id}/attachments/${attachmentId}`,
+      `${BASE_J}/${id}/attachments/${attachmentId}`,
     );
     return res.data;
   },
 
   getAttachmentUrl: async (id: string, attachmentId: string) => {
     const res = await axiosInstance.get<{ url: string }>(
-      `/journal-entries/${id}/attachments/${attachmentId}/download-url`,
+      `${BASE_J}/${id}/attachments/${attachmentId}/download-url`,
     );
     return res.data.url;
   },
 
   getPeriodOptions: async () => {
     const res = await axiosInstance.get<{ items: PeriodOption[] }>(
-      "/journal-entries/lookup/periods",
+      `${BASE_J}/lookup/periods`,
     );
     return res.data.items;
   },
 
   getAccountOptions: async (search?: string) => {
     const res = await axiosInstance.get<{ items: AccountOption[] }>(
-      "/journal-entries/lookup/accounts",
+      `${BASE_J}/lookup/accounts`,
       { params: { search } },
     );
     return res.data.items;
@@ -205,7 +208,7 @@ export const accountingApi = {
   // --- Accounting Configs ---
   getConfigs: async (params: BaseQuery) => {
     const res = await axiosInstance.get<PagedResponse<ErpAccountingConfig>>(
-      "/accounting-configs-core",
+      BASE_C,
       { params },
     );
     return res.data;
@@ -213,7 +216,7 @@ export const accountingApi = {
 
   createConfig: async (payload: AccountingConfigPayload) => {
     const res = await axiosInstance.post<{ data: ErpAccountingConfig }>(
-      "/accounting-configs-core",
+      BASE_C,
       payload,
     );
     return res.data.data;
@@ -221,14 +224,14 @@ export const accountingApi = {
 
   updateConfig: async (id: string, payload: AccountingConfigPayload) => {
     const res = await axiosInstance.patch<{ data: ErpAccountingConfig }>(
-      `/accounting-configs-core/${id}`,
+      `${BASE_C}/${id}`,
       payload,
     );
     return res.data.data;
   },
 
   deleteConfig: async (id: string) => {
-    const res = await axiosInstance.delete(`/accounting-configs-core/${id}`);
+    const res = await axiosInstance.delete(`${BASE_C}/${id}`);
     return res.data;
   },
 };
