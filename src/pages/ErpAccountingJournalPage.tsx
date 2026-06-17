@@ -121,10 +121,17 @@ export function ErpAccountingJournalPage() {
 
         // Hiển thị TK Nợ cho các bút toán 0đ sinh tự động
         if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
+          const desc = item.description || "";
           const isReverse =
-            item.status === "REVERSED" ||
-            !!item.description?.toLowerCase().includes("hủy");
-          debitLines = isReverse ? [item.lines[1]] : [item.lines[0]];
+            item.status === "REVERSED" || desc.toLowerCase().includes("hủy");
+
+          // Với bút toán thường: sort 1 là Nợ, sort 2 là Có
+          // Với bút toán hủy: sort 2 là Nợ, sort 1 là Có
+          const targetSort = isReverse ? 2 : 1;
+          const line =
+            item.lines.find((l) => l.sort === targetSort) ||
+            item.lines[isReverse ? 1 : 0];
+          debitLines = [line];
         }
 
         const accounts = debitLines
@@ -151,10 +158,17 @@ export function ErpAccountingJournalPage() {
 
         // Hiển thị TK Có cho các bút toán 0đ sinh tự động
         if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
+          const desc = item.description || "";
           const isReverse =
-            item.status === "REVERSED" ||
-            !!item.description?.toLowerCase().includes("hủy");
-          creditLines = isReverse ? [item.lines[0]] : [item.lines[1]];
+            item.status === "REVERSED" || desc.toLowerCase().includes("hủy");
+
+          // Với bút toán thường: sort 2 là Có, sort 1 là Nợ
+          // Với bút toán hủy: sort 1 là Có, sort 2 là Nợ
+          const targetSort = isReverse ? 1 : 2;
+          const line =
+            item.lines.find((l) => l.sort === targetSort) ||
+            item.lines[isReverse ? 0 : 1];
+          creditLines = [line];
         }
 
         const accounts = creditLines
