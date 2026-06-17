@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Pencil, Settings, Trash2, Plus } from "lucide-react";
+import { Pencil, Settings, Trash2, Plus, Settings2 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -11,6 +11,7 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
@@ -83,7 +84,13 @@ function buildCoaForm(c: ChartOfAccount): CoaForm {
   };
 }
 
-export function TKTab() {
+export function TKTab({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab?: string;
+  onTabChange?: (v: string) => void;
+}) {
   const [items, setItems] = useState<ChartOfAccount[]>([]);
   const [allItems, setAllItems] = useState<ChartOfAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,7 +132,6 @@ export function TKTab() {
 
   useEffect(() => {
     loadItems(page, pageSize, search);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
   async function loadItems(pg: number, ps: number, q: string) {
@@ -280,9 +286,17 @@ export function TKTab() {
   ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <div />
+    <PageLayout
+      title="Thiết lập kế toán"
+      desc="Danh mục tài khoản và cấu hình hạch toán tự động"
+      icon={<Settings2 className="w-5 h-5" />}
+      tabs={[
+        { value: "chart-of-accounts", label: "Danh mục tài khoản" },
+        { value: "accounting-config", label: "Cấu hình hạch toán" },
+      ]}
+      activeTab={activeTab || "chart-of-accounts"}
+      onTabChange={onTabChange}
+      actions={
         <div className="flex items-center gap-2">
           <FilterButton
             activeCount={filterPanel.activeFilterCount}
@@ -292,7 +306,8 @@ export function TKTab() {
             <Plus className="w-4 h-4" /> {t("common.addNew")}
           </BtnPrimary>
         </div>
-      </div>
+      }
+    >
       <div className="flex items-start">
         <div className="flex-1 min-w-0">
           <DataTable
@@ -445,6 +460,6 @@ export function TKTab() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </PageLayout>
   );
 }

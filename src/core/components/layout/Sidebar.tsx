@@ -290,16 +290,7 @@ export function Sidebar() {
                 onClick={() => navTo("erp-accounting-journal")}
                 contextPage="erp-accounting-journal"
               />
-              <NavItem
-                collapsed={c}
-                icon={
-                  <Settings2 className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label="Cấu hình tài khoản"
-                active={currentPage === "erp-accounting-config"}
-                onClick={() => navTo("erp-accounting-config")}
-                contextPage="erp-accounting-config"
-              />
+
               <NavItem
                 collapsed={c}
                 icon={

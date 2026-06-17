@@ -19,7 +19,13 @@ const TABS: { value: TabKey; label: string }[] = [
 ];
 
 // ─── Tab: Cấu hình hạch toán ─────────────────────────────────────────────────
-function AccountingConfigTab() {
+export function AccountingConfigTab({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: string;
+  onTabChange: (v: string) => void;
+}) {
   const page = useAccountingConfigListStore((s) => s.page);
   const pageSize = useAccountingConfigListStore((s) => s.pageSize);
   const search = useAccountingConfigListStore((s) => s.search);
@@ -103,9 +109,14 @@ function AccountingConfigTab() {
   ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <div />
+    <PageLayout
+      title="Thiết lập kế toán"
+      desc="Danh mục tài khoản và cấu hình hạch toán tự động"
+      icon={<Settings2 className="w-5 h-5" />}
+      tabs={TABS}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
+      actions={
         <div className="flex items-center gap-2">
           <FilterButton
             activeCount={filterPanel.activeFilterCount}
@@ -123,8 +134,8 @@ function AccountingConfigTab() {
             <span>Tạo cấu hình</span>
           </button>
         </div>
-      </div>
-
+      }
+    >
       <div className="flex items-start">
         <div className="flex-1 min-w-0">
           <DataTable
@@ -153,7 +164,7 @@ function AccountingConfigTab() {
         onClose={() => setModalOpen(false)}
         configId={editingId}
       />
-    </div>
+    </PageLayout>
   );
 }
 
@@ -161,17 +172,18 @@ function AccountingConfigTab() {
 export function ErpAccountingSettingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("chart-of-accounts");
 
+  if (activeTab === "chart-of-accounts") {
+    return (
+      <TKTab
+        activeTab={activeTab}
+        onTabChange={(v: string) => setActiveTab(v as TabKey)}
+      />
+    );
+  }
   return (
-    <PageLayout
-      title="Thiết lập kế toán"
-      desc="Danh mục tài khoản và cấu hình hạch toán tự động"
-      icon={<Settings2 className="w-5 h-5" />}
-      tabs={TABS}
+    <AccountingConfigTab
       activeTab={activeTab}
-      onTabChange={(v) => setActiveTab(v as TabKey)}
-    >
-      {activeTab === "chart-of-accounts" && <TKTab />}
-      {activeTab === "accounting-config" && <AccountingConfigTab />}
-    </PageLayout>
+      onTabChange={(v: string) => setActiveTab(v as TabKey)}
+    />
   );
 }

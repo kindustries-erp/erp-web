@@ -35,7 +35,6 @@ import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { ErpAccountingJournalPage } from "@/pages/ErpAccountingJournalPage";
-import { ErpAccountingConfigPage } from "@/pages/ErpAccountingConfigPage";
 import { ErpAccountingSettingsPage } from "@/pages/ErpAccountingSettingsPage";
 
 const CORE_PAGES = [
@@ -60,7 +59,6 @@ const CORE_PAGES = [
   "erp-permissions-core",
   "erp-invoices",
   "erp-accounting-journal",
-  "erp-accounting-config",
   "erp-accounting-settings",
 ] as const;
 
@@ -308,17 +306,7 @@ export default function App() {
                   <ErpAccountingJournalPage />
                 </div>
               )}
-              {openTabs.includes("erp-accounting-config") && (
-                <div
-                  className={
-                    currentPage === "erp-accounting-config"
-                      ? "block h-full"
-                      : "hidden"
-                  }
-                >
-                  <ErpAccountingConfigPage />
-                </div>
-              )}
+
               {openTabs.includes("erp-accounting-settings") && (
                 <div
                   className={

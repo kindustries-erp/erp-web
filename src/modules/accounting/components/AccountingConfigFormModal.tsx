@@ -45,6 +45,9 @@ export function AccountingConfigFormModal({
   });
   const [saveError, setSaveError] = useState<string | null>(null);
   const [accountSearch, setAccountSearch] = useState("");
+  const [accountOptionsCache, setAccountOptionsCache] = useState<
+    Record<string, AccountOption>
+  >({});
 
   const { data: configData, isFetching: loadingConfig } = useQuery({
     queryKey: ["accounting-configs", configId],
@@ -63,13 +66,41 @@ export function AccountingConfigFormModal({
     enabled: open,
   });
 
+  useEffect(() => {
+    if (accountsData) {
+      setAccountOptionsCache((prev) => {
+        const next = { ...prev };
+        (accountsData as AccountOption[]).forEach((a) => {
+          next[a.id] = a;
+        });
+        return next;
+      });
+    }
+  }, [accountsData]);
+
+  useEffect(() => {
+    if (configData) {
+      setAccountOptionsCache((prev) => {
+        const next = { ...prev };
+        if (configData.debit_account) {
+          next[configData.debit_account.id] =
+            configData.debit_account as AccountOption;
+        }
+        if (configData.credit_account) {
+          next[configData.credit_account.id] =
+            configData.credit_account as AccountOption;
+        }
+        return next;
+      });
+    }
+  }, [configData]);
+
   const accountOptions = useMemo(() => {
-    if (!accountsData) return [];
-    return (accountsData as AccountOption[]).map((a) => ({
+    return Object.values(accountOptionsCache).map((a) => ({
       value: a.id,
       label: `${a.account_code} - ${a.account_name}`,
     }));
-  }, [accountsData]);
+  }, [accountOptionsCache]);
 
   useEffect(() => {
     if (open) {
