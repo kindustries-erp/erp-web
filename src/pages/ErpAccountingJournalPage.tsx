@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, BookText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
@@ -143,6 +143,8 @@ export function ErpAccountingJournalPage() {
   return (
     <PageLayout
       title="Sổ Nhật ký chung"
+      desc="Xem báo cáo nhật ký chung và sổ cái"
+      icon={<BookText className="w-5 h-5" />}
       actions={
         <div className="flex items-center gap-2">
           <FilterButton
@@ -159,10 +161,8 @@ export function ErpAccountingJournalPage() {
         </div>
       }
     >
-      <div className="flex flex-col gap-4 h-full">
-        <FilterPanel config={filterConfig} filter={filterPanel} />
-
-        <div className="flex-1 bg-surface border border-border rounded-lg shadow-sm overflow-hidden flex flex-col">
+      <div className="flex items-start">
+        <div className="flex-1 min-w-0">
           <DataTable
             columns={columns}
             items={items}
@@ -181,6 +181,7 @@ export function ErpAccountingJournalPage() {
             }}
           />
         </div>
+        <FilterPanel config={filterConfig} filter={filterPanel} />
       </div>
 
       <JournalEntryFormModal

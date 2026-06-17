@@ -83,6 +83,14 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.erpInvoices",
     group: "accounting",
   },
+  "erp-accounting-journal": {
+    labelKey: "nav.items.reportJournal",
+    group: "accounting",
+  },
+  "erp-accounting-config": {
+    labelKey: "nav.items.accountingConfig",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
@@ -116,6 +124,14 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
   "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
+  "erp-accounting-journal": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.reportJournal"],
+  ],
+  "erp-accounting-config": [
+    ["breadcrumb.accounting"],
+    ["breadcrumb.accountingConfig"],
+  ],
 };
 
 interface AppState {
