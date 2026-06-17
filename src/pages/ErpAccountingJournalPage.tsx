@@ -89,8 +89,7 @@ export function ErpAccountingJournalPage() {
       key: "voucher_no",
       header: "Số chứng từ",
       cell: (item) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const voucherNo = item.voucher_no || (item as any).voucherNo;
+        const voucherNo = item.voucher_no;
         return (
           <span className="font-semibold text-primary cursor-pointer hover:underline">
             {voucherNo}
@@ -114,17 +113,13 @@ export function ErpAccountingJournalPage() {
       key: "debit_accounts",
       header: "TK Nợ",
       cell: (item) => {
-        const totalDebit = Number(
-          item.total_debit ?? (item as any).totalDebit ?? 0,
-        );
+        const totalDebit = Number(item.total_debit ?? 0);
         let debitLines = item.lines?.filter((l) => Number(l.debit) > 0) || [];
 
         // Hiển thị TK Nợ cho các bút toán 0đ sinh tự động
         if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
           const desc = item.description || "";
-          const voucherNo = String(
-            item.voucher_no || (item as any).voucherNo || "",
-          );
+          const voucherNo = String(item.voucher_no || "");
           const isReverse =
             item.status === "REVERSED" ||
             voucherNo.endsWith("-REV") ||
@@ -140,10 +135,7 @@ export function ErpAccountingJournalPage() {
         }
 
         const accounts = debitLines
-          .map(
-            (l) =>
-              (l.account as any)?.accountCode || l.account?.account_code || "",
-          )
+          .map((l) => l.account?.account_code || "")
           .filter(Boolean);
         return (
           <span className="font-medium text-sm">
@@ -156,17 +148,13 @@ export function ErpAccountingJournalPage() {
       key: "credit_accounts",
       header: "TK Có",
       cell: (item) => {
-        const totalDebit = Number(
-          item.total_debit ?? (item as any).totalDebit ?? 0,
-        );
+        const totalDebit = Number(item.total_debit ?? 0);
         let creditLines = item.lines?.filter((l) => Number(l.credit) > 0) || [];
 
         // Hiển thị TK Có cho các bút toán 0đ sinh tự động
         if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
           const desc = item.description || "";
-          const voucherNo = String(
-            item.voucher_no || (item as any).voucherNo || "",
-          );
+          const voucherNo = String(item.voucher_no || "");
           const isReverse =
             item.status === "REVERSED" ||
             voucherNo.endsWith("-REV") ||
@@ -182,10 +170,7 @@ export function ErpAccountingJournalPage() {
         }
 
         const accounts = creditLines
-          .map(
-            (l) =>
-              (l.account as any)?.accountCode || l.account?.account_code || "",
-          )
+          .map((l) => l.account?.account_code || "")
           .filter(Boolean);
         return (
           <span className="font-medium text-sm">
@@ -209,8 +194,7 @@ export function ErpAccountingJournalPage() {
       className: "text-right",
       headerClassName: "text-right",
       cell: (item) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const totalDebit = item.total_debit ?? (item as any).totalDebit ?? 0;
+        const totalDebit = item.total_debit ?? 0;
         return <span className="font-medium">{money(totalDebit)}</span>;
       },
     },

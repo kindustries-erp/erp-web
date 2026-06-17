@@ -14,6 +14,14 @@ import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
+type ApiErrorLike = {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 type TabKey = "chart-of-accounts" | "accounting-config";
 
@@ -53,7 +61,7 @@ export function AccountingConfigTab({
       toast.success("Đã xóa cấu hình thành công");
       queryClient.invalidateQueries({ queryKey: ["accounting-configs"] });
     },
-    onError: (err: any) => {
+    onError: (err: ApiErrorLike) => {
       toast.error(err?.response?.data?.message || "Lỗi khi xóa cấu hình");
     },
   });

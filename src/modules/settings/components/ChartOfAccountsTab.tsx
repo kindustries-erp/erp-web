@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Pencil, Settings, Trash2, Plus, Settings2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Settings2 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -27,13 +27,7 @@ import {
   type ChartOfAccount,
   type CreateChartOfAccountDto,
 } from "@/modules/accounting/api/catalogApi";
-import {
-  SectionHeader,
-  TagCell,
-  ErrorBanner,
-  extractApiError,
-  BtnPrimary,
-} from "./shared";
+import { TagCell, ErrorBanner, extractApiError, BtnPrimary } from "./shared";
 
 const ACC_TYPES = [
   { value: "asset", label: "Tài sản" },
@@ -151,15 +145,6 @@ export function TKTab({
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleSearch(val: string) {
-    setSearch(val);
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setPage(1);
-      loadItems(1, pageSize, val);
-    }, 400);
   }
 
   function handlePageSize(ps: number) {
