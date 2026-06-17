@@ -9,6 +9,7 @@ import { useAccountingJournalListStore } from "@/modules/accounting/hooks/useAcc
 import { useAccountingJournalListQuery } from "@/modules/accounting/hooks/useAccountingJournalListQuery";
 import { JournalEntryFormModal } from "@/modules/accounting/components/JournalEntryFormModal";
 import { JournalEntryDetailModal } from "@/modules/accounting/components/JournalEntryDetailModal";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { money } from "@/shared/utils/format";
 import type { ErpJournalEntry } from "@/modules/accounting/api/accountingApi";
 
@@ -87,11 +88,15 @@ export function ErpAccountingJournalPage() {
     {
       key: "voucher_no",
       header: "Số chứng từ",
-      cell: (item) => (
-        <span className="font-semibold text-primary cursor-pointer hover:underline">
-          {item.voucher_no}
-        </span>
-      ),
+      cell: (item) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const voucherNo = item.voucher_no || (item as any).voucherNo;
+        return (
+          <span className="font-semibold text-primary cursor-pointer hover:underline">
+            {voucherNo}
+          </span>
+        );
+      },
     },
     {
       key: "date",
@@ -103,6 +108,36 @@ export function ErpAccountingJournalPage() {
         } catch {
           return item.date;
         }
+      },
+    },
+    {
+      key: "debit_accounts",
+      header: "TK Nợ",
+      cell: (item) => {
+        const debitLines = item.lines?.filter((l) => l.debit > 0) || [];
+        const accounts = debitLines
+          .map((l) => l.account?.account_code || "")
+          .filter(Boolean);
+        return (
+          <span className="font-medium text-sm">
+            {Array.from(new Set(accounts)).join(", ")}
+          </span>
+        );
+      },
+    },
+    {
+      key: "credit_accounts",
+      header: "TK Có",
+      cell: (item) => {
+        const creditLines = item.lines?.filter((l) => l.credit > 0) || [];
+        const accounts = creditLines
+          .map((l) => l.account?.account_code || "")
+          .filter(Boolean);
+        return (
+          <span className="font-medium text-sm">
+            {Array.from(new Set(accounts)).join(", ")}
+          </span>
+        );
       },
     },
     {
@@ -119,9 +154,11 @@ export function ErpAccountingJournalPage() {
       header: "Tổng phát sinh",
       className: "text-right",
       headerClassName: "text-right",
-      cell: (item) => (
-        <span className="font-medium">{money(item.total_debit)}</span>
-      ),
+      cell: (item) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const totalDebit = item.total_debit ?? (item as any).totalDebit ?? 0;
+        return <span className="font-medium">{money(totalDebit)}</span>;
+      },
     },
     {
       key: "status",
@@ -175,6 +212,23 @@ export function ErpAccountingJournalPage() {
             totalPages={totalPages}
             onPage={setPage}
             onPageSize={setPageSize}
+            actionsColumn={{
+              header: "",
+              cell: (item) => (
+                <ActionDropdown
+                  items={[
+                    {
+                      label: "Xem chi tiết",
+                      icon: <BookText className="w-4 h-4" />,
+                      onClick: () => {
+                        setSelectedJournalId(item.id);
+                        setDetailModalOpen(true);
+                      },
+                    },
+                  ]}
+                />
+              ),
+            }}
             onRowClick={(row) => {
               setSelectedJournalId(row.id);
               setDetailModalOpen(true);
