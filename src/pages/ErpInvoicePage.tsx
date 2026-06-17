@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAppStore } from "@/core/config/appStore";
-import { useT } from "@/core/i18n";
+
 import {
   DrawerModal,
   DrawerField,
@@ -31,6 +31,8 @@ import {
   FileUp,
   Download,
   Eye,
+  Trash,
+  Ban,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------------
@@ -78,7 +80,6 @@ function emptyForm(): CreateErpInvoicePayload {
 // Main Page
 // ---------------------------------------------------------------------------
 export function ErpInvoicePage() {
-  const t = useT();
   const { navigate } = useAppStore();
 
   // List state
@@ -220,7 +221,7 @@ export function ErpInvoicePage() {
   // ---------------------------------------------------------------------------
   // Save
   // ---------------------------------------------------------------------------
-  async function handleSave() {
+  async function handleSave(statusOverride?: string) {
     if (!form.invoiceNo.trim()) {
       setFormError("Số hóa đơn là bắt buộc.");
       return;
@@ -232,12 +233,18 @@ export function ErpInvoicePage() {
     setSaving(true);
     setFormError(null);
     try {
+      const payload = { ...form };
+      if (statusOverride) payload.status = statusOverride;
+
       if (detailInvoice) {
-        const updated = await erpInvoicesCoreApi.update(detailInvoice.id, form);
+        const updated = await erpInvoicesCoreApi.update(
+          detailInvoice.id,
+          payload,
+        );
         setDetailInvoice(updated);
         setEditMode(false);
       } else {
-        await erpInvoicesCoreApi.create(form);
+        await erpInvoicesCoreApi.create(payload);
         closeDrawer();
       }
       await loadInvoices();
@@ -265,6 +272,18 @@ export function ErpInvoicePage() {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Cancel
+  // ---------------------------------------------------------------------------
+  async function handleCancel(inv: ErpInvoice) {
+    if (!confirm("Bạn có chắc muốn hủy hóa đơn này?")) return;
+    try {
+      await erpInvoicesCoreApi.update(inv.id, { status: "CANCELLED" });
+      await loadInvoices();
+    } catch {
+      alert("Không thể hủy hóa đơn.");
+    }
+  }
   // ---------------------------------------------------------------------------
   // Render helpers
   // ---------------------------------------------------------------------------
@@ -306,7 +325,26 @@ export function ErpInvoicePage() {
       sortable: true,
       headerClassName: "min-w-[110px]",
       className: "font-medium text-primary min-w-[110px]",
-      cell: (inv) => inv.invoiceNo,
+      cell: (inv) => (
+        <div className="flex items-center gap-2">
+          <span>{inv.invoiceNo}</span>
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
+              inv.status === "CONFIRMED"
+                ? "bg-green-100 text-green-800"
+                : inv.status === "CANCELLED"
+                  ? "bg-red-100 text-red-800"
+                  : "bg-amber-100 text-amber-800"
+            }`}
+          >
+            {inv.status === "CONFIRMED"
+              ? "Đã xác nhận"
+              : inv.status === "CANCELLED"
+                ? "Đã hủy"
+                : "Nháp"}
+          </span>
+        </div>
+      ),
     },
     {
       key: "serialNo",
@@ -369,30 +407,7 @@ export function ErpInvoicePage() {
       className: "text-right font-semibold min-w-[120px]",
       cell: (inv) => fmtAmt(inv.totalAmount),
     },
-    {
-      key: "status",
-      header: "Trạng thái",
-      sortable: true,
-      headerClassName: "min-w-[110px]",
-      className: "min-w-[110px]",
-      cell: (inv) => (
-        <span
-          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-            inv.status === "CONFIRMED"
-              ? "bg-green-100 text-green-800"
-              : inv.status === "CANCELLED"
-                ? "bg-red-100 text-red-800"
-                : "bg-amber-100 text-amber-800"
-          }`}
-        >
-          {inv.status === "CONFIRMED"
-            ? "Đã xác nhận"
-            : inv.status === "CANCELLED"
-              ? "Đã hủy"
-              : "Nháp"}
-        </span>
-      ),
-    },
+
     {
       key: "link",
       header: "Chứng từ",
@@ -434,11 +449,6 @@ export function ErpInvoicePage() {
       onClick: closeDrawer,
       variant: "outline" as const,
     },
-    {
-      label: "Chỉnh sửa",
-      onClick: startEdit,
-      variant: "secondary" as const,
-    },
   ];
 
   const editActions = [
@@ -459,6 +469,12 @@ export function ErpInvoicePage() {
         ]
       : []),
     {
+      label: "Lưu Nháp",
+      variant: "secondary" as const,
+      disabled: saving,
+      onClick: () => handleSave("DRAFT"),
+    },
+    {
       label: saving
         ? "Đang lưu..."
         : detailInvoice
@@ -467,7 +483,7 @@ export function ErpInvoicePage() {
       primary: true,
       loading: saving,
       disabled: saving,
-      onClick: handleSave,
+      onClick: () => handleSave("CONFIRMED"),
     },
   ];
 
@@ -528,10 +544,34 @@ export function ErpInvoicePage() {
                   <ActionDropdown
                     items={[
                       {
-                        label: t("common.edit"),
+                        label: "Chi tiết",
                         icon: <Eye className="w-4 h-4" />,
                         onClick: () => openDetail(inv),
                       },
+                      ...(inv.status === "DRAFT"
+                        ? [
+                            {
+                              label: "Xóa",
+                              icon: <Trash className="w-4 h-4 text-red-600" />,
+                              variant: "danger" as const,
+                              onClick: () => {
+                                setDetailInvoice(inv);
+                                setDeleteConfirm(true);
+                                setDrawerOpen(true);
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(inv.status === "CONFIRMED"
+                        ? [
+                            {
+                              label: "Hủy",
+                              icon: <Ban className="w-4 h-4 text-red-600" />,
+                              variant: "danger" as const,
+                              onClick: () => handleCancel(inv),
+                            },
+                          ]
+                        : []),
                     ]}
                   />
                 ),
@@ -577,8 +617,15 @@ export function ErpInvoicePage() {
       <DrawerModal
         open={drawerOpen}
         onClose={closeDrawer}
+        headerExtra={
+          !editMode && detailInvoice ? (
+            <Button variant="secondary" size="sm" onClick={startEdit}>
+              Chỉnh sửa
+            </Button>
+          ) : undefined
+        }
         title={drawerTitle}
-        panelClassName="min-[1024px]:min-w-[720px]"
+        panelClassName="min-[1024px]:min-w-[920px]"
         actions={editMode ? editActions : viewActions}
       >
         {/* Delete confirm */}
@@ -609,257 +656,262 @@ export function ErpInvoicePage() {
           {/* VIEW MODE */}
           {!editMode && detailInvoice && (
             <>
-              {/* Section: Thông tin hóa đơn */}
-              <DrawerSection title="Thông tin hóa đơn">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Số hóa đơn
-                    </div>
-                    <div className="font-semibold">
-                      {detailInvoice.invoiceNo}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Ký hiệu
-                    </div>
-                    <div>{detailInvoice.serialNo || "—"}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Ngày hóa đơn
-                    </div>
-                    <div>{detailInvoice.invoiceDate}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Trạng thái
-                    </div>
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                        detailInvoice.status === "CONFIRMED"
-                          ? "bg-green-100 text-green-800"
-                          : detailInvoice.status === "CANCELLED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {detailInvoice.status === "CONFIRMED"
-                        ? "Đã xác nhận"
-                        : detailInvoice.status === "CANCELLED"
-                          ? "Đã hủy"
-                          : "Nháp"}
-                    </span>
-                  </div>
-                </div>
-              </DrawerSection>
-
-              {/* Section: Bên bán */}
-              <DrawerSection title="Bên bán">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="col-span-2">
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Tên
-                    </div>
-                    <div className="font-medium">
-                      {detailInvoice.sellerName || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      MST
-                    </div>
-                    <div>{detailInvoice.sellerTaxCode || "—"}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Ngân hàng
-                    </div>
-                    <div>{detailInvoice.sellerBank || "—"}</div>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Địa chỉ
-                    </div>
-                    <div>{detailInvoice.sellerAddress || "—"}</div>
-                  </div>
-                </div>
-              </DrawerSection>
-
-              {/* Section: Bên mua */}
-              <DrawerSection title="Bên mua">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="col-span-2">
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Tên
-                    </div>
-                    <div className="font-medium">
-                      {detailInvoice.buyerName || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      MST
-                    </div>
-                    <div>{detailInvoice.buyerTaxCode || "—"}</div>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Địa chỉ
-                    </div>
-                    <div>{detailInvoice.buyerAddress || "—"}</div>
-                  </div>
-                </div>
-              </DrawerSection>
-
-              {/* Section: Tài chính */}
-              <DrawerSection title="Tài chính">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="col-span-2">
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Diễn giải
-                    </div>
-                    <div>{detailInvoice.description || "—"}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Giá trước VAT
-                    </div>
-                    <div className="font-medium">
-                      {fmtAmt(detailInvoice.preVatAmount)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Thuế suất (%)
-                    </div>
-                    <div>
-                      {detailInvoice.vatRate != null
-                        ? `${(Number(detailInvoice.vatRate) * 100).toFixed(0)}%`
-                        : "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Tiền thuế VAT
-                    </div>
-                    <div>{fmtAmt(detailInvoice.vatAmount)}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Chiết khấu
-                    </div>
-                    <div>{fmtAmt(detailInvoice.discountAmount)}</div>
-                  </div>
-                  <div className="col-span-2 border-t border-border pt-2">
-                    <div className="text-xs text-muted-foreground mb-0.5">
-                      Thành tiền
-                    </div>
-                    <div className="text-lg font-bold text-primary">
-                      {fmtAmt(detailInvoice.totalAmount)}
-                    </div>
-                  </div>
-                </div>
-              </DrawerSection>
-
-              {/* Section: Chứng từ liên quan */}
-              {(detailInvoice.purchaseOrderId ||
-                detailInvoice.salesOrderId ||
-                detailInvoice.notes) && (
-                <DrawerSection title="Liên kết & Ghi chú">
-                  <div className="flex flex-col gap-2 text-sm">
-                    {detailInvoice.purchaseOrderId && (
+              <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
+                {/* Cột trái: Chi tiết */}
+                <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
+                  {/* Section: Bên bán */}
+                  <DrawerSection title="Bên bán">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Tên
+                        </div>
+                        <div className="font-medium">
+                          {detailInvoice.sellerName || "—"}
+                        </div>
+                      </div>
                       <div>
                         <div className="text-xs text-muted-foreground mb-0.5">
-                          Chứng từ mua hàng
+                          MST
                         </div>
-                        <button
-                          className="flex items-center gap-1.5 text-primary hover:underline font-medium"
-                          onClick={() => {
-                            navigate("purchasing");
-                          }}
+                        <div>{detailInvoice.sellerTaxCode || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Ngân hàng
+                        </div>
+                        <div>{detailInvoice.sellerBank || "—"}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Địa chỉ
+                        </div>
+                        <div>{detailInvoice.sellerAddress || "—"}</div>
+                      </div>
+                    </div>
+                  </DrawerSection>
+
+                  {/* Section: Bên mua */}
+                  <DrawerSection title="Bên mua">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Tên
+                        </div>
+                        <div className="font-medium">
+                          {detailInvoice.buyerName || "—"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          MST
+                        </div>
+                        <div>{detailInvoice.buyerTaxCode || "—"}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Địa chỉ
+                        </div>
+                        <div>{detailInvoice.buyerAddress || "—"}</div>
+                      </div>
+                    </div>
+                  </DrawerSection>
+
+                  {/* Section: Tài chính */}
+                  <DrawerSection title="Tài chính">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Diễn giải
+                        </div>
+                        <div>{detailInvoice.description || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Giá trước VAT
+                        </div>
+                        <div className="font-medium">
+                          {fmtAmt(detailInvoice.preVatAmount)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Thuế suất (%)
+                        </div>
+                        <div>
+                          {detailInvoice.vatRate != null
+                            ? `${(Number(detailInvoice.vatRate) * 100).toFixed(0)}%`
+                            : "—"}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Tiền thuế VAT
+                        </div>
+                        <div>{fmtAmt(detailInvoice.vatAmount)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Chiết khấu
+                        </div>
+                        <div>{fmtAmt(detailInvoice.discountAmount)}</div>
+                      </div>
+                      <div className="col-span-2 border-t border-border pt-2">
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Thành tiền
+                        </div>
+                        <div className="text-lg font-bold text-primary">
+                          {fmtAmt(detailInvoice.totalAmount)}
+                        </div>
+                      </div>
+                    </div>
+                  </DrawerSection>
+                </div>
+
+                {/* Cột phải: Thông tin chung */}
+                <div className="w-full xl:w-[320px] shrink-0 order-1 xl:order-2 space-y-4">
+                  <DrawerSection title="Thông tin chung">
+                    <div className="grid grid-cols-1 gap-3 text-sm">
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Số hóa đơn
+                        </div>
+                        <div className="font-semibold">
+                          {detailInvoice.invoiceNo}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Ký hiệu
+                        </div>
+                        <div>{detailInvoice.serialNo || "—"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Ngày hóa đơn
+                        </div>
+                        <div>{detailInvoice.invoiceDate}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-0.5">
+                          Trạng thái
+                        </div>
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                            detailInvoice.status === "CONFIRMED"
+                              ? "bg-green-100 text-green-800"
+                              : detailInvoice.status === "CANCELLED"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-amber-100 text-amber-800"
+                          }`}
                         >
-                          Xem đơn mua hàng{" "}
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </button>
+                          {detailInvoice.status === "CONFIRMED"
+                            ? "Đã xác nhận"
+                            : detailInvoice.status === "CANCELLED"
+                              ? "Đã hủy"
+                              : "Nháp"}
+                        </span>
                       </div>
-                    )}
-                    {detailInvoice.salesOrderId && (
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Chứng từ bán hàng
-                        </div>
-                        <button
-                          className="flex items-center gap-1.5 text-primary hover:underline font-medium"
-                          onClick={() => {
-                            navigate("erp-sales-orders");
-                          }}
-                        >
-                          Xem đơn bán hàng{" "}
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                    {detailInvoice.notes && (
-                      <div>
-                        <div className="text-xs text-muted-foreground mb-0.5">
-                          Ghi chú
-                        </div>
-                        <div>{detailInvoice.notes}</div>
-                      </div>
-                    )}
-                  </div>
-                </DrawerSection>
-              )}
+                    </div>
+                  </DrawerSection>
 
-              {/* Section: File hóa đơn */}
-              {(detailInvoice.xmlFileKey || detailInvoice.pdfFileKey) && (
-                <DrawerSection title="File hóa đơn">
-                  <div className="flex flex-wrap gap-2">
-                    {detailInvoice.xmlFileKey && (
-                      <button
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
-                        onClick={async () => {
-                          try {
-                            const { url } =
-                              await erpInvoicesCoreApi.getDownloadUrl(
-                                detailInvoice.id,
-                                "xml",
-                              );
-                            window.open(url, "_blank");
-                          } catch {
-                            alert("Không thể tải file XML.");
-                          }
-                        }}
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Tải XML
-                      </button>
-                    )}
-                    {detailInvoice.pdfFileKey && (
-                      <button
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
-                        onClick={async () => {
-                          try {
-                            const { url } =
-                              await erpInvoicesCoreApi.getDownloadUrl(
-                                detailInvoice.id,
-                                "pdf",
-                              );
-                            window.open(url, "_blank");
-                          } catch {
-                            alert("Không thể tải file PDF.");
-                          }
-                        }}
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Tải PDF
-                      </button>
-                    )}
-                  </div>
-                </DrawerSection>
-              )}
+                  {/* Section: Chứng từ liên quan */}
+                  {(detailInvoice.purchaseOrderId ||
+                    detailInvoice.salesOrderId ||
+                    detailInvoice.notes) && (
+                    <DrawerSection title="Liên kết & Ghi chú">
+                      <div className="flex flex-col gap-2 text-sm">
+                        {detailInvoice.purchaseOrderId && (
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-0.5">
+                              Chứng từ mua hàng
+                            </div>
+                            <button
+                              className="flex items-center gap-1.5 text-primary hover:underline font-medium"
+                              onClick={() => navigate("purchasing")}
+                            >
+                              Xem đơn mua hàng{" "}
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        {detailInvoice.salesOrderId && (
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-0.5">
+                              Chứng từ bán hàng
+                            </div>
+                            <button
+                              className="flex items-center gap-1.5 text-primary hover:underline font-medium"
+                              onClick={() => navigate("erp-sales-orders")}
+                            >
+                              Xem đơn bán hàng{" "}
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        {detailInvoice.notes && (
+                          <div>
+                            <div className="text-xs text-muted-foreground mb-0.5">
+                              Ghi chú
+                            </div>
+                            <div className="whitespace-pre-wrap">
+                              {detailInvoice.notes}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </DrawerSection>
+                  )}
+
+                  {/* Section: File hóa đơn */}
+                  {(detailInvoice.xmlFileKey || detailInvoice.pdfFileKey) && (
+                    <DrawerSection title="File hóa đơn">
+                      <div className="flex flex-wrap gap-2">
+                        {detailInvoice.xmlFileKey && (
+                          <button
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+                            onClick={async () => {
+                              try {
+                                const { url } =
+                                  await erpInvoicesCoreApi.getDownloadUrl(
+                                    detailInvoice.id,
+                                    "xml",
+                                  );
+                                window.open(url, "_blank");
+                              } catch {
+                                alert("Không thể tải file XML.");
+                              }
+                            }}
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            Tải XML
+                          </button>
+                        )}
+                        {detailInvoice.pdfFileKey && (
+                          <button
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-border hover:bg-muted transition-colors"
+                            onClick={async () => {
+                              try {
+                                const { url } =
+                                  await erpInvoicesCoreApi.getDownloadUrl(
+                                    detailInvoice.id,
+                                    "pdf",
+                                  );
+                                window.open(url, "_blank");
+                              } catch {
+                                alert("Không thể tải file PDF.");
+                              }
+                            }}
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            Tải PDF
+                          </button>
+                        )}
+                      </div>
+                    </DrawerSection>
+                  )}
+                </div>
+              </div>
             </>
           )}
 
