@@ -122,8 +122,13 @@ export function ErpAccountingJournalPage() {
         // Hiển thị TK Nợ cho các bút toán 0đ sinh tự động
         if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
           const desc = item.description || "";
+          const voucherNo = String(
+            item.voucher_no || (item as any).voucherNo || "",
+          );
           const isReverse =
-            item.status === "REVERSED" || desc.toLowerCase().includes("hủy");
+            item.status === "REVERSED" ||
+            voucherNo.endsWith("-REV") ||
+            desc.normalize("NFC").toLowerCase().includes("hủy");
 
           // Với bút toán thường: sort 1 là Nợ, sort 2 là Có
           // Với bút toán hủy: sort 2 là Nợ, sort 1 là Có
@@ -159,8 +164,13 @@ export function ErpAccountingJournalPage() {
         // Hiển thị TK Có cho các bút toán 0đ sinh tự động
         if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
           const desc = item.description || "";
+          const voucherNo = String(
+            item.voucher_no || (item as any).voucherNo || "",
+          );
           const isReverse =
-            item.status === "REVERSED" || desc.toLowerCase().includes("hủy");
+            item.status === "REVERSED" ||
+            voucherNo.endsWith("-REV") ||
+            desc.normalize("NFC").toLowerCase().includes("hủy");
 
           // Với bút toán thường: sort 2 là Có, sort 1 là Nợ
           // Với bút toán hủy: sort 1 là Có, sort 2 là Nợ
