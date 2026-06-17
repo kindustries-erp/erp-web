@@ -114,7 +114,19 @@ export function ErpAccountingJournalPage() {
       key: "debit_accounts",
       header: "TK Nợ",
       cell: (item) => {
-        const debitLines = item.lines?.filter((l) => l.debit > 0) || [];
+        const totalDebit = Number(
+          item.total_debit ?? (item as any).totalDebit ?? 0,
+        );
+        let debitLines = item.lines?.filter((l) => Number(l.debit) > 0) || [];
+
+        // Hiển thị TK Nợ cho các bút toán 0đ sinh tự động
+        if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
+          const isReverse =
+            item.status === "REVERSED" ||
+            !!item.description?.toLowerCase().includes("hủy");
+          debitLines = isReverse ? [item.lines[1]] : [item.lines[0]];
+        }
+
         const accounts = debitLines
           .map(
             (l) =>
@@ -132,7 +144,19 @@ export function ErpAccountingJournalPage() {
       key: "credit_accounts",
       header: "TK Có",
       cell: (item) => {
-        const creditLines = item.lines?.filter((l) => l.credit > 0) || [];
+        const totalDebit = Number(
+          item.total_debit ?? (item as any).totalDebit ?? 0,
+        );
+        let creditLines = item.lines?.filter((l) => Number(l.credit) > 0) || [];
+
+        // Hiển thị TK Có cho các bút toán 0đ sinh tự động
+        if (totalDebit === 0 && item.lines && item.lines.length >= 2) {
+          const isReverse =
+            item.status === "REVERSED" ||
+            !!item.description?.toLowerCase().includes("hủy");
+          creditLines = isReverse ? [item.lines[0]] : [item.lines[1]];
+        }
+
         const accounts = creditLines
           .map(
             (l) =>
