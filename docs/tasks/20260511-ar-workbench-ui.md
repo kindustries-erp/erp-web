@@ -3,7 +3,6 @@
 > **HISTORICAL REFERENCE ONLY**
 > Task này thuộc AR / Directus-era flow cũ. Không dùng làm default implementation guidance cho lane `erp-master` hiện tại nếu user không mở lại scope finance legacy.
 
-
 ## Request Input (bạn chỉ cần điền phần này)
 
 - Type: ENHANCE

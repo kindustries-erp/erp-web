@@ -8,6 +8,7 @@ description: Web-specific local-only skill for Liouni ERP. Use when working in t
 Use this skill only inside this repository.
 
 ## Local read order
+
 1. `@docs/ai/current-truth-context.md`
 2. `@AGENTS.md`
 3. `@docs/web-current-truth-index.md`
@@ -16,6 +17,7 @@ Use this skill only inside this repository.
 6. Relevant file in `@docs/tasks/`
 
 ## Current truth
+
 - Main ERP lane = GitHub + branch `erp-master`
 - Directus = legacy/reference only unless task explicit says legacy scope
 - Gitea = historical only
@@ -23,6 +25,7 @@ Use this skill only inside this repository.
 - Removed `liouni-erp-core-*` stacks must not be assumed to exist
 
 ## Web responsibilities
+
 - UI flows
 - route wiring
 - action visibility by state/status
@@ -30,6 +33,7 @@ Use this skill only inside this repository.
 - build / test / route smoke evidence
 
 ## Working rules
+
 - Follow DB -> API -> UI -> QC
 - Inspect current state before edits
 - Use Bun/Bunx first

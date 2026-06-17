@@ -1,12 +1,14 @@
 # Current Lane Task Entry
 
 ## Active entry docs
+
 - `docs/ai/technical-instructions.md`
 - `docs/app-structure.md`
 - `docs/web-current-truth-index.md`
 - `docs/README.md`
 
 ## High-value current-lane tasks
+
 - `docs/tasks/20260616-172700-erp-invoices-and-po-invoice-field-web.md`
 - `docs/tasks/20260614-213309-erp-core-elite-ci-lane.md`
 - `docs/tasks/20260613-100500-purchase-edit-description-qty-notes.md`
@@ -17,4 +19,5 @@
 - `docs/tasks/20260607-erp-core-web-scope-cut.md`
 
 ## Historical signal
+
 Những task cũ về AR / voucher / shell experiments / tax-portal / einvoice / Directus-first flow phải được xem là historical/reference trừ khi user mở lại scope đó.

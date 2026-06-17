@@ -1,5 +1,9 @@
 # Task: Switch SInvoice UI surface to Viettel v2.49
 
+> **HISTORICAL REFERENCE ONLY**
+> Task này thuộc SInvoice / tax-portal / Directus-era finance flow cũ. Không dùng làm default implementation guidance cho lane `erp-master` hiện tại nếu user không mở lại scope finance legacy.
+
+
 ## Request Input (bạn chỉ cần điền phần này)
 
 - Type: ENHANCE

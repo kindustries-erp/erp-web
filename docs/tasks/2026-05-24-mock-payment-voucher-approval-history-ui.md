@@ -1,5 +1,9 @@
 # Task — Mock payment voucher approval history UI
 
+> **HISTORICAL REFERENCE ONLY**
+> Task này thuộc payment-voucher / approval-history finance flow cũ. Không dùng làm default implementation guidance cho lane `erp-master` hiện tại nếu user không mở lại scope finance legacy.
+
+
 ## Request Input (bạn chỉ cần điền phần này)
 
 - Type: FIX
