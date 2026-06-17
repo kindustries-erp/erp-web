@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Pencil, Settings, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Pencil, Settings, Trash2, Plus } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -9,7 +9,8 @@ import {
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { SearchInput } from "@/shared/components/SearchInput";
+import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
@@ -25,7 +26,13 @@ import {
   type ChartOfAccount,
   type CreateChartOfAccountDto,
 } from "@/modules/accounting/api/catalogApi";
-import { SectionHeader, TagCell, ErrorBanner, extractApiError } from "./shared";
+import {
+  SectionHeader,
+  TagCell,
+  ErrorBanner,
+  extractApiError,
+  BtnPrimary,
+} from "./shared";
 
 const ACC_TYPES = [
   { value: "asset", label: "Tài sản" },
@@ -96,6 +103,20 @@ export function TKTab() {
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
 
+  const filterConfig = useMemo(() => ({ search: true }), []);
+  const filterPanel = useFilterPanel(filterConfig, () => setPage(1));
+
+  useEffect(() => {
+    if (search !== (filterPanel.state.search || "")) {
+      setSearch(filterPanel.state.search || "");
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+      searchTimer.current = setTimeout(() => {
+        setPage(1);
+        loadItems(1, pageSize, filterPanel.state.search || "");
+      }, 400);
+    }
+  }, [filterPanel.state.search, search, pageSize]);
+
   useEffect(() => {
     getChartOfAccountsApi()
       .then(setAllItems)
@@ -104,6 +125,7 @@ export function TKTab() {
 
   useEffect(() => {
     loadItems(page, pageSize, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
   async function loadItems(pg: number, ps: number, q: string) {
@@ -259,53 +281,57 @@ export function TKTab() {
 
   return (
     <div>
-      <SectionHeader
-        title={t("settings.tk.title")}
-        desc={t("settings.tk.desc")}
-        icon={<Settings className="h-4 w-4" />}
-        onAdd={openNew}
-      />
-      <div className="mb-3">
-        <SearchInput
-          value={search}
-          onChange={handleSearch}
-          placeholder={t("settings.tk.searchPlaceholder")}
-        />
+      <div className="flex items-center justify-between mb-3">
+        <div />
+        <div className="flex items-center gap-2">
+          <FilterButton
+            activeCount={filterPanel.activeFilterCount}
+            onClick={filterPanel.togglePanel}
+          />
+          <BtnPrimary type="button" onClick={openNew}>
+            <Plus className="w-4 h-4" /> {t("common.addNew")}
+          </BtnPrimary>
+        </div>
       </div>
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(c) => c.id}
-        loading={loading}
-        error={fetchError}
-        emptyLabel={t("common.noData")}
-        minWidth={700}
-        loadingRows={4}
-        actionsColumn={{
-          cell: (c) => {
-            const actionItems: ActionItem[] = [
-              {
-                label: t("common.edit"),
-                onClick: () => openEdit(c),
-                icon: <Pencil size={14} />,
+      <div className="flex items-start">
+        <div className="flex-1 min-w-0">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(c) => c.id}
+            loading={loading}
+            error={fetchError}
+            emptyLabel={t("common.noData")}
+            minWidth={700}
+            loadingRows={4}
+            actionsColumn={{
+              cell: (c) => {
+                const actionItems: ActionItem[] = [
+                  {
+                    label: t("common.edit"),
+                    onClick: () => openEdit(c),
+                    icon: <Pencil size={14} />,
+                  },
+                  {
+                    label: t("common.delete"),
+                    onClick: () => setDeleteTarget(c),
+                    icon: <Trash2 size={14} />,
+                    variant: "danger",
+                  },
+                ];
+                return <ActionDropdown items={actionItems} />;
               },
-              {
-                label: t("common.delete"),
-                onClick: () => setDeleteTarget(c),
-                icon: <Trash2 size={14} />,
-                variant: "danger",
-              },
-            ];
-            return <ActionDropdown items={actionItems} />;
-          },
-        }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-      />
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={handlePageSize}
+          />
+        </div>
+        <FilterPanel config={filterConfig} filter={filterPanel} />
+      </div>
 
       <DrawerModal
         open={drawerOpen}
