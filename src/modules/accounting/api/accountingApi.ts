@@ -121,7 +121,7 @@ export interface ErpAccountingConfig {
 }
 
 const BASE_J = "/api/v1/journal-entries";
-const BASE_C = "/api/v1/accounting-configs-core";
+const BASE_C = "/api/v1/accounting-configs";
 
 export const accountingApi = {
   // --- Journal Entries ---
