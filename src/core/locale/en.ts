@@ -65,8 +65,6 @@ export const en: Dict = {
       catalogRoles: "Partner Roles",
       catalogOpeningBalance: "Opening Balances",
       catalogVoucherNumbering: "Voucher Numbering",
-      accountingConfig: "Account Configuration",
-      accountingSettings: "Accounting Settings",
     },
     bottom: {
       themeLight: "Light mode",
@@ -147,8 +145,6 @@ export const en: Dict = {
     catalogFunds: "Cash Funds",
     catalogBank: "Bank Accounts",
     catalogAccounts: "Chart of Accounts",
-    accountingConfig: "Account Configuration",
-    accountingSettings: "Accounting Settings",
   },
   topbar: {
     search: "Search accounts, vouchers...",

@@ -63,8 +63,6 @@ export const vi = {
       catalogRoles: "Vai trò đối tác",
       catalogOpeningBalance: "Số dư đầu kỳ",
       catalogVoucherNumbering: "Số thứ tự CT",
-      accountingConfig: "Cấu hình tài khoản",
-      accountingSettings: "Thiết lập kế toán",
     },
     bottom: {
       themeLight: "Giao diện sáng",
@@ -145,8 +143,6 @@ export const vi = {
     catalogFunds: "Quỹ tiền mặt",
     catalogBank: "Tài khoản ngân hàng",
     catalogAccounts: "Hệ thống tài khoản",
-    accountingConfig: "Cấu hình tài khoản",
-    accountingSettings: "Thiết lập kế toán",
   },
   topbar: {
     search: "Tìm kiếm tài khoản, chứng từ...",
