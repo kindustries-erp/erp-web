@@ -34,11 +34,13 @@ Apply to all work in this repo.
 - **Definition of done**: A frontend task is not done until task checklist is updated, validation evidence is recorded, and commit/push status is stated clearly.
 
 ## Teamwork guardrails
+
 - Use `must` only for standards already enforced or verified in this repo; use `prefer` for target-direction conventions.
 - If introducing a new page/module, record route wiring, page key, app store registration, API client dependency, and permission impact in the task.
 - Documentation/process changes must update the canonical file first (`docs/ai/technical-instructions.md`), then keep `.agents` aligned.
 
 ## Anti-drift / anti-patterns
+
 - Do not reference non-existent bootstrap files.
 - Do not let historical docs override repo-local current truth.
 - Do not add domain-heavy logic into shared generic components.

@@ -246,6 +246,7 @@ Khi task có thay đổi UI:
 Pre-commit hook tự động chạy qua Bun toolchain: prettier → lint-staged → vitest run. Nếu test fail → commit bị block.
 
 Definition of done tối thiểu cho frontend task:
+
 1. Task file tồn tại và checklist được tick realtime
 2. DB/API prerequisite đã được xác nhận trong task
 3. Validation evidence đã ghi

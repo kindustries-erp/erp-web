@@ -45,6 +45,7 @@ Use this skill only inside this repository.
 - When task docs are stale, verify with code + build/test + git state before correcting status/checklist
 
 ## Team-scale reminders
+
 - Use `must` only for standards already enforced in this repo; use `prefer` for target-direction conventions.
 - Keep page boundaries clean: page -> domain hook/query -> domain components -> shared primitives.
 - If a new helper/component is created instead of reusing one, note the reason in the task artifact.
