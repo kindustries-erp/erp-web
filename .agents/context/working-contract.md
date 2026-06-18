@@ -14,6 +14,7 @@
 - evidence-first
 - do not use historical Directus/Gitea docs as default guidance
 - before commit/push, `cd` into the repo root
+- before commit/push, remember to run `bun build`, `bun lint`, and `bun lint:check`
 - push this repo with `github-industries`
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
 - extend/adapt before forking parallel patterns
