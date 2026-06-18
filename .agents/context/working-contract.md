@@ -1,6 +1,6 @@
 # Working Contract
 
-## Mandatory order
+## Order
 
 1. DB
 2. API
@@ -9,12 +9,16 @@
 
 ## Rules
 
-- inspect current state before edits
+- inspect before edits
 - Bun/Bunx first
-- evidence-first, không overclaim
-- không dùng historical Directus/Gitea-era docs làm default implementation guidance cho code mới
+- evidence-first
+- do not use historical Directus/Gitea docs as default guidance
+- before commit/push, `cd` into the repo root
+- push this repo with `github-industries`
+- reuse existing components/hooks/utils/helpers/functions/page patterns first
+- extend/adapt before forking parallel patterns
 
-## Local repo read path
+## Read path
 
 1. `.agents/README.md`
 2. `.agents/context/current-truth.md`

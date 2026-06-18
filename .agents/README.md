@@ -1,6 +1,6 @@
 # Liouni ERP Web Agent Pack
 
-Đây là source of truth cho mọi agent làm việc trong repo này.
+Source of truth for this repo.
 
 ## Read order
 
@@ -12,15 +12,23 @@
 
 ## Purpose
 
-- gom current-truth, working contract, task-lane entrypoint, skill/rule vào một chỗ
-- tránh agent phải tự suy luận từ nhiều docs lịch sử trong `docs/`
-- tách rõ `agent bootstrap` khỏi `implementation docs`
+- keep current truth, contract, lane, skill, and rule together
+- avoid deriving implementation guidance from scattered historical docs
+- separate bootstrap from implementation docs
 
 ## Boundary
 
-- `.agents/` = agent-facing source of truth
-- `docs/` = implementation docs, task history, lessons learned, domain references
+- `.agents/` = agent source of truth
+- `docs/` = implementation/history/references
 
-## Historical handling rule
+## Preferences
 
-Nếu một file trong `docs/` nhắc Directus, Gitea, old dev domains, hoặc branch `erp-core`, phải mặc định xem là historical/reference trước khi dùng cho implementation mới.
+- Bun/Bunx first
+- stay inside this repo for commit/push
+- use `github-industries`
+- reuse existing components/hooks/utils/helpers/functions/page patterns first
+- extend/adapt before duplicating
+
+## Historical rule
+
+Treat `docs/` files mentioning Directus, Gitea, old dev domains, or `erp-core` as historical/reference before using them for new work.
