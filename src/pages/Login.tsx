@@ -11,6 +11,10 @@ export function Login() {
   const { loginAction, loading } = useAuthStore();
   const t = useT();
 
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -196,6 +200,19 @@ export function Login() {
           >
             {loading ? t("login.loading") : t("login.submit")}
           </Button>
+
+          {isLocalhost && (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              disabled={loading}
+              onClick={() => loginAction("admin@liouni.com", "admiN@123")}
+              className="mt-2 font-semibold"
+            >
+              {t("login.quickLoginAdmin")}
+            </Button>
+          )}
         </form>
       </div>
     </div>

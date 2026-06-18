@@ -175,6 +175,7 @@ export const en: Dict = {
     errorEmailRequired: "Please enter your email.",
     errorEmailFormat: "Invalid email address.",
     errorPasswordRequired: "Please enter your password.",
+    quickLoginAdmin: "Quick Login (Admin)",
   },
   hoadondientuPage: {
     tabs: {

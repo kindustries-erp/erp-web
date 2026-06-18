@@ -173,6 +173,7 @@ export const vi = {
     errorEmailRequired: "Vui lòng nhập email.",
     errorEmailFormat: "Email không hợp lệ.",
     errorPasswordRequired: "Vui lòng nhập mật khẩu.",
+    quickLoginAdmin: "Đăng nhập nhanh (Admin)",
   },
   hoadondientuPage: {
     tabs: {
