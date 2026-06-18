@@ -271,3 +271,9 @@ Agent phải báo rõ:
 - Lessons template: `docs/lessons-learned/_template.md`
 - Task index/rules: `docs/tasks/README.md`
 - Kiến trúc app: `docs/app-structure.md`
+- Web page template: `docs/ai/templates/web-page-template.md`
+- Web domain-module template: `docs/ai/templates/web-domain-module-template.md`
+- ADR-lite template: `docs/ai/templates/adr-lite-template.md`
+- Web naming conventions: `docs/ai/conventions/web-naming-conventions.md`
+- DoD matrix: `docs/ai/conventions/definition-of-done-matrix.md`
+- Anti-pattern cookbook: `docs/ai/conventions/anti-pattern-cookbook.md`
