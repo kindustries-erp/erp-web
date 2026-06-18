@@ -1,6 +1,6 @@
 import { DataTable } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { Eye, Link2, Warehouse } from "lucide-react";
+import { Eye, Link2, Trash2, XCircle } from "lucide-react";
 import { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
@@ -19,8 +19,9 @@ export interface PurchaseOrderTableProps {
   expandedRowIds: Record<string, boolean>;
   toggleExpandRow: (id: string) => void;
   onOpenDetail: (row: OperationalDocument) => void;
-  onOpenPosting: (row: OperationalDocument) => void;
   onOpenSettlement: (row: OperationalDocument) => void;
+  onDeleteDocument?: (id: string) => void;
+  onCancelDocument?: (id: string) => void;
 }
 
 export function PurchaseOrderTable({
@@ -36,8 +37,9 @@ export function PurchaseOrderTable({
   expandedRowIds,
   toggleExpandRow,
   onOpenDetail,
-  onOpenPosting,
   onOpenSettlement,
+  onDeleteDocument,
+  onCancelDocument,
 }: PurchaseOrderTableProps) {
   const t = useT();
   const columns = usePurchaseColumns({
@@ -82,9 +84,18 @@ export function PurchaseOrderTable({
                 hidden: Number(row.open_amount || 0) <= 0,
               },
               {
-                label: t("Nhập kho"),
-                icon: <Warehouse className="h-4 w-4" />,
-                onClick: () => onOpenPosting(row),
+                label: t("Xóa"),
+                icon: <Trash2 className="h-4 w-4" />,
+                variant: "danger",
+                onClick: () => onDeleteDocument?.(row.id),
+                hidden: row.status !== "DRAFT",
+              },
+              {
+                label: t("Hủy phiếu"),
+                icon: <XCircle className="h-4 w-4" />,
+                variant: "danger",
+                onClick: () => onCancelDocument?.(row.id),
+                hidden: row.status === "DRAFT" || row.status === "CANCELLED",
               },
             ]}
           />

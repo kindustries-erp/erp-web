@@ -51,6 +51,14 @@ export function usePurchaseColumns({
                 <span className="font-semibold text-primary">
                   {row.purchase_no || "—"}
                 </span>
+                {row.inventory_status &&
+                  row.inventory_status !== "NOT_RECEIVED" && (
+                    <Tooltip content={t("Có lịch sử nhập kho")}>
+                      <div className="flex items-center text-muted-foreground/80 cursor-help">
+                        <Warehouse className="w-3.5 h-3.5" />
+                      </div>
+                    </Tooltip>
+                  )}
                 {row.status === "DRAFT" && (
                   <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
                     {t("Nháp")}
@@ -63,14 +71,6 @@ export function usePurchaseColumns({
                   )}
                 />
               </button>
-              {row.inventory_status &&
-                row.inventory_status !== "NOT_RECEIVED" && (
-                  <Tooltip content={t("Có lịch sử nhập kho")}>
-                    <div className="flex items-center text-muted-foreground/80 text-xs mt-0.5 cursor-help">
-                      <Warehouse className="w-3.5 h-3.5" />
-                    </div>
-                  </Tooltip>
-                )}
             </div>
           );
         },

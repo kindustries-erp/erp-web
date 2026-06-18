@@ -18,6 +18,8 @@
 - push this repo with `github-industries`
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
 - extend/adapt before forking parallel patterns
+- cancel or delete actions must have modal confirm (e.g. ConfirmModal)
+- delete operations must be soft delete with `isDeleted` flag
 
 ## Read path
 

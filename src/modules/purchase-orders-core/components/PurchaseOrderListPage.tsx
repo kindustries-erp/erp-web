@@ -5,6 +5,7 @@ import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { useT } from "@/core/i18n";
 import { PurchaseOrderTable } from "./PurchaseOrderTable";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
@@ -31,6 +32,12 @@ export function PurchaseOrderListPage() {
     handleCloseForm,
     handleToggleEdit,
     handleFormSaved,
+    confirmDeleteDocument,
+    confirmCancelDocument,
+    confirmState,
+    confirmLoading,
+    handleConfirmAction,
+    closeConfirmModal,
   } = pageState;
 
   const {
@@ -90,8 +97,9 @@ export function PurchaseOrderListPage() {
             expandedRowIds={expandedRowIds}
             toggleExpandRow={toggleExpandRow}
             onOpenDetail={openDetail}
-            onOpenPosting={openPostingDrawer}
             onOpenSettlement={openSettlement}
+            onDeleteDocument={confirmDeleteDocument}
+            onCancelDocument={confirmCancelDocument}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
@@ -113,6 +121,26 @@ export function PurchaseOrderListPage() {
         onClose={closeSettlement}
         onSave={saveSettlement}
         onRemoveLink={removePaymentLink}
+      />
+
+      <ConfirmModal
+        open={!!confirmState}
+        title={
+          confirmState?.action === "delete"
+            ? t("Xác nhận xóa")
+            : t("Xác nhận hủy")
+        }
+        message={
+          confirmState?.action === "delete"
+            ? t("Bạn có chắc muốn xóa chứng từ này?")
+            : t("Bạn có chắc muốn hủy chứng từ này?")
+        }
+        confirmLabel={confirmState?.action === "delete" ? t("Xóa") : t("Hủy")}
+        cancelLabel={t("Quay lại")}
+        onConfirm={() => void handleConfirmAction()}
+        onCancel={closeConfirmModal}
+        loading={confirmLoading}
+        danger
       />
     </PageLayout>
   );

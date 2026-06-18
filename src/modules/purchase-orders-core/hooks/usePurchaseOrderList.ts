@@ -64,6 +64,7 @@ export function usePurchaseOrderList() {
     () => ({
       search: true,
       period: true,
+      noDefaultPeriod: true,
       custom: [
         {
           key: "supplier_id",

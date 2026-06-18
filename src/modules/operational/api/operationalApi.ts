@@ -346,6 +346,12 @@ export const operationalApi = {
     );
     return normalizePurchaseRow(data.data);
   },
+  deletePurchase: async (id: string) => {
+    const { data } = await axiosInstance.delete<{ message: string; data: any }>(
+      `/api/v1/purchase-orders/${id}`,
+    );
+    return data;
+  },
   updateExpense: async (
     id: string,
     payload: Partial<CreateOperationalPayload>,

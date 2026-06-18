@@ -32,6 +32,12 @@ export function usePurchaseOrderPage() {
   const [poReceipts, setPoReceipts] = useState<ErpPoReceipt[]>([]);
   const [pageError, setPageError] = useState<string | null>(null);
 
+  const [confirmState, setConfirmState] = useState<{
+    id: string;
+    action: "delete" | "cancel";
+  } | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
   const {
     rootDocument,
     rootDocumentType,
@@ -269,6 +275,49 @@ export function usePurchaseOrderPage() {
     await listData.listQuery.refetch();
   }, [listData.listQuery]);
 
+  const confirmDeleteDocument = useCallback((id: string) => {
+    setConfirmState({ id, action: "delete" });
+  }, []);
+
+  const confirmCancelDocument = useCallback((id: string) => {
+    setConfirmState({ id, action: "cancel" });
+  }, []);
+
+  const closeConfirmModal = useCallback(() => {
+    if (!confirmLoading) setConfirmState(null);
+  }, [confirmLoading]);
+
+  const handleConfirmAction = useCallback(async () => {
+    if (!confirmState) return;
+    setConfirmLoading(true);
+    setPageError(null);
+    try {
+      if (confirmState.action === "delete") {
+        await operationalApi.deletePurchase(confirmState.id);
+        showToast({ title: t("Xóa thành công"), variant: "success" });
+      } else {
+        await operationalApi.updatePurchase(confirmState.id, {
+          status: "CANCELLED",
+        });
+        showToast({ title: t("Hủy thành công"), variant: "success" });
+      }
+      await listData.listQuery.refetch();
+      setConfirmState(null);
+    } catch (err) {
+      showToast({
+        title: extractApiError(
+          err,
+          confirmState.action === "delete"
+            ? t("Xóa thất bại")
+            : t("Hủy thất bại"),
+        ),
+        variant: "destructive",
+      });
+    } finally {
+      setConfirmLoading(false);
+    }
+  }, [confirmState, listData.listQuery, showToast, t]);
+
   return {
     listData,
     formOpen,
@@ -287,5 +336,11 @@ export function usePurchaseOrderPage() {
     handleCloseForm,
     handleToggleEdit,
     handleFormSaved,
+    confirmDeleteDocument,
+    confirmCancelDocument,
+    confirmState,
+    confirmLoading,
+    handleConfirmAction,
+    closeConfirmModal,
   };
 }

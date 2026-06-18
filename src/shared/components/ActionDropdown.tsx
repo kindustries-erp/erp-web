@@ -9,6 +9,7 @@ export interface ActionItem {
   icon?: ReactNode;
   variant?: "default" | "danger";
   hidden?: boolean;
+  disabled?: boolean;
 }
 
 export interface ActionDropdownProps {
@@ -46,8 +47,10 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
               }}
               className={cn(
                 "flex items-center gap-2 px-3 py-[6px] rounded-md text-xs cursor-pointer outline-none select-none",
-                "hover:bg-[color:var(--popup-bg-hover)]",
-                "data-[highlighted]:bg-[color:var(--popup-bg-hover)]",
+                !item.disabled &&
+                  "hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)]",
+                item.disabled &&
+                  "opacity-50 cursor-not-allowed pointer-events-none",
                 item.variant === "danger" ? "text-red-500" : "text-foreground",
               )}
             >
