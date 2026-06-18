@@ -15,7 +15,6 @@ export type PageKey =
   | "employees"
   | "departments"
   | "positions"
-  | "sales"
   | "customers"
   | "purchasing"
   | "operating-expenses"

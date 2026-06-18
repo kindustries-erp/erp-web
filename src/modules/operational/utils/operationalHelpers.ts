@@ -111,11 +111,16 @@ export function resolveDocumentType(
     return "sales_service_orders";
   if (row.document_type === "purchase_orders") return "purchase_orders";
   if (row.document_type === "operating_expenses") return "operating_expenses";
-  if (variant === "sales" || variant === "receivables")
-    return "sales_service_orders";
-  if (variant === "purchase") return "purchase_orders";
-  if (variant === "expenses") return "operating_expenses";
-  return null;
+  switch (variant) {
+    case "sales":
+      return "sales_service_orders";
+    case "purchase":
+      return "purchase_orders";
+    case "expenses":
+      return "operating_expenses";
+    default:
+      return null;
+  }
 }
 
 export function inventoryStatusLabel(status?: string | null): string {

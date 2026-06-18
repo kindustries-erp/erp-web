@@ -1,5 +1,5 @@
-import { OperationalListPage } from "@/modules/operational/components/OperationalListPage";
+import { InventoryListPage } from "@/modules/operational/components/InventoryListPage";
 
 export function Kho() {
-  return <OperationalListPage variant="inventory" />;
+  return <InventoryListPage />;
 }

@@ -2,7 +2,7 @@ import { PageKey } from "@/shared/types";
 
 export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
-  "sales",
+
   "purchasing",
   "inventory",
   "mfg-items",
@@ -22,7 +22,6 @@ export const ALL_PAGE_KEYS: PageKey[] = [
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
-  "ban-hang": "sales",
   "mua-hang": "purchasing",
   kho: "inventory",
 };

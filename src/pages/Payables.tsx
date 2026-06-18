@@ -1,5 +1,0 @@
-import { OperationalListPage } from "@/modules/operational/components/OperationalListPage";
-
-export function PhaiTra() {
-  return <OperationalListPage variant="payables" />;
-}

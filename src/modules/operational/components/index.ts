@@ -21,5 +21,5 @@ export { useStockColumns } from "@/modules/operational/components/list/columns/s
 
 // Main pages
 export { OperationalFormDrawer } from "@/modules/operational/components/OperationalFormDrawer";
-export { OperationalListPage } from "@/modules/operational/components/OperationalListPage";
+export { InventoryListPage } from "@/modules/operational/components/InventoryListPage";
 export { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";

@@ -11,7 +11,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
-import { BanHang } from "@/pages/Sales";
+
 import { MuaHang } from "@/pages/Purchasing";
 import { Kho } from "@/pages/Inventory";
 import { MfgItems } from "@/pages/MfgItems";
@@ -37,7 +37,7 @@ import { TooltipProvider } from "@/core/components/ui/Tooltip";
 
 const CORE_PAGES = [
   "dashboard",
-  "sales",
+
   "purchasing",
   "inventory",
   "mfg-items",
@@ -117,15 +117,7 @@ export default function App() {
                   <Dashboard />
                 </div>
               )}
-              {openTabs.includes("sales") && (
-                <div
-                  className={
-                    currentPage === "sales" ? "block h-full" : "hidden"
-                  }
-                >
-                  <BanHang />
-                </div>
-              )}
+
               {openTabs.includes("purchasing") && (
                 <div
                   className={
