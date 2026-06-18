@@ -1,6 +1,7 @@
 # Definition of Done Matrix
 
 ## Frontend feature / fix
+
 - Task file có checklist realtime
 - DB/API prerequisite được xác nhận
 - Page/module boundaries rõ
@@ -12,6 +13,7 @@
 - Commit/push status stated
 
 ## Docs / process change
+
 - Canonical file update trước
 - `.agents` được sync theo canonical
 - Không còn dead reference

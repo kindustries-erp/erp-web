@@ -6,6 +6,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+import { MultiSelect } from "@/shared/components/MultiSelect";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useT } from "@/core/i18n";
 import {
@@ -101,6 +102,7 @@ export function FormGeneralInfoPanel({
     setAutoGenerateNext,
     supplierInvoiceNo,
     setSupplierInvoiceNo,
+    supplierInvoiceOptions,
   } = useOperationalFormStore();
 
   const statusOptions =
@@ -234,12 +236,23 @@ export function FormGeneralInfoPanel({
               {/* Số HĐ nhà cung cấp — chỉ purchase */}
               {variant === "purchase" && (
                 <DrawerField label={t("Số HĐ nhà cung cấp")}>
-                  <input
-                    className={inputCls}
-                    value={supplierInvoiceNo}
-                    disabled={isPurchaseFullyLocked}
-                    placeholder="Số hóa đơn VAT từ nhà cung cấp"
-                    onChange={(e) => setSupplierInvoiceNo(e.target.value)}
+                  <MultiSelect
+                    options={supplierInvoiceOptions}
+                    value={
+                      supplierInvoiceNo
+                        ? supplierInvoiceNo
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
+                        : []
+                    }
+                    disabled={
+                      viewOnly || status === "DRAFT" || status === "CANCELLED"
+                    }
+                    placeholder="Chọn hóa đơn..."
+                    onChange={(selectedArr) =>
+                      setSupplierInvoiceNo(selectedArr.join(", "))
+                    }
                   />
                 </DrawerField>
               )}

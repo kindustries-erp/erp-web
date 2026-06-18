@@ -29,6 +29,7 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
     vatAmount: 0,
     discountAmount: 0,
     totalAmount: 0,
+    paymentDocumentNos: "",
     items: [],
   };
 }
@@ -89,6 +90,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       totalAmount: Number(detailInvoice.totalAmount),
       purchaseOrderId: detailInvoice.purchaseOrderId ?? undefined,
       salesOrderId: detailInvoice.salesOrderId ?? undefined,
+      paymentDocumentNos: detailInvoice.paymentDocumentNos ?? "",
       notes: detailInvoice.notes ?? "",
       items:
         detailInvoice.items && detailInvoice.items.length > 0

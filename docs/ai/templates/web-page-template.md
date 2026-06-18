@@ -1,10 +1,13 @@
 # Web Page Template (ERP Web)
 
 ## Khi dùng
+
 Dùng khi thêm page mới trong `src/pages/*`.
 
 ## Page responsibility
+
 Page chỉ orchestration:
+
 - `<PageLayout>`
 - query hooks
 - action wiring
@@ -13,6 +16,7 @@ Page chỉ orchestration:
 Không nhồi business-heavy transform, submit mapping dài, hoặc domain text generic vào page.
 
 ## Shape tối thiểu
+
 ```text
 src/pages/ErpExamplePage.tsx
 src/modules/example/api/exampleApi.ts
@@ -23,6 +27,7 @@ src/modules/example/types/example.ts
 ```
 
 ## Checklist
+
 1. Tạo task file trước
 2. Xác nhận DB/API prerequisite
 3. Tạo API client / types / query hook
@@ -35,6 +40,7 @@ src/modules/example/types/example.ts
 10. Chạy `bun run build`
 
 ## Mẫu page tối thiểu
+
 ```tsx
 export function ErpExamplePage() {
   const page = useExamplePage();
@@ -48,6 +54,7 @@ export function ErpExamplePage() {
 ```
 
 ## Anti-patterns
+
 - Page vừa fetch vừa map business sâu vừa submit mutation inline
 - Shared component chứa label/logic quá domain-specific
 - Tạo page mới mà không note route/permission impact

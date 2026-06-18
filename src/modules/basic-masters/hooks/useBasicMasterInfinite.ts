@@ -40,6 +40,8 @@ export const useBasicMasterInfinite = ({
         (lastPage.items.itemTypes?.length || 0) === currentLimit;
       const hasMoreEmployees =
         (lastPage.items.employees?.length || 0) === currentLimit;
+      const hasMoreErpInvoices =
+        (lastPage.items.erpInvoices?.length || 0) === currentLimit;
 
       const hasNextPage =
         hasMoreCustomers ||
@@ -47,7 +49,8 @@ export const useBasicMasterInfinite = ({
         hasMoreInventoryItems ||
         hasMoreUoms ||
         hasMoreItemTypes ||
-        hasMoreEmployees;
+        hasMoreEmployees ||
+        hasMoreErpInvoices;
 
       return hasNextPage ? currentPage + 1 : undefined;
     },

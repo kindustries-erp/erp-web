@@ -33,6 +33,7 @@ export interface ErpInvoice {
   totalAmount: string;
   purchaseOrderId?: string | null;
   salesOrderId?: string | null;
+  paymentDocumentNos?: string | null;
   notes?: string | null;
   // R2 Storage
   pdfFileKey?: string | null;
@@ -64,6 +65,7 @@ export interface CreateErpInvoicePayload {
   totalAmount?: number;
   purchaseOrderId?: string;
   salesOrderId?: string;
+  paymentDocumentNos?: string;
   notes?: string;
   items?: ErpInvoiceItem[];
 }

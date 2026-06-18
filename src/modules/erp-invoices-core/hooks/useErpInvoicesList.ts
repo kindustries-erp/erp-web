@@ -69,6 +69,10 @@ export function useErpInvoicesList() {
     setPage(1);
   }, [direction]);
 
+  useEffect(() => {
+    void loadInvoices();
+  }, [loadInvoices]);
+
   const handleSort = (key: string) => {
     if (sortBy === key) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");

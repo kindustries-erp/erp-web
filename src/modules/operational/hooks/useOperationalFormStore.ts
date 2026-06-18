@@ -72,6 +72,7 @@ interface OperationalFormState {
     note?: string;
     searchText?: string;
   }>;
+  supplierInvoiceOptions: Array<{ value: string; label: string }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -130,6 +131,9 @@ interface OperationalFormActions {
   setInventoryItemOptions: (
     v: OperationalFormState["inventoryItemOptions"],
   ) => void;
+  setSupplierInvoiceOptions: (
+    v: OperationalFormState["supplierInvoiceOptions"],
+  ) => void;
 
   // Lifecycle
   initNew: (variant: FormVariant) => void;
@@ -174,6 +178,7 @@ const defaultState = (): OperationalFormState => ({
   branchOptions: [],
   partnerOptions: [],
   inventoryItemOptions: [],
+  supplierInvoiceOptions: [],
 });
 
 // ---------------------------------------------------------------------------
@@ -254,6 +259,7 @@ export const useOperationalFormStore = create<
   setBranchOptions: (v) => set({ branchOptions: v }),
   setPartnerOptions: (v) => set({ partnerOptions: v }),
   setInventoryItemOptions: (v) => set({ inventoryItemOptions: v }),
+  setSupplierInvoiceOptions: (v) => set({ supplierInvoiceOptions: v }),
 
   initNew: (variant) => {
     set({

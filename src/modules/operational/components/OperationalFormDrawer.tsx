@@ -75,6 +75,7 @@ export function OperationalFormDrawer({
     setBranchOptions,
     setPartnerOptions,
     setInventoryItemOptions,
+    setSupplierInvoiceOptions,
     setSaving,
     setError,
     setSubmittingStatus,
@@ -177,6 +178,26 @@ export function OperationalFormDrawer({
         setInventoryItemOptions(options);
       })
       .catch(() => setInventoryItemOptions([]));
+  }, [variant, open, viewOnly]);
+
+  useEffect(() => {
+    if (!open) return;
+    if (variant !== "purchase" || viewOnly) {
+      setSupplierInvoiceOptions([]);
+      return;
+    }
+    basicMastersApi
+      .list({ limit: 200, entities: "erpInvoices" })
+      .then((res) => {
+        const options = (res.items.erpInvoices || [])
+          .filter((inv) => inv.direction === "IN") // Only Hóa đơn đầu vào
+          .map((inv) => ({
+            value: inv.invoiceNo,
+            label: `${inv.invoiceNo} — ${inv.invoiceDate.slice(0, 10)}${inv.sellerName ? ` — ${inv.sellerName}` : ""}`,
+          }));
+        setSupplierInvoiceOptions(options);
+      })
+      .catch(() => setSupplierInvoiceOptions([]));
   }, [variant, open, viewOnly]);
 
   // -------------------------------------------------------------------------

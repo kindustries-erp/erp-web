@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useErpInvoicesList } from "../hooks/useErpInvoicesList";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
@@ -24,21 +24,32 @@ vi.mock("@/shared/hooks/useFilterPanel", () => ({
 describe("useErpInvoicesList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (erpInvoicesCoreApi.list as any).mockResolvedValue({
+      items: [],
+      total: 0,
+      totalPages: 0,
+      page: 1,
+      pageSize: 40,
+    });
   });
 
-  it("should initialize with default state", () => {
+  it("should initialize with default state", async () => {
     const { result } = renderHook(() => useErpInvoicesList());
 
     expect(result.current.direction).toBe("IN");
     expect(result.current.page).toBe(1);
     expect(result.current.sortBy).toBe("invoiceDate");
     expect(result.current.sortOrder).toBe("desc");
-    expect(result.current.loading).toBe(false);
+    expect(result.current.loading).toBe(true);
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.invoices).toEqual([]);
   });
 
-  it("should change direction and reset page", () => {
+  it("should change direction and reset page", async () => {
     const { result } = renderHook(() => useErpInvoicesList());
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
       result.current.setPage(2);
@@ -53,8 +64,9 @@ describe("useErpInvoicesList", () => {
     expect(result.current.page).toBe(1); // Page should reset
   });
 
-  it("should toggle sort order when sorting by same key", () => {
+  it("should toggle sort order when sorting by same key", async () => {
     const { result } = renderHook(() => useErpInvoicesList());
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current.sortBy).toBe("invoiceDate");
     expect(result.current.sortOrder).toBe("desc");
@@ -67,8 +79,9 @@ describe("useErpInvoicesList", () => {
     expect(result.current.page).toBe(1);
   });
 
-  it("should change sort key and default to desc", () => {
+  it("should change sort key and default to desc", async () => {
     const { result } = renderHook(() => useErpInvoicesList());
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
       result.current.handleSort("totalAmount");
@@ -79,7 +92,8 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should fetch invoices correctly", async () => {
-    const mockList = vi.mocked(erpInvoicesCoreApi.list);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mockList = erpInvoicesCoreApi.list as any;
     mockList.mockResolvedValueOnce({
       items: [{ id: "1", invoiceNo: "INV-01" } as unknown as ErpInvoice],
       total: 1,
@@ -89,10 +103,7 @@ describe("useErpInvoicesList", () => {
     });
 
     const { result } = renderHook(() => useErpInvoicesList());
-
-    await act(async () => {
-      await result.current.loadInvoices();
-    });
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(mockList).toHaveBeenCalledWith(
       expect.objectContaining({
