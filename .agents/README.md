@@ -28,6 +28,8 @@ Source of truth for this repo.
 - use `github-industries`
 - reuse existing components/hooks/utils/helpers/functions/page patterns first
 - extend/adapt before duplicating
+- follow atomic design and TDD (Test-Driven Development)
+- try to break down components, hooks, utils, functions, anything into smaller modules
 
 ## Historical rule
 
