@@ -7,12 +7,15 @@ Scope: Áp dụng cho mọi AI agent/model làm việc trong repo này (Copilot,
 
 Khi bắt đầu một task code, agent phải đọc theo thứ tự:
 
-1. `AGENTS.md` (repo root)
-2. File này: `docs/ai/technical-instructions.md`
-3. `docs/app-structure.md`
-4. Task file cụ thể trong `docs/tasks/`
+1. `.agents/context/current-truth.md`
+2. `.agents/context/working-contract.md`
+3. `AGENTS.md` (repo root)
+4. File này: `docs/ai/technical-instructions.md`
+5. `docs/app-structure.md`
+6. Task file cụ thể trong `docs/tasks/`
 
 Nếu có mâu thuẫn, ưu tiên theo thứ tự trên.
+Không tham chiếu file bootstrap không tồn tại.
 
 ## 2) Universal DB-first policy (FEATURE / ENHANCE / FIX)
 
@@ -58,6 +61,7 @@ Không được nhảy gate.
 
 - Hoàn tất task phải commit + push code repo web/api liên quan.
 - Riêng phần DB/directus staging: không bắt buộc commit/push code DB repo; bắt buộc có evidence apply + verify + documentation.
+- Nếu task artifact bị stale so với code thật, phải verify bằng code state + build/test + git state trước khi chỉnh status/checklist.
 
 ## 4) Frontend architecture rules
 
@@ -97,6 +101,13 @@ Nếu tạo mới, phải ghi lý do ngắn trong task hoặc PR note.
 - Pure helpers: `src/modules/<domain>/utils`
 - Domain UI: `src/modules/<domain>/components`
 - Page chỉ compose hook + components
+
+### 4.5b Team-scale page/module discipline
+
+- `src/pages/*` chỉ orchestration; không nhồi query transformation, submit mapping lớn, hay business rules nặng trực tiếp trong page.
+- Hook nên tách vai trò rõ: query hook, form hook, UI interaction hook nếu complexity tăng.
+- `src/shared/*` chỉ chứa primitive/generic patterns; nếu logic/text phụ thuộc domain ERP cụ thể, giữ ở `src/modules/<domain>/*`.
+- Nếu tạo primitive mới thay vì reuse, ghi lý do ngắn trong task artifact hoặc PR note.
 
 ### 4.6 PageLayout — mandatory page wrapper
 
@@ -224,6 +235,7 @@ Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (the
 Khi task có thay đổi TypeScript:
 
 - Bun-first tooling: use `bun` / `bunx` by default for install/build/test/lint/format; only fall back to `npm`/`npx` if the task records a verified Bun incompatibility.
+- `bun run lint:check`
 - `bunx tsc --noEmit`
 - `bunx vitest run` (all tests must pass)
 
@@ -232,6 +244,14 @@ Khi task có thay đổi UI:
 - Smoke check route liên quan (render, empty state, loading state, basic interaction).
 
 Pre-commit hook tự động chạy qua Bun toolchain: prettier → lint-staged → vitest run. Nếu test fail → commit bị block.
+
+Definition of done tối thiểu cho frontend task:
+1. Task file tồn tại và checklist được tick realtime
+2. DB/API prerequisite đã được xác nhận trong task
+3. Validation evidence đã ghi
+4. Nếu source đổi: lint/tsc/test/build đã chạy
+5. Nếu UI flow đổi: có smoke/handoff note rõ
+6. Commit/push status stated rõ theo đúng repo
 
 ## 7) Output contract khi agent báo hoàn tất
 

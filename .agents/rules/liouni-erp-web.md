@@ -5,7 +5,7 @@ Apply to all work in this repo.
 ## Required behavior
 
 - load `@.agents/skills/liouni-erp-web-current-truth/SKILL.md`
-- read `@docs/ai/current-truth-context.md` first
+- read `@.agents/context/current-truth.md` first
 - use repo-local context as default guidance
 - treat Directus as legacy/reference unless the task explicitly says legacy scope
 - treat Gitea as historical only
@@ -14,19 +14,35 @@ Apply to all work in this repo.
 - inspect current state before edits
 - use evidence-first wording
 - before push/commit, `cd /opt/repos/liouni-erp-core/liouni-erp-web`
-- before push/commit, always run `bun run lint` and `bun run build` to verify code quality
+- before push/commit, always run `bun run lint:check`, `bunx tsc --noEmit`, `bun run test`, and `bun run build`
 - push with `github-industries`
 - reuse existing components/hooks/utils/helpers/services/functions/page patterns first
 - extend/adapt before duplicating
+- no code without a task file under `docs/tasks/`
+- keep task checklist updated in realtime
+- if task status in docs drifts from code reality, verify by code + build/test + git state before correcting the artifact
 
 ## Architecture & Development Standards
 
-- **TDD**: Enforce Test-Driven Development (TDD) as a core practice. Write tests before implementing new features.
-- **State Management**: Use `useState` for component inner state. Use `zustand` for any state that is used by multiple places. Use `@tanstack/react-query` with `axios` for UI API state.
+- **TDD**: Prefer Test-Driven Development for new features and non-trivial fixes. If not practical, add or update the nearest affected automated test before closing the task.
+- **State Management**: Use `useState` for component inner state. Use `zustand` for state shared across multiple places. Use `@tanstack/react-query` with `axios` for server/API state.
 - **Imports**: Use alias imports. Group 3rd-party imports first, followed by a blank line, then custom code imports.
 - **Modularity**: Apply atomic design and a modular mindset. Break down components, hooks, utilities, and functions into the smallest possible, reusable units.
-- **Forms & Validation**: All forms must use `react-hook-form`. All data type checking or enum/interface generation must use `zod`.
-- **Options Fields**: All fields having options must use `enum` to select.
+- **Forms & Validation**: Prefer `react-hook-form` + schema-based validation for new complex forms or when refactoring unstable forms. Do not force a partial migration that makes the codebase more inconsistent.
+- **Options Fields**: Prefer explicit enums/typed options for option-based fields; keep naming aligned with existing domain types.
+- **Page boundaries**: Pages should orchestrate layout, query hooks, and domain components; avoid pushing business-heavy logic directly into `src/pages/*`.
+- **Definition of done**: A frontend task is not done until task checklist is updated, validation evidence is recorded, and commit/push status is stated clearly.
+
+## Teamwork guardrails
+- Use `must` only for standards already enforced or verified in this repo; use `prefer` for target-direction conventions.
+- If introducing a new page/module, record route wiring, page key, app store registration, API client dependency, and permission impact in the task.
+- Documentation/process changes must update the canonical file first (`docs/ai/technical-instructions.md`), then keep `.agents` aligned.
+
+## Anti-drift / anti-patterns
+- Do not reference non-existent bootstrap files.
+- Do not let historical docs override repo-local current truth.
+- Do not add domain-heavy logic into shared generic components.
+- Do not report a task DONE from docs alone; verify with code state, build/test evidence, and git state.
 
 ## Historical warning
 

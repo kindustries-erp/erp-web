@@ -33,8 +33,11 @@ Mục tiêu rõ ràng của task.
 - [ ] 2.0 Backend workflow/API gate done
 - [ ] 3.0 UI gate done
 - [ ] 4.0 Validation
-  - [ ] 4.1 Chạy `npx tsc --noEmit`
-  - [ ] 4.2 Smoke test flow liên quan
+  - [ ] 4.1 `bun run lint:check`
+  - [ ] 4.2 `bunx tsc --noEmit`
+  - [ ] 4.3 `bun run test`
+  - [ ] 4.4 `bun run build`
+  - [ ] 4.5 Smoke test flow liên quan
 - [ ] 5.0 Close
   - [ ] 5.1 Lessons learned entry (if issue)
   - [ ] 5.2 Commit + push code (web/api)
@@ -43,7 +46,10 @@ Mục tiêu rõ ràng của task.
 ## Validation Evidence
 
 - DB precheck result:
-- `npx tsc --noEmit`:
+- `bun run lint:check`:
+- `bunx tsc --noEmit`:
+- `bun run test`:
+- `bun run build`:
 - Smoke test:
 
 ## Lessons Learned
