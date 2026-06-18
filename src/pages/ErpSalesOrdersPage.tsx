@@ -401,6 +401,7 @@ export function ErpSalesOrdersPage() {
       await salesOrdersCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
       await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Không thể xóa SO");
     } finally {
@@ -415,6 +416,7 @@ export function ErpSalesOrdersPage() {
       await salesOrdersCoreApi.cancel(cancelTarget.id);
       setCancelTarget(null);
       await loadOrders();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Không thể hủy SO");
     } finally {

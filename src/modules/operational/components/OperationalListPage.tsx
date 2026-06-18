@@ -10,7 +10,6 @@ import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { getPaymentVouchersPagedApi } from "@/modules/finance/api/financeApi";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { PageLayout } from "@/shared/components/PageLayout";

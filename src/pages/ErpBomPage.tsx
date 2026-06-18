@@ -4,8 +4,6 @@ import {
   Plus,
   Trash2,
   ChevronRight,
-  ChevronDown,
-  RefreshCw,
   Network,
   Loader2,
 } from "lucide-react";

@@ -8,8 +8,6 @@ import {
   Factory,
   RotateCcw,
   ArrowRight,
-  Trash2,
-  RefreshCw,
   XCircle,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
@@ -517,6 +515,7 @@ export function ErpProductionPage() {
       await productionCoreApi.cancel(cancelTarget.id);
       setCancelTarget(null);
       await loadHistory();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setExecError(
         e?.response?.data?.message ||
