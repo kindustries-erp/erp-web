@@ -2,12 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pencil,
   Plus,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Trash2,
   ChevronRight,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ChevronDown,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCw,
   Network,
   Loader2,
@@ -19,6 +16,7 @@ import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -543,6 +541,9 @@ export function ErpBomPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [deleteTarget, setDeleteTarget] = useState<ErpBom | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -848,6 +849,23 @@ export function ErpBomPage() {
     }
   }
 
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await bomCoreApi.remove(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadBoms();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message || e?.message || t("Không thể xóa BOM"),
+      );
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const columns: DataTableColumn<ErpBom>[] = [
     {
       key: "stt",
@@ -1030,6 +1048,13 @@ export function ErpBomPage() {
                       onClick: () => void openEdit(item),
                       icon: <Pencil className="h-3.5 w-3.5" />,
                     },
+                    {
+                      label: t("Xóa"),
+                      onClick: () => setDeleteTarget(item),
+                      icon: <Trash2 className="h-3.5 w-3.5" />,
+                      variant: "danger",
+                      hidden: item.status === "ACTIVE",
+                    },
                   ]}
                 />
               ),
@@ -1060,6 +1085,26 @@ export function ErpBomPage() {
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title={t("Xác nhận xóa")}
+        message={
+          deleteTarget
+            ? t(
+                `Xóa BOM "${deleteTarget.bomCode}"? Hành động này không thể hoàn tác.`,
+              )
+            : ""
+        }
+        confirmLabel={t("Xóa")}
+        cancelLabel={t("Hủy")}
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
 
       <DrawerModal
         open={drawerOpen}

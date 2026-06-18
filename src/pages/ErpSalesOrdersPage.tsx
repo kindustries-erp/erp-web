@@ -6,12 +6,15 @@ import {
   Plus,
   ReceiptText,
   RotateCcw,
+  Trash2,
+  XCircle,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -173,6 +176,11 @@ export function ErpSalesOrdersPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [actingId, setActingId] = useState<string | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<ErpSalesOrder | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<ErpSalesOrder | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
@@ -386,6 +394,34 @@ export function ErpSalesOrdersPage() {
     }
   }
 
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await salesOrdersCoreApi.remove(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadOrders();
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || "Không thể xóa SO");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleConfirmCancel() {
+    if (!cancelTarget) return;
+    setCanceling(true);
+    try {
+      await salesOrdersCoreApi.cancel(cancelTarget.id);
+      setCancelTarget(null);
+      await loadOrders();
+    } catch (e: any) {
+      setError(e?.response?.data?.message || e?.message || "Không thể hủy SO");
+    } finally {
+      setCanceling(false);
+    }
+  }
+
   const columns: DataTableColumn<ErpSalesOrder>[] = [
     {
       key: "soNo",
@@ -494,6 +530,22 @@ export function ErpSalesOrdersPage() {
                         icon: <RotateCcw className="h-4 w-4" />,
                         onClick: () => void handleUnreserve(item),
                       },
+                      {
+                        label: "Xóa",
+                        onClick: () => setDeleteTarget(item),
+                        icon: <Trash2 className="h-4 w-4" />,
+                        variant: "danger",
+                        hidden: item.status !== "DRAFT",
+                      },
+                      {
+                        label: "Hủy phiếu",
+                        onClick: () => setCancelTarget(item),
+                        icon: <XCircle className="h-4 w-4" />,
+                        variant: "danger",
+                        hidden:
+                          item.status === "DRAFT" ||
+                          item.status === "CANCELLED",
+                      },
                     ]}
                   />
                 </div>
@@ -503,6 +555,34 @@ export function ErpSalesOrdersPage() {
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Xác nhận xóa"
+        message={deleteTarget ? `Xóa đơn bán hàng "${deleteTarget.soNo}"?` : ""}
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        loading={deleting}
+        danger
+      />
+
+      <ConfirmModal
+        open={!!cancelTarget}
+        title="Xác nhận hủy"
+        message={cancelTarget ? `Hủy đơn bán hàng "${cancelTarget.soNo}"?` : ""}
+        confirmLabel="Hủy phiếu"
+        cancelLabel="Quay lại"
+        onConfirm={() => void handleConfirmCancel()}
+        onCancel={() => {
+          if (!canceling) setCancelTarget(null);
+        }}
+        loading={canceling}
+        danger
+      />
 
       <DrawerModal
         open={drawerOpen}

@@ -94,4 +94,11 @@ export const productionCoreApi = {
     });
     return data;
   },
+  cancel: async (id: string): Promise<ErpProductionOrder> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: ErpProductionOrder;
+    }>(`/api/v1/production/${id}/cancel`);
+    return data.data;
+  },
 };

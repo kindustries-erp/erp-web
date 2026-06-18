@@ -76,4 +76,7 @@ export const bomCoreApi = {
     );
     return data.data;
   },
+  remove: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${BASE}/${id}`);
+  },
 };

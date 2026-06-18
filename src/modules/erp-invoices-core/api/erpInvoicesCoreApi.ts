@@ -132,6 +132,13 @@ export const erpInvoicesCoreApi = {
     await axiosInstance.delete(`${BASE}/${id}`);
   },
 
+  cancel: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<{ data: ErpInvoice }>(
+      `${BASE}/${id}/cancel`,
+    );
+    return data.data;
+  },
+
   // ---------------------------------------------------------------------------
   // Bulk XML import
   // ---------------------------------------------------------------------------

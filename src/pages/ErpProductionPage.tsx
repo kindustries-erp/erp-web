@@ -8,13 +8,14 @@ import {
   Factory,
   RotateCcw,
   ArrowRight,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Trash2,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   RefreshCw,
+  XCircle,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   DrawerField,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -320,6 +321,11 @@ export function ErpProductionPage() {
   const [vehicleSaving, setVehicleSaving] = useState(false);
   const [vehicleError, setVehicleError] = useState<string | null>(null);
 
+  const [cancelTarget, setCancelTarget] = useState<ErpProductionOrder | null>(
+    null,
+  );
+  const [canceling, setCanceling] = useState(false);
+
   // ── History list ──
   const [orders, setOrders] = useState<ErpProductionOrder[]>([]);
   const [histLoading, setHistLoading] = useState(true);
@@ -502,6 +508,24 @@ export function ErpProductionPage() {
     setExecError(null);
     setVehicleForm(emptyVehicleForm());
     setVehicleError(null);
+  }
+
+  async function handleConfirmCancel() {
+    if (!cancelTarget) return;
+    setCanceling(true);
+    try {
+      await productionCoreApi.cancel(cancelTarget.id);
+      setCancelTarget(null);
+      await loadHistory();
+    } catch (e: any) {
+      setExecError(
+        e?.response?.data?.message ||
+          e?.message ||
+          "Không thể hủy lệnh sản xuất",
+      );
+    } finally {
+      setCanceling(false);
+    }
   }
 
   // ── History table columns ──
@@ -769,9 +793,42 @@ export function ErpProductionPage() {
             totalPages={histTotalPages}
             onPage={setHistPage}
             onPageSize={() => {}}
+            actionsColumn={{
+              cell: (item: ErpProductionOrder) => (
+                <div className="flex justify-end">
+                  <ActionDropdown
+                    items={[
+                      {
+                        label: "Hủy lệnh",
+                        onClick: () => setCancelTarget(item),
+                        icon: <XCircle className="h-4 w-4" />,
+                        variant: "danger",
+                        hidden: item.status === "CANCELLED",
+                      },
+                    ]}
+                  />
+                </div>
+              ),
+            }}
           />
         </div>
       </div>
+
+      <ConfirmModal
+        open={!!cancelTarget}
+        title="Xác nhận hủy"
+        message={
+          cancelTarget ? `Hủy lệnh sản xuất "${cancelTarget.referenceNo}"?` : ""
+        }
+        confirmLabel="Hủy lệnh"
+        cancelLabel="Quay lại"
+        onConfirm={() => void handleConfirmCancel()}
+        onCancel={() => {
+          if (!canceling) setCancelTarget(null);
+        }}
+        loading={canceling}
+        danger
+      />
     </PageLayout>
   );
 }
