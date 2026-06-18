@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useErpInvoicesList } from "../hooks/useErpInvoicesList";
-import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
+import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 // Mock the API
 vi.mock("../api/erpInvoicesCoreApi", () => ({
@@ -81,7 +81,7 @@ describe("useErpInvoicesList", () => {
   it("should fetch invoices correctly", async () => {
     const mockList = vi.mocked(erpInvoicesCoreApi.list);
     mockList.mockResolvedValueOnce({
-      items: [{ id: "1", invoiceNo: "INV-01" } as unknown],
+      items: [{ id: "1", invoiceNo: "INV-01" } as unknown as ErpInvoice],
       total: 1,
       totalPages: 1,
       page: 1,

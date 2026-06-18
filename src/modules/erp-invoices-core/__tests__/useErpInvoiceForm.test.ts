@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useErpInvoiceForm } from "../hooks/useErpInvoiceForm";
-import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
+import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
@@ -57,7 +57,7 @@ describe("useErpInvoiceForm", () => {
       id: "1",
       invoiceNo: "INV-01",
       direction: "OUT",
-    } as unknown;
+    } as unknown as ErpInvoice;
 
     act(() => {
       result.current.openDetail(mockInvoice);
@@ -81,7 +81,7 @@ describe("useErpInvoiceForm", () => {
       vatAmount: 10,
       discountAmount: 0,
       totalAmount: 110,
-    } as unknown;
+    } as unknown as ErpInvoice;
 
     act(() => {
       result.current.openDetail(mockInvoice);
@@ -153,7 +153,7 @@ describe("useErpInvoiceForm", () => {
       buyerAddress: "",
       description: "",
       items: [],
-    } as unknown;
+    } as unknown as ErpInvoice;
 
     act(() => {
       result.current.openDetail(mockInvoice);
@@ -177,7 +177,7 @@ describe("useErpInvoiceForm", () => {
 
   it("should delete an invoice", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
-    const mockInvoice = { id: "1" } as unknown;
+    const mockInvoice = { id: "1" } as unknown as ErpInvoice;
 
     act(() => {
       result.current.openDetail(mockInvoice);
@@ -194,7 +194,7 @@ describe("useErpInvoiceForm", () => {
 
   it("should cancel an invoice", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
-    const mockInvoice = { id: "1" } as unknown;
+    const mockInvoice = { id: "1" } as unknown as ErpInvoice;
 
     act(() => {
       result.current.openDetail(mockInvoice);

@@ -14,6 +14,7 @@ Apply to all work in this repo.
 - inspect current state before edits
 - use evidence-first wording
 - before push/commit, `cd /opt/repos/liouni-erp-core/liouni-erp-web`
+- before push/commit, always run `bun run lint` and `bun run build` to verify code quality
 - push with `github-industries`
 - reuse existing components/hooks/utils/helpers/services/functions/page patterns first
 - extend/adapt before duplicating
