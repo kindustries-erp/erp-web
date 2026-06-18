@@ -68,6 +68,7 @@ Làm sạch và nâng chuẩn agent contract của repo Web theo hướng curren
 - Không có issue / hoặc link entry: `docs/lessons-learned/<file>.md#<anchor>`
 
 ## Commit/Push Status
+
 - Web repo: committed `7efa53c`, pushed `github-industries/erp-master`
 - API repo: coordinated separately in sibling repo task
 - DB/directus staging: N/A
