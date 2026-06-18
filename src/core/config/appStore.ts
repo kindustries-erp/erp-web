@@ -16,11 +16,11 @@ function applyDocumentTheme(appTheme: AppTheme) {
   );
 }
 
-export const STATIC_TABS: Record<string, TabInfo> = {
+export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
   purchasing: { labelKey: "nav.items.purchasing", closable: false },
 };
 
-export const SECTION_ROOTS: Record<string, SectionRoot> = {
+export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
   inventory: { labelKey: "nav.items.inventory", group: "inventory" },
   "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
@@ -84,7 +84,7 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
   },
 };
 
-export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
+export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
