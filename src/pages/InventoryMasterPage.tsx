@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
 import { Boxes, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
@@ -348,7 +348,7 @@ export function InventoryMasterPage() {
           <div className="flex items-start">
             <div className="min-w-0 flex-1 space-y-4">
               <section>
-                <DataTable
+                <StandardTable<InventoryMasterOption>
                   items={currentItems}
                   columns={columns}
                   getRowKey={(item) => item.id}
@@ -357,27 +357,19 @@ export function InventoryMasterPage() {
                   emptyLabel={t("inventoryMasters.table.emptyUom")}
                   minWidth={760}
                   loadingRows={6}
-                  actionsColumn={{
-                    header: "",
-                    className: "w-[48px]",
-                    cell: (row) => (
-                      <ActionDropdown
-                        items={[
-                          {
-                            label: t("inventoryMasters.table.actionEdit"),
-                            icon: <Pencil className="h-3.5 w-3.5" />,
-                            onClick: () => openEdit(activeTab, row),
-                          },
-                          {
-                            label: t("inventoryMasters.table.actionDelete"),
-                            icon: <Trash2 className="h-3.5 w-3.5" />,
-                            variant: "danger",
-                            onClick: () => handleDelete(activeTab, row),
-                          },
-                        ]}
-                      />
-                    ),
-                  }}
+                  actions={(row) => [
+                    {
+                      label: t("inventoryMasters.table.actionEdit"),
+                      icon: <Pencil className="h-3.5 w-3.5" />,
+                      onClick: () => openEdit(activeTab, row),
+                    },
+                    {
+                      label: t("inventoryMasters.table.actionDelete"),
+                      icon: <Trash2 className="h-3.5 w-3.5" />,
+                      variant: "danger",
+                      onClick: () => handleDelete(activeTab, row),
+                    },
+                  ]}
                 />
               </section>
             </div>

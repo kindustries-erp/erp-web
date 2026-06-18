@@ -1,5 +1,5 @@
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Eye, Trash, Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -144,49 +144,42 @@ export function ErpInvoiceListTable({
   ];
 
   return (
-    <DataTable<ErpInvoice>
+    <StandardTable<ErpInvoice>
       minWidth={1200}
       items={invoices}
       columns={columns}
       getRowKey={(inv) => inv.id}
-      actionsColumn={{
-        headerClassName: "w-[48px] text-center",
-        cell: (inv) => (
-          <ActionDropdown
-            items={[
+      actions={(inv) => [
+        {
+          label: t("actionDetail", "Chi tiết"),
+          icon: <Eye className="w-4 h-4" />,
+          onClick: () => openDetail(inv),
+        },
+        ...(inv.status === "DRAFT"
+          ? [
               {
-                label: t("actionDetail", "Chi tiết"),
-                icon: <Eye className="w-4 h-4" />,
-                onClick: () => openDetail(inv),
+                label: t("actionDelete", "Xóa"),
+                icon: <Trash className="w-4 h-4 text-red-600" />,
+                variant: "danger" as const,
+                onClick: () => {
+                  onDeleteConfirm(inv);
+                },
               },
-              ...(inv.status === "DRAFT"
-                ? [
-                    {
-                      label: t("actionDelete", "Xóa"),
-                      icon: <Trash className="w-4 h-4 text-red-600" />,
-                      variant: "danger" as const,
-                      onClick: () => {
-                        onDeleteConfirm(inv);
-                      },
-                    },
-                  ]
-                : []),
-              ...(inv.status === "CONFIRMED"
-                ? [
-                    {
-                      label: t("actionCancel", "Hủy"),
-                      icon: <Ban className="w-4 h-4 text-red-600" />,
-                      variant: "danger" as const,
-                      onClick: () => {
-                        onCancelConfirm(inv);
-                      },
-                    },
-                  ]
-                : []),
-            ]}
-          />
-        ),
-      }}
+            ]
+          : []),
+        ...(inv.status === "CONFIRMED"
+          ? [
+              {
+                label: t("actionCancel", "Hủy"),
+                icon: <Ban className="w-4 h-4 text-red-600" />,
+                variant: "danger" as const,
+                onClick: () => {
+                  onCancelConfirm(inv);
+                },
+              },
+            ]
+          : []),
+      ]}
       loading={loading}
       emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
       page={page}
@@ -195,9 +188,9 @@ export function ErpInvoiceListTable({
       totalPages={totalPages}
       onPage={onPage}
       onPageSize={() => {}}
-      onRowClick={openDetail}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
+      sortArray={
+        sortBy ? [sortOrder === "desc" ? `-${sortBy}` : sortBy] : undefined
+      }
       onSort={onSort}
     />
   );

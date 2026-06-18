@@ -11,7 +11,7 @@ import { useT } from "@/core/i18n";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { getPaymentVouchersPagedApi } from "@/modules/finance/api/financeApi";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { DataTable } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { type FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
@@ -849,26 +849,19 @@ export function OperationalListPage({
 
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
-          <DataTable
-            items={visibleItems}
+          <StandardTable<OperationalDocument>
             columns={columns}
+            items={visibleItems}
             getRowKey={(row) => `${row.document_type || variant}-${row.id}`}
             loading={loading}
             error={error}
             emptyLabel={t("Chưa có dữ liệu.")}
             minWidth={980}
-            sortBy={
-              variant === "purchase" && purchaseSort
-                ? purchaseSort.startsWith("-")
-                  ? purchaseSort.slice(1)
-                  : purchaseSort
-                : undefined
-            }
-            sortOrder={
-              variant === "purchase" && purchaseSort
-                ? purchaseSort.startsWith("-")
-                  ? "desc"
-                  : "asc"
+            sortArray={
+              variant === "purchase"
+                ? purchaseSort
+                  ? [purchaseSort]
+                  : undefined
                 : undefined
             }
             onSort={
@@ -876,51 +869,42 @@ export function OperationalListPage({
                 ? (key) => togglePurchaseSort(key)
                 : undefined
             }
-            actionsColumn={{
-              cell: (row) => (
-                <ActionDropdown
-                  items={[
-                    {
-                      label: t("Chi tiết"),
-                      icon: <Eye className="h-4 w-4" />,
-                      onClick: () => void openDetail(row),
-                    },
-                    {
-                      label: "Liên kết tiền",
-                      icon: <Link2 className="h-4 w-4" />,
-                      onClick: () => void openSettlement(row),
-                      hidden:
-                        !config.paymentLinkable ||
-                        Number(row.open_amount || 0) <= 0,
-                    },
-                    {
-                      label: "Nhập kho",
-                      icon: <Warehouse className="h-4 w-4" />,
-                      onClick: () => {
-                        if (!postingLoading) void openPostingDrawer(row);
-                      },
-                      hidden: !canPostReceipt(row, variant),
-                    },
-                    {
-                      label: "Xuất kho",
-                      icon: <Warehouse className="h-4 w-4" />,
-                      onClick: () => {
-                        if (!postingLoading) void openPostingDrawer(row);
-                      },
-                      hidden: !canPostIssue(row, variant),
-                    },
-                  ]}
-                />
-              ),
-            }}
+            actions={(row) => [
+              {
+                label: t("Chi tiết"),
+                icon: <Eye className="h-4 w-4" />,
+                onClick: () => void openDetail(row),
+              },
+              {
+                label: "Liên kết tiền",
+                icon: <Link2 className="h-4 w-4" />,
+                onClick: () => void openSettlement(row),
+                hidden:
+                  !config.paymentLinkable || Number(row.open_amount || 0) <= 0,
+              },
+              {
+                label: "Nhập kho",
+                icon: <Warehouse className="h-4 w-4" />,
+                onClick: () => {
+                  if (!postingLoading) void openPostingDrawer(row);
+                },
+                hidden: !canPostReceipt(row, variant),
+              },
+              {
+                label: "Xuất kho",
+                icon: <Warehouse className="h-4 w-4" />,
+                onClick: () => {
+                  if (!postingLoading) void openPostingDrawer(row);
+                },
+                hidden: !canPostIssue(row, variant),
+              },
+            ]}
             renderSubRow={
               variant === "purchase"
                 ? (item) => <PurchaseSubRow rowId={item.id} />
                 : undefined
             }
-            expandedRowKeys={Object.keys(expandedRowIds).filter(
-              (key) => expandedRowIds[key],
-            )}
+            expandedRowIds={expandedRowIds}
             page={page}
             pageSize={pageSize}
             total={total}

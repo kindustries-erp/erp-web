@@ -2,8 +2,8 @@ import { useMemo, useState, useEffect } from "react";
 import { useT } from "@/core/i18n";
 import { Layers, Pencil, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { type DataTableColumn } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
@@ -428,53 +428,39 @@ export function ErpInventoryItemsTab({
         <div className="flex items-center justify-end mb-3">{actionsNode}</div>
       )}
       <div className="flex items-start gap-4 h-full">
-        <div className="flex-1 overflow-auto rounded-xl border bg-card text-card-foreground shadow-sm min-w-0">
-          <div className="flex h-full flex-col">
-            <div className="flex-1 p-4">
-              <div className="h-full">
-                <DataTable
-                  items={items}
-                  columns={columns}
-                  getRowKey={(item) => item.id}
-                  loading={loading}
-                  error={error}
-                  emptyLabel={t("inventoryMasters.table.emptyItem")}
-                  minWidth={760}
-                  loadingRows={8}
-                  actionsColumn={{
-                    header: "",
-                    className: "w-[48px]",
-                    cell: (item) => (
-                      <ActionDropdown
-                        items={[
-                          {
-                            label: t("inventoryMasters.table.actionEdit"),
-                            onClick: () => void openEdit(item),
-                            icon: <Pencil className="h-3.5 w-3.5" />,
-                          },
-                          {
-                            label: t("inventoryMasters.table.actionDelete"),
-                            onClick: () => handleDelete(item),
-                            icon: <Trash2 className="h-3.5 w-3.5" />,
-                            variant: "danger",
-                          },
-                        ]}
-                      />
-                    ),
-                  }}
-                  page={page}
-                  pageSize={pageSize}
-                  total={total}
-                  totalPages={totalPages}
-                  onPage={setPage}
-                  onPageSize={(value) => {
-                    setPage(1);
-                    setPageSize(value);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+        <div className="flex-1 min-w-0 space-y-4">
+          <StandardTable<ErpInventoryItem>
+            items={items}
+            columns={columns}
+            getRowKey={(item) => item.id}
+            loading={loading}
+            error={error}
+            emptyLabel={t("inventoryMasters.table.emptyItem")}
+            minWidth={760}
+            loadingRows={8}
+            actions={(item) => [
+              {
+                label: t("inventoryMasters.table.actionEdit"),
+                onClick: () => void openEdit(item),
+                icon: <Pencil className="h-3.5 w-3.5" />,
+              },
+              {
+                label: t("inventoryMasters.table.actionDelete"),
+                onClick: () => handleDelete(item),
+                icon: <Trash2 className="h-3.5 w-3.5" />,
+                variant: "danger",
+              },
+            ]}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(value) => {
+              setPage(1);
+              setPageSize(value);
+            }}
+          />
         </div>
         <FilterPanel
           config={{

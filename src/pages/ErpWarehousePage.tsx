@@ -32,8 +32,8 @@ import { Button } from "@/shared/components/ui/Button";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import {
@@ -933,13 +933,20 @@ export function ErpWarehousePage() {
 
         <div className="flex items-start">
           <div className="flex-1 min-w-0 space-y-4">
-            <DataTable
+            <StandardTable<WarehouseRow>
               items={rows}
               columns={columns}
               getRowKey={(r) => `${r.type}-${r.id}`}
               loading={loading}
-              sortBy={activeSortKey ?? ""}
-              sortOrder={activeSortOrder}
+              sortArray={
+                activeSortKey
+                  ? [
+                      activeSortOrder === "desc"
+                        ? `-${activeSortKey}`
+                        : activeSortKey,
+                    ]
+                  : undefined
+              }
               onSort={(key) => {
                 if (activeSortKey === key) {
                   if (activeSortOrder === "asc") {
@@ -963,42 +970,31 @@ export function ErpWarehousePage() {
               emptyLabel="Chưa có chứng từ kho."
               minWidth={780}
               loadingRows={8}
-              actionsColumn={{
-                header: "",
-                className: "w-[48px]",
-                cell: (row) => (
-                  <ActionDropdown
-                    items={[
-                      {
-                        label: "Chi tiết",
-                        icon: <Eye className="h-3.5 w-3.5" />,
-                        onClick: () => {
-                          if (row.type === "receipt")
-                            void openGrDetail(row.id, true);
-                          else if (row.type === "issue")
-                            void openGiDetail(row.id, true);
-                        },
-                      },
-                      {
-                        label: "Xóa",
-                        icon: <Trash2 className="h-3.5 w-3.5" />,
-                        variant: "danger",
-                        hidden: row.status !== "DRAFT",
-                        onClick: () => setDeleteTarget(row),
-                      },
-                      {
-                        label:
-                          grCancelId === row.id ? "Đang hủy..." : "Hủy phiếu",
-                        icon: <XCircle className="h-3.5 w-3.5" />,
-                        variant: "danger",
-                        hidden:
-                          row.type !== "receipt" || row.status !== "POSTED",
-                        onClick: () => setCancelTarget(row),
-                      },
-                    ]}
-                  />
-                ),
-              }}
+              actions={(row) => [
+                {
+                  label: "Chi tiết",
+                  icon: <Eye className="h-3.5 w-3.5" />,
+                  onClick: () => {
+                    if (row.type === "receipt") void openGrDetail(row.id, true);
+                    else if (row.type === "issue")
+                      void openGiDetail(row.id, true);
+                  },
+                },
+                {
+                  label: "Xóa",
+                  icon: <Trash2 className="h-3.5 w-3.5" />,
+                  variant: "danger",
+                  hidden: row.status !== "DRAFT",
+                  onClick: () => setDeleteTarget(row),
+                },
+                {
+                  label: grCancelId === row.id ? "Đang hủy..." : "Hủy phiếu",
+                  icon: <XCircle className="h-3.5 w-3.5" />,
+                  variant: "danger",
+                  hidden: row.type !== "receipt" || row.status !== "POSTED",
+                  onClick: () => setCancelTarget(row),
+                },
+              ]}
               page={page}
               pageSize={pageSize}
               total={total}

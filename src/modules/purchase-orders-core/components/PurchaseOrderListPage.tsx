@@ -3,8 +3,11 @@ import { PageLayout } from "@/shared/components/PageLayout";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { useT } from "@/core/i18n";
-import { PurchaseOrderTable } from "./PurchaseOrderTable";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { Eye, Link2, Trash2, XCircle } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
+import { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
+import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
@@ -59,6 +62,12 @@ export function PurchaseOrderListPage() {
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
 
+  const columns = usePurchaseColumns({
+    variant: "purchase",
+    expandedRowIds,
+    onToggleExpand: toggleExpandRow,
+  });
+
   return (
     <PageLayout
       title={t("Đơn mua hàng")}
@@ -83,22 +92,47 @@ export function PurchaseOrderListPage() {
 
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
-          <PurchaseOrderTable
+          <StandardTable<OperationalDocument>
             items={items}
+            columns={columns}
             total={total}
             totalPages={totalPages}
             page={page}
             pageSize={pageSize}
-            setPage={setPage}
-            setPageSize={setPageSize}
-            purchaseSortArray={purchaseSort ? [purchaseSort] : undefined}
-            togglePurchaseSort={togglePurchaseSort}
+            onPage={setPage}
+            onPageSize={setPageSize}
+            sortArray={purchaseSort ? [purchaseSort] : undefined}
+            onSort={togglePurchaseSort}
             expandedRowIds={expandedRowIds}
-            toggleExpandRow={toggleExpandRow}
-            onOpenDetail={openDetail}
-            onOpenSettlement={openSettlement}
-            onDeleteDocument={confirmDeleteDocument}
-            onCancelDocument={confirmCancelDocument}
+            getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
+            actions={(row) => [
+              {
+                label: t("Chi tiết"),
+                icon: <Eye className="h-4 w-4" />,
+                onClick: () => openDetail(row),
+              },
+              {
+                label: t("Liên kết tiền"),
+                icon: <Link2 className="h-4 w-4" />,
+                onClick: () => openSettlement(row),
+                hidden: Number(row.open_amount || 0) <= 0,
+              },
+              {
+                label: t("Xóa"),
+                icon: <Trash2 className="h-4 w-4" />,
+                variant: "danger",
+                onClick: () => confirmDeleteDocument(row.id),
+                hidden: row.status !== "DRAFT",
+              },
+              {
+                label: t("Hủy phiếu"),
+                icon: <XCircle className="h-4 w-4" />,
+                variant: "danger",
+                onClick: () => confirmCancelDocument(row.id),
+                hidden: row.status === "DRAFT" || row.status === "CANCELLED",
+              },
+            ]}
+            renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />

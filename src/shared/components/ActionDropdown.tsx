@@ -35,7 +35,7 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           sideOffset={4}
-          align="start"
+          align="end"
           className="z-[9999] min-w-[140px] rounded-lg p-1 popup-content"
         >
           {visibleItems.map((item) => (

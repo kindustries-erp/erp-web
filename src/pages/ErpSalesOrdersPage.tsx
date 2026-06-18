@@ -10,8 +10,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -484,7 +484,7 @@ export function ErpSalesOrdersPage() {
     >
       <div className="flex items-start">
         <div className="min-w-0 flex-1 space-y-4">
-          <DataTable
+          <StandardTable<ErpSalesOrder>
             items={items}
             columns={columns}
             getRowKey={(item) => item.id}
@@ -501,56 +501,42 @@ export function ErpSalesOrdersPage() {
               setPageSize(size);
               setPage(1);
             }}
-            actionsColumn={{
-              cell: (item: ErpSalesOrder) => (
-                <div className="flex justify-end">
-                  <ActionDropdown
-                    items={[
-                      {
-                        label: "Xem chi tiết",
-                        icon: <ReceiptText className="h-4 w-4" />,
-                        onClick: () => void openView(item),
-                      },
-                      {
-                        label: "Chỉnh sửa",
-                        icon: <Pencil className="h-4 w-4" />,
-                        onClick: () => void openEdit(item),
-                      },
-                      {
-                        label:
-                          actingId === item.id ? "Đang reserve..." : "Reserve",
-                        icon: <PackageCheck className="h-4 w-4" />,
-                        onClick: () => void handleReserve(item),
-                      },
-                      {
-                        label:
-                          actingId === item.id
-                            ? "Đang unreserve..."
-                            : "Unreserve",
-                        icon: <RotateCcw className="h-4 w-4" />,
-                        onClick: () => void handleUnreserve(item),
-                      },
-                      {
-                        label: "Xóa",
-                        onClick: () => setDeleteTarget(item),
-                        icon: <Trash2 className="h-4 w-4" />,
-                        variant: "danger",
-                        hidden: item.status !== "DRAFT",
-                      },
-                      {
-                        label: "Hủy phiếu",
-                        onClick: () => setCancelTarget(item),
-                        icon: <XCircle className="h-4 w-4" />,
-                        variant: "danger",
-                        hidden:
-                          item.status === "DRAFT" ||
-                          item.status === "CANCELLED",
-                      },
-                    ]}
-                  />
-                </div>
-              ),
-            }}
+            actions={(item) => [
+              {
+                label: "Xem chi tiết",
+                icon: <ReceiptText className="h-4 w-4" />,
+                onClick: () => void openView(item),
+              },
+              {
+                label: "Chỉnh sửa",
+                icon: <Pencil className="h-4 w-4" />,
+                onClick: () => void openEdit(item),
+              },
+              {
+                label: actingId === item.id ? "Đang reserve..." : "Reserve",
+                icon: <PackageCheck className="h-4 w-4" />,
+                onClick: () => void handleReserve(item),
+              },
+              {
+                label: actingId === item.id ? "Đang unreserve..." : "Unreserve",
+                icon: <RotateCcw className="h-4 w-4" />,
+                onClick: () => void handleUnreserve(item),
+              },
+              {
+                label: "Xóa",
+                onClick: () => setDeleteTarget(item),
+                icon: <Trash2 className="h-4 w-4" />,
+                variant: "danger",
+                hidden: item.status !== "DRAFT",
+              },
+              {
+                label: "Hủy phiếu",
+                onClick: () => setCancelTarget(item),
+                icon: <XCircle className="h-4 w-4" />,
+                variant: "danger",
+                hidden: item.status === "DRAFT" || item.status === "CANCELLED",
+              },
+            ]}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
