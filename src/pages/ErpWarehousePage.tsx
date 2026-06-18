@@ -7,8 +7,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Boxes,
-  PackageOpen,
   PackagePlus,
   PackageMinus,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -23,8 +21,6 @@ import {
   Eye,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   BookCheck,
-  ChevronRight,
-  ChevronLeft,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/shared/utils";
@@ -44,10 +40,10 @@ import {
 import {
   type DrawerAction,
   DrawerField,
-  DrawerModal,
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -276,7 +272,6 @@ export function ErpWarehousePage() {
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [tabFilter, setTabFilter] = useState<TabFilter>("all");
-  const [showGrGeneralInfo, setShowGrGeneralInfo] = useState(true);
 
   // ── list state
   const [page, setPage] = useState(1);
@@ -1051,10 +1046,19 @@ export function ErpWarehousePage() {
       />
 
       {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
-      <DrawerModal
+      <StandardFormDrawer
         open={grDrawerOpen}
+        mode={grViewOnly ? "view" : grEditing ? "edit" : "create"}
         onClose={() => setGrDrawerOpen(false)}
-        icon={<Boxes className="h-4 w-4" />}
+        onToggleEdit={
+          grViewOnly &&
+          grEditing &&
+          !["POSTED", "CANCELLED", "VOIDED"].includes(
+            grEditing.status || "DRAFT",
+          )
+            ? () => setGrViewOnly(false)
+            : undefined
+        }
         title={
           grEditing
             ? grViewOnly
@@ -1078,32 +1082,16 @@ export function ErpWarehousePage() {
           </div>
         }
         actions={grDrawerActions}
-        headerExtra={
-          grViewOnly &&
-          grEditing &&
-          !["POSTED", "CANCELLED", "VOIDED"].includes(
-            grEditing.status || "DRAFT",
-          ) ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setGrViewOnly(false)}
-            >
-              Chỉnh sửa
-            </Button>
-          ) : null
-        }
-        panelClassName="min-[1024px]:min-w-[1240px]"
-      >
-        {grSaveError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {grSaveError}
-          </div>
-        )}
+        rightPanelTitle="Thông tin chung"
+        leftPanel={
+          <>
+            {grSaveError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {grSaveError}
+              </div>
+            )}
 
-        {grDrawerLoading ? (
-          <div className="flex flex-col xl:flex-row gap-6 items-start">
-            <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+            {grDrawerLoading ? (
               <DrawerSection title="Chi tiết">
                 <div className="space-y-3">
                   <Skeleton className="h-10 w-full" />
@@ -1112,22 +1100,7 @@ export function ErpWarehousePage() {
                   <Skeleton className="h-10 w-full" />
                 </div>
               </DrawerSection>
-            </div>
-            <div className="shrink-0 order-1 xl:order-2 space-y-4 w-full xl:w-[320px]">
-              <DrawerSection title="Thông tin chung">
-                <div className="flex flex-col gap-3">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                </div>
-              </DrawerSection>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col xl:flex-row gap-6 items-start">
-            <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
+            ) : (
               <DrawerSection
                 title={`Chi tiết (${grForm.lines.length})`}
                 titleExtra={
@@ -1401,143 +1374,108 @@ export function ErpWarehousePage() {
                   </div>
                 )}
               </DrawerSection>
+            )}
+          </>
+        }
+        rightPanel={
+          grDrawerLoading ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-20 w-full" />
             </div>
-
-            <div
-              className={cn(
-                "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
-                showGrGeneralInfo
-                  ? "w-full xl:w-[320px]"
-                  : "w-full xl:w-[52px]",
-              )}
-            >
-              <DrawerSection
-                title={
-                  <span
-                    className={cn(
-                      "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
-                      showGrGeneralInfo
-                        ? "max-w-[200px] opacity-100"
-                        : "max-w-0 opacity-0",
-                    )}
-                  >
-                    Thông tin chung
-                  </span>
-                }
-                titleExtra={
-                  <button
-                    type="button"
-                    onClick={() => setShowGrGeneralInfo((s) => !s)}
-                    className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
-                    title={showGrGeneralInfo ? "Thu gọn" : "Mở rộng"}
-                  >
-                    {showGrGeneralInfo ? (
-                      <ChevronRight className="w-4 h-4" />
-                    ) : (
-                      <ChevronLeft className="w-4 h-4" />
-                    )}
-                  </button>
-                }
-              >
-                <div
-                  className={cn(
-                    "grid transition-all duration-300 ease-in-out",
-                    showGrGeneralInfo ? "opacity-100" : "opacity-0",
-                  )}
-                  style={{
-                    gridTemplateRows: showGrGeneralInfo ? "1fr" : "0fr",
-                  }}
-                >
-                  <div
-                    className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)]"
-                    style={{ scrollbarWidth: "none" }}
-                  >
-                    <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
-                      <DrawerField label="Số phiếu">
-                        <input
-                          className={inputCls}
-                          placeholder="Tự động nếu để trống"
-                          value={grForm.receiptNo}
-                          disabled={grViewOnly}
-                          onChange={(e) =>
-                            setGrForm((f) => ({
-                              ...f,
-                              receiptNo: e.target.value,
-                            }))
-                          }
-                        />
-                      </DrawerField>
-                      <DrawerField label="Ngày nhập">
-                        <input
-                          type="date"
-                          className={inputCls}
-                          value={grForm.receiptDate}
-                          disabled={grViewOnly}
-                          onChange={(e) =>
-                            setGrForm((f) => ({
-                              ...f,
-                              receiptDate: e.target.value,
-                            }))
-                          }
-                        />
-                      </DrawerField>
-                      <DrawerField label="Đơn mua hàng (PO)">
-                        <Combobox
-                          options={poOptions}
-                          value={grForm.purchaseOrderId}
-                          disabled={grViewOnly}
-                          placeholder="Chọn PO..."
-                          onChange={(v) =>
-                            setGrForm((f) => ({
-                              ...f,
-                              purchaseOrderId: v,
-                              lines: [],
-                            }))
-                          }
-                        />
-                      </DrawerField>
-                      <DrawerField label="Nhà cung cấp">
-                        <Combobox
-                          options={supplierOptions}
-                          value={grForm.supplierId}
-                          disabled={grViewOnly || !!grForm.purchaseOrderId}
-                          placeholder="Chọn NCC"
-                          searchPlaceholder="Tìm kiếm..."
-                          onSearch={setSupplierSearch}
-                          onScrollBottom={fetchNextSuppliers}
-                          loading={loadingSuppliers}
-                          onChange={(v) =>
-                            setGrForm((f) => ({ ...f, supplierId: v }))
-                          }
-                        />
-                      </DrawerField>
-                      <DrawerField label="Ghi chú">
-                        <textarea
-                          className={`${inputCls} min-h-[60px] resize-y`}
-                          value={grForm.remarks}
-                          disabled={grViewOnly}
-                          onChange={(e) =>
-                            setGrForm((f) => ({
-                              ...f,
-                              remarks: e.target.value,
-                            }))
-                          }
-                        />
-                      </DrawerField>
-                    </div>
-                  </div>
-                </div>
-              </DrawerSection>
+          ) : (
+            <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
+              <DrawerField label="Số phiếu">
+                <input
+                  className={inputCls}
+                  placeholder="Tự động nếu để trống"
+                  value={grForm.receiptNo}
+                  disabled={grViewOnly}
+                  onChange={(e) =>
+                    setGrForm((f) => ({
+                      ...f,
+                      receiptNo: e.target.value,
+                    }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Ngày nhập">
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={grForm.receiptDate}
+                  disabled={grViewOnly}
+                  onChange={(e) =>
+                    setGrForm((f) => ({
+                      ...f,
+                      receiptDate: e.target.value,
+                    }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Đơn mua hàng (PO)">
+                <Combobox
+                  options={poOptions}
+                  value={grForm.purchaseOrderId}
+                  disabled={grViewOnly}
+                  placeholder="Chọn PO..."
+                  onChange={(v) =>
+                    setGrForm((f) => ({
+                      ...f,
+                      purchaseOrderId: v,
+                      lines: [],
+                    }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Nhà cung cấp">
+                <Combobox
+                  options={supplierOptions}
+                  value={grForm.supplierId}
+                  disabled={grViewOnly || !!grForm.purchaseOrderId}
+                  placeholder="Chọn NCC"
+                  searchPlaceholder="Tìm kiếm..."
+                  onSearch={setSupplierSearch}
+                  onScrollBottom={fetchNextSuppliers}
+                  loading={loadingSuppliers}
+                  onChange={(v) => setGrForm((f) => ({ ...f, supplierId: v }))}
+                />
+              </DrawerField>
+              <DrawerField label="Ghi chú">
+                <textarea
+                  className={`${inputCls} min-h-[60px] resize-y`}
+                  value={grForm.remarks}
+                  disabled={grViewOnly}
+                  onChange={(e) =>
+                    setGrForm((f) => ({
+                      ...f,
+                      remarks: e.target.value,
+                    }))
+                  }
+                />
+              </DrawerField>
             </div>
-          </div>
-        )}
-      </DrawerModal>
+          )
+        }
+      />
 
       {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
-      <DrawerModal
+      <StandardFormDrawer
         open={giDrawerOpen}
+        mode={giViewOnly ? "view" : giEditing ? "edit" : "create"}
         onClose={() => setGiDrawerOpen(false)}
-        icon={<PackageOpen className="h-4 w-4" />}
+        onToggleEdit={
+          giViewOnly &&
+          giEditing &&
+          !["POSTED", "CANCELLED", "VOIDED"].includes(
+            giEditing.status || "DRAFT",
+          )
+            ? () => setGiViewOnly(false)
+            : undefined
+        }
         title={
           giEditing
             ? giViewOnly
@@ -1561,113 +1499,220 @@ export function ErpWarehousePage() {
           </div>
         }
         actions={giDrawerActions}
-        headerExtra={
-          giViewOnly &&
-          giEditing &&
-          !["POSTED", "CANCELLED", "VOIDED"].includes(
-            giEditing.status || "DRAFT",
-          ) ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setGiViewOnly(false)}
-            >
-              Chỉnh sửa
-            </Button>
-          ) : null
-        }
-        panelClassName="min-[1024px]:min-w-[550px]"
-      >
-        {giSaveError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {giSaveError}
-          </div>
-        )}
-
-        {giDrawerLoading ? (
-          <div className="space-y-4">
-            <DrawerSection title="Thông tin phiếu">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </DrawerSection>
-            <DrawerSection title="Dòng xuất kho">
-              <div className="space-y-3">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-              </div>
-            </DrawerSection>
-          </div>
-        ) : (
+        rightPanelTitle="Thông tin chung"
+        leftPanel={
           <>
-            <DrawerSection title="Thông tin phiếu">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <DrawerField label="Số phiếu xuất" required>
-                  <input
-                    className={inputCls}
-                    value={giForm.issueNo}
-                    disabled={giViewOnly || !!giEditing}
-                    onChange={(e) =>
-                      setGiForm((f) => ({ ...f, issueNo: e.target.value }))
-                    }
-                    placeholder="GI-YYYYMMDD-001"
-                  />
-                </DrawerField>
-                <DrawerField label="Ngày xuất" required>
-                  <input
-                    type="date"
-                    className={inputCls}
-                    value={giForm.issueDate}
-                    disabled={giViewOnly}
-                    onChange={(e) =>
-                      setGiForm((f) => ({ ...f, issueDate: e.target.value }))
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Loại xuất" required>
-                  <Combobox
-                    options={ISSUE_TYPE_OPTIONS}
-                    value={giForm.issueType}
-                    disabled={giViewOnly}
-                    allowClear={false}
-                    onChange={(v) =>
-                      setGiForm((f) => ({ ...f, issueType: v || "SALE" }))
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Khách hàng">
-                  <Combobox
-                    options={customerOptions}
-                    value={giForm.customerId}
-                    disabled={giViewOnly}
-                    placeholder="Chọn khách hàng"
-                    searchPlaceholder="Tìm khách hàng"
-                    onSearch={setCustomerSearch}
-                    onScrollBottom={fetchNextCustomers}
-                    loading={loadingCustomers}
-                    onChange={(v) =>
-                      setGiForm((f) => ({ ...f, customerId: v }))
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Trạng thái">
-                  <Combobox
-                    options={STATUS_OPTIONS}
-                    value={giForm.status}
-                    disabled={giViewOnly}
-                    allowClear={false}
-                    onChange={(v) =>
-                      setGiForm((f) => ({ ...f, status: v || "DRAFT" }))
-                    }
-                  />
-                </DrawerField>
+            {giSaveError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {giSaveError}
               </div>
+            )}
+
+            {giDrawerLoading ? (
+              <DrawerSection title="Dòng xuất kho">
+                <div className="space-y-3">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </div>
+              </DrawerSection>
+            ) : (
+              <DrawerSection title={`Dòng xuất kho (${giForm.lines.length})`}>
+                {giForm.lines.map((line, idx) => {
+                  if (giViewOnly && Number(line.qtyIssued) <= 0) return null;
+                  return (
+                    <div
+                      key={idx}
+                      className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          Dòng {idx + 1}
+                        </span>
+                        {!giViewOnly && (
+                          <button
+                            type="button"
+                            className="text-xs text-red-500 hover:underline"
+                            onClick={() =>
+                              setGiForm((f) => ({
+                                ...f,
+                                lines: f.lines.filter((_, i) => i !== idx),
+                              }))
+                            }
+                          >
+                            Xóa
+                          </button>
+                        )}
+                      </div>
+                      <DrawerField label="Hàng hóa">
+                        <Combobox
+                          options={itemOptions}
+                          value={line.itemId}
+                          disabled={giViewOnly}
+                          placeholder="Chọn inventory item"
+                          searchPlaceholder="Tìm SKU / tên"
+                          onSearch={setItemSearch}
+                          onScrollBottom={fetchNextItems}
+                          loading={loadingItems}
+                          onChange={(v) => {
+                            const found = itemOptions.find(
+                              (o) => o.value === v,
+                            );
+                            setGiForm((f) => {
+                              const lines = [...f.lines];
+                              lines[idx] = {
+                                ...lines[idx],
+                                itemId: v,
+                                itemName: found?.label ?? "",
+                              };
+                              return { ...f, lines };
+                            });
+                          }}
+                        />
+                      </DrawerField>
+                      <div className="flex gap-2">
+                        <DrawerField label="Số lượng">
+                          <input
+                            type="number"
+                            className={cn(inputCls, "w-28")}
+                            value={line.qtyIssued}
+                            disabled={giViewOnly}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setGiForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], qtyIssued: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        </DrawerField>
+                        <DrawerField label="Đơn giá">
+                          <input
+                            type="number"
+                            className={cn(inputCls, "w-28")}
+                            value={line.unitCost}
+                            disabled={giViewOnly}
+                            placeholder="Tùy chọn"
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setGiForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], unitCost: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        </DrawerField>
+                      </div>
+                      {vehicleOptions.length > 0 && (
+                        <DrawerField label="Xe (tùy chọn)">
+                          <Combobox
+                            options={vehicleOptions}
+                            value={line.vehicleId}
+                            disabled={giViewOnly}
+                            placeholder="Chọn xe..."
+                            onChange={(v) => {
+                              setGiForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], vehicleId: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        </DrawerField>
+                      )}
+                    </div>
+                  );
+                })}
+                {!giViewOnly && (
+                  <button
+                    type="button"
+                    className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
+                    onClick={() =>
+                      setGiForm((f) => ({
+                        ...f,
+                        lines: [...f.lines, emptyGiLine()],
+                      }))
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Thêm dòng hàng
+                  </button>
+                )}
+              </DrawerSection>
+            )}
+          </>
+        }
+        rightPanel={
+          giDrawerLoading ? (
+            <div className="flex flex-col gap-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3 pt-1">
+              <DrawerField label="Số phiếu xuất" required>
+                <input
+                  className={inputCls}
+                  value={giForm.issueNo}
+                  disabled={giViewOnly || !!giEditing}
+                  onChange={(e) =>
+                    setGiForm((f) => ({ ...f, issueNo: e.target.value }))
+                  }
+                  placeholder="GI-YYYYMMDD-001"
+                />
+              </DrawerField>
+              <DrawerField label="Ngày xuất" required>
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={giForm.issueDate}
+                  disabled={giViewOnly}
+                  onChange={(e) =>
+                    setGiForm((f) => ({ ...f, issueDate: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Loại xuất" required>
+                <Combobox
+                  options={ISSUE_TYPE_OPTIONS}
+                  value={giForm.issueType}
+                  disabled={giViewOnly}
+                  allowClear={false}
+                  onChange={(v) =>
+                    setGiForm((f) => ({ ...f, issueType: v || "SALE" }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Khách hàng">
+                <Combobox
+                  options={customerOptions}
+                  value={giForm.customerId}
+                  disabled={giViewOnly}
+                  placeholder="Chọn khách hàng"
+                  searchPlaceholder="Tìm khách hàng"
+                  onSearch={setCustomerSearch}
+                  onScrollBottom={fetchNextCustomers}
+                  loading={loadingCustomers}
+                  onChange={(v) => setGiForm((f) => ({ ...f, customerId: v }))}
+                />
+              </DrawerField>
+              <DrawerField label="Trạng thái">
+                <Combobox
+                  options={STATUS_OPTIONS}
+                  value={giForm.status}
+                  disabled={giViewOnly}
+                  allowClear={false}
+                  onChange={(v) =>
+                    setGiForm((f) => ({ ...f, status: v || "DRAFT" }))
+                  }
+                />
+              </DrawerField>
               <DrawerField label="Ghi chú">
                 <textarea
                   className={`${inputCls} min-h-[60px] resize-y`}
@@ -1678,133 +1723,10 @@ export function ErpWarehousePage() {
                   }
                 />
               </DrawerField>
-            </DrawerSection>
-
-            <DrawerSection title={`Dòng xuất kho (${giForm.lines.length})`}>
-              {giForm.lines.map((line, idx) => {
-                if (giViewOnly && Number(line.qtyIssued) <= 0) return null;
-                return (
-                  <div
-                    key={idx}
-                    className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        Dòng {idx + 1}
-                      </span>
-                      {!giViewOnly && (
-                        <button
-                          type="button"
-                          className="text-xs text-red-500 hover:underline"
-                          onClick={() =>
-                            setGiForm((f) => ({
-                              ...f,
-                              lines: f.lines.filter((_, i) => i !== idx),
-                            }))
-                          }
-                        >
-                          Xóa
-                        </button>
-                      )}
-                    </div>
-                    <DrawerField label="Hàng hóa">
-                      <Combobox
-                        options={itemOptions}
-                        value={line.itemId}
-                        disabled={giViewOnly}
-                        placeholder="Chọn inventory item"
-                        searchPlaceholder="Tìm SKU / tên"
-                        onSearch={setItemSearch}
-                        onScrollBottom={fetchNextItems}
-                        loading={loadingItems}
-                        onChange={(v) => {
-                          const found = itemOptions.find((o) => o.value === v);
-                          setGiForm((f) => {
-                            const lines = [...f.lines];
-                            lines[idx] = {
-                              ...lines[idx],
-                              itemId: v,
-                              itemName: found?.label ?? "",
-                            };
-                            return { ...f, lines };
-                          });
-                        }}
-                      />
-                    </DrawerField>
-                    <div className="flex gap-2">
-                      <DrawerField label="Số lượng">
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-28")}
-                          value={line.qtyIssued}
-                          disabled={giViewOnly}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setGiForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], qtyIssued: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      </DrawerField>
-                      <DrawerField label="Đơn giá">
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-28")}
-                          value={line.unitCost}
-                          disabled={giViewOnly}
-                          placeholder="Tùy chọn"
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setGiForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], unitCost: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      </DrawerField>
-                    </div>
-                    {vehicleOptions.length > 0 && (
-                      <DrawerField label="Xe (tùy chọn)">
-                        <Combobox
-                          options={vehicleOptions}
-                          value={line.vehicleId}
-                          disabled={giViewOnly}
-                          placeholder="Chọn xe..."
-                          onChange={(v) => {
-                            setGiForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], vehicleId: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      </DrawerField>
-                    )}
-                  </div>
-                );
-              })}
-              {!giViewOnly && (
-                <button
-                  type="button"
-                  className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
-                  onClick={() =>
-                    setGiForm((f) => ({
-                      ...f,
-                      lines: [...f.lines, emptyGiLine()],
-                    }))
-                  }
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Thêm dòng hàng
-                </button>
-              )}
-            </DrawerSection>
-          </>
-        )}
-      </DrawerModal>
+            </div>
+          )
+        }
+      />
     </>
   );
 }

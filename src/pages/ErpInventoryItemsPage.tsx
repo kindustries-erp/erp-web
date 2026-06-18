@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useT } from "@/core/i18n";
-import { Layers, Pencil, Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { StandardTable } from "@/shared/components/StandardTable";
@@ -13,16 +13,16 @@ import {
 import {
   DrawerAction,
   DrawerField,
-  DrawerModal,
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useUIStore } from "@/core/config/uiStore";
 import { Combobox } from "@/shared/components/Combobox";
 import {
-  inventoryCoreApi,
   type CreateInventoryItemPayload,
   type ErpInventoryItem,
   type InventoryMasterOption,
@@ -113,7 +113,12 @@ export function ErpInventoryItemsTab({
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerStore = useDrawerStore();
+  const isThisDrawerOpen =
+    drawerStore.isOpen && drawerStore.type === "inventoryItem";
+  const viewOnly = drawerStore.mode === "view";
+  const isEditing = drawerStore.mode !== "create";
+
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpInventoryItem | null>(null);
   const [form, setForm] = useState<ItemForm>(emptyForm);
@@ -218,37 +223,16 @@ export function ErpInventoryItemsTab({
   }
 
   function closeDrawer() {
-    setDrawerOpen(false);
+    drawerStore.closeDrawer();
     resetForm();
   }
 
   async function openCreate() {
     resetForm();
     setDrawerLoading(true);
-    setDrawerOpen(true);
+    drawerStore.openDrawer("inventoryItem", "create");
     try {
       await ensureMastersFresh();
-    } finally {
-      setDrawerLoading(false);
-    }
-  }
-
-  async function openEdit(item: ErpInventoryItem) {
-    setSaveError(null);
-    setDetailError(null);
-    setDrawerLoading(true);
-    setDrawerOpen(true);
-    try {
-      await ensureMastersFresh();
-      const detail = await inventoryCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
-    } catch (e) {
-      setDetailError(
-        e instanceof Error
-          ? e.message
-          : t("inventoryMasters.error.detailFetch"),
-      );
     } finally {
       setDrawerLoading(false);
     }
@@ -440,9 +424,13 @@ export function ErpInventoryItemsTab({
             loadingRows={8}
             actions={(item) => [
               {
-                label: t("inventoryMasters.table.actionEdit"),
-                onClick: () => void openEdit(item),
-                icon: <Pencil className="h-3.5 w-3.5" />,
+                label: t("inventoryMasters.table.actionDetail") || "Chi tiết",
+                onClick: () => {
+                  setEditing(item);
+                  setForm(buildForm(item));
+                  drawerStore.openDrawer("inventoryItem", "view");
+                },
+                icon: <Eye className="h-3.5 w-3.5" />,
               },
               {
                 label: t("inventoryMasters.table.actionDelete"),
@@ -498,102 +486,138 @@ export function ErpInventoryItemsTab({
         danger
       />
 
-      <DrawerModal
-        open={drawerOpen}
+      <StandardFormDrawer
+        open={isThisDrawerOpen}
+        mode={drawerStore.mode}
         onClose={closeDrawer}
-        icon={<Layers className="h-4 w-4" />}
+        onToggleEdit={editing ? () => drawerStore.setMode("edit") : undefined}
         title={
-          editing
+          isEditing
             ? t("inventoryMasters.drawer.editItem")
             : t("inventoryMasters.drawer.createItem")
         }
         subtitle={
           editing ? editing.sku : t("inventoryMasters.drawer.subtitleItem")
         }
-        actions={drawerActions}
-        panelClassName="min-[1024px]:min-w-[620px]"
-      >
-        {saveError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {saveError}
-          </div>
-        )}
-
-        {drawerLoading ? (
-          <DrawerSection title={t("inventoryMasters.drawer.sectionItem")}>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <div className="md:col-span-2">
-                <Skeleton className="h-24 w-full" />
+        actions={
+          viewOnly
+            ? [
+                {
+                  label: "Đóng",
+                  variant: "outline",
+                  onClick: closeDrawer,
+                },
+              ]
+            : drawerActions
+        }
+        rightPanelTitle="Hệ thống"
+        leftPanel={
+          <>
+            {saveError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {saveError}
               </div>
+            )}
+            {drawerLoading ? (
+              <DrawerSection title={t("inventoryMasters.drawer.sectionItem")}>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </DrawerSection>
+            ) : (
+              <DrawerSection title={t("inventoryMasters.drawer.sectionItem")}>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <DrawerField
+                    label={t("inventoryMasters.fields.sku")}
+                    required
+                  >
+                    <input
+                      value={form.sku}
+                      disabled={isEditing}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, sku: e.target.value }))
+                      }
+                      className={inputCls}
+                      placeholder={t("inventoryMasters.fields.skuPlaceholder")}
+                    />
+                  </DrawerField>
+
+                  <DrawerField
+                    label={t("inventoryMasters.fields.itemName")}
+                    required
+                  >
+                    <input
+                      value={form.itemName}
+                      disabled={viewOnly}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          itemName: e.target.value,
+                        }))
+                      }
+                      className={inputCls}
+                      placeholder={t(
+                        "inventoryMasters.fields.itemNamePlaceholder",
+                      )}
+                    />
+                  </DrawerField>
+
+                  <DrawerField
+                    label={t("inventoryMasters.fields.uom")}
+                    required
+                  >
+                    <Combobox
+                      value={form.uom}
+                      disabled={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          uom: value || form.uom || "PCS",
+                        }))
+                      }
+                      options={uomOptions}
+                      placeholder={t("inventoryMasters.fields.uomPlaceholder")}
+                    />
+                  </DrawerField>
+
+                  <DrawerField label={t("inventoryMasters.fields.itemType")}>
+                    <Combobox
+                      value={form.itemType}
+                      disabled={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          itemType: value || form.itemType || "FG",
+                        }))
+                      }
+                      options={itemTypeOptions}
+                      placeholder={t(
+                        "inventoryMasters.fields.itemTypePlaceholder",
+                      )}
+                    />
+                  </DrawerField>
+                </div>
+              </DrawerSection>
+            )}
+          </>
+        }
+        rightPanel={
+          drawerLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-24 w-full" />
             </div>
-          </DrawerSection>
-        ) : (
-          <DrawerSection title={t("inventoryMasters.drawer.sectionItem")}>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <DrawerField label={t("inventoryMasters.fields.sku")} required>
-                <input
-                  value={form.sku}
-                  disabled={!!editing}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, sku: e.target.value }))
-                  }
-                  className={inputCls}
-                  placeholder={t("inventoryMasters.fields.skuPlaceholder")}
-                />
-              </DrawerField>
-
-              <DrawerField
-                label={t("inventoryMasters.fields.itemName")}
-                required
-              >
-                <input
-                  value={form.itemName}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, itemName: e.target.value }))
-                  }
-                  className={inputCls}
-                  placeholder={t("inventoryMasters.fields.itemNamePlaceholder")}
-                />
-              </DrawerField>
-
-              <DrawerField label={t("inventoryMasters.fields.uom")} required>
-                <Combobox
-                  value={form.uom}
-                  allowClear={false}
-                  onChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      uom: value || form.uom || "PCS",
-                    }))
-                  }
-                  options={uomOptions}
-                  placeholder={t("inventoryMasters.fields.uomPlaceholder")}
-                />
-              </DrawerField>
-
-              <DrawerField label={t("inventoryMasters.fields.itemType")}>
-                <Combobox
-                  value={form.itemType}
-                  allowClear={false}
-                  onChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      itemType: value || form.itemType || "FG",
-                    }))
-                  }
-                  options={itemTypeOptions}
-                  placeholder={t("inventoryMasters.fields.itemTypePlaceholder")}
-                />
-              </DrawerField>
-
+          ) : (
+            <>
               <DrawerField label={t("inventoryMasters.fields.status")}>
                 <Combobox
                   value={form.status}
+                  disabled={viewOnly}
                   allowClear={false}
                   onChange={(value) =>
                     setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
@@ -602,22 +626,21 @@ export function ErpInventoryItemsTab({
                 />
               </DrawerField>
 
-              <div className="md:col-span-2">
-                <DrawerField label={t("inventoryMasters.fields.note")}>
-                  <textarea
-                    value={form.note}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, note: e.target.value }))
-                    }
-                    className={`${inputCls} min-h-[80px] resize-y`}
-                    placeholder={t("inventoryMasters.fields.notePlaceholder")}
-                  />
-                </DrawerField>
-              </div>
-            </div>
-          </DrawerSection>
-        )}
-      </DrawerModal>
+              <DrawerField label={t("inventoryMasters.fields.note")}>
+                <textarea
+                  value={form.note}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  className={`${inputCls} min-h-[80px] resize-y`}
+                  placeholder={t("inventoryMasters.fields.notePlaceholder")}
+                />
+              </DrawerField>
+            </>
+          )
+        }
+      />
     </>
   );
 }

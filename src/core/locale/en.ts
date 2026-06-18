@@ -614,6 +614,7 @@ export const en: Dict = {
     table: {
       emptyUom: "No data available",
       emptyItem: "No inventory items found",
+      actionDetail: "Detail",
       actionEdit: "Edit",
       actionDelete: "Delete",
     },

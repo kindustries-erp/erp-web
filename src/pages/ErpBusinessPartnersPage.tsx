@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Building2, Trash2, Users, Pencil, Eye } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
 import { PageLayout } from "@/shared/components/PageLayout";
 import {
   DataTable,
@@ -10,11 +9,12 @@ import {
 } from "@/shared/components/DataTable";
 import {
   DrawerField,
-  DrawerModal,
   DrawerSection,
   inputCls,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
@@ -85,11 +85,15 @@ export function ErpBusinessPartnersPage({
   const [items, setItems] = useState<ErpBusinessPartner[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editing, setEditing] = useState<ErpBusinessPartner | null>(null);
-  const [viewOnly, setViewOnly] = useState(false);
   const [form, setForm] = useState<PartnerFormState>(emptyForm());
+
+  const drawerStore = useDrawerStore();
+  const isThisDrawerOpen =
+    drawerStore.isOpen &&
+    drawerStore.type === `BUSINESS_PARTNER_${partnerType}`;
+  const viewOnly = drawerStore.mode === "view";
+  const isEditing = drawerStore.mode !== "create";
   const [deleteTarget, setDeleteTarget] = useState<ErpBusinessPartner | null>(
     null,
   );
@@ -218,15 +222,12 @@ export function ErpBusinessPartnersPage({
   }
 
   function openCreate() {
-    setEditing(null);
     setForm(emptyForm());
-    setViewOnly(false);
-    setDrawerOpen(true);
+    drawerStore.openDrawer(`BUSINESS_PARTNER_${partnerType}`, "create");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function openEdit(item: ErpBusinessPartner) {
-    setEditing(item);
     setForm({
       code: item.code ?? "",
       name: item.name ?? "",
@@ -239,12 +240,15 @@ export function ErpBusinessPartnersPage({
       status: item.status ?? "ACTIVE",
       notes: item.notes ?? "",
     });
-    setViewOnly(false);
-    setDrawerOpen(true);
+    drawerStore.openDrawer(
+      `BUSINESS_PARTNER_${partnerType}`,
+      "edit",
+      item.id,
+      item,
+    );
   }
 
   function openView(item: ErpBusinessPartner) {
-    setEditing(item);
     setForm({
       code: item.code ?? "",
       name: item.name ?? "",
@@ -257,8 +261,12 @@ export function ErpBusinessPartnersPage({
       status: item.status ?? "ACTIVE",
       notes: item.notes ?? "",
     });
-    setViewOnly(true);
-    setDrawerOpen(true);
+    drawerStore.openDrawer(
+      `BUSINESS_PARTNER_${partnerType}`,
+      "view",
+      item.id,
+      item,
+    );
   }
 
   async function handleSave() {
@@ -291,8 +299,8 @@ export function ErpBusinessPartnersPage({
 
     setSaving(true);
     try {
-      if (editing) {
-        await businessPartnersCoreApi.update(editing.id, payload);
+      if (isEditing && drawerStore.entityId) {
+        await businessPartnersCoreApi.update(drawerStore.entityId, payload);
         showToast({
           title: "Đã cập nhật",
           description: `${title} đã được cập nhật.`,
@@ -304,12 +312,12 @@ export function ErpBusinessPartnersPage({
           description: `${title} đã được tạo mới.`,
         });
       }
-      setDrawerOpen(false);
+      drawerStore.closeDrawer();
       await load();
     } catch (err) {
       showToast({
         variant: "destructive",
-        title: editing ? "Cập nhật thất bại" : "Tạo thất bại",
+        title: isEditing ? "Cập nhật thất bại" : "Tạo thất bại",
         description: extractApiError(err, "Không lưu được đối tác."),
       });
     } finally {
@@ -321,19 +329,19 @@ export function ErpBusinessPartnersPage({
     ? [
         {
           label: "Đóng",
-          onClick: () => setDrawerOpen(false),
+          onClick: drawerStore.closeDrawer,
           variant: "outline",
         },
       ]
     : [
         {
           label: "Hủy",
-          onClick: () => setDrawerOpen(false),
+          onClick: drawerStore.closeDrawer,
           disabled: saving,
           variant: "outline",
         },
         {
-          label: saving ? "Đang lưu..." : editing ? "Cập nhật" : "Tạo mới",
+          label: saving ? "Đang lưu..." : isEditing ? "Cập nhật" : "Tạo mới",
           onClick: () => void handleSave(),
           disabled: saving,
           primary: true,
@@ -396,103 +404,112 @@ export function ErpBusinessPartnersPage({
         danger
       />
 
-      <DrawerModal
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+      <StandardFormDrawer
+        open={isThisDrawerOpen}
+        mode={drawerStore.mode}
+        onClose={drawerStore.closeDrawer}
+        onToggleEdit={() => drawerStore.setMode("edit")}
         title={
           viewOnly
             ? `Chi tiết ${title.toLowerCase()}`
-            : editing
+            : isEditing
               ? `Chỉnh sửa ${title.toLowerCase()}`
               : `Tạo ${title.toLowerCase()}`
         }
-        headerExtra={
-          viewOnly ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setViewOnly(false)}
-            >
-              Chỉnh sửa
-            </Button>
-          ) : undefined
-        }
         actions={drawerActions}
-      >
-        <DrawerSection title="Thông tin chính">
-          <div className="grid gap-4 md:grid-cols-2">
-            <DrawerField label="Mã *">
-              <input
-                className={inputCls}
-                value={form.code}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, code: e.target.value }))
-                }
-                placeholder="VD: NCC-001"
-              />
-            </DrawerField>
-            <DrawerField label="Tên *">
-              <input
-                className={inputCls}
-                value={form.name}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, name: e.target.value }))
-                }
-                placeholder={`Tên ${title.toLowerCase()}`}
-              />
-            </DrawerField>
-            <DrawerField label="Tên hiển thị">
-              <input
-                className={inputCls}
-                value={form.displayName}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, displayName: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Mã số thuế">
-              <input
-                className={inputCls}
-                value={form.taxCode}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, taxCode: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Số điện thoại">
-              <input
-                className={inputCls}
-                value={form.phone}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, phone: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Email">
-              <input
-                className={inputCls}
-                value={form.email}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, email: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Người liên hệ">
-              <input
-                className={inputCls}
-                value={form.contactName}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, contactName: e.target.value }))
-                }
-              />
-            </DrawerField>
+        panelClassName="min-[1024px]:min-w-[1000px] xl:min-w-[1100px]"
+        leftPanel={
+          <DrawerSection title="Thông tin chính">
+            <div className="grid gap-4 md:grid-cols-2">
+              <DrawerField label="Mã *">
+                <input
+                  className={inputCls}
+                  value={form.code}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, code: e.target.value }))
+                  }
+                  placeholder="VD: NCC-001"
+                />
+              </DrawerField>
+              <DrawerField label="Tên *">
+                <input
+                  className={inputCls}
+                  value={form.name}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                  placeholder={`Tên ${title.toLowerCase()}`}
+                />
+              </DrawerField>
+              <DrawerField label="Tên hiển thị">
+                <input
+                  className={inputCls}
+                  value={form.displayName}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, displayName: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Mã số thuế">
+                <input
+                  className={inputCls}
+                  value={form.taxCode}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, taxCode: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Số điện thoại">
+                <input
+                  className={inputCls}
+                  value={form.phone}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, phone: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Email">
+                <input
+                  className={inputCls}
+                  value={form.email}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, email: e.target.value }))
+                  }
+                />
+              </DrawerField>
+              <DrawerField label="Người liên hệ">
+                <input
+                  className={inputCls}
+                  value={form.contactName}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, contactName: e.target.value }))
+                  }
+                />
+              </DrawerField>
+            </div>
+            <div className="mt-4">
+              <DrawerField label="Địa chỉ">
+                <textarea
+                  className={`${inputCls} min-h-[80px]`}
+                  value={form.address}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, address: e.target.value }))
+                  }
+                />
+              </DrawerField>
+            </div>
+          </DrawerSection>
+        }
+        rightPanel={
+          <>
             <DrawerField label="Trạng thái">
               <Combobox
                 options={[
@@ -507,29 +524,19 @@ export function ErpBusinessPartnersPage({
                 allowClear={false}
               />
             </DrawerField>
-          </div>
-          <DrawerField label="Địa chỉ">
-            <textarea
-              className={`${inputCls} min-h-[80px]`}
-              value={form.address}
-              disabled={viewOnly}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, address: e.target.value }))
-              }
-            />
-          </DrawerField>
-          <DrawerField label="Ghi chú">
-            <textarea
-              className={`${inputCls} min-h-[80px]`}
-              value={form.notes}
-              disabled={viewOnly}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, notes: e.target.value }))
-              }
-            />
-          </DrawerField>
-        </DrawerSection>
-      </DrawerModal>
+            <DrawerField label="Ghi chú">
+              <textarea
+                className={`${inputCls} min-h-[80px]`}
+                value={form.notes}
+                disabled={viewOnly}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, notes: e.target.value }))
+                }
+              />
+            </DrawerField>
+          </>
+        }
+      />
     </PageLayout>
   );
 }

@@ -606,6 +606,7 @@ export const vi = {
     table: {
       emptyUom: "Chưa có dữ liệu",
       emptyItem: "Chưa có item kho nào",
+      actionDetail: "Chi tiết",
       actionEdit: "Sửa",
       actionDelete: "Xóa",
     },

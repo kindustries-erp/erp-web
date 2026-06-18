@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
-import { Boxes, Pencil, Trash2 } from "lucide-react";
+import { Boxes, Eye, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -13,10 +13,10 @@ import {
 import {
   DrawerAction,
   DrawerField,
-  DrawerModal,
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
@@ -118,6 +118,7 @@ export function InventoryMasterPage() {
     [t],
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [viewOnly, setViewOnly] = useState(false);
   const [editingKind, setEditingKind] = useState<MasterKind>("uom");
   const [editing, setEditing] = useState<InventoryMasterOption | null>(null);
   const [form, setForm] = useState<MasterForm>(emptyForm);
@@ -188,6 +189,7 @@ export function InventoryMasterPage() {
     setEditingKind(activeTab === "items" ? "uom" : activeTab);
     setForm(emptyForm());
     setSaveError(null);
+    setViewOnly(false);
   }
 
   function openCreate(kind: MasterKind) {
@@ -195,14 +197,16 @@ export function InventoryMasterPage() {
     setEditing(null);
     setForm(emptyForm());
     setSaveError(null);
+    setViewOnly(false);
     setDrawerOpen(true);
   }
 
-  function openEdit(kind: MasterKind, item: InventoryMasterOption) {
+  function openDetail(kind: MasterKind, item: InventoryMasterOption) {
     setEditingKind(kind);
     setEditing(item);
     setForm(buildForm(item));
     setSaveError(null);
+    setViewOnly(true);
     setDrawerOpen(true);
   }
 
@@ -302,14 +306,18 @@ export function InventoryMasterPage() {
       onClick: closeDrawer,
       variant: "outline",
     },
-    {
-      label: editing
-        ? t("inventoryMasters.drawer.update")
-        : t("inventoryMasters.drawer.create"),
-      onClick: handleSave,
-      primary: true,
-      loading: saveMutation.isPending,
-    },
+    ...(viewOnly
+      ? []
+      : [
+          {
+            label: editing
+              ? t("inventoryMasters.drawer.update")
+              : t("inventoryMasters.drawer.create"),
+            onClick: handleSave,
+            primary: true,
+            loading: saveMutation.isPending,
+          } as DrawerAction,
+        ]),
   ];
 
   if (!canRead) return <Forbidden />;
@@ -359,9 +367,10 @@ export function InventoryMasterPage() {
                   loadingRows={6}
                   actions={(row) => [
                     {
-                      label: t("inventoryMasters.table.actionEdit"),
-                      icon: <Pencil className="h-3.5 w-3.5" />,
-                      onClick: () => openEdit(activeTab, row),
+                      label:
+                        t("inventoryMasters.table.actionDetail") || "Chi tiết",
+                      icon: <Eye className="h-3.5 w-3.5" />,
+                      onClick: () => openDetail(activeTab, row),
                     },
                     {
                       label: t("inventoryMasters.table.actionDelete"),
@@ -398,10 +407,13 @@ export function InventoryMasterPage() {
         danger
       />
 
-      <DrawerModal
+      <StandardFormDrawer
         open={drawerOpen}
+        mode={viewOnly ? "view" : editing ? "edit" : "create"}
         onClose={closeDrawer}
-        icon={<Boxes className="h-4 w-4" />}
+        onToggleEdit={
+          viewOnly && editing ? () => setViewOnly(false) : undefined
+        }
         title={
           editing
             ? editingKind === "uom"
@@ -413,18 +425,53 @@ export function InventoryMasterPage() {
         }
         subtitle={editing?.code || t("inventoryMasters.drawer.subtitleConfig")}
         actions={drawerActions}
-        panelClassName="min-[1024px]:min-w-[620px]"
-      >
-        {saveError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {saveError}
-          </div>
-        )}
-        <DrawerSection title={t("inventoryMasters.drawer.sectionConfig")}>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        rightPanelTitle="Thông tin"
+        leftPanel={
+          <>
+            {saveError && (
+              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {saveError}
+              </div>
+            )}
+            <DrawerSection title={t("inventoryMasters.drawer.sectionConfig")}>
+              <div className="flex flex-col gap-3">
+                <DrawerField label={t("inventoryMasters.fields.name")} required>
+                  <input
+                    value={form.name}
+                    disabled={viewOnly}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    className={inputCls}
+                    placeholder={t("inventoryMasters.fields.namePlaceholder")}
+                  />
+                </DrawerField>
+                <DrawerField label={t("inventoryMasters.fields.description")}>
+                  <input
+                    value={form.description}
+                    disabled={viewOnly}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    className={inputCls}
+                    placeholder={t(
+                      "inventoryMasters.fields.descriptionPlaceholder",
+                    )}
+                  />
+                </DrawerField>
+              </div>
+            </DrawerSection>
+          </>
+        }
+        rightPanel={
+          <div className="flex flex-col gap-3 pt-1">
             <DrawerField label={t("inventoryMasters.fields.code")} required>
               <input
                 value={form.code}
+                disabled={viewOnly}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, code: e.target.value }))
                 }
@@ -435,6 +482,7 @@ export function InventoryMasterPage() {
             <DrawerField label={t("inventoryMasters.fields.status")}>
               <Combobox
                 value={form.isActive}
+                disabled={viewOnly}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({ ...prev, isActive: value || "true" }))
@@ -442,31 +490,9 @@ export function InventoryMasterPage() {
                 options={STATUS_OPTIONS}
               />
             </DrawerField>
-            <DrawerField label={t("inventoryMasters.fields.name")} required>
-              <input
-                value={form.name}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, name: e.target.value }))
-                }
-                className={inputCls}
-                placeholder={t("inventoryMasters.fields.namePlaceholder")}
-              />
-            </DrawerField>
-            <DrawerField label={t("inventoryMasters.fields.description")}>
-              <input
-                value={form.description}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, description: e.target.value }))
-                }
-                className={inputCls}
-                placeholder={t(
-                  "inventoryMasters.fields.descriptionPlaceholder",
-                )}
-              />
-            </DrawerField>
           </div>
-        </DrawerSection>
-      </DrawerModal>
+        }
+      />
     </PageLayout>
   );
 }

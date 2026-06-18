@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Users, UserPlus, Pencil, Ban, CheckCircle } from "lucide-react";
+import { Users, Pencil, Ban, CheckCircle } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   DrawerAction,
-  DrawerModal,
-  DrawerSection,
   DrawerField,
+  DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -52,9 +53,13 @@ export function ErpEmployeesPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [total, setTotal] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editing, setEditing] = useState<ErpEmployee | null>(null);
+  const drawerStore = useDrawerStore();
+  const isThisDrawerOpen =
+    drawerStore.isOpen && drawerStore.type === "employee";
+  const viewOnly = drawerStore.mode === "view";
+  const isEditing = drawerStore.mode !== "create";
+  const editingData = drawerStore.entityData as ErpEmployee | null;
 
   const [form, setForm] = useState<CreateEmployeeCoreDto>({
     employeeCode: "",
@@ -67,6 +72,37 @@ export function ErpEmployeesPage() {
     status: "ACTIVE",
     notes: "",
   });
+
+  useEffect(() => {
+    if (isThisDrawerOpen) {
+      if (editingData) {
+        setForm({
+          employeeCode: editingData.employeeCode || "",
+          fullName: editingData.fullName,
+          email: editingData.email || "",
+          phone: editingData.phone || "",
+          address: editingData.address || "",
+          startDate: editingData.startDate || "",
+          leaveDate: editingData.leaveDate || "",
+          status: editingData.status || "ACTIVE",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          notes: (editingData as any).notes || "",
+        });
+      } else {
+        setForm({
+          employeeCode: "",
+          fullName: "",
+          email: "",
+          phone: "",
+          address: "",
+          startDate: "",
+          leaveDate: "",
+          status: "ACTIVE",
+          notes: "",
+        });
+      }
+    }
+  }, [isThisDrawerOpen, editingData]);
 
   useEffect(() => {
     setCustomBreadcrumbs([
@@ -145,9 +181,9 @@ export function ErpEmployeesPage() {
 
     setSaving(true);
     try {
-      if (editing) {
+      if (isEditing && editingData) {
         await employeesCoreApi.update(
-          editing.id,
+          editingData.id,
           payload as UpdateEmployeeCoreDto,
         );
         showToast({
@@ -161,19 +197,7 @@ export function ErpEmployeesPage() {
           description: payload.fullName.trim(),
         });
       }
-      setDrawerOpen(false);
-      setForm({
-        employeeCode: "",
-        fullName: "",
-        email: "",
-        phone: "",
-        address: "",
-        startDate: "",
-        leaveDate: "",
-        status: "ACTIVE",
-        notes: "",
-      });
-      setEditing(null);
+      drawerStore.closeDrawer();
       await loadEmployees();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -255,19 +279,7 @@ export function ErpEmployeesPage() {
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
           onCreate={() => {
-            setEditing(null);
-            setForm({
-              employeeCode: "",
-              fullName: "",
-              email: "",
-              phone: "",
-              address: "",
-              startDate: "",
-              leaveDate: "",
-              status: "ACTIVE",
-              notes: "",
-            });
-            setDrawerOpen(true);
+            drawerStore.openDrawer("employee", "create");
           }}
           createLabel="Thêm mới"
         />
@@ -279,6 +291,9 @@ export function ErpEmployeesPage() {
             items={items}
             columns={columns}
             getRowKey={(item) => item.id}
+            onRowClick={(item) =>
+              drawerStore.openDrawer("employee", "view", item.id, item)
+            }
             loading={loading}
             emptyLabel="Chưa có nhân viên"
             page={page}
@@ -298,20 +313,12 @@ export function ErpEmployeesPage() {
                       label: "Chỉnh sửa",
                       icon: <Pencil size={14} />,
                       onClick: () => {
-                        setEditing(item);
-                        setForm({
-                          employeeCode: item.employeeCode || "",
-                          fullName: item.fullName,
-                          email: item.email || "",
-                          phone: item.phone || "",
-                          address: item.address || "",
-                          startDate: item.startDate || "",
-                          leaveDate: item.leaveDate || "",
-                          status: item.status || "ACTIVE",
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                          notes: (item as any).notes || "",
-                        });
-                        setDrawerOpen(true);
+                        drawerStore.openDrawer(
+                          "employee",
+                          "edit",
+                          item.id,
+                          item,
+                        );
                       },
                     },
                     ...(item.status === "ACTIVE"
@@ -375,110 +382,140 @@ export function ErpEmployeesPage() {
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
-      <DrawerModal
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        title={editing ? "Cập nhật nhân viên" : "Tạo nhân viên"}
-        icon={<UserPlus size={18} />}
-        actions={[
-          {
-            label: "Hủy",
-            variant: "outline",
-            onClick: () => setDrawerOpen(false),
-          },
-          {
-            label: editing ? "Lưu thay đổi" : "Tạo",
-            primary: true,
-            loading: saving,
-            onClick: handleSave,
-          },
-        ]}
-      >
-        <DrawerSection title="Thông tin nhân viên">
-          <div className="grid grid-cols-2 gap-4">
-            <DrawerField label="Mã nhân viên" required>
+      <StandardFormDrawer
+        open={isThisDrawerOpen}
+        mode={drawerStore.mode}
+        onClose={() => drawerStore.closeDrawer()}
+        onToggleEdit={() => drawerStore.setMode("edit")}
+        title={isEditing ? "Cập nhật nhân viên" : "Tạo nhân viên"}
+        actions={
+          viewOnly
+            ? [
+                {
+                  label: "Đóng",
+                  variant: "outline",
+                  onClick: () => drawerStore.closeDrawer(),
+                },
+              ]
+            : [
+                {
+                  label: "Hủy",
+                  variant: "outline",
+                  onClick: () => drawerStore.closeDrawer(),
+                },
+                {
+                  label: isEditing ? "Lưu thay đổi" : "Tạo",
+                  primary: true,
+                  loading: saving,
+                  onClick: handleSave,
+                },
+              ]
+        }
+        rightPanelTitle="Hệ thống"
+        leftPanel={
+          <DrawerSection title="Thông tin nhân viên">
+            <div className="grid grid-cols-2 gap-4">
+              <DrawerField label="Mã nhân viên" required>
+                <input
+                  className={inputCls}
+                  value={form.employeeCode}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm({ ...form, employeeCode: e.target.value })
+                  }
+                  placeholder="NV001"
+                />
+              </DrawerField>
+              <DrawerField label="Họ tên" required>
+                <input
+                  className={inputCls}
+                  value={form.fullName}
+                  disabled={viewOnly}
+                  onChange={(e) =>
+                    setForm({ ...form, fullName: e.target.value })
+                  }
+                  placeholder="Nguyễn Văn A"
+                />
+              </DrawerField>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <DrawerField label="Email">
+                <input
+                  className={inputCls}
+                  type="email"
+                  value={form.email}
+                  disabled={viewOnly}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </DrawerField>
+              <DrawerField label="Số điện thoại">
+                <input
+                  className={inputCls}
+                  value={form.phone}
+                  disabled={viewOnly}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="09..."
+                />
+              </DrawerField>
+            </div>
+            <DrawerField label="Địa chỉ">
               <input
                 className={inputCls}
-                value={form.employeeCode}
-                onChange={(e) =>
-                  setForm({ ...form, employeeCode: e.target.value })
+                value={form.address || ""}
+                disabled={viewOnly}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                placeholder="123 Đường A..."
+              />
+            </DrawerField>
+            <div className="grid grid-cols-2 gap-4">
+              <DrawerField label="Ngày bắt đầu">
+                <DatePicker
+                  value={form.startDate || ""}
+                  disabled={viewOnly}
+                  onChange={(val) => setForm({ ...form, startDate: val })}
+                  placeholder="Chọn ngày"
+                />
+              </DrawerField>
+              <DrawerField label="Ngày nghỉ">
+                <DatePicker
+                  value={form.leaveDate || ""}
+                  disabled={viewOnly}
+                  onChange={(val) => setForm({ ...form, leaveDate: val })}
+                  placeholder="Chọn ngày"
+                />
+              </DrawerField>
+            </div>
+          </DrawerSection>
+        }
+        rightPanel={
+          <>
+            <DrawerField label="Trạng thái">
+              <Combobox
+                options={[
+                  { value: "ACTIVE", label: "Hoạt động" },
+                  { value: "INACTIVE", label: "Ngưng hoạt động" },
+                ]}
+                value={form.status || "ACTIVE"}
+                disabled={viewOnly}
+                onChange={(val) =>
+                  setForm({ ...form, status: val || "ACTIVE" })
                 }
-                placeholder="NV001"
+                allowClear={false}
               />
             </DrawerField>
-            <DrawerField label="Họ tên" required>
-              <input
-                className={inputCls}
-                value={form.fullName}
-                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                placeholder="Nguyễn Văn A"
+            <DrawerField label="Ghi chú">
+              <textarea
+                className={`${inputCls} min-h-[80px]`}
+                rows={3}
+                value={form.notes}
+                disabled={viewOnly}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
             </DrawerField>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <DrawerField label="Email">
-              <input
-                className={inputCls}
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="email@example.com"
-              />
-            </DrawerField>
-            <DrawerField label="Số điện thoại">
-              <input
-                className={inputCls}
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="09..."
-              />
-            </DrawerField>
-          </div>
-          <DrawerField label="Địa chỉ">
-            <input
-              className={inputCls}
-              value={form.address || ""}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              placeholder="123 Đường A..."
-            />
-          </DrawerField>
-          <div className="grid grid-cols-2 gap-4">
-            <DrawerField label="Ngày bắt đầu">
-              <DatePicker
-                value={form.startDate || ""}
-                onChange={(val) => setForm({ ...form, startDate: val })}
-                placeholder="Chọn ngày"
-              />
-            </DrawerField>
-            <DrawerField label="Ngày nghỉ">
-              <DatePicker
-                value={form.leaveDate || ""}
-                onChange={(val) => setForm({ ...form, leaveDate: val })}
-                placeholder="Chọn ngày"
-              />
-            </DrawerField>
-          </div>
-          <DrawerField label="Trạng thái">
-            <Combobox
-              options={[
-                { value: "ACTIVE", label: "Hoạt động" },
-                { value: "INACTIVE", label: "Ngưng hoạt động" },
-              ]}
-              value={form.status || "ACTIVE"}
-              onChange={(val) => setForm({ ...form, status: val })}
-              allowClear={false}
-            />
-          </DrawerField>
-          <DrawerField label="Ghi chú">
-            <textarea
-              className={inputCls}
-              rows={3}
-              value={form.notes}
-              onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            />
-          </DrawerField>
-        </DrawerSection>
-      </DrawerModal>
+          </>
+        }
+      />
     </PageLayout>
   );
 }

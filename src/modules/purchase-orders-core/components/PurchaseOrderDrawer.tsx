@@ -1,10 +1,10 @@
-import { DrawerModal } from "@/shared/components/DrawerModal";
-import { Button } from "@/shared/components/ui/Button";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useT } from "@/core/i18n";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { usePurchaseOrderDrawer } from "@/modules/purchase-orders-core/hooks/usePurchaseOrderDrawer";
-import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
+import {} from "@/modules/operational/components/form/FormLoadingSkeleton";
 import { FormLineDetailPanel } from "@/modules/operational/components/form/FormLineDetailPanel";
 import { FormGeneralInfoPanel } from "@/modules/operational/components/form/FormGeneralInfoPanel";
 
@@ -102,18 +102,14 @@ export function PurchaseOrderDrawer({
             },
           ];
 
+  const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
+
   return (
-    <DrawerModal
+    <StandardFormDrawer
       open={open}
+      mode={mode}
       onClose={onClose}
-      headerExtra={
-        viewOnly && onToggleEdit ? (
-          <Button variant="secondary" size="sm" onClick={onToggleEdit}>
-            {t("Chỉnh sửa")}
-          </Button>
-        ) : undefined
-      }
-      panelClassName="min-[1024px]:min-w-[1400px]"
+      onToggleEdit={onToggleEdit}
       title={
         viewOnly
           ? t("Chi tiết Đơn mua hàng")
@@ -134,39 +130,29 @@ export function PurchaseOrderDrawer({
           : t("Nhập thông tin chứng từ")
       }
       actions={actions}
-    >
-      {loading ? (
-        <FormLoadingSkeleton />
-      ) : (
-        <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
-          <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
-            <FormLineDetailPanel
-              variant="purchase"
-              isPurchaseLocked={isPurchaseLocked}
-              purchaseFieldLocked={purchaseFieldLocked}
-              viewOnly={viewOnly}
-              purchaseInventoryOptions={purchaseInventoryOptions}
-            />
-          </div>
-
-          <FormGeneralInfoPanel
-            variant="purchase"
-            isPurchaseLocked={isPurchaseLocked}
-            isPurchaseFullyLocked={isPurchaseFullyLocked}
-            purchaseFieldLocked={purchaseFieldLocked}
-            viewOnly={viewOnly}
-            branchOptions={branchOptions}
-            partnerOptions={partnerOptions}
-            poReceipts={poReceipts}
-          />
-        </div>
-      )}
-
-      {error && (
-        <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mt-3">
-          {error}
-        </div>
-      )}
-    </DrawerModal>
+      loading={loading}
+      error={error}
+      leftPanel={
+        <FormLineDetailPanel
+          variant="purchase"
+          isPurchaseLocked={isPurchaseLocked}
+          purchaseFieldLocked={purchaseFieldLocked}
+          viewOnly={viewOnly}
+          purchaseInventoryOptions={purchaseInventoryOptions}
+        />
+      }
+      rightPanel={
+        <FormGeneralInfoPanel
+          variant="purchase"
+          isPurchaseLocked={isPurchaseLocked}
+          isPurchaseFullyLocked={isPurchaseFullyLocked}
+          purchaseFieldLocked={purchaseFieldLocked}
+          viewOnly={viewOnly}
+          branchOptions={branchOptions}
+          partnerOptions={partnerOptions}
+          poReceipts={poReceipts}
+        />
+      }
+    />
   );
 }
