@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { useT } from "@/core/i18n";
 import { Layers, Pencil, Trash2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -34,19 +35,7 @@ import {
   useInventoryItemSaveMutation,
 } from "@/modules/inventory-core/hooks/useInventoryItemMutations";
 
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "ACTIVE" },
-  { value: "INACTIVE", label: "INACTIVE" },
-];
-
-const ITEM_TYPE_FILTER_OPTIONS = [
-  { value: "FG", label: "FG — Thành phẩm" },
-  { value: "WIP", label: "WIP — Bán thành phẩm" },
-  { value: "RAW", label: "RAW — Linh kiện" },
-  { value: "GOODS", label: "GOODS — Hàng hóa" },
-  { value: "SERVICE", label: "SERVICE — Dịch vụ" },
-  { value: "OTHER", label: "OTHER — Khác" },
-];
+// Removed global constants
 
 interface ItemForm {
   sku: string;
@@ -102,6 +91,26 @@ export function ErpInventoryItemsTab({
 }: {
   setActions?: (node: React.ReactNode) => void;
 }) {
+  const t = useT();
+  const STATUS_OPTIONS = useMemo(
+    () => [
+      { value: "ACTIVE", label: t("inventoryMasters.status.active") },
+      { value: "INACTIVE", label: t("inventoryMasters.status.inactive") },
+    ],
+    [t],
+  );
+  const ITEM_TYPE_FILTER_OPTIONS = useMemo(
+    () => [
+      { value: "FG", label: t("inventoryMasters.itemTypes.fg") },
+      { value: "WIP", label: t("inventoryMasters.itemTypes.wip") },
+      { value: "RAW", label: t("inventoryMasters.itemTypes.raw") },
+      { value: "GOODS", label: t("inventoryMasters.itemTypes.goods") },
+      { value: "SERVICE", label: t("inventoryMasters.itemTypes.service") },
+      { value: "OTHER", label: t("inventoryMasters.itemTypes.other") },
+    ],
+    [t],
+  );
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -122,18 +131,18 @@ export function ErpInventoryItemsTab({
       search: true,
       status: {
         options: STATUS_OPTIONS,
-        placeholder: "Tất cả trạng thái",
+        placeholder: t("inventoryMasters.filter.statusPlaceholder"),
       },
       custom: [
         {
           key: "itemType",
-          label: "Loại item",
-          placeholder: "Tất cả loại item",
+          label: t("inventoryMasters.filter.itemTypeLabel"),
+          placeholder: t("inventoryMasters.filter.itemTypePlaceholder"),
           options: ITEM_TYPE_FILTER_OPTIONS,
         },
       ],
     }),
-    [],
+    [STATUS_OPTIONS, ITEM_TYPE_FILTER_OPTIONS, t],
   );
   const filter = useFilterPanel(filterConfig);
 
@@ -235,7 +244,11 @@ export function ErpInventoryItemsTab({
       setEditing(detail);
       setForm(buildForm(detail));
     } catch (e) {
-      setDetailError(e instanceof Error ? e.message : "Không thể tải chi tiết");
+      setDetailError(
+        e instanceof Error
+          ? e.message
+          : t("inventoryMasters.error.detailFetch"),
+      );
     } finally {
       setDrawerLoading(false);
     }
@@ -247,11 +260,11 @@ export function ErpInventoryItemsTab({
 
   async function handleSave() {
     if (!form.sku.trim()) {
-      setSaveError("SKU là bắt buộc");
+      setSaveError(t("inventoryMasters.error.skuRequired"));
       return;
     }
     if (!form.itemName.trim()) {
-      setSaveError("Tên item kho là bắt buộc");
+      setSaveError(t("inventoryMasters.error.itemNameRequired"));
       return;
     }
     setSaveError(null);
@@ -261,7 +274,9 @@ export function ErpInventoryItemsTab({
         payload: toPayload(form),
       });
       showToast({
-        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
+        title: editing
+          ? t("inventoryMasters.toast.updateSuccess")
+          : t("inventoryMasters.toast.createSuccess"),
         variant: "success",
       });
       closeDrawer();
@@ -270,7 +285,11 @@ export function ErpInventoryItemsTab({
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
+      setSaveError(
+        e?.response?.data?.message ||
+          e?.message ||
+          t("inventoryMasters.error.save"),
+      );
     }
   }
 
@@ -282,12 +301,18 @@ export function ErpInventoryItemsTab({
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync({ id: deleteTarget.id });
-      showToast({ title: "Đã xóa thành công", variant: "success" });
+      showToast({
+        title: t("inventoryMasters.toast.deleteSuccess"),
+        variant: "success",
+      });
       setDeleteTarget(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       showToast({
-        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        title:
+          e?.response?.data?.message ||
+          e?.message ||
+          t("inventoryMasters.error.delete"),
         variant: "destructive",
       });
     }
@@ -297,7 +322,7 @@ export function ErpInventoryItemsTab({
     () => [
       {
         key: "sku",
-        header: "SKU",
+        header: t("inventoryMasters.columns.sku"),
         cell: (item) => (
           <span className="font-medium font-mono">{item.sku}</span>
         ),
@@ -305,25 +330,25 @@ export function ErpInventoryItemsTab({
       },
       {
         key: "itemName",
-        header: "Tên item kho",
+        header: t("inventoryMasters.columns.itemName"),
         cell: (item) => item.itemName,
         skeletonClassName: "w-44",
       },
       {
         key: "uom",
-        header: "ĐVT",
+        header: t("inventoryMasters.columns.uom"),
         cell: (item) => item.uom || "—",
         skeletonClassName: "w-10",
       },
       {
         key: "itemType",
-        header: "Loại",
+        header: t("inventoryMasters.columns.itemType"),
         cell: (item) => item.itemType || "—",
         skeletonClassName: "w-28",
       },
       {
         key: "note",
-        header: "Ghi chú",
+        header: t("inventoryMasters.columns.note"),
         cell: (item) => (
           <span
             className="text-muted-foreground truncate max-w-[150px] inline-block align-bottom"
@@ -336,7 +361,7 @@ export function ErpInventoryItemsTab({
       },
       {
         key: "status",
-        header: "Trạng thái",
+        header: t("inventoryMasters.columns.status"),
         cell: (item) => (
           <span
             className={
@@ -355,9 +380,15 @@ export function ErpInventoryItemsTab({
   );
 
   const drawerActions: DrawerAction[] = [
-    { label: "Hủy", onClick: closeDrawer, variant: "outline" },
     {
-      label: editing ? "Cập nhật" : "Tạo mới",
+      label: t("inventoryMasters.drawer.cancel"),
+      onClick: closeDrawer,
+      variant: "outline",
+    },
+    {
+      label: editing
+        ? t("inventoryMasters.drawer.update")
+        : t("inventoryMasters.drawer.create"),
       onClick: handleSave,
       primary: true,
       loading: saveMutation.isPending,
@@ -375,11 +406,11 @@ export function ErpInventoryItemsTab({
         onFilterToggle={filter.togglePanel}
         activeFilterCount={filter.activeFilterCount}
         onCreate={() => void openCreate()}
-        createLabel="Tạo item kho"
+        createLabel={t("inventoryMasters.actions.createItem")}
       />
     ),
 
-    [loading, filter.activeFilterCount, filter.togglePanel],
+    [loading, filter.activeFilterCount, filter.togglePanel, t],
   );
 
   useEffect(() => {
@@ -396,48 +427,54 @@ export function ErpInventoryItemsTab({
       {!setActions && (
         <div className="flex items-center justify-end mb-3">{actionsNode}</div>
       )}
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          <DataTable
-            items={items}
-            columns={columns}
-            getRowKey={(item) => item.id}
-            loading={loading}
-            error={error}
-            emptyLabel="Chưa có item kho nào"
-            minWidth={980}
-            loadingRows={8}
-            actionsColumn={{
-              header: "",
-              className: "w-[48px]",
-              cell: (item) => (
-                <ActionDropdown
-                  items={[
-                    {
-                      label: "Sửa",
-                      onClick: () => void openEdit(item),
-                      icon: <Pencil className="h-3.5 w-3.5" />,
-                    },
-                    {
-                      label: "Xóa",
-                      onClick: () => handleDelete(item),
-                      icon: <Trash2 className="h-3.5 w-3.5" />,
-                      variant: "danger",
-                    },
-                  ]}
+      <div className="flex items-start gap-4 h-full">
+        <div className="flex-1 overflow-auto rounded-xl border bg-card text-card-foreground shadow-sm min-w-0">
+          <div className="flex h-full flex-col">
+            <div className="flex-1 p-4">
+              <div className="h-full">
+                <DataTable
+                  items={items}
+                  columns={columns}
+                  getRowKey={(item) => item.id}
+                  loading={loading}
+                  error={error}
+                  emptyLabel={t("inventoryMasters.table.emptyItem")}
+                  minWidth={760}
+                  loadingRows={8}
+                  actionsColumn={{
+                    header: "",
+                    className: "w-[48px]",
+                    cell: (item) => (
+                      <ActionDropdown
+                        items={[
+                          {
+                            label: t("inventoryMasters.table.actionEdit"),
+                            onClick: () => void openEdit(item),
+                            icon: <Pencil className="h-3.5 w-3.5" />,
+                          },
+                          {
+                            label: t("inventoryMasters.table.actionDelete"),
+                            onClick: () => handleDelete(item),
+                            icon: <Trash2 className="h-3.5 w-3.5" />,
+                            variant: "danger",
+                          },
+                        ]}
+                      />
+                    ),
+                  }}
+                  page={page}
+                  pageSize={pageSize}
+                  total={total}
+                  totalPages={totalPages}
+                  onPage={setPage}
+                  onPageSize={(value) => {
+                    setPage(1);
+                    setPageSize(value);
+                  }}
                 />
-              ),
-            }}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPage={setPage}
-            onPageSize={(value) => {
-              setPage(1);
-              setPageSize(value);
-            }}
-          />
+              </div>
+            </div>
+          </div>
         </div>
         <FilterPanel
           config={{
@@ -445,8 +482,8 @@ export function ErpInventoryItemsTab({
             custom: [
               {
                 key: "itemType",
-                label: "Loại item",
-                placeholder: "Tất cả loại item",
+                label: t("inventoryMasters.filter.itemTypeLabel"),
+                placeholder: t("inventoryMasters.filter.itemTypePlaceholder"),
                 options: masterFilterOptions,
               },
             ],
@@ -457,14 +494,16 @@ export function ErpInventoryItemsTab({
 
       <ConfirmModal
         open={!!deleteTarget}
-        title="Xác nhận xóa"
+        title={t("inventoryMasters.confirm.deleteTitle")}
         message={
           deleteTarget
-            ? `Xóa "${deleteTarget.itemName}" (${deleteTarget.sku})? Hành động này sẽ ẩn item kho khỏi danh sách.`
+            ? t("inventoryMasters.confirm.deleteItemMessage")
+                .replace("{0}", deleteTarget.itemName)
+                .replace("{1}", deleteTarget.sku)
             : ""
         }
-        confirmLabel="Xóa"
-        cancelLabel="Hủy"
+        confirmLabel={t("inventoryMasters.confirm.deleteConfirm")}
+        cancelLabel={t("inventoryMasters.confirm.deleteCancel")}
         onConfirm={() => void confirmDelete()}
         onCancel={() => {
           if (!deleteMutation.isPending) setDeleteTarget(null);
@@ -477,8 +516,14 @@ export function ErpInventoryItemsTab({
         open={drawerOpen}
         onClose={closeDrawer}
         icon={<Layers className="h-4 w-4" />}
-        title={editing ? "Cập nhật item kho" : "Tạo item kho mới"}
-        subtitle={editing ? editing.sku : "Danh mục item kho dùng chung"}
+        title={
+          editing
+            ? t("inventoryMasters.drawer.editItem")
+            : t("inventoryMasters.drawer.createItem")
+        }
+        subtitle={
+          editing ? editing.sku : t("inventoryMasters.drawer.subtitleItem")
+        }
         actions={drawerActions}
         panelClassName="min-[1024px]:min-w-[620px]"
       >
@@ -489,7 +534,7 @@ export function ErpInventoryItemsTab({
         )}
 
         {drawerLoading ? (
-          <DrawerSection title="Thông tin item kho">
+          <DrawerSection title={t("inventoryMasters.drawer.sectionItem")}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -502,9 +547,9 @@ export function ErpInventoryItemsTab({
             </div>
           </DrawerSection>
         ) : (
-          <DrawerSection title="Thông tin item kho">
+          <DrawerSection title={t("inventoryMasters.drawer.sectionItem")}>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <DrawerField label="SKU" required>
+              <DrawerField label={t("inventoryMasters.fields.sku")} required>
                 <input
                   value={form.sku}
                   disabled={!!editing}
@@ -512,22 +557,25 @@ export function ErpInventoryItemsTab({
                     setForm((prev) => ({ ...prev, sku: e.target.value }))
                   }
                   className={inputCls}
-                  placeholder="VD: FG-001"
+                  placeholder={t("inventoryMasters.fields.skuPlaceholder")}
                 />
               </DrawerField>
 
-              <DrawerField label="Tên item kho" required>
+              <DrawerField
+                label={t("inventoryMasters.fields.itemName")}
+                required
+              >
                 <input
                   value={form.itemName}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, itemName: e.target.value }))
                   }
                   className={inputCls}
-                  placeholder="Tên đầy đủ của item kho"
+                  placeholder={t("inventoryMasters.fields.itemNamePlaceholder")}
                 />
               </DrawerField>
 
-              <DrawerField label="Đơn vị tính (ĐVT)" required>
+              <DrawerField label={t("inventoryMasters.fields.uom")} required>
                 <Combobox
                   value={form.uom}
                   allowClear={false}
@@ -538,11 +586,11 @@ export function ErpInventoryItemsTab({
                     }))
                   }
                   options={uomOptions}
-                  placeholder="Chọn ĐVT"
+                  placeholder={t("inventoryMasters.fields.uomPlaceholder")}
                 />
               </DrawerField>
 
-              <DrawerField label="Loại item">
+              <DrawerField label={t("inventoryMasters.fields.itemType")}>
                 <Combobox
                   value={form.itemType}
                   allowClear={false}
@@ -553,11 +601,11 @@ export function ErpInventoryItemsTab({
                     }))
                   }
                   options={itemTypeOptions}
-                  placeholder="Chọn loại"
+                  placeholder={t("inventoryMasters.fields.itemTypePlaceholder")}
                 />
               </DrawerField>
 
-              <DrawerField label="Trạng thái">
+              <DrawerField label={t("inventoryMasters.fields.status")}>
                 <Combobox
                   value={form.status}
                   allowClear={false}
@@ -569,14 +617,14 @@ export function ErpInventoryItemsTab({
               </DrawerField>
 
               <div className="md:col-span-2">
-                <DrawerField label="Ghi chú">
+                <DrawerField label={t("inventoryMasters.fields.note")}>
                   <textarea
                     value={form.note}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, note: e.target.value }))
                     }
                     className={`${inputCls} min-h-[80px] resize-y`}
-                    placeholder="Ghi chú thêm về item kho này..."
+                    placeholder={t("inventoryMasters.fields.notePlaceholder")}
                   />
                 </DrawerField>
               </div>

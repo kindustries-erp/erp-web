@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useT } from "@/core/i18n";
 import { Boxes, Pencil, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -41,33 +42,7 @@ interface MasterForm {
   isActive: string;
 }
 
-const STATUS_OPTIONS = [
-  { value: "true", label: "ACTIVE" },
-  { value: "false", label: "INACTIVE" },
-];
-
-const TAB_OPTIONS: Array<{
-  key: MasterKind;
-  label: string;
-  description: string;
-}> = [
-  {
-    key: "items",
-    label: "Danh mục vật tư/kho",
-    description:
-      "Quản lý item kho dùng chung: thành phẩm (FG), nguyên vật liệu (RAW), bán thành phẩm (WIP), hàng hóa (GOODS).",
-  },
-  {
-    key: "uom",
-    label: "Thiết lập đơn vị tính",
-    description: "Quản lý danh mục đơn vị tính dùng chung cho item kho.",
-  },
-  {
-    key: "item-type",
-    label: "Thiết lập loại item kho",
-    description: "Quản lý danh mục loại item áp dụng cho danh mục kho.",
-  },
-];
+// Removed global constants
 
 const emptyForm = (): MasterForm => ({
   code: "",
@@ -85,7 +60,7 @@ function buildForm(item: InventoryMasterOption): MasterForm {
   };
 }
 
-function statusBadge(isActive: boolean) {
+function statusBadge(isActive: boolean, t: (k: string) => string) {
   return (
     <span
       className={
@@ -94,7 +69,9 @@ function statusBadge(isActive: boolean) {
           : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
       }
     >
-      {isActive ? "ACTIVE" : "INACTIVE"}
+      {isActive
+        ? t("inventoryMasters.status.active")
+        : t("inventoryMasters.status.inactive")}
     </span>
   );
 }
@@ -105,9 +82,41 @@ function toMasterQueryKind(kind: MasterKind): InventoryMasterQueryKind {
 }
 
 export function InventoryMasterPage() {
+  const t = useT();
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [activeTab, setActiveTab] = useState<MasterKind>("items");
+
+  const STATUS_OPTIONS = useMemo(
+    () => [
+      { value: "true", label: t("inventoryMasters.status.active") },
+      { value: "false", label: t("inventoryMasters.status.inactive") },
+    ],
+    [t],
+  );
+
+  const TAB_OPTIONS = useMemo<
+    { key: MasterKind; label: string; description: string }[]
+  >(
+    () => [
+      {
+        key: "items",
+        label: t("inventoryMasters.tabs.itemsLabel"),
+        description: t("inventoryMasters.tabs.itemsDesc"),
+      },
+      {
+        key: "uom",
+        label: t("inventoryMasters.tabs.uomLabel"),
+        description: t("inventoryMasters.tabs.uomDesc"),
+      },
+      {
+        key: "item-type",
+        label: t("inventoryMasters.tabs.itemTypeLabel"),
+        description: t("inventoryMasters.tabs.itemTypeDesc"),
+      },
+    ],
+    [t],
+  );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingKind, setEditingKind] = useState<MasterKind>("uom");
   const [editing, setEditing] = useState<InventoryMasterOption | null>(null);
@@ -124,10 +133,10 @@ export function InventoryMasterPage() {
       search: true,
       status: {
         options: STATUS_OPTIONS,
-        placeholder: "Tất cả trạng thái",
+        placeholder: t("inventoryMasters.filter.statusPlaceholder"),
       },
     }),
-    [],
+    [STATUS_OPTIONS, t],
   );
 
   const filterUom = useFilterPanel(filterConfig);
@@ -172,7 +181,6 @@ export function InventoryMasterPage() {
   const currentLoading = currentQuery.isLoading || currentQuery.isFetching;
   const currentError =
     currentQuery.error instanceof Error ? currentQuery.error.message : null;
-  const currentTitle = editingKind === "uom" ? "đơn vị tính" : "loại item kho";
 
   function closeDrawer() {
     setDrawerOpen(false);
@@ -199,8 +207,10 @@ export function InventoryMasterPage() {
   }
 
   async function handleSave() {
-    if (!form.code.trim()) return setSaveError("Code là bắt buộc");
-    if (!form.name.trim()) return setSaveError("Tên là bắt buộc");
+    if (!form.code.trim())
+      return setSaveError(t("inventoryMasters.error.codeRequired"));
+    if (!form.name.trim())
+      return setSaveError(t("inventoryMasters.error.nameRequired"));
     setSaveError(null);
     try {
       await saveMutation.mutateAsync({
@@ -214,13 +224,19 @@ export function InventoryMasterPage() {
         },
       });
       showToast({
-        title: editing ? "Cập nhật thành công" : "Tạo mới thành công",
+        title: editing
+          ? t("inventoryMasters.toast.updateSuccess")
+          : t("inventoryMasters.toast.createSuccess"),
         variant: "success",
       });
       closeDrawer();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
+      setSaveError(
+        e?.response?.data?.message ||
+          e?.message ||
+          t("inventoryMasters.error.save"),
+      );
     }
   }
 
@@ -235,12 +251,18 @@ export function InventoryMasterPage() {
         kind: deleteTarget.kind === "uom" ? "uom" : "item-type",
         id: deleteTarget.item.id,
       });
-      showToast({ title: "Đã xóa thành công", variant: "success" });
+      showToast({
+        title: t("inventoryMasters.toast.deleteSuccess"),
+        variant: "success",
+      });
       setDeleteTarget(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       showToast({
-        title: e?.response?.data?.message || e?.message || "Không thể xóa",
+        title:
+          e?.response?.data?.message ||
+          e?.message ||
+          t("inventoryMasters.error.delete"),
         variant: "destructive",
       });
     }
@@ -250,34 +272,40 @@ export function InventoryMasterPage() {
     () => [
       {
         key: "code",
-        header: "Code",
+        header: t("inventoryMasters.columns.code"),
         cell: (item) => (
           <span className="font-medium font-mono">{item.code}</span>
         ),
       },
       {
         key: "name",
-        header: "Tên hiển thị",
+        header: t("inventoryMasters.columns.name"),
         cell: (item) => item.name,
       },
       {
         key: "description",
-        header: "Mô tả",
+        header: t("inventoryMasters.columns.description"),
         cell: (item) => item.description || "—",
       },
       {
         key: "isActive",
-        header: "Trạng thái",
-        cell: (item) => statusBadge(item.isActive),
+        header: t("inventoryMasters.columns.status"),
+        cell: (item) => statusBadge(item.isActive, t),
       },
     ],
-    [],
+    [t],
   );
 
   const drawerActions: DrawerAction[] = [
-    { label: "Hủy", onClick: closeDrawer, variant: "outline" },
     {
-      label: editing ? "Cập nhật" : "Tạo mới",
+      label: t("inventoryMasters.drawer.cancel"),
+      onClick: closeDrawer,
+      variant: "outline",
+    },
+    {
+      label: editing
+        ? t("inventoryMasters.drawer.update")
+        : t("inventoryMasters.drawer.create"),
       onClick: handleSave,
       primary: true,
       loading: saveMutation.isPending,
@@ -288,8 +316,8 @@ export function InventoryMasterPage() {
 
   return (
     <PageLayout
-      title="Thiết lập kho"
-      desc="Quản lý tập trung đơn vị tính và loại item áp dụng cho danh mục kho."
+      title={t("inventoryMasters.title")}
+      desc={t("inventoryMasters.desc")}
       icon={<Boxes className="h-5 w-5" />}
       tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
       activeTab={activeTab}
@@ -304,7 +332,11 @@ export function InventoryMasterPage() {
             onFilterToggle={filter.togglePanel}
             activeFilterCount={filter.activeFilterCount}
             onCreate={() => openCreate(activeTab)}
-            createLabel={`Tạo mới ${activeTab === "uom" ? "đơn vị tính" : "loại item"}`}
+            createLabel={
+              activeTab === "uom"
+                ? t("inventoryMasters.actions.createUom")
+                : t("inventoryMasters.actions.createItemType")
+            }
           />
         )
       }
@@ -322,7 +354,7 @@ export function InventoryMasterPage() {
                   getRowKey={(item) => item.id}
                   loading={currentLoading}
                   error={currentError}
-                  emptyLabel="Chưa có dữ liệu"
+                  emptyLabel={t("inventoryMasters.table.emptyUom")}
                   minWidth={760}
                   loadingRows={6}
                   actionsColumn={{
@@ -332,12 +364,12 @@ export function InventoryMasterPage() {
                       <ActionDropdown
                         items={[
                           {
-                            label: "Sửa",
+                            label: t("inventoryMasters.table.actionEdit"),
                             icon: <Pencil className="h-3.5 w-3.5" />,
                             onClick: () => openEdit(activeTab, row),
                           },
                           {
-                            label: "Xóa",
+                            label: t("inventoryMasters.table.actionDelete"),
                             icon: <Trash2 className="h-3.5 w-3.5" />,
                             variant: "danger",
                             onClick: () => handleDelete(activeTab, row),
@@ -356,14 +388,16 @@ export function InventoryMasterPage() {
 
       <ConfirmModal
         open={!!deleteTarget}
-        title="Xác nhận xóa"
+        title={t("inventoryMasters.confirm.deleteTitle")}
         message={
           deleteTarget
-            ? `Xóa "${deleteTarget.item.name}" (${deleteTarget.item.code})? Hành động này sẽ ẩn mục này khỏi danh sách.`
+            ? t("inventoryMasters.confirm.deleteConfigMessage")
+                .replace("{0}", deleteTarget.item.name)
+                .replace("{1}", deleteTarget.item.code)
             : ""
         }
-        confirmLabel="Xóa"
-        cancelLabel="Hủy"
+        confirmLabel={t("inventoryMasters.confirm.deleteConfirm")}
+        cancelLabel={t("inventoryMasters.confirm.deleteCancel")}
         onConfirm={() => void confirmDelete()}
         onCancel={() => {
           if (!deleteMutation.isPending) setDeleteTarget(null);
@@ -376,8 +410,16 @@ export function InventoryMasterPage() {
         open={drawerOpen}
         onClose={closeDrawer}
         icon={<Boxes className="h-4 w-4" />}
-        title={editing ? `Cập nhật ${currentTitle}` : `Tạo ${currentTitle}`}
-        subtitle={editing?.code || "Cấu hình danh mục dùng chung"}
+        title={
+          editing
+            ? editingKind === "uom"
+              ? t("inventoryMasters.drawer.editUom")
+              : t("inventoryMasters.drawer.editItemType")
+            : editingKind === "uom"
+              ? t("inventoryMasters.drawer.createUom")
+              : t("inventoryMasters.drawer.createItemType")
+        }
+        subtitle={editing?.code || t("inventoryMasters.drawer.subtitleConfig")}
         actions={drawerActions}
         panelClassName="min-[1024px]:min-w-[620px]"
       >
@@ -386,19 +428,19 @@ export function InventoryMasterPage() {
             {saveError}
           </div>
         )}
-        <DrawerSection title="Thông tin cấu hình">
+        <DrawerSection title={t("inventoryMasters.drawer.sectionConfig")}>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <DrawerField label="Code" required>
+            <DrawerField label={t("inventoryMasters.fields.code")} required>
               <input
                 value={form.code}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, code: e.target.value }))
                 }
                 className={inputCls}
-                placeholder="VD: PCS / FG"
+                placeholder={t("inventoryMasters.fields.codePlaceholder")}
               />
             </DrawerField>
-            <DrawerField label="Trạng thái">
+            <DrawerField label={t("inventoryMasters.fields.status")}>
               <Combobox
                 value={form.isActive}
                 allowClear={false}
@@ -408,24 +450,26 @@ export function InventoryMasterPage() {
                 options={STATUS_OPTIONS}
               />
             </DrawerField>
-            <DrawerField label="Tên hiển thị" required>
+            <DrawerField label={t("inventoryMasters.fields.name")} required>
               <input
                 value={form.name}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, name: e.target.value }))
                 }
                 className={inputCls}
-                placeholder="Tên hiển thị"
+                placeholder={t("inventoryMasters.fields.namePlaceholder")}
               />
             </DrawerField>
-            <DrawerField label="Mô tả">
+            <DrawerField label={t("inventoryMasters.fields.description")}>
               <input
                 value={form.description}
                 onChange={(e) =>
                   setForm((prev) => ({ ...prev, description: e.target.value }))
                 }
                 className={inputCls}
-                placeholder="Mô tả ngắn"
+                placeholder={t(
+                  "inventoryMasters.fields.descriptionPlaceholder",
+                )}
               />
             </DrawerField>
           </div>

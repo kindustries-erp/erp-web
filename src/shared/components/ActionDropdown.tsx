@@ -22,7 +22,7 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
   if (visibleItems.length === 0) return null;
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
