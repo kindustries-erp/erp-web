@@ -23,7 +23,6 @@ export function PurchaseOrderListPage() {
     poReceipts,
     pageError,
     openDetail,
-    openPostingDrawer,
     openSettlement,
     closeSettlement,
     saveSettlement,
