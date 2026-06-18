@@ -3,7 +3,7 @@
 > **Created:** 2026-06-16  
 > **Lane:** erp-core  
 > **Repo:** `liouni-erp-web` (`/opt/repos/liouni-erp-core/liouni-erp-web`)  
-> **Status:** READY — chờ API scope hoàn thành trước (Gate thứ tự: DB → API → UI)  
+> **Status:** DONE — verified build + tests PASS 2026-06-18  
 > **Linked API task:** `liouni-erp-api/docs/tasks/20260616-172700-erp-invoices-and-po-invoice-field-api.md`
 
 ---
@@ -459,17 +459,17 @@ bun run test
 
 ## Done checklist
 
-- [ ] `purchaseOrdersCoreApi.ts` — thêm `supplierInvoiceNo` vào interfaces
-- [ ] `useOperationalFormStore.ts` — state + action + `initFromDoc` mapping
-- [ ] `OperationalFormDrawer.tsx` — payload `supplier_invoice_no` trong purchase block
-- [ ] `FormGeneralInfoPanel.tsx` — DrawerField "Số HĐ nhà cung cấp" (purchase only)
-- [ ] `Sidebar.tsx` — section Kế toán + NavItem Hóa đơn với icon `Receipt`
-- [ ] `types/index.ts` — `"erp-invoices"` vào PageKey
-- [ ] `appStore.ts` — CORE_PAGES + SECTION_ROOTS + BREADCRUMBS
-- [ ] `App.tsx` — import + CORE_PAGES + render block
-- [ ] `erp-invoices-core/api/erpInvoicesCoreApi.ts` — [NEW] API client
-- [ ] `ErpInvoicePage.tsx` — [NEW] page đầy đủ
-- [ ] `bunx tsc --noEmit` PASS
-- [ ] `bun run build` PASS
-- [ ] `bun run test` PASS
-- [ ] UI smoke 5 điểm PASS
+- [x] `purchaseOrdersCoreApi.ts` — thêm `supplierInvoiceNo` vào interfaces
+- [x] `useOperationalFormStore.ts` — state + action + `initFromDoc` mapping
+- [x] `OperationalFormDrawer.tsx` — payload `supplier_invoice_no` trong purchase block
+- [x] `FormGeneralInfoPanel.tsx` — DrawerField "Số HĐ nhà cung cấp" (purchase only)
+- [x] `Sidebar.tsx` — section Kế toán + NavItem Hóa đơn với icon `Receipt`
+- [x] `types/index.ts` — `"erp-invoices"` vào PageKey
+- [x] `appStore.ts` — CORE_PAGES + SECTION_ROOTS + BREADCRUMBS
+- [x] `App.tsx` — import + CORE_PAGES + render block
+- [x] `erp-invoices-core/api/erpInvoicesCoreApi.ts` — [NEW] API client
+- [x] `ErpInvoicePage.tsx` — [NEW] page đầy đủ
+- [x] `bunx tsc --noEmit` PASS — evidence 2026-06-18
+- [x] `bun run build` PASS — `vite build` 2803 modules, exit 0 — 2026-06-18
+- [x] `bun run test` PASS — Vitest 119/119, kể cả erp-invoices-core tests — 2026-06-18
+- [ ] UI smoke 5 điểm PASS (cần live env với `bun start:dev`)
