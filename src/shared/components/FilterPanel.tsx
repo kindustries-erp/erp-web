@@ -25,6 +25,7 @@ export function FilterButton({
   activeCount,
   className,
 }: FilterButtonProps) {
+  const t = useT();
   return (
     <Button
       variant="secondary"
@@ -37,7 +38,7 @@ export function FilterButton({
       )}
     >
       <Filter className="h-3.5 w-3.5" />
-      <span>Bộ lọc</span>
+      <span>{t("Bộ lọc")}</span>
       {activeCount > 0 && (
         <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-fg">
           {activeCount}
@@ -65,7 +66,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
           <SearchInput
             value={filter.inputs.search}
             onChange={filter.setSearchInput}
-            placeholder="Tìm số CT, đối tượng..."
+            placeholder={t("Tìm số CT, đối tượng...")}
             className="w-full"
           />
         </FilterSection>
@@ -77,19 +78,19 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
             options={PERIOD_OPTS}
             value={filter.state.period}
             onChange={(v) => filter.setPeriod(v ?? "")}
-            placeholder="Chọn kỳ..."
+            placeholder={t("Chọn kỳ...")}
             className="w-full"
           />
           <div className="mt-2 space-y-2">
             <DatePicker
               value={filter.state.dateFrom}
               onChange={filter.setDateFrom}
-              placeholder="Từ ngày"
+              placeholder={t("Từ ngày")}
             />
             <DatePicker
               value={filter.state.dateTo}
               onChange={filter.setDateTo}
-              placeholder="Đến ngày"
+              placeholder={t("Đến ngày")}
             />
           </div>
         </FilterSection>
@@ -113,7 +114,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
             options={config.status.options}
             value={filter.state.status}
             onChange={(v) => filter.setStatus(v ?? "")}
-            placeholder={config.status.placeholder || "Tất cả"}
+            placeholder={config.status.placeholder || t("Tất cả")}
             className="w-full"
           />
         </FilterSection>
@@ -125,7 +126,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
             options={config.counterpartySource.options}
             value={filter.state.counterpartySource}
             onChange={(v) => filter.setCounterpartySource(v ?? "")}
-            placeholder={config.counterpartySource.placeholder || "Tất cả"}
+            placeholder={config.counterpartySource.placeholder || t("Tất cả")}
             className="w-full"
           />
         </FilterSection>
@@ -198,7 +199,9 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
         <div className="w-7 h-7 flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]">
           <Filter className="h-3.5 w-3.5 text-primary" />
         </div>
-        <span className="text-sm font-semibold text-foreground">Bộ lọc</span>
+        <span className="text-sm font-semibold text-foreground">
+          {t("Bộ lọc")}
+        </span>
         {filter.hasActiveFilter && (
           <span className="bg-primary text-primary-fg text-[10px] font-semibold px-[7px] py-[2px] rounded-[20px]">
             {filter.activeFilterCount}

@@ -1443,6 +1443,24 @@ export const vi = {
     deleteSuccess: "Xóa thành công",
     saveFail: "Thao tác thất bại",
   },
+  "Đơn mua hàng": "Đơn mua hàng",
+  "Phụ tùng, nguyên vật liệu; có thể định kỳ và trigger nhập kho.":
+    "Phụ tùng, nguyên vật liệu; có thể định kỳ và trigger nhập kho.",
+  "Nhà cung cấp": "Nhà cung cấp",
+  "Tất cả nhà cung cấp": "Tất cả nhà cung cấp",
+  "Linh kiện": "Linh kiện",
+  "Tất cả linh kiện": "Tất cả linh kiện",
+  "Số PO": "Số PO",
+  "Ngày đặt": "Ngày đặt",
+  "Ngày nhập DK": "Ngày nhập DK",
+  "Tải lại": "Tải lại",
+  "Bộ lọc": "Bộ lọc",
+  "Tạo mới": "Tạo mới",
+  "Tìm số CT, đối tượng...": "Tìm số CT, đối tượng...",
+  "Chọn kỳ...": "Chọn kỳ...",
+  "Từ ngày": "Từ ngày",
+  "Đến ngày": "Đến ngày",
+  "Tất cả": "Tất cả",
 };
 
 export type Dict = typeof vi;
