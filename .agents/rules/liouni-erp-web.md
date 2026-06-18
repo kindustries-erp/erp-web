@@ -18,6 +18,13 @@ Apply to all work in this repo.
 - reuse existing components/hooks/utils/helpers/services/functions/page patterns first
 - extend/adapt before duplicating
 
+## Architecture & Development Standards
+
+- **TDD**: Enforce Test-Driven Development (TDD) as a core practice. Write tests before implementing new features.
+- **State Management**: Use `useState` for component inner state. Use `zustand` for any state that is used by multiple places. Use `@tanstack/react-query` with `axios` for UI API state.
+- **Imports**: Use alias imports. Group 3rd-party imports first, followed by a blank line, then custom code imports.
+- **Modularity**: Apply atomic design and a modular mindset. Break down components, hooks, utilities, and functions into the smallest possible, reusable units.
+
 ## Historical warning
 
 If a file mentions Directus-first flows, Gitea deploys, old dev domains, or `erp-core`, classify it first.
