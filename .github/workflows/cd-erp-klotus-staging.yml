@@ -83,7 +83,10 @@ jobs:
             -o StrictHostKeyChecking=no \
             -p ${{ vars.ELITE_PORT }} \
             ${{ vars.ELITE_USER }}@${{ vars.ELITE_HOST }} \
-            "cd /opt/stacks/erp-klotus-staging-web && docker compose up -d --build --force-recreate"
+            "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin ; \
+             docker pull ${{ env.IMAGE_NAME }}:staging-${{ needs.build-and-push.outputs.sha }} || true ; \
+             docker rm -f erp-web-klotus-staging || true ; \
+             docker run -d --name erp-web-klotus-staging --restart always --add-host erp-api-klotus-staging:host-gateway -p 8021:80 ${{ env.IMAGE_NAME }}:staging-${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check
         run: |
@@ -96,6 +99,7 @@ jobs:
                 code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8021/ || true)
                 if [ "$code" = "200" ]; then
                   echo "✅ Web health OK"
+                  docker image prune -af
                   exit 0
                 fi
                 echo "Attempt $i: got $code, retrying..."
