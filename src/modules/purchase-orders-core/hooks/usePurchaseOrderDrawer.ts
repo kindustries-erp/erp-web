@@ -247,11 +247,13 @@ export function usePurchaseOrderDrawer({
           payment_status: store.paymentStatus,
           notes: store.notes.trim() || undefined,
           lines: purchaseEditableLines,
+          supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
         }
       : isPurchaseFullyLocked
         ? {
             payment_status: store.paymentStatus,
             notes: store.notes.trim() || undefined,
+            supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
           }
         : {
             document_date: store.documentDate,
