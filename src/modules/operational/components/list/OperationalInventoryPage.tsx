@@ -133,21 +133,7 @@ export function OperationalInventoryPage({
             error={error}
             emptyLabel={t("Chưa có tồn kho.")}
             minWidth={760}
-            actionsColumn={{
-              header: "",
-              className: "w-[48px]",
-              cell: (row) => (
-                <ActionDropdown
-                  items={[
-                    {
-                      label: t("Chi tiết"),
-                      onClick: () => onViewItem(row.inventory_item_id),
-                      icon: <FileText className="h-4 w-4" />,
-                    },
-                  ]}
-                />
-              ),
-            }}
+            onRowClick={(row) => onViewItem(row.inventory_item_id)}
             expandedRowKeys={expandedStockRowKeys}
             renderSubRow={(row) => (
               <InventoryTimelineBlock

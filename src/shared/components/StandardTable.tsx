@@ -26,6 +26,7 @@ export interface StandardTableProps<T> {
   error?: string | null;
   actions?: (row: T) => ActionItem[];
   renderSubRow?: (row: T) => React.ReactNode;
+  onRowClick?: (row: T) => void;
 }
 
 export function StandardTable<T>({
@@ -48,6 +49,7 @@ export function StandardTable<T>({
   error = null,
   actions,
   renderSubRow,
+  onRowClick,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -59,6 +61,7 @@ export function StandardTable<T>({
       pageSize={pageSize}
       onPage={onPage}
       onPageSize={onPageSize}
+      onRowClick={onRowClick}
       sortBy={
         sortArray?.[0]?.startsWith("-") ? sortArray[0].slice(1) : sortArray?.[0]
       }

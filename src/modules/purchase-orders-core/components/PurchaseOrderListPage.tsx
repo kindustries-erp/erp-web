@@ -118,12 +118,8 @@ export function PurchaseOrderListPage() {
             onSort={togglePurchaseSort}
             expandedRowIds={expandedRowIds}
             getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
+            onRowClick={(row) => openDetail(row)}
             actions={(row) => [
-              {
-                label: t("Chi tiết"),
-                icon: <Eye className="h-4 w-4" />,
-                onClick: () => openDetail(row),
-              },
               {
                 label: t("common.receiveInventory"),
                 icon: <PackagePlus className="h-4 w-4" />,

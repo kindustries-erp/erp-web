@@ -149,12 +149,8 @@ export function ErpInvoiceListTable({
       items={invoices}
       columns={columns}
       getRowKey={(inv) => inv.id}
+      onRowClick={(inv) => openDetail(inv)}
       actions={(inv) => [
-        {
-          label: t("actionDetail", "Chi tiết"),
-          icon: <Eye className="w-4 h-4" />,
-          onClick: () => openDetail(inv),
-        },
         ...(inv.status === "DRAFT"
           ? [
               {

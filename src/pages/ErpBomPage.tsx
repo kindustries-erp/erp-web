@@ -1035,17 +1035,13 @@ export function ErpBomPage() {
             emptyLabel={t("Chưa có BOM")}
             minWidth={980}
             loadingRows={6}
+            onRowClick={(item) => void openEdit(item)}
             actionsColumn={{
               header: "",
               className: "w-[48px]",
               cell: (item) => (
                 <ActionDropdown
                   items={[
-                    {
-                      label: t("Sửa"),
-                      onClick: () => void openEdit(item),
-                      icon: <Pencil className="h-3.5 w-3.5" />,
-                    },
                     {
                       label: t("Xóa"),
                       onClick: () => setDeleteTarget(item),

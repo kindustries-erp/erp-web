@@ -365,13 +365,8 @@ export function InventoryMasterPage() {
                   emptyLabel={t("inventoryMasters.table.emptyUom")}
                   minWidth={760}
                   loadingRows={6}
+                  onRowClick={(row) => openDetail(activeTab, row)}
                   actions={(row) => [
-                    {
-                      label:
-                        t("inventoryMasters.table.actionDetail") || "Chi tiết",
-                      icon: <Eye className="h-3.5 w-3.5" />,
-                      onClick: () => openDetail(activeTab, row),
-                    },
                     {
                       label: t("inventoryMasters.table.actionDelete"),
                       icon: <Trash2 className="h-3.5 w-3.5" />,

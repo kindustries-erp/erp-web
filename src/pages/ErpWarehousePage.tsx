@@ -369,16 +369,12 @@ export function ErpWarehousePage() {
               emptyLabel={t("Chưa có chứng từ kho.")}
               minWidth={780}
               loadingRows={8}
+              onRowClick={(row) => {
+                if (row.type === "receipt") void openGrDetail(row.id, true);
+                else if (row.type === "issue")
+                  void giDrawer.openDetail(row.id, true);
+              }}
               actions={(row) => [
-                {
-                  label: t("Chi tiết"),
-                  icon: <Eye className="h-3.5 w-3.5" />,
-                  onClick: () => {
-                    if (row.type === "receipt") void openGrDetail(row.id, true);
-                    else if (row.type === "issue")
-                      void giDrawer.openDetail(row.id, true);
-                  },
-                },
                 {
                   label: t("Xóa"),
                   icon: <Trash2 className="h-3.5 w-3.5" />,

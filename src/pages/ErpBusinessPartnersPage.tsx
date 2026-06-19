@@ -187,11 +187,6 @@ export function ErpBusinessPartnersPage({
       <ActionDropdown
         items={[
           {
-            label: "Chi tiết",
-            icon: <Eye className="h-3.5 w-3.5" />,
-            onClick: () => openView(item),
-          },
-          {
             label: "Xóa",
             icon: <Trash2 className="h-3.5 w-3.5" />,
             variant: "danger",
@@ -380,6 +375,7 @@ export function ErpBusinessPartnersPage({
             loading={loading}
             emptyLabel={`Chưa có ${title.toLowerCase()} nào.`}
             minWidth={980}
+            onRowClick={(item) => openView(item)}
             actionsColumn={actionsColumn}
           />
         </div>
