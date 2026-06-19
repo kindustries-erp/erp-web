@@ -184,7 +184,11 @@ export function useGrDrawer({
   // ── Load PO list for the combobox
   const loadPoOptions = useCallback(async () => {
     try {
-      const res = await purchaseOrdersCoreApi.list({ page: 1, pageSize: 200 });
+      const res = await purchaseOrdersCoreApi.list({
+        page: 1,
+        pageSize: 200,
+        exclude_status: "DRAFT",
+      });
       setPoOptions(
         res.items.map((po) => ({
           value: po.id,

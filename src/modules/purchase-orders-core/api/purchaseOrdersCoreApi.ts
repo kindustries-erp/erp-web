@@ -72,13 +72,15 @@ export const purchaseOrdersCoreApi = {
   list: async (
     params?: ListParams,
   ): Promise<PaginatedResponse<ErpPurchaseOrder>> => {
+    const { page, pageSize, search, ...rest } = params || {};
     const { data } = await axiosInstance.get<
       PaginatedResponse<ErpPurchaseOrder>
     >(BASE, {
       params: {
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? 20,
-        ...(params?.search ? { search: params.search } : {}),
+        page: page ?? 1,
+        pageSize: pageSize ?? 20,
+        ...(search ? { search } : {}),
+        ...rest,
       },
     });
     return data;
