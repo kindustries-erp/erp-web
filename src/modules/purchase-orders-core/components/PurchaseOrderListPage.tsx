@@ -4,7 +4,7 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { useT } from "@/core/i18n";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { Eye, Link2, Trash2, XCircle } from "lucide-react";
+import { Link2, Trash2, XCircle } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";

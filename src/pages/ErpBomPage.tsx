@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Pencil,
-  Plus,
-  Trash2,
-  ChevronRight,
-  Network,
-  Loader2,
-} from "lucide-react";
+import { Plus, Trash2, ChevronRight, Network, Loader2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { SearchInput } from "@/shared/components/SearchInput";

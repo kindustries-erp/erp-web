@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
-import { Boxes, Eye, Trash2 } from "lucide-react";
+import { Boxes, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";

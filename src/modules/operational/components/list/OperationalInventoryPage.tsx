@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { FileText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";

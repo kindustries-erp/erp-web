@@ -13,7 +13,6 @@ import {
   XCircle,
   RefreshCcw,
   ClipboardList,
-  Eye,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/shared/utils";
