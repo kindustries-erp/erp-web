@@ -78,7 +78,7 @@ export function usePurchaseOrderPage() {
   );
 
   /**
-   * Open InventoryPostingDrawer for a given PO row.
+   * Set up inventory posting context.
    * Fetches PO detail to build postingLineForms (max_qty = qtyOrdered - qtyReceived),
    * then sets the flow store to activeStep="posting".
    */
@@ -124,7 +124,7 @@ export function usePurchaseOrderPage() {
   );
 
   /**
-   * Submit inventory posting from InventoryPostingDrawer.
+   * Submit inventory posting.
    * Calls postPurchaseReceipt then refreshes the list.
    */
   const handleInventoryPostingSubmit = useCallback(async () => {

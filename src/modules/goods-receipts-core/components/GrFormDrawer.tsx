@@ -17,6 +17,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import { useT } from "@/core/i18n";
 
 function fmtQty(value?: string | null) {
   if (!value) return "0";
@@ -54,11 +55,13 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     setViewOnly,
   } = drawer;
 
+  const t = useT();
+
   const actions =
     viewOnly || loading
       ? [
           {
-            label: "Đóng",
+            label: t("Đóng"),
             onClick: close,
             variant: "outline" as const,
             disabled: loading,
@@ -66,20 +69,20 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         ]
       : [
           {
-            label: "Hủy",
+            label: t("Hủy"),
             onClick: close,
             variant: "outline" as const,
             disabled: saving,
           },
           {
-            label: "Lưu nháp",
+            label: t("Lưu nháp"),
             onClick: () => void handleSave("DRAFT"),
             variant: "secondary" as const,
             loading: saving,
             disabled: saving,
           },
           {
-            label: editing ? "Cập nhật" : "Tạo mới",
+            label: editing ? t("Cập nhật") : t("Tạo mới"),
             onClick: () => void handleSave("POSTED"),
             primary: true,
             loading: saving,
@@ -102,33 +105,33 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       title={
         editing
           ? viewOnly
-            ? "Phiếu nhập kho"
-            : "Sửa nhập kho"
-          : "Tạo phiếu nhập kho"
+            ? t("Phiếu nhập kho")
+            : t("Sửa nhập kho")
+          : t("Tạo phiếu nhập kho")
       }
       subtitle={
         <div className="flex items-center gap-2">
-          <span>{editing?.receiptNo ?? "Nhập kho"}</span>
+          <span>{editing?.receiptNo ?? t("Nhập kho")}</span>
           {editing?.status === "DRAFT" && (
             <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-              Nháp
+              {t("Nháp")}
             </span>
           )}
           {editing?.status === "CANCELLED" && (
             <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
-              Đã hủy
+              {t("Đã hủy")}
             </span>
           )}
         </div>
       }
-      rightPanelTitle="Thông tin chung"
+      rightPanelTitle={t("Thông tin chung")}
       actions={actions}
       loading={loading}
       error={saveError}
       leftPanel={
         <>
           {loading ? (
-            <DrawerSection title="Chi tiết">
+            <DrawerSection title={t("Chi tiết")}>
               <div className="space-y-3">
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
@@ -138,7 +141,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
             </DrawerSection>
           ) : (
             <DrawerSection
-              title={`Chi tiết (${form.lines.length})`}
+              title={t("Chi tiết") + " (" + form.lines.length + ")"}
               titleExtra={
                 !viewOnly && poDetail ? (
                   <div className="flex items-center gap-2">
@@ -156,7 +159,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         }))
                       }
                     >
-                      Đặt lại
+                      {t("Đặt lại")}
                     </Button>
                     <Button
                       variant="outline"
@@ -183,7 +186,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         });
                       }}
                     >
-                      Nhập hết
+                      {t("Nhập hết")}
                     </Button>
                   </div>
                 ) : undefined
@@ -206,7 +209,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "itemCode",
-                      header: "Mã linh kiện",
+                      header: t("Mã linh kiện"),
                       minWidth: 140,
                       cell: (poLine) => {
                         const itemCode =
@@ -218,7 +221,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "itemName",
-                      header: "Tên linh kiện",
+                      header: t("Tên linh kiện"),
                       minWidth: 260,
                       cell: (poLine) => {
                         const itemName =
@@ -238,7 +241,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "ordered",
-                      header: "Đã đặt",
+                      header: t("Đã đặt"),
                       minWidth: 100,
                       align: "center",
                       cell: (poLine) => (
@@ -251,7 +254,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "remaining",
-                      header: "Còn lại",
+                      header: t("Còn lại"),
                       minWidth: 100,
                       align: "center",
                       cell: (poLine) => {
@@ -267,7 +270,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "qtyInput",
-                      header: "SL Nhập",
+                      header: t("SL Nhập"),
                       minWidth: 140,
                       align: "center",
                       cell: (poLine) => {
@@ -343,7 +346,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "itemCode",
-                      header: "Mã linh kiện",
+                      header: t("Mã linh kiện"),
                       minWidth: 140,
                       cell: (line) => {
                         const itemCode =
@@ -355,7 +358,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "itemName",
-                      header: "Tên linh kiện",
+                      header: t("Tên linh kiện"),
                       minWidth: 260,
                       cell: (line) => {
                         const itemName = line.itemName || line.itemId || "—";
@@ -371,21 +374,21 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     },
                     {
                       key: "ordered",
-                      header: "Đã đặt",
+                      header: t("Đã đặt"),
                       minWidth: 100,
                       align: "center",
                       cell: () => "—",
                     },
                     {
                       key: "remaining",
-                      header: "Còn lại",
+                      header: t("Còn lại"),
                       minWidth: 100,
                       align: "center",
                       cell: () => "—",
                     },
                     {
                       key: "qtyReceived",
-                      header: "SL Nhập",
+                      header: t("SL Nhập"),
                       minWidth: 140,
                       align: "center",
                       cell: (line) => (
@@ -398,7 +401,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 />
               ) : (
                 <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-center text-muted-foreground">
-                  Chọn PO để hiện danh sách hàng cần nhận.
+                  {t("Chọn PO để hiện danh sách hàng cần nhận.")}
                 </div>
               )}
             </DrawerSection>
@@ -407,19 +410,19 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       }
       rightPanel={
         loading ? (
-          <div className="flex flex-col gap-3">
+          <>
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-20 w-full" />
-          </div>
+          </>
         ) : (
-          <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
-            <DrawerField label="Số phiếu">
+          <>
+            <DrawerField label={t("Số phiếu")}>
               <input
                 className={inputCls}
-                placeholder="Tự động nếu để trống"
+                placeholder={t("Tự động nếu để trống")}
                 value={form.receiptNo}
                 disabled={viewOnly}
                 onChange={(e) =>
@@ -427,7 +430,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 }
               />
             </DrawerField>
-            <DrawerField label="Ngày nhập">
+            <DrawerField label={t("Ngày nhập")}>
               <input
                 type="date"
                 className={inputCls}
@@ -438,31 +441,31 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 }
               />
             </DrawerField>
-            <DrawerField label="Đơn mua hàng (PO)">
+            <DrawerField label={t("Đơn mua hàng (PO)")}>
               <Combobox
                 options={poOptions}
                 value={form.purchaseOrderId}
                 disabled={viewOnly}
-                placeholder="Chọn PO..."
+                placeholder={t("Chọn PO...")}
                 onChange={(v) =>
                   setForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
                 }
               />
             </DrawerField>
-            <DrawerField label="Nhà cung cấp">
+            <DrawerField label={t("Nhà cung cấp")}>
               <Combobox
                 options={supplierOptions}
                 value={form.supplierId}
                 disabled={viewOnly || !!form.purchaseOrderId}
-                placeholder="Chọn NCC"
-                searchPlaceholder="Tìm kiếm..."
+                placeholder={t("Chọn NCC")}
+                searchPlaceholder={t("Tìm kiếm...")}
                 onSearch={setSupplierSearch}
                 onScrollBottom={fetchNextSuppliers}
                 loading={loadingSuppliers}
                 onChange={(v) => setForm((f) => ({ ...f, supplierId: v }))}
               />
             </DrawerField>
-            <DrawerField label="Ghi chú">
+            <DrawerField label={t("Ghi chú")}>
               <textarea
                 className={`${inputCls} min-h-[60px] resize-y`}
                 value={form.remarks}
@@ -472,7 +475,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 }
               />
             </DrawerField>
-          </div>
+          </>
         )
       }
     />

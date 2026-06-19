@@ -10,7 +10,6 @@ export { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSu
 export { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 export { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
 export { OperationalDetailDrawer } from "@/modules/operational/components/list/OperationalDetailDrawer";
-export { InventoryPostingDrawer } from "@/modules/operational/components/list/InventoryPostingDrawer";
 export { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
 export { OperationalInventoryPage } from "@/modules/operational/components/list/OperationalInventoryPage";
 
