@@ -76,12 +76,17 @@ export function buildGrPayload(form: GrForm): CreateGrPayload {
     supplierId: form.supplierId || undefined,
     receiptDate: form.receiptDate,
     remarks: form.remarks.trim() || undefined,
-    lines: form.lines.map((line) => ({
-      purchaseOrderLineId: line.purchaseOrderLineId || undefined,
-      itemId: line.itemId || undefined,
-      qtyReceived: line.qtyReceived,
-      unitCost: line.unitCost || undefined,
-    })),
+    lines: form.lines
+      .filter((line) => {
+        const qty = Number(line.qtyReceived);
+        return !isNaN(qty) && qty > 0;
+      })
+      .map((line) => ({
+        purchaseOrderLineId: line.purchaseOrderLineId || undefined,
+        itemId: line.itemId || undefined,
+        qtyReceived: line.qtyReceived,
+        unitCost: line.unitCost || undefined,
+      })),
   };
 }
 
