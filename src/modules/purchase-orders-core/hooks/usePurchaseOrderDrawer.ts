@@ -123,7 +123,7 @@ export function usePurchaseOrderDrawer({
       return;
     }
     basicMastersApi
-      .list({ limit: 200, entities: "inventoryItems" })
+      .list({ limit: 200, entities: "inventoryItems,erpInvoices" })
       .then((res) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const options = (res.items.inventoryItems || []).map((item: any) => ({
@@ -136,9 +136,21 @@ export function usePurchaseOrderDrawer({
           note: "",
         }));
         setInventoryItemOptions(options);
+
+        // Map input invoices for PO
+        const invOptions = (res.items.erpInvoices || [])
+          .filter((inv) => inv.direction === "IN")
+          .map((inv) => ({
+            value: inv.invoiceNo,
+            label: `${inv.invoiceNo} ${inv.sellerName ? `(${inv.sellerName})` : ""}`,
+          }));
+        store.setSupplierInvoiceOptions(invOptions);
       })
-      .catch(() => setInventoryItemOptions([]));
-  }, [open, viewOnly]);
+      .catch(() => {
+        setInventoryItemOptions([]);
+        store.setSupplierInvoiceOptions([]);
+      });
+  }, [open, viewOnly, store]);
 
   // -------------------------------------------------------------------------
   // Init form
