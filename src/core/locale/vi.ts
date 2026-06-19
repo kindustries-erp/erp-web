@@ -232,6 +232,7 @@ export const vi = {
     active: "Hoạt động",
     note: "Ghi chú",
     selectAccount: "Chọn tài khoản",
+    receiveInventory: "Nhập kho",
   },
   status: {
     approved: "Đã duyệt",

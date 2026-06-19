@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { useAppStore } from "@/core/config/appStore";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import {
@@ -18,7 +17,6 @@ import { usePurchaseOrderList } from "./usePurchaseOrderList";
 
 export function usePurchaseOrderPage() {
   const t = useT();
-  const navigate = useAppStore((s) => s.navigate);
   const showToast = useUIStore((s) => s.showToast);
 
   const listData = usePurchaseOrderList();
@@ -45,6 +43,9 @@ export function usePurchaseOrderPage() {
     setRootContext,
     setActiveStep,
     setSettlementState,
+    setPostingState,
+    activeStep,
+    postingLineForms,
     resetFlow,
     setDetailState,
   } = useOperationalFlowStore();
@@ -76,20 +77,84 @@ export function usePurchaseOrderPage() {
     [t],
   );
 
-  const openPostingDrawer = useCallback(
-    (row: OperationalDocument) => {
-      navigate("erp-warehouse");
-      const params = new URLSearchParams(window.location.search);
-      params.set("purchaseOrderId", row.id);
-      params.set("mode", "from-po");
-      history.replaceState(
-        null,
-        "",
-        `${window.location.pathname}?${params.toString()}`,
-      );
+  /**
+   * Open InventoryPostingDrawer for a given PO row.
+   * Fetches PO detail to build postingLineForms (max_qty = qtyOrdered - qtyReceived),
+   * then sets the flow store to activeStep="posting".
+   */
+  const openInventoryPosting = useCallback(
+    async (row: OperationalDocument) => {
+      setPageError(null);
+      // Set document context immediately so drawer can show the header
+      setPostingState({
+        postingDocument: row,
+        postingDocumentType: "purchase_orders",
+        postingLoading: true,
+        postingLineForms: [],
+        postingNotes: "",
+      });
+      setActiveStep("posting");
+      try {
+        const po = await purchaseOrdersCoreApi.get(row.id);
+        const lineForms = (po.lines ?? [])
+          .filter((line) => line.itemId) // only lines with inventory items
+          .map((line) => {
+            const ordered = Number(line.qtyOrdered ?? 0);
+            const received = Number(line.qtyReceived ?? 0);
+            const remaining = Math.max(0, ordered - received);
+            return {
+              line_id: line.id ?? "",
+              line_name:
+                line.itemName || line.description || line.itemId || "—",
+              requested_qty: remaining,
+              max_qty: remaining,
+              inventory_item_id: line.itemId ?? null,
+            };
+          })
+          .filter((line) => line.max_qty > 0);
+        setPostingState({ postingLineForms: lineForms, postingLoading: false });
+      } catch (err) {
+        setPostingState({ postingLoading: false });
+        setPageError(
+          extractApiError(err, t("Không tải được chi tiết đơn mua hàng")),
+        );
+      }
     },
-    [navigate],
+    [setPostingState, setActiveStep, t],
   );
+
+  /**
+   * Submit inventory posting from InventoryPostingDrawer.
+   * Calls postPurchaseReceipt then refreshes the list.
+   */
+  const handleInventoryPostingSubmit = useCallback(async () => {
+    if (!rootDocument) return;
+    setPostingState({ postingLoading: true });
+    try {
+      await operationalApi.postPurchaseReceipt(rootDocument.id, {
+        receipt_lines: postingLineForms
+          .filter((l) => l.requested_qty > 0)
+          .map((l) => ({
+            line_id: l.line_id,
+            qty: l.requested_qty,
+          })),
+      });
+      showToast({ title: t("Nhập kho thành công"), variant: "success" });
+      resetFlow();
+      await listData.listQuery.refetch();
+    } catch (err) {
+      setPostingState({ postingLoading: false });
+      setPageError(extractApiError(err, t("Nhập kho thất bại")));
+    }
+  }, [
+    rootDocument,
+    postingLineForms,
+    setPostingState,
+    resetFlow,
+    listData.listQuery,
+    showToast,
+    t,
+  ]);
 
   const openSettlement = useCallback(
     async (row: OperationalDocument) => {
@@ -318,6 +383,10 @@ export function usePurchaseOrderPage() {
     }
   }, [confirmState, listData.listQuery, showToast, t]);
 
+  const closeInventoryPosting = useCallback(() => {
+    resetFlow();
+  }, [resetFlow]);
+
   return {
     listData,
     formOpen,
@@ -327,7 +396,10 @@ export function usePurchaseOrderPage() {
     poReceipts,
     pageError,
     openDetail,
-    openPostingDrawer,
+    openInventoryPosting,
+    handleInventoryPostingSubmit,
+    closeInventoryPosting,
+    inventoryPostingOpen: activeStep === "posting",
     openSettlement,
     closeSettlement,
     saveSettlement,

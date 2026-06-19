@@ -143,6 +143,19 @@ export function canPostReceipt(
   );
 }
 
+/**
+ * Whether a PO row in the PO table is eligible for inventory receipt ("Nhập Kho").
+ * Conditions:
+ *   - status must be CONFIRMED or PARTIAL_RECEIVED
+ *   - inventory_status must not be FULLY_RECEIVED
+ */
+export function canReceiveInventory(row: OperationalDocument): boolean {
+  return (
+    ["CONFIRMED", "PARTIAL_RECEIVED"].includes(row.status) &&
+    row.inventory_status !== "FULLY_RECEIVED"
+  );
+}
+
 export function canPostIssue(
   row: OperationalDocument,
   variant: OperationalVariant,

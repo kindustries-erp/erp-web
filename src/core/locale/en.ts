@@ -233,6 +233,7 @@ export const en: Dict = {
     active: "Active",
     note: "Note",
     selectAccount: "Select account",
+    receiveInventory: "Receive Inventory",
   },
   status: {
     approved: "Approved",

@@ -1,4 +1,4 @@
-import { FileText } from "lucide-react";
+import { FileText, PackagePlus } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -11,12 +11,25 @@ import { usePurchaseColumns } from "@/modules/operational/components/list/column
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
+import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
+import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 
 export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
+  const canCreateReceipt = useHasPermission("goods_receipts", "create");
+
+  // GR drawer — reuses the same form as ErpWarehousePage
+  const grDrawer = useGrDrawer({
+    onSaved: async () => {
+      await pageState.listData.listQuery.refetch();
+    },
+  });
+
   const {
     listData,
     formOpen,
@@ -112,6 +125,12 @@ export function PurchaseOrderListPage() {
                 onClick: () => openDetail(row),
               },
               {
+                label: t("common.receiveInventory"),
+                icon: <PackagePlus className="h-4 w-4" />,
+                onClick: () => grDrawer.openCreate(row.id),
+                hidden: !canCreateReceipt || !canReceiveInventory(row),
+              },
+              {
                 label: t("Liên kết tiền"),
                 icon: <Link2 className="h-4 w-4" />,
                 onClick: () => openSettlement(row),
@@ -155,6 +174,8 @@ export function PurchaseOrderListPage() {
         onSave={saveSettlement}
         onRemoveLink={removePaymentLink}
       />
+
+      <GrFormDrawer drawer={grDrawer} />
 
       <ConfirmModal
         open={!!confirmState}

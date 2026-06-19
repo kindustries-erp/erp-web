@@ -68,11 +68,10 @@ export function usePurchaseOrderDrawer({
   const purchaseFieldLocked = (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => {
+    if (field === "poNo" && !!editing) return true;
     if (!isPurchaseLocked) return false;
     if (!isPurchaseHeaderEditableAfterConfirm) return true;
-    return !["description", "qty", "expectedDate", "status", "poNo"].includes(
-      field,
-    );
+    return !["description", "qty", "expectedDate", "status"].includes(field);
   };
 
   // -------------------------------------------------------------------------
@@ -248,6 +247,7 @@ export function usePurchaseOrderDrawer({
           notes: store.notes.trim() || undefined,
           lines: purchaseEditableLines,
           supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
+          expected_receipt_date: store.expectedDate || undefined,
         }
       : isPurchaseFullyLocked
         ? {
