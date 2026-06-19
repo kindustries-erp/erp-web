@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Pencil,
-  Plus,
-  Trash2,
-  ChevronRight,
-  Network,
-  Loader2,
-} from "lucide-react";
+import { Plus, Trash2, ChevronRight, Network, Loader2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -1035,17 +1028,13 @@ export function ErpBomPage() {
             emptyLabel={t("Chưa có BOM")}
             minWidth={980}
             loadingRows={6}
+            onRowClick={(item) => void openEdit(item)}
             actionsColumn={{
               header: "",
               className: "w-[48px]",
               cell: (item) => (
                 <ActionDropdown
                   items={[
-                    {
-                      label: t("Sửa"),
-                      onClick: () => void openEdit(item),
-                      icon: <Pencil className="h-3.5 w-3.5" />,
-                    },
                     {
                       label: t("Xóa"),
                       onClick: () => setDeleteTarget(item),

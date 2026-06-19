@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
-import { Boxes, Eye, Trash2 } from "lucide-react";
+import { Boxes, Trash2 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -365,13 +365,8 @@ export function InventoryMasterPage() {
                   emptyLabel={t("inventoryMasters.table.emptyUom")}
                   minWidth={760}
                   loadingRows={6}
+                  onRowClick={(row) => openDetail(activeTab, row)}
                   actions={(row) => [
-                    {
-                      label:
-                        t("inventoryMasters.table.actionDetail") || "Chi tiết",
-                      icon: <Eye className="h-3.5 w-3.5" />,
-                      onClick: () => openDetail(activeTab, row),
-                    },
                     {
                       label: t("inventoryMasters.table.actionDelete"),
                       icon: <Trash2 className="h-3.5 w-3.5" />,

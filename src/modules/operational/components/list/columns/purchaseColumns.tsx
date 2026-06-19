@@ -55,7 +55,7 @@ export function usePurchaseColumns({
                   row.inventory_status !== "NOT_RECEIVED" && (
                     <Tooltip content={t("Có lịch sử nhập kho")}>
                       <div className="flex items-center text-muted-foreground/80 cursor-help">
-                        <Warehouse className="w-3.5 h-3.5" />
+                        <Warehouse className="w-3 h-3" />
                       </div>
                     </Tooltip>
                   )}

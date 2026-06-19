@@ -1,7 +1,7 @@
 import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Eye, Trash, Ban } from "lucide-react";
+import { Trash, Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { money } from "@/shared/utils/format";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
@@ -149,12 +149,8 @@ export function ErpInvoiceListTable({
       items={invoices}
       columns={columns}
       getRowKey={(inv) => inv.id}
+      onRowClick={(inv) => openDetail(inv)}
       actions={(inv) => [
-        {
-          label: t("actionDetail", "Chi tiết"),
-          icon: <Eye className="w-4 h-4" />,
-          onClick: () => openDetail(inv),
-        },
         ...(inv.status === "DRAFT"
           ? [
               {

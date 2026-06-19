@@ -13,7 +13,9 @@ export function Login() {
 
   const isLocalhost =
     window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "elite-liouni" ||
+    window.location.hostname === "head-liouni";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
