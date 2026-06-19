@@ -16,6 +16,7 @@ Apply to all work in this repo.
 - before push/commit, `cd /opt/repos/liouni-erp-core/liouni-erp-web`
 - before push/commit, always run `bun run lint:check`, `bunx tsc --noEmit`, `bun run test`, and `bun run build`
 - push with `github-industries`
+- always check branch 1st when push. all commit must be push on erp-master 1st, then I will create PR to another branch
 - reuse existing components/hooks/utils/helpers/services/functions/page patterns first
 - extend/adapt before duplicating
 - no code without a task file under `docs/tasks/`
