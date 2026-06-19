@@ -200,6 +200,7 @@ function normalizePurchaseRow(row: any): OperationalDocument {
     auto_generate_next: Boolean(row.auto_generate_next),
     notes: row.notes ?? row.remarks ?? null,
     document_type: row.document_type ?? "purchase_orders",
+    supplier_invoice_no: row.supplier_invoice_no ?? row.supplierInvoiceNo ?? "",
     lines,
   } as OperationalDocument;
 }
@@ -217,6 +218,8 @@ function toCorePurchasePayload(
     status: payload.status,
     paymentStatus: payload.payment_status,
     remarks: payload.notes || undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    supplierInvoiceNo: (payload as any).supplier_invoice_no || undefined,
   };
 
   if (Array.isArray(payload.lines)) {
