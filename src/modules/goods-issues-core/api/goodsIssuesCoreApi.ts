@@ -94,4 +94,11 @@ export const goodsIssuesCoreApi = {
     );
     return data.data;
   },
+  cancel: async (id: string): Promise<ErpGoodsIssue> => {
+    const { data } = await axiosInstance.post<GiDetailResponse>(
+      `${BASE}/${id}/cancel`,
+      {},
+    );
+    return data.data;
+  },
 };

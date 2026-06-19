@@ -20,7 +20,7 @@ import { cn } from "@/shared/utils";
 export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
-  cell: (item: T) => ReactNode;
+  cell: (item: T, index: number) => ReactNode;
   className?: string;
   headerClassName?: string;
   skeletonClassName?: string;
@@ -29,7 +29,7 @@ export interface DataTableColumn<T> {
 }
 
 export interface ActionsColumnConfig<T> {
-  cell: (item: T) => ReactNode;
+  cell: (item: T, index: number) => ReactNode;
   header?: ReactNode;
   className?: string;
   headerClassName?: string;
@@ -112,7 +112,13 @@ export function DataTable<T>({
     (column) => ({
       id: column.key,
       header: () => column.header,
-      cell: ({ row }) => column.cell(row.original),
+      cell: ({ row }) =>
+        column.cell(
+          row.original,
+          page && pageSize
+            ? (page - 1) * pageSize + row.index + 1
+            : row.index + 1,
+        ),
       meta: {
         className: column.className,
         headerClassName: column.headerClassName,
@@ -124,13 +130,25 @@ export function DataTable<T>({
   );
 
   if (actionsColumn) {
-    tableColumns.unshift({
+    tableColumns.push({
       id: "__actions",
       header: () => actionsColumn.header ?? "",
-      cell: ({ row }) => actionsColumn.cell(row.original),
+      cell: ({ row }) =>
+        actionsColumn.cell(
+          row.original,
+          page && pageSize
+            ? (page - 1) * pageSize + row.index + 1
+            : row.index + 1,
+        ),
       meta: {
-        className: actionsColumn.className,
-        headerClassName: actionsColumn.headerClassName ?? "w-[48px]",
+        className: cn(
+          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0",
+          actionsColumn.className,
+        ),
+        headerClassName: cn(
+          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0",
+          actionsColumn.headerClassName,
+        ),
         skeletonClassName: "",
       } satisfies DataTableRowMeta,
     });
@@ -155,23 +173,34 @@ export function DataTable<T>({
           containerClassName,
         )}
       >
-        <Table style={{ minWidth }}>
+        <Table style={{ minWidth }} className="table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
                 className="hover:bg-transparent border-b border-border"
               >
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, index) => {
                   const meta = header.column.columnDef.meta as DataTableRowMeta;
+                  const isFirstCol = index === 0;
                   return (
                     <TableHead
                       key={header.id}
-                      className={meta?.headerClassName}
+                      className={cn(
+                        meta?.headerClassName,
+                        isFirstCol &&
+                          "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                      )}
                     >
                       {header.isPlaceholder ? null : meta.sortable ? (
                         <div
-                          className="flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors"
+                          className={cn(
+                            "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors",
+                            meta.headerClassName?.includes("text-right") &&
+                              "justify-end",
+                            meta.headerClassName?.includes("text-center") &&
+                              "justify-center",
+                          )}
                           onClick={() => onSort?.(meta.sortKey!)}
                         >
                           {flexRender(
@@ -247,10 +276,18 @@ export function DataTable<T>({
             {loading &&
               Array.from({ length: loadingRows }).map((_, rowIndex) => (
                 <TableRow key={rowIndex} className="hover:bg-transparent">
-                  {table.getAllLeafColumns().map((column) => {
+                  {table.getAllLeafColumns().map((column, index) => {
                     const meta = column.columnDef.meta as DataTableRowMeta;
+                    const isFirstCol = index === 0;
                     return (
-                      <TableCell key={column.id} className={meta.className}>
+                      <TableCell
+                        key={column.id}
+                        className={cn(
+                          meta.className,
+                          isFirstCol &&
+                            "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                        )}
+                      >
                         {meta.skeletonClassName !== "" && (
                           <Skeleton
                             className={cn("h-3 w-24", meta.skeletonClassName)}
@@ -303,11 +340,19 @@ export function DataTable<T>({
                         onRowClick ? () => onRowClick(row.original) : undefined
                       }
                     >
-                      {row.getVisibleCells().map((cell) => {
+                      {row.getVisibleCells().map((cell, index) => {
                         const meta = cell.column.columnDef
                           .meta as DataTableRowMeta;
+                        const isFirstCol = index === 0;
                         return (
-                          <TableCell key={cell.id} className={meta.className}>
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              meta.className,
+                              isFirstCol &&
+                                "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                            )}
+                          >
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext(),

@@ -23,7 +23,7 @@ import {
 
 const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: LayoutDashboard,
-  sales: Boxes,
+
   "erp-sales-orders": Boxes,
   "erp-customers": Users,
   purchasing: FileText,

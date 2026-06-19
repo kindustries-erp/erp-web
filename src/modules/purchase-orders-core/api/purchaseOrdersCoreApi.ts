@@ -41,6 +41,7 @@ export interface ErpPurchaseOrder {
   expectedDate?: string | null;
   status?: string | null;
   remarks?: string | null;
+  supplierInvoiceNo?: string | null;
   createdAt?: string;
   inventoryStatus?: string | null;
   receipts?: ErpPoReceipt[];
@@ -54,6 +55,7 @@ export interface CreatePoPayload {
   expectedDate?: string;
   status?: string;
   remarks?: string;
+  supplierInvoiceNo?: string;
   lines?: Omit<ErpPoLine, "id" | "qtyReceived">[];
 }
 
@@ -70,13 +72,15 @@ export const purchaseOrdersCoreApi = {
   list: async (
     params?: ListParams,
   ): Promise<PaginatedResponse<ErpPurchaseOrder>> => {
+    const { page, pageSize, search, ...rest } = params || {};
     const { data } = await axiosInstance.get<
       PaginatedResponse<ErpPurchaseOrder>
     >(BASE, {
       params: {
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? 20,
-        ...(params?.search ? { search: params.search } : {}),
+        page: page ?? 1,
+        pageSize: pageSize ?? 20,
+        ...(search ? { search } : {}),
+        ...rest,
       },
     });
     return data;
@@ -105,5 +109,14 @@ export const purchaseOrdersCoreApi = {
       { params: date ? { date } : {} },
     );
     return data.nextNo;
+  },
+  remove: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${BASE}/${id}`);
+  },
+  cancel: async (id: string): Promise<ErpPurchaseOrder> => {
+    const { data } = await axiosInstance.post<PoDetailResponse>(
+      `${BASE}/${id}/cancel`,
+    );
+    return data.data;
   },
 };

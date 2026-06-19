@@ -1,0 +1,83 @@
+export const erpInvoicesVi = {
+  // Page Actions
+  reload: "Tải lại",
+  importXml: "Import XML",
+  createInvoice: "Tạo hóa đơn",
+  filters: "Tất cả trạng thái",
+
+  // Tabs
+  inbound: "Hóa đơn mua vào",
+  outbound: "Hóa đơn bán ra",
+
+  // Columns & Fields
+  invoiceDate: "Ngày HĐ",
+  serialNo: "Ký hiệu",
+  invoiceNo: "Số HĐ",
+  seller: "Bên bán",
+  buyer: "Bên mua",
+  taxCode: "MST",
+  preVatAmount: "Trước VAT",
+  vatRate: "Thuế suất",
+  vatAmount: "Thuế VAT",
+  discountAmount: "Chiết khấu",
+  totalAmount: "Thành tiền",
+  description: "Diễn giải",
+
+  // Statuses
+  statusDraft: "Nháp",
+  statusConfirmed: "Đã xác nhận",
+  statusCancelled: "Đã hủy",
+
+  // Actions
+  actionDetail: "Chi tiết",
+  actionEdit: "Chỉnh sửa",
+  actionDelete: "Xóa",
+  actionCancel: "Hủy",
+  actionSaveDraft: "Lưu nháp",
+  actionCreate: "Tạo mới",
+  actionSaveChange: "Lưu thay đổi",
+  actionSaving: "Đang lưu...",
+  actionClose: "Đóng",
+
+  // Modal Text
+  emptyData: "Chưa có hóa đơn nào.",
+  drawerTitleNew: "Tạo hóa đơn mới",
+  drawerTitleEdit: "Chỉnh sửa: {{invoiceNo}}",
+  drawerTitleView: "Chi tiết: {{invoiceNo}}",
+  generalInfo: "Thông tin chung",
+  sellerInfo: "Bên bán",
+  buyerInfo: "Bên mua",
+  taxTotalInfo: "Thuế & Tổng tiền",
+  itemsSection: "Chi tiết hóa đơn",
+
+  // Validation & Errors
+  errorInvoiceNoRequired: "Số hóa đơn là bắt buộc.",
+  errorInvoiceDateRequired: "Ngày hóa đơn là bắt buộc.",
+  errorSave: "Không thể lưu hóa đơn.",
+  errorDelete: "Không thể xóa hóa đơn.",
+  errorCancel: "Không thể hủy hóa đơn.",
+  errorImport: "Không thể import. Vui lòng thử lại.",
+
+  // Import Modal
+  importTitle: "Import XML hóa đơn",
+  importDropzoneText: "Kéo thả file <1>.xml</1> vào đây",
+  importDropzoneSubtext:
+    "hoặc click để chọn từ máy tính (tối đa 200 file, 5MB/file)",
+  importSelected: "{{count}} file đã chọn",
+  importProcessing: "Đang xử lý {{count}} file XML...",
+  importProcessingSubtext: "Hệ thống đang parse và tạo hóa đơn. Vui lòng chờ.",
+  importCreated: "{{count}} tạo mới",
+  importSkipped: "{{count}} bỏ qua",
+  importErrors: "{{count}} lỗi",
+  importTotal: "/ {{count}} file",
+  importSkippedTitle: "Hóa đơn bị bỏ qua (trùng lặp)",
+  importErrorTitle: "Lỗi xử lý",
+  importReasonDuplicated: "Trùng lặp",
+  importReason: "Lý do",
+  importErrorReason: "Lý do lỗi",
+  importFile: "File",
+  importNoData: "Không có file nào được xử lý.",
+  importActionStart: "Bắt đầu Import ({{count}} file)",
+  importActionMore: "Import thêm",
+  importActionViewCreated: "Xem hóa đơn vừa tạo",
+};

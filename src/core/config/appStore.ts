@@ -16,12 +16,11 @@ function applyDocumentTheme(appTheme: AppTheme) {
   );
 }
 
-export const STATIC_TABS: Record<string, TabInfo> = {
+export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
   purchasing: { labelKey: "nav.items.purchasing", closable: false },
 };
 
-export const SECTION_ROOTS: Record<string, SectionRoot> = {
-  sales: { labelKey: "nav.items.sales", group: "sales" },
+export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
   inventory: { labelKey: "nav.items.inventory", group: "inventory" },
   "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
@@ -79,11 +78,15 @@ export const SECTION_ROOTS: Record<string, SectionRoot> = {
     labelKey: "nav.items.phanquyen",
     group: "system",
   },
+  "erp-invoices": {
+    labelKey: "nav.items.erpInvoices",
+    group: "accounting",
+  },
 };
 
-export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
+export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
-  sales: [["breadcrumb.sales"], ["breadcrumb.salesOrders"]],
+
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
   inventory: [["breadcrumb.inventory"], ["breadcrumb.inventoryStock"]],
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
@@ -111,6 +114,7 @@ export const BREADCRUMBS: Record<string, Array<[string, string?]>> = {
   "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
+  "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
 };
 
 interface AppState {

@@ -24,6 +24,15 @@ export interface BasicMasterOption {
   name: string;
 }
 
+export interface BasicMasterErpInvoice {
+  id: string;
+  invoiceNo: string;
+  invoiceDate: string;
+  sellerName?: string | null;
+  direction: "IN" | "OUT";
+  status: string;
+}
+
 export interface BasicMasterEmployee {
   id: string;
   employeeCode: string;
@@ -38,6 +47,7 @@ export interface BasicMastersPayload {
   uoms?: BasicMasterOption[];
   itemTypes?: BasicMasterOption[];
   employees?: BasicMasterEmployee[];
+  erpInvoices?: BasicMasterErpInvoice[];
 }
 
 interface BasicMastersResponse {

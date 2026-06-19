@@ -1,5 +1,8 @@
 # Task — Unify Cash/Bank forms and remove AR duplicate flows
 
+> **HISTORICAL REFERENCE ONLY**
+> Task này thuộc cash-bank / AR / Directus-era finance flow cũ. Không dùng làm default implementation guidance cho lane `erp-master` hiện tại nếu user không mở lại scope finance legacy.
+
 ## Type
 
 ENHANCE

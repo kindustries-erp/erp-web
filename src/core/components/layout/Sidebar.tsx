@@ -24,6 +24,7 @@ import {
   Shield,
   History,
   Key,
+  Receipt,
 } from "lucide-react";
 import { IconChevronLeft, IconPin } from "./sidebarIcons";
 import { UserMenuPopover } from "./UserMenuPopover";
@@ -264,6 +265,20 @@ export function Sidebar() {
                 active={currentPage === "erp-production"}
                 onClick={() => navTo("erp-production")}
                 contextPage="erp-production"
+              />
+            </div>
+            {/* Kế toán */}
+            <div className="sidebar-nav-section py-2">
+              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                Kế toán
+              </div>
+              <NavItem
+                collapsed={c}
+                icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Hóa đơn"
+                active={currentPage === "erp-invoices"}
+                onClick={() => navTo("erp-invoices")}
+                contextPage="erp-invoices"
               />
             </div>
             {/* Hệ thống / Admin */}

@@ -33,6 +33,15 @@ export default {
         sm: "12px",
         base: "13px",
       },
+      keyframes: {
+        slideDownAndFade: {
+          from: { opacity: 0, transform: "translateY(-8px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        slideDownAndFade: "slideDownAndFade 300ms ease-out forwards",
+      },
     },
   },
   plugins: [],

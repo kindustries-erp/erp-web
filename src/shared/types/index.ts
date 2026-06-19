@@ -15,7 +15,6 @@ export type PageKey =
   | "employees"
   | "departments"
   | "positions"
-  | "sales"
   | "customers"
   | "purchasing"
   | "operating-expenses"
@@ -42,7 +41,8 @@ export type PageKey =
   | "erp-employees"
   | "erp-users"
   | "erp-activity-logs"
-  | "erp-permissions-core";
+  | "erp-permissions-core"
+  | "erp-invoices";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

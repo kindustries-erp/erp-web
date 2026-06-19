@@ -5,10 +5,10 @@ import * as fc from "fast-check";
 import { DataTable, type DataTableColumn } from "../DataTable";
 
 /**
- * Property 1: Actions column is always first when actionsColumn prop is provided
+ * Property 1: Actions column is always last when actionsColumn prop is provided
  *
  * For any DataTable rendered with an `actionsColumn` prop and any non-empty array
- * of `columns`, the first rendered column in the DOM shall always be the actions
+ * of `columns`, the last rendered column in the DOM shall always be the actions
  * column (identified by internal id `__actions`), regardless of the number or order
  * of columns in the `columns` array.
  *
@@ -21,8 +21,8 @@ interface TestItem {
 
 const ACTIONS_HEADER_TEXT = "__ACTIONS_HEADER__";
 
-describe("DataTable - Property 1: Actions column is always first when actionsColumn provided", () => {
-  it("should always render the actions column as the first column", () => {
+describe("DataTable - Property 1: Actions column is always last when actionsColumn provided", () => {
+  it("should always render the actions column as the last column", () => {
     fc.assert(
       fc.property(
         fc
@@ -66,15 +66,16 @@ describe("DataTable - Property 1: Actions column is always first when actionsCol
           const headerCells = container.querySelectorAll("thead tr th");
           expect(headerCells.length).toBeGreaterThan(0);
 
-          // The first header cell should contain the actions header text
-          const firstHeaderCell = headerCells[0];
-          expect(firstHeaderCell.textContent).toBe(ACTIONS_HEADER_TEXT);
+          // The last header cell should contain the actions header text
+          const lastHeaderCell = headerCells[headerCells.length - 1];
+          expect(lastHeaderCell.textContent).toBe(ACTIONS_HEADER_TEXT);
 
-          // Also verify via data rows: first cell in data row should be the actions cell
+          // Also verify via data rows: last cell in data row should be the actions cell
           const dataRows = container.querySelectorAll("tbody tr");
           if (dataRows.length > 0) {
-            const firstDataCell = dataRows[0].querySelectorAll("td")[0];
-            expect(firstDataCell.textContent).toBe("ACTIONS");
+            const cells = dataRows[0].querySelectorAll("td");
+            const lastDataCell = cells[cells.length - 1];
+            expect(lastDataCell.textContent).toBe("ACTIONS");
           }
 
           // Total columns should be columnKeys.length + 1 (for actions)

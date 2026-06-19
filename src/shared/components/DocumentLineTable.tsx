@@ -1,6 +1,7 @@
 import { ReactNode, useRef, useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useT } from "@/core/i18n";
+import { cn } from "@/shared/utils";
 
 export interface DocumentLineTableColumn<T> {
   key: string;
@@ -8,6 +9,7 @@ export interface DocumentLineTableColumn<T> {
   width?: string | number;
   minWidth?: string | number;
   align?: "left" | "center" | "right";
+  sortable?: boolean;
   cell: (row: T, index: number) => ReactNode;
 }
 
@@ -20,6 +22,8 @@ export interface DocumentLineTableProps<T> {
   addLabel?: string;
   disabled?: boolean;
   viewOnly?: boolean;
+  sortConfig?: { key: string; direction: "asc" | "desc" } | null;
+  onSort?: (key: string) => void;
 }
 
 export function DocumentLineTable<T>({
@@ -31,6 +35,8 @@ export function DocumentLineTable<T>({
   addLabel,
   disabled,
   viewOnly,
+  sortConfig,
+  onSort,
 }: DocumentLineTableProps<T>) {
   const t = useT();
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -95,10 +101,71 @@ export function DocumentLineTable<T>({
                       : col.align === "right"
                         ? "text-right"
                         : "text-left"
-                  }`}
+                  } ${col.sortable ? "cursor-pointer hover:bg-muted/80 transition-colors select-none" : ""}`}
                   style={{ width: col.width, minWidth: col.minWidth }}
+                  onClick={() => col.sortable && onSort?.(col.key)}
                 >
-                  {col.header}
+                  <div
+                    className={`flex items-center gap-1.5 ${col.align === "center" ? "justify-center" : col.align === "right" ? "justify-end" : "justify-start"}`}
+                  >
+                    {col.header}
+                    {col.sortable && (
+                      <div className="flex flex-col -space-y-[3px] shrink-0">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="10"
+                          height="10"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={
+                            sortConfig?.key === col.key &&
+                            sortConfig.direction === "asc"
+                              ? 3.5
+                              : 1.5
+                          }
+                          className={cn(
+                            "transition-all duration-150",
+                            sortConfig?.key === col.key
+                              ? sortConfig.direction === "asc"
+                                ? "text-foreground"
+                                : "text-muted-foreground/20"
+                              : "text-muted-foreground/40",
+                          )}
+                        >
+                          <path d="m18 15-6-6-6 6" />
+                        </svg>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="10"
+                          height="10"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={
+                            sortConfig?.key === col.key &&
+                            sortConfig.direction === "desc"
+                              ? 3.5
+                              : 1.5
+                          }
+                          className={cn(
+                            "transition-all duration-150",
+                            sortConfig?.key === col.key
+                              ? sortConfig.direction === "desc"
+                                ? "text-foreground"
+                                : "text-muted-foreground/20"
+                              : "text-muted-foreground/40",
+                          )}
+                        >
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                 </th>
               ))}
               {hasActions && (

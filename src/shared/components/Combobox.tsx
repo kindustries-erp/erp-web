@@ -7,6 +7,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 export interface ComboboxOption {
   value: string;
   label: string;
+  searchText?: string;
 }
 
 interface ComboboxProps {
@@ -47,7 +48,9 @@ export function Combobox({
   const selected = options.find((o) => o.value === value);
 
   const filtered = query.trim()
-    ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+    ? options.filter((o) =>
+        (o.searchText || o.label).toLowerCase().includes(query.toLowerCase()),
+      )
     : options;
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {

@@ -52,3 +52,13 @@ export async function getProfileApi(): Promise<CoreProfileResponse> {
   );
   return data;
 }
+
+export async function impersonateApi(
+  targetUserId: string,
+): Promise<CoreLoginResponse> {
+  const { data } = await axiosInstance.post<CoreLoginResponse>(
+    "/api/v1/auth/impersonate",
+    { targetUserId },
+  );
+  return data;
+}

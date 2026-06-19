@@ -4,6 +4,7 @@ import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 export interface ErpBomLine {
   id?: string;
   componentItemId?: string;
+  componentItemCode?: string;
   componentItemName?: string;
   qtyRequired: string;
   uom: string;
@@ -51,9 +52,9 @@ export const bomCoreApi = {
   list: async (params?: ListParams): Promise<PaginatedResponse<ErpBom>> => {
     const { data } = await axiosInstance.get<PaginatedResponse<ErpBom>>(BASE, {
       params: {
-        page: params?.page ?? 1,
-        pageSize: params?.pageSize ?? 20,
-        ...(params?.search ? { search: params.search } : {}),
+        page: 1,
+        pageSize: 20,
+        ...params,
       },
     });
     return data;
@@ -74,5 +75,8 @@ export const bomCoreApi = {
       payload,
     );
     return data.data;
+  },
+  remove: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${BASE}/${id}`);
   },
 };

@@ -96,4 +96,13 @@ export const salesOrdersCoreApi = {
     );
     return data.data;
   },
+  remove: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${BASE}/${id}`);
+  },
+  cancel: async (id: string): Promise<ErpSalesOrder> => {
+    const { data } = await axiosInstance.post<SoDetailResponse>(
+      `${BASE}/${id}/cancel`,
+    );
+    return data.data;
+  },
 };

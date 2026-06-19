@@ -1,5 +1,5 @@
-import { OperationalListPage } from "@/modules/operational/components/OperationalListPage";
+import { PurchaseOrderListPage } from "@/modules/purchase-orders-core/components/PurchaseOrderListPage";
 
 export function MuaHang() {
-  return <OperationalListPage variant="purchase" />;
+  return <PurchaseOrderListPage />;
 }

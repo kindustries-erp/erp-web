@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Pencil, Settings, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Pencil, Trash2, Plus, Settings2 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -9,7 +9,9 @@ import {
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { SearchInput } from "@/shared/components/SearchInput";
+import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
@@ -25,7 +27,7 @@ import {
   type ChartOfAccount,
   type CreateChartOfAccountDto,
 } from "@/modules/accounting/api/catalogApi";
-import { SectionHeader, TagCell, ErrorBanner, extractApiError } from "./shared";
+import { TagCell, ErrorBanner, extractApiError, BtnPrimary } from "./shared";
 
 const ACC_TYPES = [
   { value: "asset", label: "Tài sản" },
@@ -76,7 +78,13 @@ function buildCoaForm(c: ChartOfAccount): CoaForm {
   };
 }
 
-export function TKTab() {
+export function TKTab({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab?: string;
+  onTabChange?: (v: string) => void;
+}) {
   const [items, setItems] = useState<ChartOfAccount[]>([]);
   const [allItems, setAllItems] = useState<ChartOfAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,6 +103,20 @@ export function TKTab() {
   const [deleting, setDeleting] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const t = useT();
+
+  const filterConfig = useMemo(() => ({ search: true }), []);
+  const filterPanel = useFilterPanel(filterConfig, () => setPage(1));
+
+  useEffect(() => {
+    if (search !== (filterPanel.state.search || "")) {
+      setSearch(filterPanel.state.search || "");
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+      searchTimer.current = setTimeout(() => {
+        setPage(1);
+        loadItems(1, pageSize, filterPanel.state.search || "");
+      }, 400);
+    }
+  }, [filterPanel.state.search, search, pageSize]);
 
   useEffect(() => {
     getChartOfAccountsApi()
@@ -123,15 +145,6 @@ export function TKTab() {
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleSearch(val: string) {
-    setSearch(val);
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setPage(1);
-      loadItems(1, pageSize, val);
-    }, 400);
   }
 
   function handlePageSize(ps: number) {
@@ -258,54 +271,67 @@ export function TKTab() {
   ];
 
   return (
-    <div>
-      <SectionHeader
-        title={t("settings.tk.title")}
-        desc={t("settings.tk.desc")}
-        icon={<Settings className="h-4 w-4" />}
-        onAdd={openNew}
-      />
-      <div className="mb-3">
-        <SearchInput
-          value={search}
-          onChange={handleSearch}
-          placeholder={t("settings.tk.searchPlaceholder")}
-        />
+    <PageLayout
+      title="Thiết lập kế toán"
+      desc="Danh mục tài khoản và cấu hình hạch toán tự động"
+      icon={<Settings2 className="w-5 h-5" />}
+      tabs={[
+        { value: "chart-of-accounts", label: "Danh mục tài khoản" },
+        { value: "accounting-config", label: "Cấu hình hạch toán" },
+      ]}
+      activeTab={activeTab || "chart-of-accounts"}
+      onTabChange={onTabChange}
+      actions={
+        <div className="flex items-center gap-2">
+          <FilterButton
+            activeCount={filterPanel.activeFilterCount}
+            onClick={filterPanel.togglePanel}
+          />
+          <BtnPrimary type="button" onClick={openNew}>
+            <Plus className="w-4 h-4" /> {t("common.addNew")}
+          </BtnPrimary>
+        </div>
+      }
+    >
+      <div className="flex items-start">
+        <div className="flex-1 min-w-0">
+          <DataTable
+            items={items}
+            columns={columns}
+            getRowKey={(c) => c.id}
+            loading={loading}
+            error={fetchError}
+            emptyLabel={t("common.noData")}
+            minWidth={700}
+            loadingRows={4}
+            actionsColumn={{
+              cell: (c) => {
+                const actionItems: ActionItem[] = [
+                  {
+                    label: t("common.edit"),
+                    onClick: () => openEdit(c),
+                    icon: <Pencil size={14} />,
+                  },
+                  {
+                    label: t("common.delete"),
+                    onClick: () => setDeleteTarget(c),
+                    icon: <Trash2 size={14} />,
+                    variant: "danger",
+                  },
+                ];
+                return <ActionDropdown items={actionItems} />;
+              },
+            }}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={handlePageSize}
+          />
+        </div>
+        <FilterPanel config={filterConfig} filter={filterPanel} />
       </div>
-      <DataTable
-        items={items}
-        columns={columns}
-        getRowKey={(c) => c.id}
-        loading={loading}
-        error={fetchError}
-        emptyLabel={t("common.noData")}
-        minWidth={700}
-        loadingRows={4}
-        actionsColumn={{
-          cell: (c) => {
-            const actionItems: ActionItem[] = [
-              {
-                label: t("common.edit"),
-                onClick: () => openEdit(c),
-                icon: <Pencil size={14} />,
-              },
-              {
-                label: t("common.delete"),
-                onClick: () => setDeleteTarget(c),
-                icon: <Trash2 size={14} />,
-                variant: "danger",
-              },
-            ];
-            return <ActionDropdown items={actionItems} />;
-          },
-        }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
-      />
 
       <DrawerModal
         open={drawerOpen}
@@ -419,6 +445,6 @@ export function TKTab() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </PageLayout>
   );
 }

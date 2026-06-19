@@ -1,30 +1,37 @@
 # ERP Web Agent Bootstrap
 
-This file is the entrypoint for any AI agent/model working in this repository.
+Entry point for this repo.
 
-## Required reading order
+## Read order
 
-1. `docs/ai/technical-instructions.md` (canonical rules)
-2. `docs/app-structure.md` (architecture and layering)
-3. Relevant task file in `docs/tasks/`
+1. `.agents/README.md`
+2. `.agents/context/current-truth.md`
+3. `.agents/context/working-contract.md`
+4. `.agents/tasks/current-lane.md`
+5. `docs/ai/technical-instructions.md`
+6. `docs/app-structure.md`
+7. Relevant `docs/tasks/*`
 
-## Mandatory execution contract
+## Execution contract
 
-- No code without a task file in `docs/tasks/`.
-- Tick checklist items (`[ ]` -> `[x]`) in realtime when each sub-task is done.
-- If any issue/blocker occurs, record it in lessons learned before closing task.
-- Bun-first: all install/build/test/lint/format commands in this repo must use `bun` / `bunx`, not `npm`, `npx`, `pnpm`, or `yarn`, unless the task records a verified Bun incompatibility.
+- no code without a task file
+- update checklists in real time
+- record lessons learned for blockers
+- use `bun` / `bunx` unless Bun incompatibility is proven
+- before commit/push, `cd /opt/repos/liouni-erp-core/liouni-erp-web`
+- push with `github-industries`
+- reuse existing components/hooks/utils/helpers/functions/page patterns first
+- extend/adapt before duplicating
 
-## Canonical references
+## References
 
-- Technical instructions: `docs/ai/technical-instructions.md`
-- Task template: `docs/tasks/_template.md`
+- `docs/ai/technical-instructions.md`
+- `docs/tasks/_template.md`
 
-## Testing rules (NON-NEGOTIABLE)
+## Tests
 
-- Pre-commit hook runs ALL tests (`bunx vitest run`). If tests fail, commit is blocked.
-- **If a test fails, fix the SOURCE CODE — NOT the test.** Tests are the source of truth for expected behavior.
-- Unit tests live in `__tests__/*.test.ts(x)` co-located with source.
-- Run tests: `bunx vitest run` (all) or `bunx vitest run src/path/to/file.test.ts` (specific).
-- Framework: Vitest + React Testing Library + fast-check (property tests).
-- Lessons template: `docs/lessons-learned/_template.md`
+- pre-commit runs `bunx vitest run`
+- fix source, not tests
+- tests live in `__tests__/*.test.ts(x)`
+- run all: `bunx vitest run`
+- run one file: `bunx vitest run src/path/to/file.test.ts`

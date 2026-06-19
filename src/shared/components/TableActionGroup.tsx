@@ -3,6 +3,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { cn } from "@/shared/utils";
+import { useT } from "@/core/i18n";
 
 interface TableActionGroupProps {
   onRefresh?: () => void;
@@ -26,6 +27,7 @@ export function TableActionGroup({
   createLabel = "Tạo mới",
   children,
 }: TableActionGroupProps) {
+  const t = useT();
   return (
     <div className="flex items-center gap-2 w-full justify-end">
       {onRefresh && (
@@ -39,7 +41,7 @@ export function TableActionGroup({
           <RefreshCcw
             className={cn("h-3.5 w-3.5", loading && "animate-spin")}
           />
-          <span>Tải lại</span>
+          <span>{t("Tải lại")}</span>
         </Button>
       )}
 
@@ -55,7 +57,7 @@ export function TableActionGroup({
       {onCreate && (
         <BtnPrimary onClick={onCreate}>
           <Plus className="h-4 w-4 mr-1" />
-          {createLabel}
+          {t(createLabel)}
         </BtnPrimary>
       )}
     </div>

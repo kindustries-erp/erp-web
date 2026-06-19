@@ -9,6 +9,7 @@ export interface ActionItem {
   icon?: ReactNode;
   variant?: "default" | "danger";
   hidden?: boolean;
+  disabled?: boolean;
 }
 
 export interface ActionDropdownProps {
@@ -21,7 +22,7 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
   if (visibleItems.length === 0) return null;
 
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
@@ -34,17 +35,22 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           sideOffset={4}
-          align="start"
+          align="end"
           className="z-[9999] min-w-[140px] rounded-lg p-1 popup-content"
         >
           {visibleItems.map((item) => (
             <DropdownMenu.Item
               key={item.label}
-              onClick={item.onClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                item.onClick();
+              }}
               className={cn(
                 "flex items-center gap-2 px-3 py-[6px] rounded-md text-xs cursor-pointer outline-none select-none",
-                "hover:bg-[color:var(--popup-bg-hover)]",
-                "data-[highlighted]:bg-[color:var(--popup-bg-hover)]",
+                !item.disabled &&
+                  "hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)]",
+                item.disabled &&
+                  "opacity-50 cursor-not-allowed pointer-events-none",
                 item.variant === "danger" ? "text-red-500" : "text-foreground",
               )}
             >

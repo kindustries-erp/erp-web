@@ -1,5 +1,8 @@
 # Task — Customers, Suppliers pages + Operational create/update modals
 
+> **HISTORICAL REFERENCE ONLY**
+> Task này thuộc legacy operational / Directus-era flow cũ trước lane `erp-master` hiện tại. Không dùng làm default implementation guidance nếu user không mở lại scope legacy operational.
+
 ## Request Input (bạn chỉ cần điền phần này)
 
 - Type: FEATURE
