@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/kindustries-erp/erp-klotus-web
+  IMAGE_NAME: ghcr.io/kindustries-erp/erp-web-klotus-staging
 
 jobs:
   build-and-push:
@@ -49,8 +49,8 @@ jobs:
             VITE_API_BASE_URL=${{ vars.KLOTUS_STAGING_WEB_API_BASE_URL }}
             VITE_APP_ENV=production
           tags: |
-            ${{ env.IMAGE_NAME }}:staging
-            ${{ env.IMAGE_NAME }}:staging-${{ steps.meta.outputs.sha }}
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -84,9 +84,9 @@ jobs:
             -p ${{ vars.ELITE_PORT }} \
             ${{ vars.ELITE_USER }}@${{ vars.ELITE_HOST }} \
             "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin ; \
-             docker pull ${{ env.IMAGE_NAME }}:staging-${{ needs.build-and-push.outputs.sha }} || true ; \
+             docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} || true ; \
              docker rm -f erp-web-klotus-staging || true ; \
-             docker run -d --name erp-web-klotus-staging --restart always --add-host erp-api-klotus-staging:host-gateway -p 8021:80 ${{ env.IMAGE_NAME }}:staging-${{ needs.build-and-push.outputs.sha }}"
+             docker run -d --name erp-web-klotus-staging --restart always --add-host erp-api-klotus-staging:host-gateway -p 8021:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check
         run: |
