@@ -45,6 +45,7 @@ export function usePurchaseOrderDrawer({
     setSaving,
     setError,
     setSubmittingStatus,
+    setSupplierInvoiceOptions,
   } = store;
 
   // -------------------------------------------------------------------------
@@ -144,13 +145,13 @@ export function usePurchaseOrderDrawer({
             value: inv.invoiceNo,
             label: `${inv.invoiceNo} ${inv.sellerName ? `(${inv.sellerName})` : ""}`,
           }));
-        store.setSupplierInvoiceOptions(invOptions);
+        setSupplierInvoiceOptions(invOptions);
       })
       .catch(() => {
         setInventoryItemOptions([]);
-        store.setSupplierInvoiceOptions([]);
+        setSupplierInvoiceOptions([]);
       });
-  }, [open, viewOnly, store]);
+  }, [open, viewOnly, setInventoryItemOptions, setSupplierInvoiceOptions]);
 
   // -------------------------------------------------------------------------
   // Init form
