@@ -40,6 +40,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     loadingItems,
     vehicleOptions,
     moOptions,
+    close,
     handleSave,
     setViewOnly,
   } = drawer;

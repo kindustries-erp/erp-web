@@ -10,6 +10,11 @@ export interface ExecuteProductionPayload {
   plannedEndDate?: string;
   outputMetadata?: Record<string, unknown>;
   status?: string;
+  materialOverrides?: Array<{
+    originalItemId: string;
+    alternativeItemId: string;
+    notes?: string;
+  }>;
 }
 
 export interface MaterialIssuedItem {
@@ -78,6 +83,12 @@ export interface ErpProductionOrderMaterial {
   itemName?: string | null;
 }
 
+export interface ProductionOrderMasterOption {
+  value: string;
+  label: string;
+  details: ErpProductionOrder;
+}
+
 const BASE_EXECUTE = "/api/v1/production/execute";
 const BASE_ORDERS = "/api/v1/production/orders";
 
@@ -137,5 +148,27 @@ export const productionCoreApi = {
       data: ErpProductionOrder;
     }>(`/api/v1/production/${id}/confirm`);
     return data.data;
+  },
+
+  listMasterOptions: async (
+    params?: ListParams,
+  ): Promise<ProductionOrderMasterOption[]> => {
+    const res = await productionCoreApi.list({
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 200,
+      ...(params?.search ? { search: params.search } : {}),
+      ...(params?.status ? { status: params.status } : {}),
+      ...(params?.dateFrom ? { dateFrom: params.dateFrom } : {}),
+      ...(params?.dateTo ? { dateTo: params.dateTo } : {}),
+      ...(params?.finishedGoodItemId
+        ? { finishedGoodItemId: params.finishedGoodItemId }
+        : {}),
+    });
+
+    return (res.items ?? []).map((item) => ({
+      value: item.id,
+      label: item.referenceNo || item.finishedGoodItemName || item.id,
+      details: item,
+    }));
   },
 };

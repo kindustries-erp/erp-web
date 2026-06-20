@@ -8,7 +8,10 @@ import {
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
 import type { ErpVehicle } from "@/modules/manufacturing/api/manufacturingApi";
-import { productionCoreApi } from "@/modules/production-core/api/productionCoreApi";
+import {
+  productionCoreApi,
+  type ProductionOrderMasterOption,
+} from "@/modules/production-core/api/productionCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useT } from "@/core/i18n";
 
@@ -173,13 +176,7 @@ export function useGiDrawer({
   >([]);
 
   // Production Order options
-  const [moOptions, setMoOptions] = useState<
-    Array<{
-      value: string;
-      label: string;
-      details: ErpGoodsIssue | Record<string, unknown>;
-    }>
-  >([]);
+  const [moOptions, setMoOptions] = useState<ProductionOrderMasterOption[]>([]);
 
   const loadGiLookups = useCallback(async () => {
     try {
@@ -195,18 +192,11 @@ export function useGiDrawer({
         })),
       );
 
-      const moRes = await productionCoreApi.list({
+      const moOptions = await productionCoreApi.listMasterOptions({
         page: 1,
         pageSize: LOOKUP_LIMIT,
       });
-      const moList = moRes.items ?? [];
-      setMoOptions(
-        moList.map((m: Record<string, unknown>) => ({
-          value: String(m.id ?? ""),
-          label: String(m.referenceNo ?? m.id ?? ""),
-          details: m,
-        })),
-      );
+      setMoOptions(moOptions);
     } catch {
       /* silent */
     }

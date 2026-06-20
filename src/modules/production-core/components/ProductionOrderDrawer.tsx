@@ -62,6 +62,13 @@ export function ProductionOrderDrawer({
     localSearch,
     setLocalSearch,
     handleConfirmOrder,
+    alternativeItems,
+    setAlternativeItem,
+    clearAlternativeItem,
+    altItemOptions,
+    setAltItemSearch,
+    fetchNextAltItems,
+    loadingAltItems,
   } = drawerState;
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
@@ -162,9 +169,24 @@ export function ProductionOrderDrawer({
                     ? requiredQty
                     : requiredQty * Number(form.qtyToProduce || 1);
 
-                  const balanceKey = line.itemId ?? "";
-                  const b = balances[balanceKey] || { availableQty: 0 };
-                  const availableQty = b.availableQty;
+                  const originalItemId =
+                    line.originalItemId ?? line.itemId ?? "";
+                  const selectedAltItemId =
+                    alternativeItems[originalItemId] ?? "";
+                  const effectiveItemId =
+                    selectedAltItemId || line.itemId || "";
+                  const baseBalance = balances[line.itemId ?? ""] || {
+                    availableQty: 0,
+                  };
+                  const effectiveBalance = balances[effectiveItemId] || {
+                    availableQty: 0,
+                  };
+                  const availableQty = effectiveBalance.availableQty;
+                  const altOption = altItemOptions.find(
+                    (option) => option.value === selectedAltItemId,
+                  );
+                  const displayItemCode = line.itemCode || line.itemId || "—";
+                  const displayItemName = line.itemName || "—";
 
                   // Highlight pink/light red if lacking stock and we are creating or in DRAFT
                   const isLacking = displayRequired > availableQty;
@@ -173,8 +195,67 @@ export function ProductionOrderDrawer({
 
                   return (
                     <tr key={line.id} className={trClass}>
-                      <td className="px-3 py-2 font-medium">{line.itemId}</td>
-                      <td className="px-3 py-2">{line.itemName}</td>
+                      <td className="px-3 py-2 font-medium">
+                        {displayItemCode}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="space-y-2">
+                          <div>{displayItemName}</div>
+                          {!editing && isLacking && originalItemId ? (
+                            <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-2">
+                              <div className="text-[11px] font-medium text-amber-800">
+                                {t(
+                                  "Thiếu tồn. Có thể chọn NVL thay thế để tạo MO nháp/xác nhận.",
+                                )}
+                              </div>
+                              <Combobox
+                                value={selectedAltItemId}
+                                onChange={(value) => {
+                                  if (!value) {
+                                    clearAlternativeItem(originalItemId);
+                                    return;
+                                  }
+                                  setAlternativeItem(originalItemId, value);
+                                }}
+                                options={altItemOptions}
+                                placeholder={t("Chọn NVL thay thế")}
+                                searchPlaceholder={t("Tìm SKU / tên NVL")}
+                                onSearch={setAltItemSearch}
+                                onScrollBottom={fetchNextAltItems}
+                                loading={loadingAltItems}
+                                disabled={
+                                  saving ||
+                                  viewOnly ||
+                                  isCompleted ||
+                                  isConfirmed
+                                }
+                              />
+                              {selectedAltItemId && (
+                                <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                                  <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
+                                    {t("Đang thay thế")}:{" "}
+                                    {altOption?.label || selectedAltItemId}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {t("Tồn gốc")}:{" "}
+                                    {fmtQty(
+                                      String(baseBalance.availableQty ?? 0),
+                                    )}
+                                  </span>
+                                  <span className="text-muted-foreground">
+                                    {t("Tồn thay thế")}:{" "}
+                                    {fmtQty(
+                                      String(
+                                        effectiveBalance.availableQty ?? 0,
+                                      ),
+                                    )}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          ) : null}
+                        </div>
+                      </td>
                       <td className="px-3 py-2 text-right text-amber-700 font-semibold">
                         {fmtQty(displayRequired.toString())}
                       </td>
