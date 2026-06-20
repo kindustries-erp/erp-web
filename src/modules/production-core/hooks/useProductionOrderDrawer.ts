@@ -6,6 +6,7 @@ import {
 } from "@/modules/production-core/api/productionCoreApi";
 import { useAppStore } from "@/core/config/appStore";
 import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 
 export interface UseProductionOrderDrawerProps {
   open: boolean;
@@ -40,6 +41,13 @@ export function useProductionOrderDrawer({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGeneralInfo, setShowGeneralInfo] = useState(true);
+  const [balances, setBalances] = useState<
+    Record<
+      string,
+      { qtyOnHand: number; qtyReserved: number; availableQty: number }
+    >
+  >({});
+  const [localSearch, setLocalSearch] = useState("");
 
   const loadItems = useCallback(async () => {
     try {
@@ -71,18 +79,36 @@ export function useProductionOrderDrawer({
           const bom = res.items[0];
           if (bom) {
             bomCoreApi.get(bom.id).then((fullBom) => {
-              setBomLines(fullBom.lines || []);
+              const lines = fullBom.lines || [];
+              setBomLines(lines);
+              const itemIds = lines.map((l: any) => l.itemId);
+              if (itemIds.length) {
+                inventoryCoreApi.getBalances(itemIds).then(setBalances);
+              } else {
+                setBalances({});
+              }
             });
           } else {
             setBomLines([]);
+            setBalances({});
           }
         })
-        .catch(() => setBomLines([]));
+        .catch(() => {
+          setBomLines([]);
+          setBalances({});
+        });
     } else if (editing && editing.lines) {
       // Use existing lines if editing (but we may want to map them similarly)
       setBomLines(editing.lines);
+      const itemIds = editing.lines.map((l: any) => l.itemId);
+      if (itemIds.length) {
+        inventoryCoreApi.getBalances(itemIds).then(setBalances);
+      } else {
+        setBalances({});
+      }
     } else {
       setBomLines([]);
+      setBalances({});
     }
   }, [form.finishedGoodItemId, editing]);
 
@@ -109,7 +135,7 @@ export function useProductionOrderDrawer({
     }
   }, [open, editing, loadItems]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (status: string = "CONFIRMED") => {
     if (!form.finishedGoodItemId) {
       setError("Vui lòng chọn thành phẩm");
       return;
@@ -135,6 +161,7 @@ export function useProductionOrderDrawer({
           ? { plannedStartDate: form.plannedStartDate }
           : {}),
         ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
+        status,
       };
 
       if (!editing) {
@@ -165,6 +192,29 @@ export function useProductionOrderDrawer({
     }
   };
 
+  const handleConfirmOrder = async () => {
+    if (!editing?.id) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await productionCoreApi.confirm(editing.id);
+      showToast({
+        title: "Xác nhận lệnh sản xuất thành công",
+        variant: "success",
+      });
+      await onSaved();
+      onClose();
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+          e?.message ||
+          "Không thể xác nhận lệnh sản xuất",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const onIssueMaterial = () => {
     if (!editing?.id) return;
     // Set query params or session storage so the GI page knows to prefill for this MO
@@ -186,10 +236,14 @@ export function useProductionOrderDrawer({
     saving,
     error,
     handleSubmit,
+    handleConfirmOrder,
     onIssueMaterial,
     onReceiveFinishedGood,
     showGeneralInfo,
     setShowGeneralInfo,
     bomLines,
+    balances,
+    localSearch,
+    setLocalSearch,
   };
 }

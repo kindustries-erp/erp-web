@@ -9,6 +9,7 @@ export interface ExecuteProductionPayload {
   plannedStartDate?: string;
   plannedEndDate?: string;
   outputMetadata?: Record<string, unknown>;
+  status?: string;
 }
 
 export interface MaterialIssuedItem {
@@ -128,6 +129,13 @@ export const productionCoreApi = {
       message: string;
       data: ErpProductionOrder;
     }>(`/api/v1/production/${id}/cancel`);
+    return data.data;
+  },
+  confirm: async (id: string): Promise<ErpProductionOrder> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: ErpProductionOrder;
+    }>(`/api/v1/production/${id}/confirm`);
     return data.data;
   },
 };

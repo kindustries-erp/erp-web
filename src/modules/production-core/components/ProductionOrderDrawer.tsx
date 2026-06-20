@@ -61,6 +61,10 @@ export function ProductionOrderDrawer({
     showGeneralInfo,
     setShowGeneralInfo,
     bomLines,
+    balances,
+    localSearch,
+    setLocalSearch,
+    handleConfirmOrder,
   } = drawerState;
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
@@ -68,6 +72,8 @@ export function ProductionOrderDrawer({
   const isConfirmed =
     editing?.status === "CONFIRMED" || editing?.status === "IN_PROGRESS";
   const isCompleted = editing?.status === "COMPLETED";
+
+  const isDraft = editing?.status === "DRAFT";
 
   const actions = viewOnly
     ? [
@@ -84,84 +90,105 @@ export function ProductionOrderDrawer({
           variant: "outline" as const,
           disabled: saving,
         },
-        {
-          label: editing ? t("Lưu thay đổi") : t("Tạo Lệnh Sản Xuất"),
-          primary: true,
-          loading: saving,
-          disabled: saving || isConfirmed || isCompleted,
-          onClick: handleSubmit,
-        },
+        ...(!editing
+          ? [
+              {
+                label: t("Lưu Nháp"),
+                onClick: () => handleSubmit("DRAFT"),
+                variant: "secondary" as const,
+                disabled: saving,
+                loading: saving,
+              },
+            ]
+          : []),
+        ...(isDraft
+          ? [
+              {
+                label: t("Xác nhận lệnh"),
+                primary: true,
+                loading: saving,
+                disabled: saving,
+                onClick: handleConfirmOrder,
+              },
+            ]
+          : [
+              {
+                label: editing ? t("Lưu thay đổi") : t("Tạo Lệnh Sản Xuất"),
+                primary: true,
+                loading: saving,
+                disabled: saving || isConfirmed || isCompleted,
+                onClick: () => handleSubmit("CONFIRMED"),
+              },
+            ]),
       ];
 
+  const filteredBomLines = bomLines?.filter((line: any) => {
+    const s = localSearch.toLowerCase();
+    const name = (line.itemName || "").toLowerCase();
+    const sku = (line.itemId || "").toLowerCase();
+    return name.includes(s) || sku.includes(s);
+  });
+
   const leftPanel = (
-    <div className="flex h-full flex-col p-4 md:p-6 space-y-6">
-      <DrawerSection title={t("Thông tin sản phẩm")}>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <DrawerField label={t("Thành phẩm")} required>
-            <Combobox
-              value={form.finishedGoodItemId}
-              onChange={(v) =>
-                setForm((p: any) => ({ ...p, finishedGoodItemId: v }))
-              }
-              options={itemOptions}
-              placeholder={t("Chọn thành phẩm")}
-              searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-              disabled={saving || isConfirmed || isCompleted || viewOnly}
-            />
-          </DrawerField>
-
-          <DrawerField label={t("Số lượng kế hoạch")} required>
+    <div className="flex h-full flex-col space-y-6">
+      <DrawerSection
+        title={t(`CHI TIẾT BOM (${bomLines?.length || 0})`)}
+        titleExtra={
+          <div className="flex items-center space-x-2">
             <input
-              type="number"
-              min="0.001"
-              step="any"
-              value={form.qtyToProduce}
-              onChange={(e) =>
-                setForm((p: any) => ({ ...p, qtyToProduce: e.target.value }))
-              }
-              disabled={saving || isConfirmed || isCompleted || viewOnly}
-              className={inputCls}
-              placeholder="1"
+              type="text"
+              placeholder={t("Tìm kiếm mã / tên...")}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
+              className={cn(inputCls, "h-8 text-xs py-1 px-2 w-[200px]")}
             />
-          </DrawerField>
-
-          {editing && (
-            <DrawerField label={t("Số lượng đã sản xuất")}>
-              <div className="text-sm font-semibold text-emerald-600">
-                {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}
-              </div>
-            </DrawerField>
-          )}
-        </div>
-      </DrawerSection>
-
-      {bomLines && bomLines.length > 0 && (
-        <DrawerSection title={t("Nguyên vật liệu (BOM)")}>
+          </div>
+        }
+      >
+        {filteredBomLines && filteredBomLines.length > 0 ? (
           <div className="rounded-xl border border-border overflow-hidden">
             <table className="min-w-full text-xs">
               <thead className="bg-muted text-left uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2">{t("Mặt hàng")}</th>
-                  <th className="px-3 py-2 text-right">{t("Cần dùng")}</th>
-                  <th className="px-3 py-2 text-right">{t("Đã xuất")}</th>
+                  <th className="px-3 py-2">{t("Mã Linh Kiện")}</th>
+                  <th className="px-3 py-2">{t("Tên Linh Kiện")}</th>
+                  <th className="px-3 py-2 text-right">{t("Cần Dùng")}</th>
+                  <th className="px-3 py-2 text-right">{t("Khả Dụng")}</th>
+                  <th className="px-3 py-2 text-right">{t("Đã Xuất")}</th>
                   <th className="px-3 py-2">{t("ĐVT")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-card">
-                {bomLines.map((line: any) => {
+                {filteredBomLines.map((line: any) => {
                   const requiredQty = Number(line.qtyRequired || 0);
                   const displayRequired = editing
                     ? requiredQty
                     : requiredQty * Number(form.qtyToProduce || 1);
+
+                  const b = balances[line.itemId] || { availableQty: 0 };
+                  const availableQty = b.availableQty;
+
+                  // Highlight pink/light red if lacking stock and we are creating or in DRAFT
+                  const isLacking = displayRequired > availableQty;
+                  const trClass =
+                    (!editing || isDraft) && isLacking ? "bg-red-50" : "";
+
                   return (
-                    <tr key={line.id}>
-                      <td className="px-3 py-2 font-medium">
-                        {line.itemName || line.itemId}
-                      </td>
+                    <tr key={line.id} className={trClass}>
+                      <td className="px-3 py-2 font-medium">{line.itemId}</td>
+                      <td className="px-3 py-2">{line.itemName}</td>
                       <td className="px-3 py-2 text-right text-amber-700 font-semibold">
                         {fmtQty(displayRequired.toString())}
                       </td>
-                      <td className="px-3 py-2 text-right text-emerald-700 font-semibold">
+                      <td
+                        className={cn(
+                          "px-3 py-2 text-right font-semibold",
+                          isLacking ? "text-red-600" : "text-emerald-700",
+                        )}
+                      >
+                        {fmtQty(availableQty.toString())}
+                      </td>
+                      <td className="px-3 py-2 text-right text-muted-foreground">
                         {fmtQty(line.qtyIssued || "0")}
                       </td>
                       <td className="px-3 py-2 text-muted-foreground">
@@ -173,15 +200,19 @@ export function ProductionOrderDrawer({
               </tbody>
             </table>
           </div>
-        </DrawerSection>
-      )}
+        ) : (
+          <div className="text-sm text-muted-foreground italic px-2 py-4">
+            {t("Không có dữ liệu BOM hoặc chưa chọn thành phẩm")}
+          </div>
+        )}
+      </DrawerSection>
     </div>
   );
 
   const rightPanel = (
     <div
       className={cn(
-        "shrink-0 space-y-4 transition-all duration-300 xl:sticky xl:top-0 bg-slate-50 border-l border-border",
+        "shrink-0 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
         showGeneralInfo ? "w-full xl:w-[320px]" : "w-full xl:w-[52px]",
       )}
     >
@@ -224,6 +255,46 @@ export function ProductionOrderDrawer({
             className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)] space-y-4 p-4 md:p-6"
             style={{ scrollbarWidth: "none" }}
           >
+            <DrawerField label={t("Thành phẩm")} required>
+              <Combobox
+                value={form.finishedGoodItemId}
+                onChange={(v) =>
+                  setForm((p: any) => ({ ...p, finishedGoodItemId: v }))
+                }
+                options={itemOptions}
+                placeholder={t("Chọn thành phẩm")}
+                searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
+                disabled={
+                  saving || isConfirmed || isCompleted || viewOnly || !!editing
+                }
+              />
+            </DrawerField>
+
+            <DrawerField label={t("Số lượng kế hoạch")} required>
+              <input
+                type="number"
+                min="0.001"
+                step="any"
+                value={form.qtyToProduce}
+                onChange={(e) =>
+                  setForm((p: any) => ({ ...p, qtyToProduce: e.target.value }))
+                }
+                disabled={saving || isConfirmed || isCompleted || viewOnly}
+                className={inputCls}
+                placeholder="1"
+              />
+            </DrawerField>
+
+            {editing && (
+              <DrawerField label={t("Số lượng đã sản xuất")}>
+                <div className="text-sm font-semibold text-emerald-600 border border-emerald-200 bg-emerald-50 rounded-md px-3 py-2">
+                  {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}
+                </div>
+              </DrawerField>
+            )}
+
+            <div className="border-t border-border pt-4 mt-2 mb-2"></div>
+
             <DrawerField label={t("Reference No")}>
               <input
                 value={form.referenceNo}
