@@ -202,6 +202,29 @@ export function ProductionOrderDrawer({
                   cell: (line: BomLikeLine) => line.itemName || "—",
                 },
                 {
+                  key: "altItemCode",
+                  header: t("Mã LK thay thế"),
+                  cell: (line: BomLikeLine) => {
+                    const originalItemId =
+                      line.originalItemId ?? line.itemId ?? "";
+                    const selectedAltItemId =
+                      alternativeItems[originalItemId] ?? "";
+                    const altOption = altItemOptions.find(
+                      (o) => o.value === selectedAltItemId,
+                    );
+                    const label =
+                      altOption?.label || line.alternativeItemName || "";
+                    const code = label.includes(" — ")
+                      ? label.split(" — ")[0]
+                      : line.alternativeItemCode || "—";
+                    return (
+                      <span className="font-medium text-blue-700">
+                        {selectedAltItemId ? code : "—"}
+                      </span>
+                    );
+                  },
+                },
+                {
                   key: "altItem",
                   header: t("NVL thay thế"),
                   cell: (line: BomLikeLine) => {
@@ -518,7 +541,10 @@ export function ProductionOrderDrawer({
                       <button
                         onClick={handleStartProduction}
                         disabled={
-                          saving || !Number(startQty) || Number(startQty) <= 0
+                          saving ||
+                          !Number(startQty) ||
+                          Number(startQty) <= 0 ||
+                          Number(startQty) > Number(editing.qtyToProduce ?? 0)
                         }
                         className="flex-1 rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
                       >
@@ -586,7 +612,10 @@ export function ProductionOrderDrawer({
                         disabled={
                           saving ||
                           !Number(completeQty) ||
-                          Number(completeQty) <= 0
+                          Number(completeQty) <= 0 ||
+                          Number(completeQty) >
+                            Number(editing.qtyToProduce ?? 0) -
+                              Number(editing.qtyProduced ?? 0)
                         }
                         className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
                       >
