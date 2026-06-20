@@ -12,6 +12,7 @@ import { Skeleton } from "@/shared/components/Skeleton";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 
 import type { UseProductionOrderDrawerReturn } from "../hooks/useProductionOrderDrawer";
 import type { BomLikeLine } from "../hooks/useProductionOrderDrawer";
@@ -55,6 +56,7 @@ export function ProductionOrderDrawer({
     error,
     handleSubmit,
     onIssueMaterial,
+    issueDrawer,
     onReceiveFinishedGood,
     showGeneralInfo,
     setShowGeneralInfo,
@@ -95,7 +97,7 @@ export function ProductionOrderDrawer({
           variant: "outline" as const,
           disabled: saving,
         },
-        ...(!editing
+        ...(!editing || isDraft
           ? [
               {
                 label: t("Lưu Nháp"),
@@ -157,6 +159,7 @@ export function ProductionOrderDrawer({
                 <tr>
                   <th className="px-3 py-2">{t("Mã Linh Kiện")}</th>
                   <th className="px-3 py-2">{t("Tên Linh Kiện")}</th>
+                  <th className="px-3 py-2">{t("NVL thay thế")}</th>
                   <th className="px-3 py-2 text-right">{t("Cần Dùng")}</th>
                   <th className="px-3 py-2 text-right">{t("Khả Dụng")}</th>
                   <th className="px-3 py-2 text-right">{t("Đã Xuất")}</th>
@@ -199,62 +202,56 @@ export function ProductionOrderDrawer({
                       <td className="px-3 py-2 font-medium">
                         {displayItemCode}
                       </td>
+                      <td className="px-3 py-2">{displayItemName}</td>
                       <td className="px-3 py-2">
-                        <div className="space-y-2">
-                          <div>{displayItemName}</div>
-                          {!editing && isLacking && originalItemId ? (
-                            <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-2">
-                              <div className="text-[11px] font-medium text-amber-800">
-                                {t(
-                                  "Thiếu tồn. Có thể chọn NVL thay thế để tạo MO nháp/xác nhận.",
+                        <div className="space-y-2 min-w-[250px]">
+                          <Combobox
+                            value={selectedAltItemId}
+                            onChange={(value) => {
+                              if (!value) {
+                                clearAlternativeItem(originalItemId);
+                                return;
+                              }
+                              setAlternativeItem(originalItemId, value);
+                            }}
+                            options={altItemOptions}
+                            placeholder={t("Chọn NVL thay thế")}
+                            searchPlaceholder={t("Tìm SKU / tên NVL")}
+                            onSearch={setAltItemSearch}
+                            onScrollBottom={fetchNextAltItems}
+                            loading={loadingAltItems}
+                            disabled={
+                              saving || viewOnly || isCompleted || isConfirmed
+                            }
+                          />
+                          {selectedAltItemId ? (
+                            <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                              <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
+                                {t("Đang thay thế")}:{" "}
+                                {altOption?.label ||
+                                  line.alternativeItemName ||
+                                  selectedAltItemId}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {t("Tồn gốc")}:{" "}
+                                {fmtQty(String(baseBalance.availableQty ?? 0))}
+                              </span>
+                              <span className="text-muted-foreground">
+                                {t("Tồn thay thế")}:{" "}
+                                {fmtQty(
+                                  String(effectiveBalance.availableQty ?? 0),
                                 )}
-                              </div>
-                              <Combobox
-                                value={selectedAltItemId}
-                                onChange={(value) => {
-                                  if (!value) {
-                                    clearAlternativeItem(originalItemId);
-                                    return;
-                                  }
-                                  setAlternativeItem(originalItemId, value);
-                                }}
-                                options={altItemOptions}
-                                placeholder={t("Chọn NVL thay thế")}
-                                searchPlaceholder={t("Tìm SKU / tên NVL")}
-                                onSearch={setAltItemSearch}
-                                onScrollBottom={fetchNextAltItems}
-                                loading={loadingAltItems}
-                                disabled={
-                                  saving ||
-                                  viewOnly ||
-                                  isCompleted ||
-                                  isConfirmed
-                                }
-                              />
-                              {selectedAltItemId && (
-                                <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                                  <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
-                                    {t("Đang thay thế")}:{" "}
-                                    {altOption?.label || selectedAltItemId}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {t("Tồn gốc")}:{" "}
-                                    {fmtQty(
-                                      String(baseBalance.availableQty ?? 0),
-                                    )}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {t("Tồn thay thế")}:{" "}
-                                    {fmtQty(
-                                      String(
-                                        effectiveBalance.availableQty ?? 0,
-                                      ),
-                                    )}
-                                  </span>
-                                </div>
-                              )}
+                              </span>
                             </div>
-                          ) : null}
+                          ) : (
+                            <div className="text-[11px] text-muted-foreground">
+                              {editing && isDraft
+                                ? t(
+                                    "Có thể chọn NVL thay thế trước khi xác nhận.",
+                                  )
+                                : t("Tùy chọn cho mọi dòng BOM.")}
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td className="px-3 py-2 text-right text-amber-700 font-semibold">
@@ -444,45 +441,48 @@ export function ProductionOrderDrawer({
   );
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode={mode}
-      onClose={onClose}
-      onToggleEdit={onToggleEdit}
-      title={
-        viewOnly
-          ? t("Chi tiết Lệnh Sản Xuất")
-          : editing
-            ? t("Cập nhật Lệnh Sản Xuất")
-            : t("Tạo mới Lệnh Sản Xuất")
-      }
-      subtitle={
-        editing
-          ? `${t("Mã")}: ${editing.referenceNo || editing.id}`
-          : t("Nhập thông tin lệnh")
-      }
-      actions={actions}
-      loading={loading}
-      error={error}
-      leftPanel={loading ? <Skeleton className="h-40" /> : leftPanel}
-      rightPanel={loading ? <Skeleton className="h-40" /> : rightPanel}
-      titleExtra={
-        editing?.status && (
-          <span
-            className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-              editing.status === "COMPLETED"
-                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                : editing.status === "IN_PROGRESS"
-                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                  : editing.status === "CANCELLED"
-                    ? "bg-red-100 text-red-800 border-red-200"
-                    : "bg-amber-100 text-amber-800 border-amber-200"
-            }`}
-          >
-            {editing.status}
-          </span>
-        )
-      }
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode={mode}
+        onClose={onClose}
+        onToggleEdit={onToggleEdit}
+        title={
+          viewOnly
+            ? t("Chi tiết Lệnh Sản Xuất")
+            : editing
+              ? t("Cập nhật Lệnh Sản Xuất")
+              : t("Tạo mới Lệnh Sản Xuất")
+        }
+        subtitle={
+          editing
+            ? `${t("Mã")}: ${editing.referenceNo || editing.id}`
+            : t("Nhập thông tin lệnh")
+        }
+        actions={actions}
+        loading={loading}
+        error={error}
+        leftPanel={loading ? <Skeleton className="h-40" /> : leftPanel}
+        rightPanel={loading ? <Skeleton className="h-40" /> : rightPanel}
+        titleExtra={
+          editing?.status && (
+            <span
+              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                editing.status === "COMPLETED"
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                  : editing.status === "IN_PROGRESS"
+                    ? "bg-blue-100 text-blue-800 border-blue-200"
+                    : editing.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800 border-red-200"
+                      : "bg-amber-100 text-amber-800 border-amber-200"
+              }`}
+            >
+              {editing.status}
+            </span>
+          )
+        }
+      />
+      <GiFormDrawer drawer={issueDrawer} />
+    </>
   );
 }

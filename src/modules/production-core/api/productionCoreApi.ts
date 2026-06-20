@@ -70,6 +70,8 @@ export interface ErpProductionOrder {
   warehouseCode?: string | null;
   createdAt?: string;
   lines?: ErpProductionOrderMaterial[];
+  materials?: ErpProductionOrderMaterial[];
+  outputMetadata?: Record<string, unknown> | null;
   [key: string]: unknown;
 }
 
@@ -81,6 +83,12 @@ export interface ErpProductionOrderMaterial {
   qtyIssued: string;
   uom?: string | null;
   itemName?: string | null;
+  itemCode?: string | null;
+  originalItemId?: string | null;
+  originalItemName?: string | null;
+  originalItemCode?: string | null;
+  alternativeItemId?: string | null;
+  alternativeNotes?: string | null;
 }
 
 export interface ProductionOrderMasterOption {
@@ -133,6 +141,16 @@ export const productionCoreApi = {
       message: string;
       data: ErpProductionOrder;
     }>(`${BASE_ORDERS}/${id}`);
+    return data.data;
+  },
+  update: async (
+    id: string,
+    payload: ExecuteProductionPayload,
+  ): Promise<ErpProductionOrder> => {
+    const { data } = await axiosInstance.patch<{
+      message: string;
+      data: ErpProductionOrder;
+    }>(`${BASE_ORDERS}/${id}`, payload);
     return data.data;
   },
   remove: async (id: string): Promise<{ id: string }> => {
