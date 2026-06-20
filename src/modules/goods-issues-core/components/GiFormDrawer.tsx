@@ -35,13 +35,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     fetchNextCustomers,
     loadingCustomers,
     itemOptions,
-    itemSearch,
     setItemSearch,
     fetchNextItems,
     loadingItems,
     vehicleOptions,
     moOptions,
-    openCreate,
     handleSave,
     setViewOnly,
   } = drawer;

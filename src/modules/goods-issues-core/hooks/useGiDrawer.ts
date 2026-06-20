@@ -7,6 +7,7 @@ import {
   type ErpGoodsIssue,
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
+import type { ErpVehicle } from "@/modules/manufacturing/api/manufacturingApi";
 import { productionCoreApi } from "@/modules/production-core/api/productionCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useT } from "@/core/i18n";
@@ -173,7 +174,11 @@ export function useGiDrawer({
 
   // Production Order options
   const [moOptions, setMoOptions] = useState<
-    Array<{ value: string; label: string; details: any }>
+    Array<{
+      value: string;
+      label: string;
+      details: ErpGoodsIssue | Record<string, unknown>;
+    }>
   >([]);
 
   const loadGiLookups = useCallback(async () => {
@@ -184,7 +189,7 @@ export function useGiDrawer({
       });
       const vehList = vehRes.items ?? [];
       setVehicleOptions(
-        vehList.map((v: any) => ({
+        vehList.map((v: ErpVehicle) => ({
           value: v.id,
           label: `${v.frame_no ?? v.vin ?? v.id}${v.engine_no ? ` / ${v.engine_no}` : ""}`,
         })),
@@ -196,9 +201,9 @@ export function useGiDrawer({
       });
       const moList = moRes.items ?? [];
       setMoOptions(
-        moList.map((m: any) => ({
-          value: m.id,
-          label: m.referenceNo || m.id,
+        moList.map((m: Record<string, unknown>) => ({
+          value: String(m.id ?? ""),
+          label: String(m.referenceNo ?? m.id ?? ""),
           details: m,
         })),
       );

@@ -8,6 +8,7 @@
 - `docs/README.md`
 
 ## High-value current-lane tasks
+
 - `docs/tasks/20260614-213309-erp-core-elite-ci-lane.md`
 - `docs/tasks/20260613-100500-purchase-edit-description-qty-notes.md`
 - `docs/tasks/20260613-084500-react-query-shared-hook-inventory-catalog.md`
@@ -17,6 +18,7 @@
 - `docs/tasks/20260607-erp-core-web-scope-cut.md`
 
 ## Current checkpoint gap
+
 - Recent Web commits after 2026-06-18 include MO form refactor + draft support, MO filter/layout, goods-receipt quantity fix UI, purchase-order draft voucher + warehouse-history fix UI, `onRowClick` detail drawer for specific tables.
 - These changes are newer than the current task artifacts listed above.
 - Treat this as **task-artifact drift**: before further feature work, create/close the corresponding repo task artifact(s) under `docs/tasks/`.

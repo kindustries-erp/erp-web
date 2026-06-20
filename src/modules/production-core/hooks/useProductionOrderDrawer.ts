@@ -8,6 +8,35 @@ import { useAppStore } from "@/core/config/appStore";
 import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 
+type ProductionDrawerForm = ReturnType<typeof emptyForm>;
+
+export interface BomLikeLine {
+  id?: string;
+  itemId?: string;
+  itemName?: string | null;
+  qtyRequired?: string | null;
+  qtyIssued?: string | null;
+  uom?: string | null;
+}
+
+interface BomLikeItem {
+  id?: string;
+  finishedGoodItemId?: string | null;
+  finishedGoodItemName?: string | null;
+  lines?: BomLikeLine[];
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object") {
+    const maybe = error as {
+      message?: string;
+      response?: { data?: { message?: string } };
+    };
+    return maybe.response?.data?.message || maybe.message || fallback;
+  }
+  return fallback;
+}
+
 export interface UseProductionOrderDrawerProps {
   open: boolean;
   editing: ErpProductionOrder | null;
@@ -33,11 +62,11 @@ export function useProductionOrderDrawer({
   const showToast = useUIStore((s) => s.showToast);
   const navigate = useAppStore((s) => s.navigate);
 
-  const [form, setForm] = useState(emptyForm());
+  const [form, setForm] = useState<ProductionDrawerForm>(emptyForm());
   const [itemOptions, setItemOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
-  const [bomLines, setBomLines] = useState<any[]>([]);
+  const [bomLines, setBomLines] = useState<BomLikeLine[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGeneralInfo, setShowGeneralInfo] = useState(true);
@@ -52,8 +81,8 @@ export function useProductionOrderDrawer({
   const loadItems = useCallback(async () => {
     try {
       const res = await bomCoreApi.list({ pageSize: 500 });
-      const uniqueFgs = new Map();
-      res.items.forEach((bom: any) => {
+      const uniqueFgs = new Map<string, { value: string; label: string }>();
+      res.items.forEach((bom: BomLikeItem) => {
         if (bom.finishedGoodItemId) {
           uniqueFgs.set(bom.finishedGoodItemId, {
             value: bom.finishedGoodItemId,
@@ -74,14 +103,16 @@ export function useProductionOrderDrawer({
         .list({
           pageSize: 1,
           finishedGoodItemId: form.finishedGoodItemId,
-        } as any)
+        })
         .then((res) => {
-          const bom = res.items[0];
-          if (bom) {
+          const bom = res.items[0] as BomLikeItem | undefined;
+          if (bom?.id) {
             bomCoreApi.get(bom.id).then((fullBom) => {
               const lines = fullBom.lines || [];
               setBomLines(lines);
-              const itemIds = lines.map((l: any) => l.itemId);
+              const itemIds = lines
+                .map((l: BomLikeLine) => l.itemId)
+                .filter(Boolean) as string[];
               if (itemIds.length) {
                 inventoryCoreApi.getBalances(itemIds).then(setBalances);
               } else {
@@ -100,7 +131,9 @@ export function useProductionOrderDrawer({
     } else if (editing && editing.lines) {
       // Use existing lines if editing (but we may want to map them similarly)
       setBomLines(editing.lines);
-      const itemIds = editing.lines.map((l: any) => l.itemId);
+      const itemIds = editing.lines
+        .map((l: BomLikeLine) => l.itemId)
+        .filter(Boolean) as string[];
       if (itemIds.length) {
         inventoryCoreApi.getBalances(itemIds).then(setBalances);
       } else {
@@ -181,12 +214,8 @@ export function useProductionOrderDrawer({
 
       await onSaved();
       onClose();
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ||
-          e?.message ||
-          "Không thể lưu lệnh sản xuất",
-      );
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không thể lưu lệnh sản xuất"));
     } finally {
       setSaving(false);
     }
@@ -204,12 +233,8 @@ export function useProductionOrderDrawer({
       });
       await onSaved();
       onClose();
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ||
-          e?.message ||
-          "Không thể xác nhận lệnh sản xuất",
-      );
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không thể xác nhận lệnh sản xuất"));
     } finally {
       setSaving(false);
     }
@@ -226,7 +251,7 @@ export function useProductionOrderDrawer({
     if (!editing?.id) return;
     // Set query params or session storage so the GR page knows to prefill for this MO
     window.sessionStorage.setItem("gr_prefill_mo", editing.id);
-    navigate("erp-warehouse" as any);
+    navigate("erp-warehouse");
   };
 
   return {
@@ -247,3 +272,7 @@ export function useProductionOrderDrawer({
     setLocalSearch,
   };
 }
+
+export type UseProductionOrderDrawerReturn = ReturnType<
+  typeof useProductionOrderDrawer
+>;

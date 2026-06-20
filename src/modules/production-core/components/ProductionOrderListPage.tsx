@@ -11,7 +11,6 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
-import { Button } from "@/shared/components/ui/Button";
 
 import {
   productionCoreApi,
@@ -137,8 +136,9 @@ export function ProductionOrderListPage() {
       });
       setOrders(res.items);
       setTotal(res.total);
-    } catch (e: any) {
-      setError(e?.message || t("Không thể tải danh sách lệnh sản xuất"));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "";
+      setError(msg || t("Không thể tải danh sách lệnh sản xuất"));
     } finally {
       setLoading(false);
     }
@@ -172,7 +172,7 @@ export function ProductionOrderListPage() {
     try {
       const data = await productionCoreApi.get(id);
       setEditingOrder(data);
-    } catch (e: any) {
+    } catch {
       showToast({ title: t("Lỗi tải chi tiết"), variant: "destructive" });
       setDrawerOpen(false);
     } finally {
@@ -188,10 +188,17 @@ export function ProductionOrderListPage() {
       showToast({ title: t("Đã hủy lệnh sản xuất"), variant: "success" });
       setCancelTarget(null);
       loadData();
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const errMsg =
+        e && typeof e === "object" && "response" in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data
+              ?.message
+          : undefined;
       showToast({
         title:
-          e?.response?.data?.message || e?.message || t("Không thể hủy lệnh"),
+          errMsg ||
+          (e instanceof Error ? e.message : "") ||
+          t("Không thể hủy lệnh"),
         variant: "destructive",
       });
     } finally {

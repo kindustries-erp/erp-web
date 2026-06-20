@@ -169,7 +169,14 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       className="h-6 text-[11px] px-2 leading-none"
                       onClick={() => {
                         setForm((f) => {
-                          let newLines: any[] = [];
+                          let newLines: Array<{
+                            purchaseOrderLineId: string;
+                            productionOrderMaterialId: string;
+                            itemId: string;
+                            itemName: string;
+                            qtyReceived: string;
+                            unitCost: string;
+                          }> = [];
                           if (poDetail && poDetail.lines) {
                             newLines = poDetail.lines.map((poLine) => {
                               const ordered = Number(poLine.qtyOrdered ?? 0);

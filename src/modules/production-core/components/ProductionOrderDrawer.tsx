@@ -9,10 +9,12 @@ import {
 import { Combobox } from "@/shared/components/Combobox";
 import type { ErpProductionOrder } from "@/modules/production-core/api/productionCoreApi";
 import { Skeleton } from "@/shared/components/Skeleton";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/shared/utils";
+
+import type { UseProductionOrderDrawerReturn } from "../hooks/useProductionOrderDrawer";
+import type { BomLikeLine } from "../hooks/useProductionOrderDrawer";
 
 export interface ProductionOrderDrawerProps {
   open: boolean;
@@ -22,7 +24,7 @@ export interface ProductionOrderDrawerProps {
   onClose: () => void;
   onSaved: () => Promise<void> | void;
   onToggleEdit?: () => void;
-  drawerState: any; // Using custom state
+  drawerState: UseProductionOrderDrawerReturn;
 }
 
 function fmtQty(value?: string | null) {
@@ -33,11 +35,6 @@ function fmtQty(value?: string | null) {
     minimumFractionDigits: 0,
     maximumFractionDigits: 3,
   }).format(n);
-}
-
-function fmtDate(value?: string | null) {
-  if (!value) return "—";
-  return value.slice(0, 10);
 }
 
 export function ProductionOrderDrawer({
@@ -122,7 +119,7 @@ export function ProductionOrderDrawer({
             ]),
       ];
 
-  const filteredBomLines = bomLines?.filter((line: any) => {
+  const filteredBomLines = bomLines?.filter((line: BomLikeLine) => {
     const s = localSearch.toLowerCase();
     const name = (line.itemName || "").toLowerCase();
     const sku = (line.itemId || "").toLowerCase();
@@ -159,13 +156,14 @@ export function ProductionOrderDrawer({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-card">
-                {filteredBomLines.map((line: any) => {
+                {filteredBomLines.map((line: BomLikeLine) => {
                   const requiredQty = Number(line.qtyRequired || 0);
                   const displayRequired = editing
                     ? requiredQty
                     : requiredQty * Number(form.qtyToProduce || 1);
 
-                  const b = balances[line.itemId] || { availableQty: 0 };
+                  const balanceKey = line.itemId ?? "";
+                  const b = balances[balanceKey] || { availableQty: 0 };
                   const availableQty = b.availableQty;
 
                   // Highlight pink/light red if lacking stock and we are creating or in DRAFT
@@ -259,7 +257,7 @@ export function ProductionOrderDrawer({
               <Combobox
                 value={form.finishedGoodItemId}
                 onChange={(v) =>
-                  setForm((p: any) => ({ ...p, finishedGoodItemId: v }))
+                  setForm((p) => ({ ...p, finishedGoodItemId: v }))
                 }
                 options={itemOptions}
                 placeholder={t("Chọn thành phẩm")}
@@ -277,7 +275,7 @@ export function ProductionOrderDrawer({
                 step="any"
                 value={form.qtyToProduce}
                 onChange={(e) =>
-                  setForm((p: any) => ({ ...p, qtyToProduce: e.target.value }))
+                  setForm((p) => ({ ...p, qtyToProduce: e.target.value }))
                 }
                 disabled={saving || isConfirmed || isCompleted || viewOnly}
                 className={inputCls}
@@ -299,7 +297,7 @@ export function ProductionOrderDrawer({
               <input
                 value={form.referenceNo}
                 onChange={(e) =>
-                  setForm((p: any) => ({ ...p, referenceNo: e.target.value }))
+                  setForm((p) => ({ ...p, referenceNo: e.target.value }))
                 }
                 disabled={saving || isConfirmed || isCompleted || viewOnly}
                 className={inputCls}
@@ -311,7 +309,7 @@ export function ProductionOrderDrawer({
               <input
                 value={form.warehouseCode}
                 onChange={(e) =>
-                  setForm((p: any) => ({ ...p, warehouseCode: e.target.value }))
+                  setForm((p) => ({ ...p, warehouseCode: e.target.value }))
                 }
                 disabled={saving || isConfirmed || isCompleted || viewOnly}
                 className={inputCls}
@@ -324,7 +322,7 @@ export function ProductionOrderDrawer({
                 className={inputCls}
                 value={form.plannedStartDate}
                 onChange={(v) =>
-                  setForm((p: any) => ({ ...p, plannedStartDate: v }))
+                  setForm((p) => ({ ...p, plannedStartDate: v }))
                 }
                 disabled={saving || isConfirmed || isCompleted || viewOnly}
               />
@@ -334,9 +332,7 @@ export function ProductionOrderDrawer({
               <DatePicker
                 className={inputCls}
                 value={form.plannedEndDate}
-                onChange={(v) =>
-                  setForm((p: any) => ({ ...p, plannedEndDate: v }))
-                }
+                onChange={(v) => setForm((p) => ({ ...p, plannedEndDate: v }))}
                 disabled={saving || isConfirmed || isCompleted || viewOnly}
               />
             </DrawerField>
