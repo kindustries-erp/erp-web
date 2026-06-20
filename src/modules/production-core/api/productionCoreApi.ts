@@ -6,7 +6,15 @@ export interface ExecuteProductionPayload {
   qtyToProduce: string;
   warehouseCode?: string;
   referenceNo?: string;
+  plannedStartDate?: string;
+  plannedEndDate?: string;
   outputMetadata?: Record<string, unknown>;
+  status?: string;
+  materialOverrides?: Array<{
+    originalItemId: string;
+    alternativeItemId: string;
+    notes?: string;
+  }>;
 }
 
 export interface MaterialIssuedItem {
@@ -56,9 +64,29 @@ export interface ErpProductionOrder {
   finishedGoodItemId?: string | null;
   finishedGoodItemName?: string | null;
   qtyProduced?: string | null;
+  qtyToProduce?: string | null;
+  plannedStartDate?: string | null;
+  plannedEndDate?: string | null;
   warehouseCode?: string | null;
   createdAt?: string;
+  lines?: ErpProductionOrderMaterial[];
   [key: string]: unknown;
+}
+
+export interface ErpProductionOrderMaterial {
+  id: string;
+  productionOrderId: string;
+  itemId: string;
+  qtyRequired: string;
+  qtyIssued: string;
+  uom?: string | null;
+  itemName?: string | null;
+}
+
+export interface ProductionOrderMasterOption {
+  value: string;
+  label: string;
+  details: ErpProductionOrder;
 }
 
 const BASE_EXECUTE = "/api/v1/production/execute";
@@ -90,9 +118,29 @@ export const productionCoreApi = {
         page: params?.page ?? 1,
         pageSize: params?.pageSize ?? 20,
         ...(params?.search ? { search: params.search } : {}),
+        ...(params?.status ? { status: params.status } : {}),
+        ...(params?.dateFrom ? { dateFrom: params.dateFrom } : {}),
+        ...(params?.dateTo ? { dateTo: params.dateTo } : {}),
+        ...(params?.finishedGoodItemId
+          ? { finishedGoodItemId: params.finishedGoodItemId }
+          : {}),
       },
     });
     return data;
+  },
+  get: async (id: string): Promise<ErpProductionOrder> => {
+    const { data } = await axiosInstance.get<{
+      message: string;
+      data: ErpProductionOrder;
+    }>(`${BASE_ORDERS}/${id}`);
+    return data.data;
+  },
+  remove: async (id: string): Promise<{ id: string }> => {
+    const { data } = await axiosInstance.delete<{
+      message: string;
+      data: { id: string };
+    }>(`${BASE_ORDERS}/${id}`);
+    return data.data;
   },
   cancel: async (id: string): Promise<ErpProductionOrder> => {
     const { data } = await axiosInstance.post<{
@@ -100,5 +148,36 @@ export const productionCoreApi = {
       data: ErpProductionOrder;
     }>(`/api/v1/production/${id}/cancel`);
     return data.data;
+  },
+  confirm: async (id: string): Promise<ErpProductionOrder> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: ErpProductionOrder;
+    }>(`/api/v1/production/${id}/confirm`);
+    return data.data;
+  },
+
+  listMasterOptions: async (
+    params?: ListParams,
+  ): Promise<ProductionOrderMasterOption[]> => {
+    const res = await productionCoreApi.list({
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 200,
+      ...(params?.search ? { search: params.search } : {}),
+      ...(params?.status ? { status: params.status } : {}),
+      ...(params?.dateFrom ? { dateFrom: params.dateFrom } : {}),
+      ...(params?.dateTo ? { dateTo: params.dateTo } : {}),
+      ...(params?.finishedGoodItemId
+        ? { finishedGoodItemId: params.finishedGoodItemId }
+        : {}),
+    });
+
+    return (res.items ?? [])
+      .filter((item) => !["DRAFT", "CANCELLED"].includes(item.status || ""))
+      .map((item) => ({
+        value: item.id,
+        label: item.referenceNo || item.finishedGoodItemName || item.id,
+        details: item,
+      }));
   },
 };

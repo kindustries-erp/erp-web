@@ -4,6 +4,7 @@ import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 export interface ErpGiLine {
   id?: string;
   salesOrderLineId?: string;
+  productionOrderMaterialId?: string;
   itemId?: string;
   itemName?: string;
   serialId?: string;
@@ -24,6 +25,7 @@ export interface ErpGoodsIssue {
   issueType: string;
   customerId?: string | null;
   customerName?: string | null;
+  productionOrderId?: string | null;
   status?: string | null;
   remarks?: string | null;
   createdAt?: string;
@@ -31,14 +33,31 @@ export interface ErpGoodsIssue {
   lines?: ErpGiLine[];
 }
 
+export interface CreateGiLinePayload {
+  salesOrderLineId?: string;
+  productionOrderMaterialId?: string;
+  itemId?: string;
+  itemName?: string;
+  serialId?: string;
+  serialNo?: string;
+  vehicleId?: string;
+  vehicleVin?: string;
+  frameNo?: string;
+  engineNo?: string;
+  qtyIssued: string;
+  unitCost?: string;
+  amount?: string;
+}
+
 export interface CreateGiPayload {
   issueNo: string;
   issueDate: string;
   issueType: string;
   customerId?: string;
+  productionOrderId?: string;
   status?: string;
   remarks?: string;
-  lines?: Omit<ErpGiLine, "id">[];
+  lines?: CreateGiLinePayload[];
 }
 
 export type UpdateGiPayload = Partial<CreateGiPayload>;

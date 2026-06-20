@@ -47,7 +47,7 @@ jobs:
           build-args: |
             VITE_APP_NAME=${{ vars.KLOTUS_MASTER_WEB_APP_NAME }}
             VITE_API_BASE_URL=${{ vars.KLOTUS_MASTER_WEB_API_BASE_URL }}
-            VITE_APP_ENV=production
+            APP_ENV=klotus-production
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.sha }}

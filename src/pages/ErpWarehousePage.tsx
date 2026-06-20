@@ -170,6 +170,19 @@ export function ErpWarehousePage() {
     setLoadError(error);
   }, [vouchersQuery.error]);
 
+  useEffect(() => {
+    const grPrefill = window.sessionStorage.getItem("gr_prefill_mo");
+    if (grPrefill) {
+      window.sessionStorage.removeItem("gr_prefill_mo");
+      grDrawer.openCreate(undefined, grPrefill);
+    }
+    const giPrefill = window.sessionStorage.getItem("gi_prefill_mo");
+    if (giPrefill) {
+      window.sessionStorage.removeItem("gi_prefill_mo");
+      giDrawer.openCreate(giPrefill);
+    }
+  }, [grDrawer, giDrawer]);
+
   // ── Unified rows
   const rows: WarehouseRow[] = vouchersQuery.data?.items ?? [];
   const loading = vouchersQuery.isLoading || vouchersQuery.isFetching;

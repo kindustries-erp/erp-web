@@ -237,12 +237,14 @@ export function Sidebar() {
               />
             </div>
 
-            {/* Manufacturing / BOM / Production */}
-            <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-                {t("nav.sections.manufacturing")}
-              </div>
-              {/* <NavItem
+            {__APP_ENV__ !== "klotus-production" && (
+              <>
+                {/* Manufacturing / BOM / Production */}
+                <div className="sidebar-nav-section py-2">
+                  <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                    {t("nav.sections.manufacturing")}
+                  </div>
+                  {/* <NavItem
                 collapsed={c}
                 icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.mfgVehicles")}
@@ -250,75 +252,89 @@ export function Sidebar() {
                 onClick={() => navTo("mfg-vehicles")}
                 contextPage="mfg-vehicles"
               /> */}
-              <NavItem
-                collapsed={c}
-                icon={<Network className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpBom")}
-                active={currentPage === "erp-bom"}
-                onClick={() => navTo("erp-bom")}
-                contextPage="erp-bom"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpProduction")}
-                active={currentPage === "erp-production"}
-                onClick={() => navTo("erp-production")}
-                contextPage="erp-production"
-              />
-            </div>
-            {/* Kế toán */}
-            <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-                Kế toán
-              </div>
-              <NavItem
-                collapsed={c}
-                icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Hóa đơn"
-                active={currentPage === "erp-invoices"}
-                onClick={() => navTo("erp-invoices")}
-                contextPage="erp-invoices"
-              />
-            </div>
-            {/* Hệ thống / Admin */}
-            <div className="sidebar-nav-section py-2">
-              <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-                Hệ thống
-              </div>
-              <NavItem
-                collapsed={c}
-                icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpEmployees")}
-                active={currentPage === "erp-employees"}
-                onClick={() => navTo("erp-employees")}
-                contextPage="erp-employees"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Quản lý người dùng"
-                active={currentPage === "erp-users"}
-                onClick={() => navTo("erp-users")}
-                contextPage="erp-users"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<Key className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Phân quyền (Core)"
-                active={currentPage === "erp-permissions-core"}
-                onClick={() => navTo("erp-permissions-core")}
-                contextPage="erp-permissions-core"
-              />
-              <NavItem
-                collapsed={c}
-                icon={<History className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Nhật ký hoạt động"
-                active={currentPage === "erp-activity-logs"}
-                onClick={() => navTo("erp-activity-logs")}
-                contextPage="erp-activity-logs"
-              />
-            </div>
+                  <NavItem
+                    collapsed={c}
+                    icon={
+                      <Network className="w-4 h-4 opacity-65 flex-shrink-0" />
+                    }
+                    label={t("nav.items.erpBom")}
+                    active={currentPage === "erp-bom"}
+                    onClick={() => navTo("erp-bom")}
+                    contextPage="erp-bom"
+                  />
+                  <NavItem
+                    collapsed={c}
+                    icon={
+                      <Factory className="w-4 h-4 opacity-65 flex-shrink-0" />
+                    }
+                    label={t("nav.items.erpProduction")}
+                    active={currentPage === "erp-production"}
+                    onClick={() => navTo("erp-production")}
+                    contextPage="erp-production"
+                  />
+                </div>
+                {/* Kế toán */}
+                <div className="sidebar-nav-section py-2">
+                  <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                    Kế toán
+                  </div>
+                  <NavItem
+                    collapsed={c}
+                    icon={
+                      <Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />
+                    }
+                    label="Hóa đơn"
+                    active={currentPage === "erp-invoices"}
+                    onClick={() => navTo("erp-invoices")}
+                    contextPage="erp-invoices"
+                  />
+                </div>
+                {/* Hệ thống / Admin */}
+                <div className="sidebar-nav-section py-2">
+                  <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+                    Hệ thống
+                  </div>
+                  <NavItem
+                    collapsed={c}
+                    icon={
+                      <Users className="w-4 h-4 opacity-65 flex-shrink-0" />
+                    }
+                    label={t("nav.items.erpEmployees")}
+                    active={currentPage === "erp-employees"}
+                    onClick={() => navTo("erp-employees")}
+                    contextPage="erp-employees"
+                  />
+                  <NavItem
+                    collapsed={c}
+                    icon={
+                      <Shield className="w-4 h-4 opacity-65 flex-shrink-0" />
+                    }
+                    label="Quản lý người dùng"
+                    active={currentPage === "erp-users"}
+                    onClick={() => navTo("erp-users")}
+                    contextPage="erp-users"
+                  />
+                  <NavItem
+                    collapsed={c}
+                    icon={<Key className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                    label="Phân quyền (Core)"
+                    active={currentPage === "erp-permissions-core"}
+                    onClick={() => navTo("erp-permissions-core")}
+                    contextPage="erp-permissions-core"
+                  />
+                  <NavItem
+                    collapsed={c}
+                    icon={
+                      <History className="w-4 h-4 opacity-65 flex-shrink-0" />
+                    }
+                    label="Nhật ký hoạt động"
+                    active={currentPage === "erp-activity-logs"}
+                    onClick={() => navTo("erp-activity-logs")}
+                    contextPage="erp-activity-logs"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {/* Bottom: user menu */}

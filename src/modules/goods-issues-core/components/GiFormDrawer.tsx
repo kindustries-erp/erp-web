@@ -39,6 +39,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     fetchNextItems,
     loadingItems,
     vehicleOptions,
+    moOptions,
     close,
     handleSave,
     setViewOnly,
@@ -46,6 +47,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
   const ISSUE_TYPE_OPTIONS = [
     { value: "SALE", label: "SALE — " + t("Xuất bán") },
+    { value: "PRODUCTION", label: "PRODUCTION — " + t("Xuất sản xuất") },
     { value: "OTHER", label: "OTHER — " + t("Xuất khác") },
   ];
 
@@ -341,21 +343,37 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 }
               />
             </DrawerField>
-            <DrawerField label={t("Khách hàng")}>
-              <Combobox
-                options={customerOptions}
-                value={form.customerId}
-                disabled={viewOnly}
-                placeholder={t("Chọn khách hàng")}
-                searchPlaceholder={t("Tìm khách hàng")}
-                onSearch={setCustomerSearch}
-                onScrollBottom={fetchNextCustomers}
-                loading={loadingCustomers}
-                onChange={(v) =>
-                  setForm((f) => ({ ...f, customerId: v || "" }))
-                }
-              />
-            </DrawerField>
+            {form.issueType !== "PRODUCTION" && (
+              <DrawerField label={t("Khách hàng")}>
+                <Combobox
+                  options={customerOptions}
+                  value={form.customerId}
+                  disabled={viewOnly}
+                  placeholder={t("Chọn khách hàng")}
+                  searchPlaceholder={t("Tìm khách hàng")}
+                  onSearch={setCustomerSearch}
+                  onScrollBottom={fetchNextCustomers}
+                  loading={loadingCustomers}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, customerId: v || "" }))
+                  }
+                />
+              </DrawerField>
+            )}
+            {form.issueType === "PRODUCTION" && (
+              <DrawerField label={t("Lệnh sản xuất")}>
+                <Combobox
+                  options={moOptions}
+                  value={form.productionOrderId}
+                  disabled={viewOnly}
+                  placeholder={t("Chọn lệnh sản xuất")}
+                  searchPlaceholder={t("Tìm MO")}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, productionOrderId: v || "" }))
+                  }
+                />
+              </DrawerField>
+            )}
             <DrawerField label={t("Trạng thái")}>
               <Combobox
                 options={STATUS_OPTIONS}

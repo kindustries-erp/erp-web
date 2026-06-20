@@ -131,6 +131,20 @@ export const inventoryCoreApi = {
     );
     return data.data;
   },
+  getBalances: async (
+    ids: string[],
+  ): Promise<
+    Record<
+      string,
+      { qtyOnHand: number; qtyReserved: number; availableQty: number }
+    >
+  > => {
+    if (!ids || !ids.length) return {};
+    const { data } = await axiosInstance.get(`${BASE}/balances`, {
+      params: { ids: ids.join(",") },
+    });
+    return data.data || {};
+  },
   create: async (
     payload: CreateInventoryItemPayload,
   ): Promise<ErpInventoryItem> => {

@@ -4,6 +4,7 @@ import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
 export interface ErpGrLine {
   id?: string;
   purchaseOrderLineId?: string;
+  productionOrderMaterialId?: string;
   itemId?: string;
   itemName?: string;
   qtyReceived: string;
@@ -15,6 +16,7 @@ export interface ErpGoodsReceipt {
   id: string;
   receiptNo: string;
   purchaseOrderId?: string | null;
+  productionOrderId?: string | null;
   supplierId?: string | null;
   supplierName?: string | null;
   receiptDate: string;
@@ -28,6 +30,7 @@ export interface ErpGoodsReceipt {
 export interface CreateGrPayload {
   receiptNo?: string;
   purchaseOrderId?: string;
+  productionOrderId?: string;
   supplierId?: string;
   receiptDate: string;
   status?: string;
