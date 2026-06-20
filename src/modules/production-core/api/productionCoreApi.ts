@@ -175,6 +175,60 @@ export const productionCoreApi = {
     return data.data;
   },
 
+  start: async (
+    id: string,
+    payload: { qtyToManufacture: number; warehouseCode?: string },
+  ): Promise<{
+    id: string;
+    referenceNo?: string;
+    status?: string;
+    goodsIssueId?: string;
+    goodsIssueNo?: string;
+    qtyToManufacture: number;
+  }> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: {
+        id: string;
+        referenceNo?: string;
+        status?: string;
+        goodsIssueId?: string;
+        goodsIssueNo?: string;
+        qtyToManufacture: number;
+      };
+    }>(`/api/v1/production/orders/${id}/start`, payload);
+    return data.data;
+  },
+
+  complete: async (
+    id: string,
+    payload: { qtyFinished: number; warehouseCode?: string; unitCost?: number },
+  ): Promise<{
+    id: string;
+    referenceNo?: string;
+    status?: string;
+    qtyToProduce?: string;
+    qtyProduced?: string;
+    goodsReceiptId?: string;
+    goodsReceiptNo?: string;
+    qtyFinished: number;
+  }> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: {
+        id: string;
+        referenceNo?: string;
+        status?: string;
+        qtyToProduce?: string;
+        qtyProduced?: string;
+        goodsReceiptId?: string;
+        goodsReceiptNo?: string;
+        qtyFinished: number;
+      };
+    }>(`/api/v1/production/orders/${id}/complete`, payload);
+    return data.data;
+  },
+
   listMasterOptions: async (
     params?: ListParams,
   ): Promise<ProductionOrderMasterOption[]> => {

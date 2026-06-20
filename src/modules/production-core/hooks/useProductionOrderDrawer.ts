@@ -91,6 +91,11 @@ export function useProductionOrderDrawer({
   const [localSearch, setLocalSearch] = useState("");
   const bomLoadRequestRef = useRef(0);
   const issueDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
+  const [startQty, setStartQty] = useState("1");
+  const [completeQty, setCompleteQty] = useState("1");
+  const [completeUnitCost, setCompleteUnitCost] = useState("0");
+  const [showStartDialog, setShowStartDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
   // ── Alternative item overrides: bomLineId (or componentItemId) → alternativeItemId
   const [alternativeItems, setAlternativeItems] = useState<
@@ -470,6 +475,63 @@ export function useProductionOrderDrawer({
     navigate("erp-warehouse");
   };
 
+  const handleStartProduction = async () => {
+    if (!editing?.id) return;
+    const qty = Number(startQty);
+    if (!qty || qty <= 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await productionCoreApi.start(editing.id, {
+        qtyToManufacture: qty,
+        ...(form.warehouseCode?.trim()
+          ? { warehouseCode: form.warehouseCode.trim() }
+          : {}),
+      });
+      showToast({
+        title: "Bắt đầu sản xuất thành công",
+        variant: "success",
+      });
+      setShowStartDialog(false);
+      await onSaved();
+      onClose();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không thể bắt đầu sản xuất"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCompleteProduction = async () => {
+    if (!editing?.id) return;
+    const qty = Number(completeQty);
+    if (!qty || qty <= 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await productionCoreApi.complete(editing.id, {
+        qtyFinished: qty,
+        ...(form.warehouseCode?.trim()
+          ? { warehouseCode: form.warehouseCode.trim() }
+          : {}),
+        ...(Number(completeUnitCost) > 0
+          ? { unitCost: Number(completeUnitCost) }
+          : {}),
+      });
+      showToast({
+        title: "Hoàn thành sản xuất thành công",
+        variant: "success",
+      });
+      setShowCompleteDialog(false);
+      await onSaved();
+      onClose();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không thể ghi nhận hoàn thành sản xuất"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return {
     form,
     setForm,
@@ -481,6 +543,18 @@ export function useProductionOrderDrawer({
     onIssueMaterial,
     issueDrawer,
     onReceiveFinishedGood,
+    handleStartProduction,
+    handleCompleteProduction,
+    startQty,
+    setStartQty,
+    completeQty,
+    setCompleteQty,
+    completeUnitCost,
+    setCompleteUnitCost,
+    showStartDialog,
+    setShowStartDialog,
+    showCompleteDialog,
+    setShowCompleteDialog,
     showGeneralInfo,
     setShowGeneralInfo,
     bomLines,

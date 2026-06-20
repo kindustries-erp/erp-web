@@ -56,9 +56,19 @@ export function ProductionOrderDrawer({
     saving,
     error,
     handleSubmit,
-    onIssueMaterial,
     issueDrawer,
-    onReceiveFinishedGood,
+    handleStartProduction,
+    handleCompleteProduction,
+    startQty,
+    setStartQty,
+    completeQty,
+    setCompleteQty,
+    completeUnitCost,
+    setCompleteUnitCost,
+    showStartDialog,
+    setShowStartDialog,
+    showCompleteDialog,
+    setShowCompleteDialog,
     showGeneralInfo,
     setShowGeneralInfo,
     bomLines,
@@ -474,20 +484,124 @@ export function ProductionOrderDrawer({
 
             {editing && (isConfirmed || isCompleted) && (
               <div className="pt-4 border-t border-border space-y-2 mt-4">
-                <button
-                  onClick={onIssueMaterial}
-                  className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
-                >
-                  <span>{t("Xuất kho nguyên vật liệu")}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={onReceiveFinishedGood}
-                  className="flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-50"
-                >
-                  <span>{t("Nhập kho thành phẩm")}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
+                {/* ── Sản xuất button (CONFIRMED / IN_PROGRESS only) ── */}
+                {!isCompleted && (
+                  <button
+                    onClick={() => {
+                      setStartQty(editing.qtyToProduce ?? "1");
+                      setShowStartDialog(true);
+                    }}
+                    disabled={saving || viewOnly}
+                    className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
+                  >
+                    <span>{t("Sản xuất")}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
+                {/* ── Start dialog ── */}
+                {showStartDialog && (
+                  <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 space-y-3">
+                    <p className="text-sm font-semibold text-amber-900">
+                      {t("Nhập số lượng cần sản xuất")}
+                    </p>
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="any"
+                      value={startQty}
+                      onChange={(e) => setStartQty(e.target.value)}
+                      className={cn(inputCls, "w-full")}
+                      placeholder="Số lượng"
+                      disabled={saving}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleStartProduction}
+                        disabled={
+                          saving || !Number(startQty) || Number(startQty) <= 0
+                        }
+                        className="flex-1 rounded-md bg-amber-600 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+                      >
+                        {saving ? t("Đang xử lý...") : t("Xác nhận")}
+                      </button>
+                      <button
+                        onClick={() => setShowStartDialog(false)}
+                        disabled={saving}
+                        className="flex-1 rounded-md border border-amber-300 px-3 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+                      >
+                        {t("Huỷ")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/* ── Hoàn thành button (IN_PROGRESS only) ── */}
+                {editing.status === "IN_PROGRESS" && (
+                  <button
+                    onClick={() => {
+                      const remaining =
+                        Number(editing.qtyToProduce ?? 0) -
+                        Number(editing.qtyProduced ?? 0);
+                      setCompleteQty(
+                        remaining > 0 ? remaining.toFixed(3) : "1",
+                      );
+                      setCompleteUnitCost("0");
+                      setShowCompleteDialog(true);
+                    }}
+                    disabled={saving || viewOnly}
+                    className="flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-50"
+                  >
+                    <span>{t("Hoàn thành")}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
+                {/* ── Complete dialog ── */}
+                {showCompleteDialog && (
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 space-y-3">
+                    <p className="text-sm font-semibold text-emerald-900">
+                      {t("Nhập số lượng thành phẩm hoàn thành")}
+                    </p>
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="any"
+                      value={completeQty}
+                      onChange={(e) => setCompleteQty(e.target.value)}
+                      className={cn(inputCls, "w-full")}
+                      placeholder="Số lượng hoàn thành"
+                      disabled={saving}
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={completeUnitCost}
+                      onChange={(e) => setCompleteUnitCost(e.target.value)}
+                      className={cn(inputCls, "w-full")}
+                      placeholder="Đơn giá nhập kho (0 nếu bỏ qua)"
+                      disabled={saving}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleCompleteProduction}
+                        disabled={
+                          saving ||
+                          !Number(completeQty) ||
+                          Number(completeQty) <= 0
+                        }
+                        className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {saving ? t("Đang xử lý...") : t("Xác nhận")}
+                      </button>
+                      <button
+                        onClick={() => setShowCompleteDialog(false)}
+                        disabled={saving}
+                        className="flex-1 rounded-md border border-emerald-300 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                      >
+                        {t("Huỷ")}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
