@@ -3,20 +3,24 @@
 > **Created:** 2026-06-20
 > **Lane:** erp-master
 > **Repo:** `liouni-erp-web`
-> **Status:** IN_PROGRESS
+> **Status:** DONE
 
 ## Scope
+
 - Remove current lint debt blocking `bun run lint:check`
 - Restore ability to commit docs-only changes without `--no-verify`
 - Keep scope limited to existing warnings only
 
 ## DB
+
 - No DB/schema change
 
 ## API
+
 - N/A
 
 ## UI
+
 - Fix existing `@typescript-eslint/no-unused-vars`
 - Fix existing `@typescript-eslint/no-explicit-any`
 - Target files only:
@@ -28,18 +32,22 @@
   - `src/modules/production-core/hooks/useProductionOrderDrawer.ts`
 
 ## QC
+
 - `bun run lint:check`
 - `bunx vitest run`
 - `bunx tsc --noEmit`
 
 ## Risks
+
 - Over-tightening types may break current production-core UX
 - Refactor must stay additive and local
 
 ## Rollback
+
 - Revert the cleanup commit in `liouni-erp-web`
 
 ## Checklist
+
 - [ ] classify each warning
 - [ ] fix unused vars safely
 - [ ] replace `any` with local explicit types or `unknown` + narrowing
