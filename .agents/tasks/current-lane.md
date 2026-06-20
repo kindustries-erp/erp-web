@@ -19,9 +19,9 @@
 
 ## Current checkpoint gap
 
-- Recent Web commits after 2026-06-18 include MO form refactor + draft support, MO filter/layout, goods-receipt quantity fix UI, purchase-order draft voucher + warehouse-history fix UI, `onRowClick` detail drawer for specific tables.
-- These changes are newer than the current task artifacts listed above.
-- Treat this as **task-artifact drift**: before further feature work, create/close the corresponding repo task artifact(s) under `docs/tasks/`.
+- Recent Web commits after 2026-06-18 now include production start/complete MO drawer closure (`docs/tasks/20260620-erp-production-start-complete-auto-warehouse.md`) plus earlier MO form refactor + draft support, MO filter/layout, goods-receipt quantity fix UI, purchase-order draft voucher + warehouse-history fix UI, and `onRowClick` detail drawer work.
+- `current-lane.md` vẫn chưa phản ánh các artifacts/closure mới hơn này.
+- Treat this as **task-artifact drift**: before further feature work, create/close the remaining corresponding repo task artifact(s) under `docs/tasks/` and keep `current-lane.md` aligned with recent commits.
 
 ## Current lane lessons
 
