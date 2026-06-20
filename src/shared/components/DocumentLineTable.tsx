@@ -24,6 +24,7 @@ export interface DocumentLineTableProps<T> {
   viewOnly?: boolean;
   sortConfig?: { key: string; direction: "asc" | "desc" } | null;
   onSort?: (key: string) => void;
+  rowClassName?: (row: T, index: number) => string;
 }
 
 export function DocumentLineTable<T>({
@@ -37,6 +38,7 @@ export function DocumentLineTable<T>({
   viewOnly,
   sortConfig,
   onSort,
+  rowClassName,
 }: DocumentLineTableProps<T>) {
   const t = useT();
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -187,7 +189,10 @@ export function DocumentLineTable<T>({
               data.map((row, idx) => (
                 <tr
                   key={getRowKey(row, idx)}
-                  className="group hover:bg-muted/30 transition-colors"
+                  className={cn(
+                    "group hover:bg-muted/30 transition-colors",
+                    rowClassName?.(row, idx),
+                  )}
                 >
                   {columns.map((col) => (
                     <td

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Factory } from "lucide-react";
+import { Factory, Eye, Edit2, Trash2, XCircle } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -309,37 +308,6 @@ export function ProductionOrderListPage() {
         header: t("Ngày kết thúc"),
         cell: (item: ErpProductionOrder) => fmtDate(item.plannedEndDate),
       },
-      {
-        key: "actions",
-        header: "",
-        cell: (item: ErpProductionOrder) => (
-          <div className="flex justify-end">
-            <ActionDropdown
-              items={[
-                {
-                  label: t("Xem chi tiết"),
-                  onClick: () => handleEdit(item.id, true),
-                },
-                {
-                  label: t("Cập nhật"),
-                  onClick: () => handleEdit(item.id, false),
-                  hidden: !canUpdate || item.status === "CANCELLED",
-                },
-                {
-                  label:
-                    item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
-                  onClick: () =>
-                    item.status === "DRAFT"
-                      ? setDeleteTarget(item)
-                      : setCancelTarget(item),
-                  variant: "danger",
-                  hidden: !canUpdate || item.status === "CANCELLED",
-                },
-              ]}
-            />
-          </div>
-        ),
-      },
     ],
     [t, canUpdate],
   );
@@ -382,6 +350,35 @@ export function ProductionOrderListPage() {
             totalPages={Math.ceil(total / pageSize)}
             onPage={setPage}
             onPageSize={setPageSize}
+            onRowClick={(item) => handleEdit(item.id, true)}
+            actions={(item) => [
+              {
+                label: t("Xem chi tiết"),
+                onClick: () => handleEdit(item.id, true),
+                icon: <Eye className="h-[13px] w-[13px]" />,
+              },
+              {
+                label: t("Cập nhật"),
+                onClick: () => handleEdit(item.id, false),
+                icon: <Edit2 className="h-[13px] w-[13px]" />,
+                hidden: !canUpdate || item.status === "CANCELLED",
+              },
+              {
+                label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
+                onClick: () =>
+                  item.status === "DRAFT"
+                    ? setDeleteTarget(item)
+                    : setCancelTarget(item),
+                icon:
+                  item.status === "DRAFT" ? (
+                    <Trash2 className="h-[13px] w-[13px]" />
+                  ) : (
+                    <XCircle className="h-[13px] w-[13px]" />
+                  ),
+                variant: "danger",
+                hidden: !canUpdate || item.status === "CANCELLED",
+              },
+            ]}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />

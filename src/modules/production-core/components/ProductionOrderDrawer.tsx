@@ -1,4 +1,5 @@
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useT } from "@/core/i18n";
 import {
@@ -153,129 +154,184 @@ export function ProductionOrderDrawer({
         }
       >
         {filteredBomLines && filteredBomLines.length > 0 ? (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="min-w-full text-xs">
-              <thead className="bg-muted text-left uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2">{t("Mã Linh Kiện")}</th>
-                  <th className="px-3 py-2">{t("Tên Linh Kiện")}</th>
-                  <th className="px-3 py-2">{t("NVL thay thế")}</th>
-                  <th className="px-3 py-2 text-right">{t("Cần Dùng")}</th>
-                  <th className="px-3 py-2 text-right">{t("Khả Dụng")}</th>
-                  <th className="px-3 py-2 text-right">{t("Đã Xuất")}</th>
-                  <th className="px-3 py-2">{t("ĐVT")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-card">
-                {filteredBomLines.map((line: BomLikeLine) => {
-                  const requiredQty = Number(line.qtyRequired || 0);
-                  const displayRequired = editing
-                    ? requiredQty
-                    : requiredQty * Number(form.qtyToProduce || 1);
+          <div className="w-full">
+            <DocumentLineTable
+              data={filteredBomLines}
+              getRowKey={(line: BomLikeLine) => line.id || ""}
+              viewOnly={true}
+              rowClassName={(line: BomLikeLine) => {
+                const requiredQty = Number(line.qtyRequired || 0);
+                const displayRequired = editing
+                  ? requiredQty
+                  : requiredQty * Number(form.qtyToProduce || 1);
 
-                  const originalItemId =
-                    line.originalItemId ?? line.itemId ?? "";
-                  const selectedAltItemId =
-                    alternativeItems[originalItemId] ?? "";
-                  const effectiveItemId =
-                    selectedAltItemId || line.itemId || "";
-                  const baseBalance = balances[line.itemId ?? ""] || {
-                    availableQty: 0,
-                  };
-                  const effectiveBalance = balances[effectiveItemId] || {
-                    availableQty: 0,
-                  };
-                  const availableQty = effectiveBalance.availableQty;
-                  const altOption = altItemOptions.find(
-                    (option) => option.value === selectedAltItemId,
-                  );
-                  const displayItemCode = line.itemCode || line.itemId || "—";
-                  const displayItemName = line.itemName || "—";
+                const effectiveItemId =
+                  alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
+                  line.itemId ||
+                  "";
+                const availableQty = (
+                  balances[effectiveItemId] || { availableQty: 0 }
+                ).availableQty;
 
-                  // Highlight pink/light red if lacking stock and we are creating or in DRAFT
-                  const isLacking = displayRequired > availableQty;
-                  const trClass =
-                    (!editing || isDraft) && isLacking ? "bg-red-50" : "";
+                const isLacking = displayRequired > availableQty;
+                return (!editing || isDraft) && isLacking ? "bg-red-50" : "";
+              }}
+              columns={[
+                {
+                  key: "itemCode",
+                  header: t("Mã Linh Kiện"),
+                  cell: (line: BomLikeLine) => (
+                    <span className="font-medium">
+                      {line.itemCode || line.itemId || "—"}
+                    </span>
+                  ),
+                },
+                {
+                  key: "itemName",
+                  header: t("Tên Linh Kiện"),
+                  cell: (line: BomLikeLine) => line.itemName || "—",
+                },
+                {
+                  key: "altItem",
+                  header: t("NVL thay thế"),
+                  cell: (line: BomLikeLine) => {
+                    const originalItemId =
+                      line.originalItemId ?? line.itemId ?? "";
+                    const selectedAltItemId =
+                      alternativeItems[originalItemId] ?? "";
+                    const effectiveItemId =
+                      selectedAltItemId || line.itemId || "";
+                    const baseBalance = balances[line.itemId ?? ""] || {
+                      availableQty: 0,
+                    };
+                    const effectiveBalance = balances[effectiveItemId] || {
+                      availableQty: 0,
+                    };
+                    const altOption = altItemOptions.find(
+                      (o) => o.value === selectedAltItemId,
+                    );
 
-                  return (
-                    <tr key={line.id} className={trClass}>
-                      <td className="px-3 py-2 font-medium">
-                        {displayItemCode}
-                      </td>
-                      <td className="px-3 py-2">{displayItemName}</td>
-                      <td className="px-3 py-2">
-                        <div className="space-y-2 min-w-[250px]">
-                          <Combobox
-                            value={selectedAltItemId}
-                            onChange={(value) => {
-                              if (!value) {
-                                clearAlternativeItem(originalItemId);
-                                return;
-                              }
-                              setAlternativeItem(originalItemId, value);
-                            }}
-                            options={altItemOptions}
-                            placeholder={t("Chọn NVL thay thế")}
-                            searchPlaceholder={t("Tìm SKU / tên NVL")}
-                            onSearch={setAltItemSearch}
-                            onScrollBottom={fetchNextAltItems}
-                            loading={loadingAltItems}
-                            disabled={
-                              saving || viewOnly || isCompleted || isConfirmed
+                    return (
+                      <div className="space-y-2 min-w-[250px]">
+                        <Combobox
+                          value={selectedAltItemId}
+                          onChange={(value) => {
+                            if (!value) {
+                              clearAlternativeItem(originalItemId);
+                              return;
                             }
-                          />
-                          {selectedAltItemId ? (
-                            <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                              <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
-                                {t("Đang thay thế")}:{" "}
-                                {altOption?.label ||
-                                  line.alternativeItemName ||
-                                  selectedAltItemId}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {t("Tồn gốc")}:{" "}
-                                {fmtQty(String(baseBalance.availableQty ?? 0))}
-                              </span>
-                              <span className="text-muted-foreground">
-                                {t("Tồn thay thế")}:{" "}
-                                {fmtQty(
-                                  String(effectiveBalance.availableQty ?? 0),
-                                )}
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="text-[11px] text-muted-foreground">
-                              {editing && isDraft
-                                ? t(
-                                    "Có thể chọn NVL thay thế trước khi xác nhận.",
-                                  )
-                                : t("Tùy chọn cho mọi dòng BOM.")}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right text-amber-700 font-semibold">
+                            setAlternativeItem(originalItemId, value);
+                          }}
+                          options={altItemOptions}
+                          placeholder={t("Chọn NVL thay thế")}
+                          searchPlaceholder={t("Tìm SKU / tên NVL")}
+                          onSearch={setAltItemSearch}
+                          onScrollBottom={fetchNextAltItems}
+                          loading={loadingAltItems}
+                          disabled={
+                            saving || viewOnly || isCompleted || isConfirmed
+                          }
+                        />
+                        {selectedAltItemId ? (
+                          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                            <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
+                              {t("Đang thay thế")}:{" "}
+                              {altOption?.label ||
+                                line.alternativeItemName ||
+                                selectedAltItemId}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {t("Tồn gốc")}:{" "}
+                              {fmtQty(String(baseBalance.availableQty ?? 0))}
+                            </span>
+                            <span className="text-muted-foreground">
+                              {t("Tồn thay thế")}:{" "}
+                              {fmtQty(
+                                String(effectiveBalance.availableQty ?? 0),
+                              )}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-muted-foreground">
+                            {editing && isDraft
+                              ? t(
+                                  "Có thể chọn NVL thay thế trước khi xác nhận.",
+                                )
+                              : t("Tùy chọn cho mọi dòng BOM.")}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  key: "required",
+                  header: t("Cần Dùng"),
+                  align: "right",
+                  cell: (line: BomLikeLine) => {
+                    const requiredQty = Number(line.qtyRequired || 0);
+                    const displayRequired = editing
+                      ? requiredQty
+                      : requiredQty * Number(form.qtyToProduce || 1);
+                    return (
+                      <span className="text-amber-700 font-semibold">
                         {fmtQty(displayRequired.toString())}
-                      </td>
-                      <td
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: "available",
+                  header: t("Khả Dụng"),
+                  align: "right",
+                  cell: (line: BomLikeLine) => {
+                    const requiredQty = Number(line.qtyRequired || 0);
+                    const displayRequired = editing
+                      ? requiredQty
+                      : requiredQty * Number(form.qtyToProduce || 1);
+                    const effectiveItemId =
+                      alternativeItems[
+                        line.originalItemId ?? line.itemId ?? ""
+                      ] ||
+                      line.itemId ||
+                      "";
+                    const availableQty = (
+                      balances[effectiveItemId] || { availableQty: 0 }
+                    ).availableQty;
+                    const isLacking = displayRequired > availableQty;
+                    return (
+                      <span
                         className={cn(
-                          "px-3 py-2 text-right font-semibold",
+                          "font-semibold",
                           isLacking ? "text-red-600" : "text-emerald-700",
                         )}
                       >
                         {fmtQty(availableQty.toString())}
-                      </td>
-                      <td className="px-3 py-2 text-right text-muted-foreground">
-                        {fmtQty(line.qtyIssued || "0")}
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">
-                        {line.uom || "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: "issued",
+                  header: t("Đã Xuất"),
+                  align: "right",
+                  cell: (line: BomLikeLine) => (
+                    <span className="text-muted-foreground">
+                      {fmtQty(line.qtyIssued || "0")}
+                    </span>
+                  ),
+                },
+                {
+                  key: "uom",
+                  header: t("ĐVT"),
+                  cell: (line: BomLikeLine) => (
+                    <span className="text-muted-foreground">
+                      {line.uom || "—"}
+                    </span>
+                  ),
+                },
+              ]}
+            />
           </div>
         ) : (
           <div className="text-sm text-muted-foreground italic px-2 py-4">
@@ -329,7 +385,7 @@ export function ProductionOrderDrawer({
           style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
         >
           <div
-            className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)] space-y-4 p-4 md:p-6"
+            className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)] space-y-4"
             style={{ scrollbarWidth: "none" }}
           >
             <DrawerField label={t("Thành phẩm")} required>

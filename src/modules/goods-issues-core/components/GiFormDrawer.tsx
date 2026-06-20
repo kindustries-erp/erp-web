@@ -1,8 +1,8 @@
-import { Plus } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Skeleton } from "@/shared/components/Skeleton";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   DrawerField,
@@ -13,6 +13,7 @@ import {
   emptyGiLine,
   isMoLinkedGiLocked,
   type UseGiDrawerReturn,
+  type GiLineForm,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
 interface GiFormDrawerProps {
@@ -181,33 +182,38 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             <DrawerSection
               title={t("Dòng xuất kho") + " (" + form.lines.length + ")"}
             >
-              {form.lines.map((line, idx) => {
-                if (viewOnly && Number(line.qtyIssued) <= 0) return null;
-                return (
-                  <div
-                    key={idx}
-                    className="rounded-xl border border-border bg-muted/10 p-3 mb-2 space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-muted-foreground">
-                        {t("Dòng")} {idx + 1}
-                      </span>
-                      {!viewOnly && (
-                        <button
-                          type="button"
-                          className="text-xs text-red-500 hover:underline"
-                          onClick={() =>
-                            setForm((f) => ({
-                              ...f,
-                              lines: f.lines.filter((_, i) => i !== idx),
-                            }))
-                          }
-                        >
-                          {t("Xóa")}
-                        </button>
-                      )}
-                    </div>
-                    <DrawerField label={t("Hàng hóa")}>
+              <DocumentLineTable
+                data={form.lines}
+                getRowKey={(_, idx) => idx}
+                viewOnly={viewOnly}
+                disabled={viewOnly}
+                onAddLine={() =>
+                  setForm((f) => ({
+                    ...f,
+                    lines: [...f.lines, emptyGiLine()],
+                  }))
+                }
+                onRemoveLine={(idx) =>
+                  setForm((f) => ({
+                    ...f,
+                    lines: f.lines.filter((_, i) => i !== idx),
+                  }))
+                }
+                columns={[
+                  {
+                    key: "index",
+                    header: "#",
+                    width: 40,
+                    align: "center",
+                    cell: (_, idx) => (
+                      <span className="text-muted-foreground">{idx + 1}</span>
+                    ),
+                  },
+                  {
+                    key: "itemId",
+                    header: t("Hàng hóa"),
+                    minWidth: 200,
+                    cell: (line, idx) => (
                       <Combobox
                         options={itemOptions}
                         value={line.itemId}
@@ -230,80 +236,80 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                           });
                         }}
                       />
-                    </DrawerField>
-                    <div className="flex gap-2">
-                      <DrawerField label={t("Số lượng")}>
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-28")}
-                          value={line.qtyIssued}
-                          disabled={viewOnly}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], qtyIssued: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      </DrawerField>
-                      <DrawerField label={t("Đơn giá")}>
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-28")}
-                          value={line.unitCost}
-                          disabled={viewOnly}
-                          placeholder={t("Tùy chọn")}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], unitCost: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      </DrawerField>
-                    </div>
-                    {vehicleOptions.length > 0 && (
-                      <DrawerField label={t("Xe") + " (" + t("tùy chọn") + ")"}>
-                        <Combobox
-                          options={vehicleOptions}
-                          value={line.vehicleId}
-                          disabled={viewOnly}
-                          placeholder={t("Chọn xe...")}
-                          onChange={(v) => {
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = {
-                                ...lines[idx],
-                                vehicleId: v || "",
-                              };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      </DrawerField>
-                    )}
-                  </div>
-                );
-              })}
-              {!viewOnly && (
-                <button
-                  type="button"
-                  className="mt-1 flex items-center gap-1 text-sm text-primary hover:underline"
-                  onClick={() =>
-                    setForm((f) => ({
-                      ...f,
-                      lines: [...f.lines, emptyGiLine()],
-                    }))
-                  }
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {t("Thêm dòng hàng")}
-                </button>
-              )}
+                    ),
+                  },
+                  {
+                    key: "qtyIssued",
+                    header: t("Số lượng"),
+                    width: 140,
+                    cell: (line, idx) => (
+                      <input
+                        type="number"
+                        className={cn(inputCls, "w-full")}
+                        value={line.qtyIssued}
+                        disabled={viewOnly}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((f) => {
+                            const lines = [...f.lines];
+                            lines[idx] = { ...lines[idx], qtyIssued: v };
+                            return { ...f, lines };
+                          });
+                        }}
+                      />
+                    ),
+                  },
+                  {
+                    key: "unitCost",
+                    header: t("Đơn giá"),
+                    width: 140,
+                    cell: (line, idx) => (
+                      <input
+                        type="number"
+                        className={cn(inputCls, "w-full")}
+                        value={line.unitCost}
+                        disabled={viewOnly}
+                        placeholder={t("Tùy chọn")}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setForm((f) => {
+                            const lines = [...f.lines];
+                            lines[idx] = { ...lines[idx], unitCost: v };
+                            return { ...f, lines };
+                          });
+                        }}
+                      />
+                    ),
+                  },
+                  ...(vehicleOptions.length > 0
+                    ? [
+                        {
+                          key: "vehicle",
+                          header: t("Xe") + " (" + t("tùy chọn") + ")",
+                          minWidth: 160,
+                          cell: (line: GiLineForm, idx: number) => (
+                            <Combobox
+                              options={vehicleOptions}
+                              value={line.vehicleId}
+                              disabled={viewOnly}
+                              placeholder={t("Chọn xe...")}
+                              onChange={(v) => {
+                                setForm((f) => {
+                                  const lines = [...f.lines];
+                                  lines[idx] = {
+                                    ...lines[idx],
+                                    vehicleId: v || "",
+                                  };
+                                  return { ...f, lines };
+                                });
+                              }}
+                            />
+                          ),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             </DrawerSection>
           )}
         </>
