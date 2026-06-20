@@ -9,10 +9,10 @@ RUN bun install --frozen-lockfile
 COPY . .
 ARG VITE_APP_NAME
 ARG VITE_API_BASE_URL
-ARG VITE_APP_ENV
+ARG APP_ENV=production
 ENV VITE_APP_NAME=${VITE_APP_NAME}
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-ENV VITE_APP_ENV=${VITE_APP_ENV}
+ENV APP_ENV=${APP_ENV}
 RUN bun run build
 
 # ── Stage 2: Serve ────────────────────────────────────────────────────────────
