@@ -11,6 +11,7 @@ import {
 } from "@/shared/components/DrawerModal";
 import {
   emptyGiLine,
+  isMoLinkedGiLocked,
   type UseGiDrawerReturn,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
@@ -56,6 +57,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     { value: "POSTED", label: t("Đã vào sổ") },
     { value: "CANCELLED", label: t("Đã hủy") },
   ];
+  const moLinkedLocked = isMoLinkedGiLocked(editing);
 
   // Derive actions
   const actions = [];
@@ -123,6 +125,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       onToggleEdit={
         viewOnly &&
         editing &&
+        !moLinkedLocked &&
         !["POSTED", "CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
           ? () => setViewOnly(false)
           : undefined
@@ -156,6 +159,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           {saveError && (
             <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
               {saveError}
+            </div>
+          )}
+          {editing?.productionOrderId && (
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              {t(
+                "Phiếu xuất kho gắn lệnh sản xuất đang bị khóa sửa. Chỉ được xem trạng thái hiện tại.",
+              )}
             </div>
           )}
 
