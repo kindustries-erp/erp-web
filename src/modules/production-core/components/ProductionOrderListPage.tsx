@@ -116,6 +116,12 @@ export function ProductionOrderListPage() {
   );
   const [canceling, setCanceling] = useState(false);
 
+  const filterSearch = filter.state.search;
+  const filterStatus = filter.state.status;
+  const filterDateFrom = filter.state.dateFrom;
+  const filterDateTo = filter.state.dateTo;
+  const filterFinishedGood = filter.state.custom.finishedGoodItemId;
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -123,11 +129,11 @@ export function ProductionOrderListPage() {
       const res = await productionCoreApi.list({
         page,
         pageSize,
-        search: filter.state.search || undefined,
-        status: filter.state.status || undefined,
-        dateFrom: filter.state.dateFrom || undefined,
-        dateTo: filter.state.dateTo || undefined,
-        finishedGoodItemId: filter.state.custom.finishedGoodItemId || undefined,
+        search: filterSearch || undefined,
+        status: filterStatus || undefined,
+        dateFrom: filterDateFrom || undefined,
+        dateTo: filterDateTo || undefined,
+        finishedGoodItemId: filterFinishedGood || undefined,
       });
       setOrders(res.items);
       setTotal(res.total);
@@ -136,7 +142,16 @@ export function ProductionOrderListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, filter.state, t]);
+  }, [
+    page,
+    pageSize,
+    filterSearch,
+    filterStatus,
+    filterDateFrom,
+    filterDateTo,
+    filterFinishedGood,
+    t,
+  ]);
 
   useEffect(() => {
     if (canRead) {
