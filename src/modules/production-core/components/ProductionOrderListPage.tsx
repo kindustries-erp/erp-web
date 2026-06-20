@@ -74,7 +74,7 @@ export function ProductionOrderListPage() {
 
   const filterConfig = useMemo(
     () => ({
-      period: true,
+      period: false,
       search: true,
       status: {
         options: [
@@ -114,6 +114,10 @@ export function ProductionOrderListPage() {
     null,
   );
   const [canceling, setCanceling] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ErpProductionOrder | null>(
+    null,
+  );
+  const [deleting, setDeleting] = useState(false);
 
   const filterSearch = filter.state.search;
   const filterStatus = filter.state.status;
@@ -203,6 +207,32 @@ export function ProductionOrderListPage() {
       });
     } finally {
       setCanceling(false);
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await productionCoreApi.remove(deleteTarget.id);
+      showToast({ title: t("Đã xóa lệnh sản xuất nháp"), variant: "success" });
+      setDeleteTarget(null);
+      loadData();
+    } catch (e: unknown) {
+      const errMsg =
+        e && typeof e === "object" && "response" in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data
+              ?.message
+          : undefined;
+      showToast({
+        title:
+          errMsg ||
+          (e instanceof Error ? e.message : "") ||
+          t("Không thể xóa lệnh"),
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -296,8 +326,12 @@ export function ProductionOrderListPage() {
                   hidden: !canUpdate || item.status === "CANCELLED",
                 },
                 {
-                  label: t("Hủy lệnh"),
-                  onClick: () => setCancelTarget(item),
+                  label:
+                    item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
+                  onClick: () =>
+                    item.status === "DRAFT"
+                      ? setDeleteTarget(item)
+                      : setCancelTarget(item),
                   variant: "danger",
                   hidden: !canUpdate || item.status === "CANCELLED",
                 },
@@ -359,9 +393,31 @@ export function ProductionOrderListPage() {
         editing={editingOrder}
         viewOnly={drawerMode === "view"}
         onClose={() => setDrawerOpen(false)}
+        onToggleEdit={
+          drawerMode === "view" &&
+          canUpdate &&
+          editingOrder?.status !== "CANCELLED"
+            ? () => setDrawerMode("edit")
+            : undefined
+        }
         onSaved={loadData}
         drawerState={drawerState}
       />
+
+      {deleteTarget && (
+        <ConfirmModal
+          open={true}
+          title={t("Xóa lệnh sản xuất nháp")}
+          message={t(
+            `Bạn có chắc muốn xóa lệnh sản xuất ${deleteTarget.referenceNo || deleteTarget.id}? Hành động này không thể hoàn tác.`,
+          )}
+          confirmLabel={t("Xác nhận xóa")}
+          danger={true}
+          onConfirm={handleDeleteOrder}
+          onCancel={() => setDeleteTarget(null)}
+          loading={deleting}
+        />
+      )}
 
       {cancelTarget && (
         <ConfirmModal

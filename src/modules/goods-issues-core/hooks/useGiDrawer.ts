@@ -195,6 +195,7 @@ export function useGiDrawer({
       const moOptions = await productionCoreApi.listMasterOptions({
         page: 1,
         pageSize: LOOKUP_LIMIT,
+        status: "CONFIRMED",
       });
       setMoOptions(moOptions);
     } catch {

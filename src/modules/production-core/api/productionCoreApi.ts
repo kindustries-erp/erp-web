@@ -135,6 +135,13 @@ export const productionCoreApi = {
     }>(`${BASE_ORDERS}/${id}`);
     return data.data;
   },
+  remove: async (id: string): Promise<{ id: string }> => {
+    const { data } = await axiosInstance.delete<{
+      message: string;
+      data: { id: string };
+    }>(`${BASE_ORDERS}/${id}`);
+    return data.data;
+  },
   cancel: async (id: string): Promise<ErpProductionOrder> => {
     const { data } = await axiosInstance.post<{
       message: string;
@@ -165,10 +172,12 @@ export const productionCoreApi = {
         : {}),
     });
 
-    return (res.items ?? []).map((item) => ({
-      value: item.id,
-      label: item.referenceNo || item.finishedGoodItemName || item.id,
-      details: item,
-    }));
+    return (res.items ?? [])
+      .filter((item) => !["DRAFT", "CANCELLED"].includes(item.status || ""))
+      .map((item) => ({
+        value: item.id,
+        label: item.referenceNo || item.finishedGoodItemName || item.id,
+        details: item,
+      }));
   },
 };

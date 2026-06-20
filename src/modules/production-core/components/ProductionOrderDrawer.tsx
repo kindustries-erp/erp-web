@@ -43,6 +43,7 @@ export function ProductionOrderDrawer({
   editing,
   viewOnly,
   onClose,
+  onToggleEdit,
   drawerState,
 }: ProductionOrderDrawerProps) {
   const t = useT();
@@ -447,6 +448,7 @@ export function ProductionOrderDrawer({
       open={open}
       mode={mode}
       onClose={onClose}
+      onToggleEdit={onToggleEdit}
       title={
         viewOnly
           ? t("Chi tiết Lệnh Sản Xuất")
