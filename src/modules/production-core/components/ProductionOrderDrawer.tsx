@@ -62,6 +62,8 @@ export function ProductionOrderDrawer({
     form,
     setForm,
     itemOptions,
+    availableBoms,
+    bomOptions,
     saving,
     error,
     handleSubmit,
@@ -374,6 +376,19 @@ export function ProductionOrderDrawer({
         />
       </DrawerField>
 
+      {availableBoms.length > 1 && (
+        <DrawerField label={t("Phiên bản BOM")}>
+          <Combobox
+            value={form.bomId}
+            onChange={(v) => setForm((p) => ({ ...p, bomId: v }))}
+            options={bomOptions}
+            placeholder={t("Chọn phiên bản BOM")}
+            searchPlaceholder={t("Tìm BOM")}
+            disabled={saving || isConfirmed || isCompleted || viewOnly}
+          />
+        </DrawerField>
+      )}
+
       <DrawerField label={t("Số lượng kế hoạch")} required>
         <input
           type="number"
@@ -410,7 +425,7 @@ export function ProductionOrderDrawer({
           }
           disabled={saving || isConfirmed || isCompleted || viewOnly}
           className={inputCls}
-          placeholder={t("Tự động nếu để trống")}
+          placeholder={t("Tự động theo tháng (MO-YYYYMMXXXX)")}
         />
       </DrawerField>
 

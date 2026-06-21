@@ -10,6 +10,7 @@ export interface ExecuteProductionPayload {
   plannedEndDate?: string;
   outputMetadata?: Record<string, unknown>;
   status?: string;
+  bomId?: string;
   materialOverrides?: Array<{
     originalItemId: string;
     alternativeItemId: string;
@@ -227,6 +228,16 @@ export const productionCoreApi = {
       };
     }>(`/api/v1/production/orders/${id}/complete`, payload);
     return data.data;
+  },
+
+  getNextReferenceNo: async (): Promise<string> => {
+    const { data } = await axiosInstance.get<string>(
+      "/api/v1/production/orders/next-reference-no",
+    );
+    // API returns the string directly (not wrapped in { data: ... })
+    return typeof data === "string"
+      ? data
+      : ((data as unknown as { data?: string }).data ?? "");
   },
 
   listMasterOptions: async (

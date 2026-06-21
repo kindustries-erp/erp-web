@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useUIStore } from "@/core/config/uiStore";
 import {
   productionCoreApi,
   type ErpProductionOrder,
 } from "@/modules/production-core/api/productionCoreApi";
 import { useAppStore } from "@/core/config/appStore";
-import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
+import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import {
@@ -63,6 +63,7 @@ const emptyForm = () => ({
   referenceNo: "",
   plannedStartDate: "",
   plannedEndDate: "",
+  bomId: "",
 });
 
 export function useProductionOrderDrawer({
@@ -92,6 +93,9 @@ export function useProductionOrderDrawer({
   const bomLoadRequestRef = useRef(0);
   const issueDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
   const [startQty, setStartQty] = useState("1");
+
+  // BOM selection: list of BOMs available for the selected finished good
+  const [availableBoms, setAvailableBoms] = useState<ErpBom[]>([]);
   const [completeQty, setCompleteQty] = useState("1");
   const [completeUnitCost, setCompleteUnitCost] = useState("0");
   const [showStartDialog, setShowStartDialog] = useState(false);
@@ -312,6 +316,48 @@ export function useProductionOrderDrawer({
       });
   }, [form.finishedGoodItemId, editing]);
 
+  // Auto-fill referenceNo when opening create drawer
+  useEffect(() => {
+    if (open && !editing) {
+      productionCoreApi
+        .getNextReferenceNo()
+        .then((refNo) => {
+          if (refNo) {
+            setForm((prev) => ({
+              ...prev,
+              referenceNo: prev.referenceNo || refNo,
+            }));
+          }
+        })
+        .catch(() => {
+          // Non-blocking: user can still enter referenceNo manually
+        });
+    }
+  }, [open, editing]);
+
+  // Fetch all BOMs for selected finished good; auto-select latest ACTIVE
+  useEffect(() => {
+    if (!form.finishedGoodItemId || editing) {
+      setAvailableBoms([]);
+      return;
+    }
+    bomCoreApi
+      .list({ pageSize: 50, finishedGoodItemId: form.finishedGoodItemId })
+      .then((res) => {
+        const boms = res.items;
+        setAvailableBoms(boms);
+        if (boms.length > 0) {
+          const activeBom = boms.find((b) => b.status === "ACTIVE") ?? boms[0];
+          setForm((prev) => ({ ...prev, bomId: activeBom.id }));
+        } else {
+          setForm((prev) => ({ ...prev, bomId: "" }));
+        }
+      })
+      .catch(() => {
+        setAvailableBoms([]);
+      });
+  }, [form.finishedGoodItemId]);
+
   // When alternativeItems change, reload balances to include alt item qtys
   useEffect(() => {
     const altIds = Object.values(alternativeItems).filter(Boolean);
@@ -338,6 +384,7 @@ export function useProductionOrderDrawer({
           plannedEndDate: editing.plannedEndDate
             ? editing.plannedEndDate.slice(0, 10)
             : "",
+          bomId: (editing.outputMetadata?.bomId as string) || "",
         });
         const existingNotes =
           (editing.outputMetadata?.lineNotes as Record<string, string>) || {};
@@ -391,6 +438,7 @@ export function useProductionOrderDrawer({
           ? { plannedStartDate: form.plannedStartDate }
           : {}),
         ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
+        ...(form.bomId ? { bomId: form.bomId } : {}),
         status,
         ...(materialOverrides.length > 0 ? { materialOverrides } : {}),
         outputMetadata: {
@@ -551,10 +599,23 @@ export function useProductionOrderDrawer({
     }
   };
 
+  const bomOptions = useMemo(
+    () =>
+      availableBoms.map((b) => ({
+        value: b.id,
+        label: b.bomName
+          ? `${b.bomName} (v${b.version ?? "?"})${b.status !== "ACTIVE" ? " — " + b.status : ""}`
+          : `BOM ${b.id.slice(0, 8)}`,
+      })),
+    [availableBoms],
+  );
+
   return {
     form,
     setForm,
     itemOptions,
+    availableBoms,
+    bomOptions,
     saving,
     error,
     handleSubmit,
