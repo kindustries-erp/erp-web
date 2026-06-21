@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Factory, Eye, Edit2, Trash2, XCircle } from "lucide-react";
+import { Factory, Eye, Edit2, Trash2, XCircle, PlayCircle } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -18,7 +18,7 @@ import {
 import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
 import { ProductionOrderDrawer } from "./ProductionOrderDrawer";
 import { useProductionOrderDrawer } from "../hooks/useProductionOrderDrawer";
-
+import { ProductionRunDrawer } from "./ProductionRunDrawer";
 function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
@@ -118,6 +118,11 @@ export function ProductionOrderListPage() {
   );
   const [deleting, setDeleting] = useState(false);
 
+  // Production run drawer state
+  const [productionRunOpen, setProductionRunOpen] = useState(false);
+  const [productionRunOrder, setProductionRunOrder] =
+    useState<ErpProductionOrder | null>(null);
+
   const filterSearch = filter.state.search;
   const filterStatus = filter.state.status;
   const filterDateFrom = filter.state.dateFrom;
@@ -166,6 +171,16 @@ export function ProductionOrderListPage() {
     setDrawerMode("create");
     setEditingOrder(null);
     setDrawerOpen(true);
+  };
+
+  const handleOpenProductionRun = async (item: ErpProductionOrder) => {
+    try {
+      const data = await productionCoreApi.get(item.id);
+      setProductionRunOrder(data);
+      setProductionRunOpen(true);
+    } catch {
+      showToast({ title: t("Lỗi tải chi tiết lệnh"), variant: "destructive" });
+    }
   };
 
   const handleEdit = async (id: string, viewOnly = false) => {
@@ -364,6 +379,14 @@ export function ProductionOrderListPage() {
                 hidden: !canUpdate || item.status === "CANCELLED",
               },
               {
+                label: t("Tiến hành sản xuất"),
+                onClick: () => handleOpenProductionRun(item),
+                icon: <PlayCircle className="h-[13px] w-[13px]" />,
+                hidden:
+                  !canUpdate ||
+                  !["CONFIRMED", "IN_PROGRESS"].includes(item.status || ""),
+              },
+              {
                 label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
                 onClick: () =>
                   item.status === "DRAFT"
@@ -399,6 +422,16 @@ export function ProductionOrderListPage() {
         }
         onSaved={loadData}
         drawerState={drawerState}
+        productionRunOpen={
+          productionRunOpen && productionRunOrder?.id === editingOrder?.id
+        }
+        onOpenProductionRun={() => {
+          if (editingOrder) {
+            setProductionRunOrder(editingOrder);
+            setProductionRunOpen(true);
+          }
+        }}
+        onCloseProductionRun={() => setProductionRunOpen(false)}
       />
 
       {deleteTarget && (
@@ -428,6 +461,19 @@ export function ProductionOrderListPage() {
           onConfirm={handleCancelOrder}
           onCancel={() => setCancelTarget(null)}
           loading={canceling}
+        />
+      )}
+
+      {/* Standalone production run drawer — opened directly from list quick action */}
+      {productionRunOpen && !drawerOpen && (
+        <ProductionRunDrawer
+          open={true}
+          order={productionRunOrder}
+          onClose={() => {
+            setProductionRunOpen(false);
+            setProductionRunOrder(null);
+          }}
+          onRefresh={loadData}
         />
       )}
     </PageLayout>
