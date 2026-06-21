@@ -168,14 +168,14 @@ export function ProductionRunDrawer({
         subtitle={t("Đang tải chi tiết lệnh...")}
         actions={[{ label: t("Đóng"), onClick: onClose }]}
       >
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-4">
+        <div className="grid w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
+          <div className="min-w-0 space-y-4">
             <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-72 w-full" />
           </div>
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4">
+            <Skeleton className="h-56 w-full" />
             <Skeleton className="h-40 w-full" />
-            <Skeleton className="h-32 w-full" />
           </div>
         </div>
       </DrawerModal>

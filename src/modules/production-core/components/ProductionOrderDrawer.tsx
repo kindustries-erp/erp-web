@@ -12,7 +12,6 @@ import { Combobox } from "@/shared/components/Combobox";
 import type { ErpProductionOrder } from "@/modules/production-core/api/productionCoreApi";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { ArrowRight } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { ProductionRunDrawer } from "./ProductionRunDrawer";
@@ -88,8 +87,24 @@ export function ProductionOrderDrawer({
 
   const isDraft = editing?.status === "DRAFT";
 
+  const showProductionRunAction =
+    !!editing && ["CONFIRMED", "IN_PROGRESS"].includes(editing.status || "");
+
+  const productionRunAction = showProductionRunAction
+    ? {
+        label:
+          editing?.status === "IN_PROGRESS"
+            ? t("Tiếp tục sản xuất")
+            : t("Tiến hành sản xuất"),
+        onClick: () => onOpenProductionRun?.(),
+        variant: "secondary" as const,
+        align: "left" as const,
+      }
+    : null;
+
   const actions = viewOnly
     ? [
+        ...(productionRunAction ? [productionRunAction] : []),
         {
           label: t("Đóng"),
           onClick: onClose,
@@ -97,6 +112,7 @@ export function ProductionOrderDrawer({
         },
       ]
     : [
+        ...(productionRunAction ? [productionRunAction] : []),
         {
           label: t("Hủy"),
           onClick: onClose,
@@ -454,20 +470,6 @@ export function ProductionOrderDrawer({
           disabled={saving || isConfirmed || isCompleted || viewOnly}
         />
       </DrawerField>
-
-      {editing &&
-        (isConfirmed || isCompleted || editing.status === "IN_PROGRESS") && (
-          <div className="pt-2 mt-1">
-            <button
-              onClick={onOpenProductionRun}
-              disabled={saving || viewOnly}
-              className="flex w-full items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 transition-colors hover:bg-blue-100 disabled:opacity-50"
-            >
-              <span>{t("Tiến trình sản xuất")}</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        )}
     </>
   );
 

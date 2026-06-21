@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Factory,
   Eye,
-  Edit2,
   Trash2,
   XCircle,
   PlayCircle,
@@ -385,15 +384,9 @@ export function ProductionOrderListPage() {
             onRowClick={(item) => handleEdit(item.id, true)}
             actions={(item) => [
               {
-                label: t("Xem chi tiết"),
+                label: t("Chi tiết"),
                 onClick: () => handleEdit(item.id, true),
                 icon: <Eye className="h-[13px] w-[13px]" />,
-              },
-              {
-                label: t("Cập nhật"),
-                onClick: () => handleEdit(item.id, false),
-                icon: <Edit2 className="h-[13px] w-[13px]" />,
-                hidden: !canUpdate || item.status === "CANCELLED",
               },
               {
                 label:
@@ -424,8 +417,6 @@ export function ProductionOrderListPage() {
                     <XCircle className="h-[13px] w-[13px]" />
                   ),
                 variant: "danger",
-                // Cancel: only for CONFIRMED (posted but not yet started)
-                // Delete: only for DRAFT
                 hidden:
                   !canUpdate ||
                   (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
