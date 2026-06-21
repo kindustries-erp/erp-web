@@ -10,6 +10,7 @@ export interface ExecuteProductionPayload {
   plannedEndDate?: string;
   outputMetadata?: Record<string, unknown>;
   status?: string;
+  bomId?: string;
   materialOverrides?: Array<{
     originalItemId: string;
     alternativeItemId: string;
@@ -70,6 +71,8 @@ export interface ErpProductionOrder {
   warehouseCode?: string | null;
   createdAt?: string;
   lines?: ErpProductionOrderMaterial[];
+  materials?: ErpProductionOrderMaterial[];
+  outputMetadata?: Record<string, unknown> | null;
   [key: string]: unknown;
 }
 
@@ -81,6 +84,12 @@ export interface ErpProductionOrderMaterial {
   qtyIssued: string;
   uom?: string | null;
   itemName?: string | null;
+  itemCode?: string | null;
+  originalItemId?: string | null;
+  originalItemName?: string | null;
+  originalItemCode?: string | null;
+  alternativeItemId?: string | null;
+  alternativeNotes?: string | null;
 }
 
 export interface ProductionOrderMasterOption {
@@ -135,6 +144,16 @@ export const productionCoreApi = {
     }>(`${BASE_ORDERS}/${id}`);
     return data.data;
   },
+  update: async (
+    id: string,
+    payload: ExecuteProductionPayload,
+  ): Promise<ErpProductionOrder> => {
+    const { data } = await axiosInstance.patch<{
+      message: string;
+      data: ErpProductionOrder;
+    }>(`${BASE_ORDERS}/${id}`, payload);
+    return data.data;
+  },
   remove: async (id: string): Promise<{ id: string }> => {
     const { data } = await axiosInstance.delete<{
       message: string;
@@ -155,6 +174,70 @@ export const productionCoreApi = {
       data: ErpProductionOrder;
     }>(`/api/v1/production/${id}/confirm`);
     return data.data;
+  },
+
+  start: async (
+    id: string,
+    payload: { qtyToManufacture: number; warehouseCode?: string },
+  ): Promise<{
+    id: string;
+    referenceNo?: string;
+    status?: string;
+    goodsIssueId?: string;
+    goodsIssueNo?: string;
+    qtyToManufacture: number;
+  }> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: {
+        id: string;
+        referenceNo?: string;
+        status?: string;
+        goodsIssueId?: string;
+        goodsIssueNo?: string;
+        qtyToManufacture: number;
+      };
+    }>(`/api/v1/production/orders/${id}/start`, payload);
+    return data.data;
+  },
+
+  complete: async (
+    id: string,
+    payload: { qtyFinished: number; warehouseCode?: string; unitCost?: number },
+  ): Promise<{
+    id: string;
+    referenceNo?: string;
+    status?: string;
+    qtyToProduce?: string;
+    qtyProduced?: string;
+    goodsReceiptId?: string;
+    goodsReceiptNo?: string;
+    qtyFinished: number;
+  }> => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: {
+        id: string;
+        referenceNo?: string;
+        status?: string;
+        qtyToProduce?: string;
+        qtyProduced?: string;
+        goodsReceiptId?: string;
+        goodsReceiptNo?: string;
+        qtyFinished: number;
+      };
+    }>(`/api/v1/production/orders/${id}/complete`, payload);
+    return data.data;
+  },
+
+  getNextReferenceNo: async (): Promise<string> => {
+    const { data } = await axiosInstance.get<string>(
+      "/api/v1/production/orders/next-reference-no",
+    );
+    // API returns the string directly (not wrapped in { data: ... })
+    return typeof data === "string"
+      ? data
+      : ((data as unknown as { data?: string }).data ?? "");
   },
 
   listMasterOptions: async (

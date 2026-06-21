@@ -39,6 +39,12 @@ export interface GiForm {
   lines: GiLineForm[];
 }
 
+export function isMoLinkedGiLocked(
+  gi?: Pick<ErpGoodsIssue, "productionOrderId" | "status"> | null,
+) {
+  return Boolean(gi?.productionOrderId) || !gi || gi.status !== "DRAFT";
+}
+
 export const emptyGiLine = (): GiLineForm => ({
   salesOrderLineId: "",
   productionOrderMaterialId: "",
@@ -90,20 +96,29 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
     issueType: form.issueType || "SALE",
-    customerId: form.customerId || undefined,
-    productionOrderId: form.productionOrderId || undefined,
+    customerId:
+      form.issueType === "SALE" ? form.customerId || undefined : undefined,
+    productionOrderId:
+      form.issueType === "PRODUCTION"
+        ? form.productionOrderId || undefined
+        : undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
-    lines: form.lines.map((line) => ({
-      salesOrderLineId: line.salesOrderLineId || undefined,
-      productionOrderMaterialId: line.productionOrderMaterialId || undefined,
-      itemId: line.itemId || undefined,
-      itemName: line.itemName || undefined,
-      serialId: line.serialId || undefined,
-      vehicleId: line.vehicleId || undefined,
-      qtyIssued: line.qtyIssued,
-      unitCost: line.unitCost || undefined,
-    })),
+    lines: form.lines
+      .filter((line) => {
+        const qty = Number(line.qtyIssued);
+        return !Number.isNaN(qty) && qty > 0;
+      })
+      .map((line) => ({
+        salesOrderLineId: line.salesOrderLineId || undefined,
+        productionOrderMaterialId: line.productionOrderMaterialId || undefined,
+        itemId: line.itemId || undefined,
+        itemName: line.itemName || undefined,
+        serialId: line.serialId || undefined,
+        vehicleId: line.vehicleId || undefined,
+        qtyIssued: line.qtyIssued,
+        unitCost: line.unitCost || undefined,
+      })),
   };
 }
 

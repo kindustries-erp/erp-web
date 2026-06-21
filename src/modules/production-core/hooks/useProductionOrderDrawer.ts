@@ -1,13 +1,17 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useUIStore } from "@/core/config/uiStore";
 import {
   productionCoreApi,
   type ErpProductionOrder,
 } from "@/modules/production-core/api/productionCoreApi";
 import { useAppStore } from "@/core/config/appStore";
-import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
+import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
+import {
+  useGiDrawer,
+  type GiLineForm,
+} from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
 type ProductionDrawerForm = ReturnType<typeof emptyForm>;
 
@@ -22,6 +26,9 @@ export interface BomLikeLine {
   uom?: string | null;
   /** Original BOM component item id (before any override) */
   originalItemId?: string | null;
+  alternativeItemId?: string | null;
+  alternativeItemName?: string | null;
+  alternativeItemCode?: string | null;
 }
 
 interface BomLikeItem {
@@ -56,6 +63,7 @@ const emptyForm = () => ({
   referenceNo: "",
   plannedStartDate: "",
   plannedEndDate: "",
+  bomId: "",
 });
 
 export function useProductionOrderDrawer({
@@ -82,11 +90,22 @@ export function useProductionOrderDrawer({
     >
   >({});
   const [localSearch, setLocalSearch] = useState("");
+  const bomLoadRequestRef = useRef(0);
+  const issueDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
+  const [startQty, setStartQty] = useState("1");
+
+  // BOM selection: list of BOMs available for the selected finished good
+  const [availableBoms, setAvailableBoms] = useState<ErpBom[]>([]);
+  const [completeQty, setCompleteQty] = useState("1");
+  const [completeUnitCost, setCompleteUnitCost] = useState("0");
+  const [showStartDialog, setShowStartDialog] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
 
   // ── Alternative item overrides: bomLineId (or componentItemId) → alternativeItemId
   const [alternativeItems, setAlternativeItems] = useState<
     Record<string, string>
   >({});
+  const [lineNotes, setLineNotes] = useState<Record<string, string>>({});
   const [altItemSearch, setAltItemSearch] = useState("");
 
   const {
@@ -125,6 +144,16 @@ export function useProductionOrderDrawer({
     });
   }, []);
 
+  const setLineNote = useCallback(
+    (lineOriginalItemId: string, note: string) => {
+      setLineNotes((prev) => ({
+        ...prev,
+        [lineOriginalItemId]: note,
+      }));
+    },
+    [],
+  );
+
   const loadItems = useCallback(async () => {
     try {
       const res = await bomCoreApi.list({ pageSize: 500 });
@@ -144,76 +173,190 @@ export function useProductionOrderDrawer({
   }, []);
 
   useEffect(() => {
-    if (form.finishedGoodItemId && !editing) {
-      // Load BOM lines for the selected FG
+    const requestId = ++bomLoadRequestRef.current;
+
+    if (editing?.finishedGoodItemId) {
+      const sourceLines = editing.lines || editing.materials || [];
+      const restoredAlternativeItems = Object.fromEntries(
+        sourceLines
+          .filter((l) => l.originalItemId && l.alternativeItemId)
+          .map((l) => [
+            l.originalItemId as string,
+            l.alternativeItemId as string,
+          ]),
+      );
+      setAlternativeItems(restoredAlternativeItems);
+
       bomCoreApi
         .list({
           pageSize: 1,
-          finishedGoodItemId: form.finishedGoodItemId,
+          finishedGoodItemId: editing.finishedGoodItemId,
         })
         .then((res) => {
+          if (bomLoadRequestRef.current !== requestId) return;
           const bom = res.items[0] as BomLikeItem | undefined;
-          if (bom?.id) {
-            bomCoreApi.get(bom.id).then((fullBom) => {
-              // Map ErpBomLine fields → BomLikeLine fields
-              const lines: BomLikeLine[] = (fullBom.lines || []).map((l) => ({
-                id: l.id,
-                // componentItemId is the BOM line's item reference
-                itemId: l.componentItemId,
-                originalItemId: l.componentItemId,
-                // Prefer componentItemCode/componentItemName from API join
-                itemCode: l.componentItemCode ?? null,
-                itemName: l.componentItemCode
-                  ? `${l.componentItemCode} — ${l.componentItemName ?? ""}`
-                  : (l.componentItemName ?? null),
-                qtyRequired: l.qtyRequired,
-                qtyIssued: "0",
-                uom: l.uom,
-              }));
-              setBomLines(lines);
-              // Load balances for all items (including mapped itemIds)
-              const itemIds = lines
-                .map((l) => l.itemId)
-                .filter(Boolean) as string[];
-              if (itemIds.length) {
-                inventoryCoreApi.getBalances(itemIds).then(setBalances);
-              } else {
-                setBalances({});
-              }
-            });
-          } else {
+          if (!bom?.id) {
             setBomLines([]);
             setBalances({});
+            return;
           }
+
+          return bomCoreApi.get(bom.id).then((fullBom) => {
+            if (bomLoadRequestRef.current !== requestId) return;
+
+            const sourceLineMap = new Map(
+              sourceLines.map((line) => [
+                line.originalItemId ?? line.itemId,
+                line,
+              ]),
+            );
+
+            const lines: BomLikeLine[] = (fullBom.lines || []).map((l) => {
+              const matched = l.componentItemId
+                ? sourceLineMap.get(l.componentItemId)
+                : undefined;
+              return {
+                id: matched?.id ?? l.id,
+                itemId: l.componentItemId,
+                originalItemId: l.componentItemId,
+                itemCode:
+                  l.componentItemCode ?? matched?.originalItemCode ?? null,
+                itemName:
+                  l.componentItemName ?? matched?.originalItemName ?? null,
+                qtyRequired: matched?.qtyRequired ?? l.qtyRequired,
+                qtyIssued: matched?.qtyIssued ?? "0",
+                uom: l.uom ?? matched?.uom ?? null,
+                alternativeItemId: matched?.alternativeItemId ?? null,
+                alternativeItemCode: matched?.itemCode ?? null,
+                alternativeItemName: matched?.itemName ?? null,
+              };
+            });
+            setBomLines(lines);
+
+            const itemIds = Array.from(
+              new Set(
+                lines
+                  .flatMap((line) => [
+                    line.itemId,
+                    line.originalItemId,
+                    line.alternativeItemId,
+                  ])
+                  .filter(Boolean),
+              ),
+            ) as string[];
+            if (itemIds.length) {
+              inventoryCoreApi.getBalances(itemIds).then((nextBalances) => {
+                if (bomLoadRequestRef.current !== requestId) return;
+                setBalances(nextBalances);
+              });
+            } else {
+              setBalances({});
+            }
+          });
         })
         .catch(() => {
+          if (bomLoadRequestRef.current !== requestId) return;
           setBomLines([]);
           setBalances({});
         });
-    } else if (editing && editing.lines) {
-      // Editing existing MO — lines already have itemId/itemName from API
-      const lines: BomLikeLine[] = editing.lines.map((l) => ({
-        id: l.id,
-        itemId: l.itemId,
-        originalItemId: l.itemId,
-        itemCode: null,
-        itemName: l.itemName ?? null,
-        qtyRequired: l.qtyRequired,
-        qtyIssued: l.qtyIssued,
-        uom: l.uom ?? null,
-      }));
-      setBomLines(lines);
-      const itemIds = lines.map((l) => l.itemId).filter(Boolean) as string[];
-      if (itemIds.length) {
-        inventoryCoreApi.getBalances(itemIds).then(setBalances);
-      } else {
-        setBalances({});
-      }
-    } else {
+      return;
+    }
+
+    if (!form.finishedGoodItemId) {
       setBomLines([]);
       setBalances({});
+      return;
     }
+
+    bomCoreApi
+      .list({
+        pageSize: 1,
+        finishedGoodItemId: form.finishedGoodItemId,
+      })
+      .then((res) => {
+        if (bomLoadRequestRef.current !== requestId) return;
+        const bom = res.items[0] as BomLikeItem | undefined;
+        if (!bom?.id) {
+          setBomLines([]);
+          setBalances({});
+          return;
+        }
+
+        return bomCoreApi.get(bom.id).then((fullBom) => {
+          if (bomLoadRequestRef.current !== requestId) return;
+          const lines: BomLikeLine[] = (fullBom.lines || []).map((l) => ({
+            id: l.id,
+            itemId: l.componentItemId,
+            originalItemId: l.componentItemId,
+            itemCode: l.componentItemCode ?? null,
+            itemName: l.componentItemName ?? null,
+            qtyRequired: l.qtyRequired,
+            qtyIssued: "0",
+            uom: l.uom,
+          }));
+          setBomLines(lines);
+
+          const itemIds = lines
+            .map((l) => l.itemId)
+            .filter(Boolean) as string[];
+          if (itemIds.length) {
+            inventoryCoreApi.getBalances(itemIds).then((nextBalances) => {
+              if (bomLoadRequestRef.current !== requestId) return;
+              setBalances(nextBalances);
+            });
+          } else {
+            setBalances({});
+          }
+        });
+      })
+      .catch(() => {
+        if (bomLoadRequestRef.current !== requestId) return;
+        setBomLines([]);
+        setBalances({});
+      });
   }, [form.finishedGoodItemId, editing]);
+
+  // Auto-fill referenceNo when opening create drawer
+  useEffect(() => {
+    if (open && !editing) {
+      productionCoreApi
+        .getNextReferenceNo()
+        .then((refNo) => {
+          if (refNo) {
+            setForm((prev) => ({
+              ...prev,
+              referenceNo: prev.referenceNo || refNo,
+            }));
+          }
+        })
+        .catch(() => {
+          // Non-blocking: user can still enter referenceNo manually
+        });
+    }
+  }, [open, editing]);
+
+  // Fetch all BOMs for selected finished good; auto-select latest ACTIVE
+  useEffect(() => {
+    if (!form.finishedGoodItemId || editing) {
+      setAvailableBoms([]);
+      return;
+    }
+    bomCoreApi
+      .list({ pageSize: 50, finishedGoodItemId: form.finishedGoodItemId })
+      .then((res) => {
+        const boms = res.items;
+        setAvailableBoms(boms);
+        if (boms.length > 0) {
+          const activeBom = boms.find((b) => b.status === "ACTIVE") ?? boms[0];
+          setForm((prev) => ({ ...prev, bomId: activeBom.id }));
+        } else {
+          setForm((prev) => ({ ...prev, bomId: "" }));
+        }
+      })
+      .catch(() => {
+        setAvailableBoms([]);
+      });
+  }, [form.finishedGoodItemId]);
 
   // When alternativeItems change, reload balances to include alt item qtys
   useEffect(() => {
@@ -227,6 +370,7 @@ export function useProductionOrderDrawer({
 
   useEffect(() => {
     if (open) {
+      bomLoadRequestRef.current += 1;
       loadItems();
       if (editing) {
         setForm({
@@ -240,11 +384,21 @@ export function useProductionOrderDrawer({
           plannedEndDate: editing.plannedEndDate
             ? editing.plannedEndDate.slice(0, 10)
             : "",
+          bomId: (editing.outputMetadata?.bomId as string) || "",
         });
+        const existingNotes =
+          (editing.outputMetadata?.lineNotes as Record<string, string>) || {};
+        setLineNotes(existingNotes);
       } else {
         setForm(emptyForm());
+        setBomLines([]);
+        setBalances({});
+        setLineNotes({});
       }
-      setAlternativeItems({});
+      if (!editing) {
+        setAlternativeItems({});
+      }
+      setLocalSearch("");
       setError(null);
     }
   }, [open, editing, loadItems]);
@@ -284,14 +438,29 @@ export function useProductionOrderDrawer({
           ? { plannedStartDate: form.plannedStartDate }
           : {}),
         ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
+        ...(form.bomId ? { bomId: form.bomId } : {}),
         status,
         ...(materialOverrides.length > 0 ? { materialOverrides } : {}),
+        outputMetadata: {
+          ...(editing?.outputMetadata || {}),
+          lineNotes,
+        },
       };
 
       if (!editing) {
         await productionCoreApi.execute(payload);
         showToast({
           title: "Tạo lệnh sản xuất thành công",
+          variant: "success",
+        });
+      } else if (
+        ["DRAFT", "CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
+          editing.status || "",
+        )
+      ) {
+        await productionCoreApi.update(editing.id, payload);
+        showToast({
+          title: "Cập nhật lệnh sản xuất thành công",
           variant: "success",
         });
       } else {
@@ -331,9 +500,39 @@ export function useProductionOrderDrawer({
 
   const onIssueMaterial = () => {
     if (!editing?.id) return;
-    // Set query params or session storage so the GI page knows to prefill for this MO
-    window.sessionStorage.setItem("gi_prefill_mo", editing.id);
-    navigate("erp-goods-issues");
+
+    issueDrawer.openCreate(editing.id);
+
+    const exportLines: GiLineForm[] = bomLines.map((line) => {
+      const originalItemId = line.originalItemId ?? line.itemId ?? "";
+      const selectedAltItemId = alternativeItems[originalItemId] ?? "";
+      const effectiveItemId = selectedAltItemId || line.itemId || "";
+      const effectiveItemName =
+        selectedAltItemId && line.alternativeItemName
+          ? line.alternativeItemName
+          : line.itemName || "";
+
+      return {
+        salesOrderLineId: "",
+        productionOrderMaterialId: line.id ?? "",
+        itemId: effectiveItemId,
+        itemName: effectiveItemName,
+        serialId: "",
+        vehicleId: "",
+        qtyIssued: line.qtyRequired || "0",
+        unitCost: "",
+      };
+    });
+
+    issueDrawer.setForm((prev) => ({
+      ...prev,
+      issueType: "PRODUCTION",
+      productionOrderId: editing.id,
+      remarks: editing.referenceNo
+        ? `Xuất NVL cho ${editing.referenceNo}`
+        : prev.remarks,
+      lines: exportLines.length ? exportLines : prev.lines,
+    }));
   };
 
   const onReceiveFinishedGood = () => {
@@ -343,16 +542,99 @@ export function useProductionOrderDrawer({
     navigate("erp-warehouse");
   };
 
+  const handleStartProduction = async () => {
+    if (!editing?.id) return;
+    const qty = Number(startQty);
+    if (!qty || qty <= 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await productionCoreApi.start(editing.id, {
+        qtyToManufacture: qty,
+        ...(form.warehouseCode?.trim()
+          ? { warehouseCode: form.warehouseCode.trim() }
+          : {}),
+      });
+      showToast({
+        title: "Bắt đầu sản xuất thành công",
+        variant: "success",
+      });
+      setShowStartDialog(false);
+      await onSaved();
+      onClose();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không thể bắt đầu sản xuất"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCompleteProduction = async () => {
+    if (!editing?.id) return;
+    const qty = Number(completeQty);
+    if (!qty || qty <= 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await productionCoreApi.complete(editing.id, {
+        qtyFinished: qty,
+        ...(form.warehouseCode?.trim()
+          ? { warehouseCode: form.warehouseCode.trim() }
+          : {}),
+        ...(Number(completeUnitCost) > 0
+          ? { unitCost: Number(completeUnitCost) }
+          : {}),
+      });
+      showToast({
+        title: "Hoàn thành sản xuất thành công",
+        variant: "success",
+      });
+      setShowCompleteDialog(false);
+      await onSaved();
+      onClose();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, "Không thể ghi nhận hoàn thành sản xuất"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const bomOptions = useMemo(
+    () =>
+      availableBoms.map((b) => ({
+        value: b.id,
+        label: b.bomName
+          ? `${b.bomName} (v${b.version ?? "?"})${b.status !== "ACTIVE" ? " — " + b.status : ""}`
+          : `BOM ${b.id.slice(0, 8)}`,
+      })),
+    [availableBoms],
+  );
+
   return {
     form,
     setForm,
     itemOptions,
+    availableBoms,
+    bomOptions,
     saving,
     error,
     handleSubmit,
     handleConfirmOrder,
     onIssueMaterial,
+    issueDrawer,
     onReceiveFinishedGood,
+    handleStartProduction,
+    handleCompleteProduction,
+    startQty,
+    setStartQty,
+    completeQty,
+    setCompleteQty,
+    completeUnitCost,
+    setCompleteUnitCost,
+    showStartDialog,
+    setShowStartDialog,
+    showCompleteDialog,
+    setShowCompleteDialog,
     showGeneralInfo,
     setShowGeneralInfo,
     bomLines,
@@ -362,6 +644,8 @@ export function useProductionOrderDrawer({
     alternativeItems,
     setAlternativeItem,
     clearAlternativeItem,
+    lineNotes,
+    setLineNote,
     altItemOptions,
     altItemSearch,
     setAltItemSearch,

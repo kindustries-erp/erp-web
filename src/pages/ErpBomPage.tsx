@@ -1,10 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, ChevronRight, Network, Loader2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Trash2,
+  ChevronRight,
+  Network,
+  Loader2,
+  Eye,
+  Edit2,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { SearchInput } from "@/shared/components/SearchInput";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { type DataTableColumn } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -13,18 +20,7 @@ import {
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
 import {
-  DrawerAction,
-  DrawerField,
-  DrawerModal,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
-import { Skeleton } from "@/shared/components/Skeleton";
-import { Combobox } from "@/shared/components/Combobox";
-import { DatePicker } from "@/shared/components/DatePicker";
-import {
   bomCoreApi,
-  type CreateBomPayload,
   type ErpBom,
   type ErpBomLine,
 } from "@/modules/bom-core/api/bomCoreApi";
@@ -38,91 +34,19 @@ import { extractItemCodeAndName } from "@/shared/utils/format";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
 
-interface BomLineForm {
-  componentItemId: string;
-  qtyRequired: string;
-  uom: string;
-  scrapRate: string;
-  notes: string;
-}
-
-interface BomForm {
-  bomCode: string;
-  bomName: string;
-  finishedGoodItemId: string;
-  version: string;
-  status: string;
-  effectiveFrom: string;
-  effectiveTo: string;
-  notes: string;
-  lines: BomLineForm[];
-}
-
-const emptyLine = (): BomLineForm => ({
-  componentItemId: "",
-  qtyRequired: "1",
-  uom: "PCS",
-  scrapRate: "0",
-  notes: "",
-});
-
-const emptyForm = (): BomForm => ({
-  bomCode: "",
-  bomName: "",
-  finishedGoodItemId: "",
-  version: "v1",
-  status: "ACTIVE",
-  effectiveFrom: "",
-  effectiveTo: "",
-  notes: "",
-  lines: [emptyLine()],
-});
+import {
+  BomFormDrawer,
+  type BomForm,
+  type BomLineForm,
+  buildForm,
+  emptyForm,
+  emptyLine,
+  toPayload,
+} from "@/modules/bom-core/components/BomFormDrawer";
 
 function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
-}
-
-function buildForm(bom: ErpBom): BomForm {
-  return {
-    bomCode: bom.bomCode ?? "",
-    bomName: bom.bomName ?? "",
-    finishedGoodItemId: bom.finishedGoodItemId ?? "",
-    version: bom.version ?? "v1",
-    status: bom.status ?? "ACTIVE",
-    effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
-    effectiveTo: bom.effectiveTo ? bom.effectiveTo.slice(0, 10) : "",
-    notes: bom.notes ?? "",
-    lines: bom.lines?.length
-      ? bom.lines.map((line) => ({
-          componentItemId: line.componentItemId ?? "",
-          qtyRequired: line.qtyRequired ?? "1",
-          uom: line.uom ?? "PCS",
-          scrapRate: line.scrapRate ?? "0",
-          notes: line.notes ?? "",
-        }))
-      : [emptyLine()],
-  };
-}
-
-function toPayload(form: BomForm): CreateBomPayload {
-  return {
-    bomCode: form.bomCode.trim(),
-    bomName: form.bomName.trim(),
-    finishedGoodItemId: form.finishedGoodItemId || undefined,
-    version: form.version.trim() || "v1",
-    status: form.status || "ACTIVE",
-    effectiveFrom: form.effectiveFrom || undefined,
-    effectiveTo: form.effectiveTo || undefined,
-    notes: form.notes.trim() || undefined,
-    lines: form.lines.map((line) => ({
-      componentItemId: line.componentItemId || undefined,
-      qtyRequired: line.qtyRequired,
-      uom: line.uom.trim() || "PCS",
-      scrapRate: line.scrapRate || undefined,
-      notes: line.notes.trim() || undefined,
-    })),
-  };
 }
 
 interface BomTreeProps {
@@ -550,41 +474,71 @@ export function ErpBomPage() {
     entities: "inventoryItems",
   });
 
-  const itemOptions = useMemo(() => {
-    const opts =
-      itemsData?.pages.flatMap((p) =>
-        (p.items.inventoryItems || []).map((i) => ({
-          value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
-        })),
-      ) || [];
+  // Persistent cache: id -> label, survives search-term changes so selected
+  // items never lose their labels when the API page no longer includes them.
+  const cachedItems = useRef<Record<string, string>>({});
 
-    if (editing) {
-      if (
-        editing.finishedGoodItemId &&
-        !opts.some((o) => o.value === editing.finishedGoodItemId)
-      ) {
-        opts.push({
-          value: editing.finishedGoodItemId,
-          label: editing.finishedGoodItemName || t("Thành phẩm hiện tại"),
-        });
-      }
-
-      editing.lines?.forEach((line) => {
-        if (
-          line.componentItemId &&
-          !opts.some((o) => o.value === line.componentItemId)
-        ) {
-          opts.push({
-            value: line.componentItemId,
-            label: line.componentItemName || t("Linh kiện hiện tại"),
-          });
-        }
+  // Populate cache whenever new API pages arrive
+  useEffect(() => {
+    if (!itemsData) return;
+    itemsData.pages.forEach((p) => {
+      (p.items.inventoryItems || []).forEach((i) => {
+        cachedItems.current[i.id] = `${i.sku} — ${i.itemName}`;
       });
+    });
+  }, [itemsData]);
+
+  // Populate cache from editing BOM when it loads (edit/view mode)
+  useEffect(() => {
+    if (!editing) return;
+    if (editing.finishedGoodItemId && editing.finishedGoodItemName) {
+      cachedItems.current[editing.finishedGoodItemId] =
+        editing.finishedGoodItemName;
+    }
+    editing.lines?.forEach((line) => {
+      if (line.componentItemId && line.componentItemName) {
+        cachedItems.current[line.componentItemId] = line.componentItemName;
+      }
+    });
+  }, [editing]);
+
+  const itemOptions = useMemo(() => {
+    // Start with current search-result pages
+    const map = new Map<string, string>(
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map(
+          (i) => [i.id, `${i.sku} — ${i.itemName}`] as [string, string],
+        ),
+      ) || [],
+    );
+
+    // Ensure the currently selected finished good is always present
+    if (form.finishedGoodItemId) {
+      if (!map.has(form.finishedGoodItemId)) {
+        map.set(
+          form.finishedGoodItemId,
+          cachedItems.current[form.finishedGoodItemId] ||
+            editing?.finishedGoodItemName ||
+            t("Thành phẩm hiện tại"),
+        );
+      }
     }
 
-    return opts;
-  }, [itemsData, editing, t]);
+    // Ensure every selected component line item is always present
+    form.lines.forEach((line) => {
+      if (line.componentItemId && !map.has(line.componentItemId)) {
+        map.set(
+          line.componentItemId,
+          cachedItems.current[line.componentItemId] || t("Linh kiện hiện tại"),
+        );
+      }
+    });
+
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [itemsData, form.finishedGoodItemId, form.lines, editing, t]);
 
   const BOM_STATUS_OPTIONS = [
     { value: "ACTIVE", label: t("Đang áp dụng") },
@@ -615,6 +569,18 @@ export function ErpBomPage() {
     [itemOptions, fetchNextItems, loadingItems],
   );
   const filter = useFilterPanel(filterConfig);
+
+  // Populate cache from filter-panel selected finished-good item
+  // (done after filter is declared to avoid circular dependency with itemOptions)
+  useEffect(() => {
+    const filterFgId = filter.state.custom?.finishedGoodItemId as
+      | string
+      | undefined;
+    if (filterFgId && itemOptions.some((o) => o.value === filterFgId)) {
+      const label = itemOptions.find((o) => o.value === filterFgId)?.label;
+      if (label) cachedItems.current[filterFgId] = label;
+    }
+  }, [filter.state.custom?.finishedGoodItemId, itemOptions]);
 
   const loadBoms = useCallback(async () => {
     setLoading(true);
@@ -756,7 +722,6 @@ export function ErpBomPage() {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function openView(item: ErpBom) {
     setSaveError(null);
     setViewOnly(true);
@@ -798,7 +763,7 @@ export function ErpBomPage() {
     }));
   }
 
-  async function handleSave() {
+  async function handleSave(statusTarget?: string) {
     if (viewOnly) {
       closeDrawer();
       return;
@@ -821,6 +786,9 @@ export function ErpBomPage() {
     setSaveError(null);
     try {
       const payload = toPayload(form);
+      if (statusTarget) {
+        payload.status = statusTarget;
+      }
       if (editing) {
         await bomCoreApi.update(editing.id, payload);
       } else {
@@ -983,21 +951,6 @@ export function ErpBomPage() {
     },
   ];
 
-  const drawerActions: DrawerAction[] = [
-    {
-      label: t("Hủy"),
-      onClick: closeDrawer,
-      variant: "outline",
-      disabled: saving,
-    },
-    {
-      label: viewOnly ? t("Đóng") : editing ? t("Cập nhật") : t("Tạo mới"),
-      onClick: viewOnly ? closeDrawer : () => void handleSave(),
-      primary: true,
-      disabled: saving || viewOnly,
-    },
-  ];
-
   if (!canRead) return <Forbidden />;
 
   return (
@@ -1019,7 +972,7 @@ export function ErpBomPage() {
     >
       <div className="flex items-start">
         <div className="min-w-0 flex-1">
-          <DataTable
+          <StandardTable<ErpBom>
             items={items}
             columns={columns}
             getRowKey={(item) => item.id}
@@ -1028,24 +981,26 @@ export function ErpBomPage() {
             emptyLabel={t("Chưa có BOM")}
             minWidth={980}
             loadingRows={6}
-            onRowClick={(item) => void openEdit(item)}
-            actionsColumn={{
-              header: "",
-              className: "w-[48px]",
-              cell: (item) => (
-                <ActionDropdown
-                  items={[
-                    {
-                      label: t("Xóa"),
-                      onClick: () => setDeleteTarget(item),
-                      icon: <Trash2 className="h-3.5 w-3.5" />,
-                      variant: "danger",
-                      hidden: item.status === "ACTIVE",
-                    },
-                  ]}
-                />
-              ),
-            }}
+            onRowClick={(item) => void openView(item)}
+            actions={(item) => [
+              {
+                label: t("Chi tiết"),
+                onClick: () => void openView(item),
+                icon: <Eye className="h-[13px] w-[13px]" />,
+              },
+              {
+                label: t("Cập nhật"),
+                onClick: () => void openEdit(item),
+                icon: <Edit2 className="h-[13px] w-[13px]" />,
+              },
+              {
+                label: t("Xóa"),
+                onClick: () => setDeleteTarget(item),
+                icon: <Trash2 className="h-[13px] w-[13px]" />,
+                variant: "danger",
+                hidden: item.status === "ACTIVE",
+              },
+            ]}
             page={page}
             pageSize={pageSize}
             total={total}
@@ -1062,11 +1017,12 @@ export function ErpBomPage() {
                 itemsMap={itemsMap}
               />
             )}
-            expandedRowKeys={Object.keys(expandedBomIds).filter(
-              (key) => expandedBomIds[key],
-            )}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
+            expandedRowIds={expandedBomIds}
+            sortArray={
+              sortBy
+                ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`]
+                : undefined
+            }
             onSort={handleSort}
           />
         </div>
@@ -1093,285 +1049,25 @@ export function ErpBomPage() {
         danger
       />
 
-      <DrawerModal
+      <BomFormDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={
-          viewOnly
-            ? t("Xem BOM")
-            : editing
-              ? t("Cập nhật BOM")
-              : t("Tạo BOM mới")
-        }
-        subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
-        actions={drawerActions}
-        panelClassName="min-[1024px]:min-w-[1100px] min-[1280px]:min-w-[1280px]"
-      >
-        {saveError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-            {saveError}
-          </div>
-        )}
-
-        {drawerLoading ? (
-          <div className="flex flex-col xl:flex-row gap-6 items-start">
-            <div className="flex-1 min-w-0 order-2 xl:order-1 space-y-4">
-              <DrawerSection title={t("Định mức nguyên vật liệu")}>
-                <div className="space-y-3">
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                  <Skeleton className="h-16 w-full" />
-                </div>
-              </DrawerSection>
-            </div>
-            <div className="shrink-0 order-1 xl:order-2 w-full xl:w-[360px] space-y-4">
-              <DrawerSection title={t("Thông tin chung")}>
-                <div className="flex flex-col gap-3">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              </DrawerSection>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col xl:flex-row gap-6 items-start">
-            <div className="flex-1 min-w-0 order-2 xl:order-1">
-              <DrawerSection title={t("Định mức nguyên vật liệu")}>
-                {!viewOnly && !editing && (
-                  <div className="mb-3 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={addLine}
-                      className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      {t("Thêm dòng")}
-                    </button>
-                  </div>
-                )}
-                <div className="space-y-3">
-                  {form.lines.map((line, index) => (
-                    <div
-                      key={`${index}-${line.componentItemId}`}
-                      className="rounded-xl border border-border bg-muted/20 p-3"
-                    >
-                      <div className="mb-2 flex items-center justify-between">
-                        <div className="text-xs font-semibold text-muted-foreground">
-                          {t("NVL")} {index + 1}
-                        </div>
-                        {!viewOnly && !editing && (
-                          <button
-                            type="button"
-                            onClick={() => removeLine(index)}
-                            className="text-xs font-medium text-red-600 hover:text-red-700"
-                          >
-                            {t("Xóa dòng")}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="flex flex-nowrap overflow-x-auto gap-3 pb-2 scrollbar-thin">
-                        <div className="min-w-[240px] flex-[2]">
-                          <DrawerField label={t("Linh kiện")} required>
-                            <Combobox
-                              value={line.componentItemId}
-                              readOnly={viewOnly || !!editing}
-                              onChange={(value) =>
-                                updateLine(index, { componentItemId: value })
-                              }
-                              options={itemOptions}
-                              placeholder={t("Chọn linh kiện")}
-                              searchPlaceholder={t("Tìm SKU / tên linh kiện")}
-                              onSearch={setItemSearch}
-                              onScrollBottom={fetchNextItems}
-                              loading={loadingItems}
-                            />
-                          </DrawerField>
-                        </div>
-                        <div className="min-w-[90px] flex-1">
-                          <DrawerField label={t("Số lượng")} required>
-                            <input
-                              value={line.qtyRequired}
-                              readOnly={viewOnly || !!editing}
-                              onChange={(e) =>
-                                updateLine(index, {
-                                  qtyRequired: e.target.value,
-                                })
-                              }
-                              className={inputCls}
-                            />
-                          </DrawerField>
-                        </div>
-                        <div className="min-w-[80px] flex-1">
-                          <DrawerField label={t("ĐVT")}>
-                            <input
-                              value={line.uom}
-                              readOnly={viewOnly || !!editing}
-                              onChange={(e) =>
-                                updateLine(index, { uom: e.target.value })
-                              }
-                              className={inputCls}
-                            />
-                          </DrawerField>
-                        </div>
-                        <div className="min-w-[95px] flex-1">
-                          <DrawerField label={t("Tỷ lệ hao hụt")}>
-                            <input
-                              value={line.scrapRate}
-                              readOnly={viewOnly || !!editing}
-                              onChange={(e) =>
-                                updateLine(index, { scrapRate: e.target.value })
-                              }
-                              className={inputCls}
-                            />
-                          </DrawerField>
-                        </div>
-                      </div>
-
-                      <div className="mt-2">
-                        <DrawerField label={t("Ghi chú dòng")}>
-                          <textarea
-                            value={line.notes}
-                            readOnly={viewOnly}
-                            onChange={(e) =>
-                              updateLine(index, { notes: e.target.value })
-                            }
-                            className={`${inputCls} min-h-[44px] py-1.5 resize-y`}
-                          />
-                        </DrawerField>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </DrawerSection>
-            </div>
-
-            <div className="xl:w-[280px] w-full shrink-0 order-1 xl:order-2">
-              <DrawerSection title={t("Thông tin chung")}>
-                <div className="flex flex-col gap-3">
-                  <DrawerField label={t("Mã BOM")} required>
-                    <input
-                      value={form.bomCode}
-                      readOnly={viewOnly || !!editing}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          bomCode: e.target.value,
-                        }))
-                      }
-                      className={inputCls}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Version")} required>
-                    <input
-                      value={form.version}
-                      readOnly={viewOnly || !!editing}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          version: e.target.value,
-                        }))
-                      }
-                      className={inputCls}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Tên BOM")} required>
-                    <input
-                      value={form.bomName}
-                      readOnly={viewOnly || !!editing}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          bomName: e.target.value,
-                        }))
-                      }
-                      className={inputCls}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Thành phẩm")}>
-                    <Combobox
-                      value={form.finishedGoodItemId}
-                      readOnly={viewOnly || !!editing}
-                      onChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          finishedGoodItemId: value,
-                        }))
-                      }
-                      options={itemOptions}
-                      placeholder={t("Chọn thành phẩm")}
-                      searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-                      onSearch={setItemSearch}
-                      onScrollBottom={fetchNextItems}
-                      loading={loadingItems}
-                      allowClear
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Hiệu lực từ")}>
-                    <DatePicker
-                      value={form.effectiveFrom}
-                      disabled={viewOnly}
-                      onChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          effectiveFrom: value,
-                        }))
-                      }
-                      className="w-full"
-                      placeholder="DD/MM/YYYY"
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Hiệu lực đến")}>
-                    <DatePicker
-                      value={form.effectiveTo}
-                      disabled={viewOnly}
-                      onChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          effectiveTo: value,
-                        }))
-                      }
-                      className="w-full"
-                      placeholder="DD/MM/YYYY"
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Trạng thái")}>
-                    <Combobox
-                      value={form.status}
-                      readOnly={viewOnly}
-                      allowClear={false}
-                      onChange={(value) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          status: value || "ACTIVE",
-                        }))
-                      }
-                      options={[
-                        { value: "ACTIVE", label: t("Đang áp dụng") },
-                        { value: "INACTIVE", label: t("Ngừng áp dụng") },
-                        { value: "DRAFT", label: t("Bản nháp") },
-                      ]}
-                    />
-                  </DrawerField>
-                  <DrawerField label={t("Ghi chú")}>
-                    <textarea
-                      value={form.notes}
-                      readOnly={viewOnly}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, notes: e.target.value }))
-                      }
-                      className={`${inputCls} min-h-[88px] resize-y`}
-                    />
-                  </DrawerField>
-                </div>
-              </DrawerSection>
-            </div>
-          </div>
-        )}
-      </DrawerModal>
+        mode={viewOnly ? "view" : editing ? "edit" : "create"}
+        editing={editing}
+        form={form}
+        setForm={setForm}
+        drawerLoading={drawerLoading}
+        saving={saving}
+        saveError={saveError}
+        handleSave={handleSave}
+        itemOptions={itemOptions}
+        setItemSearch={setItemSearch}
+        fetchNextItems={fetchNextItems}
+        loadingItems={loadingItems}
+        addLine={addLine}
+        removeLine={removeLine}
+        updateLine={updateLine}
+      />
     </PageLayout>
   );
 }

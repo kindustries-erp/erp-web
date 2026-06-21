@@ -1,17 +1,21 @@
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useT } from "@/core/i18n";
 import {
   DrawerField,
   DrawerSection,
+  DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import type { ErpProductionOrder } from "@/modules/production-core/api/productionCoreApi";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { ProductionRunDrawer } from "./ProductionRunDrawer";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 import type { UseProductionOrderDrawerReturn } from "../hooks/useProductionOrderDrawer";
 import type { BomLikeLine } from "../hooks/useProductionOrderDrawer";
@@ -25,6 +29,9 @@ export interface ProductionOrderDrawerProps {
   onSaved: () => Promise<void> | void;
   onToggleEdit?: () => void;
   drawerState: UseProductionOrderDrawerReturn;
+  productionRunOpen?: boolean;
+  onOpenProductionRun?: () => void;
+  onCloseProductionRun?: () => void;
 }
 
 function fmtQty(value?: string | null) {
@@ -43,21 +50,24 @@ export function ProductionOrderDrawer({
   editing,
   viewOnly,
   onClose,
+  onSaved,
   onToggleEdit,
   drawerState,
+  productionRunOpen = false,
+  onOpenProductionRun,
+  onCloseProductionRun,
 }: ProductionOrderDrawerProps) {
   const t = useT();
   const {
     form,
     setForm,
     itemOptions,
+    availableBoms,
+    bomOptions,
     saving,
     error,
     handleSubmit,
-    onIssueMaterial,
-    onReceiveFinishedGood,
-    showGeneralInfo,
-    setShowGeneralInfo,
+    issueDrawer,
     bomLines,
     balances,
     localSearch,
@@ -66,6 +76,8 @@ export function ProductionOrderDrawer({
     alternativeItems,
     setAlternativeItem,
     clearAlternativeItem,
+    lineNotes,
+    setLineNote,
     altItemOptions,
     setAltItemSearch,
     fetchNextAltItems,
@@ -80,8 +92,24 @@ export function ProductionOrderDrawer({
 
   const isDraft = editing?.status === "DRAFT";
 
+  const showProductionRunAction =
+    !!editing && ["CONFIRMED", "IN_PROGRESS"].includes(editing.status || "");
+
+  const productionRunAction = showProductionRunAction
+    ? {
+        label:
+          editing?.status === "IN_PROGRESS"
+            ? t("Tiếp tục sản xuất")
+            : t("Tiến hành sản xuất"),
+        onClick: () => onOpenProductionRun?.(),
+        variant: "secondary" as const,
+        align: "left" as const,
+      }
+    : null;
+
   const actions = viewOnly
     ? [
+        ...(productionRunAction ? [productionRunAction] : []),
         {
           label: t("Đóng"),
           onClick: onClose,
@@ -89,13 +117,14 @@ export function ProductionOrderDrawer({
         },
       ]
     : [
+        ...(productionRunAction ? [productionRunAction] : []),
         {
           label: t("Hủy"),
           onClick: onClose,
           variant: "outline" as const,
           disabled: saving,
         },
-        ...(!editing
+        ...(!editing || isDraft
           ? [
               {
                 label: t("Lưu Nháp"),
@@ -121,8 +150,8 @@ export function ProductionOrderDrawer({
                 label: editing ? t("Lưu thay đổi") : t("Tạo Lệnh Sản Xuất"),
                 primary: true,
                 loading: saving,
-                disabled: saving || isConfirmed || isCompleted,
-                onClick: () => handleSubmit("CONFIRMED"),
+                disabled: saving,
+                onClick: () => handleSubmit(editing?.status || "CONFIRMED"),
               },
             ]),
       ];
@@ -151,134 +180,177 @@ export function ProductionOrderDrawer({
         }
       >
         {filteredBomLines && filteredBomLines.length > 0 ? (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="min-w-full text-xs">
-              <thead className="bg-muted text-left uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2">{t("Mã Linh Kiện")}</th>
-                  <th className="px-3 py-2">{t("Tên Linh Kiện")}</th>
-                  <th className="px-3 py-2 text-right">{t("Cần Dùng")}</th>
-                  <th className="px-3 py-2 text-right">{t("Khả Dụng")}</th>
-                  <th className="px-3 py-2 text-right">{t("Đã Xuất")}</th>
-                  <th className="px-3 py-2">{t("ĐVT")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-card">
-                {filteredBomLines.map((line: BomLikeLine) => {
-                  const requiredQty = Number(line.qtyRequired || 0);
-                  const displayRequired = editing
-                    ? requiredQty
-                    : requiredQty * Number(form.qtyToProduce || 1);
+          <div className="w-full">
+            <DocumentLineTable
+              data={filteredBomLines}
+              getRowKey={(line: BomLikeLine) => line.id || ""}
+              viewOnly={true}
+              rowClassName={(line: BomLikeLine) => {
+                const requiredQty = Number(line.qtyRequired || 0);
+                const displayRequired = editing
+                  ? requiredQty
+                  : requiredQty * Number(form.qtyToProduce || 1);
 
-                  const originalItemId =
-                    line.originalItemId ?? line.itemId ?? "";
-                  const selectedAltItemId =
-                    alternativeItems[originalItemId] ?? "";
-                  const effectiveItemId =
-                    selectedAltItemId || line.itemId || "";
-                  const baseBalance = balances[line.itemId ?? ""] || {
-                    availableQty: 0,
-                  };
-                  const effectiveBalance = balances[effectiveItemId] || {
-                    availableQty: 0,
-                  };
-                  const availableQty = effectiveBalance.availableQty;
-                  const altOption = altItemOptions.find(
-                    (option) => option.value === selectedAltItemId,
-                  );
-                  const displayItemCode = line.itemCode || line.itemId || "—";
-                  const displayItemName = line.itemName || "—";
+                const effectiveItemId =
+                  alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
+                  line.itemId ||
+                  "";
+                const availableQty = (
+                  balances[effectiveItemId] || { availableQty: 0 }
+                ).availableQty;
 
-                  // Highlight pink/light red if lacking stock and we are creating or in DRAFT
-                  const isLacking = displayRequired > availableQty;
-                  const trClass =
-                    (!editing || isDraft) && isLacking ? "bg-red-50" : "";
+                const isLacking = displayRequired > availableQty;
+                return (!editing || isDraft) && isLacking ? "bg-red-50" : "";
+              }}
+              columns={[
+                {
+                  key: "itemName",
+                  header: t("Tên Linh Kiện"),
+                  width: "30%",
+                  minWidth: "200px",
+                  cell: (line: BomLikeLine) => (
+                    <Tooltip content={line.itemName || ""}>
+                      <div className="truncate max-w-[200px] xl:max-w-[300px]">
+                        {line.itemName || "—"}
+                      </div>
+                    </Tooltip>
+                  ),
+                },
+                {
+                  key: "altItem",
+                  header: t("NVL thay thế"),
+                  width: "30%",
+                  minWidth: "200px",
+                  cell: (line: BomLikeLine) => {
+                    const originalItemId =
+                      line.originalItemId ?? line.itemId ?? "";
+                    const selectedAltItemId =
+                      alternativeItems[originalItemId] ?? "";
+                    const altOption = altItemOptions.find(
+                      (o) => o.value === selectedAltItemId,
+                    );
 
-                  return (
-                    <tr key={line.id} className={trClass}>
-                      <td className="px-3 py-2 font-medium">
-                        {displayItemCode}
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="space-y-2">
-                          <div>{displayItemName}</div>
-                          {!editing && isLacking && originalItemId ? (
-                            <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-2">
-                              <div className="text-[11px] font-medium text-amber-800">
-                                {t(
-                                  "Thiếu tồn. Có thể chọn NVL thay thế để tạo MO nháp/xác nhận.",
-                                )}
-                              </div>
-                              <Combobox
-                                value={selectedAltItemId}
-                                onChange={(value) => {
-                                  if (!value) {
-                                    clearAlternativeItem(originalItemId);
-                                    return;
-                                  }
-                                  setAlternativeItem(originalItemId, value);
-                                }}
-                                options={altItemOptions}
-                                placeholder={t("Chọn NVL thay thế")}
-                                searchPlaceholder={t("Tìm SKU / tên NVL")}
-                                onSearch={setAltItemSearch}
-                                onScrollBottom={fetchNextAltItems}
-                                loading={loadingAltItems}
-                                disabled={
-                                  saving ||
-                                  viewOnly ||
-                                  isCompleted ||
-                                  isConfirmed
-                                }
-                              />
-                              {selectedAltItemId && (
-                                <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                                  <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
-                                    {t("Đang thay thế")}:{" "}
-                                    {altOption?.label || selectedAltItemId}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {t("Tồn gốc")}:{" "}
-                                    {fmtQty(
-                                      String(baseBalance.availableQty ?? 0),
-                                    )}
-                                  </span>
-                                  <span className="text-muted-foreground">
-                                    {t("Tồn thay thế")}:{" "}
-                                    {fmtQty(
-                                      String(
-                                        effectiveBalance.availableQty ?? 0,
-                                      ),
-                                    )}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ) : null}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right text-amber-700 font-semibold">
+                    const isDisabled = !!(
+                      saving ||
+                      viewOnly ||
+                      isCompleted ||
+                      isConfirmed
+                    );
+
+                    if (isDisabled && !selectedAltItemId) {
+                      return <span className="text-muted-foreground">—</span>;
+                    }
+
+                    const displayLabel =
+                      altOption?.label ||
+                      line.alternativeItemName ||
+                      selectedAltItemId;
+
+                    return (
+                      <div className="space-y-2 min-w-[200px]">
+                        {!isDisabled && (
+                          <Combobox
+                            value={selectedAltItemId}
+                            onChange={(value) => {
+                              if (!value) {
+                                clearAlternativeItem(originalItemId);
+                                return;
+                              }
+                              setAlternativeItem(originalItemId, value);
+                            }}
+                            options={altItemOptions}
+                            placeholder={t("Chọn NVL thay thế")}
+                            searchPlaceholder={t("Tìm SKU / tên NVL")}
+                            onSearch={setAltItemSearch}
+                            onScrollBottom={fetchNextAltItems}
+                            loading={loadingAltItems}
+                            disabled={isDisabled}
+                          />
+                        )}
+                        {selectedAltItemId ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Tooltip content={displayLabel}>
+                              <span className="inline-block truncate max-w-[200px] xl:max-w-[300px] rounded-md bg-blue-50 text-blue-700 font-medium px-2 py-0.5 italic">
+                                {displayLabel}
+                              </span>
+                            </Tooltip>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  },
+                },
+                {
+                  key: "required",
+                  header: t("Cần Dùng"),
+                  align: "right",
+                  minWidth: "100px",
+                  cell: (line: BomLikeLine) => {
+                    const requiredQty = Number(line.qtyRequired || 0);
+                    const displayRequired = editing
+                      ? requiredQty
+                      : requiredQty * Number(form.qtyToProduce || 1);
+                    return (
+                      <span className="text-amber-700 font-semibold">
                         {fmtQty(displayRequired.toString())}
-                      </td>
-                      <td
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: "available",
+                  header: t("Khả Dụng"),
+                  align: "right",
+                  minWidth: "100px",
+                  cell: (line: BomLikeLine) => {
+                    const requiredQty = Number(line.qtyRequired || 0);
+                    const displayRequired = editing
+                      ? requiredQty
+                      : requiredQty * Number(form.qtyToProduce || 1);
+                    const effectiveItemId =
+                      alternativeItems[
+                        line.originalItemId ?? line.itemId ?? ""
+                      ] ||
+                      line.itemId ||
+                      "";
+                    const availableQty = (
+                      balances[effectiveItemId] || { availableQty: 0 }
+                    ).availableQty;
+                    const isLacking = displayRequired > availableQty;
+                    return (
+                      <span
                         className={cn(
-                          "px-3 py-2 text-right font-semibold",
+                          "font-semibold",
                           isLacking ? "text-red-600" : "text-emerald-700",
                         )}
                       >
                         {fmtQty(availableQty.toString())}
-                      </td>
-                      <td className="px-3 py-2 text-right text-muted-foreground">
-                        {fmtQty(line.qtyIssued || "0")}
-                      </td>
-                      <td className="px-3 py-2 text-muted-foreground">
-                        {line.uom || "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </span>
+                    );
+                  },
+                },
+                {
+                  key: "note",
+                  header: t("Ghi chú"),
+                  cell: (line: BomLikeLine) => {
+                    const originalItemId =
+                      line.originalItemId ?? line.itemId ?? "";
+                    const isDisabled = !!(saving || viewOnly);
+                    return (
+                      <input
+                        value={lineNotes[originalItemId] || ""}
+                        onChange={(e) =>
+                          setLineNote(originalItemId, e.target.value)
+                        }
+                        disabled={isDisabled}
+                        className={cn(inputCls, "min-w-[150px] text-xs h-8")}
+                        placeholder={t("Nhập ghi chú")}
+                      />
+                    );
+                  },
+                },
+              ]}
+            />
           </div>
         ) : (
           <div className="text-sm text-muted-foreground italic px-2 py-4">
@@ -290,199 +362,155 @@ export function ProductionOrderDrawer({
   );
 
   const rightPanel = (
-    <div
-      className={cn(
-        "shrink-0 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
-        showGeneralInfo ? "w-full xl:w-[320px]" : "w-full xl:w-[52px]",
+    <>
+      <DrawerField label={t("Thành phẩm")} required>
+        <Combobox
+          value={form.finishedGoodItemId}
+          onChange={(v) => setForm((p) => ({ ...p, finishedGoodItemId: v }))}
+          options={itemOptions}
+          placeholder={t("Chọn thành phẩm")}
+          searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
+          disabled={
+            saving || isConfirmed || isCompleted || viewOnly || !!editing
+          }
+        />
+      </DrawerField>
+
+      {availableBoms.length > 1 && (
+        <DrawerField label={t("Phiên bản BOM")}>
+          <Combobox
+            value={form.bomId}
+            onChange={(v) => setForm((p) => ({ ...p, bomId: v }))}
+            options={bomOptions}
+            placeholder={t("Chọn phiên bản BOM")}
+            searchPlaceholder={t("Tìm BOM")}
+            disabled={saving || isConfirmed || isCompleted || viewOnly}
+          />
+        </DrawerField>
       )}
-    >
-      <DrawerSection
-        title={
-          <span
-            className={cn(
-              "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
-              showGeneralInfo
-                ? "max-w-[200px] opacity-100"
-                : "max-w-0 opacity-0",
-            )}
-          >
-            {t("Thông tin quản lý")}
-          </span>
-        }
-        titleExtra={
-          <button
-            type="button"
-            onClick={() => setShowGeneralInfo(!showGeneralInfo)}
-            className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
-            title={showGeneralInfo ? t("Thu gọn") : t("Mở rộng")}
-          >
-            {showGeneralInfo ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </button>
-        }
-      >
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            showGeneralInfo ? "opacity-100" : "opacity-0",
-          )}
-          style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
-        >
-          <div
-            className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)] space-y-4 p-4 md:p-6"
-            style={{ scrollbarWidth: "none" }}
-          >
-            <DrawerField label={t("Thành phẩm")} required>
-              <Combobox
-                value={form.finishedGoodItemId}
-                onChange={(v) =>
-                  setForm((p) => ({ ...p, finishedGoodItemId: v }))
-                }
-                options={itemOptions}
-                placeholder={t("Chọn thành phẩm")}
-                searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-                disabled={
-                  saving || isConfirmed || isCompleted || viewOnly || !!editing
-                }
-              />
-            </DrawerField>
 
-            <DrawerField label={t("Số lượng kế hoạch")} required>
-              <input
-                type="number"
-                min="0.001"
-                step="any"
-                value={form.qtyToProduce}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, qtyToProduce: e.target.value }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-                className={inputCls}
-                placeholder="1"
-              />
-            </DrawerField>
+      <DrawerField label={t("Số lượng kế hoạch")} required>
+        <input
+          type="number"
+          min="0.001"
+          step="any"
+          value={form.qtyToProduce}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, qtyToProduce: e.target.value }))
+          }
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+          className={inputCls}
+          placeholder="1"
+        />
+      </DrawerField>
 
-            {editing && (
-              <DrawerField label={t("Số lượng đã sản xuất")}>
-                <div className="text-sm font-semibold text-emerald-600 border border-emerald-200 bg-emerald-50 rounded-md px-3 py-2">
-                  {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}
-                </div>
-              </DrawerField>
-            )}
+      {editing && (
+        <DrawerRow
+          label={t("Đã sản xuất")}
+          value={
+            <span className="font-semibold text-emerald-700">
+              {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}
+            </span>
+          }
+        />
+      )}
 
-            <div className="border-t border-border pt-4 mt-2 mb-2"></div>
+      <div className="border-t border-border my-2" />
 
-            <DrawerField label={t("Reference No")}>
-              <input
-                value={form.referenceNo}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, referenceNo: e.target.value }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-                className={inputCls}
-                placeholder={t("Tự động nếu để trống")}
-              />
-            </DrawerField>
+      <DrawerField label={t("Mã lệnh")}>
+        <input
+          value={form.referenceNo}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, referenceNo: e.target.value }))
+          }
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+          className={inputCls}
+          placeholder={t("Tự động theo tháng (MO-YYYYMMXXXX)")}
+        />
+      </DrawerField>
 
-            <DrawerField label={t("Warehouse Code")}>
-              <input
-                value={form.warehouseCode}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, warehouseCode: e.target.value }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-                className={inputCls}
-                placeholder="Ví dụ: WH-01"
-              />
-            </DrawerField>
+      <DrawerField label={t("Mã kho")}>
+        <input
+          value={form.warehouseCode}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, warehouseCode: e.target.value }))
+          }
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+          className={inputCls}
+          placeholder="Ví dụ: WH-01"
+        />
+      </DrawerField>
 
-            <DrawerField label={t("Ngày bắt đầu (kế hoạch)")}>
-              <DatePicker
-                className={inputCls}
-                value={form.plannedStartDate}
-                onChange={(v) =>
-                  setForm((p) => ({ ...p, plannedStartDate: v }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-              />
-            </DrawerField>
+      <DrawerField label={t("Ngày bắt đầu (kế hoạch)")}>
+        <DatePicker
+          className={inputCls}
+          value={form.plannedStartDate}
+          onChange={(v) => setForm((p) => ({ ...p, plannedStartDate: v }))}
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+        />
+      </DrawerField>
 
-            <DrawerField label={t("Ngày hoàn thành (kế hoạch)")}>
-              <DatePicker
-                className={inputCls}
-                value={form.plannedEndDate}
-                onChange={(v) => setForm((p) => ({ ...p, plannedEndDate: v }))}
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-              />
-            </DrawerField>
-
-            {editing && (isConfirmed || isCompleted) && (
-              <div className="pt-4 border-t border-border space-y-2 mt-4">
-                <button
-                  onClick={onIssueMaterial}
-                  className="flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50"
-                >
-                  <span>{t("Xuất kho nguyên vật liệu")}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={onReceiveFinishedGood}
-                  className="flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-50"
-                >
-                  <span>{t("Nhập kho thành phẩm")}</span>
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </DrawerSection>
-    </div>
+      <DrawerField label={t("Ngày hoàn thành (kế hoạch)")}>
+        <DatePicker
+          className={inputCls}
+          value={form.plannedEndDate}
+          onChange={(v) => setForm((p) => ({ ...p, plannedEndDate: v }))}
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+        />
+      </DrawerField>
+    </>
   );
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode={mode}
-      onClose={onClose}
-      onToggleEdit={onToggleEdit}
-      title={
-        viewOnly
-          ? t("Chi tiết Lệnh Sản Xuất")
-          : editing
-            ? t("Cập nhật Lệnh Sản Xuất")
-            : t("Tạo mới Lệnh Sản Xuất")
-      }
-      subtitle={
-        editing
-          ? `${t("Mã")}: ${editing.referenceNo || editing.id}`
-          : t("Nhập thông tin lệnh")
-      }
-      actions={actions}
-      loading={loading}
-      error={error}
-      leftPanel={loading ? <Skeleton className="h-40" /> : leftPanel}
-      rightPanel={loading ? <Skeleton className="h-40" /> : rightPanel}
-      titleExtra={
-        editing?.status && (
-          <span
-            className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-              editing.status === "COMPLETED"
-                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                : editing.status === "IN_PROGRESS"
-                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                  : editing.status === "CANCELLED"
-                    ? "bg-red-100 text-red-800 border-red-200"
-                    : "bg-amber-100 text-amber-800 border-amber-200"
-            }`}
-          >
-            {editing.status}
-          </span>
-        )
-      }
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode={mode}
+        onClose={onClose}
+        onToggleEdit={onToggleEdit}
+        title={
+          viewOnly
+            ? t("Chi tiết Lệnh Sản Xuất")
+            : editing
+              ? t("Cập nhật Lệnh Sản Xuất")
+              : t("Tạo mới Lệnh Sản Xuất")
+        }
+        subtitle={
+          editing
+            ? `${t("Mã")}: ${editing.referenceNo || editing.id}`
+            : t("Nhập thông tin lệnh")
+        }
+        actions={actions}
+        loading={loading}
+        error={error}
+        leftPanel={loading ? <Skeleton className="h-40" /> : leftPanel}
+        rightPanel={loading ? <Skeleton className="h-40" /> : rightPanel}
+        rightPanelTitle={t("Thông tin quản lý")}
+        titleExtra={
+          editing?.status && (
+            <span
+              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                editing.status === "COMPLETED"
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                  : editing.status === "IN_PROGRESS"
+                    ? "bg-blue-100 text-blue-800 border-blue-200"
+                    : editing.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800 border-red-200"
+                      : "bg-amber-100 text-amber-800 border-amber-200"
+              }`}
+            >
+              {editing.status}
+            </span>
+          )
+        }
+      />
+      <GiFormDrawer drawer={issueDrawer} />
+      <ProductionRunDrawer
+        open={productionRunOpen}
+        order={editing}
+        onClose={onCloseProductionRun ?? (() => {})}
+        onRefresh={onSaved}
+      />
+    </>
   );
 }

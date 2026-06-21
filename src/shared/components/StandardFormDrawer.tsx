@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { Button } from "./ui/Button";
 import { useT } from "@/core/i18n";
@@ -60,6 +60,12 @@ export function StandardFormDrawer({
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
     rightPanelDefaultCollapsed,
   );
+
+  useEffect(() => {
+    if (open) {
+      setRightPanelCollapsed(rightPanelDefaultCollapsed);
+    }
+  }, [open, rightPanelDefaultCollapsed]);
 
   // When in view mode and an edit toggle is provided, show the Edit button.
   const headerExtra =

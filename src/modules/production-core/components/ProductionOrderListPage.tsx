@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Factory } from "lucide-react";
+import {
+  Factory,
+  Eye,
+  Trash2,
+  XCircle,
+  PlayCircle,
+  ArrowRight,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -19,7 +25,7 @@ import {
 import { bomCoreApi } from "@/modules/bom-core/api/bomCoreApi";
 import { ProductionOrderDrawer } from "./ProductionOrderDrawer";
 import { useProductionOrderDrawer } from "../hooks/useProductionOrderDrawer";
-
+import { ProductionRunDrawer } from "./ProductionRunDrawer";
 function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
@@ -119,6 +125,12 @@ export function ProductionOrderListPage() {
   );
   const [deleting, setDeleting] = useState(false);
 
+  // Production run drawer state
+  const [productionRunOpen, setProductionRunOpen] = useState(false);
+  const [productionRunLoading, setProductionRunLoading] = useState(false);
+  const [productionRunOrder, setProductionRunOrder] =
+    useState<ErpProductionOrder | null>(null);
+
   const filterSearch = filter.state.search;
   const filterStatus = filter.state.status;
   const filterDateFrom = filter.state.dateFrom;
@@ -167,6 +179,24 @@ export function ProductionOrderListPage() {
     setDrawerMode("create");
     setEditingOrder(null);
     setDrawerOpen(true);
+  };
+
+  const handleOpenProductionRun = async (item: ErpProductionOrder) => {
+    // Open immediately with skeleton; fetch detail after open.
+    setDrawerOpen(false);
+    setEditingOrder(null);
+    setProductionRunOrder(null);
+    setProductionRunLoading(true);
+    setProductionRunOpen(true);
+    try {
+      const data = await productionCoreApi.get(item.id);
+      setProductionRunOrder(data);
+    } catch {
+      showToast({ title: t("Lỗi tải chi tiết lệnh"), variant: "destructive" });
+      setProductionRunOpen(false);
+    } finally {
+      setProductionRunLoading(false);
+    }
   };
 
   const handleEdit = async (id: string, viewOnly = false) => {
@@ -309,37 +339,6 @@ export function ProductionOrderListPage() {
         header: t("Ngày kết thúc"),
         cell: (item: ErpProductionOrder) => fmtDate(item.plannedEndDate),
       },
-      {
-        key: "actions",
-        header: "",
-        cell: (item: ErpProductionOrder) => (
-          <div className="flex justify-end">
-            <ActionDropdown
-              items={[
-                {
-                  label: t("Xem chi tiết"),
-                  onClick: () => handleEdit(item.id, true),
-                },
-                {
-                  label: t("Cập nhật"),
-                  onClick: () => handleEdit(item.id, false),
-                  hidden: !canUpdate || item.status === "CANCELLED",
-                },
-                {
-                  label:
-                    item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
-                  onClick: () =>
-                    item.status === "DRAFT"
-                      ? setDeleteTarget(item)
-                      : setCancelTarget(item),
-                  variant: "danger",
-                  hidden: !canUpdate || item.status === "CANCELLED",
-                },
-              ]}
-            />
-          </div>
-        ),
-      },
     ],
     [t, canUpdate],
   );
@@ -382,6 +381,47 @@ export function ProductionOrderListPage() {
             totalPages={Math.ceil(total / pageSize)}
             onPage={setPage}
             onPageSize={setPageSize}
+            onRowClick={(item) => handleEdit(item.id, true)}
+            actions={(item) => [
+              {
+                label: t("Chi tiết"),
+                onClick: () => handleEdit(item.id, true),
+                icon: <Eye className="h-[13px] w-[13px]" />,
+              },
+              {
+                label:
+                  item.status === "IN_PROGRESS"
+                    ? t("Tiếp tục sản xuất")
+                    : t("Tiến hành sản xuất"),
+                onClick: () => handleOpenProductionRun(item),
+                icon:
+                  item.status === "IN_PROGRESS" ? (
+                    <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                  ) : (
+                    <PlayCircle className="h-[13px] w-[13px]" />
+                  ),
+                hidden:
+                  !canUpdate ||
+                  !["CONFIRMED", "IN_PROGRESS"].includes(item.status || ""),
+              },
+              {
+                label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
+                onClick: () =>
+                  item.status === "DRAFT"
+                    ? setDeleteTarget(item)
+                    : setCancelTarget(item),
+                icon:
+                  item.status === "DRAFT" ? (
+                    <Trash2 className="h-[13px] w-[13px]" />
+                  ) : (
+                    <XCircle className="h-[13px] w-[13px]" />
+                  ),
+                variant: "danger",
+                hidden:
+                  !canUpdate ||
+                  (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
+              },
+            ]}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />
@@ -402,6 +442,16 @@ export function ProductionOrderListPage() {
         }
         onSaved={loadData}
         drawerState={drawerState}
+        productionRunOpen={
+          productionRunOpen && productionRunOrder?.id === editingOrder?.id
+        }
+        onOpenProductionRun={() => {
+          if (editingOrder) {
+            setProductionRunOrder(editingOrder);
+            setProductionRunOpen(true);
+          }
+        }}
+        onCloseProductionRun={() => setProductionRunOpen(false)}
       />
 
       {deleteTarget && (
@@ -431,6 +481,21 @@ export function ProductionOrderListPage() {
           onConfirm={handleCancelOrder}
           onCancel={() => setCancelTarget(null)}
           loading={canceling}
+        />
+      )}
+
+      {/* Standalone production run drawer — opened directly from list quick action */}
+      {productionRunOpen && !drawerOpen && (
+        <ProductionRunDrawer
+          open={true}
+          loading={productionRunLoading}
+          order={productionRunOrder}
+          onClose={() => {
+            setProductionRunOpen(false);
+            setProductionRunOrder(null);
+            setProductionRunLoading(false);
+          }}
+          onRefresh={loadData}
         />
       )}
     </PageLayout>

@@ -4,7 +4,7 @@ import { FilterPanel } from "@/shared/components/FilterPanel";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { useT } from "@/core/i18n";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { Link2, Trash2, XCircle } from "lucide-react";
+import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
@@ -121,27 +121,32 @@ export function PurchaseOrderListPage() {
             onRowClick={(row) => openDetail(row)}
             actions={(row) => [
               {
+                label: t("Chi tiết"),
+                icon: <Eye className="h-[13px] w-[13px]" />,
+                onClick: () => openDetail(row),
+              },
+              {
                 label: t("common.receiveInventory"),
-                icon: <PackagePlus className="h-4 w-4" />,
+                icon: <PackagePlus className="h-[13px] w-[13px]" />,
                 onClick: () => grDrawer.openCreate(row.id),
                 hidden: !canCreateReceipt || !canReceiveInventory(row),
               },
               {
                 label: t("Liên kết tiền"),
-                icon: <Link2 className="h-4 w-4" />,
+                icon: <Link2 className="h-[13px] w-[13px]" />,
                 onClick: () => openSettlement(row),
                 hidden: Number(row.open_amount || 0) <= 0,
               },
               {
                 label: t("Xóa"),
-                icon: <Trash2 className="h-4 w-4" />,
+                icon: <Trash2 className="h-[13px] w-[13px]" />,
                 variant: "danger",
                 onClick: () => confirmDeleteDocument(row.id),
                 hidden: row.status !== "DRAFT",
               },
               {
                 label: t("Hủy phiếu"),
-                icon: <XCircle className="h-4 w-4" />,
+                icon: <XCircle className="h-[13px] w-[13px]" />,
                 variant: "danger",
                 onClick: () => confirmCancelDocument(row.id),
                 hidden: row.status === "DRAFT" || row.status === "CANCELLED",

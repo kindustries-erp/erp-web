@@ -1,12 +1,18 @@
-import React, { type ReactNode } from "react";
+import React, { type ReactNode, useState } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Settings2 } from "lucide-react";
+
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
+  type Table as TanstackTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { TablePagination } from "@/shared/components/TablePagination";
+import { useT } from "@/core/i18n";
 import {
   Table,
   TableBody,
@@ -26,6 +32,8 @@ export interface DataTableColumn<T> {
   skeletonClassName?: string;
   sortable?: boolean;
   sortKey?: string;
+  hideable?: boolean;
+  label?: ReactNode;
 }
 
 export interface ActionsColumnConfig<T> {
@@ -41,6 +49,8 @@ interface DataTableRowMeta {
   skeletonClassName?: string;
   sortable?: boolean;
   sortKey?: string;
+  hideable?: boolean;
+  label?: ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -68,6 +78,71 @@ interface DataTableProps<T> {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (key: string) => void;
+  enableColumnVisibility?: boolean;
+}
+
+function ColumnToggle<T>({ table }: { table: TanstackTable<T> }) {
+  const t = useT();
+  const hideableColumns = table.getAllLeafColumns().filter((col) => {
+    const meta = col.columnDef.meta as DataTableRowMeta;
+    return meta?.hideable !== false && col.id !== "__actions";
+  });
+
+  if (hideableColumns.length === 0) return null;
+
+  return (
+    <DropdownMenu.Root modal={false}>
+      <DropdownMenu.Trigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground transition-colors outline-none cursor-pointer border border-transparent hover:border-border"
+          title={t("Hiển thị cột")}
+        >
+          <Settings2 size={16} />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          align="end"
+          className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content bg-surface border border-border shadow-md"
+        >
+          {hideableColumns.map((column) => {
+            const meta = column.columnDef.meta as DataTableRowMeta;
+            return (
+              <DropdownMenu.CheckboxItem
+                key={column.id}
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] cursor-pointer outline-none select-none hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)]"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                <div
+                  className="flex items-center justify-center w-4 h-4 rounded-[4px] border border-border bg-surface data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+                  data-state={column.getIsVisible() ? "checked" : "unchecked"}
+                >
+                  {column.getIsVisible() && (
+                    <svg
+                      width="10"
+                      height="10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-primary-fg"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  )}
+                </div>
+                <span className="truncate">{meta?.label as ReactNode}</span>
+              </DropdownMenu.CheckboxItem>
+            );
+          })}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
 }
 
 export function DataTable<T>({
@@ -95,7 +170,12 @@ export function DataTable<T>({
   sortBy,
   sortOrder,
   onSort,
+  enableColumnVisibility,
 }: DataTableProps<T>) {
+  const [internalVisibility, setInternalVisibility] = useState<VisibilityState>(
+    {},
+  );
+
   const showPagination =
     page != null &&
     pageSize != null &&
@@ -125,6 +205,8 @@ export function DataTable<T>({
         skeletonClassName: column.skeletonClassName,
         sortable: column.sortable,
         sortKey: column.sortKey || column.key,
+        hideable: column.hideable !== false,
+        label: column.label || column.header || column.key,
       } satisfies DataTableRowMeta,
     }),
   );
@@ -132,7 +214,9 @@ export function DataTable<T>({
   if (actionsColumn) {
     tableColumns.push({
       id: "__actions",
-      header: () => actionsColumn.header ?? "",
+      header: enableColumnVisibility
+        ? ({ table }) => <ColumnToggle table={table} />
+        : () => actionsColumn.header ?? "",
       cell: ({ row }) =>
         actionsColumn.cell(
           row.original,
@@ -142,14 +226,15 @@ export function DataTable<T>({
         ),
       meta: {
         className: cn(
-          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0",
+          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0 text-center",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0",
+          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0 text-center",
           actionsColumn.headerClassName,
         ),
         skeletonClassName: "",
+        hideable: false,
       } satisfies DataTableRowMeta,
     });
   }
@@ -161,6 +246,10 @@ export function DataTable<T>({
     getRowId: getRowKey,
     manualPagination: true,
     manualSorting: true,
+    state: {
+      columnVisibility: internalVisibility,
+    },
+    onColumnVisibilityChange: setInternalVisibility,
   });
 
   return (
