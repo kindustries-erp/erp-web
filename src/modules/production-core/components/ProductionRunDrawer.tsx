@@ -8,6 +8,7 @@ import {
   DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { Skeleton } from "@/shared/components/Skeleton";
 import {
   productionCoreApi,
   type ErpProductionOrder,
@@ -43,6 +44,7 @@ const UNIT_ROW_THRESHOLD = 50;
 
 export interface ProductionRunDrawerProps {
   open: boolean;
+  loading?: boolean;
   order: ErpProductionOrder | null;
   onClose: () => void;
   onRefresh: () => Promise<void> | void;
@@ -52,6 +54,7 @@ export interface ProductionRunDrawerProps {
 
 export function ProductionRunDrawer({
   open,
+  loading = false,
   order,
   onClose,
   onRefresh,
@@ -153,6 +156,31 @@ export function ProductionRunDrawer({
       setSaving(false);
     }
   }, [localOrder, batchCompleteQty, batchUnitCost, refresh, showToast, t]);
+
+  const isLoading = loading || (!localOrder && open);
+
+  if (isLoading) {
+    return (
+      <DrawerModal
+        open={open}
+        onClose={onClose}
+        title={t("Tiến trình sản xuất")}
+        subtitle={t("Đang tải chi tiết lệnh...")}
+        actions={[{ label: t("Đóng"), onClick: onClose }]}
+      >
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </DrawerModal>
+    );
+  }
 
   if (!localOrder) return null;
 

@@ -1594,6 +1594,7 @@ export const vi = {
   "Ngày kết thúc": "Ngày kết thúc",
   // Actions
   "Tiến hành sản xuất": "Tiến hành sản xuất",
+  "Tiếp tục sản xuất": "Tiếp tục sản xuất",
   "Cập nhật": "Cập nhật",
   "Xem chi tiết": "Xem chi tiết",
   "Xóa lệnh": "Xóa lệnh",
@@ -1638,6 +1639,7 @@ export const vi = {
   "Không thể xóa lệnh": "Không thể xóa lệnh",
   "Lỗi tải chi tiết lệnh": "Lỗi tải chi tiết lệnh",
   "Lỗi tải chi tiết": "Lỗi tải chi tiết",
+  "Đang tải chi tiết lệnh...": "Đang tải chi tiết lệnh...",
   // ProductionRunDrawer
   "Tiến độ sản xuất": "Tiến độ sản xuất",
   "Thông tin chung": "Thông tin chung",

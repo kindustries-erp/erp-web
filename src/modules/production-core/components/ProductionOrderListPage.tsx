@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Factory, Eye, Edit2, Trash2, XCircle, PlayCircle } from "lucide-react";
+import {
+  Factory,
+  Eye,
+  Edit2,
+  Trash2,
+  XCircle,
+  PlayCircle,
+  ArrowRight,
+} from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -120,6 +128,7 @@ export function ProductionOrderListPage() {
 
   // Production run drawer state
   const [productionRunOpen, setProductionRunOpen] = useState(false);
+  const [productionRunLoading, setProductionRunLoading] = useState(false);
   const [productionRunOrder, setProductionRunOrder] =
     useState<ErpProductionOrder | null>(null);
 
@@ -174,15 +183,20 @@ export function ProductionOrderListPage() {
   };
 
   const handleOpenProductionRun = async (item: ErpProductionOrder) => {
-    // Close detail drawer first — prevents double-drawer when triggered from list
+    // Open immediately with skeleton; fetch detail after open.
     setDrawerOpen(false);
     setEditingOrder(null);
+    setProductionRunOrder(null);
+    setProductionRunLoading(true);
+    setProductionRunOpen(true);
     try {
       const data = await productionCoreApi.get(item.id);
       setProductionRunOrder(data);
-      setProductionRunOpen(true);
     } catch {
       showToast({ title: t("Lỗi tải chi tiết lệnh"), variant: "destructive" });
+      setProductionRunOpen(false);
+    } finally {
+      setProductionRunLoading(false);
     }
   };
 
@@ -382,9 +396,17 @@ export function ProductionOrderListPage() {
                 hidden: !canUpdate || item.status === "CANCELLED",
               },
               {
-                label: t("Tiến hành sản xuất"),
+                label:
+                  item.status === "IN_PROGRESS"
+                    ? t("Tiếp tục sản xuất")
+                    : t("Tiến hành sản xuất"),
                 onClick: () => handleOpenProductionRun(item),
-                icon: <PlayCircle className="h-[13px] w-[13px]" />,
+                icon:
+                  item.status === "IN_PROGRESS" ? (
+                    <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                  ) : (
+                    <PlayCircle className="h-[13px] w-[13px]" />
+                  ),
                 hidden:
                   !canUpdate ||
                   !["CONFIRMED", "IN_PROGRESS"].includes(item.status || ""),
@@ -402,7 +424,11 @@ export function ProductionOrderListPage() {
                     <XCircle className="h-[13px] w-[13px]" />
                   ),
                 variant: "danger",
-                hidden: !canUpdate || item.status === "CANCELLED",
+                // Cancel: only for CONFIRMED (posted but not yet started)
+                // Delete: only for DRAFT
+                hidden:
+                  !canUpdate ||
+                  (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
               },
             ]}
           />
@@ -471,10 +497,12 @@ export function ProductionOrderListPage() {
       {productionRunOpen && !drawerOpen && (
         <ProductionRunDrawer
           open={true}
+          loading={productionRunLoading}
           order={productionRunOrder}
           onClose={() => {
             setProductionRunOpen(false);
             setProductionRunOrder(null);
+            setProductionRunLoading(false);
           }}
           onRefresh={loadData}
         />

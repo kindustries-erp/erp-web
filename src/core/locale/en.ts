@@ -1604,6 +1604,7 @@ export const en: Dict = {
   "Ngày kết thúc": "End Date",
   // Actions
   "Tiến hành sản xuất": "Start Production",
+  "Tiếp tục sản xuất": "Continue Production",
   "Cập nhật": "Edit",
   "Xem chi tiết": "View Details",
   "Xóa lệnh": "Delete Order",
@@ -1648,6 +1649,7 @@ export const en: Dict = {
   "Không thể xóa lệnh": "Failed to delete order",
   "Lỗi tải chi tiết lệnh": "Failed to load order details",
   "Lỗi tải chi tiết": "Failed to load details",
+  "Đang tải chi tiết lệnh...": "Loading order details...",
   // ProductionRunDrawer
   "Tiến độ sản xuất": "Production Progress",
   "Thông tin chung": "General Info",
