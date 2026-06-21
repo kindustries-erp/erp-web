@@ -11,6 +11,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
+import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
 import { Kho } from "@/pages/Inventory";
@@ -99,6 +100,7 @@ export default function App() {
   return (
     <TooltipProvider>
       <div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
+        <EnvStamp />
         <Sidebar />
         <div className="right-panel relative">
           <Topbar />
