@@ -14,7 +14,7 @@ export function createInventoryItemsListKey(filters: InventoryItemListFilters) {
 }
 
 export function createInventoryMastersKey(
-  kind: "uoms" | "item-types",
+  kind: "uoms" | "item-types" | "tracking-categories",
   params?: ListParams & { isActive?: boolean },
 ) {
   return ["inventory-masters", kind, normalizeFilters(params ?? {})] as const;

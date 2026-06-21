@@ -19,6 +19,8 @@ export interface ErpInventoryItem {
   itemType: string;
   status?: string | null;
   note?: string | null;
+  trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM" | null;
+  trackingCategoryKey?: string | null;
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
@@ -62,6 +64,8 @@ export interface CreateInventoryItemPayload {
   itemType: string;
   status?: string;
   note?: string;
+  trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
+  trackingCategoryKey?: string;
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
@@ -79,6 +83,7 @@ export type UpdateInventoryMasterPayload =
 const BASE = "/api/v1/inventory/items";
 const UOM_BASE = "/api/v1/inventory/uoms";
 const ITEM_TYPE_BASE = "/api/v1/inventory/item-types";
+const TRACKING_CATEGORY_BASE = "/api/v1/inventory/tracking-categories";
 
 type InventoryItemDetailResponse = {
   message: string;
@@ -236,11 +241,49 @@ export const inventoryCoreApi = {
     );
     return data.data;
   },
+
+  listTrackingCategories: async (
+    params?: ListParams & { isActive?: boolean },
+  ): Promise<PaginatedResponse<InventoryMasterOption>> => {
+    const requestParams = {
+      ...p(params),
+      ...(params?.isActive !== undefined ? { isActive: params.isActive } : {}),
+    };
+    const key = `inventory-tracking-categories:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<
+        PaginatedResponse<InventoryMasterOption>
+      >(TRACKING_CATEGORY_BASE, { params: requestParams });
+      return data;
+    });
+  },
+  createTrackingCategory: async (
+    payload: CreateInventoryMasterPayload,
+  ): Promise<InventoryMasterOption> => {
+    const { data } = await axiosInstance.post<InventoryMasterDetailResponse>(
+      TRACKING_CATEGORY_BASE,
+      payload,
+    );
+    return data.data;
+  },
+  updateTrackingCategory: async (
+    id: string,
+    payload: UpdateInventoryMasterPayload,
+  ): Promise<InventoryMasterOption> => {
+    const { data } = await axiosInstance.patch<InventoryMasterDetailResponse>(
+      `${TRACKING_CATEGORY_BASE}/${id}`,
+      payload,
+    );
+    return data.data;
+  },
   deleteUom: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${UOM_BASE}/${id}`);
   },
   deleteItemType: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${ITEM_TYPE_BASE}/${id}`);
+  },
+  deleteTrackingCategory: async (id: string): Promise<void> => {
+    await axiosInstance.delete(`${TRACKING_CATEGORY_BASE}/${id}`);
   },
   delete: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);

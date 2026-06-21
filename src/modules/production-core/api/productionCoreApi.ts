@@ -58,12 +58,35 @@ export interface ExecuteProductionResult {
 }
 
 /** Shape of a production order record from GET /api/v1/production/orders */
+export interface ErpProducedVehicle {
+  id: string;
+  vin: string;
+  engineNo?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+}
+
+export interface ErpProducedSerial {
+  id: string;
+  serialNo?: string | null;
+  lotNo?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+}
+
 export interface ErpProductionOrder {
   id: string;
   referenceNo?: string | null;
   status?: string | null;
   finishedGoodItemId?: string | null;
   finishedGoodItemName?: string | null;
+  finishedGoodItemCode?: string | null;
+  finishedGoodItem?: {
+    id: string;
+    itemCode?: string | null;
+    itemName?: string | null;
+    trackingPolicy?: string | null;
+  } | null;
   qtyProduced?: string | null;
   qtyToProduce?: string | null;
   plannedStartDate?: string | null;
@@ -73,6 +96,8 @@ export interface ErpProductionOrder {
   lines?: ErpProductionOrderMaterial[];
   materials?: ErpProductionOrderMaterial[];
   outputMetadata?: Record<string, unknown> | null;
+  producedVehicles?: ErpProducedVehicle[];
+  producedSerials?: ErpProducedSerial[];
   [key: string]: unknown;
 }
 
@@ -89,6 +114,7 @@ export interface ErpProductionOrderMaterial {
   originalItemName?: string | null;
   originalItemCode?: string | null;
   alternativeItemId?: string | null;
+  alternativeItemName?: string | null;
   alternativeNotes?: string | null;
 }
 
@@ -143,6 +169,21 @@ export const productionCoreApi = {
       data: ErpProductionOrder;
     }>(`${BASE_ORDERS}/${id}`);
     return data.data;
+  },
+  explodePreview: async (
+    bomId: string,
+    qtyToProduce: number,
+  ): Promise<{
+    flatMaterials: ErpProductionOrderMaterial[];
+    explosionTree: Record<string, unknown>[];
+  }> => {
+    const { data } = await axiosInstance.get<{
+      flatMaterials: ErpProductionOrderMaterial[];
+      explosionTree: Record<string, unknown>[];
+    }>(`/api/v1/production/explode-preview`, {
+      params: { bomId, qtyToProduce },
+    });
+    return data;
   },
   update: async (
     id: string,
@@ -203,7 +244,18 @@ export const productionCoreApi = {
 
   complete: async (
     id: string,
-    payload: { qtyFinished: number; warehouseCode?: string; unitCost?: number },
+    payload: {
+      qtyFinished: number;
+      warehouseCode?: string;
+      unitCost?: number;
+      identifiers?: Array<{
+        vin?: string;
+        engineNo?: string;
+        serialNo?: string;
+        lotNo?: string;
+        notes?: string;
+      }>;
+    },
   ): Promise<{
     id: string;
     referenceNo?: string;

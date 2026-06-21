@@ -33,7 +33,7 @@ import {
   useInventoryMasterSaveMutation,
 } from "@/modules/inventory-core/hooks/useInventoryMasterMutation";
 
-type MasterKind = "items" | "uom" | "item-type";
+type MasterKind = "items" | "uom" | "item-type" | "tracking-category";
 
 interface MasterForm {
   code: string;
@@ -78,7 +78,11 @@ function statusBadge(isActive: boolean, t: (k: string) => string) {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function toMasterQueryKind(kind: MasterKind): InventoryMasterQueryKind {
-  return kind === "uom" ? "uoms" : "item-types";
+  return kind === "uom"
+    ? "uoms"
+    : kind === "item-type"
+      ? "item-types"
+      : "tracking-categories";
 }
 
 export function InventoryMasterPage() {
@@ -113,6 +117,11 @@ export function InventoryMasterPage() {
         key: "item-type",
         label: t("inventoryMasters.tabs.itemTypeLabel"),
         description: t("inventoryMasters.tabs.itemTypeDesc"),
+      },
+      {
+        key: "tracking-category",
+        label: "Tracking Category",
+        description: "Cấu hình key/value label hiển thị cho tracking.",
       },
     ],
     [t],
@@ -173,11 +182,33 @@ export function InventoryMasterPage() {
   );
 
   const uomsQuery = useInventoryMasterListQuery(uomParams);
+  const trackingCategoryParams = useMemo(
+    () => ({
+      kind: "tracking-categories" as const,
+      search: filterItemType.state.search.trim() || undefined,
+      isActive:
+        filterItemType.state.status === "true"
+          ? true
+          : filterItemType.state.status === "false"
+            ? false
+            : undefined,
+    }),
+    [filterItemType.state.search, filterItemType.state.status],
+  );
+
   const itemTypesQuery = useInventoryMasterListQuery(itemTypeParams);
+  const trackingCategoriesQuery = useInventoryMasterListQuery(
+    trackingCategoryParams,
+  );
   const saveMutation = useInventoryMasterSaveMutation();
   const deleteMutation = useInventoryMasterDeleteMutation();
 
-  const currentQuery = activeTab === "uom" ? uomsQuery : itemTypesQuery;
+  const currentQuery =
+    activeTab === "uom"
+      ? uomsQuery
+      : activeTab === "item-type"
+        ? itemTypesQuery
+        : trackingCategoriesQuery;
   const currentItems = currentQuery.data?.items ?? [];
   const currentLoading = currentQuery.isLoading || currentQuery.isFetching;
   const currentError =
@@ -218,7 +249,12 @@ export function InventoryMasterPage() {
     setSaveError(null);
     try {
       await saveMutation.mutateAsync({
-        kind: editingKind === "uom" ? "uom" : "item-type",
+        kind:
+          editingKind === "uom"
+            ? "uom"
+            : editingKind === "item-type"
+              ? "item-type"
+              : "tracking-category",
         id: editing?.id,
         payload: {
           code: form.code.trim(),
@@ -252,7 +288,12 @@ export function InventoryMasterPage() {
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync({
-        kind: deleteTarget.kind === "uom" ? "uom" : "item-type",
+        kind:
+          deleteTarget.kind === "uom"
+            ? "uom"
+            : deleteTarget.kind === "item-type"
+              ? "item-type"
+              : "tracking-category",
         id: deleteTarget.item.id,
       });
       showToast({

@@ -6,7 +6,10 @@ import {
   type InventoryMasterOption,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 
-export type InventoryMasterMutationKind = "uom" | "item-type";
+export type InventoryMasterMutationKind =
+  | "uom"
+  | "item-type"
+  | "tracking-category";
 
 export interface InventoryMasterSaveVariables {
   kind: InventoryMasterMutationKind;
@@ -20,7 +23,14 @@ export interface InventoryMasterDeleteVariables {
 }
 
 function getQueryKey(kind: InventoryMasterMutationKind) {
-  return ["inventory-masters", kind === "uom" ? "uoms" : "item-types"] as const;
+  return [
+    "inventory-masters",
+    kind === "uom"
+      ? "uoms"
+      : kind === "item-type"
+        ? "item-types"
+        : "tracking-categories",
+  ] as const;
 }
 
 export function useInventoryMasterSaveMutation() {
@@ -36,9 +46,12 @@ export function useInventoryMasterSaveMutation() {
         if (id) return inventoryCoreApi.updateUom(id, payload);
         return inventoryCoreApi.createUom(payload);
       }
-
-      if (id) return inventoryCoreApi.updateItemType(id, payload);
-      return inventoryCoreApi.createItemType(payload);
+      if (kind === "item-type") {
+        if (id) return inventoryCoreApi.updateItemType(id, payload);
+        return inventoryCoreApi.createItemType(payload);
+      }
+      if (id) return inventoryCoreApi.updateTrackingCategory(id, payload);
+      return inventoryCoreApi.createTrackingCategory(payload);
     },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({
@@ -54,7 +67,8 @@ export function useInventoryMasterDeleteMutation() {
   return useAppMutation<void, Error, InventoryMasterDeleteVariables>({
     mutationFn: async ({ kind, id }) => {
       if (kind === "uom") return inventoryCoreApi.deleteUom(id);
-      return inventoryCoreApi.deleteItemType(id);
+      if (kind === "item-type") return inventoryCoreApi.deleteItemType(id);
+      return inventoryCoreApi.deleteTrackingCategory(id);
     },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({
