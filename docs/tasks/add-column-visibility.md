@@ -13,6 +13,7 @@ The user requested a feature to select which columns to render in a table. It wa
 - Pushed changes to `github-industries/erp-master`.
 
 ### Phase 2: Hoisting State to TableActionGroup
+
 - **Problem**: The user wanted the "Hiển thị" toggle to be rendered right next to the "Filter" button, which resides in the `<TableActionGroup>` component placed in the Page Header, while the table sits in the Page Body.
 - **Solution**: Created a custom hook `useColumnVisibility` that hoists the `columnVisibility` state up to the Page level.
   - The hook provides a `<ColumnToggle />` component (with i18n translation `t("Hiển thị")`) that can be safely rendered inside `<TableActionGroup>`.
@@ -25,7 +26,7 @@ The user requested a feature to select which columns to render in a table. It wa
   - `ErpBomPage`
   - `ProductionOrderListPage`
   - `InventoryMasterPage`
-- Verified all components with `bun run lint` and `bun run tsc --noEmit`. 
+- Verified all components with `bun run lint` and `bun run tsc --noEmit`.
 
 - `src/shared/components/StandardTable.tsx`:
   - Added `enableColumnVisibility` to `StandardTableProps`.

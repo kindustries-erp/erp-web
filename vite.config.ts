@@ -10,10 +10,11 @@ const buildVersion =
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
-  const apiBaseUrl = process.env.VITE_API_BASE_URL || env.VITE_API_BASE_URL || "";
+  const apiBaseUrl =
+    process.env.VITE_API_BASE_URL || env.VITE_API_BASE_URL || "";
   const cleanApiUrl = apiBaseUrl.replace(/\/$/, "");
-  const escapedApiUrl = cleanApiUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const apiUrlPattern = new RegExp(`^${escapedApiUrl}/.*`, 'i');
+  const escapedApiUrl = cleanApiUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const apiUrlPattern = new RegExp(`^${escapedApiUrl}/.*`, "i");
   return {
     server: {
       watch: {
