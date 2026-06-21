@@ -19,15 +19,24 @@
 
 ## Current checkpoint gap
 
-- `current-lane.md` đã được cập nhật phản ánh commit mới nhất `dfa5646` (2026-06-21).
-- Các commit gần nhất: `dfa5646` (ProductionRunDrawer) → `664231f` (validate qty + alt item code) → `9cb6639` (API) → ...
+- `current-lane.md` đã được cập nhật lần này để phản ánh commit mới nhất `b13e672` (2026-06-21 continuation).
+- Lineage commit gần nhất:
+  - `b13e672` feat(ui): perfectly align column visibility gear icon and enable i18n support in toggle menu
+  - `51a2773` feat: add column visibility toggle to DataTable and StandardTable
+  - `21d9373` chore: remove dead UI table components and orphaned pages
+  - `abe7a1f` feat(production): enhance UI formatting in production order drawer and allow note updates
+  - `a589bdf` refactor(production): align MO detail action menu and drawer production action UX
 - Pending manual QC: smoke test ProductionRunDrawer với MO status CONFIRMED / IN_PROGRESS, unit-by-unit mode (≤50) và batch mode (>50).
+- Lane task artifact drift đã được reconcile (2026-06-21 audit).
 
 ## High-value current-lane tasks
 
-- `docs/tasks/20260621-manufacture-progress-drawer.md` ← **ACTIVE** (commit done, pending manual smoke)
-- `docs/tasks/20260621-production-order-qty-validation-alt-item-code.md` ← closed (commit `664231f`)
-- `docs/tasks/20260620-erp-production-start-complete-auto-warehouse.md` ← closed
+- `docs/tasks/add-column-visibility.md` ← DONE (committed `51a2773`, `b13e672`)
+- `docs/tasks/remove-dead-ui-tables.md` ← DONE (committed `21d9373`)
+- `docs/tasks/update-production-drawer-ui.md` ← DONE (committed `abe7a1f`)
+- `docs/tasks/20260621-manufacture-progress-drawer.md` ← DONE (implementation lane), QC_PENDING (manual smoke)
+- `docs/tasks/20260621-production-order-qty-validation-alt-item-code.md` ← DONE (committed `664231f`)
+- `docs/tasks/20260620-erp-production-start-complete-auto-warehouse.md` ← DONE
 
 ## Current lane lessons
 
