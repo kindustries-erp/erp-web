@@ -19,9 +19,15 @@
 
 ## Current checkpoint gap
 
-- Recent Web commits after 2026-06-18 now include production start/complete MO drawer closure (`docs/tasks/20260620-erp-production-start-complete-auto-warehouse.md`) plus earlier MO form refactor + draft support, MO filter/layout, goods-receipt quantity fix UI, purchase-order draft voucher + warehouse-history fix UI, and `onRowClick` detail drawer work.
-- `current-lane.md` vẫn chưa phản ánh các artifacts/closure mới hơn này.
-- Treat this as **task-artifact drift**: before further feature work, create/close the remaining corresponding repo task artifact(s) under `docs/tasks/` and keep `current-lane.md` aligned with recent commits.
+- `current-lane.md` đã được cập nhật phản ánh commit mới nhất `dfa5646` (2026-06-21).
+- Các commit gần nhất: `dfa5646` (ProductionRunDrawer) → `664231f` (validate qty + alt item code) → `9cb6639` (API) → ...
+- Pending manual QC: smoke test ProductionRunDrawer với MO status CONFIRMED / IN_PROGRESS, unit-by-unit mode (≤50) và batch mode (>50).
+
+## High-value current-lane tasks
+
+- `docs/tasks/20260621-manufacture-progress-drawer.md` ← **ACTIVE** (commit done, pending manual smoke)
+- `docs/tasks/20260621-production-order-qty-validation-alt-item-code.md` ← closed (commit `664231f`)
+- `docs/tasks/20260620-erp-production-start-complete-auto-warehouse.md` ← closed
 
 ## Current lane lessons
 

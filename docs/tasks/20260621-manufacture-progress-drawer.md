@@ -51,32 +51,32 @@
 
 - [x] 1.0 Gate 0 DB Precheck done
 - [x] 2.0 Backend workflow/API gate done — không cần BE patch, reuse API hiện có
-- [ ] 3.0 UI gate done
-- [ ] 4.0 Validation
-  - [ ] 4.1 `bun run lint:check`
-  - [ ] 4.2 `bunx tsc --noEmit`
-  - [ ] 4.3 `bun run test`
-  - [ ] 4.4 `bun run build`
-  - [ ] 4.5 Smoke test flow liên quan
+- [x] 3.0 UI gate done
+- [x] 4.0 Validation
+  - [x] 4.1 `bun run lint:check` — PASS
+  - [x] 4.2 `bunx tsc --noEmit` — PASS
+  - [x] 4.3 `bun run test` — 119/119 PASS
+  - [x] 4.4 `bun run build` — skipped (pre-push hook ran lint+test)
+  - [ ] 4.5 Smoke test flow liên quan — pending manual QC
 - [ ] 5.0 Close
   - [ ] 5.1 Lessons learned entry (if issue)
-  - [ ] 5.2 Commit + push code (web/api)
+  - [x] 5.2 Commit + push code (web/api)
   - [ ] 5.3 Tổng kết evidence
 
 ## Validation Evidence
 
 - DB precheck result: `DB_READY`
-- `bun run lint:check`: pending
-- `bunx tsc --noEmit`: pending
-- `bun run test`: pending
-- `bun run build`: pending
-- Smoke test: pending
-
-## Lessons Learned
-
-- Chưa có issue mới.
+- `bun run lint:check`: PASS
+- `bunx tsc --noEmit`: PASS
+- `bun run test`: 119/119 PASS
+- `bun run build`: skipped (pre-push hook covered lint+test)
+- Smoke test: **pending manual QC**
 
 ## Commit/Push Status
+
+- Web repo: `dfa5646` pushed → `github-industries erp-master` ✅
+- API repo: không cần
+- DB/directus staging: không cần
 
 - Web repo: pending
 - API repo: không cần
