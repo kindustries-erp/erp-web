@@ -187,21 +187,28 @@ export function useProductionOrderDrawer({
       );
       setAlternativeItems(restoredAlternativeItems);
 
-      bomCoreApi
-        .list({
-          pageSize: 1,
-          finishedGoodItemId: editing.finishedGoodItemId,
-        })
-        .then((res) => {
+      const resolveAndLoad = form.bomId
+        ? Promise.resolve(form.bomId)
+        : bomCoreApi
+            .list({
+              pageSize: 1,
+              finishedGoodItemId: editing.finishedGoodItemId,
+            })
+            .then((res) => {
+              const bom = res.items[0] as BomLikeItem | undefined;
+              return bom?.id ?? null;
+            });
+
+      resolveAndLoad
+        .then((bomId) => {
           if (bomLoadRequestRef.current !== requestId) return;
-          const bom = res.items[0] as BomLikeItem | undefined;
-          if (!bom?.id) {
+          if (!bomId) {
             setBomLines([]);
             setBalances({});
             return;
           }
 
-          return bomCoreApi.get(bom.id).then((fullBom) => {
+          return bomCoreApi.get(bomId).then((fullBom) => {
             if (bomLoadRequestRef.current !== requestId) return;
 
             const sourceLineMap = new Map(
@@ -341,9 +348,9 @@ export function useProductionOrderDrawer({
     }
   }, [open, editing]);
 
-  // Fetch all BOMs for selected finished good; auto-select latest ACTIVE
+  // Fetch all BOMs for selected finished good; auto-select latest ACTIVE (create only)
   useEffect(() => {
-    if (!form.finishedGoodItemId || editing) {
+    if (!form.finishedGoodItemId) {
       setAvailableBoms([]);
       return;
     }
@@ -352,17 +359,18 @@ export function useProductionOrderDrawer({
       .then((res) => {
         const boms = res.items;
         setAvailableBoms(boms);
-        if (boms.length > 0) {
+        if (!editing && boms.length > 0) {
+          // Only auto-select in create mode; edit mode keeps the saved bomId
           const activeBom = boms.find((b) => b.status === "ACTIVE") ?? boms[0];
-          setForm((prev) => ({ ...prev, bomId: activeBom.id }));
-        } else {
-          setForm((prev) => ({ ...prev, bomId: "" }));
+          setForm((prev) =>
+            prev.bomId ? prev : { ...prev, bomId: activeBom.id },
+          );
         }
       })
       .catch(() => {
         setAvailableBoms([]);
       });
-  }, [form.finishedGoodItemId]);
+  }, [form.finishedGoodItemId, editing]);
 
   // When alternativeItems change, reload balances to include alt item qtys
   useEffect(() => {
