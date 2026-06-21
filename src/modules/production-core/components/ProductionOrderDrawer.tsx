@@ -5,13 +5,14 @@ import { useT } from "@/core/i18n";
 import {
   DrawerField,
   DrawerSection,
+  DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import type { ErpProductionOrder } from "@/modules/production-core/api/productionCoreApi";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { ChevronRight, ArrowRight, ChevronLeft } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { ProductionRunDrawer } from "./ProductionRunDrawer";
@@ -65,8 +66,6 @@ export function ProductionOrderDrawer({
     error,
     handleSubmit,
     issueDrawer,
-    showGeneralInfo,
-    setShowGeneralInfo,
     bomLines,
     balances,
     localSearch,
@@ -372,154 +371,104 @@ export function ProductionOrderDrawer({
   );
 
   const rightPanel = (
-    <div
-      className={cn(
-        "shrink-0 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
-        showGeneralInfo ? "w-full xl:w-[320px]" : "w-full xl:w-[52px]",
+    <>
+      <DrawerField label={t("Thành phẩm")} required>
+        <Combobox
+          value={form.finishedGoodItemId}
+          onChange={(v) => setForm((p) => ({ ...p, finishedGoodItemId: v }))}
+          options={itemOptions}
+          placeholder={t("Chọn thành phẩm")}
+          searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
+          disabled={
+            saving || isConfirmed || isCompleted || viewOnly || !!editing
+          }
+        />
+      </DrawerField>
+
+      <DrawerField label={t("Số lượng kế hoạch")} required>
+        <input
+          type="number"
+          min="0.001"
+          step="any"
+          value={form.qtyToProduce}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, qtyToProduce: e.target.value }))
+          }
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+          className={inputCls}
+          placeholder="1"
+        />
+      </DrawerField>
+
+      {editing && (
+        <DrawerRow
+          label={t("Đã sản xuất")}
+          value={
+            <span className="font-semibold text-emerald-700">
+              {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}
+            </span>
+          }
+        />
       )}
-    >
-      <DrawerSection
-        title={
-          <span
-            className={cn(
-              "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
-              showGeneralInfo
-                ? "max-w-[200px] opacity-100"
-                : "max-w-0 opacity-0",
-            )}
-          >
-            {t("Thông tin quản lý")}
-          </span>
-        }
-        titleExtra={
-          <button
-            type="button"
-            onClick={() => setShowGeneralInfo(!showGeneralInfo)}
-            className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
-            title={showGeneralInfo ? t("Thu gọn") : t("Mở rộng")}
-          >
-            {showGeneralInfo ? (
-              <ChevronRight className="w-4 h-4" />
-            ) : (
-              <ChevronLeft className="w-4 h-4" />
-            )}
-          </button>
-        }
-      >
-        <div
-          className={cn(
-            "grid transition-all duration-300 ease-in-out",
-            showGeneralInfo ? "opacity-100" : "opacity-0",
-          )}
-          style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
-        >
-          <div
-            className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)] space-y-4"
-            style={{ scrollbarWidth: "none" }}
-          >
-            <DrawerField label={t("Thành phẩm")} required>
-              <Combobox
-                value={form.finishedGoodItemId}
-                onChange={(v) =>
-                  setForm((p) => ({ ...p, finishedGoodItemId: v }))
-                }
-                options={itemOptions}
-                placeholder={t("Chọn thành phẩm")}
-                searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-                disabled={
-                  saving || isConfirmed || isCompleted || viewOnly || !!editing
-                }
-              />
-            </DrawerField>
 
-            <DrawerField label={t("Số lượng kế hoạch")} required>
-              <input
-                type="number"
-                min="0.001"
-                step="any"
-                value={form.qtyToProduce}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, qtyToProduce: e.target.value }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-                className={inputCls}
-                placeholder="1"
-              />
-            </DrawerField>
+      <div className="border-t border-border my-2" />
 
-            {editing && (
-              <DrawerField label={t("Số lượng đã sản xuất")}>
-                <div className="text-sm font-semibold text-emerald-600 border border-emerald-200 bg-emerald-50 rounded-md px-3 py-2">
-                  {fmtQty(editing.qtyProduced)} / {fmtQty(editing.qtyToProduce)}
-                </div>
-              </DrawerField>
-            )}
+      <DrawerField label={t("Reference No")}>
+        <input
+          value={form.referenceNo}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, referenceNo: e.target.value }))
+          }
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+          className={inputCls}
+          placeholder={t("Tự động nếu để trống")}
+        />
+      </DrawerField>
 
-            <div className="border-t border-border pt-4 mt-2 mb-2"></div>
+      <DrawerField label={t("Warehouse Code")}>
+        <input
+          value={form.warehouseCode}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, warehouseCode: e.target.value }))
+          }
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+          className={inputCls}
+          placeholder="Ví dụ: WH-01"
+        />
+      </DrawerField>
 
-            <DrawerField label={t("Reference No")}>
-              <input
-                value={form.referenceNo}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, referenceNo: e.target.value }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-                className={inputCls}
-                placeholder={t("Tự động nếu để trống")}
-              />
-            </DrawerField>
+      <DrawerField label={t("Ngày bắt đầu (kế hoạch)")}>
+        <DatePicker
+          className={inputCls}
+          value={form.plannedStartDate}
+          onChange={(v) => setForm((p) => ({ ...p, plannedStartDate: v }))}
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+        />
+      </DrawerField>
 
-            <DrawerField label={t("Warehouse Code")}>
-              <input
-                value={form.warehouseCode}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, warehouseCode: e.target.value }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-                className={inputCls}
-                placeholder="Ví dụ: WH-01"
-              />
-            </DrawerField>
+      <DrawerField label={t("Ngày hoàn thành (kế hoạch)")}>
+        <DatePicker
+          className={inputCls}
+          value={form.plannedEndDate}
+          onChange={(v) => setForm((p) => ({ ...p, plannedEndDate: v }))}
+          disabled={saving || isConfirmed || isCompleted || viewOnly}
+        />
+      </DrawerField>
 
-            <DrawerField label={t("Ngày bắt đầu (kế hoạch)")}>
-              <DatePicker
-                className={inputCls}
-                value={form.plannedStartDate}
-                onChange={(v) =>
-                  setForm((p) => ({ ...p, plannedStartDate: v }))
-                }
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-              />
-            </DrawerField>
-
-            <DrawerField label={t("Ngày hoàn thành (kế hoạch)")}>
-              <DatePicker
-                className={inputCls}
-                value={form.plannedEndDate}
-                onChange={(v) => setForm((p) => ({ ...p, plannedEndDate: v }))}
-                disabled={saving || isConfirmed || isCompleted || viewOnly}
-              />
-            </DrawerField>
-
-            {editing &&
-              (isConfirmed ||
-                isCompleted ||
-                editing.status === "IN_PROGRESS") && (
-                <div className="pt-4 border-t border-border space-y-2 mt-4">
-                  <button
-                    onClick={onOpenProductionRun}
-                    disabled={saving || viewOnly}
-                    className="flex w-full items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 transition-colors hover:bg-blue-100 disabled:opacity-50"
-                  >
-                    <span>{t("Tiến trình sản xuất")}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
+      {editing &&
+        (isConfirmed || isCompleted || editing.status === "IN_PROGRESS") && (
+          <div className="pt-2 mt-1">
+            <button
+              onClick={onOpenProductionRun}
+              disabled={saving || viewOnly}
+              className="flex w-full items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800 transition-colors hover:bg-blue-100 disabled:opacity-50"
+            >
+              <span>{t("Tiến trình sản xuất")}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
-        </div>
-      </DrawerSection>
-    </div>
+        )}
+    </>
   );
 
   return (
@@ -546,6 +495,7 @@ export function ProductionOrderDrawer({
         error={error}
         leftPanel={loading ? <Skeleton className="h-40" /> : leftPanel}
         rightPanel={loading ? <Skeleton className="h-40" /> : rightPanel}
+        rightPanelTitle={t("Thông tin quản lý")}
         titleExtra={
           editing?.status && (
             <span
