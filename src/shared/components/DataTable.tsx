@@ -1,4 +1,7 @@
-import React, { type ReactNode } from "react";
+import React, { type ReactNode, useState } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Settings2 } from "lucide-react";
+import type { VisibilityState } from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
@@ -26,6 +29,8 @@ export interface DataTableColumn<T> {
   skeletonClassName?: string;
   sortable?: boolean;
   sortKey?: string;
+  hideable?: boolean;
+  label?: string;
 }
 
 export interface ActionsColumnConfig<T> {
@@ -41,6 +46,8 @@ interface DataTableRowMeta {
   skeletonClassName?: string;
   sortable?: boolean;
   sortKey?: string;
+  hideable?: boolean;
+  label?: string;
 }
 
 interface DataTableProps<T> {
@@ -68,6 +75,7 @@ interface DataTableProps<T> {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (key: string) => void;
+  enableColumnVisibility?: boolean;
 }
 
 export function DataTable<T>({
@@ -95,7 +103,10 @@ export function DataTable<T>({
   sortBy,
   sortOrder,
   onSort,
+  enableColumnVisibility,
 }: DataTableProps<T>) {
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
   const showPagination =
     page != null &&
     pageSize != null &&
@@ -125,6 +136,8 @@ export function DataTable<T>({
         skeletonClassName: column.skeletonClassName,
         sortable: column.sortable,
         sortKey: column.sortKey || column.key,
+        hideable: column.hideable !== false,
+        label: column.label || column.key,
       } satisfies DataTableRowMeta,
     }),
   );
@@ -150,6 +163,7 @@ export function DataTable<T>({
           actionsColumn.headerClassName,
         ),
         skeletonClassName: "",
+        hideable: false,
       } satisfies DataTableRowMeta,
     });
   }
@@ -161,11 +175,82 @@ export function DataTable<T>({
     getRowId: getRowKey,
     manualPagination: true,
     manualSorting: true,
+    state: {
+      columnVisibility,
+    },
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
     <>
-      {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
+      {(filters || enableColumnVisibility) && (
+        <div className="flex gap-2 mb-3 flex-wrap items-center justify-between">
+          <div className="flex gap-2 flex-wrap flex-1">{filters}</div>
+          {enableColumnVisibility && (
+            <DropdownMenu.Root modal={false}>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 px-3 py-[6px] rounded-md border border-border bg-surface text-[13px] text-[color:var(--muted-fg)] hover:text-foreground font-medium hover:bg-[color:var(--popup-bg-hover)] transition-colors outline-none"
+                >
+                  <Settings2 size={14} />
+                  Hiển thị
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content bg-surface border border-border shadow-md"
+                >
+                  {table
+                    .getAllLeafColumns()
+                    .filter((col) => {
+                      const meta = col.columnDef.meta as DataTableRowMeta;
+                      return meta?.hideable !== false && col.id !== "__actions";
+                    })
+                    .map((column) => {
+                      const meta = column.columnDef.meta as DataTableRowMeta;
+                      return (
+                        <DropdownMenu.CheckboxItem
+                          key={column.id}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] cursor-pointer outline-none select-none hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)]"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) =>
+                            column.toggleVisibility(!!value)
+                          }
+                        >
+                          <div
+                            className="flex items-center justify-center w-4 h-4 rounded-[4px] border border-border bg-surface data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+                            data-state={
+                              column.getIsVisible() ? "checked" : "unchecked"
+                            }
+                          >
+                            {column.getIsVisible() && (
+                              <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="text-primary-fg"
+                              >
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                          </div>
+                          <span className="truncate">{meta?.label}</span>
+                        </DropdownMenu.CheckboxItem>
+                      );
+                    })}
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          )}
+        </div>
+      )}
       <div
         className={cn(
           "bg-surface border border-border rounded-[10px] overflow-x-auto",
