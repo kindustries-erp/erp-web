@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Trash2,
   ChevronRight,
@@ -474,41 +474,71 @@ export function ErpBomPage() {
     entities: "inventoryItems",
   });
 
-  const itemOptions = useMemo(() => {
-    const opts =
-      itemsData?.pages.flatMap((p) =>
-        (p.items.inventoryItems || []).map((i) => ({
-          value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
-        })),
-      ) || [];
+  // Persistent cache: id -> label, survives search-term changes so selected
+  // items never lose their labels when the API page no longer includes them.
+  const cachedItems = useRef<Record<string, string>>({});
 
-    if (editing) {
-      if (
-        editing.finishedGoodItemId &&
-        !opts.some((o) => o.value === editing.finishedGoodItemId)
-      ) {
-        opts.push({
-          value: editing.finishedGoodItemId,
-          label: editing.finishedGoodItemName || t("Thành phẩm hiện tại"),
-        });
-      }
-
-      editing.lines?.forEach((line) => {
-        if (
-          line.componentItemId &&
-          !opts.some((o) => o.value === line.componentItemId)
-        ) {
-          opts.push({
-            value: line.componentItemId,
-            label: line.componentItemName || t("Linh kiện hiện tại"),
-          });
-        }
+  // Populate cache whenever new API pages arrive
+  useEffect(() => {
+    if (!itemsData) return;
+    itemsData.pages.forEach((p) => {
+      (p.items.inventoryItems || []).forEach((i) => {
+        cachedItems.current[i.id] = `${i.sku} — ${i.itemName}`;
       });
+    });
+  }, [itemsData]);
+
+  // Populate cache from editing BOM when it loads (edit/view mode)
+  useEffect(() => {
+    if (!editing) return;
+    if (editing.finishedGoodItemId && editing.finishedGoodItemName) {
+      cachedItems.current[editing.finishedGoodItemId] =
+        editing.finishedGoodItemName;
+    }
+    editing.lines?.forEach((line) => {
+      if (line.componentItemId && line.componentItemName) {
+        cachedItems.current[line.componentItemId] = line.componentItemName;
+      }
+    });
+  }, [editing]);
+
+  const itemOptions = useMemo(() => {
+    // Start with current search-result pages
+    const map = new Map<string, string>(
+      itemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map(
+          (i) => [i.id, `${i.sku} — ${i.itemName}`] as [string, string],
+        ),
+      ) || [],
+    );
+
+    // Ensure the currently selected finished good is always present
+    if (form.finishedGoodItemId) {
+      if (!map.has(form.finishedGoodItemId)) {
+        map.set(
+          form.finishedGoodItemId,
+          cachedItems.current[form.finishedGoodItemId] ||
+            editing?.finishedGoodItemName ||
+            t("Thành phẩm hiện tại"),
+        );
+      }
     }
 
-    return opts;
-  }, [itemsData, editing, t]);
+    // Ensure every selected component line item is always present
+    form.lines.forEach((line) => {
+      if (line.componentItemId && !map.has(line.componentItemId)) {
+        map.set(
+          line.componentItemId,
+          cachedItems.current[line.componentItemId] || t("Linh kiện hiện tại"),
+        );
+      }
+    });
+
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [itemsData, form.finishedGoodItemId, form.lines, editing, t]);
 
   const BOM_STATUS_OPTIONS = [
     { value: "ACTIVE", label: t("Đang áp dụng") },
@@ -539,6 +569,18 @@ export function ErpBomPage() {
     [itemOptions, fetchNextItems, loadingItems],
   );
   const filter = useFilterPanel(filterConfig);
+
+  // Populate cache from filter-panel selected finished-good item
+  // (done after filter is declared to avoid circular dependency with itemOptions)
+  useEffect(() => {
+    const filterFgId = filter.state.custom?.finishedGoodItemId as
+      | string
+      | undefined;
+    if (filterFgId && itemOptions.some((o) => o.value === filterFgId)) {
+      const label = itemOptions.find((o) => o.value === filterFgId)?.label;
+      if (label) cachedItems.current[filterFgId] = label;
+    }
+  }, [filter.state.custom?.finishedGoodItemId, itemOptions]);
 
   const loadBoms = useCallback(async () => {
     setLoading(true);
