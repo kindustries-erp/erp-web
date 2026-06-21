@@ -113,6 +113,40 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
   }, [bomId, fgToBomMap, t]);
 
   const toggleExpand = async (nodeId: string, subBomId: string) => {
+    // Circular reference guard: collect ancestor bomIds of this node
+    const getAncestorBomIds = (
+      nodes: FlatNode[],
+      startId: string,
+    ): Set<string> => {
+      const visited = new Set<string>();
+      let curr = nodes.find((n) => n.uniqueId === startId);
+      while (curr) {
+        if (curr.subBomId) visited.add(curr.subBomId);
+        curr = curr.parentId
+          ? nodes.find((n) => n.uniqueId === curr!.parentId)
+          : undefined;
+      }
+      return visited;
+    };
+
+    // Depth guard: max 10 levels to prevent run-away recursion
+    const getNodeLevel = (nodes: FlatNode[], nId: string): number =>
+      nodes.find((n) => n.uniqueId === nId)?.level ?? 0;
+
+    if (getNodeLevel(flatNodes, nodeId) >= 10) {
+      console.warn("[BomTree] Max depth (10) reached, not expanding further");
+      return;
+    }
+
+    const ancestorBomIds = getAncestorBomIds(flatNodes, nodeId);
+    if (ancestorBomIds.has(subBomId)) {
+      console.warn(
+        "[BomTree] Circular BOM reference detected, stopping expansion:",
+        subBomId,
+      );
+      return;
+    }
+
     setFlatNodes((prev) =>
       prev.map((n) =>
         n.uniqueId === nodeId ? { ...n, isExpanded: !n.isExpanded } : n,

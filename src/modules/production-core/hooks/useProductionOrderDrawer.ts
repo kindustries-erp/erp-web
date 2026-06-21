@@ -246,11 +246,11 @@ export function useProductionOrderDrawer({
                     originalItemId: n.itemId,
                     itemCode: n.itemCode ?? matched?.originalItemCode ?? null,
                     itemName: n.itemName ?? matched?.originalItemName ?? null,
-                    qtyRequired: matched?.qtyRequired ?? String(n.qtyRequired),
+                    qtyRequired: String(n.qtyRequired),
                     qtyIssued: matched?.qtyIssued ?? "0",
                     uom: n.uom ?? matched?.uom ?? null,
                     alternativeItemId: matched?.alternativeItemId ?? null,
-                    alternativeItemName: matched?.itemName ?? null,
+                    alternativeItemName: matched?.alternativeItemName ?? null,
                     level,
                     isLeaf: n.isLeaf,
                   });
@@ -268,12 +268,13 @@ export function useProductionOrderDrawer({
               ) {
                 // If we are editing an MO and the bomId matches its original bom, use the saved tree
                 lines = flattenTree(
-                  editing.outputMetadata.explosionTree as ExplosionNode[],
+                  editing.outputMetadata
+                    .explosionTree as unknown as ExplosionNode[],
                 );
               } else {
                 // Otherwise use the preview tree from API
                 lines = flattenTree(
-                  previewRes.explosionTree as ExplosionNode[],
+                  previewRes.explosionTree as unknown as ExplosionNode[],
                 );
               }
 
@@ -364,7 +365,7 @@ export function useProductionOrderDrawer({
             };
 
             const lines = flattenTree(
-              previewRes.explosionTree as ExplosionNode[],
+              previewRes.explosionTree as unknown as ExplosionNode[],
             );
             setBomLines(lines);
 

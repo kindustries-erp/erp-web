@@ -189,9 +189,7 @@ export function ProductionOrderDrawer({
               viewOnly={true}
               rowClassName={(line: BomLikeLine) => {
                 const requiredQty = Number(line.qtyRequired || 0);
-                const displayRequired = editing
-                  ? requiredQty
-                  : requiredQty * Number(form.qtyToProduce || 1);
+                const displayRequired = requiredQty;
 
                 const effectiveItemId =
                   alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
@@ -298,9 +296,7 @@ export function ProductionOrderDrawer({
                   minWidth: "100px",
                   cell: (line: BomLikeLine) => {
                     const requiredQty = Number(line.qtyRequired || 0);
-                    const displayRequired = editing
-                      ? requiredQty
-                      : requiredQty * Number(form.qtyToProduce || 1);
+                    const displayRequired = requiredQty;
                     return (
                       <span className="text-amber-700 font-semibold">
                         {fmtQty(displayRequired.toString())}
@@ -315,9 +311,7 @@ export function ProductionOrderDrawer({
                   minWidth: "100px",
                   cell: (line: BomLikeLine) => {
                     const requiredQty = Number(line.qtyRequired || 0);
-                    const displayRequired = editing
-                      ? requiredQty
-                      : requiredQty * Number(form.qtyToProduce || 1);
+                    const displayRequired = requiredQty;
                     const effectiveItemId =
                       alternativeItems[
                         line.originalItemId ?? line.itemId ?? ""

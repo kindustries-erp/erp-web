@@ -6,6 +6,7 @@ import {
   XCircle,
   PlayCircle,
   ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
@@ -392,17 +393,23 @@ export function ProductionOrderListPage() {
                 label:
                   item.status === "IN_PROGRESS"
                     ? t("Tiếp tục sản xuất")
-                    : t("Tiến hành sản xuất"),
+                    : item.status === "COMPLETED"
+                      ? t("Xem kết quả sản xuất")
+                      : t("Tiến hành sản xuất"),
                 onClick: () => handleOpenProductionRun(item),
                 icon:
                   item.status === "IN_PROGRESS" ? (
                     <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                  ) : item.status === "COMPLETED" ? (
+                    <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
                   ) : (
                     <PlayCircle className="h-[13px] w-[13px]" />
                   ),
                 hidden:
                   !canUpdate ||
-                  !["CONFIRMED", "IN_PROGRESS"].includes(item.status || ""),
+                  !["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
+                    item.status || "",
+                  ),
               },
               {
                 label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),

@@ -22,6 +22,13 @@ const STATUS_OPTIONS = [
   { value: "INACTIVE", label: "INACTIVE" },
 ];
 
+const TRACKING_POLICY_OPTIONS = [
+  { value: "NONE", label: "Không tracking" },
+  { value: "SERIAL", label: "Serial" },
+  { value: "LOT", label: "Lot" },
+  { value: "VEHICLE", label: "Vehicle (VIN/số máy)" },
+];
+
 interface ItemForm {
   sku: string;
   itemName: string;
@@ -29,6 +36,8 @@ interface ItemForm {
   itemType: string;
   status: string;
   note: string;
+  trackingPolicy: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
+  trackingCategoryKey: string;
 }
 
 const emptyForm = (): ItemForm => ({
@@ -38,6 +47,8 @@ const emptyForm = (): ItemForm => ({
   itemType: "FG",
   status: "ACTIVE",
   note: "",
+  trackingPolicy: "NONE",
+  trackingCategoryKey: "",
 });
 
 function buildForm(item: ErpInventoryItem): ItemForm {
@@ -48,6 +59,8 @@ function buildForm(item: ErpInventoryItem): ItemForm {
     itemType: item.itemType ?? "FG",
     status: item.status ?? "ACTIVE",
     note: item.note ?? "",
+    trackingPolicy: item.trackingPolicy ?? "NONE",
+    trackingCategoryKey: item.trackingCategoryKey ?? "",
   };
 }
 
@@ -59,6 +72,11 @@ function toPayload(form: ItemForm): CreateInventoryItemPayload {
     itemType: form.itemType || "FG",
     status: form.status || "ACTIVE",
     note: form.note.trim() || undefined,
+    trackingPolicy: form.trackingPolicy || "NONE",
+    trackingCategoryKey:
+      form.trackingPolicy === "CUSTOM"
+        ? form.trackingCategoryKey || undefined
+        : undefined,
   };
 }
 
@@ -96,12 +114,20 @@ export function InventoryItemFormDrawer({
   const [itemTypeOptions, setItemTypeOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [trackingCategoryOptions, setTrackingCategoryOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   const loadMasters = useCallback(async () => {
     try {
-      const [uoms, itemTypes] = await Promise.all([
+      const [uoms, itemTypes, trackingCategories] = await Promise.all([
         inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
         inventoryCoreApi.listItemTypes({
+          page: 1,
+          pageSize: 200,
+          isActive: true,
+        }),
+        inventoryCoreApi.listTrackingCategories({
           page: 1,
           pageSize: 200,
           isActive: true,
@@ -109,6 +135,7 @@ export function InventoryItemFormDrawer({
       ]);
       setUomOptions(buildMasterOptions(uoms.items));
       setItemTypeOptions(buildMasterOptions(itemTypes.items));
+      setTrackingCategoryOptions(buildMasterOptions(trackingCategories.items));
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Ignore
@@ -275,6 +302,44 @@ export function InventoryItemFormDrawer({
                 }
                 options={itemTypeOptions}
                 placeholder="Chọn loại"
+              />
+            </DrawerField>
+
+            <DrawerField label="Tracking policy">
+              <Combobox
+                value={form.trackingPolicy}
+                allowClear={false}
+                onChange={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    trackingPolicy:
+                      (value as
+                        | "NONE"
+                        | "SERIAL"
+                        | "LOT"
+                        | "VEHICLE"
+                        | "CUSTOM") || "NONE",
+                    trackingCategoryKey:
+                      value === "NONE" ? "" : prev.trackingCategoryKey,
+                  }))
+                }
+                options={TRACKING_POLICY_OPTIONS}
+              />
+            </DrawerField>
+
+            <DrawerField label="Tracking category">
+              <Combobox
+                value={form.trackingCategoryKey}
+                allowClear
+                disabled={form.trackingPolicy !== "CUSTOM"}
+                onChange={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    trackingCategoryKey: value || "",
+                  }))
+                }
+                options={trackingCategoryOptions}
+                placeholder="Chọn nhóm label hiển thị"
               />
             </DrawerField>
 
