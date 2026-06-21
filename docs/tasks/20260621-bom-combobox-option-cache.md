@@ -39,8 +39,21 @@ selected value was lost.
 - [x] `bunx tsc --noEmit` — PASS
 - [x] `bun run lint:check` — PASS
 - [x] `bunx vitest run` — 119/119 PASS
-- [ ] Commit + push
+- [x] Commit + push
 
 ## Commit/Push Status
 
-- pending
+- Web repo: `5e21328` → `github-industries erp-master` ✅
+- API repo: không cần
+- DB: không cần
+
+## Summary Evidence
+
+- Commit `5e21328` đã push, pre-commit hook đã chạy lint + test (119/119 PASS).
+- TSC clean, lint zero warnings.
+- Manual UI smoke còn mở (plan bước 3, không cản closure coding lane).
+
+## Status
+
+- `DONE` for implementation lane
+- `QC_PENDING` for manual UI smoke only
