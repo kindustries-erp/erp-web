@@ -174,6 +174,9 @@ export function ProductionOrderListPage() {
   };
 
   const handleOpenProductionRun = async (item: ErpProductionOrder) => {
+    // Close detail drawer first — prevents double-drawer when triggered from list
+    setDrawerOpen(false);
+    setEditingOrder(null);
     try {
       const data = await productionCoreApi.get(item.id);
       setProductionRunOrder(data);
