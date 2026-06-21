@@ -268,21 +268,27 @@ export function useProductionOrderDrawer({
       return;
     }
 
-    bomCoreApi
-      .list({
-        pageSize: 1,
-        finishedGoodItemId: form.finishedGoodItemId,
-      })
-      .then((res) => {
-        if (bomLoadRequestRef.current !== requestId) return;
-        const bom = res.items[0] as BomLikeItem | undefined;
-        if (!bom?.id) {
+    // Use the user-selected bomId if available; otherwise fall back to first
+    const resolveAndLoad = form.bomId
+      ? Promise.resolve(form.bomId)
+      : bomCoreApi
+          .list({
+            pageSize: 1,
+            finishedGoodItemId: form.finishedGoodItemId,
+          })
+          .then((res) => {
+            const bom = res.items[0] as BomLikeItem | undefined;
+            return bom?.id ?? null;
+          });
+
+    resolveAndLoad
+      .then((bomId) => {
+        if (!bomId) {
           setBomLines([]);
           setBalances({});
           return;
         }
-
-        return bomCoreApi.get(bom.id).then((fullBom) => {
+        return bomCoreApi.get(bomId).then((fullBom) => {
           if (bomLoadRequestRef.current !== requestId) return;
           const lines: BomLikeLine[] = (fullBom.lines || []).map((l) => ({
             id: l.id,
@@ -314,7 +320,7 @@ export function useProductionOrderDrawer({
         setBomLines([]);
         setBalances({});
       });
-  }, [form.finishedGoodItemId, editing]);
+  }, [form.finishedGoodItemId, form.bomId, editing]);
 
   // Auto-fill referenceNo when opening create drawer
   useEffect(() => {
