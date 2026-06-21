@@ -144,6 +144,21 @@ export const productionCoreApi = {
     }>(`${BASE_ORDERS}/${id}`);
     return data.data;
   },
+  explodePreview: async (
+    bomId: string,
+    qtyToProduce: number,
+  ): Promise<{
+    flatMaterials: ErpProductionOrderMaterial[];
+    explosionTree: Record<string, unknown>[];
+  }> => {
+    const { data } = await axiosInstance.get<{
+      flatMaterials: ErpProductionOrderMaterial[];
+      explosionTree: Record<string, unknown>[];
+    }>(`/api/v1/production/explode-preview`, {
+      params: { bomId, qtyToProduce },
+    });
+    return data;
+  },
   update: async (
     id: string,
     payload: ExecuteProductionPayload,

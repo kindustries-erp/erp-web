@@ -183,7 +183,9 @@ export function ProductionOrderDrawer({
           <div className="w-full">
             <DocumentLineTable
               data={filteredBomLines}
-              getRowKey={(line: BomLikeLine) => line.id || ""}
+              getRowKey={(line: BomLikeLine, idx: number) =>
+                line.id || String(idx)
+              }
               viewOnly={true}
               rowClassName={(line: BomLikeLine) => {
                 const requiredQty = Number(line.qtyRequired || 0);
@@ -209,11 +211,19 @@ export function ProductionOrderDrawer({
                   width: "30%",
                   minWidth: "200px",
                   cell: (line: BomLikeLine) => (
-                    <Tooltip content={line.itemName || ""}>
-                      <div className="truncate max-w-[200px] xl:max-w-[300px]">
-                        {line.itemName || "—"}
-                      </div>
-                    </Tooltip>
+                    <div
+                      className="flex items-center"
+                      style={{ paddingLeft: `${(line.level || 0) * 16}px` }}
+                    >
+                      {(line.level || 0) > 0 && (
+                        <span className="text-muted-foreground mr-1">└─</span>
+                      )}
+                      <Tooltip content={line.itemName || ""}>
+                        <div className="truncate max-w-[200px] xl:max-w-[300px]">
+                          {line.itemName || "—"}
+                        </div>
+                      </Tooltip>
+                    </div>
                   ),
                 },
                 {
@@ -234,7 +244,8 @@ export function ProductionOrderDrawer({
                       saving ||
                       viewOnly ||
                       isCompleted ||
-                      isConfirmed
+                      isConfirmed ||
+                      line.isLeaf === false
                     );
 
                     if (isDisabled && !selectedAltItemId) {
@@ -335,7 +346,14 @@ export function ProductionOrderDrawer({
                   cell: (line: BomLikeLine) => {
                     const originalItemId =
                       line.originalItemId ?? line.itemId ?? "";
-                    const isDisabled = !!(saving || viewOnly);
+                    const isDisabled = !!(
+                      saving ||
+                      viewOnly ||
+                      line.isLeaf === false
+                    );
+                    if (isDisabled && !lineNotes[originalItemId]) {
+                      return <span className="text-muted-foreground">—</span>;
+                    }
                     return (
                       <input
                         value={lineNotes[originalItemId] || ""}

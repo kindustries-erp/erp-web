@@ -29,6 +29,8 @@ export interface BomLikeLine {
   alternativeItemId?: string | null;
   alternativeItemName?: string | null;
   alternativeItemCode?: string | null;
+  level?: number;
+  isLeaf?: boolean;
 }
 
 interface BomLikeItem {
@@ -36,6 +38,16 @@ interface BomLikeItem {
   finishedGoodItemId?: string | null;
   finishedGoodItemName?: string | null;
   lines?: BomLikeLine[];
+}
+
+export interface ExplosionNode {
+  itemId: string;
+  itemName?: string;
+  itemCode?: string;
+  qtyRequired: number | string;
+  uom?: string;
+  isLeaf?: boolean;
+  children?: ExplosionNode[];
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -208,58 +220,85 @@ export function useProductionOrderDrawer({
             return;
           }
 
-          return bomCoreApi.get(bomId).then((fullBom) => {
-            if (bomLoadRequestRef.current !== requestId) return;
+          return productionCoreApi
+            .explodePreview(bomId, Number(form.qtyToProduce || 1))
+            .then((previewRes) => {
+              if (bomLoadRequestRef.current !== requestId) return;
 
-            const sourceLineMap = new Map(
-              sourceLines.map((line) => [
-                line.originalItemId ?? line.itemId,
-                line,
-              ]),
-            );
+              const sourceLineMap = new Map(
+                sourceLines.map((line) => [
+                  line.originalItemId ?? line.itemId,
+                  line,
+                ]),
+              );
 
-            const lines: BomLikeLine[] = (fullBom.lines || []).map((l) => {
-              const matched = l.componentItemId
-                ? sourceLineMap.get(l.componentItemId)
-                : undefined;
-              return {
-                id: matched?.id ?? l.id,
-                itemId: l.componentItemId,
-                originalItemId: l.componentItemId,
-                itemCode:
-                  l.componentItemCode ?? matched?.originalItemCode ?? null,
-                itemName:
-                  l.componentItemName ?? matched?.originalItemName ?? null,
-                qtyRequired: matched?.qtyRequired ?? l.qtyRequired,
-                qtyIssued: matched?.qtyIssued ?? "0",
-                uom: l.uom ?? matched?.uom ?? null,
-                alternativeItemId: matched?.alternativeItemId ?? null,
-                alternativeItemCode: matched?.itemCode ?? null,
-                alternativeItemName: matched?.itemName ?? null,
+              // Helper to flatten the tree
+              const flattenTree = (
+                nodes: ExplosionNode[],
+                level = 0,
+              ): BomLikeLine[] => {
+                let result: BomLikeLine[] = [];
+                for (const n of nodes) {
+                  const matched = sourceLineMap.get(n.itemId);
+                  result.push({
+                    id: matched?.id, // Keep original ID if it exists
+                    itemId: n.itemId,
+                    originalItemId: n.itemId,
+                    itemCode: n.itemCode ?? matched?.originalItemCode ?? null,
+                    itemName: n.itemName ?? matched?.originalItemName ?? null,
+                    qtyRequired: matched?.qtyRequired ?? String(n.qtyRequired),
+                    qtyIssued: matched?.qtyIssued ?? "0",
+                    uom: n.uom ?? matched?.uom ?? null,
+                    alternativeItemId: matched?.alternativeItemId ?? null,
+                    alternativeItemName: matched?.itemName ?? null,
+                    level,
+                    isLeaf: n.isLeaf,
+                  });
+                  if (Array.isArray(n.children) && n.children.length > 0) {
+                    result = result.concat(flattenTree(n.children, level + 1));
+                  }
+                }
+                return result;
               };
-            });
-            setBomLines(lines);
 
-            const itemIds = Array.from(
-              new Set(
-                lines
-                  .flatMap((line) => [
-                    line.itemId,
-                    line.originalItemId,
-                    line.alternativeItemId,
-                  ])
-                  .filter(Boolean),
-              ),
-            ) as string[];
-            if (itemIds.length) {
-              inventoryCoreApi.getBalances(itemIds).then((nextBalances) => {
-                if (bomLoadRequestRef.current !== requestId) return;
-                setBalances(nextBalances);
-              });
-            } else {
-              setBalances({});
-            }
-          });
+              let lines: BomLikeLine[];
+              if (
+                editing?.outputMetadata?.explosionTree &&
+                editing.outputMetadata.bomId === bomId
+              ) {
+                // If we are editing an MO and the bomId matches its original bom, use the saved tree
+                lines = flattenTree(
+                  editing.outputMetadata.explosionTree as ExplosionNode[],
+                );
+              } else {
+                // Otherwise use the preview tree from API
+                lines = flattenTree(
+                  previewRes.explosionTree as ExplosionNode[],
+                );
+              }
+
+              setBomLines(lines);
+
+              const itemIds = Array.from(
+                new Set(
+                  lines
+                    .flatMap((line) => [
+                      line.itemId,
+                      line.originalItemId,
+                      line.alternativeItemId,
+                    ])
+                    .filter(Boolean),
+                ),
+              ) as string[];
+              if (itemIds.length) {
+                inventoryCoreApi.getBalances(itemIds).then((nextBalances) => {
+                  if (bomLoadRequestRef.current !== requestId) return;
+                  setBalances(nextBalances);
+                });
+              } else {
+                setBalances({});
+              }
+            });
         })
         .catch(() => {
           if (bomLoadRequestRef.current !== requestId) return;
@@ -295,32 +334,52 @@ export function useProductionOrderDrawer({
           setBalances({});
           return;
         }
-        return bomCoreApi.get(bomId).then((fullBom) => {
-          if (bomLoadRequestRef.current !== requestId) return;
-          const lines: BomLikeLine[] = (fullBom.lines || []).map((l) => ({
-            id: l.id,
-            itemId: l.componentItemId,
-            originalItemId: l.componentItemId,
-            itemCode: l.componentItemCode ?? null,
-            itemName: l.componentItemName ?? null,
-            qtyRequired: l.qtyRequired,
-            qtyIssued: "0",
-            uom: l.uom,
-          }));
-          setBomLines(lines);
+        return productionCoreApi
+          .explodePreview(bomId, Number(form.qtyToProduce || 1))
+          .then((previewRes) => {
+            if (bomLoadRequestRef.current !== requestId) return;
 
-          const itemIds = lines
-            .map((l) => l.itemId)
-            .filter(Boolean) as string[];
-          if (itemIds.length) {
-            inventoryCoreApi.getBalances(itemIds).then((nextBalances) => {
-              if (bomLoadRequestRef.current !== requestId) return;
-              setBalances(nextBalances);
-            });
-          } else {
-            setBalances({});
-          }
-        });
+            const flattenTree = (
+              nodes: ExplosionNode[],
+              level = 0,
+            ): BomLikeLine[] => {
+              let result: BomLikeLine[] = [];
+              for (const n of nodes) {
+                result.push({
+                  itemId: n.itemId,
+                  originalItemId: n.itemId,
+                  itemCode: n.itemCode ?? null,
+                  itemName: n.itemName ?? null,
+                  qtyRequired: String(n.qtyRequired),
+                  qtyIssued: "0",
+                  uom: n.uom ?? null,
+                  level,
+                  isLeaf: n.isLeaf,
+                });
+                if (Array.isArray(n.children) && n.children.length > 0) {
+                  result = result.concat(flattenTree(n.children, level + 1));
+                }
+              }
+              return result;
+            };
+
+            const lines = flattenTree(
+              previewRes.explosionTree as ExplosionNode[],
+            );
+            setBomLines(lines);
+
+            const itemIds = lines
+              .map((l) => l.itemId)
+              .filter(Boolean) as string[];
+            if (itemIds.length) {
+              inventoryCoreApi.getBalances(itemIds).then((nextBalances) => {
+                if (bomLoadRequestRef.current !== requestId) return;
+                setBalances(nextBalances);
+              });
+            } else {
+              setBalances({});
+            }
+          });
       })
       .catch(() => {
         if (bomLoadRequestRef.current !== requestId) return;
