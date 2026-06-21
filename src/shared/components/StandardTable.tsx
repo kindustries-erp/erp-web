@@ -51,7 +51,7 @@ export function StandardTable<T>({
   actions,
   renderSubRow,
   onRowClick,
-  enableColumnVisibility,
+  enableColumnVisibility = true,
 }: StandardTableProps<T>) {
   return (
     <DataTable
