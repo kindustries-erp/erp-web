@@ -101,6 +101,7 @@ export function useProductionOrderDrawer({
   const [alternativeItems, setAlternativeItems] = useState<
     Record<string, string>
   >({});
+  const [lineNotes, setLineNotes] = useState<Record<string, string>>({});
   const [altItemSearch, setAltItemSearch] = useState("");
 
   const {
@@ -138,6 +139,16 @@ export function useProductionOrderDrawer({
       return next;
     });
   }, []);
+
+  const setLineNote = useCallback(
+    (lineOriginalItemId: string, note: string) => {
+      setLineNotes((prev) => ({
+        ...prev,
+        [lineOriginalItemId]: note,
+      }));
+    },
+    [],
+  );
 
   const loadItems = useCallback(async () => {
     try {
@@ -206,9 +217,8 @@ export function useProductionOrderDrawer({
                 originalItemId: l.componentItemId,
                 itemCode:
                   l.componentItemCode ?? matched?.originalItemCode ?? null,
-                itemName: l.componentItemCode
-                  ? `${l.componentItemCode} — ${l.componentItemName ?? ""}`
-                  : (l.componentItemName ?? matched?.originalItemName ?? null),
+                itemName:
+                  l.componentItemName ?? matched?.originalItemName ?? null,
                 qtyRequired: matched?.qtyRequired ?? l.qtyRequired,
                 qtyIssued: matched?.qtyIssued ?? "0",
                 uom: l.uom ?? matched?.uom ?? null,
@@ -275,9 +285,7 @@ export function useProductionOrderDrawer({
             itemId: l.componentItemId,
             originalItemId: l.componentItemId,
             itemCode: l.componentItemCode ?? null,
-            itemName: l.componentItemCode
-              ? `${l.componentItemCode} — ${l.componentItemName ?? ""}`
-              : (l.componentItemName ?? null),
+            itemName: l.componentItemName ?? null,
             qtyRequired: l.qtyRequired,
             qtyIssued: "0",
             uom: l.uom,
@@ -331,10 +339,14 @@ export function useProductionOrderDrawer({
             ? editing.plannedEndDate.slice(0, 10)
             : "",
         });
+        const existingNotes =
+          (editing.outputMetadata?.lineNotes as Record<string, string>) || {};
+        setLineNotes(existingNotes);
       } else {
         setForm(emptyForm());
         setBomLines([]);
         setBalances({});
+        setLineNotes({});
       }
       if (!editing) {
         setAlternativeItems({});
@@ -381,6 +393,10 @@ export function useProductionOrderDrawer({
         ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
         status,
         ...(materialOverrides.length > 0 ? { materialOverrides } : {}),
+        outputMetadata: {
+          ...(editing?.outputMetadata || {}),
+          lineNotes,
+        },
       };
 
       if (!editing) {
@@ -389,11 +405,14 @@ export function useProductionOrderDrawer({
           title: "Tạo lệnh sản xuất thành công",
           variant: "success",
         });
-      } else if (editing.status === "DRAFT") {
+      } else if (
+        ["DRAFT", "CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
+          editing.status || "",
+        )
+      ) {
         await productionCoreApi.update(editing.id, payload);
         showToast({
-          title:
-            status === "DRAFT" ? "Đã lưu lại MO nháp" : "Đã cập nhật MO nháp",
+          title: "Cập nhật lệnh sản xuất thành công",
           variant: "success",
         });
       } else {
@@ -564,6 +583,8 @@ export function useProductionOrderDrawer({
     alternativeItems,
     setAlternativeItem,
     clearAlternativeItem,
+    lineNotes,
+    setLineNote,
     altItemOptions,
     altItemSearch,
     setAltItemSearch,

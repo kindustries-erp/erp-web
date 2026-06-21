@@ -15,6 +15,7 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { cn } from "@/shared/utils";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { ProductionRunDrawer } from "./ProductionRunDrawer";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 import type { UseProductionOrderDrawerReturn } from "../hooks/useProductionOrderDrawer";
 import type { BomLikeLine } from "../hooks/useProductionOrderDrawer";
@@ -73,6 +74,8 @@ export function ProductionOrderDrawer({
     alternativeItems,
     setAlternativeItem,
     clearAlternativeItem,
+    lineNotes,
+    setLineNote,
     altItemOptions,
     setAltItemSearch,
     fetchNextAltItems,
@@ -145,8 +148,8 @@ export function ProductionOrderDrawer({
                 label: editing ? t("Lưu thay đổi") : t("Tạo Lệnh Sản Xuất"),
                 primary: true,
                 loading: saving,
-                disabled: saving || isConfirmed || isCompleted,
-                onClick: () => handleSubmit("CONFIRMED"),
+                disabled: saving,
+                onClick: () => handleSubmit(editing?.status || "CONFIRMED"),
               },
             ]),
       ];
@@ -199,111 +202,78 @@ export function ProductionOrderDrawer({
               }}
               columns={[
                 {
-                  key: "itemCode",
-                  header: t("Mã Linh Kiện"),
-                  cell: (line: BomLikeLine) => (
-                    <span className="font-medium">
-                      {line.itemCode || line.itemId || "—"}
-                    </span>
-                  ),
-                },
-                {
                   key: "itemName",
                   header: t("Tên Linh Kiện"),
-                  cell: (line: BomLikeLine) => line.itemName || "—",
-                },
-                {
-                  key: "altItemCode",
-                  header: t("Mã LK thay thế"),
-                  cell: (line: BomLikeLine) => {
-                    const originalItemId =
-                      line.originalItemId ?? line.itemId ?? "";
-                    const selectedAltItemId =
-                      alternativeItems[originalItemId] ?? "";
-                    const altOption = altItemOptions.find(
-                      (o) => o.value === selectedAltItemId,
-                    );
-                    const label =
-                      altOption?.label || line.alternativeItemName || "";
-                    const code = label.includes(" — ")
-                      ? label.split(" — ")[0]
-                      : line.alternativeItemCode || "—";
-                    return (
-                      <span className="font-medium text-blue-700">
-                        {selectedAltItemId ? code : "—"}
-                      </span>
-                    );
-                  },
+                  width: "30%",
+                  minWidth: "200px",
+                  cell: (line: BomLikeLine) => (
+                    <Tooltip content={line.itemName || ""}>
+                      <div className="truncate max-w-[200px] xl:max-w-[300px]">
+                        {line.itemName || "—"}
+                      </div>
+                    </Tooltip>
+                  ),
                 },
                 {
                   key: "altItem",
                   header: t("NVL thay thế"),
+                  width: "30%",
+                  minWidth: "200px",
                   cell: (line: BomLikeLine) => {
                     const originalItemId =
                       line.originalItemId ?? line.itemId ?? "";
                     const selectedAltItemId =
                       alternativeItems[originalItemId] ?? "";
-                    const effectiveItemId =
-                      selectedAltItemId || line.itemId || "";
-                    const baseBalance = balances[line.itemId ?? ""] || {
-                      availableQty: 0,
-                    };
-                    const effectiveBalance = balances[effectiveItemId] || {
-                      availableQty: 0,
-                    };
                     const altOption = altItemOptions.find(
                       (o) => o.value === selectedAltItemId,
                     );
 
+                    const isDisabled = !!(
+                      saving ||
+                      viewOnly ||
+                      isCompleted ||
+                      isConfirmed
+                    );
+
+                    if (isDisabled && !selectedAltItemId) {
+                      return <span className="text-muted-foreground">—</span>;
+                    }
+
+                    const displayLabel =
+                      altOption?.label ||
+                      line.alternativeItemName ||
+                      selectedAltItemId;
+
                     return (
-                      <div className="space-y-2 min-w-[250px]">
-                        <Combobox
-                          value={selectedAltItemId}
-                          onChange={(value) => {
-                            if (!value) {
-                              clearAlternativeItem(originalItemId);
-                              return;
-                            }
-                            setAlternativeItem(originalItemId, value);
-                          }}
-                          options={altItemOptions}
-                          placeholder={t("Chọn NVL thay thế")}
-                          searchPlaceholder={t("Tìm SKU / tên NVL")}
-                          onSearch={setAltItemSearch}
-                          onScrollBottom={fetchNextAltItems}
-                          loading={loadingAltItems}
-                          disabled={
-                            saving || viewOnly || isCompleted || isConfirmed
-                          }
-                        />
-                        {selectedAltItemId ? (
-                          <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                            <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 font-medium text-blue-800">
-                              {t("Đang thay thế")}:{" "}
-                              {altOption?.label ||
-                                line.alternativeItemName ||
-                                selectedAltItemId}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {t("Tồn gốc")}:{" "}
-                              {fmtQty(String(baseBalance.availableQty ?? 0))}
-                            </span>
-                            <span className="text-muted-foreground">
-                              {t("Tồn thay thế")}:{" "}
-                              {fmtQty(
-                                String(effectiveBalance.availableQty ?? 0),
-                              )}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="text-[11px] text-muted-foreground">
-                            {editing && isDraft
-                              ? t(
-                                  "Có thể chọn NVL thay thế trước khi xác nhận.",
-                                )
-                              : t("Tùy chọn cho mọi dòng BOM.")}
-                          </div>
+                      <div className="space-y-2 min-w-[200px]">
+                        {!isDisabled && (
+                          <Combobox
+                            value={selectedAltItemId}
+                            onChange={(value) => {
+                              if (!value) {
+                                clearAlternativeItem(originalItemId);
+                                return;
+                              }
+                              setAlternativeItem(originalItemId, value);
+                            }}
+                            options={altItemOptions}
+                            placeholder={t("Chọn NVL thay thế")}
+                            searchPlaceholder={t("Tìm SKU / tên NVL")}
+                            onSearch={setAltItemSearch}
+                            onScrollBottom={fetchNextAltItems}
+                            loading={loadingAltItems}
+                            disabled={isDisabled}
+                          />
                         )}
+                        {selectedAltItemId ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Tooltip content={displayLabel}>
+                              <span className="inline-block truncate max-w-[200px] xl:max-w-[300px] rounded-md bg-blue-50 text-blue-700 font-medium px-2 py-0.5 italic">
+                                {displayLabel}
+                              </span>
+                            </Tooltip>
+                          </div>
+                        ) : null}
                       </div>
                     );
                   },
@@ -312,6 +282,7 @@ export function ProductionOrderDrawer({
                   key: "required",
                   header: t("Cần Dùng"),
                   align: "right",
+                  minWidth: "100px",
                   cell: (line: BomLikeLine) => {
                     const requiredQty = Number(line.qtyRequired || 0);
                     const displayRequired = editing
@@ -328,6 +299,7 @@ export function ProductionOrderDrawer({
                   key: "available",
                   header: t("Khả Dụng"),
                   align: "right",
+                  minWidth: "100px",
                   cell: (line: BomLikeLine) => {
                     const requiredQty = Number(line.qtyRequired || 0);
                     const displayRequired = editing
@@ -356,23 +328,24 @@ export function ProductionOrderDrawer({
                   },
                 },
                 {
-                  key: "issued",
-                  header: t("Đã Xuất"),
-                  align: "right",
-                  cell: (line: BomLikeLine) => (
-                    <span className="text-muted-foreground">
-                      {fmtQty(line.qtyIssued || "0")}
-                    </span>
-                  ),
-                },
-                {
-                  key: "uom",
-                  header: t("ĐVT"),
-                  cell: (line: BomLikeLine) => (
-                    <span className="text-muted-foreground">
-                      {line.uom || "—"}
-                    </span>
-                  ),
+                  key: "note",
+                  header: t("Ghi chú"),
+                  cell: (line: BomLikeLine) => {
+                    const originalItemId =
+                      line.originalItemId ?? line.itemId ?? "";
+                    const isDisabled = !!(saving || viewOnly);
+                    return (
+                      <input
+                        value={lineNotes[originalItemId] || ""}
+                        onChange={(e) =>
+                          setLineNote(originalItemId, e.target.value)
+                        }
+                        disabled={isDisabled}
+                        className={cn(inputCls, "min-w-[150px] text-xs h-8")}
+                        placeholder={t("Nhập ghi chú")}
+                      />
+                    );
+                  },
                 },
               ]}
             />
@@ -429,7 +402,7 @@ export function ProductionOrderDrawer({
 
       <div className="border-t border-border my-2" />
 
-      <DrawerField label={t("Reference No")}>
+      <DrawerField label={t("Mã lệnh")}>
         <input
           value={form.referenceNo}
           onChange={(e) =>
@@ -441,7 +414,7 @@ export function ProductionOrderDrawer({
         />
       </DrawerField>
 
-      <DrawerField label={t("Warehouse Code")}>
+      <DrawerField label={t("Mã kho")}>
         <input
           value={form.warehouseCode}
           onChange={(e) =>
