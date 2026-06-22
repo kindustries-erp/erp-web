@@ -9,7 +9,6 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "mfg-purchase-orders",
   "mfg-vehicles",
   "erp-bom",
-  "erp-warehouse",
   "erp-production",
   "erp-sales-orders",
   "erp-goods-issues",

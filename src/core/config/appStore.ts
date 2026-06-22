@@ -30,10 +30,6 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "mfg-vehicles": { labelKey: "nav.items.mfgVehicles", group: "manufacturing" },
   "erp-bom": { labelKey: "nav.items.erpBom", group: "manufacturing" },
-  "erp-warehouse": {
-    labelKey: "nav.items.erpWarehouse",
-    group: "inventory",
-  },
   "erp-goods-issues": {
     labelKey: "nav.items.erpGoodsIssues",
     group: "inventory",
@@ -93,7 +89,6 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
   "erp-bom": [["breadcrumb.manufacturing"], ["breadcrumb.erpBom"]],
-  "erp-warehouse": [["breadcrumb.inventory"], ["breadcrumb.erpWarehouse"]],
   "erp-production": [
     ["breadcrumb.manufacturing"],
     ["breadcrumb.erpProduction"],

@@ -1,6 +1,5 @@
-import { useMemo } from "react";
-import { FileText } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
+import { useMemo, useEffect } from "react";
+
 import { DataTable } from "@/shared/components/DataTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
@@ -14,7 +13,6 @@ import type { InventoryStockRow } from "@/modules/operational/api/operationalApi
 import type { InventoryMovementsPayload } from "@/modules/inventory-core/api/inventoryCoreApi";
 
 interface OperationalInventoryPageProps {
-  config: { title: string; desc: string; cta?: string };
   loading: boolean;
   error: string | null;
   stockItems: InventoryStockRow[];
@@ -28,6 +26,7 @@ interface OperationalInventoryPageProps {
   onViewItem: (id: string) => void;
   onCloseViewItem: () => void;
   onRefetch: () => void;
+  setActions?: (node: React.ReactNode) => void;
 }
 
 const ITEM_TYPE_OPTIONS = [
@@ -41,7 +40,6 @@ const ITEM_TYPE_OPTIONS = [
  * Extracted từ OperationalListPage.tsx (dòng 1698–1841).
  */
 export function OperationalInventoryPage({
-  config,
   loading,
   error,
   stockItems,
@@ -55,6 +53,7 @@ export function OperationalInventoryPage({
   onViewItem,
   onCloseViewItem,
   onRefetch,
+  setActions,
 }: OperationalInventoryPageProps) {
   const t = useT();
   const {
@@ -101,20 +100,21 @@ export function OperationalInventoryPage({
     ],
   };
 
-  return (
-    <PageLayout
-      title={config.title}
-      desc={config.desc}
-      icon={<FileText className="h-4 w-4" />}
-      actions={
+  useEffect(() => {
+    if (setActions) {
+      setActions(
         <OperationalTableActions
           loading={loading}
           onRefresh={onRefetch}
           onFilterToggle={() => setFilterPanelOpen((v) => !v)}
           activeFilterCount={activeFilterCount}
-        />
-      }
-    >
+        />,
+      );
+    }
+  }, [setActions, loading, onRefetch, setFilterPanelOpen, activeFilterCount]);
+
+  return (
+    <>
       {error ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
           {error}
@@ -200,6 +200,6 @@ export function OperationalInventoryPage({
         itemId={viewingItemId}
         onSuccess={onRefetch}
       />
-    </PageLayout>
+    </>
   );
 }

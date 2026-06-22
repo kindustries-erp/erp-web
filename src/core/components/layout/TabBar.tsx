@@ -29,7 +29,6 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   purchasing: FileText,
   "erp-suppliers": Building2,
   inventory: FileText,
-  "erp-warehouse": ClipboardList,
   "erp-goods-issues": ClipboardList,
   "erp-inventory-items": Layers,
   "erp-inventory-masters": Layers,

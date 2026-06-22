@@ -18,7 +18,6 @@ import {
   Layers,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Car,
-  ClipboardList,
   Network,
   Factory,
   Shield,
@@ -217,16 +216,7 @@ export function Sidebar() {
                 onClick={() => navTo("inventory")}
                 contextPage="inventory"
               />
-              <NavItem
-                collapsed={c}
-                icon={
-                  <ClipboardList className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label={t("nav.items.erpWarehouse")}
-                active={currentPage === "erp-warehouse"}
-                onClick={() => navTo("erp-warehouse")}
-                contextPage="erp-warehouse"
-              />
+
               <NavItem
                 collapsed={c}
                 icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}

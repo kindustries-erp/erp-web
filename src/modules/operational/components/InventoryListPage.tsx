@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { extractApiError } from "@/shared/utils/apiError";
 import { type InventoryStockRow } from "@/modules/operational/api/operationalApi";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
@@ -9,12 +9,11 @@ import {
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 
-const config = {
-  title: "Kho (Tổng hợp tồn)",
-  desc: "Tổng hợp tồn kho toàn bộ hàng hóa: linh kiện (RAW), thành phẩm (FG), bán thành phẩm (WIP). Có thể lọc theo loại.",
-};
-
-export function InventoryListPage() {
+export function InventoryListPage({
+  setActions,
+}: {
+  setActions?: (node: React.ReactNode) => void;
+}) {
   const variant = "inventory" as const;
 
   const listStore = useOperationalListStore();
@@ -89,7 +88,7 @@ export function InventoryListPage() {
 
   return (
     <OperationalInventoryPage
-      config={config}
+      setActions={setActions}
       loading={loading}
       error={error}
       stockItems={stockItems}
@@ -102,7 +101,10 @@ export function InventoryListPage() {
       onToggleInventoryExpand={handleToggleInventoryExpand}
       onViewItem={(id) => setViewingItemId(id)}
       onCloseViewItem={() => setViewingItemId(null)}
-      onRefetch={() => void listQuery.refetch()}
+      onRefetch={useCallback(
+        () => void listQuery.refetch(),
+        [listQuery.refetch],
+      )}
     />
   );
 }

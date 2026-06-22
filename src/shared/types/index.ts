@@ -30,7 +30,6 @@ export type PageKey =
   | "mfg-purchase-orders"
   | "mfg-vehicles"
   | "erp-bom"
-  | "erp-warehouse"
   | "erp-production"
   | "erp-sales-orders"
   | "erp-goods-issues"
