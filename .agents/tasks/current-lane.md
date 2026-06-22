@@ -36,6 +36,7 @@
 ## Current checkpoint gap (2026-06-22 afternoon)
 
 Recent commits since `b13e672` now reflected in `current-lane.md`:
+
 - `22b53ee` — refactor ProductionRunDrawer layout + double-drawer fix
 - `c0648e7` — BOM drawer + table formatting
 - `b292ce3` — BOM activate/inactivate + active-BOM filter in production

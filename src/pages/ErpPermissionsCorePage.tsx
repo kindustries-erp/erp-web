@@ -263,7 +263,7 @@ export function ErpPermissionsCorePage() {
 
   return (
     <PageLayout
-      title="Phân quyền (Core)"
+      title={t("nav.items.phanquyen")}
       desc="Quản lý vai trò và phân quyền hệ thống sử dụng Core DB mới"
       icon={<Shield className="h-4 w-4" />}
       actions={

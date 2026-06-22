@@ -23,7 +23,7 @@ vi.mock("@/modules/auth/domain/authStore", () => ({
   }),
 }));
 
-vi.mock("@/core/components/layout/Sidebar", () => ({
+vi.mock("@/core/components/layout/sidebar/index", () => ({
   Sidebar: () => <div>sidebar</div>,
 }));
 
