@@ -3,12 +3,12 @@ import { PlayCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import {
-  DrawerModal,
   DrawerSection,
   DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import { Skeleton } from "@/shared/components/Skeleton";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+
 import {
   productionCoreApi,
   type ErpProductionOrder,
@@ -290,13 +290,14 @@ export function ProductionRunDrawer({
   );
 
   useEffect(() => {
+    if (!open && !order) return;
     setLocalOrder(order);
     setBatchCompleteQty("1");
     setShowBatchDialog(false);
     setVehicleBulkInput("");
     setIdentifiers(makeIdentifierRows(1));
     prevBatchQtyRef.current = "1";
-  }, [order]);
+  }, [order, open]);
 
   // Resize identifier rows when batchCompleteQty changes
   useEffect(() => {
@@ -486,612 +487,590 @@ export function ProductionRunDrawer({
 
   const isLoading = loading || (!localOrder && open);
 
-  if (isLoading) {
-    return (
-      <DrawerModal
-        open={open}
-        onClose={onClose}
-        title={t("Tiến trình sản xuất")}
-        subtitle={t("Đang tải chi tiết lệnh...")}
-        actions={[{ label: t("Đóng"), onClick: onClose }]}
+  let statusBadge: React.ReactNode = null;
+  let leftPanel: React.ReactNode = <div />;
+  let rightPanel: React.ReactNode = <div />;
+  let subtitle = t("Đang tải chi tiết lệnh...");
+
+  if (localOrder) {
+    const qtyToProduce = Number(localOrder.qtyToProduce ?? 0);
+    const qtyProduced = Number(localOrder.qtyProduced ?? 0);
+    const remaining = qtyToProduce - qtyProduced;
+    const isConfirmed = localOrder.status === "CONFIRMED";
+    const isInProgress = localOrder.status === "IN_PROGRESS";
+    const isCompleted = localOrder.status === "COMPLETED";
+    const useBatchMode = qtyToProduce > UNIT_ROW_THRESHOLD;
+    const progressPct =
+      qtyToProduce > 0 ? Math.min(1, qtyProduced / qtyToProduce) * 100 : 0;
+
+    const unitRows =
+      !useBatchMode && qtyToProduce > 0
+        ? Array.from({ length: qtyToProduce }, (_, i) => {
+            const idx = i + 1;
+            const isDone = idx <= qtyProduced;
+            const isCurrent =
+              isInProgress && !isDone && idx === Math.floor(qtyProduced) + 1;
+            return { idx, isDone, isCurrent };
+          })
+        : [];
+
+    statusBadge = (
+      <span
+        className={cn(
+          "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
+          isCompleted
+            ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+            : isInProgress
+              ? "border-blue-200 bg-blue-100 text-blue-800"
+              : isConfirmed
+                ? "border-amber-200 bg-amber-100 text-amber-800"
+                : "border-border bg-muted text-muted-foreground",
+        )}
       >
-        <div className="grid w-full gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,420px)]">
-          <div className="min-w-0 space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-72 w-full" />
-          </div>
-          <div className="min-w-0 space-y-4">
-            <Skeleton className="h-56 w-full" />
-            <Skeleton className="h-40 w-full" />
-          </div>
-        </div>
-      </DrawerModal>
+        {localOrder.status}
+      </span>
     );
-  }
 
-  if (!localOrder) return null;
-
-  const qtyToProduce = Number(localOrder.qtyToProduce ?? 0);
-  const qtyProduced = Number(localOrder.qtyProduced ?? 0);
-  const remaining = qtyToProduce - qtyProduced;
-  const isConfirmed = localOrder.status === "CONFIRMED";
-  const isInProgress = localOrder.status === "IN_PROGRESS";
-  const isCompleted = localOrder.status === "COMPLETED";
-  const useBatchMode = qtyToProduce > UNIT_ROW_THRESHOLD;
-  const progressPct =
-    qtyToProduce > 0 ? Math.min(1, qtyProduced / qtyToProduce) * 100 : 0;
-
-  const unitRows =
-    !useBatchMode && qtyToProduce > 0
-      ? Array.from({ length: qtyToProduce }, (_, i) => {
-          const idx = i + 1;
-          const isDone = idx <= qtyProduced;
-          const isCurrent =
-            isInProgress && !isDone && idx === Math.floor(qtyProduced) + 1;
-          return { idx, isDone, isCurrent };
-        })
-      : [];
-
-  // ── Status badge ────────────────────────────────────────────────────────
-  const statusBadge = (
-    <span
-      className={cn(
-        "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
-        isCompleted
-          ? "border-emerald-200 bg-emerald-100 text-emerald-800"
-          : isInProgress
-            ? "border-blue-200 bg-blue-100 text-blue-800"
-            : isConfirmed
-              ? "border-amber-200 bg-amber-100 text-amber-800"
-              : "border-border bg-muted text-muted-foreground",
-      )}
-    >
-      {localOrder.status}
-    </span>
-  );
-
-  // ── Left panel — actions ────────────────────────────────────────────────
-  const leftPanel = (
-    <div className="flex flex-col gap-4">
-      {/* Progress bar */}
-      <DrawerSection title={t("Tiến độ sản xuất")}>
-        <div className="space-y-3 pb-1">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t("Đã sản xuất")}</span>
-            <span className="font-semibold">
-              {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
-            </span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all duration-300",
-                isCompleted ? "bg-emerald-500" : "bg-blue-500",
-              )}
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
-      </DrawerSection>
-
-      {/* CONFIRMED → Start */}
-      {isConfirmed && (
-        <DrawerSection title={t("Hành động")}>
-          <button
-            type="button"
-            onClick={handleStartAll}
-            disabled={saving}
-            className={cn(
-              "flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3",
-              "text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50",
-            )}
-          >
-            <span className="flex items-center gap-2">
-              {saving ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <PlayCircle className="h-4 w-4" />
-              )}
-              {saving ? t("Đang xử lý...") : t("Bắt đầu sản xuất tất cả")}
-            </span>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </DrawerSection>
-      )}
-
-      {/* IN_PROGRESS → unit-by-unit or batch */}
-      {isInProgress && (
-        <DrawerSection title={t("Hành động")}>
-          {useBatchMode ? (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {t("Sản xuất hàng loạt")} — {t("Còn lại")}:{" "}
-                <span className="font-semibold text-foreground">
-                  {fmtQty(remaining)}
-                </span>
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setBatchCompleteQty(remaining > 0 ? String(remaining) : "1");
-                  setIdentifiers(
-                    makeIdentifierRows(remaining > 0 ? remaining : 1),
-                  );
-                  setShowBatchDialog(true);
-                }}
-                disabled={saving || remaining <= 0}
+    leftPanel = (
+      <div className="flex flex-col gap-4">
+        {/* Progress bar */}
+        <DrawerSection title={t("Tiến độ sản xuất")}>
+          <div className="space-y-3 pb-1">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{t("Đã sản xuất")}</span>
+              <span className="font-semibold">
+                {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
                 className={cn(
-                  "flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3",
-                  "text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-50",
+                  "h-full rounded-full transition-all duration-300",
+                  isCompleted ? "bg-emerald-500" : "bg-blue-500",
                 )}
-              >
-                <span className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {t("Hoàn thành tất cả / nhiều xe")}
-                </span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-
-              {trackingPolicy === "VEHICLE" && remaining > 1 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBatchCompleteQty(String(Math.floor(remaining)));
-                    setShowBatchDialog(true);
-                  }}
-                  disabled={saving}
-                  className="flex items-center justify-between rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-left hover:bg-blue-100 disabled:opacity-50"
-                >
-                  <span className="flex items-center gap-2 text-sm font-semibold text-blue-900">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t("Hoàn thành tất cả")}
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-blue-700" />
-                </button>
-              )}
-
-              {showBatchDialog && (
-                <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 space-y-3">
-                  <p className="text-sm font-semibold text-emerald-900">
-                    {t("Nhập số lượng thành phẩm hoàn thành")}
-                  </p>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">
-                      {t("Số lượng hoàn thành")}
-                    </label>
-                    <input
-                      type="number"
-                      min="0.001"
-                      step="any"
-                      value={batchCompleteQty}
-                      onChange={(e) => setBatchCompleteQty(e.target.value)}
-                      className={cn(inputCls, "w-full")}
-                      placeholder="Số lượng"
-                      disabled={saving}
-                    />
-                  </div>
-                  {trackingPolicy === "VEHICLE" && (
-                    <div className="space-y-2">
-                      <label className="text-xs text-muted-foreground">
-                        {t(
-                          "Bulk Số VIN, Số máy — mỗi dòng 1 xe; hỗ trợ dấu phẩy hoặc tab",
-                        )}
-                      </label>
-                      <textarea
-                        value={vehicleBulkInput}
-                        onChange={(e) => setVehicleBulkInput(e.target.value)}
-                        disabled={saving}
-                        rows={6}
-                        className={cn(inputCls, "w-full font-mono text-xs")}
-                        placeholder={"VIN001,ENG001\nVIN002,ENG002"}
-                      />
-                      <button
-                        type="button"
-                        onClick={applyVehicleBulkInput}
-                        disabled={saving}
-                        className="rounded-md border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                      >
-                        {t("Áp dụng bulk VIN / số máy")}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Dynamic identifier rows */}
-                  {needsIdentifiers && (
-                    <IdentifierTable
-                      policy={trackingPolicy}
-                      identifiers={identifiers}
-                      onChange={handleIdentifierChange}
-                      saving={saving}
-                      t={t}
-                    />
-                  )}
-
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleBatchComplete}
-                      disabled={
-                        saving ||
-                        !Number(batchCompleteQty) ||
-                        Number(batchCompleteQty) <= 0 ||
-                        Number(batchCompleteQty) > remaining ||
-                        (needsIdentifiers &&
-                          !identifiersAllValid(identifiers, trackingPolicy))
-                      }
-                      className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                    >
-                      {saving ? t("Đang xử lý...") : t("Xác nhận")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowBatchDialog(false)}
-                      disabled={saving}
-                      className="flex-1 rounded-md border border-emerald-300 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
-                    >
-                      {t("Huỷ")}
-                    </button>
-                  </div>
-                </div>
-              )}
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
-          ) : (
-            /* Unit-by-unit mode */
-            <div className="space-y-2">
-              {trackingPolicy === "VEHICLE" && remaining > 1 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBatchCompleteQty(String(Math.floor(remaining)));
-                    setIdentifiers(makeIdentifierRows(Math.floor(remaining)));
-                    setShowBatchDialog(true);
-                  }}
-                  disabled={saving}
-                  className="flex w-full items-center justify-between rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-left hover:bg-blue-100 disabled:opacity-50"
-                >
-                  <span className="flex items-center gap-2 text-sm font-semibold text-blue-900">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t("Hoàn thành tất cả")}
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-blue-700" />
-                </button>
-              )}
-
-              {showBatchDialog && (
-                <div className="rounded-lg border border-blue-300 bg-blue-50 p-4 space-y-3">
-                  <p className="text-sm font-semibold text-blue-900">
-                    {t("Nhập số lượng thành phẩm hoàn thành")}
-                  </p>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">
-                      {t("Số lượng hoàn thành")}
-                    </label>
-                    <input
-                      type="number"
-                      min="0.001"
-                      step="any"
-                      value={batchCompleteQty}
-                      onChange={(e) => setBatchCompleteQty(e.target.value)}
-                      className={cn(inputCls, "w-full")}
-                      placeholder="Số lượng"
-                      disabled={saving}
-                    />
-                  </div>
-                  {trackingPolicy === "VEHICLE" && (
-                    <div className="space-y-2">
-                      <label className="text-xs text-muted-foreground">
-                        {t(
-                          "Bulk Số VIN, Số máy — mỗi dòng 1 xe; hỗ trợ dấu phẩy hoặc tab",
-                        )}
-                      </label>
-                      <textarea
-                        value={vehicleBulkInput}
-                        onChange={(e) => setVehicleBulkInput(e.target.value)}
-                        disabled={saving}
-                        rows={6}
-                        className={cn(inputCls, "w-full font-mono text-xs")}
-                        placeholder={"VIN001,ENG001\nVIN002,ENG002"}
-                      />
-                      <button
-                        type="button"
-                        onClick={applyVehicleBulkInput}
-                        disabled={saving}
-                        className="rounded-md border border-blue-300 px-3 py-2 text-xs font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
-                      >
-                        {t("Áp dụng bulk VIN / số máy")}
-                      </button>
-                    </div>
-                  )}
-
-                  {needsIdentifiers && (
-                    <IdentifierTable
-                      policy={trackingPolicy}
-                      identifiers={identifiers}
-                      onChange={handleIdentifierChange}
-                      saving={saving}
-                      t={t}
-                    />
-                  )}
-
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={handleBatchComplete}
-                      disabled={
-                        saving ||
-                        !Number(batchCompleteQty) ||
-                        Number(batchCompleteQty) <= 0 ||
-                        Number(batchCompleteQty) > remaining ||
-                        (needsIdentifiers &&
-                          !identifiersAllValid(identifiers, trackingPolicy))
-                      }
-                      className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                      {saving ? t("Đang xử lý...") : t("Xác nhận")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowBatchDialog(false)}
-                      disabled={saving}
-                      className="flex-1 rounded-md border border-blue-300 px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
-                    >
-                      {t("Huỷ")}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <p className="text-xs text-muted-foreground">
-                {t("Hoàn thành từng đơn vị")} — {t("còn lại")}{" "}
-                <span className="font-semibold text-foreground">
-                  {fmtQty(remaining)}
-                </span>
-              </p>
-
-              {/* Identifier input for current unit (unit-by-unit mode) */}
-              {needsIdentifiers && (
-                <IdentifierTable
-                  policy={trackingPolicy}
-                  identifiers={identifiers.slice(0, 1)}
-                  onChange={handleIdentifierChange}
-                  saving={saving}
-                  t={t}
-                />
-              )}
-
-              <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
-                {unitRows.map(({ idx, isDone, isCurrent }) => (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "flex items-center justify-between px-4 py-2.5 text-sm",
-                      isDone ? "bg-emerald-50" : "bg-background",
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      {isDone ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      ) : isCurrent ? (
-                        <span className="h-4 w-4 rounded-full border-2 border-blue-400 bg-blue-100" />
-                      ) : (
-                        <span className="h-4 w-4 rounded-full border-2 border-border bg-muted" />
-                      )}
-                      <span
-                        className={cn(
-                          "font-medium",
-                          isDone ? "text-emerald-700" : "text-muted-foreground",
-                        )}
-                      >
-                        {t("Đơn vị")} #{idx}
-                      </span>
-                    </div>
-                    {isDone && (
-                      <span className="text-[11px] font-semibold text-emerald-600">
-                        {t("Đã sản xuất")}
-                      </span>
-                    )}
-                    {isCurrent && !saving && (
-                      <button
-                        type="button"
-                        onClick={handleCompleteOne}
-                        disabled={
-                          needsIdentifiers &&
-                          !identifiersAllValid(
-                            identifiers.slice(0, 1),
-                            trackingPolicy,
-                          )
-                        }
-                        className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-                      >
-                        {t("Hoàn thành 1 đơn vị")}
-                      </button>
-                    )}
-                    {isCurrent && saving && (
-                      <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </DrawerSection>
-      )}
-
-      {/* COMPLETED */}
-      {isCompleted && (
-        <DrawerSection title={t("Kết quả sản xuất")}>
-          <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 mb-3">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            <span className="text-sm font-semibold text-emerald-800">
-              {t("Lệnh sản xuất đã hoàn thành")} — {fmtQty(qtyProduced)}{" "}
-              {t("đơn vị")}
-            </span>
           </div>
-
-          {/* Vehicle list */}
-          {(localOrder.producedVehicles ?? []).length > 0 && (
-            <div className="mt-2">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">
-                {t("Danh sách xe đã sản xuất")}
-              </p>
-              <div className="overflow-x-auto rounded-md border border-border">
-                <table className="min-w-full text-xs">
-                  <thead className="bg-muted text-muted-foreground">
-                    <tr>
-                      <th className="px-2 py-1 text-left font-semibold">#</th>
-                      <th className="px-2 py-1 text-left font-semibold">
-                        Số VIN
-                      </th>
-                      <th className="px-2 py-1 text-left font-semibold">
-                        {t("Số máy")}
-                      </th>
-                      <th className="px-2 py-1 text-left font-semibold">
-                        {t("Ghi chú")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-white">
-                    {(localOrder.producedVehicles ?? []).map((v, i) => (
-                      <tr key={v.id}>
-                        <td className="px-2 py-1 text-muted-foreground">
-                          {i + 1}
-                        </td>
-                        <td className="px-2 py-1 font-mono font-semibold">
-                          {v.vin || "—"}
-                        </td>
-                        <td className="px-2 py-1">{v.engineNo || "—"}</td>
-                        <td className="px-2 py-1 text-muted-foreground">
-                          {v.notes || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* Serial / Lot list */}
-          {(localOrder.producedSerials ?? []).length > 0 && (
-            <div className="mt-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">
-                {trackingPolicy === "LOT"
-                  ? t("Danh sách lô đã sản xuất")
-                  : t("Danh sách serial đã sản xuất")}
-              </p>
-              <div className="overflow-x-auto rounded-md border border-border">
-                <table className="min-w-full text-xs">
-                  <thead className="bg-muted text-muted-foreground">
-                    <tr>
-                      <th className="px-2 py-1 text-left font-semibold">#</th>
-                      <th className="px-2 py-1 text-left font-semibold">
-                        {trackingPolicy === "LOT" ? t("Số lô") : t("Serial")}
-                      </th>
-                      <th className="px-2 py-1 text-left font-semibold">
-                        {t("Ghi chú")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-white">
-                    {(localOrder.producedSerials ?? []).map((s, i) => (
-                      <tr key={s.id}>
-                        <td className="px-2 py-1 text-muted-foreground">
-                          {i + 1}
-                        </td>
-                        <td className="px-2 py-1 font-mono font-semibold">
-                          {trackingPolicy === "LOT"
-                            ? s.lotNo || "—"
-                            : s.serialNo || "—"}
-                        </td>
-                        <td className="px-2 py-1 text-muted-foreground">
-                          {s.notes || "—"}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* No identifiers recorded */}
-          {(localOrder.producedVehicles ?? []).length === 0 &&
-            (localOrder.producedSerials ?? []).length === 0 &&
-            trackingPolicy !== "NONE" && (
-              <p className="text-xs text-muted-foreground mt-2">
-                {t("Chưa có định danh sản phẩm được ghi nhận.")}
-              </p>
-            )}
         </DrawerSection>
-      )}
-    </div>
-  );
 
-  // ── Right panel — general info ──────────────────────────────────────────
-  const rightPanel = (
-    <>
-      <DrawerRow label={t("Mã lệnh")} value={localOrder.referenceNo || "—"} />
-      <DrawerRow
-        label={t("Thành phẩm")}
-        value={localOrder.finishedGoodItemName || "—"}
-      />
-      {needsIdentifiers && (
+        {/* CONFIRMED → Start */}
+        {isConfirmed && (
+          <DrawerSection title={t("Hành động")}>
+            <button
+              type="button"
+              onClick={handleStartAll}
+              disabled={saving}
+              className={cn(
+                "flex w-full items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-3",
+                "text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-50",
+              )}
+            >
+              <span className="flex items-center gap-2">
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <PlayCircle className="h-4 w-4" />
+                )}
+                {saving ? t("Đang xử lý...") : t("Bắt đầu sản xuất tất cả")}
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </DrawerSection>
+        )}
+
+        {/* IN_PROGRESS → unit-by-unit or batch */}
+        {isInProgress && (
+          <DrawerSection title={t("Hành động")}>
+            {useBatchMode ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {t("Sản xuất hàng loạt")} — {t("Còn lại")}:{" "}
+                  <span className="font-semibold text-foreground">
+                    {fmtQty(remaining)}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBatchCompleteQty(
+                      remaining > 0 ? String(remaining) : "1",
+                    );
+                    setIdentifiers(
+                      makeIdentifierRows(remaining > 0 ? remaining : 1),
+                    );
+                    setShowBatchDialog(true);
+                  }}
+                  disabled={saving || remaining <= 0}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3",
+                    "text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100 disabled:opacity-50",
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {t("Hoàn thành tất cả / nhiều xe")}
+                  </span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+
+                {trackingPolicy === "VEHICLE" && remaining > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBatchCompleteQty(String(Math.floor(remaining)));
+                      setShowBatchDialog(true);
+                    }}
+                    disabled={saving}
+                    className="flex items-center justify-between rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-left hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-blue-900">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t("Hoàn thành tất cả")}
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-blue-700" />
+                  </button>
+                )}
+
+                {showBatchDialog && (
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 space-y-3">
+                    <p className="text-sm font-semibold text-emerald-900">
+                      {t("Nhập số lượng thành phẩm hoàn thành")}
+                    </p>
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">
+                        {t("Số lượng hoàn thành")}
+                      </label>
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="any"
+                        value={batchCompleteQty}
+                        onChange={(e) => setBatchCompleteQty(e.target.value)}
+                        className={cn(inputCls, "w-full")}
+                        placeholder="Số lượng"
+                        disabled={saving}
+                      />
+                    </div>
+                    {trackingPolicy === "VEHICLE" && (
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground">
+                          {t(
+                            "Bulk Số VIN, Số máy — mỗi dòng 1 xe; hỗ trợ dấu phẩy hoặc tab",
+                          )}
+                        </label>
+                        <textarea
+                          value={vehicleBulkInput}
+                          onChange={(e) => setVehicleBulkInput(e.target.value)}
+                          disabled={saving}
+                          rows={6}
+                          className={cn(inputCls, "w-full font-mono text-xs")}
+                          placeholder={"VIN001,ENG001\nVIN002,ENG002"}
+                        />
+                        <button
+                          type="button"
+                          onClick={applyVehicleBulkInput}
+                          disabled={saving}
+                          className="rounded-md border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                        >
+                          {t("Áp dụng bulk VIN / số máy")}
+                        </button>
+                      </div>
+                    )}
+
+                    {needsIdentifiers && (
+                      <IdentifierTable
+                        policy={trackingPolicy}
+                        identifiers={identifiers}
+                        onChange={handleIdentifierChange}
+                        saving={saving}
+                        t={t}
+                      />
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleBatchComplete}
+                        disabled={
+                          saving ||
+                          !Number(batchCompleteQty) ||
+                          Number(batchCompleteQty) <= 0 ||
+                          Number(batchCompleteQty) > remaining ||
+                          (needsIdentifiers &&
+                            !identifiersAllValid(identifiers, trackingPolicy))
+                        }
+                        className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                      >
+                        {saving ? t("Đang xử lý...") : t("Xác nhận")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowBatchDialog(false)}
+                        disabled={saving}
+                        className="flex-1 rounded-md border border-emerald-300 px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                      >
+                        {t("Huỷ")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Unit-by-unit mode */
+              <div className="space-y-2">
+                {trackingPolicy === "VEHICLE" && remaining > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBatchCompleteQty(String(Math.floor(remaining)));
+                      setIdentifiers(makeIdentifierRows(Math.floor(remaining)));
+                      setShowBatchDialog(true);
+                    }}
+                    disabled={saving}
+                    className="flex w-full items-center justify-between rounded-lg border border-blue-300 bg-blue-50 px-4 py-3 text-left hover:bg-blue-100 disabled:opacity-50"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-blue-900">
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t("Hoàn thành tất cả")}
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-blue-700" />
+                  </button>
+                )}
+
+                {showBatchDialog && (
+                  <div className="rounded-lg border border-blue-300 bg-blue-50 p-4 space-y-3">
+                    <p className="text-sm font-semibold text-blue-900">
+                      {t("Nhập số lượng thành phẩm hoàn thành")}
+                    </p>
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">
+                        {t("Số lượng hoàn thành")}
+                      </label>
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="any"
+                        value={batchCompleteQty}
+                        onChange={(e) => setBatchCompleteQty(e.target.value)}
+                        className={cn(inputCls, "w-full")}
+                        placeholder="Số lượng"
+                        disabled={saving}
+                      />
+                    </div>
+                    {trackingPolicy === "VEHICLE" && (
+                      <div className="space-y-2">
+                        <label className="text-xs text-muted-foreground">
+                          {t(
+                            "Bulk Số VIN, Số máy — mỗi dòng 1 xe; hỗ trợ dấu phẩy hoặc tab",
+                          )}
+                        </label>
+                        <textarea
+                          value={vehicleBulkInput}
+                          onChange={(e) => setVehicleBulkInput(e.target.value)}
+                          disabled={saving}
+                          rows={6}
+                          className={cn(inputCls, "w-full font-mono text-xs")}
+                          placeholder={"VIN001,ENG001\nVIN002,ENG002"}
+                        />
+                        <button
+                          type="button"
+                          onClick={applyVehicleBulkInput}
+                          disabled={saving}
+                          className="rounded-md border border-blue-300 px-3 py-2 text-xs font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
+                        >
+                          {t("Áp dụng bulk VIN / số máy")}
+                        </button>
+                      </div>
+                    )}
+
+                    {needsIdentifiers && (
+                      <IdentifierTable
+                        policy={trackingPolicy}
+                        identifiers={identifiers}
+                        onChange={handleIdentifierChange}
+                        saving={saving}
+                        t={t}
+                      />
+                    )}
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleBatchComplete}
+                        disabled={
+                          saving ||
+                          !Number(batchCompleteQty) ||
+                          Number(batchCompleteQty) <= 0 ||
+                          Number(batchCompleteQty) > remaining ||
+                          (needsIdentifiers &&
+                            !identifiersAllValid(identifiers, trackingPolicy))
+                        }
+                        className="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {saving ? t("Đang xử lý...") : t("Xác nhận")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowBatchDialog(false)}
+                        disabled={saving}
+                        className="flex-1 rounded-md border border-blue-300 px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
+                      >
+                        {t("Huỷ")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground">
+                  {t("Hoàn thành từng đơn vị")} — {t("còn lại")}{" "}
+                  <span className="font-semibold text-foreground">
+                    {fmtQty(remaining)}
+                  </span>
+                </p>
+
+                {/* Identifier input for current unit (unit-by-unit mode) */}
+                {needsIdentifiers && (
+                  <IdentifierTable
+                    policy={trackingPolicy}
+                    identifiers={identifiers.slice(0, 1)}
+                    onChange={handleIdentifierChange}
+                    saving={saving}
+                    t={t}
+                  />
+                )}
+
+                <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+                  {unitRows.map(({ idx, isDone, isCurrent }) => (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "flex items-center justify-between px-4 py-2.5 text-sm",
+                        isDone ? "bg-emerald-50" : "bg-background",
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        {isDone ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        ) : isCurrent ? (
+                          <span className="h-4 w-4 rounded-full border-2 border-blue-400 bg-blue-100" />
+                        ) : (
+                          <span className="h-4 w-4 rounded-full border-2 border-border bg-muted" />
+                        )}
+                        <span
+                          className={cn(
+                            "font-medium",
+                            isDone
+                              ? "text-emerald-700"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {t("Đơn vị")} #{idx}
+                        </span>
+                      </div>
+                      {isDone && (
+                        <span className="text-[11px] font-semibold text-emerald-600">
+                          {t("Đã sản xuất")}
+                        </span>
+                      )}
+                      {isCurrent && !saving && (
+                        <button
+                          type="button"
+                          onClick={handleCompleteOne}
+                          disabled={
+                            needsIdentifiers &&
+                            !identifiersAllValid(
+                              identifiers.slice(0, 1),
+                              trackingPolicy,
+                            )
+                          }
+                          className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          {t("Hoàn thành 1 đơn vị")}
+                        </button>
+                      )}
+                      {isCurrent && saving && (
+                        <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </DrawerSection>
+        )}
+
+        {/* COMPLETED */}
+        {isCompleted && (
+          <DrawerSection title={t("Kết quả sản xuất")}>
+            <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 mb-3">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <span className="text-sm font-semibold text-emerald-800">
+                {t("Lệnh sản xuất đã hoàn thành")} — {fmtQty(qtyProduced)}{" "}
+                {t("đơn vị")}
+              </span>
+            </div>
+
+            {/* Vehicle list */}
+            {(localOrder.producedVehicles ?? []).length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                  {t("Danh sách xe đã sản xuất")}
+                </p>
+                <div className="overflow-x-auto rounded-md border border-border">
+                  <table className="min-w-full text-xs">
+                    <thead className="bg-muted text-muted-foreground">
+                      <tr>
+                        <th className="px-2 py-1 text-left font-semibold">#</th>
+                        <th className="px-2 py-1 text-left font-semibold">
+                          Số VIN
+                        </th>
+                        <th className="px-2 py-1 text-left font-semibold">
+                          {t("Số máy")}
+                        </th>
+                        <th className="px-2 py-1 text-left font-semibold">
+                          {t("Ghi chú")}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-white">
+                      {(localOrder.producedVehicles ?? []).map((v, i) => (
+                        <tr key={v.id}>
+                          <td className="px-2 py-1 text-muted-foreground">
+                            {i + 1}
+                          </td>
+                          <td className="px-2 py-1 font-mono font-semibold">
+                            {v.vin || "—"}
+                          </td>
+                          <td className="px-2 py-1">{v.engineNo || "—"}</td>
+                          <td className="px-2 py-1 text-muted-foreground">
+                            {v.notes || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Serial / Lot list */}
+            {(localOrder.producedSerials ?? []).length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                  {trackingPolicy === "LOT"
+                    ? t("Danh sách lô đã sản xuất")
+                    : t("Danh sách serial đã sản xuất")}
+                </p>
+                <div className="overflow-x-auto rounded-md border border-border">
+                  <table className="min-w-full text-xs">
+                    <thead className="bg-muted text-muted-foreground">
+                      <tr>
+                        <th className="px-2 py-1 text-left font-semibold">#</th>
+                        <th className="px-2 py-1 text-left font-semibold">
+                          {trackingPolicy === "LOT" ? t("Số lô") : t("Serial")}
+                        </th>
+                        <th className="px-2 py-1 text-left font-semibold">
+                          {t("Ghi chú")}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-white">
+                      {(localOrder.producedSerials ?? []).map((s, i) => (
+                        <tr key={s.id}>
+                          <td className="px-2 py-1 text-muted-foreground">
+                            {i + 1}
+                          </td>
+                          <td className="px-2 py-1 font-mono font-semibold">
+                            {trackingPolicy === "LOT"
+                              ? s.lotNo || "—"
+                              : s.serialNo || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-muted-foreground">
+                            {s.notes || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* No identifiers recorded */}
+            {(localOrder.producedVehicles ?? []).length === 0 &&
+              (localOrder.producedSerials ?? []).length === 0 &&
+              trackingPolicy !== "NONE" && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {t("Chưa có định danh sản phẩm được ghi nhận.")}
+                </p>
+              )}
+          </DrawerSection>
+        )}
+      </div>
+    );
+
+    // ── Right panel — general info ──────────────────────────────────────────
+    rightPanel = (
+      <>
+        <DrawerRow label={t("Mã lệnh")} value={localOrder.referenceNo || "—"} />
         <DrawerRow
-          label={t("Truy xuất")}
+          label={t("Thành phẩm")}
+          value={localOrder.finishedGoodItemName || "—"}
+        />
+        {needsIdentifiers && (
+          <DrawerRow
+            label={t("Truy xuất")}
+            value={
+              <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800">
+                {trackingPolicy}
+              </span>
+            }
+          />
+        )}
+        <DrawerRow
+          label={t("Kho sản xuất")}
+          value={localOrder.warehouseCode || "—"}
+        />
+        <DrawerRow
+          label={t("Ngày bắt đầu (kế hoạch)")}
+          value={localOrder.plannedStartDate?.slice(0, 10) || "—"}
+        />
+        <DrawerRow
+          label={t("Ngày hoàn thành (kế hoạch)")}
+          value={localOrder.plannedEndDate?.slice(0, 10) || "—"}
+        />
+        <DrawerRow
+          label={t("Tiến độ")}
           value={
-            <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800">
-              {trackingPolicy}
+            <span className="font-bold text-emerald-700">
+              {fmtQty(qtyProduced)}{" "}
+              <span className="font-normal text-muted-foreground">
+                / {fmtQty(qtyToProduce)}
+              </span>
             </span>
           }
         />
-      )}
-      <DrawerRow
-        label={t("Kho sản xuất")}
-        value={localOrder.warehouseCode || "—"}
-      />
-      <DrawerRow
-        label={t("Ngày bắt đầu (kế hoạch)")}
-        value={localOrder.plannedStartDate?.slice(0, 10) || "—"}
-      />
-      <DrawerRow
-        label={t("Ngày hoàn thành (kế hoạch)")}
-        value={localOrder.plannedEndDate?.slice(0, 10) || "—"}
-      />
-      <DrawerRow
-        label={t("Tiến độ")}
-        value={
-          <span className="font-bold text-emerald-700">
-            {fmtQty(qtyProduced)}{" "}
-            <span className="font-normal text-muted-foreground">
-              / {fmtQty(qtyToProduce)}
-            </span>
-          </span>
-        }
-      />
-    </>
-  );
+      </>
+    );
+
+    subtitle = `${localOrder.referenceNo || localOrder.id.slice(0, 8)} · ${localOrder.finishedGoodItemName || "—"}`;
+  }
 
   return (
-    <DrawerModal
+    <StandardFormDrawer
       open={open}
+      mode="view"
       onClose={onClose}
       title={t("Tiến trình sản xuất")}
       titleExtra={statusBadge}
-      subtitle={`${localOrder.referenceNo || localOrder.id.slice(0, 8)} · ${localOrder.finishedGoodItemName || "—"}`}
+      subtitle={subtitle}
       actions={[{ label: t("Đóng"), onClick: onClose, variant: "outline" }]}
-      panelClassName="w-full md:w-[720px] lg:w-[820px]"
-    >
-      <div className="flex flex-col xl:flex-row gap-6 items-start w-full h-full">
-        {/* Main actions */}
-        <div className="flex-1 min-w-0 w-full">{leftPanel}</div>
-
-        {/* Info sidebar */}
-        <div className="shrink-0 w-full xl:w-[260px] xl:sticky xl:top-0">
-          <DrawerSection title={t("Thông tin chung")}>
-            {rightPanel}
-          </DrawerSection>
-        </div>
-      </div>
-    </DrawerModal>
+      loading={isLoading}
+      leftPanel={leftPanel}
+      rightPanel={rightPanel}
+      rightPanelTitle={t("Thông tin chung")}
+      rightPanelDefaultCollapsed={false}
+    />
   );
 }
