@@ -64,12 +64,14 @@ export function Combobox({
 
   useEffect(() => {
     if (open) {
-      setQuery("");
       // Focus after animation frame
       const id = requestAnimationFrame(() => inputRef.current?.focus());
       return () => cancelAnimationFrame(id);
+    } else {
+      setQuery("");
+      if (onSearch) onSearch("");
     }
-  }, [open]);
+  }, [open, onSearch]);
 
   useEffect(() => {
     if (onSearch) {
