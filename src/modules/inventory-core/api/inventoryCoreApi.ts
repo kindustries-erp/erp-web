@@ -104,6 +104,7 @@ function p(params: ListParams = {}) {
   return {
     page: params.page ?? 1,
     pageSize: params.pageSize ?? 20,
+    ...(params.sort?.length ? { sort: params.sort.join(",") } : {}),
     ...(params.search ? { search: params.search } : {}),
     ...(params.itemType ? { itemType: params.itemType } : {}),
     ...(params.status ? { status: params.status } : {}),

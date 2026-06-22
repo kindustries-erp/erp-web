@@ -113,6 +113,7 @@ export function ErpInventoryItemsTab({
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [sortArray, setSortArray] = useState<string[]>(["-createdAt"]);
   const drawerStore = useDrawerStore();
   const isThisDrawerOpen =
     drawerStore.isOpen && drawerStore.type === "inventoryItem";
@@ -155,6 +156,7 @@ export function ErpInventoryItemsTab({
     () => ({
       page,
       pageSize,
+      sort: sortArray,
       search: filter.state.search.trim() || undefined,
       status: filter.state.status || undefined,
       itemType: filter.state.custom.itemType || undefined,
@@ -165,6 +167,7 @@ export function ErpInventoryItemsTab({
       filter.state.status,
       page,
       pageSize,
+      sortArray,
     ],
   );
 
@@ -281,6 +284,14 @@ export function ErpInventoryItemsTab({
     setDeleteTarget(item);
   }
 
+  function handleSort(colId: string) {
+    setSortArray((prev) => {
+      if (prev?.[0] === colId) return [`-${colId}`];
+      if (prev?.[0] === `-${colId}`) return [];
+      return [colId];
+    });
+  }
+
   async function confirmDelete() {
     if (!deleteTarget) return;
     try {
@@ -307,6 +318,8 @@ export function ErpInventoryItemsTab({
       {
         key: "sku",
         header: t("inventoryMasters.columns.sku"),
+        sortable: true,
+        sortKey: "sku",
         cell: (item) => (
           <span className="font-medium font-mono">{item.sku}</span>
         ),
@@ -315,18 +328,24 @@ export function ErpInventoryItemsTab({
       {
         key: "itemName",
         header: t("inventoryMasters.columns.itemName"),
+        sortable: true,
+        sortKey: "itemName",
         cell: (item) => item.itemName,
         skeletonClassName: "w-44",
       },
       {
         key: "uom",
         header: t("inventoryMasters.columns.uom"),
+        sortable: true,
+        sortKey: "uom",
         cell: (item) => item.uom || "—",
         skeletonClassName: "w-10",
       },
       {
         key: "itemType",
         header: t("inventoryMasters.columns.itemType"),
+        sortable: true,
+        sortKey: "itemType",
         cell: (item) => item.itemType || "—",
         skeletonClassName: "w-28",
       },
@@ -346,15 +365,19 @@ export function ErpInventoryItemsTab({
       {
         key: "status",
         header: t("inventoryMasters.columns.status"),
+        sortable: true,
+        sortKey: "status",
         cell: (item) => (
           <span
             className={
               item.status === "ACTIVE"
                 ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
+                : "inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600 ring-1 ring-gray-200"
             }
           >
-            {item.status || "—"}
+            {item.status === "ACTIVE"
+              ? t("inventoryMasters.status.active")
+              : t("inventoryMasters.status.inactive")}
           </span>
         ),
         skeletonClassName: "w-16",
@@ -411,7 +434,7 @@ export function ErpInventoryItemsTab({
       {!setActions && (
         <div className="flex items-center justify-end mb-3">{actionsNode}</div>
       )}
-      <div className="flex items-start gap-4 h-full">
+      <div className="flex items-start h-full">
         <div className="flex-1 min-w-0 space-y-4">
           <StandardTable<ErpInventoryItem>
             items={items}
@@ -447,6 +470,13 @@ export function ErpInventoryItemsTab({
             onPageSize={(value) => {
               setPage(1);
               setPageSize(value);
+            }}
+            sortArray={sortArray}
+            onSort={handleSort}
+            onRowClick={(item) => {
+              setEditing(item);
+              setForm(buildForm(item));
+              drawerStore.openDrawer("inventoryItem", "view");
             }}
           />
         </div>

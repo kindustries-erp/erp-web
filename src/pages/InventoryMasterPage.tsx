@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
-import { Boxes, Trash2 } from "lucide-react";
+import { Boxes, Trash2, Eye } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -90,6 +90,9 @@ export function InventoryMasterPage() {
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [activeTab, setActiveTab] = useState<MasterKind>("items");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sortArray, setSortArray] = useState<string[]>(["-createdAt"]);
 
   const STATUS_OPTIONS = useMemo(
     () => [
@@ -156,6 +159,9 @@ export function InventoryMasterPage() {
   const uomParams = useMemo(
     () => ({
       kind: "uoms" as const,
+      page,
+      pageSize,
+      sort: sortArray,
       search: filterUom.state.search.trim() || undefined,
       isActive:
         filterUom.state.status === "true"
@@ -164,12 +170,15 @@ export function InventoryMasterPage() {
             ? false
             : undefined,
     }),
-    [filterUom.state.search, filterUom.state.status],
+    [filterUom.state.search, filterUom.state.status, page, pageSize, sortArray],
   );
 
   const itemTypeParams = useMemo(
     () => ({
       kind: "item-types" as const,
+      page,
+      pageSize,
+      sort: sortArray,
       search: filterItemType.state.search.trim() || undefined,
       isActive:
         filterItemType.state.status === "true"
@@ -178,13 +187,22 @@ export function InventoryMasterPage() {
             ? false
             : undefined,
     }),
-    [filterItemType.state.search, filterItemType.state.status],
+    [
+      filterItemType.state.search,
+      filterItemType.state.status,
+      page,
+      pageSize,
+      sortArray,
+    ],
   );
 
   const uomsQuery = useInventoryMasterListQuery(uomParams);
   const trackingCategoryParams = useMemo(
     () => ({
       kind: "tracking-categories" as const,
+      page,
+      pageSize,
+      sort: sortArray,
       search: filterItemType.state.search.trim() || undefined,
       isActive:
         filterItemType.state.status === "true"
@@ -193,7 +211,13 @@ export function InventoryMasterPage() {
             ? false
             : undefined,
     }),
-    [filterItemType.state.search, filterItemType.state.status],
+    [
+      filterItemType.state.search,
+      filterItemType.state.status,
+      page,
+      pageSize,
+      sortArray,
+    ],
   );
 
   const itemTypesQuery = useInventoryMasterListQuery(itemTypeParams);
@@ -221,6 +245,14 @@ export function InventoryMasterPage() {
     setForm(emptyForm());
     setSaveError(null);
     setViewOnly(false);
+  }
+
+  function handleSort(colId: string) {
+    setSortArray((prev) => {
+      if (prev?.[0] === colId) return [`-${colId}`];
+      if (prev?.[0] === `-${colId}`) return [];
+      return [colId];
+    });
   }
 
   function openCreate(kind: MasterKind) {
@@ -318,6 +350,8 @@ export function InventoryMasterPage() {
       {
         key: "code",
         header: t("inventoryMasters.columns.code"),
+        sortable: true,
+        sortKey: "code",
         cell: (item) => (
           <span className="font-medium font-mono">{item.code}</span>
         ),
@@ -325,16 +359,22 @@ export function InventoryMasterPage() {
       {
         key: "name",
         header: t("inventoryMasters.columns.name"),
+        sortable: true,
+        sortKey: "name",
         cell: (item) => item.name,
       },
       {
         key: "description",
         header: t("inventoryMasters.columns.description"),
+        sortable: true,
+        sortKey: "description",
         cell: (item) => item.description || "—",
       },
       {
         key: "isActive",
         header: t("inventoryMasters.columns.status"),
+        sortable: true,
+        sortKey: "isActive",
         cell: (item) => statusBadge(item.isActive, t),
       },
     ],
@@ -370,7 +410,10 @@ export function InventoryMasterPage() {
       icon={<Boxes className="h-5 w-5" />}
       tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
       activeTab={activeTab}
-      onTabChange={(value) => setActiveTab(value as MasterKind)}
+      onTabChange={(value) => {
+        setActiveTab(value as MasterKind);
+        setPage(1);
+      }}
       actions={
         activeTab === "items" ? (
           itemsActions
@@ -409,12 +452,29 @@ export function InventoryMasterPage() {
                   onRowClick={(row) => openDetail(activeTab, row)}
                   actions={(row) => [
                     {
+                      label:
+                        t("inventoryMasters.table.actionDetail") || "Chi tiết",
+                      icon: <Eye className="h-3.5 w-3.5" />,
+                      onClick: () => openDetail(activeTab, row),
+                    },
+                    {
                       label: t("inventoryMasters.table.actionDelete"),
                       icon: <Trash2 className="h-3.5 w-3.5" />,
                       variant: "danger",
                       onClick: () => handleDelete(activeTab, row),
                     },
                   ]}
+                  page={page}
+                  pageSize={pageSize}
+                  total={currentQuery.data?.total ?? 0}
+                  totalPages={currentQuery.data?.totalPages ?? 0}
+                  onPage={setPage}
+                  onPageSize={(value) => {
+                    setPage(1);
+                    setPageSize(value);
+                  }}
+                  sortArray={sortArray}
+                  onSort={handleSort}
                 />
               </section>
             </div>
