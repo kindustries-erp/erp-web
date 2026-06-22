@@ -26,7 +26,7 @@ export function InventoryTimelineBlock({
 
   if (isLoading) {
     return (
-      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-6 sm:p-8 flex items-center justify-center text-sm text-muted-foreground my-4 mr-2 -ml-4 sm:mr-4 sm:-ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-6 sm:p-8 flex items-center justify-center text-sm text-muted-foreground my-2 shadow-sm border border-border">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         {t("Đang tải lịch sử xuất nhập kho...")}
       </div>
@@ -35,7 +35,7 @@ export function InventoryTimelineBlock({
 
   if (error && !data) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 sm:p-6 flex items-center justify-center text-sm text-red-700 my-4 mr-2 -ml-4 sm:mr-4 sm:-ml-6 md:mr-8 md:-ml-2 shadow-md">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 sm:p-6 flex items-center justify-center text-sm text-red-700 my-2 shadow-sm">
         <AlertCircle className="mr-2 h-5 w-5 shrink-0" />
         {error}
       </div>
@@ -45,7 +45,7 @@ export function InventoryTimelineBlock({
   if (!data) return null;
 
   return (
-    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-3 sm:p-4 md:p-6 overflow-x-auto my-4 mr-2 -ml-4 sm:mr-4 sm:-ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-3 sm:p-4 md:p-6 overflow-x-auto my-2 shadow-sm border border-border">
       <div className="min-w-[560px]">
         <div className="mb-3 sm:mb-4 font-semibold text-sm sm:text-base text-foreground">
           {t("Lịch sử xuất nhập kho")}

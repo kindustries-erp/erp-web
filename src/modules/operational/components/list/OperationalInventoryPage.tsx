@@ -123,6 +123,8 @@ export function OperationalInventoryPage({
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <DataTable
+            tableId="inventory-stock-table"
+            enableColumnVisibility={true}
             items={stockItems}
             columns={stockColumns}
             getRowKey={(row) =>
