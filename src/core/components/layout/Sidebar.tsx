@@ -3,6 +3,8 @@ import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
 import { ChangePasswordModal } from "@/modules/auth/components/ChangePasswordModal";
+import { CompanyProfileDrawer } from "../CompanyProfileDrawer";
+import { useCompanyProfile } from "../../api/companyProfileApi";
 import type { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -42,6 +44,9 @@ export function Sidebar() {
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [companyProfileOpen, setCompanyProfileOpen] = useState(false);
+
+  const { data: companyProfile } = useCompanyProfile();
 
   const t = useT();
   const displayName =
@@ -97,21 +102,30 @@ export function Sidebar() {
         >
           {/* Header */}
           <div className="sidebar-header h-12 px-[10px] border-b border-border flex items-center gap-2 flex-shrink-0 transition-all duration-[220ms]">
-            <div className="sidebar-logo-wrap flex items-center gap-2 overflow-hidden flex-1 min-w-0 transition-all duration-[220ms]">
-              <div className="w-8 h-8 min-w-[32px] bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-[18px] h-[18px] fill-primary-fg"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />
-                </svg>
+            <div
+              className="sidebar-logo-wrap flex items-center gap-2 overflow-hidden flex-1 min-w-0 transition-all duration-[220ms] cursor-pointer hover:opacity-80"
+              onClick={() => setCompanyProfileOpen(true)}
+              title={t("Hồ sơ công ty")}
+            >
+              <div className="w-8 h-8 min-w-[32px] bg-primary rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {companyProfile?.logo ? (
+                  <img
+                    src={companyProfile.logo}
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <svg
+                    className="w-[18px] h-[18px] fill-primary-fg"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />
+                  </svg>
+                )}
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <p className="font-semibold text-sm leading-tight whitespace-nowrap text-foreground">
-                  {t("nav.appName")}
-                </p>
-                <p className="text-[10px] text-[color:var(--muted-fg)] whitespace-nowrap overflow-hidden text-ellipsis">
-                  {buildVersionLabel}
+                <p className="font-semibold text-sm leading-tight whitespace-nowrap text-foreground overflow-hidden text-ellipsis">
+                  {companyProfile?.company_name || t("nav.appName")}
                 </p>
               </div>
             </div>
@@ -328,60 +342,67 @@ export function Sidebar() {
           </div>
 
           {/* Bottom: user menu */}
-          <div
-            className={cn(
-              "sidebar-bottom border-t border-border p-[10px] flex-shrink-0 overflow-hidden",
-              c
-                ? "flex flex-col items-center gap-[6px]"
-                : "flex items-center gap-[6px]",
-            )}
-          >
-            <UserMenuPopover
-              onOpenProfile={() => setProfileOpen(true)}
-              onOpenSettings={() => setSettingsOpen(true)}
+          <div className="sidebar-bottom flex flex-col flex-shrink-0 border-t border-border p-[10px]">
+            <div
+              className={cn(
+                "overflow-hidden",
+                c
+                  ? "flex flex-col items-center gap-[6px]"
+                  : "flex items-center gap-[6px]",
+              )}
             >
-              <div
-                className={cn(
-                  "flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-surface-hover cursor-pointer",
-                  c ? "justify-center" : "flex-1 min-w-0",
-                )}
+              <UserMenuPopover
+                onOpenProfile={() => setProfileOpen(true)}
+                onOpenSettings={() => setSettingsOpen(true)}
               >
-                <div className="w-[22px] h-[22px] min-w-[22px] bg-primary rounded-full flex items-center justify-center text-primary-fg text-[8px] font-semibold flex-shrink-0">
-                  {av}
+                <div
+                  className={cn(
+                    "flex items-center gap-2 px-1 py-[7px] rounded-lg hover:bg-surface-hover cursor-pointer",
+                    c ? "justify-center" : "flex-1 min-w-0",
+                  )}
+                >
+                  <div className="w-[22px] h-[22px] min-w-[22px] bg-primary rounded-full flex items-center justify-center text-primary-fg text-[8px] font-semibold flex-shrink-0">
+                    {av}
+                  </div>
+                  <span className="hide-on-collapse text-xs font-medium text-[color:var(--muted-fg)] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
+                    {displayName}
+                  </span>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="hide-on-collapse text-[color:var(--faint)] flex-shrink-0"
+                  >
+                    <polyline points="7 10 12 5 17 10" />
+                    <polyline points="7 14 12 19 17 14" />
+                  </svg>
                 </div>
-                <span className="hide-on-collapse text-xs font-medium text-[color:var(--muted-fg)] whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0">
-                  {displayName}
-                </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="hide-on-collapse text-[color:var(--faint)] flex-shrink-0"
-                >
-                  <polyline points="7 10 12 5 17 10" />
-                  <polyline points="7 14 12 19 17 14" />
-                </svg>
-              </div>
-            </UserMenuPopover>
+              </UserMenuPopover>
 
-            <NotificationPopover>
-              <button className="flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-surface-hover border-none bg-transparent cursor-pointer flex-shrink-0">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-              </button>
-            </NotificationPopover>
+              <NotificationPopover>
+                <button className="flex items-center justify-center w-[26px] h-[26px] min-w-[26px] rounded-md text-[color:var(--faint)] hover:text-foreground hover:bg-surface-hover border-none bg-transparent cursor-pointer flex-shrink-0">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                </button>
+              </NotificationPopover>
+            </div>
+            {!c && (
+              <div className="mt-2 text-[9px] font-medium text-[color:var(--faint)] text-center tracking-widest uppercase">
+                {buildVersionLabel}
+              </div>
+            )}
           </div>
         </aside>
       </>
@@ -392,6 +413,10 @@ export function Sidebar() {
       <ChangePasswordModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
+      />
+      <CompanyProfileDrawer
+        open={companyProfileOpen}
+        onClose={() => setCompanyProfileOpen(false)}
       />
     </TooltipProvider>
   );
