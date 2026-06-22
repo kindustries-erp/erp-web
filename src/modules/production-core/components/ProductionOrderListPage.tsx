@@ -201,14 +201,14 @@ export function ProductionOrderListPage() {
 
   const handleCreate = () => {
     setDrawerMode("create");
-    setEditingOrder(null);
+    setTimeout(() => setEditingOrder(null), 300);
     setDrawerOpen(true);
   };
 
   const handleOpenProductionRun = async (item: ErpProductionOrder) => {
     // Open immediately with skeleton; fetch detail after open.
     setDrawerOpen(false);
-    setEditingOrder(null);
+    setTimeout(() => setEditingOrder(null), 300);
     setProductionRunOrder(null);
     setProductionRunLoading(true);
     setProductionRunOpen(true);
@@ -295,7 +295,7 @@ export function ProductionOrderListPage() {
     editing: editingOrder,
     onClose: () => {
       setDrawerOpen(false);
-      setEditingOrder(null);
+      setTimeout(() => setEditingOrder(null), 300);
     },
     onSaved: loadData,
   });
@@ -497,7 +497,10 @@ export function ProductionOrderListPage() {
         loading={drawerLoading}
         editing={editingOrder}
         viewOnly={drawerMode === "view"}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setTimeout(() => setEditingOrder(null), 300);
+        }}
         onToggleEdit={
           drawerMode === "view" &&
           canUpdate &&

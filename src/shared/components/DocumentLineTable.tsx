@@ -26,6 +26,7 @@ export interface DocumentLineTableProps<T> {
   sortConfig?: { key: string; direction: "asc" | "desc" } | null;
   onSort?: (key: string) => void;
   rowClassName?: (row: T, index: number) => string;
+  tableContainerClassName?: string;
 }
 
 export function DocumentLineTable<T>({
@@ -40,6 +41,7 @@ export function DocumentLineTable<T>({
   sortConfig,
   onSort,
   rowClassName,
+  tableContainerClassName,
 }: DocumentLineTableProps<T>) {
   const t = useT();
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -89,7 +91,7 @@ export function DocumentLineTable<T>({
       </div>
       <div
         ref={bottomScrollRef}
-        className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]"
+        className={cn("w-full overflow-x-auto rounded-lg border border-[color:var(--border)]", tableContainerClassName)}
         onScroll={handleBottomScroll}
       >
         <table ref={tableRef} className="w-full text-sm text-left relative">
