@@ -3,29 +3,31 @@ import { FileText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { InventoryListPage } from "@/modules/operational/components/InventoryListPage";
 import { ErpWarehouseTab } from "@/pages/ErpWarehouseTab";
+import { useT } from "@/core/i18n";
 
 type InventoryTabKind = "stock" | "vouchers";
 
 export function Kho() {
+  const t = useT();
   const [activeTab, setActiveTab] = useState<InventoryTabKind>("stock");
   const [tabActions, setTabActions] = useState<React.ReactNode>(null);
 
   const TAB_OPTIONS = useMemo<{ key: InventoryTabKind; label: string }[]>(
     () => [
-      { key: "stock", label: "Tồn kho" },
-      { key: "vouchers", label: "Chứng từ kho" },
+      { key: "stock", label: t("inventory.tabStock") },
+      { key: "vouchers", label: t("inventory.tabVouchers") },
     ],
-    [],
+    [t],
   );
 
   const desc =
     activeTab === "stock"
-      ? "Tổng hợp tồn kho toàn bộ hàng hóa: linh kiện (RAW), thành phẩm (FG), bán thành phẩm (WIP)."
-      : "Quản lý phiếu nhập kho và xuất kho.";
+      ? t("inventory.descStock")
+      : t("inventory.descVouchers");
 
   return (
     <PageLayout
-      title="Kho"
+      title={t("inventory.pageTitle")}
       desc={desc}
       icon={<FileText className="h-5 w-5" />}
       tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}

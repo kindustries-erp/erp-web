@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/utils";
-import { normalizeDateTime } from "@/shared/utils/format";
+import { normalizeDateTimeGMT7 } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
@@ -24,7 +24,7 @@ export function useStockColumns({
     () => [
       {
         key: "item",
-        header: t("Vật tư"),
+        header: t("inventory.table.columns.item"),
         className: "align-middle min-w-[220px]",
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
@@ -47,7 +47,7 @@ export function useStockColumns({
                 />
               </button>
               <div className="text-xs text-[color:var(--muted-fg)]">
-                {row.item_name || "Chưa đặt tên"}
+                {row.item_name || t("inventory.table.unnamed")}
               </div>
             </div>
           );
@@ -55,7 +55,7 @@ export function useStockColumns({
       },
       {
         key: "item_type",
-        header: t("Loại"),
+        header: t("inventory.table.columns.type"),
         className: "align-middle min-w-[90px]",
         cell: (row) => {
           const itemType = row.item_type;
@@ -67,14 +67,18 @@ export function useStockColumns({
             <span
               className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}
             >
-              {itemType || "—"}
+              {itemType
+                ? t(
+                    `inventory.itemTypes.${itemType.toLowerCase() as "raw" | "fg" | "wip"}`,
+                  )
+                : "—"}
             </span>
           );
         },
       },
       {
         key: "received_qty",
-        header: t("Nhập"),
+        header: t("inventory.table.columns.in"),
         className: "align-middle min-w-[100px] text-left",
         cell: (row) => (
           <span className="inline-block w-full text-left text-sm tabular-nums">
@@ -84,7 +88,7 @@ export function useStockColumns({
       },
       {
         key: "issued_qty",
-        header: t("Xuất"),
+        header: t("inventory.table.columns.out"),
         className: "align-middle min-w-[100px] text-left",
         cell: (row) => (
           <span className="inline-block w-full text-left text-sm tabular-nums">
@@ -94,7 +98,7 @@ export function useStockColumns({
       },
       {
         key: "on_hand_qty",
-        header: t("Tồn"),
+        header: t("inventory.table.columns.onHand"),
         className: "align-middle min-w-[110px] text-left",
         cell: (row) => (
           <span className="inline-block w-full text-left text-sm font-medium tabular-nums">
@@ -104,19 +108,19 @@ export function useStockColumns({
       },
       {
         key: "unit",
-        header: t("Đơn vị"),
+        header: t("inventory.table.columns.unit"),
         className: "align-middle min-w-[80px]",
         cell: (row) => <span className="text-sm">{row.unit || "—"}</span>,
       },
       {
         key: "last",
-        header: t("Giao dịch cuối"),
+        header: t("inventory.table.columns.lastTx"),
         className: "align-middle min-w-[180px]",
-        cell: (row) => normalizeDateTime(row.last_transaction_date) || "—",
+        cell: (row) => normalizeDateTimeGMT7(row.last_transaction_date) || "—",
       },
       {
         key: "status",
-        header: t("Trạng thái"),
+        header: t("inventory.table.columns.status"),
         className: "align-middle min-w-[100px]",
         cell: (row) => (
           <span

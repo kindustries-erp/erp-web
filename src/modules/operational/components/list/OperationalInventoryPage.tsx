@@ -29,12 +29,6 @@ interface OperationalInventoryPageProps {
   setActions?: (node: React.ReactNode) => void;
 }
 
-const ITEM_TYPE_OPTIONS = [
-  { value: "RAW", label: "RAW — Linh kiện" },
-  { value: "FG", label: "FG — Thành phẩm" },
-  { value: "WIP", label: "WIP — Bán thành phẩm" },
-];
-
 /**
  * Trang tổng hợp tồn kho (variant="inventory").
  * Extracted từ OperationalListPage.tsx (dòng 1698–1841).
@@ -88,17 +82,29 @@ export function OperationalInventoryPage({
     [expandedStockItemIds, stockItems],
   );
 
-  const inventoryFilterConfig: FilterPanelConfig = {
-    search: true,
-    custom: [
-      {
-        key: "itemType",
-        label: "Loại item",
-        placeholder: "Tất cả loại item",
-        options: ITEM_TYPE_OPTIONS,
-      },
+  const itemTypeOptions = useMemo(
+    () => [
+      { value: "RAW", label: t("inventory.itemTypes.raw") },
+      { value: "FG", label: t("inventory.itemTypes.fg") },
+      { value: "WIP", label: t("inventory.itemTypes.wip") },
     ],
-  };
+    [t],
+  );
+
+  const inventoryFilterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      custom: [
+        {
+          key: "itemType",
+          label: t("inventory.filter.itemTypeLabel"),
+          placeholder: t("inventory.filter.itemTypePlaceholder"),
+          options: itemTypeOptions,
+        },
+      ],
+    }),
+    [t, itemTypeOptions],
+  );
 
   useEffect(() => {
     if (setActions) {

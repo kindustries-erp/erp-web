@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useT } from "@/core/i18n";
-import { normalizeDateTime, fmtQty } from "@/shared/utils/format";
+import { normalizeDateTimeGMT7, fmtQty } from "@/shared/utils/format";
 import { movementLabel } from "@/modules/operational/utils/operationalHelpers";
 import type { InventoryMovementsPayload } from "@/modules/inventory-core/api/inventoryCoreApi";
 
@@ -24,11 +25,21 @@ export function InventoryTimelineBlock({
   const t = useT();
   const isLoading = loadingId === itemId;
 
+  const movements = data?.movements;
+  const sortedMovements = useMemo(() => {
+    if (!movements) return [];
+    return [...movements].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [movements]);
+
   if (isLoading) {
     return (
       <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-6 sm:p-8 flex items-center justify-center text-sm text-muted-foreground my-2 shadow-sm border border-border">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        {t("Đang tải lịch sử xuất nhập kho...")}
+        {t("inventory.history.loading")}
       </div>
     );
   }
@@ -48,31 +59,33 @@ export function InventoryTimelineBlock({
     <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-3 sm:p-4 md:p-6 overflow-x-auto my-2 shadow-sm border border-border">
       <div className="min-w-[560px]">
         <div className="mb-3 sm:mb-4 font-semibold text-sm sm:text-base text-foreground">
-          {t("Lịch sử xuất nhập kho")}
+          {t("inventory.history.title")}
         </div>
-        {data.movements.length === 0 ? (
+        {sortedMovements.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-            {t("Chưa có phát sinh xuất nhập kho.")}
+            {t("inventory.history.empty")}
           </div>
         ) : (
           <div className="w-full text-sm">
             <div className="flex items-center text-muted-foreground border-b border-border pb-2 mb-2 px-2">
               <div className="w-[90px] sm:w-[100px] font-medium">
-                {t("Thời gian")}
+                {t("inventory.history.time")}
               </div>
-              <div className="flex-1 font-medium">{t("Giao dịch")}</div>
-              <div className="w-[90px] sm:w-[120px] text-right font-medium">
-                {t("Thay đổi")}
+              <div className="flex-1 font-medium">
+                {t("inventory.history.transaction")}
               </div>
               <div className="w-[90px] sm:w-[120px] text-right font-medium">
-                {t("Tồn kho")}
+                {t("inventory.history.change")}
+              </div>
+              <div className="w-[90px] sm:w-[120px] text-right font-medium">
+                {t("inventory.history.balance")}
               </div>
             </div>
-            <div className="space-y-1">
-              {data.movements.map((m) => {
+            <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2">
+              {sortedMovements.map((m) => {
                 const isIn = Number(m.qtyIn || 0) > 0;
                 const qty = isIn ? m.qtyIn : m.qtyOut;
-                const dt = normalizeDateTime(m.createdAt);
+                const dt = normalizeDateTimeGMT7(m.createdAt);
                 return (
                   <div
                     key={m.id}
@@ -96,10 +109,12 @@ export function InventoryTimelineBlock({
                               : "text-[11px] font-medium text-amber-600"
                           }
                         >
-                          {isIn ? t("Nhập") : t("Xuất")}
+                          {isIn
+                            ? t("inventory.history.in")
+                            : t("inventory.history.out")}
                         </span>
                         <span className="truncate font-medium text-foreground text-xs sm:text-sm">
-                          {movementLabel(m)}
+                          {movementLabel(m, t)}
                         </span>
                         {m.notes ? (
                           <span className="hidden sm:inline truncate text-xs text-muted-foreground">
