@@ -16,6 +16,10 @@ import { cn } from "@/shared/utils";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { ProductionRunDrawer } from "./ProductionRunDrawer";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import * as Popover from "@radix-ui/react-popover";
+import { FilterButton } from "@/shared/components/FilterPanel";
+import { SearchInput } from "@/shared/components/SearchInput";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 
 import type { UseProductionOrderDrawerReturn } from "../hooks/useProductionOrderDrawer";
 import type { BomLikeLine } from "../hooks/useProductionOrderDrawer";
@@ -40,7 +44,7 @@ function fmtQty(value?: string | null) {
   if (Number.isNaN(n)) return value;
   return new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
+    maximumFractionDigits: 2,
   }).format(n);
 }
 
@@ -82,6 +86,8 @@ export function ProductionOrderDrawer({
     setAltItemSearch,
     fetchNextAltItems,
     loadingAltItems,
+    showLackingOnly,
+    setShowLackingOnly,
   } = drawerState;
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
@@ -160,23 +166,71 @@ export function ProductionOrderDrawer({
     const s = localSearch.toLowerCase();
     const name = (line.itemName || "").toLowerCase();
     const sku = (line.itemId || "").toLowerCase();
-    return name.includes(s) || sku.includes(s);
+    const matchSearch = name.includes(s) || sku.includes(s);
+    if (!showLackingOnly) return matchSearch;
+
+    const requiredQty = Number(line.qtyRequired || 0);
+    const effectiveItemId =
+      alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
+      line.itemId ||
+      "";
+    const availableQty = (balances[effectiveItemId] || { availableQty: 0 })
+      .availableQty;
+    return matchSearch && requiredQty > availableQty;
   });
 
   const leftPanel = (
     <div className="flex h-full flex-col space-y-6">
       <DrawerSection
-        title={t(`CHI TIẾT BOM (${bomLines?.length || 0})`)}
+        title={t("CHI TIẾT BOM") + " (" + (bomLines?.length || 0) + ")"}
         titleExtra={
-          <div className="flex items-center space-x-2">
-            <input
-              type="text"
-              placeholder={t("Tìm kiếm mã / tên...")}
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              className={cn(inputCls, "h-8 text-xs py-1 px-2 w-[200px]")}
-            />
-          </div>
+          <Popover.Root>
+            <Popover.Trigger asChild>
+              <div>
+                <FilterButton
+                  onClick={() => {}}
+                  activeCount={
+                    (showLackingOnly ? 1 : 0) + (localSearch ? 1 : 0)
+                  }
+                />
+              </div>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content
+                align="end"
+                sideOffset={4}
+                className="z-[9999] w-64 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-xl card-shadow animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95"
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[10px] text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-2 block">
+                      {t("Tìm kiếm")}
+                    </label>
+                    <SearchInput
+                      placeholder={t("Tìm kiếm mã / tên...")}
+                      value={localSearch}
+                      onChange={setLocalSearch}
+                      className="w-full [&>input]:h-9 [&>input]:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-2 block">
+                      {t("Bộ lọc khác")}
+                    </label>
+                    <label className="flex items-center space-x-2 text-sm cursor-pointer">
+                      <Checkbox
+                        checked={showLackingOnly}
+                        onCheckedChange={(c) => setShowLackingOnly(c === true)}
+                      />
+                      <span className="text-foreground">
+                        {t("Chỉ hiện NVL thiếu")}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         }
       >
         {filteredBomLines && filteredBomLines.length > 0 ? (
@@ -204,24 +258,34 @@ export function ProductionOrderDrawer({
               }}
               columns={[
                 {
-                  key: "itemName",
-                  header: t("Tên Linh Kiện"),
-                  width: "30%",
-                  minWidth: "200px",
+                  key: "itemCode",
+                  header: t("Mã Linh Kiện"),
+                  width: "15%",
+                  minWidth: "100px",
+                  fixed: "left",
                   cell: (line: BomLikeLine) => (
                     <div
-                      className="flex items-center"
+                      className="truncate text-xs font-medium"
                       style={{ paddingLeft: `${(line.level || 0) * 16}px` }}
                     >
                       {(line.level || 0) > 0 && (
                         <span className="text-muted-foreground mr-1">└─</span>
                       )}
-                      <Tooltip content={line.itemName || ""}>
-                        <div className="truncate max-w-[200px] xl:max-w-[300px]">
-                          {line.itemName || "—"}
-                        </div>
-                      </Tooltip>
+                      {line.itemCode || "—"}
                     </div>
+                  ),
+                },
+                {
+                  key: "itemName",
+                  header: t("Tên Linh Kiện"),
+                  width: "25%",
+                  minWidth: "200px",
+                  cell: (line: BomLikeLine) => (
+                    <Tooltip content={line.itemName || ""}>
+                      <div className="truncate max-w-[200px] xl:max-w-[300px]">
+                        {line.itemName || "—"}
+                      </div>
+                    </Tooltip>
                   ),
                 },
                 {
@@ -388,7 +452,7 @@ export function ProductionOrderDrawer({
         />
       </DrawerField>
 
-      {availableBoms.length > 1 && (
+      {form.finishedGoodItemId && availableBoms.length > 0 && (
         <DrawerField label={t("Phiên bản BOM")}>
           <Combobox
             value={form.bomId}

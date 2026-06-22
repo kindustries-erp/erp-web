@@ -39,7 +39,7 @@ function fmtQty(value?: string | null) {
   if (Number.isNaN(n)) return value;
   return new Intl.NumberFormat("vi-VN", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
+    maximumFractionDigits: 2,
   }).format(n);
 }
 

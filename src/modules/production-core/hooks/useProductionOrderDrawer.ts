@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { format } from "date-fns";
 import { useUIStore } from "@/core/config/uiStore";
 import {
   productionCoreApi,
@@ -69,15 +70,18 @@ export interface UseProductionOrderDrawerProps {
   onSaved: () => Promise<void> | void;
 }
 
-const emptyForm = () => ({
-  finishedGoodItemId: "",
-  qtyToProduce: "1",
-  warehouseCode: "",
-  referenceNo: "",
-  plannedStartDate: "",
-  plannedEndDate: "",
-  bomId: "",
-});
+const emptyForm = () => {
+  const today = format(new Date(), "yyyy-MM-dd");
+  return {
+    finishedGoodItemId: "",
+    qtyToProduce: "1",
+    warehouseCode: "",
+    referenceNo: "",
+    plannedStartDate: today,
+    plannedEndDate: today,
+    bomId: "",
+  };
+};
 
 export function useProductionOrderDrawer({
   open,
@@ -113,6 +117,7 @@ export function useProductionOrderDrawer({
   const [completeUnitCost, setCompleteUnitCost] = useState("0");
   const [showStartDialog, setShowStartDialog] = useState(false);
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showLackingOnly, setShowLackingOnly] = useState(false);
 
   // ── Alternative item overrides: bomLineId (or componentItemId) → alternativeItemId
   const [alternativeItems, setAlternativeItems] = useState<
@@ -413,6 +418,7 @@ export function useProductionOrderDrawer({
   useEffect(() => {
     if (!form.finishedGoodItemId) {
       setAvailableBoms([]);
+      setForm((prev) => (prev.bomId ? { ...prev, bomId: "" } : prev));
       return;
     }
     bomCoreApi
@@ -424,7 +430,9 @@ export function useProductionOrderDrawer({
           // Only auto-select in create mode; edit mode keeps the saved bomId
           const activeBom = boms.find((b) => b.status === "ACTIVE") ?? boms[0];
           setForm((prev) =>
-            prev.bomId ? prev : { ...prev, bomId: activeBom.id },
+            boms.some((b) => b.id === prev.bomId)
+              ? prev
+              : { ...prev, bomId: activeBom.id },
           );
         }
       })
@@ -710,6 +718,8 @@ export function useProductionOrderDrawer({
     setShowStartDialog,
     showCompleteDialog,
     setShowCompleteDialog,
+    showLackingOnly,
+    setShowLackingOnly,
     showGeneralInfo,
     setShowGeneralInfo,
     bomLines,
