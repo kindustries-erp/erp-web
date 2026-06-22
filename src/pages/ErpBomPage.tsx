@@ -5,7 +5,7 @@ import {
   Network,
   Loader2,
   Eye,
-  Edit2,
+  Copy,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
@@ -30,6 +30,7 @@ import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMa
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import { extractItemCodeAndName } from "@/shared/utils/format";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
@@ -119,7 +120,11 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
       startId: string,
     ): Set<string> => {
       const visited = new Set<string>();
+      visited.add(bomId);
       let curr = nodes.find((n) => n.uniqueId === startId);
+      curr = curr?.parentId
+        ? nodes.find((n) => n.uniqueId === curr!.parentId)
+        : undefined;
       while (curr) {
         if (curr.subBomId) visited.add(curr.subBomId);
         curr = curr.parentId
@@ -316,7 +321,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
           onChange={setSearch}
         />
       </div>
-      <div className="w-full overflow-y-auto max-h-[300px]">
+      <div className="w-full overflow-auto max-h-[300px]">
         <DocumentLineTable
           columns={[
             {
@@ -342,9 +347,11 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
                   fallbackLabel,
                 );
                 return (
-                  <span className="font-medium text-foreground">
-                    {code || "—"}
-                  </span>
+                  <Tooltip content={code || ""}>
+                    <span className="font-medium text-foreground block truncate max-w-[120px]">
+                      {code || "—"}
+                    </span>
+                  </Tooltip>
                 );
               },
             },
@@ -391,10 +398,12 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
                         •
                       </span>
                     )}
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-medium text-foreground/90">
-                        {name || t("Linh kiện không xác định")}
-                      </span>
+                    <div className="flex flex-col min-w-[80px] max-w-[220px]">
+                      <Tooltip content={name || t("Linh kiện không xác định")}>
+                        <span className="font-medium text-foreground/90 block truncate">
+                          {name || t("Linh kiện không xác định")}
+                        </span>
+                      </Tooltip>
                       {node.isError && (
                         <span className="text-[10px] text-red-500 font-medium mt-0.5">
                           {t("Lỗi tải chi tiết")}
@@ -455,9 +464,11 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
               header: t("Ghi chú"),
               minWidth: 120,
               cell: (node: FlatNode) => (
-                <span className="text-muted-foreground italic text-[11px]">
-                  {node.line.notes || "—"}
-                </span>
+                <Tooltip content={node.line.notes || ""}>
+                  <span className="text-muted-foreground italic text-[11px] block truncate max-w-[120px]">
+                    {node.line.notes || "—"}
+                  </span>
+                </Tooltip>
               ),
             },
           ]}
@@ -738,9 +749,9 @@ export function ErpBomPage() {
     setDrawerOpen(true);
   }
 
-  async function openEdit(item: ErpBom) {
+  async function openView(item: ErpBom) {
     setSaveError(null);
-    setViewOnly(false);
+    setViewOnly(true);
     setDrawerLoading(true);
     setDrawerOpen(true);
     try {
@@ -756,18 +767,24 @@ export function ErpBomPage() {
     }
   }
 
-  async function openView(item: ErpBom) {
+  async function handleClone(item: ErpBom) {
     setSaveError(null);
-    setViewOnly(true);
+    setViewOnly(false);
     setDrawerLoading(true);
     setDrawerOpen(true);
+    setEditing(null);
     try {
       const detail = await bomCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
+      const clonedForm = buildForm(detail);
+      clonedForm.bomCode = `${clonedForm.bomCode}-COPY`;
+      clonedForm.bomName = `${clonedForm.bomName} (Copy)`;
+      clonedForm.status = "DRAFT";
+      setForm(clonedForm);
     } catch (e) {
       setError(
-        e instanceof Error ? e.message : t("Không thể tải chi tiết BOM"),
+        e instanceof Error
+          ? e.message
+          : t("Không thể tải chi tiết BOM để nhân bản"),
       );
     } finally {
       setDrawerLoading(false);
@@ -881,9 +898,13 @@ export function ErpBomPage() {
               e.stopPropagation();
               toggleExpand(item.id);
             }}
-            className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left"
+            className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left w-full"
           >
-            <span className="font-semibold text-primary">{item.bomCode}</span>
+            <Tooltip content={item.bomCode}>
+              <span className="font-semibold text-primary block truncate max-w-[120px]">
+                {item.bomCode}
+              </span>
+            </Tooltip>
             <ChevronRight
               className={cn(
                 "h-3.5 w-3.5 transition-transform text-muted-foreground",
@@ -900,7 +921,11 @@ export function ErpBomPage() {
       header: t("Tên BOM"),
       sortable: true,
       sortKey: "bomName",
-      cell: (item) => item.bomName,
+      cell: (item) => (
+        <Tooltip content={item.bomName}>
+          <span className="block truncate max-w-[160px]">{item.bomName}</span>
+        </Tooltip>
+      ),
       skeletonClassName: "w-40",
     },
     {
@@ -913,17 +938,18 @@ export function ErpBomPage() {
           item.finishedGoodItemName ||
           (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—");
         return (
-          <div className="flex flex-col min-w-0">
-            <span className="truncate font-medium text-foreground" title={name}>
-              {name}
-            </span>
-            {item.notes && (
-              <span
-                className="italic text-muted-foreground text-[11px] mt-0.5 truncate"
-                title={item.notes}
-              >
-                ({item.notes})
+          <div className="flex flex-col min-w-[80px] max-w-[200px]">
+            <Tooltip content={name}>
+              <span className="truncate font-medium text-foreground block">
+                {name}
               </span>
+            </Tooltip>
+            {item.notes && (
+              <Tooltip content={item.notes}>
+                <span className="italic text-muted-foreground text-[11px] mt-0.5 truncate block">
+                  ({item.notes})
+                </span>
+              </Tooltip>
             )}
           </div>
         );
@@ -1023,9 +1049,9 @@ export function ErpBomPage() {
                 icon: <Eye className="h-[13px] w-[13px]" />,
               },
               {
-                label: t("Cập nhật"),
-                onClick: () => void openEdit(item),
-                icon: <Edit2 className="h-[13px] w-[13px]" />,
+                label: t("common.clone"),
+                onClick: () => void handleClone(item),
+                icon: <Copy className="h-[13px] w-[13px]" />,
               },
               {
                 label: t("Xóa"),
@@ -1086,6 +1112,7 @@ export function ErpBomPage() {
       <BomFormDrawer
         open={drawerOpen}
         onClose={closeDrawer}
+        onToggleEdit={() => setViewOnly(false)}
         mode={viewOnly ? "view" : editing ? "edit" : "create"}
         editing={editing}
         form={form}
