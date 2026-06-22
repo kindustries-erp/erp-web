@@ -36,6 +36,7 @@
 ## Recent closed / reconciled lineage (2026-06-22 evening)
 
 Earlier commits already reflected:
+
 - `22b53ee` — refactor ProductionRunDrawer layout + double-drawer fix
 - `c0648e7` — BOM drawer + table formatting
 - `b292ce3` — BOM activate/inactivate + active-BOM filter in production
@@ -49,6 +50,7 @@ Earlier commits already reflected:
 - `bcd20bb` — company profile drawer modal style reuse
 
 Latest commits now reconciled:
+
 - `058e00d` — sidebar refactor + `useFaviconEffect` lint fix
 - `87b910a` — inventory tables UI sync + server-side sorting
 - `cabeecc` — `is_lio_device` quick admin login flag
@@ -57,6 +59,7 @@ Latest commits now reconciled:
 - `f92bee4` — MO drawer UI/BOM auto-selection/translations improvements
 
 Related closure artifact:
+
 - `docs/tasks/20260622-sidebar-refactor-inventory-sorting-warehouse-print.md`
 - existing task artifacts already present:
   - `docs/tasks/20260622-global-loading-theme-refactor.md`

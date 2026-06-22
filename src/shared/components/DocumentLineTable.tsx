@@ -91,7 +91,10 @@ export function DocumentLineTable<T>({
       </div>
       <div
         ref={bottomScrollRef}
-        className={cn("w-full overflow-x-auto rounded-lg border border-[color:var(--border)]", tableContainerClassName)}
+        className={cn(
+          "w-full overflow-x-auto rounded-lg border border-[color:var(--border)]",
+          tableContainerClassName,
+        )}
         onScroll={handleBottomScroll}
       >
         <table ref={tableRef} className="w-full text-sm text-left relative">

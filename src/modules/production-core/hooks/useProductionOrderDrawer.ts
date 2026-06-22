@@ -158,7 +158,8 @@ export function useProductionOrderDrawer({
     const sourceLines = editing.lines || editing.materials || [];
     sourceLines.forEach((line) => {
       if (line.alternativeItemId && line.alternativeItemName) {
-        cachedAltItems.current[line.alternativeItemId] = line.alternativeItemName;
+        cachedAltItems.current[line.alternativeItemId] =
+          line.alternativeItemName;
       }
     });
   }, [editing]);
@@ -175,10 +176,7 @@ export function useProductionOrderDrawer({
     // Ensure currently selected alternative items are always present
     Object.values(alternativeItems).forEach((altId) => {
       if (altId && !map.has(altId)) {
-        map.set(
-          altId,
-          cachedAltItems.current[altId] || "NVL Thay Thế",
-        );
+        map.set(altId, cachedAltItems.current[altId] || "NVL Thay Thế");
       }
     });
 
@@ -239,16 +237,21 @@ export function useProductionOrderDrawer({
 
     if (editing?.finishedGoodItemId) {
       const sourceLines = editing.lines || editing.materials || [];
-      const overridesFromMetadata = Array.isArray(editing.outputMetadata?.materialOverrides) 
-        ? editing.outputMetadata.materialOverrides 
+      const overridesFromMetadata = Array.isArray(
+        editing.outputMetadata?.materialOverrides,
+      )
+        ? editing.outputMetadata.materialOverrides
         : [];
       const restoredAlternativeItems = Object.fromEntries(
         overridesFromMetadata
-          .filter((ov: any) => ov.alternativeItemId)
-          .map((ov: any) => [
-            ov.path || ov.originalItemId,
-            ov.alternativeItemId,
-          ]),
+          .filter((ov: { alternativeItemId?: string }) => ov.alternativeItemId)
+          .map(
+            (ov: {
+              path?: string;
+              originalItemId?: string;
+              alternativeItemId: string;
+            }) => [ov.path || ov.originalItemId, ov.alternativeItemId],
+          ),
       );
       setAlternativeItems(restoredAlternativeItems);
 
@@ -294,7 +297,9 @@ export function useProductionOrderDrawer({
                 let result: BomLikeLine[] = [];
                 for (const n of nodes) {
                   const linePath = n.path || n.itemId;
-                  const selectedAltItemId = restoredAlternativeItems[linePath] || restoredAlternativeItems[n.itemId];
+                  const selectedAltItemId =
+                    restoredAlternativeItems[linePath] ||
+                    restoredAlternativeItems[n.itemId];
                   const effectiveItemId = selectedAltItemId || n.itemId;
                   const matched = sourceLineMap.get(effectiveItemId);
                   result.push({
@@ -573,7 +578,9 @@ export function useProductionOrderDrawer({
       const materialOverrides = Object.entries(alternativeItems)
         .filter(([, altId]) => !!altId)
         .map(([pathOrItemId, alternativeItemId]) => {
-          const node = bomLines.find((l) => (l.path || l.itemId) === pathOrItemId);
+          const node = bomLines.find(
+            (l) => (l.path || l.itemId) === pathOrItemId,
+          );
           return {
             path: node?.path,
             originalItemId: node?.itemId || pathOrItemId,
@@ -662,7 +669,8 @@ export function useProductionOrderDrawer({
 
     const exportLines: GiLineForm[] = bomLines.map((line) => {
       const linePath = line.path || line.itemId || "";
-      const selectedAltItemId = alternativeItems[linePath] || alternativeItems[line.itemId ?? ""] || "";
+      const selectedAltItemId =
+        alternativeItems[linePath] || alternativeItems[line.itemId ?? ""] || "";
       const effectiveItemId = selectedAltItemId || line.itemId || "";
       const effectiveItemName =
         selectedAltItemId && line.alternativeItemName

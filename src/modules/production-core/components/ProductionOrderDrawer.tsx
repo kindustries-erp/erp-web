@@ -253,9 +253,7 @@ export function ProductionOrderDrawer({
 
                 const linePath = line.path || line.itemId || "";
                 const effectiveItemId =
-                  alternativeItems[linePath] ||
-                  line.itemId ||
-                  "";
+                  alternativeItems[linePath] || line.itemId || "";
                 const availableQty = (
                   balances[effectiveItemId] || { availableQty: 0 }
                 ).availableQty;
@@ -383,9 +381,7 @@ export function ProductionOrderDrawer({
                     const displayRequired = requiredQty;
                     const linePath = line.path || line.itemId || "";
                     const effectiveItemId =
-                      alternativeItems[linePath] ||
-                      line.itemId ||
-                      "";
+                      alternativeItems[linePath] || line.itemId || "";
                     const availableQty = (
                       balances[effectiveItemId] || { availableQty: 0 }
                     ).availableQty;
@@ -418,9 +414,7 @@ export function ProductionOrderDrawer({
                     return (
                       <input
                         value={lineNotes[linePath] || ""}
-                        onChange={(e) =>
-                          setLineNote(linePath, e.target.value)
-                        }
+                        onChange={(e) => setLineNote(linePath, e.target.value)}
                         disabled={isDisabled}
                         className={cn(inputCls, "min-w-[150px] text-xs h-8")}
                         placeholder={t("Nhập ghi chú")}
