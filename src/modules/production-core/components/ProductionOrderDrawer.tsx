@@ -88,6 +88,7 @@ export function ProductionOrderDrawer({
     loadingAltItems,
     showLackingOnly,
     setShowLackingOnly,
+    bomLoading,
   } = drawerState;
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
@@ -233,20 +234,26 @@ export function ProductionOrderDrawer({
           </Popover.Root>
         }
       >
-        {filteredBomLines && filteredBomLines.length > 0 ? (
+        {bomLoading ? (
+          <div className="pl-4 py-4 text-xs text-muted-foreground animate-pulse">
+            {t("Đang tải cấu trúc NVL...")}
+          </div>
+        ) : filteredBomLines && filteredBomLines.length > 0 ? (
           <div className="w-full">
             <DocumentLineTable
+              tableContainerClassName="max-h-[calc(100vh-350px)] overflow-y-auto"
               data={filteredBomLines}
               getRowKey={(line: BomLikeLine, idx: number) =>
-                line.id || String(idx)
+                line.id ? `${line.id}-${idx}` : String(idx)
               }
               viewOnly={true}
               rowClassName={(line: BomLikeLine) => {
                 const requiredQty = Number(line.qtyRequired || 0);
                 const displayRequired = requiredQty;
 
+                const linePath = line.path || line.itemId || "";
                 const effectiveItemId =
-                  alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
+                  alternativeItems[linePath] ||
                   line.itemId ||
                   "";
                 const availableQty = (
@@ -294,10 +301,8 @@ export function ProductionOrderDrawer({
                   width: "30%",
                   minWidth: "200px",
                   cell: (line: BomLikeLine) => {
-                    const originalItemId =
-                      line.originalItemId ?? line.itemId ?? "";
-                    const selectedAltItemId =
-                      alternativeItems[originalItemId] ?? "";
+                    const linePath = line.path || line.itemId || "";
+                    const selectedAltItemId = alternativeItems[linePath] ?? "";
                     const altOption = altItemOptions.find(
                       (o) => o.value === selectedAltItemId,
                     );
@@ -326,10 +331,10 @@ export function ProductionOrderDrawer({
                             value={selectedAltItemId}
                             onChange={(value) => {
                               if (!value) {
-                                clearAlternativeItem(originalItemId);
+                                clearAlternativeItem(linePath);
                                 return;
                               }
-                              setAlternativeItem(originalItemId, value);
+                              setAlternativeItem(linePath, value);
                             }}
                             options={altItemOptions}
                             placeholder={t("Chọn NVL thay thế")}
@@ -376,10 +381,9 @@ export function ProductionOrderDrawer({
                   cell: (line: BomLikeLine) => {
                     const requiredQty = Number(line.qtyRequired || 0);
                     const displayRequired = requiredQty;
+                    const linePath = line.path || line.itemId || "";
                     const effectiveItemId =
-                      alternativeItems[
-                        line.originalItemId ?? line.itemId ?? ""
-                      ] ||
+                      alternativeItems[linePath] ||
                       line.itemId ||
                       "";
                     const availableQty = (
@@ -402,21 +406,20 @@ export function ProductionOrderDrawer({
                   key: "note",
                   header: t("Ghi chú"),
                   cell: (line: BomLikeLine) => {
-                    const originalItemId =
-                      line.originalItemId ?? line.itemId ?? "";
+                    const linePath = line.path || line.itemId || "";
                     const isDisabled = !!(
                       saving ||
                       viewOnly ||
                       line.isLeaf === false
                     );
-                    if (isDisabled && !lineNotes[originalItemId]) {
+                    if (isDisabled && !lineNotes[linePath]) {
                       return <span className="text-muted-foreground">—</span>;
                     }
                     return (
                       <input
-                        value={lineNotes[originalItemId] || ""}
+                        value={lineNotes[linePath] || ""}
                         onChange={(e) =>
-                          setLineNote(originalItemId, e.target.value)
+                          setLineNote(linePath, e.target.value)
                         }
                         disabled={isDisabled}
                         className={cn(inputCls, "min-w-[150px] text-xs h-8")}

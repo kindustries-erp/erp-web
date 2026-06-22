@@ -18,6 +18,7 @@ type ProductionDrawerForm = ReturnType<typeof emptyForm>;
 
 export interface BomLikeLine {
   id?: string;
+  path?: string;
   /** Effective item id (may be alternativeItemId when override is set) */
   itemId?: string;
   itemName?: string | null;
@@ -43,6 +44,7 @@ interface BomLikeItem {
 }
 
 export interface ExplosionNode {
+  path?: string;
   itemId: string;
   itemName?: string;
   itemCode?: string;
@@ -107,6 +109,7 @@ export function useProductionOrderDrawer({
     >
   >({});
   const [localSearch, setLocalSearch] = useState("");
+  const [bomLoading, setBomLoading] = useState(false);
   const bomLoadRequestRef = useRef(0);
   const issueDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
   const [startQty, setStartQty] = useState("1");
@@ -136,13 +139,54 @@ export function useProductionOrderDrawer({
     entities: "inventoryItems",
   });
 
-  const altItemOptions =
-    altItemsData?.pages.flatMap((p) =>
-      (p.items.inventoryItems || []).map((i) => ({
-        value: i.id,
-        label: `${i.sku} — ${i.itemName}`,
-      })),
-    ) ?? [];
+  // Persistent cache: id -> label, survives search-term changes so selected
+  // items never lose their labels when the API page no longer includes them.
+  const cachedAltItems = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!altItemsData) return;
+    altItemsData.pages.forEach((p) => {
+      (p.items.inventoryItems || []).forEach((i) => {
+        cachedAltItems.current[i.id] = `${i.sku} — ${i.itemName}`;
+      });
+    });
+  }, [altItemsData]);
+
+  // Populate cache from editing BOM when it loads (edit/view mode)
+  useEffect(() => {
+    if (!editing) return;
+    const sourceLines = editing.lines || editing.materials || [];
+    sourceLines.forEach((line) => {
+      if (line.alternativeItemId && line.alternativeItemName) {
+        cachedAltItems.current[line.alternativeItemId] = line.alternativeItemName;
+      }
+    });
+  }, [editing]);
+
+  const altItemOptions = useMemo(() => {
+    const map = new Map<string, string>(
+      altItemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map(
+          (i) => [i.id, `${i.sku} — ${i.itemName}`] as [string, string],
+        ),
+      ) || [],
+    );
+
+    // Ensure currently selected alternative items are always present
+    Object.values(alternativeItems).forEach((altId) => {
+      if (altId && !map.has(altId)) {
+        map.set(
+          altId,
+          cachedAltItems.current[altId] || "NVL Thay Thế",
+        );
+      }
+    });
+
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [altItemsData, alternativeItems]);
 
   const setAlternativeItem = useCallback(
     (lineOriginalItemId: string, altItemId: string) => {
@@ -195,16 +239,20 @@ export function useProductionOrderDrawer({
 
     if (editing?.finishedGoodItemId) {
       const sourceLines = editing.lines || editing.materials || [];
+      const overridesFromMetadata = Array.isArray(editing.outputMetadata?.materialOverrides) 
+        ? editing.outputMetadata.materialOverrides 
+        : [];
       const restoredAlternativeItems = Object.fromEntries(
-        sourceLines
-          .filter((l) => l.originalItemId && l.alternativeItemId)
-          .map((l) => [
-            l.originalItemId as string,
-            l.alternativeItemId as string,
+        overridesFromMetadata
+          .filter((ov: any) => ov.alternativeItemId)
+          .map((ov: any) => [
+            ov.path || ov.originalItemId,
+            ov.alternativeItemId,
           ]),
       );
       setAlternativeItems(restoredAlternativeItems);
 
+      setBomLoading(true);
       const resolveAndLoad = form.bomId
         ? Promise.resolve(form.bomId)
         : bomCoreApi
@@ -233,7 +281,7 @@ export function useProductionOrderDrawer({
 
               const sourceLineMap = new Map(
                 sourceLines.map((line) => [
-                  line.originalItemId ?? line.itemId,
+                  line.itemId, // Map by effective item id to distinguish overridden and non-overridden identical original items
                   line,
                 ]),
               );
@@ -245,9 +293,13 @@ export function useProductionOrderDrawer({
               ): BomLikeLine[] => {
                 let result: BomLikeLine[] = [];
                 for (const n of nodes) {
-                  const matched = sourceLineMap.get(n.itemId);
+                  const linePath = n.path || n.itemId;
+                  const selectedAltItemId = restoredAlternativeItems[linePath] || restoredAlternativeItems[n.itemId];
+                  const effectiveItemId = selectedAltItemId || n.itemId;
+                  const matched = sourceLineMap.get(effectiveItemId);
                   result.push({
                     id: matched?.id, // Keep original ID if it exists
+                    path: n.path,
                     itemId: n.itemId,
                     originalItemId: n.itemId,
                     itemCode: n.itemCode ?? matched?.originalItemCode ?? null,
@@ -311,6 +363,9 @@ export function useProductionOrderDrawer({
           if (bomLoadRequestRef.current !== requestId) return;
           setBomLines([]);
           setBalances({});
+        })
+        .finally(() => {
+          if (bomLoadRequestRef.current === requestId) setBomLoading(false);
         });
       return;
     }
@@ -318,9 +373,11 @@ export function useProductionOrderDrawer({
     if (!form.finishedGoodItemId) {
       setBomLines([]);
       setBalances({});
+      setBomLoading(false);
       return;
     }
 
+    setBomLoading(true);
     // Use the user-selected bomId if available; otherwise fall back to first
     const resolveAndLoad = form.bomId
       ? Promise.resolve(form.bomId)
@@ -353,6 +410,7 @@ export function useProductionOrderDrawer({
               let result: BomLikeLine[] = [];
               for (const n of nodes) {
                 result.push({
+                  path: n.path,
                   itemId: n.itemId,
                   originalItemId: n.itemId,
                   itemCode: n.itemCode ?? null,
@@ -392,6 +450,9 @@ export function useProductionOrderDrawer({
         if (bomLoadRequestRef.current !== requestId) return;
         setBomLines([]);
         setBalances({});
+      })
+      .finally(() => {
+        if (bomLoadRequestRef.current === requestId) setBomLoading(false);
       });
   }, [form.finishedGoodItemId, form.bomId, editing]);
 
@@ -477,12 +538,22 @@ export function useProductionOrderDrawer({
         setBomLines([]);
         setBalances({});
         setLineNotes({});
+        setBomLoading(false);
       }
       if (!editing) {
         setAlternativeItems({});
       }
       setLocalSearch("");
       setError(null);
+    } else {
+      setForm(emptyForm());
+      setBomLines([]);
+      setBalances({});
+      setLineNotes({});
+      setAlternativeItems({});
+      setLocalSearch("");
+      setError(null);
+      setBomLoading(false);
     }
   }, [open, editing, loadItems]);
 
@@ -499,14 +570,17 @@ export function useProductionOrderDrawer({
     setSaving(true);
     setError(null);
     try {
-      // Build materialOverrides from alternativeItems state
       const materialOverrides = Object.entries(alternativeItems)
         .filter(([, altId]) => !!altId)
-        .map(([originalItemId, alternativeItemId]) => ({
-          originalItemId,
-          alternativeItemId,
-          notes: "Thay thế bởi người dùng khi tạo lệnh sản xuất",
-        }));
+        .map(([pathOrItemId, alternativeItemId]) => {
+          const node = bomLines.find((l) => (l.path || l.itemId) === pathOrItemId);
+          return {
+            path: node?.path,
+            originalItemId: node?.itemId || pathOrItemId,
+            alternativeItemId,
+            notes: "Thay thế bởi người dùng khi tạo lệnh sản xuất",
+          };
+        });
 
       const payload = {
         finishedGoodItemId: form.finishedGoodItemId,
@@ -587,8 +661,8 @@ export function useProductionOrderDrawer({
     issueDrawer.openCreate(editing.id);
 
     const exportLines: GiLineForm[] = bomLines.map((line) => {
-      const originalItemId = line.originalItemId ?? line.itemId ?? "";
-      const selectedAltItemId = alternativeItems[originalItemId] ?? "";
+      const linePath = line.path || line.itemId || "";
+      const selectedAltItemId = alternativeItems[linePath] || alternativeItems[line.itemId ?? ""] || "";
       const effectiveItemId = selectedAltItemId || line.itemId || "";
       const effectiveItemName =
         selectedAltItemId && line.alternativeItemName
@@ -736,6 +810,7 @@ export function useProductionOrderDrawer({
     setAltItemSearch,
     fetchNextAltItems,
     loadingAltItems,
+    bomLoading,
   };
 }
 
