@@ -3,6 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { normalizeDateTimeGMT7 } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
 
@@ -28,6 +29,7 @@ export function useStockColumns({
         className: "align-middle min-w-[220px]",
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
+          const itemName = row.item_name || t("inventory.table.unnamed");
           return (
             <div className="space-y-1">
               <button
@@ -46,9 +48,11 @@ export function useStockColumns({
                   )}
                 />
               </button>
-              <div className="text-xs text-[color:var(--muted-fg)]">
-                {row.item_name || t("inventory.table.unnamed")}
-              </div>
+              <Tooltip content={itemName} side="top">
+                <div className="text-xs text-[color:var(--muted-fg)] truncate max-w-[200px]">
+                  {itemName}
+                </div>
+              </Tooltip>
             </div>
           );
         },
@@ -63,16 +67,19 @@ export function useStockColumns({
           if (itemType === "RAW") cls = "bg-blue-100 text-blue-700";
           else if (itemType === "FG") cls = "bg-emerald-100 text-emerald-700";
           else if (itemType === "WIP") cls = "bg-amber-100 text-amber-700";
+          const typeText = itemType
+            ? t(
+                `inventory.itemTypes.${itemType.toLowerCase() as "raw" | "fg" | "wip"}`,
+              )
+            : "—";
           return (
-            <span
-              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}
-            >
-              {itemType
-                ? t(
-                    `inventory.itemTypes.${itemType.toLowerCase() as "raw" | "fg" | "wip"}`,
-                  )
-                : "—"}
-            </span>
+            <Tooltip content={typeText} side="top">
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-[120px] ${cls}`}
+              >
+                {typeText}
+              </span>
+            </Tooltip>
           );
         },
       },

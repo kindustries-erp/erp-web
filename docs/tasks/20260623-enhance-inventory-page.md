@@ -18,6 +18,7 @@
   - Thêm dịch `inventory` vào `vi.ts` và `en.ts`.
   - Viết helper `normalizeDateTimeGMT7` trong `format.ts`.
   - Cập nhật `Inventory.tsx`, `OperationalInventoryPage.tsx`, `stockColumns.tsx`, `InventoryTimelineBlock.tsx`, và `operationalHelpers.ts`.
+  - Sử dụng component custom `Tooltip` từ app cho các cột vật tư (Item) và loại vật tư (Type).
 - Out-of-scope:
   - Thay đổi DB schema hoặc thay đổi logic API.
 
@@ -60,9 +61,9 @@
 - DB precheck result: `DB_READY` (Không cần chỉnh sửa DB)
 - `bun run lint:check`: Thành công, không lỗi/cảnh báo.
 - `bunx tsc --noEmit`: Thành công, compile không lỗi.
-- `bun run test`: 120/120 tests passed.
-- `bun run build`: Build thành công (1,433.89 kB bundle generated).
-- Smoke test: Đã kiểm tra đa ngôn ngữ, chuyển đổi timezone GMT+7 hoạt động chính xác ở các cột "Giao dịch cuối" và cột "Thời gian" lịch sử, danh sách movements đã được sort mới nhất lên đầu, có chiều cao giới hạn và thanh cuộn dọc hoạt động mượt mà.
+- `bun run test`: 119/119 tests passed.
+- `bun run build`: Build thành công (1,434.04 kB bundle generated).
+- Smoke test: Đã kiểm tra đa ngôn ngữ, chuyển đổi timezone GMT+7 hoạt động chính xác ở các cột "Giao dịch cuối" và cột "Thời gian" lịch sử, danh sách movements đã được sort mới nhất lên đầu, có chiều cao giới hạn và thanh cuộn dọc hoạt động mượt mà. Đã tích hợp component `<Tooltip>` từ `@/core/components/ui/Tooltip` cho tên vật tư và loại vật tư khi bị truncate (ellipsis).
 
 ## Lessons Learned
 
