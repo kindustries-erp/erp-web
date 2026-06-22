@@ -17,26 +17,40 @@
 - `docs/tasks/20260608-235700-wave2-core-flow-verification.md`
 - `docs/tasks/20260607-erp-core-web-scope-cut.md`
 
-## Current checkpoint gap
+## Recently closed (2026-06-22 — reconcile session)
 
-- `current-lane.md` đã được cập nhật lần này để phản ánh commit mới nhất `b13e672` (2026-06-21 continuation).
-- Lineage commit gần nhất:
-  - `b13e672` feat(ui): perfectly align column visibility gear icon and enable i18n support in toggle menu
-  - `51a2773` feat: add column visibility toggle to DataTable and StandardTable
-  - `21d9373` chore: remove dead UI table components and orphaned pages
-  - `abe7a1f` feat(production): enhance UI formatting in production order drawer and allow note updates
-  - `a589bdf` refactor(production): align MO detail action menu and drawer production action UX
-- Pending manual QC: smoke test ProductionRunDrawer với MO status CONFIRMED / IN_PROGRESS, unit-by-unit mode (≤50) và batch mode (>50).
-- Lane task artifact drift đã được reconcile (2026-06-21 audit).
-
-## High-value current-lane tasks
-
-- `docs/tasks/add-column-visibility.md` ← DONE (committed `51a2773`, `b13e672`)
-- `docs/tasks/remove-dead-ui-tables.md` ← DONE (committed `21d9373`)
-- `docs/tasks/update-production-drawer-ui.md` ← DONE (committed `abe7a1f`)
-- `docs/tasks/20260621-manufacture-progress-drawer.md` ← DONE (implementation lane), QC_PENDING (manual smoke)
-- `docs/tasks/20260621-production-order-qty-validation-alt-item-code.md` ← DONE (committed `664231f`)
+- `docs/tasks/add-column-visibility.md` ← DONE (`51a2773`, `b13e672`)
+- `docs/tasks/remove-dead-ui-tables.md` ← DONE (`21d9373`)
+- `docs/tasks/update-production-drawer-ui.md` ← DONE (`abe7a1f`)
+- `docs/tasks/20260621-manufacture-progress-drawer.md` ← DONE (implementation), QC_PENDING (manual smoke staging)
+- `docs/tasks/20260621-production-order-qty-validation-alt-item-code.md` ← DONE (`664231f`)
 - `docs/tasks/20260620-erp-production-start-complete-auto-warehouse.md` ← DONE
+- `docs/tasks/20260621-bom-combobox-option-cache.md` ← DONE (`5e21328`, `dc2841b`)
+- `docs/tasks/20260621-mo-bom-selection-ref-autofill.md` ← DONE (`52b5282`, `f278cb2`, `a12109c`, `14fa12d`)
+- `docs/tasks/20260621-mo-dynamic-identifiers-and-bom-bugfixes.md` ← DONE (bulk vehicle complete, dynamic identifiers, BOM bugfixes)
+- `docs/tasks/feat-env-stamp.md` ← DONE (`69cb59d`)
+- `docs/tasks/feat-env-stamp-refactor.md` ← DONE (`69f72db`, `eb93ac1`)
+- `docs/tasks/column-reorder-preferences.md` ← DONE (`aa8ca5e`)
+- `docs/tasks/20260622-bom-activate-inactivate-and-production-filter.md` ← DONE (`b292ce3`)
+
+## Current checkpoint gap (2026-06-22 afternoon)
+
+Recent commits since `b13e672` now reflected in `current-lane.md`:
+- `22b53ee` — refactor ProductionRunDrawer layout + double-drawer fix
+- `c0648e7` — BOM drawer + table formatting
+- `b292ce3` — BOM activate/inactivate + active-BOM filter in production
+- `aa8ca5e` — draggable column reorder + preferences persistence
+- `411db2d` — production progress UI columns and sorting
+- `ffc2bac` — production sort param serialization fix
+- `69cb59d` — EnvStamp float
+- `69f72db` — EnvStamp Zustand refactor + shared enum
+- `e49b517` — UI enhancements + company profile integration
+- `eb93ac1` — EnvStamp right edge position
+- `bcd20bb` — company profile drawer modal style reuse
+
+Company profile + R2 file storage feature on API side (`e06188e`) may require a matching Web artifact once UI consumer is added.
+
+Pending staging QC: smoke test ProductionRunDrawer with MO status CONFIRMED / IN_PROGRESS, unit-by-unit mode (≤50) and batch mode (>50), plus vehicle tracking complete-all flow.
 
 ## Current lane lessons
 
