@@ -46,7 +46,7 @@ export function EnvStamp() {
 
   return (
     <div
-      className={`fixed top-0 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none px-4 py-1.5 ${bgClass} text-white text-xs font-bold uppercase tracking-widest backdrop-blur-md rounded-b-xl shadow-md border-b border-x ${borderClass} transition-all`}
+      className={`fixed top-1/2 right-0 -translate-y-1/2 z-[9999] pointer-events-none px-1.5 py-4 ${bgClass} text-white text-xs font-bold uppercase tracking-widest backdrop-blur-md rounded-r-xl shadow-md border-y border-r ${borderClass} transition-all rotate-180 [writing-mode:vertical-rl]`}
     >
       {text}
     </div>
