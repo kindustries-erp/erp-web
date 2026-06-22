@@ -234,6 +234,7 @@ export const en: Dict = {
     note: "Note",
     selectAccount: "Select account",
     receiveInventory: "Receive Inventory",
+    clone: "Clone",
   },
   status: {
     approved: "Approved",

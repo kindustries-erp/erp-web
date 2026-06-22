@@ -98,6 +98,7 @@ export function toPayload(form: BomForm) {
 export interface BomFormDrawerProps {
   open: boolean;
   onClose: () => void;
+  onToggleEdit?: () => void;
   mode: DrawerMode;
   editing: ErpBom | null;
   form: BomForm;
@@ -118,6 +119,7 @@ export interface BomFormDrawerProps {
 export function BomFormDrawer({
   open,
   onClose,
+  onToggleEdit,
   mode,
   editing,
   form,
@@ -179,7 +181,7 @@ export function BomFormDrawer({
               },
             },
             {
-              label: editing ? t("Xác nhận") : t("Tạo Mới"),
+              label: editing ? t("Lưu và Áp dụng") : t("Tạo Mới"),
               primary: true,
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
@@ -199,7 +201,7 @@ export function BomFormDrawer({
             {
               label: t("Lưu thay đổi"),
               primary: true,
-              loading: saving,
+              loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
                 setSubmittingStatus("ACTIVE");
@@ -213,6 +215,7 @@ export function BomFormDrawer({
       open={open}
       mode={mode}
       onClose={onClose}
+      onToggleEdit={onToggleEdit}
       title={
         viewOnly
           ? t("Xem BOM")
@@ -259,8 +262,8 @@ export function BomFormDrawer({
             data={filteredLines}
             getRowKey={(_, idx) => String(idx)}
             viewOnly={viewOnly}
-            onAddLine={addLine}
-            onRemoveLine={removeLine}
+            onAddLine={isEditing ? undefined : addLine}
+            onRemoveLine={isEditing ? undefined : removeLine}
             columns={[
               {
                 key: "component",
@@ -410,21 +413,6 @@ export function BomFormDrawer({
               }
               className="w-full"
               placeholder="DD/MM/YYYY"
-            />
-          </DrawerField>
-          <DrawerField label={t("Trạng thái")}>
-            <Combobox
-              value={form.status}
-              readOnly={viewOnly}
-              allowClear={false}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, status: value || "ACTIVE" }))
-              }
-              options={[
-                { value: "ACTIVE", label: t("Đang áp dụng") },
-                { value: "INACTIVE", label: t("Ngừng áp dụng") },
-                { value: "DRAFT", label: t("Bản nháp") },
-              ]}
             />
           </DrawerField>
           <DrawerField label={t("Ghi chú")}>

@@ -453,8 +453,8 @@ export function DataTable<T>({
                     {renderSubRow && isExpanded && (
                       <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
                         <TableCell
-                          colSpan={tableColumns.length}
-                          className="p-4 pl-14 bg-muted/20"
+                          colSpan={row.getVisibleCells().length}
+                          className="p-4 bg-muted/20"
                         >
                           {renderSubRow(row.original)}
                         </TableCell>
