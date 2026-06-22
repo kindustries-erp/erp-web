@@ -148,7 +148,7 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      appTheme: "shell",
+      appTheme: "classic",
       locale: "vi",
       isLoggedIn: false,
       customBreadcrumbs: null,
@@ -273,7 +273,7 @@ export const useAppStore = create<AppState>()(
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["shell", "classic", "orcaq"];
+        const order: AppTheme[] = ["classic", "shell", "orcaq"];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
@@ -308,7 +308,7 @@ export const useAppStore = create<AppState>()(
         if (state) {
           applyDocumentTheme(state.appTheme);
         } else {
-          applyDocumentTheme("shell");
+          applyDocumentTheme("classic");
         }
       },
     },

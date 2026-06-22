@@ -18,9 +18,10 @@ import {
 } from "@/shared/components/DrawerModal";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
+import { useUIStore } from "@/core/config/uiStore";
 import { GoodsReceiptPrintTemplate } from "@/shared/components/print-templates/GoodsReceiptPrintTemplate";
 
 function fmtQty(value?: string | null) {
@@ -60,6 +61,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     handleSave,
     setViewOnly,
   } = drawer;
+
+  const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
+  useEffect(() => {
+    setGlobalLoading(saving);
+  }, [saving, setGlobalLoading]);
 
   const t = useT();
   const printRef = useRef<HTMLDivElement>(null);

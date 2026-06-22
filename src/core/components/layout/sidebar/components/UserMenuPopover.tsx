@@ -6,8 +6,8 @@ import { Popover } from "@/core/components/ui/Popover";
 import { cn, getBuildVersionLabel } from "@/shared/utils";
 
 const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
-  { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "classic", labelKey: "nav.bottom.themeClassic" },
+  { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "orcaq", labelKey: "nav.bottom.themeOrca" },
 ];
 

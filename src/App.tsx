@@ -6,6 +6,7 @@ import { Topbar } from "@/core/components/layout/Topbar";
 import { TabBar } from "@/core/components/layout/TabBar";
 import { SlidePanel } from "@/shared/components/SlidePanel";
 import { Toast } from "@/shared/components/Toast";
+import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
@@ -126,6 +127,7 @@ export default function App() {
           <TabBar />
         </div>
         <SlidePanel />
+        <TopProgressBar />
         <Toast />
         <ReloadPrompt />
         <AppContextMenu />

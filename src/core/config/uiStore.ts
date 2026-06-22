@@ -32,6 +32,8 @@ interface UIState {
   closeImport: () => void;
   setImportFile: (file: File | null) => void;
   resetShellState: () => void;
+  globalLoading: boolean;
+  setGlobalLoading: (loading: boolean) => void;
 }
 
 const shellStateDefaults = {
@@ -83,4 +85,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     if (prev) URL.revokeObjectURL(prev.name);
     set(shellStateDefaults);
   },
+
+  globalLoading: false,
+  setGlobalLoading: (globalLoading) => set({ globalLoading }),
 }));

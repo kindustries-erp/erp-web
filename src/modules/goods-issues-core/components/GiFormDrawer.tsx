@@ -15,9 +15,10 @@ import {
   type UseGiDrawerReturn,
   type GiLineForm,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
+import { useUIStore } from "@/core/config/uiStore";
 import { GoodsIssuePrintTemplate } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
 
 interface GiFormDrawerProps {
@@ -50,6 +51,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     handleSave,
     setViewOnly,
   } = drawer;
+
+  const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
+  useEffect(() => {
+    setGlobalLoading(saving);
+  }, [saving, setGlobalLoading]);
 
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({

@@ -49,7 +49,6 @@ import {
 } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { createPortal } from "react-dom";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -62,6 +61,7 @@ export function ErpWarehouseTab({
   const canReadReceipts = useHasPermission("goods_receipts", "read");
   const canReadIssues = useHasPermission("goods_issues", "read");
   const showToast = useUIStore((s) => s.showToast);
+  const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const queryClient = useQueryClient();
 
   // ── filter state (same pattern as page mua hàng)
@@ -111,6 +111,10 @@ export function ErpWarehouseTab({
     documentTitle: `PhieuXuatKho_${printGiData?.data.issueNo || ""}`,
     onAfterPrint: () => setPrintTargetId(null),
   });
+
+  useEffect(() => {
+    setGlobalLoading(!!printTargetId);
+  }, [printTargetId, setGlobalLoading]);
 
   useEffect(() => {
     if (printTargetId && printGrData && printGrData.id === printTargetId) {
@@ -628,28 +632,6 @@ export function ErpWarehouseTab({
           />
         )}
       </div>
-
-      {!!printTargetId &&
-        typeof document !== "undefined" &&
-        createPortal(
-          <div className="fixed top-0 left-0 right-0 h-[3px] z-[99999] overflow-hidden bg-primary/20 pointer-events-none">
-            <div
-              className="h-full bg-primary"
-              style={{
-                width: "40%",
-                animation: "indeterminate 1.5s infinite ease-in-out",
-              }}
-            >
-              <style>{`
-                @keyframes indeterminate {
-                  0% { transform: translateX(-100%); }
-                  100% { transform: translateX(250%); }
-                }
-              `}</style>
-            </div>
-          </div>,
-          document.body,
-        )}
     </>
   );
 }
