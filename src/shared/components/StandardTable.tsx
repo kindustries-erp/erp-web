@@ -28,6 +28,7 @@ export interface StandardTableProps<T> {
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
+  tableId?: string;
 }
 
 export function StandardTable<T>({
@@ -52,6 +53,7 @@ export function StandardTable<T>({
   renderSubRow,
   onRowClick,
   enableColumnVisibility = true,
+  tableId,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -90,6 +92,7 @@ export function StandardTable<T>({
       }
       renderSubRow={renderSubRow}
       enableColumnVisibility={enableColumnVisibility}
+      tableId={tableId}
     />
   );
 }

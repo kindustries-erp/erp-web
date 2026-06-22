@@ -18,6 +18,7 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
+import { Progress } from "@/shared/components/ui/progress";
 
 import {
   productionCoreApi,
@@ -67,7 +68,7 @@ export function ProductionOrderListPage() {
       .then((res) => {
         const uniqueFgs = new Map();
         res.items.forEach((bom) => {
-          if (bom.finishedGoodItemId) {
+          if (bom.status === "ACTIVE" && bom.finishedGoodItemId) {
             uniqueFgs.set(bom.finishedGoodItemId, {
               value: bom.finishedGoodItemId,
               label: bom.finishedGoodItemName || bom.finishedGoodItemId,
@@ -138,6 +139,9 @@ export function ProductionOrderListPage() {
   const filterDateTo = filter.state.dateTo;
   const filterFinishedGood = filter.state.custom.finishedGoodItemId;
 
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -150,6 +154,9 @@ export function ProductionOrderListPage() {
         dateFrom: filterDateFrom || undefined,
         dateTo: filterDateTo || undefined,
         finishedGoodItemId: filterFinishedGood || undefined,
+        sort: sortBy
+          ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`]
+          : undefined,
       });
       setOrders(res.items);
       setTotal(res.total);
@@ -167,6 +174,8 @@ export function ProductionOrderListPage() {
     filterDateFrom,
     filterDateTo,
     filterFinishedGood,
+    sortBy,
+    sortOrder,
     t,
   ]);
 
@@ -175,6 +184,20 @@ export function ProductionOrderListPage() {
       loadData();
     }
   }, [loadData, canRead]);
+
+  const handleSort = (key: string) => {
+    if (sortBy === key) {
+      if (sortOrder === "asc") setSortOrder("desc");
+      else {
+        setSortBy(undefined);
+        setSortOrder("asc");
+      }
+    } else {
+      setSortBy(key);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
 
   const handleCreate = () => {
     setDrawerMode("create");
@@ -281,7 +304,9 @@ export function ProductionOrderListPage() {
     () => [
       {
         key: "referenceNo",
-        header: t("Reference No"),
+        header: t("Mã lệnh"),
+        sortable: true,
+        sortKey: "reference_no",
         cell: (item: ErpProductionOrder) => (
           <span
             className="cursor-pointer font-medium text-emerald-600 hover:underline"
@@ -292,8 +317,64 @@ export function ProductionOrderListPage() {
         ),
       },
       {
+        key: "finishedGoodItemName",
+        header: t("Thành phẩm"),
+        sortable: true,
+        sortKey: "finished_good_item_name",
+        cell: (item: ErpProductionOrder) =>
+          item.finishedGoodItemName || item.finishedGoodItemId || "—",
+      },
+      {
+        key: "plannedStartDate",
+        header: t("Ngày bắt đầu"),
+        sortable: true,
+        sortKey: "planned_start_date",
+        cell: (item: ErpProductionOrder) => fmtDate(item.plannedStartDate),
+      },
+      {
+        key: "plannedEndDate",
+        header: t("Ngày kết thúc"),
+        sortable: true,
+        sortKey: "planned_end_date",
+        cell: (item: ErpProductionOrder) => fmtDate(item.plannedEndDate),
+      },
+      {
+        key: "qtyProduced",
+        header: t("Tiến độ"),
+        sortable: true,
+        sortKey: "qty_produced",
+        cell: (item: ErpProductionOrder) => {
+          const produced = Number(item.qtyProduced) || 0;
+          const target = Number(item.qtyToProduce) || 0;
+          const percent =
+            target > 0 ? Math.min((produced / target) * 100, 100) : 0;
+
+          let indicatorColor = "bg-slate-400";
+          if (percent === 100) indicatorColor = "bg-emerald-500";
+          else if (percent > 0) indicatorColor = "bg-blue-500";
+
+          return (
+            <div className="flex flex-col gap-1 w-28">
+              <div className="flex items-center justify-between text-[11px] font-medium leading-none">
+                <span className="text-slate-700">{Math.round(percent)}%</span>
+                <span className="text-slate-500">
+                  ({fmtQty(item.qtyProduced)} / {fmtQty(item.qtyToProduce)})
+                </span>
+              </div>
+              <Progress
+                value={percent}
+                className="h-1.5 bg-slate-200"
+                indicatorClassName={indicatorColor}
+              />
+            </div>
+          );
+        },
+      },
+      {
         key: "status",
         header: t("Trạng thái"),
+        sortable: true,
+        sortKey: "status",
         cell: (item: ErpProductionOrder) => (
           <span
             className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
@@ -309,36 +390,6 @@ export function ProductionOrderListPage() {
             {item.status || "—"}
           </span>
         ),
-      },
-      {
-        key: "finishedGoodItemName",
-        header: t("Thành phẩm"),
-        cell: (item: ErpProductionOrder) =>
-          item.finishedGoodItemName || item.finishedGoodItemId || "—",
-      },
-      {
-        key: "qtyProduced",
-        header: t("Tiến độ"),
-        cell: (item: ErpProductionOrder) => (
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-emerald-700">
-              {fmtQty(item.qtyProduced)}
-            </span>
-            <span className="text-muted-foreground text-xs">
-              / {fmtQty(item.qtyToProduce)}
-            </span>
-          </div>
-        ),
-      },
-      {
-        key: "plannedStartDate",
-        header: t("Ngày bắt đầu"),
-        cell: (item: ErpProductionOrder) => fmtDate(item.plannedStartDate),
-      },
-      {
-        key: "plannedEndDate",
-        header: t("Ngày kết thúc"),
-        cell: (item: ErpProductionOrder) => fmtDate(item.plannedEndDate),
       },
     ],
     [t, canUpdate],
@@ -371,6 +422,7 @@ export function ProductionOrderListPage() {
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <StandardTable<ErpProductionOrder>
+            tableId="erp-production-table"
             items={orders}
             columns={columns}
             getRowKey={(i) => i.id}
@@ -429,6 +481,12 @@ export function ProductionOrderListPage() {
                   (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
               },
             ]}
+            sortArray={
+              sortBy
+                ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`]
+                : undefined
+            }
+            onSort={handleSort}
           />
         </div>
         <FilterPanel config={filterConfig} filter={filter} />

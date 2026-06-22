@@ -234,6 +234,8 @@ export const vi = {
     selectAccount: "Chọn tài khoản",
     receiveInventory: "Nhập kho",
     clone: "Nhân bản",
+    activate: "Áp dụng",
+    inactivate: "Ngừng áp dụng",
   },
   status: {
     approved: "Đã duyệt",
