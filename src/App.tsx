@@ -18,7 +18,6 @@ import { Kho } from "@/pages/Inventory";
 import { MfgItems } from "@/pages/MfgItems";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
-import { ErpWarehousePage } from "@/pages/ErpWarehousePage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
@@ -45,7 +44,6 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,
-  "erp-warehouse": ErpWarehousePage,
   "erp-production": ErpProductionPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "erp-goods-issues": ErpGoodsIssuesPage,

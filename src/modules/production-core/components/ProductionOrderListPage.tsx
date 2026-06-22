@@ -450,7 +450,10 @@ export function ProductionOrderListPage() {
         onSaved={loadData}
         drawerState={drawerState}
         productionRunOpen={
-          productionRunOpen && productionRunOrder?.id === editingOrder?.id
+          productionRunOpen &&
+          !!productionRunOrder &&
+          !!editingOrder &&
+          productionRunOrder.id === editingOrder.id
         }
         onOpenProductionRun={() => {
           if (editingOrder) {

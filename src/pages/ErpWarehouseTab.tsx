@@ -12,12 +12,10 @@ import {
   Trash2,
   XCircle,
   RefreshCcw,
-  ClipboardList,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
-import { PageLayout } from "@/shared/components/PageLayout";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { StandardTable } from "@/shared/components/StandardTable";
@@ -40,24 +38,13 @@ import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function KindBadge({ kind }: { kind: "receipt" | "issue" }) {
-  const t = useT();
-  return kind === "receipt" ? (
-    <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 ring-1 ring-blue-200">
-      {t("Nhập kho")}
-    </span>
-  ) : (
-    <span className="inline-flex rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700 ring-1 ring-orange-200">
-      {t("Xuất kho")}
-    </span>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export function ErpWarehousePage() {
+export function ErpWarehouseTab({
+  setActions,
+}: {
+  setActions?: (node: React.ReactNode) => void;
+}) {
   const t = useT();
   const canReadReceipts = useHasPermission("goods_receipts", "read");
   const canReadIssues = useHasPermission("goods_issues", "read");
@@ -189,9 +176,6 @@ export function ErpWarehousePage() {
   const total = vouchersQuery.data?.total ?? 0;
   const totalPages = vouchersQuery.data?.totalPages ?? 1;
 
-  function openGrCreate() {
-    grDrawer.openCreate();
-  }
   async function openGrDetail(id: string, viewOnly: boolean) {
     await grDrawer.openDetail(id, viewOnly);
   }
@@ -234,28 +218,24 @@ export function ErpWarehousePage() {
   const columns: DataTableColumn<WarehouseRow>[] = useMemo(
     () => [
       {
-        key: "type",
-        header: t("Loại"),
-        className: "w-[110px]",
-        cell: (row) => <KindBadge kind={row.type} />,
-      },
-      {
-        key: "date",
-        header: t("Ngày"),
-        className: "w-[110px]",
-        sortable: true,
-        sortKey: "date",
-        cell: (row) => format(new Date(row.createdAt), "dd/MM/yyyy HH:mm:ss"),
-      },
-      {
         key: "voucherNo",
         header: t("Số phiếu"),
-        className: "w-[160px] font-mono text-sm",
+        className: "w-[200px] font-mono text-sm",
         sortable: true,
         sortKey: "voucherNo",
         cell: (row) => (
           <div className="flex items-center gap-2">
-            <span>{row.voucherNo}</span>
+            <span
+              title={row.type === "receipt" ? t("Nhập kho") : t("Xuất kho")}
+              className="flex-shrink-0"
+            >
+              {row.type === "receipt" ? (
+                <PackagePlus className="h-4 w-4 text-emerald-600" />
+              ) : (
+                <PackageMinus className="h-4 w-4 text-orange-600" />
+              )}
+            </span>
+            <span className="font-medium text-foreground">{row.voucherNo}</span>
             {row.status === "DRAFT" && (
               <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
                 {t("Nháp")}
@@ -268,6 +248,14 @@ export function ErpWarehousePage() {
             )}
           </div>
         ),
+      },
+      {
+        key: "date",
+        header: t("Ngày"),
+        className: "w-[110px]",
+        sortable: true,
+        sortKey: "date",
+        cell: (row) => format(new Date(row.createdAt), "dd/MM/yyyy HH:mm:ss"),
       },
       {
         key: "poNo",
@@ -283,6 +271,7 @@ export function ErpWarehousePage() {
       {
         key: "remarks",
         header: t("Ghi chú"),
+        className: "min-w-[300px]",
         cell: (row) => row.remarks ?? "—",
       },
     ],
@@ -291,132 +280,131 @@ export function ErpWarehousePage() {
 
   // ── GR drawer actions (now delegated — kept for the URL-driven open logic below)
 
+  useEffect(() => {
+    if (setActions) {
+      setActions(
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="px-3 py-2"
+            disabled={loading}
+            onClick={() => void vouchersQuery.refetch()}
+          >
+            <RefreshCcw
+              className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")}
+            />
+            <span>{t("Tải lại")}</span>
+          </Button>
+          <FilterButton
+            onClick={() => filterPanel.togglePanel()}
+            activeCount={filterPanel.activeFilterCount}
+          />
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+            onClick={() => grDrawer.openCreate()}
+          >
+            <PackagePlus className="h-3.5 w-3.5" />
+            {t("Nhập kho")}
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
+            onClick={() => giDrawer.openCreate()}
+          >
+            <PackageMinus className="h-3.5 w-3.5" />
+            {t("Xuất kho")}
+          </button>
+        </div>,
+      );
+    }
+  }, [setActions, loading, filterPanel.activeFilterCount]);
+
   if (!canReadReceipts && !canReadIssues) return <Forbidden />;
 
   return (
     <>
-      <PageLayout
-        title={t("Chứng từ kho")}
-        desc={t("Quản lý phiếu nhập kho và xuất kho.")}
-        icon={<ClipboardList className="h-5 w-5" />}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="px-3 py-2"
-              disabled={loading}
-              onClick={() => void vouchersQuery.refetch()}
-            >
-              <RefreshCcw
-                className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")}
-              />
-              <span>{t("Tải lại")}</span>
-            </Button>
-            <FilterButton
-              onClick={() => filterPanel.togglePanel()}
-              activeCount={filterPanel.activeFilterCount}
-            />
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-              onClick={() => openGrCreate()}
-            >
-              <PackagePlus className="h-3.5 w-3.5" />
-              {t("Nhập kho")}
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-              onClick={() => giDrawer.openCreate()}
-            >
-              <PackageMinus className="h-3.5 w-3.5" />
-              {t("Xuất kho")}
-            </button>
-          </div>
-        }
-      >
-        {loadError && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {loadError}
-          </div>
-        )}
-
-        <div className="flex items-start">
-          <div className="flex-1 min-w-0 space-y-4">
-            <StandardTable<WarehouseRow>
-              items={rows}
-              columns={columns}
-              getRowKey={(r) => `${r.type}-${r.id}`}
-              loading={loading}
-              sortArray={
-                activeSortKey
-                  ? [
-                      activeSortOrder === "desc"
-                        ? `-${activeSortKey}`
-                        : activeSortKey,
-                    ]
-                  : undefined
-              }
-              onSort={(key) => {
-                if (activeSortKey === key) {
-                  if (activeSortOrder === "asc") {
-                    // lần 2: chuyển sang desc
-                    setActiveSortOrder("desc");
-                    setSortOrder("desc");
-                  } else {
-                    // lần 3: reset về default
-                    setActiveSortKey(null);
-                    setSortBy("date");
-                    setSortOrder("desc");
-                  }
-                } else {
-                  // click column mới: bắt đầu từ asc
-                  setActiveSortKey(key);
-                  setActiveSortOrder("asc");
-                  setSortBy(key);
-                  setSortOrder("asc");
-                }
-              }}
-              emptyLabel={t("Chưa có chứng từ kho.")}
-              minWidth={780}
-              loadingRows={8}
-              onRowClick={(row) => {
-                if (row.type === "receipt") void openGrDetail(row.id, true);
-                else if (row.type === "issue")
-                  void giDrawer.openDetail(row.id, true);
-              }}
-              actions={(row) => [
-                {
-                  label: t("Xóa"),
-                  icon: <Trash2 className="h-3.5 w-3.5" />,
-                  variant: "danger",
-                  hidden: row.status !== "DRAFT",
-                  onClick: () => setDeleteTarget(row),
-                },
-                {
-                  label:
-                    grCancelId === row.id ? t("Đang hủy...") : t("Hủy phiếu"),
-                  icon: <XCircle className="h-3.5 w-3.5" />,
-                  variant: "danger",
-                  hidden: row.type !== "receipt" || row.status !== "POSTED",
-                  onClick: () => setCancelTarget(row),
-                },
-              ]}
-              page={page}
-              pageSize={pageSize}
-              total={total}
-              totalPages={totalPages}
-              onPage={setPage}
-              onPageSize={(v) => {
-                setPage(1);
-                setPageSize(v);
-              }}
-            />
-          </div>
-          <FilterPanel config={filterConfig} filter={filterPanel} />
+      {loadError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
         </div>
-      </PageLayout>
+      )}
+
+      <div className="flex items-start">
+        <div className="flex-1 min-w-0 space-y-4">
+          <StandardTable<WarehouseRow>
+            items={rows}
+            columns={columns}
+            getRowKey={(r) => `${r.type}-${r.id}`}
+            loading={loading}
+            sortArray={
+              activeSortKey
+                ? [
+                    activeSortOrder === "desc"
+                      ? `-${activeSortKey}`
+                      : activeSortKey,
+                  ]
+                : undefined
+            }
+            onSort={(key) => {
+              if (activeSortKey === key) {
+                if (activeSortOrder === "asc") {
+                  // lần 2: chuyển sang desc
+                  setActiveSortOrder("desc");
+                  setSortOrder("desc");
+                } else {
+                  // lần 3: reset về default
+                  setActiveSortKey(null);
+                  setSortBy("date");
+                  setSortOrder("desc");
+                }
+              } else {
+                // click column mới: bắt đầu từ asc
+                setActiveSortKey(key);
+                setActiveSortOrder("asc");
+                setSortBy(key);
+                setSortOrder("asc");
+              }
+            }}
+            emptyLabel={t("Chưa có chứng từ kho.")}
+            minWidth={1000}
+            loadingRows={8}
+            onRowClick={(row) => {
+              if (row.type === "receipt") void openGrDetail(row.id, true);
+              else if (row.type === "issue")
+                void giDrawer.openDetail(row.id, true);
+            }}
+            actions={(row) => [
+              {
+                label: t("Xóa"),
+                icon: <Trash2 className="h-3.5 w-3.5" />,
+                variant: "danger",
+                hidden: row.status !== "DRAFT",
+                onClick: () => setDeleteTarget(row),
+              },
+              {
+                label:
+                  grCancelId === row.id ? t("Đang hủy...") : t("Hủy phiếu"),
+                icon: <XCircle className="h-3.5 w-3.5" />,
+                variant: "danger",
+                hidden: row.type !== "receipt" || row.status !== "POSTED",
+                onClick: () => setCancelTarget(row),
+              },
+            ]}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(v) => {
+              setPage(1);
+              setPageSize(v);
+            }}
+          />
+        </div>
+        <FilterPanel config={filterConfig} filter={filterPanel} />
+      </div>
 
       <ConfirmModal
         open={!!deleteTarget}
