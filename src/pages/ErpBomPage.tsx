@@ -1054,6 +1054,7 @@ export function ErpBomPage() {
       <div className="flex items-start">
         <div className="min-w-0 flex-1">
           <StandardTable<ErpBom>
+            tableId="erp-bom-table"
             items={items}
             columns={columns}
             getRowKey={(item) => item.id}
