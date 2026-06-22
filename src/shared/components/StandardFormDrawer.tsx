@@ -22,8 +22,10 @@ export interface StandardFormDrawerProps {
   loading?: boolean;
   error?: string | null;
 
+  layout?: "1-column" | "2-columns";
+
   leftPanel: React.ReactNode;
-  rightPanel: React.ReactNode;
+  rightPanel?: React.ReactNode;
 
   /** Allows overriding the default wide panel width class */
   panelClassName?: string;
@@ -49,6 +51,7 @@ export function StandardFormDrawer({
   actions,
   loading,
   error,
+  layout = "2-columns",
   leftPanel,
   rightPanel,
   panelClassName,
@@ -76,7 +79,9 @@ export function StandardFormDrawer({
     ) : undefined;
 
   const defaultPanelClassName =
-    "w-full md:w-[95vw] lg:w-[90vw] xl:w-[1200px] 2xl:w-[1400px]";
+    layout === "1-column"
+      ? "w-full md:w-[95vw] lg:w-[500px] xl:w-[500px] 2xl:w-[550px]"
+      : "w-full md:w-[95vw] lg:w-[90vw] xl:w-[1200px] 2xl:w-[1400px]";
 
   return (
     <DrawerModal
@@ -91,6 +96,12 @@ export function StandardFormDrawer({
     >
       {loading ? (
         <FormLoadingSkeleton />
+      ) : layout === "1-column" ? (
+        <div className="w-full pb-4">
+          <div className="rounded-xl border border-border bg-surface p-6 card-shadow">
+            {leftPanel}
+          </div>
+        </div>
       ) : (
         <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full relative h-full">
           {/* Cột trái: Chi tiết / Main Content */}

@@ -18,3 +18,5 @@ export function bangChu(n: number): string {
     : fmtMoney(n);
   return label + " đồng chẵn";
 }
+
+export * from "./buildVersion";

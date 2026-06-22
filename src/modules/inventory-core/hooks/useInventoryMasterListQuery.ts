@@ -14,6 +14,9 @@ export type InventoryMasterQueryKind =
 
 export interface UseInventoryMasterListQueryParams {
   kind: InventoryMasterQueryKind;
+  page?: number;
+  pageSize?: number;
+  sort?: string[];
   search?: string;
   isActive?: boolean;
 }
@@ -23,12 +26,13 @@ export function useInventoryMasterListQuery(
 ) {
   const normalizedParams = useMemo(
     () => ({
-      page: 1,
-      pageSize: 200,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 200,
+      sort: params.sort,
       search: params.search?.trim() || undefined,
       isActive: params.isActive,
     }),
-    [params.isActive, params.search],
+    [params.isActive, params.search, params.page, params.pageSize, params.sort],
   );
 
   return useAppQuery<PaginatedResponse<InventoryMasterOption>>({
