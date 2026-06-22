@@ -67,7 +67,7 @@ export function ProductionOrderListPage() {
       .then((res) => {
         const uniqueFgs = new Map();
         res.items.forEach((bom) => {
-          if (bom.finishedGoodItemId) {
+          if (bom.status === "ACTIVE" && bom.finishedGoodItemId) {
             uniqueFgs.set(bom.finishedGoodItemId, {
               value: bom.finishedGoodItemId,
               label: bom.finishedGoodItemName || bom.finishedGoodItemId,

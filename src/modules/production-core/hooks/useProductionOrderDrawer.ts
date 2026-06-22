@@ -35,6 +35,7 @@ export interface BomLikeLine {
 
 interface BomLikeItem {
   id?: string;
+  status?: string | null;
   finishedGoodItemId?: string | null;
   finishedGoodItemName?: string | null;
   lines?: BomLikeLine[];
@@ -171,7 +172,7 @@ export function useProductionOrderDrawer({
       const res = await bomCoreApi.list({ pageSize: 500 });
       const uniqueFgs = new Map<string, { value: string; label: string }>();
       res.items.forEach((bom: BomLikeItem) => {
-        if (bom.finishedGoodItemId) {
+        if (bom.status === "ACTIVE" && bom.finishedGoodItemId) {
           uniqueFgs.set(bom.finishedGoodItemId, {
             value: bom.finishedGoodItemId,
             label: bom.finishedGoodItemName || bom.finishedGoodItemId,

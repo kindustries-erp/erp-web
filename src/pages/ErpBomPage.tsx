@@ -6,6 +6,8 @@ import {
   Loader2,
   Eye,
   Copy,
+  Ban,
+  CheckCircle,
 } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
@@ -504,6 +506,12 @@ export function ErpBomPage() {
   const [deleteTarget, setDeleteTarget] = useState<ErpBom | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [statusTarget, setStatusTarget] = useState<ErpBom | null>(null);
+  const [targetAction, setTargetAction] = useState<
+    "ACTIVE" | "INACTIVE" | null
+  >(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -876,14 +884,27 @@ export function ErpBomPage() {
     }
   }
 
+  async function handleConfirmStatusChange() {
+    if (!statusTarget || !targetAction) return;
+    setUpdatingStatus(true);
+    try {
+      await bomCoreApi.update(statusTarget.id, { status: targetAction });
+      setStatusTarget(null);
+      setTargetAction(null);
+      await loadBoms();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+          e?.message ||
+          t("Không thể thay đổi trạng thái BOM"),
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
   const columns: DataTableColumn<ErpBom>[] = [
-    {
-      key: "stt",
-      header: <div className="text-center">#</div>,
-      className: "text-center font-medium text-muted-foreground",
-      headerClassName: "w-[48px] text-center",
-      cell: (_, index) => index,
-    },
     {
       key: "bomCode",
       header: t("Mã BOM"),
@@ -1054,6 +1075,25 @@ export function ErpBomPage() {
                 icon: <Copy className="h-[13px] w-[13px]" />,
               },
               {
+                label: t("common.activate"),
+                onClick: () => {
+                  setStatusTarget(item);
+                  setTargetAction("ACTIVE");
+                },
+                icon: <CheckCircle className="h-[13px] w-[13px]" />,
+                hidden: item.status !== "INACTIVE",
+              },
+              {
+                label: t("common.inactivate"),
+                onClick: () => {
+                  setStatusTarget(item);
+                  setTargetAction("INACTIVE");
+                },
+                icon: <Ban className="h-[13px] w-[13px]" />,
+                variant: "danger",
+                hidden: item.status !== "ACTIVE",
+              },
+              {
                 label: t("Xóa"),
                 onClick: () => setDeleteTarget(item),
                 icon: <Trash2 className="h-[13px] w-[13px]" />,
@@ -1107,6 +1147,33 @@ export function ErpBomPage() {
         }}
         loading={deleting}
         danger
+      />
+
+      <ConfirmModal
+        open={!!statusTarget}
+        title={
+          targetAction === "ACTIVE"
+            ? t("Xác nhận áp dụng")
+            : t("Xác nhận ngừng áp dụng")
+        }
+        message={
+          statusTarget
+            ? targetAction === "ACTIVE"
+              ? t(`Áp dụng BOM "${statusTarget.bomCode}"?`)
+              : t(`Ngừng áp dụng BOM "${statusTarget.bomCode}"?`)
+            : ""
+        }
+        confirmLabel={t("Đồng ý")}
+        cancelLabel={t("Hủy")}
+        onConfirm={() => void handleConfirmStatusChange()}
+        onCancel={() => {
+          if (!updatingStatus) {
+            setStatusTarget(null);
+            setTargetAction(null);
+          }
+        }}
+        loading={updatingStatus}
+        danger={targetAction === "INACTIVE"}
       />
 
       <BomFormDrawer
