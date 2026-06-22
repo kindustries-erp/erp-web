@@ -3,7 +3,7 @@ import { useAppStore, AppTheme } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useT } from "@/core/i18n";
 import { Popover } from "@/core/components/ui/Popover";
-import { cn } from "@/shared/utils";
+import { cn, getBuildVersionLabel } from "@/shared/utils";
 
 const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
   { value: "shell", labelKey: "nav.bottom.themeShell" },
@@ -40,6 +40,8 @@ export function UserMenuPopover({
     THEME_OPTIONS.find((o) => o.value === appTheme)?.labelKey ?? "";
   const currentLocaleLabel =
     LOCALE_OPTIONS.find((o) => o.value === locale)?.label ?? "";
+
+  const buildVersionLabel = getBuildVersionLabel();
 
   const content = (
     <div className="flex">
@@ -216,6 +218,10 @@ export function UserMenuPopover({
           </svg>
           <span>{t("nav.bottom.logout")}</span>
         </button>
+
+        <div className="mt-2 text-[9px] font-medium text-[color:var(--faint)] text-center tracking-widest uppercase">
+          {buildVersionLabel}
+        </div>
       </div>
 
       {/* Side sub-menu panel */}
