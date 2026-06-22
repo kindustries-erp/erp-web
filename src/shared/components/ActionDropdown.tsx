@@ -10,6 +10,8 @@ export interface ActionItem {
   variant?: "default" | "danger";
   hidden?: boolean;
   disabled?: boolean;
+  loading?: boolean;
+  preventClose?: boolean;
 }
 
 export interface ActionDropdownProps {
@@ -41,9 +43,16 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
           {visibleItems.map((item) => (
             <DropdownMenu.Item
               key={item.label}
+              onSelect={(e) => {
+                if (item.preventClose || item.loading) {
+                  e.preventDefault();
+                }
+              }}
               onClick={(e) => {
                 e.stopPropagation();
-                item.onClick();
+                if (!item.disabled && !item.loading) {
+                  item.onClick();
+                }
               }}
               className={cn(
                 "flex items-center gap-2 px-3 py-[6px] rounded-md text-xs cursor-pointer outline-none select-none",
@@ -54,9 +63,19 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
                 item.variant === "danger" ? "text-red-500" : "text-foreground",
               )}
             >
-              {item.icon && (
+              {item.loading ? (
+                <svg
+                  className="animate-spin w-4 h-4 flex-shrink-0 opacity-60"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                </svg>
+              ) : item.icon ? (
                 <span className="flex-shrink-0 opacity-60">{item.icon}</span>
-              )}
+              ) : null}
               {item.label}
             </DropdownMenu.Item>
           ))}

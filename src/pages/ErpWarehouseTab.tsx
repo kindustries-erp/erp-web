@@ -4,7 +4,7 @@
  * Filter tabs: Tất cả / Nhập kho / Xuất kho
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   PackagePlus,
@@ -12,6 +12,7 @@ import {
   Trash2,
   XCircle,
   RefreshCcw,
+  Printer,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/shared/utils";
@@ -37,6 +38,18 @@ import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDra
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import { useReactToPrint } from "react-to-print";
+import {
+  GoodsReceiptPrintTemplate,
+  type GoodsReceiptPrintData,
+} from "@/shared/components/print-templates/GoodsReceiptPrintTemplate";
+import {
+  GoodsIssuePrintTemplate,
+  type GoodsIssuePrintData,
+} from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
+import { useCompanyProfile } from "@/core/api/companyProfileApi";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { createPortal } from "react-dom";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -71,6 +84,134 @@ export function ErpWarehouseTab({
 
   // ── GI drawer — delegated to useGiDrawer
   const giDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
+
+  // ── Background Print Setup
+  const { data: companyProfile } = useCompanyProfile();
+
+  const printGrRef = useRef<HTMLDivElement>(null);
+  const printGiRef = useRef<HTMLDivElement>(null);
+  const [printGrData, setPrintGrData] = useState<{
+    id: string;
+    data: GoodsReceiptPrintData;
+  } | null>(null);
+  const [printGiData, setPrintGiData] = useState<{
+    id: string;
+    data: GoodsIssuePrintData;
+  } | null>(null);
+  const [printTargetId, setPrintTargetId] = useState<string | null>(null);
+
+  const handlePrintGr = useReactToPrint({
+    contentRef: printGrRef,
+    documentTitle: `PhieuNhapKho_${printGrData?.data.receiptNo || ""}`,
+    onAfterPrint: () => setPrintTargetId(null),
+  });
+
+  const handlePrintGi = useReactToPrint({
+    contentRef: printGiRef,
+    documentTitle: `PhieuXuatKho_${printGiData?.data.issueNo || ""}`,
+    onAfterPrint: () => setPrintTargetId(null),
+  });
+
+  useEffect(() => {
+    if (printTargetId && printGrData && printGrData.id === printTargetId) {
+      handlePrintGr();
+    }
+  }, [printTargetId, printGrData, handlePrintGr]);
+
+  useEffect(() => {
+    if (printTargetId && printGiData && printGiData.id === printTargetId) {
+      handlePrintGi();
+    }
+  }, [printTargetId, printGiData, handlePrintGi]);
+
+  const handlePrintRow = async (row: WarehouseRow) => {
+    setPrintTargetId(row.id);
+    try {
+      if (row.type === "receipt") {
+        const detail = await goodsReceiptsCoreApi.get(row.id);
+        const itemIds = [
+          ...new Set(
+            detail.lines?.map((l) => l.itemId).filter(Boolean) as string[],
+          ),
+        ];
+        let itemsDict: Record<
+          string,
+          { itemCode?: string; itemName?: string }
+        > = {};
+        if (itemIds.length > 0) {
+          const res = await inventoryCoreApi.list({
+            ids: itemIds.join(","),
+            pageSize: 1000,
+          });
+          itemsDict = Object.fromEntries(res.items.map((i) => [i.id, i]));
+        }
+
+        setPrintGrData({
+          id: row.id,
+          data: {
+            receiptNo: detail.receiptNo,
+            receiptDate: detail.receiptDate,
+            supplierName: detail.supplierName || "",
+            remarks: detail.remarks || "",
+            lines:
+              detail.lines?.map((l) => {
+                const dictItem = l.itemId ? itemsDict[l.itemId] : null;
+                return {
+                  itemId: l.itemId || "",
+                  itemCode: dictItem?.itemCode || l.itemId || "",
+                  itemName: l.itemName || dictItem?.itemName || "",
+                  qtyReceived: l.qtyReceived,
+                  unitCost: l.unitCost,
+                };
+              }) || [],
+          },
+        });
+      } else {
+        const detail = await goodsIssuesCoreApi.get(row.id);
+        const itemIds = [
+          ...new Set(
+            detail.lines?.map((l) => l.itemId).filter(Boolean) as string[],
+          ),
+        ];
+        let itemsDict: Record<
+          string,
+          { itemCode?: string; itemName?: string }
+        > = {};
+        if (itemIds.length > 0) {
+          const res = await inventoryCoreApi.list({
+            ids: itemIds.join(","),
+            pageSize: 1000,
+          });
+          itemsDict = Object.fromEntries(res.items.map((i) => [i.id, i]));
+        }
+
+        setPrintGiData({
+          id: row.id,
+          data: {
+            issueNo: detail.issueNo,
+            issueDate: detail.issueDate,
+            customerName: detail.customerName || "",
+            remarks: detail.remarks || "",
+            lines:
+              detail.lines?.map((l) => {
+                const dictItem = l.itemId ? itemsDict[l.itemId] : null;
+                return {
+                  itemId: l.itemId || "",
+                  itemCode: dictItem?.itemCode || l.itemId || "",
+                  itemName: l.itemName || dictItem?.itemName || "",
+                  qtyIssued: l.qtyIssued,
+                  unitCost: l.unitCost,
+                };
+              }) || [],
+          },
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      setPrintTargetId(null);
+      showToast({ title: "Lỗi tải dữ liệu in", variant: "destructive" });
+    }
+  };
 
   // Lookup hooks for basic masters
   const { data: suppliersData } = useBasicMasterInfinite({
@@ -377,6 +518,13 @@ export function ErpWarehouseTab({
             }}
             actions={(row) => [
               {
+                label: t("common.print"),
+                icon: <Printer className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT",
+                disabled: !!printTargetId,
+                onClick: () => handlePrintRow(row),
+              },
+              {
                 label: t("Xóa"),
                 icon: <Trash2 className="h-3.5 w-3.5" />,
                 variant: "danger",
@@ -463,6 +611,45 @@ export function ErpWarehouseTab({
 
       {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
       <GiFormDrawer drawer={giDrawer} />
+
+      <div style={{ display: "none" }}>
+        {printGrData && (
+          <GoodsReceiptPrintTemplate
+            ref={printGrRef}
+            companyProfile={companyProfile}
+            data={printGrData.data}
+          />
+        )}
+        {printGiData && (
+          <GoodsIssuePrintTemplate
+            ref={printGiRef}
+            companyProfile={companyProfile}
+            data={printGiData.data}
+          />
+        )}
+      </div>
+
+      {!!printTargetId &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div className="fixed top-0 left-0 right-0 h-[3px] z-[99999] overflow-hidden bg-primary/20 pointer-events-none">
+            <div
+              className="h-full bg-primary"
+              style={{
+                width: "40%",
+                animation: "indeterminate 1.5s infinite ease-in-out",
+              }}
+            >
+              <style>{`
+                @keyframes indeterminate {
+                  0% { transform: translateX(-100%); }
+                  100% { transform: translateX(250%); }
+                }
+              `}</style>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

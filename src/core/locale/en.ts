@@ -212,9 +212,10 @@ export const en: Dict = {
     },
   },
   common: {
-    thisMonth: "This month",
-    export: "Export report",
+    thisMonth: "This Month",
+    export: "Export",
     import: "Import",
+    print: "Print",
     save: "Save",
     cancel: "Cancel",
     close: "Close",

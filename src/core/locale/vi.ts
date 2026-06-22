@@ -214,6 +214,7 @@ export const vi = {
     thisMonth: "Tháng này",
     export: "Xuất báo cáo",
     import: "Import",
+    print: "In phiếu",
     save: "Lưu",
     cancel: "Hủy",
     close: "Đóng",
