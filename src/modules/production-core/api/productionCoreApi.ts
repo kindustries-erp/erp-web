@@ -159,7 +159,9 @@ export const productionCoreApi = {
         ...(params?.finishedGoodItemId
           ? { finishedGoodItemId: params.finishedGoodItemId }
           : {}),
-        ...(params?.sort ? { sort: params.sort } : {}),
+        ...(params?.sort && params.sort.length > 0
+          ? { sort: params.sort.join(",") }
+          : {}),
       },
     });
     return data;
