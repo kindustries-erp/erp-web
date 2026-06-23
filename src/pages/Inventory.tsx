@@ -3,9 +3,10 @@ import { FileText } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { InventoryListPage } from "@/modules/operational/components/InventoryListPage";
 import { ErpWarehouseTab } from "@/pages/ErpWarehouseTab";
+import { TrackedGoodsPage } from "@/modules/operational/components/list/TrackedGoodsPage";
 import { useT } from "@/core/i18n";
 
-type InventoryTabKind = "stock" | "vouchers";
+type InventoryTabKind = "stock" | "vouchers" | "finished_goods";
 
 export function Kho() {
   const t = useT();
@@ -15,6 +16,7 @@ export function Kho() {
   const TAB_OPTIONS = useMemo<{ key: InventoryTabKind; label: string }[]>(
     () => [
       { key: "stock", label: t("inventory.tabStock") },
+      { key: "finished_goods", label: t("Serial / Tracking") },
       { key: "vouchers", label: t("inventory.tabVouchers") },
     ],
     [t],
@@ -23,7 +25,9 @@ export function Kho() {
   const desc =
     activeTab === "stock"
       ? t("inventory.descStock")
-      : t("inventory.descVouchers");
+      : activeTab === "finished_goods"
+        ? t("Danh sách sản phẩm / vật tư có tracking")
+        : t("inventory.descVouchers");
 
   return (
     <PageLayout
@@ -40,6 +44,8 @@ export function Kho() {
     >
       {activeTab === "stock" ? (
         <InventoryListPage setActions={setTabActions} />
+      ) : activeTab === "finished_goods" ? (
+        <TrackedGoodsPage setActions={setTabActions} />
       ) : (
         <ErpWarehouseTab setActions={setTabActions} />
       )}
