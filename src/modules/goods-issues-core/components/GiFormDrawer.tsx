@@ -370,9 +370,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 <DatePicker
                   value={form.issueDate ? form.issueDate.slice(0, 10) : ""}
                   disabled={viewOnly}
-                  onChange={(v) =>
-                    setForm((f) => ({ ...f, issueDate: v }))
-                  }
+                  onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
                 />
               </DrawerField>
               <DrawerField label={t("Loại xuất")} required>

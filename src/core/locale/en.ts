@@ -214,6 +214,8 @@ export const en: Dict = {
   common: {
     thisMonth: "This Month",
     export: "Export",
+    exportExcel: "Export Excel",
+    exportCsv: "Export CSV",
     import: "Import",
     print: "Print",
     save: "Save",

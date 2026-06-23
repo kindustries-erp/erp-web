@@ -114,6 +114,7 @@ export interface BomFormDrawerProps {
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<BomLineForm>) => void;
+  onExport?: (format: "xlsx" | "csv") => void;
 }
 
 export function BomFormDrawer({
@@ -135,6 +136,7 @@ export function BomFormDrawer({
   addLine,
   removeLine,
   updateLine,
+  onExport,
 }: BomFormDrawerProps) {
   const t = useT();
   const viewOnly = mode === "view";
@@ -152,9 +154,28 @@ export function BomFormDrawer({
     return componentStr.includes(term) || notesStr.includes(term);
   });
 
+  const exportActions =
+    editing && onExport
+      ? [
+          {
+            label: t("common.exportExcel"),
+            onClick: () => onExport("xlsx"),
+            variant: "outline" as const,
+            disabled: drawerLoading || saving,
+          },
+          {
+            label: t("common.exportCsv"),
+            onClick: () => onExport("csv"),
+            variant: "outline" as const,
+            disabled: drawerLoading || saving,
+          },
+        ]
+      : [];
+
   const drawerActions =
     viewOnly || drawerLoading
       ? [
+          ...exportActions,
           {
             label: t("Đóng"),
             onClick: onClose,
@@ -192,6 +213,7 @@ export function BomFormDrawer({
             },
           ]
         : [
+            ...exportActions,
             {
               label: t("Hủy"),
               onClick: onClose,

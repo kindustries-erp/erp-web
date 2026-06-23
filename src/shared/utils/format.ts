@@ -67,7 +67,10 @@ export function fmtDate(value?: string | null) {
   return value.slice(0, 10);
 }
 
-export function formatGMT7(value?: string | null, formatStr: "date" | "datetime" | "datetime-sec" = "date") {
+export function formatGMT7(
+  value?: string | null,
+  formatStr: "date" | "datetime" | "datetime-sec" = "date",
+) {
   if (!value) return "—";
   try {
     const d = new Date(value);

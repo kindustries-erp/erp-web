@@ -79,4 +79,11 @@ export const bomCoreApi = {
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },
+  export: async (id: string, format: "xlsx" | "csv"): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/export`, {
+      params: { format },
+      responseType: "blob",
+    });
+    return data;
+  },
 };

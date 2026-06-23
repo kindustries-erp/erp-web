@@ -14,7 +14,6 @@ import {
   RefreshCcw,
   Printer,
 } from "lucide-react";
-import { format } from "date-fns";
 import { cn } from "@/shared/utils";
 import { formatGMT7 } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -403,7 +402,10 @@ export function ErpWarehouseTab({
         sortable: true,
         sortKey: "date",
         cell: (row) => (
-          <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")} side="top">
+          <Tooltip
+            content={formatGMT7(row.createdAt, "datetime-sec")}
+            side="top"
+          >
             <span className="cursor-help border-b border-dotted border-gray-400">
               {formatGMT7(row.createdAt, "date")}
             </span>

@@ -162,7 +162,10 @@ export function useStockColumns({
           if (!row.last_transaction_date) return "—";
           return (
             <div className="w-full text-right">
-              <Tooltip content={formatGMT7(row.last_transaction_date, "datetime-sec")} side="top">
+              <Tooltip
+                content={formatGMT7(row.last_transaction_date, "datetime-sec")}
+                side="top"
+              >
                 <span className="cursor-help inline-block border-b border-dotted border-gray-400">
                   {formatGMT7(row.last_transaction_date, "date")}
                 </span>

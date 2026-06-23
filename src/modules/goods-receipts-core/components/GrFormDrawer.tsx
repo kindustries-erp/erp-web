@@ -616,9 +616,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 <DatePicker
                   value={form.receiptDate ? form.receiptDate.slice(0, 10) : ""}
                   disabled={viewOnly}
-                  onChange={(v) =>
-                    setForm((f) => ({ ...f, receiptDate: v }))
-                  }
+                  onChange={(v) => setForm((f) => ({ ...f, receiptDate: v }))}
                 />
               </DrawerField>
               <DrawerField label={t("Đơn mua hàng (PO)")}>

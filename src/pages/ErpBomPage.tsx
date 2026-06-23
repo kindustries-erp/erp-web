@@ -8,7 +8,11 @@ import {
   Copy,
   Ban,
   CheckCircle,
+  FileSpreadsheet,
+  FileText,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useUIStore } from "@/core/config/uiStore";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -488,6 +492,7 @@ function BomTree({ bomId, fgToBomMap, itemsMap }: BomTreeProps) {
 export function ErpBomPage() {
   const t = useT();
   const canRead = useHasPermission("bom", "read");
+  const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const [items, setItems] = useState<ErpBom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -511,6 +516,32 @@ export function ErpBomPage() {
     "ACTIVE" | "INACTIVE" | null
   >(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+
+  const handleExport = async (item: ErpBom, format: "xlsx" | "csv") => {
+    setGlobalLoading(true);
+    try {
+      const blob = await bomCoreApi.export(item.id, format);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const extension = format;
+      const safeBomCode = (item.bomCode || "BOM").replace(
+        /[^a-zA-Z0-9_-]/g,
+        "_",
+      );
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      link.setAttribute("download", `${safeBomCode}_${timestamp}.${extension}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      toast.error(t("Không thể xuất file"));
+    } finally {
+      setGlobalLoading(false);
+    }
+  };
 
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -1095,6 +1126,16 @@ export function ErpBomPage() {
                 icon: <Eye className="h-[13px] w-[13px]" />,
               },
               {
+                label: t("common.exportExcel"),
+                onClick: () => void handleExport(item, "xlsx"),
+                icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+              },
+              {
+                label: t("common.exportCsv"),
+                onClick: () => void handleExport(item, "csv"),
+                icon: <FileText className="h-[13px] w-[13px]" />,
+              },
+              {
                 label: t("common.clone"),
                 onClick: () => void handleClone(item),
                 icon: <Copy className="h-[13px] w-[13px]" />,
@@ -1220,6 +1261,7 @@ export function ErpBomPage() {
         addLine={addLine}
         removeLine={removeLine}
         updateLine={updateLine}
+        onExport={(format) => editing && handleExport(editing, format)}
       />
     </PageLayout>
   );

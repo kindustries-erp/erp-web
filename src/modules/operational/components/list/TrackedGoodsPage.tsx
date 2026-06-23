@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { format } from "date-fns";
+
 import { StandardTable } from "@/shared/components/StandardTable";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -115,7 +115,10 @@ export function TrackedGoodsPage({
         sortable: true,
         sortKey: "created_at",
         cell: (row) => (
-          <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")} side="top">
+          <Tooltip
+            content={formatGMT7(row.createdAt, "datetime-sec")}
+            side="top"
+          >
             <span className="cursor-help border-b border-dotted border-gray-400">
               {formatGMT7(row.createdAt, "date")}
             </span>

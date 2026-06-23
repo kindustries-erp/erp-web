@@ -213,6 +213,8 @@ export const vi = {
   common: {
     thisMonth: "Tháng này",
     export: "Xuất báo cáo",
+    exportExcel: "Tải Excel",
+    exportCsv: "Tải CSV",
     import: "Import",
     print: "In phiếu",
     save: "Lưu",
