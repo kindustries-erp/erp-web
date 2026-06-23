@@ -1,9 +1,22 @@
-import { useMemo, useEffect } from "react";
-import { Eye } from "lucide-react";
+import { useMemo, useEffect, useState } from "react";
+import { Eye, Network } from "lucide-react";
 
 import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
+import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
+import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
+import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
+import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { useProductionOrderDrawer } from "@/modules/production-core/hooks/useProductionOrderDrawer";
+import { ProductionOrderDrawer } from "@/modules/production-core/components/ProductionOrderDrawer";
+import {
+  productionCoreApi,
+  type ErpProductionOrder,
+} from "@/modules/production-core/api/productionCoreApi";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 import { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
@@ -73,6 +86,38 @@ export function OperationalInventoryPage({
     toggleInventorySort,
     resetAllFilters,
   } = useOperationalListStore();
+
+  const [graphOpen, setGraphOpen] = useState(false);
+  const [graphItemId, setGraphItemId] = useState<string | null>(null);
+  const inventoryGraph = useInventoryGraph();
+
+  const employee = useAuthStore((s) => s.employee);
+  const isGraphAdmin = employee?.email === "admin@liouni.com";
+
+  const grDrawer = useGrDrawer({});
+  const giDrawer = useGiDrawer({});
+
+  const [poOpen, setPoOpen] = useState(false);
+  const [editingPo, setEditingPo] = useState<ErpProductionOrder | null>(null);
+  const [viewOnlyPo, setViewOnlyPo] = useState(false);
+
+  const poDrawer = useProductionOrderDrawer({
+    open: poOpen,
+    editing: editingPo,
+    onClose: () => setPoOpen(false),
+    onSaved: () => {},
+  });
+
+  const openPoDetail = async (id: string) => {
+    try {
+      const detail = await productionCoreApi.get(id);
+      setEditingPo(detail);
+      setViewOnlyPo(true);
+      setPoOpen(true);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const activeFilterCount = [!!searchInput, !!itemTypeFilter].filter(
     Boolean,
@@ -176,6 +221,19 @@ export function OperationalInventoryPage({
                 icon: <Eye size={14} />,
                 onClick: () => onViewItem(row.inventory_item_id),
               },
+              ...(isGraphAdmin
+                ? [
+                    {
+                      label: t("Đồ thị liên kết"),
+                      icon: <Network size={14} />,
+                      onClick: () => {
+                        setGraphItemId(row.inventory_item_id);
+                        setGraphOpen(true);
+                        void inventoryGraph.loadGraph(row.inventory_item_id);
+                      },
+                    },
+                  ]
+                : []),
             ]}
             page={page}
             pageSize={pageSize}
@@ -237,6 +295,48 @@ export function OperationalInventoryPage({
         }}
         itemId={viewingItemId}
         onSuccess={onRefetch}
+      />
+      <ConnectionGraphDrawer
+        open={graphOpen}
+        onClose={() => {
+          setGraphOpen(false);
+          setGraphItemId(null);
+          inventoryGraph.reset();
+        }}
+        title="Đồ thị liên kết Kho"
+        subtitle={
+          graphItemId
+            ? `Vật tư: ${stockItems.find((i) => i.inventory_item_id === graphItemId)?.item_name || graphItemId}`
+            : undefined
+        }
+        loading={inventoryGraph.loading}
+        error={inventoryGraph.error}
+        initialNodes={inventoryGraph.nodes}
+        initialEdges={inventoryGraph.edges}
+        layout={inventoryGraph.layout}
+        toggleLayout={inventoryGraph.toggleLayout}
+        onNodeClick={(node) => {
+          if (!node.docId) return;
+          if (node.nodeType === "inventory_item") {
+            onViewItem(node.docId);
+          } else if (node.nodeType === "goods_receipt") {
+            void grDrawer.openDetail(node.docId, true);
+          } else if (node.nodeType === "goods_issue") {
+            void giDrawer.openDetail(node.docId, true);
+          } else if (node.nodeType === "production_order") {
+            void openPoDetail(node.docId);
+          }
+        }}
+      />
+      <GrFormDrawer drawer={grDrawer} />
+      <GiFormDrawer drawer={giDrawer} />
+      <ProductionOrderDrawer
+        open={poOpen}
+        editing={editingPo}
+        viewOnly={viewOnlyPo}
+        onClose={() => setPoOpen(false)}
+        onSaved={() => {}}
+        drawerState={poDrawer}
       />
     </>
   );

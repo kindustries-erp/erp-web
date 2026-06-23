@@ -63,6 +63,30 @@ const NODE_CONFIG: Record<
     borderClass: "border-slate-400/40",
     iconLabel: "SUP",
   },
+  inventory_item: {
+    accentClass:
+      "bg-cyan-50 text-cyan-700 font-semibold dark:bg-cyan-900/30 dark:text-cyan-300",
+    borderClass: "border-cyan-400/40",
+    iconLabel: "KHO",
+  },
+  goods_issue: {
+    accentClass:
+      "bg-orange-50 text-orange-700 font-semibold dark:bg-orange-900/30 dark:text-orange-300",
+    borderClass: "border-orange-400/40",
+    iconLabel: "XK",
+  },
+  production_order: {
+    accentClass:
+      "bg-fuchsia-50 text-fuchsia-700 font-semibold dark:bg-fuchsia-900/30 dark:text-fuchsia-300",
+    borderClass: "border-fuchsia-400/40",
+    iconLabel: "SX",
+  },
+  bom: {
+    accentClass:
+      "bg-pink-50 text-pink-700 font-semibold dark:bg-pink-900/30 dark:text-pink-300",
+    borderClass: "border-pink-400/40",
+    iconLabel: "BOM",
+  },
 };
 
 // ─── Custom Node ───────────────────────────────────────────────────────────────
@@ -134,20 +158,22 @@ function GraphNode({ data }: NodeProps<Node<GraphNodeData>>) {
       )}
 
       {/* Source Handle (Right or Bottom) - for outgoing edges */}
-      {(data.nodeType === "supplier" || data.nodeType === "purchase_order") && (
-        <Handle
-          type="source"
-          position={
-            data.layout === "vertical" ? Position.Bottom : Position.Right
-          }
-          className={cn(
-            "w-2 h-2 !bg-[color:var(--primary)] border-none",
-            data.layout === "vertical"
-              ? "left-1/2 -translate-x-1/2"
-              : "top-1/2 -translate-y-1/2",
-          )}
-        />
-      )}
+      {data.nodeType !== "payment_voucher" &&
+        data.nodeType !== "invoice" &&
+        data.nodeType !== "goods_issue" && (
+          <Handle
+            type="source"
+            position={
+              data.layout === "vertical" ? Position.Bottom : Position.Right
+            }
+            className={cn(
+              "w-2 h-2 !bg-[color:var(--primary)] border-none",
+              data.layout === "vertical"
+                ? "left-1/2 -translate-x-1/2"
+                : "top-1/2 -translate-y-1/2",
+            )}
+          />
+        )}
 
       {/* Top bar header */}
       <div
@@ -322,6 +348,14 @@ export function ConnectionGraphDrawer({
                     return "#fbbf24";
                   case "invoice":
                     return "#818cf8";
+                  case "inventory_item":
+                    return "#06b6d4";
+                  case "goods_issue":
+                    return "#f97316";
+                  case "production_order":
+                    return "#d946ef";
+                  case "bom":
+                    return "#ec4899";
                   default:
                     return "#94a3b8";
                 }

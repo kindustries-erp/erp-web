@@ -179,6 +179,10 @@ export const inventoryCoreApi = {
     );
     return data.data;
   },
+  getConnections: async (id: string): Promise<any> => {
+    const { data } = await axiosInstance.get(`${BASE}/${id}/connections`);
+    return data.data;
+  },
   movements: async (id: string): Promise<InventoryMovementsPayload> => {
     const { data } = await axiosInstance.get<InventoryMovementsResponse>(
       `${BASE}/${id}/movements`,

@@ -48,7 +48,11 @@ export type GraphNodeType =
   | "goods_receipt"
   | "payment_voucher"
   | "invoice"
-  | "supplier";
+  | "supplier"
+  | "inventory_item"
+  | "goods_issue"
+  | "production_order"
+  | "bom";
 
 export type GraphLayoutDirection = "horizontal" | "vertical";
 
