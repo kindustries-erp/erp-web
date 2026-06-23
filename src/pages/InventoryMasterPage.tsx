@@ -21,7 +21,6 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
 import { type InventoryMasterOption } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { ErpInventoryItemsTab } from "@/pages/ErpInventoryItemsPage";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import {
@@ -33,7 +32,7 @@ import {
   useInventoryMasterSaveMutation,
 } from "@/modules/inventory-core/hooks/useInventoryMasterMutation";
 
-type MasterKind = "items" | "uom" | "item-type" | "tracking-category";
+type MasterKind = "uom" | "item-type" | "tracking-category";
 
 interface MasterForm {
   code: string;
@@ -89,7 +88,7 @@ export function InventoryMasterPage() {
   const t = useT();
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
-  const [activeTab, setActiveTab] = useState<MasterKind>("items");
+  const [activeTab, setActiveTab] = useState<MasterKind>("uom");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortArray, setSortArray] = useState<string[]>(["-createdAt"]);
@@ -106,11 +105,6 @@ export function InventoryMasterPage() {
     { key: MasterKind; label: string; description: string }[]
   >(
     () => [
-      {
-        key: "items",
-        label: t("inventoryMasters.tabs.itemsLabel"),
-        description: t("inventoryMasters.tabs.itemsDesc"),
-      },
       {
         key: "uom",
         label: t("inventoryMasters.tabs.uomLabel"),
@@ -135,7 +129,6 @@ export function InventoryMasterPage() {
   const [editing, setEditing] = useState<InventoryMasterOption | null>(null);
   const [form, setForm] = useState<MasterForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [itemsActions, setItemsActions] = useState<React.ReactNode>(null);
   const [deleteTarget, setDeleteTarget] = useState<{
     kind: MasterKind;
     item: InventoryMasterOption;
@@ -241,7 +234,7 @@ export function InventoryMasterPage() {
   function closeDrawer() {
     setDrawerOpen(false);
     setEditing(null);
-    setEditingKind(activeTab === "items" ? "uom" : activeTab);
+    setEditingKind(activeTab);
     setForm(emptyForm());
     setSaveError(null);
     setViewOnly(false);
@@ -415,73 +408,62 @@ export function InventoryMasterPage() {
         setPage(1);
       }}
       actions={
-        activeTab === "items" ? (
-          itemsActions
-        ) : (
-          <TableActionGroup
-            onRefresh={() => void currentQuery.refetch()}
-            loading={currentLoading}
-            onFilterToggle={filter.togglePanel}
-            activeFilterCount={filter.activeFilterCount}
-            onCreate={() => openCreate(activeTab)}
-            createLabel={
-              activeTab === "uom"
-                ? t("inventoryMasters.actions.createUom")
-                : t("inventoryMasters.actions.createItemType")
-            }
-          />
-        )
+        <TableActionGroup
+          onRefresh={() => void currentQuery.refetch()}
+          loading={currentLoading}
+          onFilterToggle={filter.togglePanel}
+          activeFilterCount={filter.activeFilterCount}
+          onCreate={() => openCreate(activeTab)}
+          createLabel={
+            activeTab === "uom"
+              ? t("inventoryMasters.actions.createUom")
+              : t("inventoryMasters.actions.createItemType")
+          }
+        />
       }
     >
-      {activeTab === "items" ? (
-        <ErpInventoryItemsTab setActions={setItemsActions} />
-      ) : (
-        <>
-          <div className="flex items-start">
-            <div className="min-w-0 flex-1 space-y-4">
-              <section>
-                <StandardTable<InventoryMasterOption>
-                  items={currentItems}
-                  columns={columns}
-                  getRowKey={(item) => item.id}
-                  loading={currentLoading}
-                  error={currentError}
-                  emptyLabel={t("inventoryMasters.table.emptyUom")}
-                  minWidth={760}
-                  loadingRows={6}
-                  onRowClick={(row) => openDetail(activeTab, row)}
-                  actions={(row) => [
-                    {
-                      label:
-                        t("inventoryMasters.table.actionDetail") || "Chi tiết",
-                      icon: <Eye className="h-3.5 w-3.5" />,
-                      onClick: () => openDetail(activeTab, row),
-                    },
-                    {
-                      label: t("inventoryMasters.table.actionDelete"),
-                      icon: <Trash2 className="h-3.5 w-3.5" />,
-                      variant: "danger",
-                      onClick: () => handleDelete(activeTab, row),
-                    },
-                  ]}
-                  page={page}
-                  pageSize={pageSize}
-                  total={currentQuery.data?.total ?? 0}
-                  totalPages={currentQuery.data?.totalPages ?? 0}
-                  onPage={setPage}
-                  onPageSize={(value) => {
-                    setPage(1);
-                    setPageSize(value);
-                  }}
-                  sortArray={sortArray}
-                  onSort={handleSort}
-                />
-              </section>
-            </div>
-            <FilterPanel config={filterConfig} filter={filter} />
-          </div>
-        </>
-      )}
+      <div className="flex items-start">
+        <div className="min-w-0 flex-1 space-y-4">
+          <section>
+            <StandardTable<InventoryMasterOption>
+              items={currentItems}
+              columns={columns}
+              getRowKey={(item) => item.id}
+              loading={currentLoading}
+              error={currentError}
+              emptyLabel={t("inventoryMasters.table.emptyUom")}
+              minWidth={760}
+              loadingRows={6}
+              onRowClick={(row) => openDetail(activeTab, row)}
+              actions={(row) => [
+                {
+                  label: t("inventoryMasters.table.actionDetail") || "Chi tiết",
+                  icon: <Eye className="h-3.5 w-3.5" />,
+                  onClick: () => openDetail(activeTab, row),
+                },
+                {
+                  label: t("inventoryMasters.table.actionDelete"),
+                  icon: <Trash2 className="h-3.5 w-3.5" />,
+                  variant: "danger",
+                  onClick: () => handleDelete(activeTab, row),
+                },
+              ]}
+              page={page}
+              pageSize={pageSize}
+              total={currentQuery.data?.total ?? 0}
+              totalPages={currentQuery.data?.totalPages ?? 0}
+              onPage={setPage}
+              onPageSize={(value) => {
+                setPage(1);
+                setPageSize(value);
+              }}
+              sortArray={sortArray}
+              onSort={handleSort}
+            />
+          </section>
+        </div>
+        <FilterPanel config={filterConfig} filter={filter} />
+      </div>
 
       <ConfirmModal
         open={!!deleteTarget}

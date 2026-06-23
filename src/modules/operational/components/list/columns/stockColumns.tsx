@@ -24,36 +24,53 @@ export function useStockColumns({
   return useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
-        key: "item",
-        header: t("inventory.table.columns.item"),
-        className: "align-middle min-w-[220px]",
+        key: "item_code",
+        header: t("inventoryMasters.columns.sku"),
+        className: "align-middle min-w-[160px] text-right",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "item_code",
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
+          return (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleExpand(row);
+              }}
+              className="font-medium text-foreground hover:underline focus:outline-none flex items-center justify-end w-full gap-1.5 text-right text-sm"
+            >
+              <Tooltip content={row.item_code || "—"} side="top">
+                <span className="truncate max-w-[120px] inline-block">
+                  {row.item_code || "—"}
+                </span>
+              </Tooltip>
+              <ChevronRight
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)] shrink-0",
+                  expanded && "rotate-90",
+                )}
+              />
+            </button>
+          );
+        },
+      },
+      {
+        key: "item_name",
+        header: t("inventoryMasters.columns.itemName"),
+        className: "align-middle min-w-[180px] text-right",
+        headerClassName: "text-center",
+        sortable: true,
+        sortKey: "item_name",
+        cell: (row) => {
           const itemName = row.item_name || t("inventory.table.unnamed");
           return (
-            <div className="space-y-1">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleExpand(row);
-                }}
-                className="font-medium text-foreground hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
-              >
-                <span>{row.item_code || "—"}</span>
-                <ChevronRight
-                  className={cn(
-                    "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)]",
-                    expanded && "rotate-90",
-                  )}
-                />
-              </button>
+            <div className="w-full text-right overflow-hidden">
               <Tooltip content={itemName} side="top">
-                <div className="text-xs text-[color:var(--muted-fg)] truncate max-w-[200px]">
+                <span className="text-sm truncate block w-full">
                   {itemName}
-                </div>
+                </span>
               </Tooltip>
             </div>
           );
@@ -62,7 +79,8 @@ export function useStockColumns({
       {
         key: "item_type",
         header: t("inventory.table.columns.type"),
-        className: "align-middle min-w-[90px]",
+        className: "align-middle min-w-[150px] text-right",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "item_type",
         cell: (row) => {
@@ -77,22 +95,25 @@ export function useStockColumns({
               )
             : "—";
           return (
-            <Tooltip content={typeText} side="top">
-              <span
-                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-[120px] ${cls}`}
-              >
-                {typeText}
-              </span>
-            </Tooltip>
+            <div className="w-full text-right">
+              <Tooltip content={typeText} side="top">
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-[120px] ${cls}`}
+                >
+                  {typeText}
+                </span>
+              </Tooltip>
+            </div>
           );
         },
       },
       {
         key: "received_qty",
         header: t("inventory.table.columns.in"),
-        className: "align-middle min-w-[100px] text-left",
+        className: "align-middle min-w-[100px] text-right",
+        headerClassName: "text-center",
         cell: (row) => (
-          <span className="inline-block w-full text-left text-sm tabular-nums">
+          <span className="inline-block w-full text-right text-sm tabular-nums">
             {Number(row.received_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -100,9 +121,10 @@ export function useStockColumns({
       {
         key: "issued_qty",
         header: t("inventory.table.columns.out"),
-        className: "align-middle min-w-[100px] text-left",
+        className: "align-middle min-w-[100px] text-right",
+        headerClassName: "text-center",
         cell: (row) => (
-          <span className="inline-block w-full text-left text-sm tabular-nums">
+          <span className="inline-block w-full text-right text-sm tabular-nums">
             {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -110,9 +132,10 @@ export function useStockColumns({
       {
         key: "on_hand_qty",
         header: t("inventory.table.columns.onHand"),
-        className: "align-middle min-w-[110px] text-left",
+        className: "align-middle min-w-[110px] text-right",
+        headerClassName: "text-center",
         cell: (row) => (
-          <span className="inline-block w-full text-left text-sm font-medium tabular-nums">
+          <span className="inline-block w-full text-right text-sm font-medium tabular-nums">
             {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -120,33 +143,53 @@ export function useStockColumns({
       {
         key: "unit",
         header: t("inventory.table.columns.unit"),
-        className: "align-middle min-w-[80px]",
+        className: "align-middle min-w-[80px] text-right",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "unit",
-        cell: (row) => <span className="text-sm">{row.unit || "—"}</span>,
+        cell: (row) => (
+          <span className="text-sm block w-full text-right">
+            {row.unit || "—"}
+          </span>
+        ),
       },
       {
         key: "last",
         header: t("inventory.table.columns.lastTx"),
-        className: "align-middle min-w-[180px]",
-        cell: (row) => normalizeDateTimeGMT7(row.last_transaction_date) || "—",
+        className: "align-middle min-w-[300px] whitespace-nowrap text-right",
+        headerClassName: "text-center",
+        cell: (row) => {
+          const fullDateTime = normalizeDateTimeGMT7(row.last_transaction_date);
+          if (!fullDateTime) return "—";
+          const shortDate = fullDateTime.slice(0, 10);
+          return (
+            <div className="w-full text-right">
+              <Tooltip content={fullDateTime} side="top">
+                <span className="cursor-help inline-block">{shortDate}</span>
+              </Tooltip>
+            </div>
+          );
+        },
       },
       {
         key: "status",
         header: t("inventory.table.columns.status"),
-        className: "align-middle min-w-[100px]",
+        className: "align-middle min-w-[100px] text-right",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "status",
         cell: (row) => (
-          <span
-            className={
-              row.status === "ACTIVE" || !row.status
-                ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
-            }
-          >
-            {row.status || "ACTIVE"}
-          </span>
+          <div className="w-full text-right">
+            <span
+              className={
+                row.status === "ACTIVE" || !row.status
+                  ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
+                  : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
+              }
+            >
+              {row.status || "ACTIVE"}
+            </span>
+          </div>
         ),
       },
     ],

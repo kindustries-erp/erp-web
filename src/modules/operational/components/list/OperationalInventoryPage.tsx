@@ -157,7 +157,7 @@ export function OperationalInventoryPage({
             loading={loading}
             error={error}
             emptyLabel={t("Chưa có tồn kho.")}
-            minWidth={760}
+            minWidth={1300}
             onRowClick={(row) => onViewItem(row.inventory_item_id)}
             expandedRowKeys={expandedStockRowKeys}
             renderSubRow={(row) => (
