@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from "react";
+import { Eye } from "lucide-react";
 
-import { DataTable } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
@@ -19,21 +20,18 @@ interface OperationalInventoryPageProps {
   total: number;
   totalPages: number;
   viewingItemId: string | null;
+  creatingItem: boolean;
   movLoadingId: string | null;
   movError: string | null;
   movMap: Record<string, InventoryMovementsPayload>;
   onToggleInventoryExpand: (row: InventoryStockRow) => void;
   onViewItem: (id: string) => void;
   onCloseViewItem: () => void;
+  onOpenCreateItem: () => void;
+  onCloseCreateItem: () => void;
   onRefetch: () => void;
   setActions?: (node: React.ReactNode) => void;
 }
-
-const ITEM_TYPE_OPTIONS = [
-  { value: "RAW", label: "RAW — Linh kiện" },
-  { value: "FG", label: "FG — Thành phẩm" },
-  { value: "WIP", label: "WIP — Bán thành phẩm" },
-];
 
 /**
  * Trang tổng hợp tồn kho (variant="inventory").
@@ -46,12 +44,15 @@ export function OperationalInventoryPage({
   total,
   totalPages,
   viewingItemId,
+  creatingItem,
   movLoadingId,
   movError,
   movMap,
   onToggleInventoryExpand,
   onViewItem,
   onCloseViewItem,
+  onOpenCreateItem,
+  onCloseCreateItem,
   onRefetch,
   setActions,
 }: OperationalInventoryPageProps) {
@@ -68,6 +69,8 @@ export function OperationalInventoryPage({
     itemTypeFilter,
     setItemTypeFilter,
     expandedStockItemIds,
+    inventorySort,
+    toggleInventorySort,
     resetAllFilters,
   } = useOperationalListStore();
 
@@ -88,17 +91,37 @@ export function OperationalInventoryPage({
     [expandedStockItemIds, stockItems],
   );
 
-  const inventoryFilterConfig: FilterPanelConfig = {
-    search: true,
-    custom: [
-      {
-        key: "itemType",
-        label: "Loại item",
-        placeholder: "Tất cả loại item",
-        options: ITEM_TYPE_OPTIONS,
-      },
+  console.log("DEBUG INVENTORY EXPAND", {
+    expandedStockItemIds,
+    expandedStockRowKeys,
+    firstItemKey: stockItems[0]
+      ? `${stockItems[0].inventory_item_id}-${stockItems[0].branch_id || "all"}`
+      : null,
+  });
+
+  const itemTypeOptions = useMemo(
+    () => [
+      { value: "RAW", label: t("inventory.itemTypes.raw") },
+      { value: "FG", label: t("inventory.itemTypes.fg") },
+      { value: "WIP", label: t("inventory.itemTypes.wip") },
     ],
-  };
+    [t],
+  );
+
+  const inventoryFilterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+      custom: [
+        {
+          key: "itemType",
+          label: t("inventory.filter.itemTypeLabel"),
+          placeholder: t("inventory.filter.itemTypePlaceholder"),
+          options: itemTypeOptions,
+        },
+      ],
+    }),
+    [t, itemTypeOptions],
+  );
 
   useEffect(() => {
     if (setActions) {
@@ -108,6 +131,7 @@ export function OperationalInventoryPage({
           onRefresh={onRefetch}
           onFilterToggle={() => setFilterPanelOpen((v) => !v)}
           activeFilterCount={activeFilterCount}
+          onCreate={onOpenCreateItem}
         />,
       );
     }
@@ -122,7 +146,9 @@ export function OperationalInventoryPage({
       ) : null}
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
-          <DataTable
+          <StandardTable
+            tableId="inventory-stock-table"
+            enableColumnVisibility={true}
             items={stockItems}
             columns={stockColumns}
             getRowKey={(row) =>
@@ -142,6 +168,15 @@ export function OperationalInventoryPage({
                 data={movMap[row.inventory_item_id]}
               />
             )}
+            sortArray={inventorySort ? [inventorySort] : undefined}
+            onSort={(key) => toggleInventorySort(key)}
+            actions={(row) => [
+              {
+                label: t("inventory.action.details"),
+                icon: <Eye size={14} />,
+                onClick: () => onViewItem(row.inventory_item_id),
+              },
+            ]}
             page={page}
             pageSize={pageSize}
             total={total}
@@ -195,8 +230,11 @@ export function OperationalInventoryPage({
         />
       </div>
       <InventoryItemFormDrawer
-        open={!!viewingItemId}
-        onClose={onCloseViewItem}
+        open={!!viewingItemId || creatingItem}
+        onClose={() => {
+          onCloseViewItem();
+          onCloseCreateItem();
+        }}
         itemId={viewingItemId}
         onSuccess={onRefetch}
       />

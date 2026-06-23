@@ -106,6 +106,7 @@ export function PurchaseOrderListPage() {
       <div className="flex items-start">
         <div className="flex-1 min-w-0 space-y-4">
           <StandardTable<OperationalDocument>
+            tableId="purchase-orders-table"
             items={items}
             columns={columns}
             total={total}

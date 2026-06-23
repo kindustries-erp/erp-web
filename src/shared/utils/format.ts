@@ -23,6 +23,29 @@ export function normalizeDateTime(value?: string | null) {
   }
 }
 
+export function normalizeDateTimeGMT7(value?: string | null) {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+    return `${partMap.year}-${partMap.month}-${partMap.day} ${partMap.hour}:${partMap.minute}:${partMap.second}`;
+  } catch {
+    return String(value);
+  }
+}
+
 export function today() {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());

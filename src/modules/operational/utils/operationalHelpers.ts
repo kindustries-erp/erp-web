@@ -203,10 +203,22 @@ export function buildSamplePayload(
   return null;
 }
 
-export function movementLabel(m: InventoryMovement): string {
+export function movementLabel(
+  m: InventoryMovement,
+  t: (key: string) => string,
+): string {
   const type = m.transactionType || "—";
-  const doc = m.documentType ? ` • ${m.documentType}` : "";
-  return `${type}${doc}`;
+
+  const translatedType =
+    t(`inventory.txTypes.${type}`) !== `inventory.txTypes.${type}`
+      ? t(`inventory.txTypes.${type}`)
+      : type;
+
+  const translatedDoc = m.documentType
+    ? ` • ${t(`inventory.docTypes.${m.documentType}`) !== `inventory.docTypes.${m.documentType}` ? t(`inventory.docTypes.${m.documentType}`) : m.documentType}`
+    : "";
+
+  return `${translatedType}${translatedDoc}`;
 }
 
 // ---------------------------------------------------------------------------

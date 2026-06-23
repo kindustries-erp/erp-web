@@ -656,6 +656,66 @@ export const vi = {
       deleteCancel: "Hủy",
     },
   },
+  inventory: {
+    pageTitle: "Kho",
+    tabStock: "Tồn kho",
+    tabVouchers: "Chứng từ kho",
+    descStock:
+      "Tổng hợp tồn kho toàn bộ hàng hóa: linh kiện (RAW), thành phẩm (FG), bán thành phẩm (WIP).",
+    descVouchers: "Quản lý phiếu nhập kho và xuất kho.",
+    filter: {
+      itemTypeLabel: "Loại item",
+      itemTypePlaceholder: "Tất cả loại item",
+    },
+    action: {
+      details: "Chi tiết",
+    },
+    itemTypes: {
+      raw: "RAW — Linh kiện",
+      fg: "FG — Thành phẩm",
+      wip: "WIP — Bán thành phẩm",
+    },
+    table: {
+      columns: {
+        item: "Vật tư",
+        type: "Loại",
+        in: "Nhập",
+        out: "Xuất",
+        onHand: "Tồn",
+        unit: "Đơn vị",
+        lastTx: "Giao dịch cuối",
+        status: "Trạng thái",
+      },
+      unnamed: "Chưa đặt tên",
+      emptyStock: "Chưa có tồn kho.",
+    },
+    history: {
+      title: "Lịch sử xuất nhập kho",
+      loading: "Đang tải lịch sử xuất nhập kho...",
+      empty: "Chưa có phát sinh xuất nhập kho.",
+      time: "Thời gian",
+      transaction: "Giao dịch",
+      change: "Thay đổi",
+      balance: "Tồn kho",
+      in: "Nhập",
+      out: "Xuất",
+    },
+    txTypes: {
+      INVENTORY_RECEIPT: "Nhập kho",
+      INVENTORY_ISSUE: "Xuất kho",
+      PRODUCTION_RECEIPT: "Nhập kho sản xuất",
+      PRODUCTION_ISSUE: "Xuất kho sản xuất",
+      PURCHASE_RECEIPT: "Nhập kho mua hàng",
+      SALES_ISSUE: "Xuất kho bán hàng",
+    },
+    docTypes: {
+      goods_receipts: "Phiếu nhập kho",
+      goods_issues: "Phiếu xuất kho",
+      production_orders: "Lệnh sản xuất",
+      purchase_orders: "Đơn mua hàng",
+      sales_service_orders: "Đơn bán hàng",
+    },
+  },
   thietlap: {
     hoadondientuPage: {
       tabs: {
