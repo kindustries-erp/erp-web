@@ -1,4 +1,4 @@
-import { FileText, PackagePlus } from "lucide-react";
+import { FileText, PackagePlus, Network } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
@@ -6,6 +6,7 @@ import { useT } from "@/core/i18n";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
+import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
 import { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -53,6 +54,17 @@ export function PurchaseOrderListPage() {
     confirmLoading,
     handleConfirmAction,
     closeConfirmModal,
+    // Connection Graph
+    connectionGraphOpen,
+    connectionGraphRow,
+    graphNodes,
+    graphEdges,
+    graphLoading,
+    graphError,
+    graphLayout,
+    toggleGraphLayout,
+    openConnectionGraph,
+    closeConnectionGraph,
   } = pageState;
 
   const {
@@ -127,6 +139,11 @@ export function PurchaseOrderListPage() {
                 onClick: () => openDetail(row),
               },
               {
+                label: t("connectionGraph.action"),
+                icon: <Network className="h-[13px] w-[13px]" />,
+                onClick: () => void openConnectionGraph(row),
+              },
+              {
                 label: t("common.receiveInventory"),
                 icon: <PackagePlus className="h-[13px] w-[13px]" />,
                 onClick: () => grDrawer.openCreate(row.id),
@@ -178,6 +195,39 @@ export function PurchaseOrderListPage() {
       />
 
       <GrFormDrawer drawer={grDrawer} />
+
+      <ConnectionGraphDrawer
+        open={connectionGraphOpen}
+        onClose={closeConnectionGraph}
+        title={t("Đồ thị liên kết chứng từ")}
+        subtitle={
+          connectionGraphRow
+            ? `${connectionGraphRow.purchase_no || connectionGraphRow.order_no || connectionGraphRow.id} (${
+                connectionGraphRow.supplier_name_snapshot ?? t("common.unknown")
+              })`
+            : undefined
+        }
+        loading={graphLoading}
+        error={graphError}
+        initialNodes={graphNodes}
+        initialEdges={graphEdges}
+        layout={graphLayout}
+        toggleLayout={toggleGraphLayout}
+        onNodeClick={(nodeData) => {
+          if (!nodeData.docId) return;
+          switch (nodeData.nodeType) {
+            case "purchase_order":
+              if (connectionGraphRow) openDetail(connectionGraphRow);
+              break;
+            case "goods_receipt":
+              grDrawer.openDetail(nodeData.docId);
+              break;
+            default:
+              // Other drawers (Invoice, Payment Voucher) not available in this page context yet
+              break;
+          }
+        }}
+      />
 
       <ConfirmModal
         open={!!confirmState}

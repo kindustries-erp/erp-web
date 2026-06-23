@@ -381,7 +381,7 @@ export const operationalApi = {
   ) => {
     const { data } = await axiosInstance.get<{
       items: OperationalDocumentPaymentLink[];
-    }>(`/api/v1/${documentType}/${id}/payment-links`);
+    }>(`/api/v1/${resolvePath(documentType)}/${id}/payment-links`);
     return data.items ?? [];
   },
   createPaymentLink: async (payload: CreateOperationalPaymentLinkPayload) => {
@@ -397,7 +397,7 @@ export const operationalApi = {
     linkId: string,
   ) => {
     await axiosInstance.delete(
-      `/api/v1/${documentType}/${id}/payment-links/${linkId}`,
+      `/api/v1/${resolvePath(documentType)}/${id}/payment-links/${linkId}`,
     );
   },
   postPurchaseReceipt: async (

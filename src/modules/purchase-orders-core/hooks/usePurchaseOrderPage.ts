@@ -14,12 +14,34 @@ import { getPaymentVouchersPagedApi } from "@/modules/finance/api/financeApi";
 import { extractApiError } from "@/shared/utils/apiError";
 import { today } from "@/shared/utils/format";
 import { usePurchaseOrderList } from "./usePurchaseOrderList";
+import { usePurchaseOrderGraph } from "./usePurchaseOrderGraph";
 
 export function usePurchaseOrderPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
 
   const listData = usePurchaseOrderList();
+
+  // ── Connection Graph ──────────────────────────────────────────────────────
+  const graph = usePurchaseOrderGraph();
+  const [connectionGraphOpen, setConnectionGraphOpen] = useState(false);
+  const [connectionGraphRow, setConnectionGraphRow] =
+    useState<OperationalDocument | null>(null);
+
+  const openConnectionGraph = useCallback(
+    async (row: OperationalDocument) => {
+      setConnectionGraphRow(row);
+      setConnectionGraphOpen(true);
+      await graph.loadGraph(row);
+    },
+    [graph],
+  );
+
+  const closeConnectionGraph = useCallback(() => {
+    setConnectionGraphOpen(false);
+    setConnectionGraphRow(null);
+    graph.reset();
+  }, [graph]);
 
   const [formOpen, setFormOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
@@ -414,5 +436,16 @@ export function usePurchaseOrderPage() {
     confirmLoading,
     handleConfirmAction,
     closeConfirmModal,
+    // Connection Graph
+    connectionGraphOpen,
+    connectionGraphRow,
+    graphNodes: graph.nodes,
+    graphEdges: graph.edges,
+    graphLoading: graph.loading,
+    graphError: graph.error,
+    graphLayout: graph.layout,
+    toggleGraphLayout: graph.toggleLayout,
+    openConnectionGraph,
+    closeConnectionGraph,
   };
 }

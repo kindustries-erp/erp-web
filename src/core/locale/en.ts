@@ -1757,4 +1757,10 @@ export const en: Dict = {
   Đóng: "Close",
   "Xác nhận": "Confirm",
   Huỷ: "Cancel",
+  connectionGraph: {
+    action: "Connection Graph",
+    title: "Document Connection Graph",
+    loading: "Loading graph...",
+    empty: "No connection data found.",
+  },
 };

@@ -1747,6 +1747,12 @@ export const vi = {
   Đóng: "Đóng",
   "Xác nhận": "Xác nhận",
   Huỷ: "Huỷ",
+  connectionGraph: {
+    action: "Đồ thị kết nối",
+    title: "Đồ thị liên kết chứng từ",
+    loading: "Đang tải đồ thị...",
+    empty: "Chưa có dữ liệu kết nối.",
+  },
 };
 
 export type Dict = typeof vi;
