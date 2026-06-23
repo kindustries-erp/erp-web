@@ -11,6 +11,32 @@ export type ListParams = BaseListParams & {
   ids?: string;
 };
 
+export type InventorySerialListParams = BaseListParams & {
+  itemType?: string;
+  trackingPolicy?: string;
+  itemId?: string;
+};
+
+export interface InventorySerialRow {
+  id: string;
+  serialNo: string;
+  itemId: string;
+  vinId?: string | null;
+  vin?: string | null;
+  engineNo?: string | null;
+  lotId?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+  item: {
+    id: string;
+    sku: string;
+    itemName: string;
+    itemType: string;
+    trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM" | null;
+    trackingCategoryKey?: string | null;
+  };
+}
+
 export interface ErpInventoryItem {
   id: string;
   sku: string;
@@ -122,6 +148,28 @@ export const inventoryCoreApi = {
       const { data } = await axiosInstance.get<
         PaginatedResponse<ErpInventoryItem>
       >(BASE, { params: requestParams });
+      return data;
+    });
+  },
+  listSerials: async (
+    params?: InventorySerialListParams,
+  ): Promise<PaginatedResponse<InventorySerialRow>> => {
+    const requestParams = {
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 20,
+      ...(params?.sort?.length ? { sort: params.sort.join(",") } : {}),
+      ...(params?.search ? { search: params.search } : {}),
+      ...(params?.itemType ? { itemType: params.itemType } : {}),
+      ...(params?.trackingPolicy
+        ? { trackingPolicy: params.trackingPolicy }
+        : {}),
+      ...(params?.itemId ? { itemId: params.itemId } : {}),
+    };
+    const key = `inventory-serials:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<
+        PaginatedResponse<InventorySerialRow>
+      >("/api/v1/inventory/serials", { params: requestParams });
       return data;
     });
   },
