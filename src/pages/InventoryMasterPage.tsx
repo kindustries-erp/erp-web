@@ -343,32 +343,48 @@ export function InventoryMasterPage() {
       {
         key: "code",
         header: t("inventoryMasters.columns.code"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "code",
         cell: (item) => (
-          <span className="font-medium font-mono">{item.code}</span>
+          <div className="w-full text-center">
+            <span className="font-medium font-mono">{item.code}</span>
+          </div>
         ),
       },
       {
         key: "name",
         header: t("inventoryMasters.columns.name"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "name",
-        cell: (item) => item.name,
+        cell: (item) => <div className="w-full text-center">{item.name}</div>,
       },
       {
         key: "description",
         header: t("inventoryMasters.columns.description"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "description",
-        cell: (item) => item.description || "—",
+        cell: (item) => (
+          <div className="w-full text-center">{item.description || "—"}</div>
+        ),
       },
       {
         key: "isActive",
         header: t("inventoryMasters.columns.status"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "isActive",
-        cell: (item) => statusBadge(item.isActive, t),
+        cell: (item) => (
+          <div className="w-full text-center">
+            {statusBadge(item.isActive, t)}
+          </div>
+        ),
       },
     ],
     [t],

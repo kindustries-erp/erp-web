@@ -908,6 +908,8 @@ export function ErpBomPage() {
     {
       key: "bomCode",
       header: t("Mã BOM"),
+      headerClassName: "text-center",
+      className: "align-middle text-right",
       sortable: true,
       sortKey: "bomCode",
       cell: (item) => {
@@ -919,7 +921,7 @@ export function ErpBomPage() {
               e.stopPropagation();
               toggleExpand(item.id);
             }}
-            className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left w-full"
+            className="font-medium text-primary hover:underline focus:outline-none flex items-center justify-end gap-1.5 text-right w-full"
           >
             <Tooltip content={item.bomCode}>
               <span className="font-semibold text-primary block truncate max-w-[120px]">
@@ -935,23 +937,29 @@ export function ErpBomPage() {
           </button>
         );
       },
-      skeletonClassName: "w-24",
+      skeletonClassName: "w-24 ml-auto",
     },
     {
       key: "bomName",
       header: t("Tên BOM"),
+      headerClassName: "text-center",
+      className: "align-middle text-right",
       sortable: true,
       sortKey: "bomName",
       cell: (item) => (
-        <Tooltip content={item.bomName}>
-          <span className="block truncate max-w-[160px]">{item.bomName}</span>
-        </Tooltip>
+        <div className="w-full text-right overflow-hidden flex justify-end">
+          <Tooltip content={item.bomName}>
+            <span className="block truncate max-w-[160px]">{item.bomName}</span>
+          </Tooltip>
+        </div>
       ),
-      skeletonClassName: "w-40",
+      skeletonClassName: "w-40 ml-auto",
     },
     {
       key: "finishedGoodItemName",
       header: t("Thành phẩm"),
+      headerClassName: "text-center",
+      className: "align-middle text-right",
       sortable: true,
       sortKey: "finishedGoodItemName",
       cell: (item) => {
@@ -959,7 +967,7 @@ export function ErpBomPage() {
           item.finishedGoodItemName ||
           (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—");
         return (
-          <div className="flex flex-col min-w-[80px] max-w-[200px]">
+          <div className="flex flex-col min-w-[80px] max-w-[200px] text-right ml-auto">
             <Tooltip content={name}>
               <span className="truncate font-medium text-foreground block">
                 {name}
@@ -975,19 +983,25 @@ export function ErpBomPage() {
           </div>
         );
       },
-      skeletonClassName: "w-36",
+      skeletonClassName: "w-36 ml-auto",
     },
     {
       key: "version",
       header: "Version",
+      headerClassName: "text-center",
+      className: "align-middle text-center",
       sortable: true,
       sortKey: "version",
-      cell: (item) => item.version || "—",
-      skeletonClassName: "w-16",
+      cell: (item) => (
+        <div className="w-full text-center">{item.version || "—"}</div>
+      ),
+      skeletonClassName: "w-16 mx-auto",
     },
     {
       key: "status",
       header: t("Trạng thái"),
+      headerClassName: "text-center",
+      className: "align-middle text-center",
       sortable: true,
       sortKey: "status",
       cell: (item) => {
@@ -1005,30 +1019,40 @@ export function ErpBomPage() {
         const s =
           statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
         return (
-          <span
-            className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap inline-block ${s.cls}`}
-          >
-            {s.label}
-          </span>
+          <div className="w-full text-center">
+            <span
+              className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap inline-block ${s.cls}`}
+            >
+              {s.label}
+            </span>
+          </div>
         );
       },
-      skeletonClassName: "w-20",
+      skeletonClassName: "w-20 mx-auto",
     },
     {
       key: "effectiveFrom",
       header: t("Hiệu lực từ"),
+      headerClassName: "text-center",
+      className: "align-middle text-right",
       sortable: true,
       sortKey: "effectiveFrom",
-      cell: (item) => fmtDate(item.effectiveFrom),
-      skeletonClassName: "w-20",
+      cell: (item) => (
+        <div className="w-full text-right">{fmtDate(item.effectiveFrom)}</div>
+      ),
+      skeletonClassName: "w-20 ml-auto",
     },
     {
       key: "effectiveTo",
       header: t("Hiệu lực đến"),
+      headerClassName: "text-center",
+      className: "align-middle text-right",
       sortable: true,
       sortKey: "effectiveTo",
-      cell: (item) => fmtDate(item.effectiveTo),
-      skeletonClassName: "w-20",
+      cell: (item) => (
+        <div className="w-full text-right">{fmtDate(item.effectiveTo)}</div>
+      ),
+      skeletonClassName: "w-20 ml-auto",
     },
   ];
 

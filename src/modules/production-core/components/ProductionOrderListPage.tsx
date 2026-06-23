@@ -305,42 +305,65 @@ export function ProductionOrderListPage() {
       {
         key: "referenceNo",
         header: t("Mã lệnh"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "reference_no",
         cell: (item: ErpProductionOrder) => (
-          <span
-            className="cursor-pointer font-medium text-emerald-600 hover:underline"
-            onClick={() => handleEdit(item.id, !canUpdate)}
-          >
-            {item.referenceNo || item.id.split("-")[0]}
-          </span>
+          <div className="w-full text-center">
+            <span
+              className="cursor-pointer font-medium text-emerald-600 hover:underline"
+              onClick={() => handleEdit(item.id, !canUpdate)}
+            >
+              {item.referenceNo || item.id.split("-")[0]}
+            </span>
+          </div>
         ),
       },
       {
         key: "finishedGoodItemName",
         header: t("Thành phẩm"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "finished_good_item_name",
-        cell: (item: ErpProductionOrder) =>
-          item.finishedGoodItemName || item.finishedGoodItemId || "—",
+        cell: (item: ErpProductionOrder) => (
+          <div className="w-full text-center">
+            {item.finishedGoodItemName || item.finishedGoodItemId || "—"}
+          </div>
+        ),
       },
       {
         key: "plannedStartDate",
         header: t("Ngày bắt đầu"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "planned_start_date",
-        cell: (item: ErpProductionOrder) => fmtDate(item.plannedStartDate),
+        cell: (item: ErpProductionOrder) => (
+          <div className="w-full text-center">
+            {fmtDate(item.plannedStartDate)}
+          </div>
+        ),
       },
       {
         key: "plannedEndDate",
         header: t("Ngày kết thúc"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "planned_end_date",
-        cell: (item: ErpProductionOrder) => fmtDate(item.plannedEndDate),
+        cell: (item: ErpProductionOrder) => (
+          <div className="w-full text-center">
+            {fmtDate(item.plannedEndDate)}
+          </div>
+        ),
       },
       {
         key: "qtyProduced",
         header: t("Tiến độ"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "qty_produced",
         cell: (item: ErpProductionOrder) => {
@@ -354,7 +377,7 @@ export function ProductionOrderListPage() {
           else if (percent > 0) indicatorColor = "bg-blue-500";
 
           return (
-            <div className="flex flex-col gap-1 w-28">
+            <div className="flex flex-col gap-1 w-28 mx-auto">
               <div className="flex items-center justify-between text-[11px] font-medium leading-none">
                 <span className="text-slate-700">{Math.round(percent)}%</span>
                 <span className="text-slate-500">
@@ -373,22 +396,26 @@ export function ProductionOrderListPage() {
       {
         key: "status",
         header: t("Trạng thái"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "status",
         cell: (item: ErpProductionOrder) => (
-          <span
-            className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-              item.status === "COMPLETED"
-                ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                : item.status === "IN_PROGRESS"
-                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                  : item.status === "CANCELLED"
-                    ? "bg-red-100 text-red-800 border-red-200"
-                    : "bg-amber-100 text-amber-800 border-amber-200"
-            }`}
-          >
-            {item.status || "—"}
-          </span>
+          <div className="w-full text-center">
+            <span
+              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                item.status === "COMPLETED"
+                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+                  : item.status === "IN_PROGRESS"
+                    ? "bg-blue-100 text-blue-800 border-blue-200"
+                    : item.status === "CANCELLED"
+                      ? "bg-red-100 text-red-800 border-red-200"
+                      : "bg-amber-100 text-amber-800 border-amber-200"
+              }`}
+            >
+              {item.status || "—"}
+            </span>
+          </div>
         ),
       },
     ],

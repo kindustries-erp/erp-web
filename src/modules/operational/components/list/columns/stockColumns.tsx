@@ -143,12 +143,12 @@ export function useStockColumns({
       {
         key: "unit",
         header: t("inventory.table.columns.unit"),
-        className: "align-middle min-w-[80px] text-right",
+        className: "align-middle min-w-[80px] text-center",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "unit",
         cell: (row) => (
-          <span className="text-sm block w-full text-right">
+          <span className="text-sm block w-full text-center">
             {row.unit || "—"}
           </span>
         ),
@@ -174,12 +174,12 @@ export function useStockColumns({
       {
         key: "status",
         header: t("inventory.table.columns.status"),
-        className: "align-middle min-w-[100px] text-right",
+        className: "align-middle min-w-[100px] text-center",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "status",
         cell: (row) => (
-          <div className="w-full text-right">
+          <div className="w-full text-center">
             <span
               className={
                 row.status === "ACTIVE" || !row.status
