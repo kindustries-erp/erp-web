@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
-import { Boxes, Trash2, Eye } from "lucide-react";
+import { Boxes, Trash2, Eye, Network } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -31,6 +31,8 @@ import {
   useInventoryMasterDeleteMutation,
   useInventoryMasterSaveMutation,
 } from "@/modules/inventory-core/hooks/useInventoryMasterMutation";
+import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
+import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
 
 type MasterKind = "uom" | "item-type" | "tracking-category";
 
@@ -133,6 +135,22 @@ export function InventoryMasterPage() {
     kind: MasterKind;
     item: InventoryMasterOption;
   } | null>(null);
+
+  // Graph state
+  const [graphDrawerOpen, setGraphDrawerOpen] = useState(false);
+  const [graphTarget, setGraphTarget] = useState<InventoryMasterOption | null>(
+    null,
+  );
+  const {
+    nodes: graphNodes,
+    edges: graphEdges,
+    loading: graphLoading,
+    error: graphError,
+    layout: graphLayout,
+    loadGraph,
+    toggleLayout,
+    reset: resetGraph,
+  } = useInventoryGraph();
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -264,6 +282,18 @@ export function InventoryMasterPage() {
     setSaveError(null);
     setViewOnly(true);
     setDrawerOpen(true);
+  }
+
+  function openGraph(item: InventoryMasterOption) {
+    setGraphTarget(item);
+    setGraphDrawerOpen(true);
+    void loadGraph(item.id);
+  }
+
+  function closeGraph() {
+    setGraphDrawerOpen(false);
+    setGraphTarget(null);
+    resetGraph();
   }
 
   async function handleSave() {
@@ -458,6 +488,11 @@ export function InventoryMasterPage() {
                   onClick: () => openDetail(activeTab, row),
                 },
                 {
+                  label: "Đồ thị liên kết",
+                  icon: <Network className="h-3.5 w-3.5" />,
+                  onClick: () => openGraph(row),
+                },
+                {
                   label: t("inventoryMasters.table.actionDelete"),
                   icon: <Trash2 className="h-3.5 w-3.5" />,
                   variant: "danger",
@@ -587,6 +622,21 @@ export function InventoryMasterPage() {
           </div>
         }
       />
+
+      {graphTarget && (
+        <ConnectionGraphDrawer
+          open={graphDrawerOpen}
+          onClose={closeGraph}
+          title="Đồ thị liên kết kho"
+          subtitle={`${graphTarget.name} - ${graphTarget.code}`}
+          loading={graphLoading}
+          error={graphError}
+          initialNodes={graphNodes}
+          initialEdges={graphEdges}
+          layout={graphLayout}
+          toggleLayout={toggleLayout}
+        />
+      )}
     </PageLayout>
   );
 }

@@ -3,7 +3,6 @@ import { Node, Edge } from "@xyflow/react";
 import { extractApiError } from "@/shared/utils/apiError";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import type {
-  GraphNodeType,
   GraphLayoutDirection,
   GraphNodeData,
 } from "@/modules/purchase-orders-core/hooks/usePurchaseOrderGraph";
@@ -11,200 +10,15 @@ import type {
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
 export interface InventoryConnectionsData {
-  item: {
-    id: string;
-    sku: string;
-    itemName: string;
-    uom: string;
-    itemType: string;
+  item: Record<string, unknown>;
+  goodsReceipts: Record<string, unknown>[];
+  goodsIssues: Record<string, unknown>[];
+  productionOrders: Record<string, unknown>[];
+  boms: Record<string, unknown>[];
+  graph?: {
+    nodes: Node<GraphNodeData>[];
+    edges: Edge[];
   };
-  goodsReceipts: {
-    id: string;
-    receiptNo: string;
-    receiptDate: string;
-    status: string | null;
-    qty?: string;
-  }[];
-  goodsIssues: {
-    id: string;
-    issueNo: string;
-    issueDate: string;
-    status: string | null;
-    qty?: string;
-  }[];
-  productionOrders: {
-    id: string;
-    orderNo: string;
-    orderDate: string;
-    status: string | null;
-    role: "FG" | "COMPONENT";
-    qty?: string;
-  }[];
-  boms: {
-    id: string;
-    bomCode: string;
-    bomName: string;
-    status: string | null;
-    role: "FG" | "COMPONENT";
-  }[];
-}
-
-// ─── Layout constants ─────────────────────────────────────────────────────────
-
-const COL_GAP = 300;
-const ROW_GAP = 120;
-
-// ─── Graph builder ────────────────────────────────────────────────────────────
-
-function buildGraph(
-  data: InventoryConnectionsData,
-  layout: GraphLayoutDirection,
-): {
-  nodes: Node<GraphNodeData>[];
-  edges: Edge[];
-} {
-  const nodes: Node<GraphNodeData>[] = [];
-  const edges: Edge[] = [];
-
-  const item = data.item;
-
-  // Center node: Inventory Item
-  nodes.push({
-    id: `item-${item.id}`,
-    type: "graphNode",
-    position: { x: 0, y: 0 },
-    data: {
-      nodeType: "inventory_item" as any, // We will update NODE_CONFIG in ConnectionGraphDrawer
-      label: item.itemName || item.sku,
-      sublabel: item.sku,
-      docId: item.id,
-      layout,
-    },
-  });
-
-  const inbounds: Node<GraphNodeData>[] = [];
-  const outbounds: Node<GraphNodeData>[] = [];
-
-  // Goods Receipts -> Inbound
-  data.goodsReceipts.forEach((gr) => {
-    inbounds.push({
-      id: `gr-${gr.id}`,
-      type: "graphNode",
-      position: { x: 0, y: 0 }, // position computed later
-      data: {
-        nodeType: "goods_receipt",
-        label: gr.receiptNo,
-        sublabel: gr.receiptDate ? gr.receiptDate.split("T")[0] : undefined,
-        status: gr.status || undefined,
-        amount: gr.qty ? Number(gr.qty) : undefined,
-        docId: gr.id,
-        layout,
-      },
-    });
-  });
-
-  // Goods Issues -> Outbound
-  data.goodsIssues.forEach((gi) => {
-    outbounds.push({
-      id: `gi-${gi.id}`,
-      type: "graphNode",
-      position: { x: 0, y: 0 },
-      data: {
-        nodeType: "goods_issue" as any, // Add to NODE_CONFIG
-        label: gi.issueNo,
-        sublabel: gi.issueDate ? gi.issueDate.split("T")[0] : undefined,
-        status: gi.status || undefined,
-        amount: gi.qty ? Number(gi.qty) : undefined,
-        docId: gi.id,
-        layout,
-      },
-    });
-  });
-
-  // Production Orders
-  data.productionOrders.forEach((po) => {
-    const node: Node<GraphNodeData> = {
-      id: `po-${po.id}`,
-      type: "graphNode",
-      position: { x: 0, y: 0 },
-      data: {
-        nodeType: "production_order" as any, // Add to NODE_CONFIG
-        label: po.orderNo,
-        sublabel: po.orderDate ? po.orderDate.split("T")[0] : undefined,
-        status: po.status || undefined,
-        amount: po.qty ? Number(po.qty) : undefined,
-        docId: po.id,
-        layout,
-      },
-    };
-    if (po.role === "FG") inbounds.push(node);
-    else outbounds.push(node);
-  });
-
-  // BOMs
-  data.boms.forEach((bom) => {
-    const node: Node<GraphNodeData> = {
-      id: `bom-${bom.id}`,
-      type: "graphNode",
-      position: { x: 0, y: 0 },
-      data: {
-        nodeType: "bom" as any, // Add to NODE_CONFIG
-        label: bom.bomCode,
-        sublabel: bom.bomName,
-        status: bom.status || undefined,
-        docId: bom.id,
-        layout,
-      },
-    };
-    if (bom.role === "FG") inbounds.push(node);
-    else outbounds.push(node);
-  });
-
-  // Position calculation
-  const setPositions = (nodesArr: Node<GraphNodeData>[], colIndex: number) => {
-    if (layout === "horizontal") {
-      const startY = -((nodesArr.length - 1) * ROW_GAP) / 2;
-      nodesArr.forEach((node, idx) => {
-        node.position.x = colIndex * COL_GAP;
-        node.position.y = startY + idx * ROW_GAP;
-      });
-    } else {
-      // vertical layout
-      const startX = -((nodesArr.length - 1) * COL_GAP) / 2;
-      nodesArr.forEach((node, idx) => {
-        node.position.x = startX + idx * COL_GAP;
-        node.position.y = colIndex * ROW_GAP;
-      });
-    }
-  };
-
-  setPositions(inbounds, -1);
-  setPositions(outbounds, 1);
-
-  nodes.push(...inbounds, ...outbounds);
-
-  // Edges
-  inbounds.forEach((node) => {
-    edges.push({
-      id: `e-in-${node.id}`,
-      source: node.id,
-      target: `item-${item.id}`,
-      type: "smoothstep",
-      animated: true,
-    });
-  });
-
-  outbounds.forEach((node) => {
-    edges.push({
-      id: `e-out-${node.id}`,
-      source: `item-${item.id}`,
-      target: node.id,
-      type: "smoothstep",
-      animated: true,
-    });
-  });
-
-  return { nodes, edges };
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -239,10 +53,9 @@ export function useInventoryGraph(): UseInventoryGraphReturn {
   const toggleLayout = useCallback(() => {
     setLayout((prev) => {
       const next = prev === "horizontal" ? "vertical" : "horizontal";
-      if (rawData) {
-        const { nodes: n, edges: e } = buildGraph(rawData, next);
-        setNodes(n);
-        setEdges(e);
+      if (rawData && rawData.graph) {
+        setNodes(rawData.graph.nodes);
+        setEdges(rawData.graph.edges);
       }
       return next;
     });
@@ -258,9 +71,10 @@ export function useInventoryGraph(): UseInventoryGraphReturn {
       try {
         const resp = await inventoryCoreApi.getConnections(itemId);
         setRawData(resp);
-        const { nodes: n, edges: e } = buildGraph(resp, layout);
-        setNodes(n);
-        setEdges(e);
+        if (resp.graph) {
+          setNodes(resp.graph.nodes);
+          setEdges(resp.graph.edges);
+        }
       } catch (err) {
         setError(extractApiError(err, "Không tải được đồ thị liên kết"));
       } finally {
