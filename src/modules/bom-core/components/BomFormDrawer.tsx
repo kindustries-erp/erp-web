@@ -10,8 +10,10 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
-import type { ErpBom } from "@/modules/bom-core/api/bomCoreApi";
+import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
+import toast from "react-hot-toast";
+import { Upload, Download, Loader2 } from "lucide-react";
 
 export interface BomLineForm {
   componentItemId: string;
@@ -145,6 +147,79 @@ export function BomFormDrawer({
   const [submittingStatus, setSubmittingStatus] = React.useState<string | null>(
     null,
   );
+  const [importing, setImporting] = React.useState(false);
+  const [extraItemOptions, setExtraItemOptions] = React.useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await bomCoreApi.downloadImportTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "BOM_Import_Template.xlsx";
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Lỗi khi tải template"));
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const parsedLines = await bomCoreApi.parseBomLines(file);
+      const newLines = parsedLines.map((pl) => ({
+        componentItemId: pl.componentItemId || "",
+        qtyRequired: pl.qtyRequired ? String(pl.qtyRequired) : "1",
+        uom: pl.uom || "PCS",
+        scrapRate: pl.scrapRate ? String(pl.scrapRate) : "0",
+        notes: pl.notes || "",
+      }));
+
+      const newExtraOptions = parsedLines.map((pl) => ({
+        value: pl.componentItemId || "",
+        label:
+          pl.componentItemName ||
+          pl.componentItemCode ||
+          pl.componentItemId ||
+          "",
+      }));
+      setExtraItemOptions((prev) => {
+        const merged = [...prev, ...newExtraOptions];
+        return merged.filter(
+          (v, i, a) => a.findIndex((t) => t.value === v.value) === i,
+        );
+      });
+
+      setForm((prev) => {
+        const currentValidLines = prev.lines.filter((l) => !!l.componentItemId);
+        return {
+          ...prev,
+          lines:
+            currentValidLines.length > 0 || newLines.length === 0
+              ? [...currentValidLines, ...newLines]
+              : newLines,
+        };
+      });
+      toast.success(t("Tải lên danh sách thành công"));
+    } catch (err: unknown) {
+      console.error(err);
+      const e = err as { response?: { data?: { message?: string } } };
+      const msg = e.response?.data?.message || t("Lỗi khi tải lên file");
+      toast.error(msg);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   const filteredLines = form.lines.filter((line) => {
     if (!lineSearch) return true;
@@ -153,6 +228,13 @@ export function BomFormDrawer({
     const notesStr = (line.notes || "").toLowerCase();
     return componentStr.includes(term) || notesStr.includes(term);
   });
+
+  const mergedItemOptions = React.useMemo(() => {
+    const combined = [...extraItemOptions, ...itemOptions];
+    return combined.filter(
+      (v, i, a) => a.findIndex((t) => t.value === v.value) === i,
+    );
+  }, [itemOptions, extraItemOptions]);
 
   const exportActions =
     editing && onExport
@@ -261,14 +343,48 @@ export function BomFormDrawer({
       leftPanel={
         <DrawerSection
           title={
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:justify-between pr-4 mt-2 sm:mt-0">
-              <span className="shrink-0 mb-2 sm:mb-0">
-                {t("Định mức nguyên vật liệu")} (
-                {lineSearch
-                  ? `${filteredLines.length}/${form.lines.length}`
-                  : form.lines.length}
-                )
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full justify-between pr-4 mt-2 sm:mt-0">
+              <div className="flex items-center gap-3">
+                <span className="shrink-0 mb-2 sm:mb-0">
+                  {t("Định mức nguyên vật liệu")} (
+                  {lineSearch
+                    ? `${filteredLines.length}/${form.lines.length}`
+                    : form.lines.length}
+                  )
+                </span>
+                {!viewOnly && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleDownloadTemplate}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none"
+                    >
+                      <Download size={14} />
+                      {t("Template")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={importing}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none disabled:opacity-50"
+                    >
+                      {importing ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Upload size={14} />
+                      )}
+                      {t("Tải lên")}
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept=".xlsx,.csv"
+                      onChange={handleFileUpload}
+                    />
+                  </div>
+                )}
+              </div>
               <div className="w-full sm:w-64 relative font-normal text-sm">
                 <SearchInput
                   className="w-full"
@@ -298,7 +414,7 @@ export function BomFormDrawer({
                     onChange={(value) =>
                       updateLine(idx, { componentItemId: value })
                     }
-                    options={itemOptions}
+                    options={mergedItemOptions}
                     placeholder={t("Chọn linh kiện")}
                     searchPlaceholder={t("Tìm SKU / tên linh kiện")}
                     onSearch={setItemSearch}
@@ -406,7 +522,7 @@ export function BomFormDrawer({
               onChange={(value) =>
                 setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
               }
-              options={itemOptions}
+              options={mergedItemOptions}
               placeholder={t("Chọn thành phẩm")}
               searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
               onSearch={setItemSearch}

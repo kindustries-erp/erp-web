@@ -86,4 +86,23 @@ export const bomCoreApi = {
     });
     return data;
   },
+  downloadImportTemplate: async (): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/import/template`, {
+      responseType: "blob",
+    });
+    return data;
+  },
+  parseBomLines: async (file: File): Promise<ErpBomLine[]> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: ErpBomLine[];
+    }>(`${BASE}/import/parse`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data.data;
+  },
 };
