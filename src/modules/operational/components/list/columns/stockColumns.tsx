@@ -27,6 +27,8 @@ export function useStockColumns({
         key: "item",
         header: t("inventory.table.columns.item"),
         className: "align-middle min-w-[220px]",
+        sortable: true,
+        sortKey: "item_code",
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
           const itemName = row.item_name || t("inventory.table.unnamed");
@@ -61,6 +63,8 @@ export function useStockColumns({
         key: "item_type",
         header: t("inventory.table.columns.type"),
         className: "align-middle min-w-[90px]",
+        sortable: true,
+        sortKey: "item_type",
         cell: (row) => {
           const itemType = row.item_type;
           let cls = "bg-slate-100 text-slate-600";
@@ -117,6 +121,8 @@ export function useStockColumns({
         key: "unit",
         header: t("inventory.table.columns.unit"),
         className: "align-middle min-w-[80px]",
+        sortable: true,
+        sortKey: "unit",
         cell: (row) => <span className="text-sm">{row.unit || "—"}</span>,
       },
       {
@@ -129,6 +135,8 @@ export function useStockColumns({
         key: "status",
         header: t("inventory.table.columns.status"),
         className: "align-middle min-w-[100px]",
+        sortable: true,
+        sortKey: "status",
         cell: (row) => (
           <span
             className={

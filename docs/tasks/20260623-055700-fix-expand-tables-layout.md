@@ -59,7 +59,7 @@
 ## Validation Evidence
 
 - DB precheck result: N/A
-- `bun run lint:check`: Succeeded with no warnings/errors (Output: $ eslint "src/**/*.{ts,tsx,js,jsx}" --max-warnings=0)
+- `bun run lint:check`: Succeeded with no warnings/errors (Output: $ eslint "src/\*_/_.{ts,tsx,js,jsx}" --max-warnings=0)
 - `bunx tsc --noEmit`: Succeeded with no errors
 - `bun run test`: N/A
 - `bun run build`: Built successfully in 3.95s (dist/assets/index-Bqv8VMVJ.js 1,430.27 kB)

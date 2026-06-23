@@ -27,6 +27,7 @@ export function InventoryListPage({
     expandedStockItemIds,
     toggleExpandStockItem,
     itemTypeFilter,
+    inventorySort,
   } = listStore;
 
   const [loading, setLoading] = useState(false);
@@ -37,6 +38,7 @@ export function InventoryListPage({
     Record<string, InventoryMovementsPayload>
   >({});
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
+  const [creatingItem, setCreatingItem] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -52,6 +54,7 @@ export function InventoryListPage({
     pageSize,
     search: search || undefined,
     item_type: itemTypeFilter || undefined,
+    sort: inventorySort ? [inventorySort] : undefined,
   });
 
   useEffect(() => {
@@ -95,12 +98,15 @@ export function InventoryListPage({
       total={total}
       totalPages={totalPages}
       viewingItemId={viewingItemId}
+      creatingItem={creatingItem}
       movLoadingId={movLoadingId}
       movError={movError}
       movMap={movMap}
       onToggleInventoryExpand={handleToggleInventoryExpand}
       onViewItem={(id) => setViewingItemId(id)}
       onCloseViewItem={() => setViewingItemId(null)}
+      onOpenCreateItem={() => setCreatingItem(true)}
+      onCloseCreateItem={() => setCreatingItem(false)}
       onRefetch={useCallback(
         () => void listQuery.refetch(),
         [listQuery.refetch],

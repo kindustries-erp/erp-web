@@ -667,6 +667,9 @@ export const vi = {
       itemTypeLabel: "Loại item",
       itemTypePlaceholder: "Tất cả loại item",
     },
+    action: {
+      details: "Chi tiết",
+    },
     itemTypes: {
       raw: "RAW — Linh kiện",
       fg: "FG — Thành phẩm",

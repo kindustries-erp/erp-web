@@ -18,6 +18,7 @@ export interface StandardTableProps<T> {
   onSort?: (colId: string) => void;
   loadingRows?: number;
   expandedRowIds?: Record<string, boolean>;
+  expandedRowKeys?: string[];
   onToggleExpand?: (id: string) => void;
   getRowKey: (row: T) => string;
   emptyLabel?: string;
@@ -44,6 +45,7 @@ export function StandardTable<T>({
   onSort,
   loadingRows,
   expandedRowIds,
+  expandedRowKeys,
   getRowKey,
   emptyLabel = "Chưa có dữ liệu.",
   minWidth = 1000,
@@ -86,9 +88,10 @@ export function StandardTable<T>({
           : undefined
       }
       expandedRowKeys={
-        expandedRowIds
+        expandedRowKeys ||
+        (expandedRowIds
           ? Object.keys(expandedRowIds).filter((key) => expandedRowIds[key])
-          : undefined
+          : undefined)
       }
       renderSubRow={renderSubRow}
       enableColumnVisibility={enableColumnVisibility}

@@ -675,6 +675,9 @@ export const en: Dict = {
       itemTypeLabel: "Item Type",
       itemTypePlaceholder: "All item types",
     },
+    action: {
+      details: "Details",
+    },
     itemTypes: {
       raw: "RAW — Component",
       fg: "FG — Finished Goods",

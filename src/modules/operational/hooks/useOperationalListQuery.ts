@@ -75,6 +75,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
           pageSize: normalized.pageSize,
           search: normalized.search,
           item_type: normalized.item_type,
+          sort: normalized.sort,
         }) as Promise<
           PaginatedResponse<OperationalDocument | InventoryStockRow>
         >;
