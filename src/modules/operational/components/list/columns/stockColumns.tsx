@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/utils";
-import { normalizeDateTimeGMT7 } from "@/shared/utils/format";
+import { formatGMT7 } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
@@ -159,13 +159,13 @@ export function useStockColumns({
         className: "align-middle min-w-[300px] whitespace-nowrap text-right",
         headerClassName: "text-center",
         cell: (row) => {
-          const fullDateTime = normalizeDateTimeGMT7(row.last_transaction_date);
-          if (!fullDateTime) return "—";
-          const shortDate = fullDateTime.slice(0, 10);
+          if (!row.last_transaction_date) return "—";
           return (
             <div className="w-full text-right">
-              <Tooltip content={fullDateTime} side="top">
-                <span className="cursor-help inline-block">{shortDate}</span>
+              <Tooltip content={formatGMT7(row.last_transaction_date, "datetime-sec")} side="top">
+                <span className="cursor-help inline-block border-b border-dotted border-gray-400">
+                  {formatGMT7(row.last_transaction_date, "date")}
+                </span>
               </Tooltip>
             </div>
           );

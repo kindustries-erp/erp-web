@@ -23,6 +23,7 @@ import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { GoodsReceiptPrintTemplate } from "@/shared/components/print-templates/GoodsReceiptPrintTemplate";
+import { DatePicker } from "@/shared/components/DatePicker";
 
 function fmtQty(value?: string | null) {
   if (!value) return "0";
@@ -612,13 +613,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 />
               </DrawerField>
               <DrawerField label={t("Ngày nhập")}>
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={form.receiptDate}
+                <DatePicker
+                  value={form.receiptDate ? form.receiptDate.slice(0, 10) : ""}
                   disabled={viewOnly}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, receiptDate: e.target.value }))
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, receiptDate: v }))
                   }
                 />
               </DrawerField>

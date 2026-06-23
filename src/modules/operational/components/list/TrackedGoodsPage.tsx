@@ -9,6 +9,8 @@ import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
+import { formatGMT7 } from "@/shared/utils/format";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 export function TrackedGoodsPage({
   setActions,
@@ -112,10 +114,13 @@ export function TrackedGoodsPage({
         className: "align-middle min-w-[160px]",
         sortable: true,
         sortKey: "created_at",
-        cell: (row) =>
-          row.createdAt
-            ? format(new Date(row.createdAt), "dd/MM/yyyy HH:mm")
-            : "—",
+        cell: (row) => (
+          <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")} side="top">
+            <span className="cursor-help border-b border-dotted border-gray-400">
+              {formatGMT7(row.createdAt, "date")}
+            </span>
+          </Tooltip>
+        ),
       },
     ],
     [t],

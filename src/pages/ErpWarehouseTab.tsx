@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/shared/utils";
+import { formatGMT7 } from "@/shared/utils/format";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
@@ -400,7 +402,13 @@ export function ErpWarehouseTab({
         className: "w-[110px]",
         sortable: true,
         sortKey: "date",
-        cell: (row) => format(new Date(row.createdAt), "dd/MM/yyyy HH:mm:ss"),
+        cell: (row) => (
+          <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")} side="top">
+            <span className="cursor-help border-b border-dotted border-gray-400">
+              {formatGMT7(row.createdAt, "date")}
+            </span>
+          </Tooltip>
+        ),
       },
       {
         key: "poNo",

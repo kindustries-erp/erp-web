@@ -20,6 +20,7 @@ import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { GoodsIssuePrintTemplate } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
+import { DatePicker } from "@/shared/components/DatePicker";
 
 interface GiFormDrawerProps {
   drawer: UseGiDrawerReturn;
@@ -366,13 +367,11 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 />
               </DrawerField>
               <DrawerField label={t("Ngày xuất")} required>
-                <input
-                  type="date"
-                  className={inputCls}
-                  value={form.issueDate}
+                <DatePicker
+                  value={form.issueDate ? form.issueDate.slice(0, 10) : ""}
                   disabled={viewOnly}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, issueDate: e.target.value }))
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, issueDate: v }))
                   }
                 />
               </DrawerField>

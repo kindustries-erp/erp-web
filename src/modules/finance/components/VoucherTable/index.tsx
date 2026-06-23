@@ -18,6 +18,7 @@ import type {
   VoucherStatus,
 } from "@/modules/finance/api/financeApi";
 import { useT } from "@/core/i18n";
+import { formatGMT7 } from "@/shared/utils/format";
 
 interface VoucherTableProps {
   title: string;
@@ -121,7 +122,7 @@ export function VoucherTable({
           {t("voucher.table.colDate")}
         </SortHeader>
       ),
-      cell: (v) => v.document_date,
+      cell: (v) => formatGMT7(v.document_date, "datetime"),
       className: "text-[color:var(--muted-fg)]",
       skeletonClassName: "w-20",
     },

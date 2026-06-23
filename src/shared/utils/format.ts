@@ -67,6 +67,35 @@ export function fmtDate(value?: string | null) {
   return value.slice(0, 10);
 }
 
+export function formatGMT7(value?: string | null, formatStr: "date" | "datetime" | "datetime-sec" = "date") {
+  if (!value) return "—";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: formatStr.startsWith("datetime") ? "2-digit" : undefined,
+      minute: formatStr.startsWith("datetime") ? "2-digit" : undefined,
+      second: formatStr === "datetime-sec" ? "2-digit" : undefined,
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+    if (formatStr === "date") {
+      return `${partMap.day}/${partMap.month}/${partMap.year}`;
+    }
+    if (formatStr === "datetime-sec") {
+      return `${partMap.day}/${partMap.month}/${partMap.year} ${partMap.hour}:${partMap.minute}:${partMap.second}`;
+    }
+    return `${partMap.day}/${partMap.month}/${partMap.year} ${partMap.hour}:${partMap.minute}`;
+  } catch {
+    return String(value);
+  }
+}
+
 export function extractItemCodeAndName(
   code?: string | null,
   name?: string | null,
