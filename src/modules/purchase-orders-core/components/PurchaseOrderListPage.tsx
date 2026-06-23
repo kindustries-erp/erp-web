@@ -134,40 +134,51 @@ export function PurchaseOrderListPage() {
             onRowClick={(row) => openDetail(row)}
             actions={(row) => [
               {
-                label: t("Chi tiết"),
-                icon: <Eye className="h-[13px] w-[13px]" />,
-                onClick: () => openDetail(row),
+                groupLabel: t("Tra cứu"),
+                items: [
+                  {
+                    label: t("Chi tiết"),
+                    icon: <Eye className="h-[13px] w-[13px]" />,
+                    onClick: () => openDetail(row),
+                  },
+                  {
+                    label: t("connectionGraph.action"),
+                    icon: <Network className="h-[13px] w-[13px]" />,
+                    onClick: () => void openConnectionGraph(row),
+                  },
+                  {
+                    label: t("Liên kết tiền"),
+                    icon: <Link2 className="h-[13px] w-[13px]" />,
+                    onClick: () => openSettlement(row),
+                    hidden: Number(row.open_amount || 0) <= 0,
+                  },
+                ],
               },
               {
-                label: t("connectionGraph.action"),
-                icon: <Network className="h-[13px] w-[13px]" />,
-                onClick: () => void openConnectionGraph(row),
-              },
-              {
-                label: t("common.receiveInventory"),
-                icon: <PackagePlus className="h-[13px] w-[13px]" />,
-                onClick: () => grDrawer.openCreate(row.id),
-                hidden: !canCreateReceipt || !canReceiveInventory(row),
-              },
-              {
-                label: t("Liên kết tiền"),
-                icon: <Link2 className="h-[13px] w-[13px]" />,
-                onClick: () => openSettlement(row),
-                hidden: Number(row.open_amount || 0) <= 0,
-              },
-              {
-                label: t("Xóa"),
-                icon: <Trash2 className="h-[13px] w-[13px]" />,
-                variant: "danger",
-                onClick: () => confirmDeleteDocument(row.id),
-                hidden: row.status !== "DRAFT",
-              },
-              {
-                label: t("Hủy phiếu"),
-                icon: <XCircle className="h-[13px] w-[13px]" />,
-                variant: "danger",
-                onClick: () => confirmCancelDocument(row.id),
-                hidden: row.status === "DRAFT" || row.status === "CANCELLED",
+                groupLabel: t("Thao tác"),
+                items: [
+                  {
+                    label: t("common.receiveInventory"),
+                    icon: <PackagePlus className="h-[13px] w-[13px]" />,
+                    onClick: () => grDrawer.openCreate(row.id),
+                    hidden: !canCreateReceipt || !canReceiveInventory(row),
+                  },
+                  {
+                    label: t("Xóa"),
+                    icon: <Trash2 className="h-[13px] w-[13px]" />,
+                    variant: "danger",
+                    onClick: () => confirmDeleteDocument(row.id),
+                    hidden: row.status !== "DRAFT",
+                  },
+                  {
+                    label: t("Hủy phiếu"),
+                    icon: <XCircle className="h-[13px] w-[13px]" />,
+                    variant: "danger",
+                    onClick: () => confirmCancelDocument(row.id),
+                    hidden:
+                      row.status === "DRAFT" || row.status === "CANCELLED",
+                  },
+                ],
               },
             ]}
             renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}

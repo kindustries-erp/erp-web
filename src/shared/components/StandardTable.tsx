@@ -2,7 +2,7 @@ import React from "react";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
-  type ActionItem,
+  type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
 
 export interface StandardTableProps<T> {
@@ -25,7 +25,7 @@ export interface StandardTableProps<T> {
   minWidth?: number;
   loading?: boolean;
   error?: string | null;
-  actions?: (row: T) => ActionItem[];
+  actions?: (row: T) => ActionDropdownItem[];
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;

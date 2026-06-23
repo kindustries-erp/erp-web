@@ -1121,50 +1121,60 @@ export function ErpBomPage() {
             onRowClick={(item) => void openView(item)}
             actions={(item) => [
               {
-                label: t("Chi tiết"),
-                onClick: () => void openView(item),
-                icon: <Eye className="h-[13px] w-[13px]" />,
+                groupLabel: t("Tra cứu"),
+                items: [
+                  {
+                    label: t("Chi tiết"),
+                    onClick: () => void openView(item),
+                    icon: <Eye className="h-[13px] w-[13px]" />,
+                  },
+                  {
+                    label: t("common.exportExcel"),
+                    onClick: () => void handleExport(item, "xlsx"),
+                    icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+                  },
+                  {
+                    label: t("common.exportCsv"),
+                    onClick: () => void handleExport(item, "csv"),
+                    icon: <FileText className="h-[13px] w-[13px]" />,
+                  },
+                ],
               },
               {
-                label: t("common.exportExcel"),
-                onClick: () => void handleExport(item, "xlsx"),
-                icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
-              },
-              {
-                label: t("common.exportCsv"),
-                onClick: () => void handleExport(item, "csv"),
-                icon: <FileText className="h-[13px] w-[13px]" />,
-              },
-              {
-                label: t("common.clone"),
-                onClick: () => void handleClone(item),
-                icon: <Copy className="h-[13px] w-[13px]" />,
-              },
-              {
-                label: t("common.activate"),
-                onClick: () => {
-                  setStatusTarget(item);
-                  setTargetAction("ACTIVE");
-                },
-                icon: <CheckCircle className="h-[13px] w-[13px]" />,
-                hidden: item.status !== "INACTIVE",
-              },
-              {
-                label: t("common.inactivate"),
-                onClick: () => {
-                  setStatusTarget(item);
-                  setTargetAction("INACTIVE");
-                },
-                icon: <Ban className="h-[13px] w-[13px]" />,
-                variant: "danger",
-                hidden: item.status !== "ACTIVE",
-              },
-              {
-                label: t("Xóa"),
-                onClick: () => setDeleteTarget(item),
-                icon: <Trash2 className="h-[13px] w-[13px]" />,
-                variant: "danger",
-                hidden: item.status === "ACTIVE",
+                groupLabel: t("Thao tác"),
+                items: [
+                  {
+                    label: t("common.clone"),
+                    onClick: () => void handleClone(item),
+                    icon: <Copy className="h-[13px] w-[13px]" />,
+                  },
+                  {
+                    label: t("common.activate"),
+                    onClick: () => {
+                      setStatusTarget(item);
+                      setTargetAction("ACTIVE");
+                    },
+                    icon: <CheckCircle className="h-[13px] w-[13px]" />,
+                    hidden: item.status !== "INACTIVE",
+                  },
+                  {
+                    label: t("common.inactivate"),
+                    onClick: () => {
+                      setStatusTarget(item);
+                      setTargetAction("INACTIVE");
+                    },
+                    icon: <Ban className="h-[13px] w-[13px]" />,
+                    variant: "danger",
+                    hidden: item.status !== "ACTIVE",
+                  },
+                  {
+                    label: t("Xóa"),
+                    onClick: () => setDeleteTarget(item),
+                    icon: <Trash2 className="h-[13px] w-[13px]" />,
+                    variant: "danger",
+                    hidden: item.status === "ACTIVE",
+                  },
+                ],
               },
             ]}
             page={page}

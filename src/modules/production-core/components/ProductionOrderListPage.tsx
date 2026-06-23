@@ -464,48 +464,59 @@ export function ProductionOrderListPage() {
             onRowClick={(item) => handleEdit(item.id, true)}
             actions={(item) => [
               {
-                label: t("Chi tiết"),
-                onClick: () => handleEdit(item.id, true),
-                icon: <Eye className="h-[13px] w-[13px]" />,
+                groupLabel: t("Tra cứu"),
+                items: [
+                  {
+                    label: t("Chi tiết"),
+                    onClick: () => handleEdit(item.id, true),
+                    icon: <Eye className="h-[13px] w-[13px]" />,
+                  },
+                ],
               },
               {
-                label:
-                  item.status === "IN_PROGRESS"
-                    ? t("Tiếp tục sản xuất")
-                    : item.status === "COMPLETED"
-                      ? t("Xem kết quả sản xuất")
-                      : t("Tiến hành sản xuất"),
-                onClick: () => handleOpenProductionRun(item),
-                icon:
-                  item.status === "IN_PROGRESS" ? (
-                    <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
-                  ) : item.status === "COMPLETED" ? (
-                    <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
-                  ) : (
-                    <PlayCircle className="h-[13px] w-[13px]" />
-                  ),
-                hidden:
-                  !canUpdate ||
-                  !["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
-                    item.status || "",
-                  ),
-              },
-              {
-                label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
-                onClick: () =>
-                  item.status === "DRAFT"
-                    ? setDeleteTarget(item)
-                    : setCancelTarget(item),
-                icon:
-                  item.status === "DRAFT" ? (
-                    <Trash2 className="h-[13px] w-[13px]" />
-                  ) : (
-                    <XCircle className="h-[13px] w-[13px]" />
-                  ),
-                variant: "danger",
-                hidden:
-                  !canUpdate ||
-                  (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
+                groupLabel: t("Thao tác"),
+                items: [
+                  {
+                    label:
+                      item.status === "IN_PROGRESS"
+                        ? t("Tiếp tục sản xuất")
+                        : item.status === "COMPLETED"
+                          ? t("Xem kết quả sản xuất")
+                          : t("Tiến hành sản xuất"),
+                    onClick: () => handleOpenProductionRun(item),
+                    icon:
+                      item.status === "IN_PROGRESS" ? (
+                        <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                      ) : item.status === "COMPLETED" ? (
+                        <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
+                      ) : (
+                        <PlayCircle className="h-[13px] w-[13px]" />
+                      ),
+                    hidden:
+                      !canUpdate ||
+                      !["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
+                        item.status || "",
+                      ),
+                  },
+                  {
+                    label:
+                      item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
+                    onClick: () =>
+                      item.status === "DRAFT"
+                        ? setDeleteTarget(item)
+                        : setCancelTarget(item),
+                    icon:
+                      item.status === "DRAFT" ? (
+                        <Trash2 className="h-[13px] w-[13px]" />
+                      ) : (
+                        <XCircle className="h-[13px] w-[13px]" />
+                      ),
+                    variant: "danger",
+                    hidden:
+                      !canUpdate ||
+                      (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
+                  },
+                ],
               },
             ]}
             sortArray={
