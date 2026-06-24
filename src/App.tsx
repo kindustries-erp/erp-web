@@ -15,7 +15,9 @@ import { Dashboard } from "@/pages/Dashboard";
 import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
-import { Kho } from "@/pages/Inventory";
+import { InventoryStockPage } from "@/pages/inventory/InventoryStockPage";
+import { InventoryTrackingPage } from "@/pages/inventory/InventoryTrackingPage";
+import { InventoryVouchersPage } from "@/pages/inventory/InventoryVouchersPage";
 import { MfgItems } from "@/pages/MfgItems";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
@@ -41,7 +43,9 @@ import { PageKey } from "@/shared/types";
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   purchasing: MuaHang,
-  inventory: Kho,
+  "erp-inventory-stock": InventoryStockPage,
+  "erp-inventory-tracking": InventoryTrackingPage,
+  "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,

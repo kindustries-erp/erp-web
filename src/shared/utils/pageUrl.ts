@@ -4,7 +4,9 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
 
   "purchasing",
-  "inventory",
+  "erp-inventory-stock",
+  "erp-inventory-tracking",
+  "erp-inventory-vouchers",
   "mfg-items",
   "mfg-purchase-orders",
   "mfg-vehicles",
@@ -22,7 +24,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
   "mua-hang": "purchasing",
-  kho: "inventory",
+  kho: "erp-inventory-stock",
 };
 
 export function pageToPath(page: PageKey, tab?: string): string {

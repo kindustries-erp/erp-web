@@ -704,7 +704,7 @@ export function useProductionOrderDrawer({
     if (!editing?.id) return;
     // Set query params or session storage so the GR page knows to prefill for this MO
     window.sessionStorage.setItem("gr_prefill_mo", editing.id);
-    navigate("inventory");
+    navigate("erp-inventory-stock");
   };
 
   const handleStartProduction = async () => {
