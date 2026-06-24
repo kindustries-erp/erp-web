@@ -19,7 +19,7 @@ export function Topbar() {
     BREADCRUMBS[currentPage] ?? [[currentPage]];
 
   return (
-    <div className="topbar h-12 flex items-center gap-[10px] flex-shrink-0">
+    <div className="topbar h-8 flex items-center gap-[10px] flex-shrink-0">
       {/* Hamburger (mobile) */}
       <Button
         variant="secondary"

@@ -42,7 +42,7 @@ export function TablePagination({
     );
 
   return (
-    <div className="flex items-center justify-between mt-4 gap-2 flex-wrap !mb-5">
+    <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
       {/* Page size selector */}
       <div className="flex items-center gap-2 text-xs text-[color:var(--muted-fg)]">
         Hiển thị{" "}
