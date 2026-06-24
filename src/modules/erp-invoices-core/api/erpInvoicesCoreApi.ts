@@ -35,7 +35,6 @@ export interface ErpInvoice {
   salesOrderId?: string | null;
   paymentDocumentNos?: string | null;
   notes?: string | null;
-  // R2 Storage
   pdfFileKey?: string | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
@@ -92,6 +91,39 @@ export interface ErpInvoiceListResponse {
   totalPages: number;
 }
 
+export interface PortalInvoiceDto {
+  shdon: string;
+  khhdon?: string | null;
+  tdlap?: string | null;
+  nbten?: string | null;
+  nbmst?: string | null;
+  tgtcthue?: string | number | null;
+  tgtthue?: string | number | null;
+  tgtttbso?: string | number | null;
+  tthai?: number | string | null;
+  direction?: "IN" | "OUT";
+}
+
+export interface PortalFetchPayload {
+  token: string;
+  dateFrom: string;
+  dateTo: string;
+  type: "purchase" | "sale";
+}
+
+export interface PortalImportPayload {
+  token: string;
+  type: "purchase" | "sale";
+  items: PortalInvoiceDto[];
+}
+
+export interface PortalImportResult {
+  imported: number;
+  skipped: number;
+  direction: "IN" | "OUT";
+  errors?: string[];
+}
+
 const BASE = "/api/v1/erp-invoices";
 
 export const erpInvoicesCoreApi = {
@@ -141,9 +173,25 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  // ---------------------------------------------------------------------------
-  // Bulk XML import
-  // ---------------------------------------------------------------------------
+  portalFetch: async (
+    payload: PortalFetchPayload,
+  ): Promise<PortalInvoiceDto[]> => {
+    const { data } = await axiosInstance.post<{
+      data?: PortalInvoiceDto[];
+      items?: PortalInvoiceDto[];
+    }>(`${BASE}/portal/fetch`, payload);
+    return data.data ?? data.items ?? [];
+  },
+
+  portalImport: async (
+    payload: PortalImportPayload,
+  ): Promise<PortalImportResult> => {
+    const { data } = await axiosInstance.post<{ data?: PortalImportResult }>(
+      `${BASE}/portal/import`,
+      payload,
+    );
+    return data.data ?? (data as unknown as PortalImportResult);
+  },
 
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
     const formData = new FormData();
@@ -166,10 +214,6 @@ export const erpInvoicesCoreApi = {
     );
     return data;
   },
-
-  // ---------------------------------------------------------------------------
-  // Pre-signed URLs
-  // ---------------------------------------------------------------------------
 
   getDownloadUrl: async (
     id: string,
@@ -194,10 +238,6 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 };
-
-// ---------------------------------------------------------------------------
-// Bulk Import types
-// ---------------------------------------------------------------------------
 
 export interface BulkImportSkippedItem {
   filename: string;
