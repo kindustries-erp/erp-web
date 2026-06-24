@@ -468,9 +468,9 @@ export function InventoryMasterPage() {
         />
       }
     >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          <section>
+      <div className="flex items-start flex-1 min-h-0">
+        <div className="min-w-0 flex-1 space-y-4 flex flex-col h-full">
+          <section className="flex-1 min-h-0 flex flex-col">
             <StandardTable<InventoryMasterOption>
               items={currentItems}
               columns={columns}

@@ -360,10 +360,10 @@ export function ErpBusinessPartnersPage({
         />
       }
     >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
+      <div className="flex items-start flex-1 min-h-0">
+        <div className="min-w-0 flex-1 space-y-4 flex flex-col h-full">
           {fetchError ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 shrink-0">
               {fetchError}
             </div>
           ) : null}

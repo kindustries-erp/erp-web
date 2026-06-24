@@ -253,7 +253,7 @@ export function DataTable<T>({
   filters,
   minWidth = 700,
   loadingRows = 6,
-  elevated = true,
+  elevated = false,
   containerClassName,
   actionsColumn,
   page,
@@ -361,11 +361,11 @@ export function DataTable<T>({
         ),
       meta: {
         className: cn(
-          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0 text-center",
+          "sticky right-0 bg-surface group-hover:bg-surface-hover shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0 text-center",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0 text-center",
+          "sticky right-0 top-0 bg-surface shadow-[-1px_1px_0_0_var(--border-light)] z-30 w-[48px] px-0 text-center",
           actionsColumn.headerClassName,
         ),
         skeletonClassName: "",
@@ -394,7 +394,7 @@ export function DataTable<T>({
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
       <div
         className={cn(
-          "bg-surface border border-border rounded-[10px] overflow-x-auto",
+          "bg-surface border border-border rounded-[10px] overflow-auto flex-1 min-h-0",
           elevated && "card-shadow",
           containerClassName,
         )}
@@ -414,8 +414,9 @@ export function DataTable<T>({
                       key={header.id}
                       className={cn(
                         meta?.headerClassName,
+                        "sticky top-0 bg-surface z-20 shadow-[0_1px_0_0_var(--border-light)]",
                         isFirstCol &&
-                          "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                          "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
                       )}
                     >
                       {header.isPlaceholder ? null : meta.sortable ? (
@@ -576,7 +577,7 @@ export function DataTable<T>({
                             className={cn(
                               meta.className,
                               isFirstCol &&
-                                "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                                "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
                             )}
                           >
                             {flexRender(

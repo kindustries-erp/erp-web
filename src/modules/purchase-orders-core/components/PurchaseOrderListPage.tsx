@@ -110,13 +110,13 @@ export function PurchaseOrderListPage() {
       }
     >
       {pageError && (
-        <div className="mb-4 text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">
+        <div className="mb-4 text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 shrink-0">
           {pageError}
         </div>
       )}
 
-      <div className="flex items-start">
-        <div className="flex-1 min-w-0 space-y-4">
+      <div className="flex items-start flex-1 min-h-0">
+        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
           <StandardTable<OperationalDocument>
             tableId="purchase-orders-table"
             items={items}

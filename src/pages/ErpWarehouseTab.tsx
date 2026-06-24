@@ -486,8 +486,8 @@ export function ErpWarehouseTab({
         </div>
       )}
 
-      <div className="flex items-start">
-        <div className="flex-1 min-w-0 space-y-4">
+      <div className="flex items-start flex-1 min-h-0">
+        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
           <StandardTable<WarehouseRow>
             items={rows}
             columns={columns}
