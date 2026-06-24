@@ -322,10 +322,6 @@ export function ErpWarehouseTab({
   const total = vouchersQuery.data?.total ?? 0;
   const totalPages = vouchersQuery.data?.totalPages ?? 1;
 
-  async function openGrDetail(id: string, viewOnly: boolean) {
-    await grDrawer.openDetail(id, viewOnly);
-  }
-
   // ── GR cancel (still used for the cancel confirm modal)
   async function handleGrCancel(id: string) {
     await grDrawer.handleCancel(id);
@@ -525,11 +521,6 @@ export function ErpWarehouseTab({
             emptyLabel={t("Chưa có chứng từ kho.")}
             minWidth={1000}
             loadingRows={8}
-            onRowClick={(row) => {
-              if (row.type === "receipt") void openGrDetail(row.id, true);
-              else if (row.type === "issue")
-                void giDrawer.openDetail(row.id, true);
-            }}
             actions={(row) => [
               {
                 label: t("common.print"),

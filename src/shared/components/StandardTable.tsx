@@ -4,6 +4,7 @@ import {
   ActionDropdown,
   type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
+import type { Updater } from "@tanstack/react-table";
 
 export interface StandardTableProps<T> {
   items: T[];
@@ -30,6 +31,11 @@ export interface StandardTableProps<T> {
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
   tableId?: string;
+  enableColumnResizing?: boolean;
+  enableRowSelection?: boolean;
+  rowSelection?: Record<string, boolean>;
+  onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
+  variant?: "default" | "spreadsheet";
 }
 
 export function StandardTable<T>({
@@ -56,6 +62,11 @@ export function StandardTable<T>({
   onRowClick,
   enableColumnVisibility = true,
   tableId,
+  enableColumnResizing,
+  enableRowSelection,
+  rowSelection,
+  onRowSelectionChange,
+  variant,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -96,6 +107,11 @@ export function StandardTable<T>({
       renderSubRow={renderSubRow}
       enableColumnVisibility={enableColumnVisibility}
       tableId={tableId}
+      enableColumnResizing={enableColumnResizing}
+      enableRowSelection={enableRowSelection}
+      rowSelection={rowSelection}
+      onRowSelectionChange={onRowSelectionChange}
+      variant={variant}
     />
   );
 }

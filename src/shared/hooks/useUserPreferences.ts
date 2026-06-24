@@ -1,9 +1,13 @@
 import { useState, useCallback } from "react";
-import { type VisibilityState } from "@tanstack/react-table";
+import {
+  type VisibilityState,
+  type ColumnSizingState,
+} from "@tanstack/react-table";
 
 export interface TablePreference {
   columnOrder: string[];
   columnVisibility: VisibilityState;
+  columnSizing?: ColumnSizingState;
 }
 
 export interface UserPreferences {

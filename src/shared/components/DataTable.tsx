@@ -30,6 +30,7 @@ import {
   type VisibilityState,
   type Column,
   type Updater,
+  type ColumnSizingState,
 } from "@tanstack/react-table";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { TablePagination } from "@/shared/components/TablePagination";
@@ -42,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/components/ui/table";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
 
 export interface DataTableColumn<T> {
@@ -55,6 +57,10 @@ export interface DataTableColumn<T> {
   sortKey?: string;
   hideable?: boolean;
   label?: ReactNode;
+  size?: number;
+  minSize?: number;
+  maxSize?: number;
+  enableResizing?: boolean;
 }
 
 export interface ActionsColumnConfig<T> {
@@ -101,6 +107,11 @@ interface DataTableProps<T> {
   onSort?: (key: string) => void;
   enableColumnVisibility?: boolean;
   tableId?: string;
+  enableColumnResizing?: boolean;
+  enableRowSelection?: boolean;
+  rowSelection?: Record<string, boolean>;
+  onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
+  variant?: "default" | "spreadsheet";
 }
 
 interface SortableItemProps<T> {
@@ -276,6 +287,11 @@ export function DataTable<T>({
   onSort,
   enableColumnVisibility,
   tableId,
+  enableColumnResizing,
+  enableRowSelection,
+  rowSelection,
+  onRowSelectionChange,
+  variant = "default",
 }: DataTableProps<T>) {
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
@@ -286,6 +302,11 @@ export function DataTable<T>({
   const [internalColumnOrder, setInternalColumnOrder] = useState<string[]>(
     () => (tableId ? getTablePreference(tableId)?.columnOrder || [] : []),
   );
+
+  const [internalColumnSizing, setInternalColumnSizing] =
+    useState<ColumnSizingState>(() =>
+      tableId ? getTablePreference(tableId)?.columnSizing || {} : {},
+    );
 
   const handleColumnVisibilityChange = (
     updaterOrValue: Updater<VisibilityState>,
@@ -299,6 +320,7 @@ export function DataTable<T>({
       setTablePreferences(tableId, {
         columnOrder: internalColumnOrder,
         columnVisibility: newState,
+        columnSizing: internalColumnSizing,
       });
     }
   };
@@ -313,6 +335,24 @@ export function DataTable<T>({
       setTablePreferences(tableId, {
         columnOrder: newState,
         columnVisibility: internalVisibility,
+        columnSizing: internalColumnSizing,
+      });
+    }
+  };
+
+  const handleColumnSizingChange = (
+    updaterOrValue: Updater<ColumnSizingState>,
+  ) => {
+    setInternalColumnSizing(updaterOrValue);
+    if (tableId) {
+      const newState =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(internalColumnSizing)
+          : updaterOrValue;
+      setTablePreferences(tableId, {
+        columnOrder: internalColumnOrder,
+        columnVisibility: internalVisibility,
+        columnSizing: newState,
       });
     }
   };
@@ -340,6 +380,10 @@ export function DataTable<T>({
             ? (page - 1) * pageSize + row.index + 1
             : row.index + 1,
         ),
+      size: column.size,
+      minSize: column.minSize,
+      maxSize: column.maxSize,
+      enableResizing: column.enableResizing,
       meta: {
         className: column.className,
         headerClassName: column.headerClassName,
@@ -367,12 +411,59 @@ export function DataTable<T>({
         ),
       meta: {
         className: cn(
-          "sticky right-0 bg-surface group-hover:bg-surface-hover shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0 text-center",
+          "w-[48px] px-0 text-center",
+          variant !== "spreadsheet" &&
+            "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "sticky right-0 top-0 bg-surface shadow-[-1px_1px_0_0_var(--border-light)] z-30 w-[48px] px-0 text-center",
+          "w-[48px] px-0 text-center",
+          variant !== "spreadsheet" &&
+            "bg-surface sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
           actionsColumn.headerClassName,
+        ),
+        skeletonClassName: "",
+        hideable: false,
+      } satisfies DataTableRowMeta,
+    });
+  }
+
+  if (enableRowSelection) {
+    tableColumns.unshift({
+      id: "__selection",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          className="translate-y-[2px]"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-[2px]"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      enableResizing: false,
+      size: 40,
+      meta: {
+        className: cn(
+          "w-[40px] px-2 text-center",
+          variant !== "spreadsheet" &&
+            "bg-surface sticky left-0 z-20 shadow-[1px_0_0_0_var(--border-light)]",
+        ),
+        headerClassName: cn(
+          "w-[40px] px-2 text-center",
+          variant !== "spreadsheet"
+            ? "bg-surface sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
+            : "sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
         ),
         skeletonClassName: "",
         hideable: false,
@@ -387,12 +478,18 @@ export function DataTable<T>({
     getRowId: getRowKey,
     manualPagination: true,
     manualSorting: true,
+    columnResizeMode: "onChange",
     state: {
       columnVisibility: internalVisibility,
       columnOrder: internalColumnOrder,
+      rowSelection: rowSelection || {},
+      columnSizing: internalColumnSizing,
     },
+    enableRowSelection,
+    onRowSelectionChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
     onColumnOrderChange: handleColumnOrderChange,
+    onColumnSizingChange: handleColumnSizingChange,
   });
 
   return (
@@ -400,13 +497,21 @@ export function DataTable<T>({
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
       <div
         className={cn(
-          "bg-surface border border-border rounded-[10px] overflow-auto flex-1 min-h-0",
+          "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0",
           elevated && "card-shadow",
           containerClassName,
         )}
       >
-        <Table style={{ minWidth }} className="table-fixed">
-          <TableHeader>
+        <Table
+          style={{
+            minWidth: enableColumnResizing ? table.getTotalSize() : minWidth,
+          }}
+          className={cn(
+            "table-fixed",
+            variant === "spreadsheet" && "border-collapse border-spacing-0",
+          )}
+        >
+          <TableHeader className="sticky top-0 z-30 bg-surface shadow-[0_1px_0_0_var(--border-light)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
@@ -422,8 +527,18 @@ export function DataTable<T>({
                         meta?.headerClassName,
                         "sticky top-0 bg-surface z-20 shadow-[0_1px_0_0_var(--border-light)]",
                         isFirstCol &&
+                          !enableRowSelection &&
+                          variant !== "spreadsheet" &&
                           "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
+                        variant === "spreadsheet" &&
+                          "border-r border-border px-2 py-1 h-auto text-[11px]",
+                        enableColumnResizing && "relative group",
                       )}
+                      style={{
+                        width: enableColumnResizing
+                          ? header.getSize()
+                          : undefined,
+                      }}
                     >
                       {header.isPlaceholder ? null : meta.sortable ? (
                         <div
@@ -499,6 +614,21 @@ export function DataTable<T>({
                           header.getContext(),
                         )
                       )}
+                      {enableColumnResizing && header.column.getCanResize() && (
+                        <div
+                          {...{
+                            onMouseDown: header.getResizeHandler(),
+                            onTouchStart: header.getResizeHandler(),
+                            className: cn(
+                              "absolute right-0 top-0 h-full w-[4px] cursor-col-resize select-none touch-none bg-transparent group-hover:bg-primary/30 z-50",
+                              header.column.getIsResizing()
+                                ? "bg-primary/50 w-[4px]"
+                                : "",
+                            ),
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
                     </TableHead>
                   );
                 })}
@@ -518,8 +648,16 @@ export function DataTable<T>({
                         className={cn(
                           meta.className,
                           isFirstCol &&
+                            !enableRowSelection &&
                             "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                          variant === "spreadsheet" &&
+                            "border-r border-border px-2 py-1 text-xs truncate",
                         )}
+                        style={{
+                          maxWidth: enableColumnResizing
+                            ? column.getSize()
+                            : undefined,
+                        }}
                       >
                         {meta.skeletonClassName !== "" && (
                           <Skeleton
@@ -583,8 +721,17 @@ export function DataTable<T>({
                             className={cn(
                               meta.className,
                               isFirstCol &&
+                                !enableRowSelection &&
+                                variant !== "spreadsheet" &&
                                 "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
+                              variant === "spreadsheet" &&
+                                "border-r border-border px-2 py-1 text-xs truncate",
                             )}
+                            style={{
+                              maxWidth: enableColumnResizing
+                                ? cell.column.getSize()
+                                : undefined,
+                            }}
                           >
                             {flexRender(
                               cell.column.columnDef.cell,

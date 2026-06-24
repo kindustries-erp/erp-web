@@ -26,10 +26,12 @@ export function useStockColumns({
       {
         key: "item_code",
         header: t("inventoryMasters.columns.sku"),
-        className: "align-middle min-w-[160px] text-right",
+        className: "align-middle text-left",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "item_code",
+        size: 150,
+        enableResizing: true,
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
           return (
@@ -39,10 +41,10 @@ export function useStockColumns({
                 e.stopPropagation();
                 onToggleExpand(row);
               }}
-              className="font-medium text-foreground hover:underline focus:outline-none flex items-center justify-end w-full gap-1.5 text-right text-sm"
+              className="font-medium text-foreground hover:underline focus:outline-none flex items-center justify-start w-full gap-1.5 text-left text-sm"
             >
               <Tooltip content={row.item_code || "—"} side="top">
-                <span className="truncate max-w-[120px] inline-block">
+                <span className="truncate max-w-full inline-block">
                   {row.item_code || "—"}
                 </span>
               </Tooltip>
@@ -59,14 +61,16 @@ export function useStockColumns({
       {
         key: "item_name",
         header: t("inventoryMasters.columns.itemName"),
-        className: "align-middle min-w-[180px] text-right",
+        className: "align-middle text-left",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "item_name",
+        size: 150,
+        enableResizing: true,
         cell: (row) => {
           const itemName = row.item_name || t("inventory.table.unnamed");
           return (
-            <div className="w-full text-right overflow-hidden">
+            <div className="w-full text-left overflow-hidden">
               <Tooltip content={itemName} side="top">
                 <span className="text-sm truncate block w-full">
                   {itemName}
@@ -79,10 +83,12 @@ export function useStockColumns({
       {
         key: "item_type",
         header: t("inventory.table.columns.type"),
-        className: "align-middle min-w-[150px] text-right",
+        className: "align-middle text-left",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "item_type",
+        size: 150,
+        enableResizing: true,
         cell: (row) => {
           const itemType = row.item_type;
           let cls = "bg-slate-100 text-slate-600";
@@ -95,10 +101,10 @@ export function useStockColumns({
               )
             : "—";
           return (
-            <div className="w-full text-right">
+            <div className="w-full text-left">
               <Tooltip content={typeText} side="top">
                 <span
-                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-[120px] ${cls}`}
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-full ${cls}`}
                 >
                   {typeText}
                 </span>
@@ -110,8 +116,10 @@ export function useStockColumns({
       {
         key: "received_qty",
         header: t("inventory.table.columns.in"),
-        className: "align-middle min-w-[100px] text-right",
+        className: "align-middle text-right",
         headerClassName: "text-center",
+        size: 150,
+        enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
             {Number(row.received_qty || 0).toLocaleString("vi-VN")}
@@ -121,8 +129,10 @@ export function useStockColumns({
       {
         key: "issued_qty",
         header: t("inventory.table.columns.out"),
-        className: "align-middle min-w-[100px] text-right",
+        className: "align-middle text-right",
         headerClassName: "text-center",
+        size: 150,
+        enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
             {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
@@ -132,10 +142,12 @@ export function useStockColumns({
       {
         key: "on_hand_qty",
         header: t("inventory.table.columns.onHand"),
-        className: "align-middle min-w-[110px] text-right",
+        className: "align-middle text-right",
         headerClassName: "text-center",
+        size: 150,
+        enableResizing: true,
         cell: (row) => (
-          <span className="inline-block w-full text-right text-sm font-medium tabular-nums">
+          <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-emerald-600">
             {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}
           </span>
         ),
@@ -143,12 +155,14 @@ export function useStockColumns({
       {
         key: "unit",
         header: t("inventory.table.columns.unit"),
-        className: "align-middle min-w-[80px] text-center",
+        className: "align-middle text-left",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "unit",
+        size: 150,
+        enableResizing: true,
         cell: (row) => (
-          <span className="text-sm block w-full text-center">
+          <span className="text-sm block w-full text-left">
             {row.unit || "—"}
           </span>
         ),
@@ -156,17 +170,19 @@ export function useStockColumns({
       {
         key: "last",
         header: t("inventory.table.columns.lastTx"),
-        className: "align-middle min-w-[300px] whitespace-nowrap text-right",
+        className: "align-middle whitespace-nowrap text-left",
         headerClassName: "text-center",
+        size: 150,
+        enableResizing: true,
         cell: (row) => {
           if (!row.last_transaction_date) return "—";
           return (
-            <div className="w-full text-right">
+            <div className="w-full text-left">
               <Tooltip
                 content={formatGMT7(row.last_transaction_date, "datetime-sec")}
                 side="top"
               >
-                <span className="cursor-help inline-block border-b border-dotted border-gray-400">
+                <span className="cursor-help inline-block border-b border-dotted border-gray-400 text-xs">
                   {formatGMT7(row.last_transaction_date, "date")}
                 </span>
               </Tooltip>
@@ -177,12 +193,14 @@ export function useStockColumns({
       {
         key: "status",
         header: t("inventory.table.columns.status"),
-        className: "align-middle min-w-[100px] text-center",
+        className: "align-middle text-left",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "status",
+        size: 150,
+        enableResizing: true,
         cell: (row) => (
-          <div className="w-full text-center">
+          <div className="w-full text-left">
             <span
               className={
                 row.status === "ACTIVE" || !row.status

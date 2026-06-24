@@ -11,6 +11,7 @@ interface OperationalTableActionsProps {
   /** Label và handler cho nút CTA phụ (VD: "Tạo đơn mẫu") */
   ctaLabel?: string;
   onCta?: () => void;
+  bulkActionsNode?: React.ReactNode;
 }
 
 /**
@@ -25,6 +26,7 @@ export function OperationalTableActions({
   onCreate,
   ctaLabel,
   onCta,
+  bulkActionsNode,
 }: OperationalTableActionsProps) {
   return (
     <TableActionGroup
@@ -34,6 +36,7 @@ export function OperationalTableActions({
       activeFilterCount={activeFilterCount}
       onCreate={onCreate}
     >
+      {bulkActionsNode}
       {ctaLabel && onCta ? (
         <Button
           variant="secondary"

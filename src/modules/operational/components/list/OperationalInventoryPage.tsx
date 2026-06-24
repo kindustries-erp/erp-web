@@ -25,6 +25,7 @@ import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
 import type { InventoryMovementsPayload } from "@/modules/inventory-core/api/inventoryCoreApi";
+import type { Updater } from "@tanstack/react-table";
 
 interface OperationalInventoryPageProps {
   loading: boolean;
@@ -44,6 +45,9 @@ interface OperationalInventoryPageProps {
   onCloseCreateItem: () => void;
   onRefetch: () => void;
   setActions?: (node: React.ReactNode) => void;
+  rowSelection: Record<string, boolean>;
+  onRowSelectionChange: (updater: Updater<Record<string, boolean>>) => void;
+  bulkActionsNode?: React.ReactNode;
 }
 
 /**
@@ -68,6 +72,9 @@ export function OperationalInventoryPage({
   onCloseCreateItem,
   onRefetch,
   setActions,
+  rowSelection,
+  onRowSelectionChange,
+  bulkActionsNode,
 }: OperationalInventoryPageProps) {
   const t = useT();
   const {
@@ -177,10 +184,18 @@ export function OperationalInventoryPage({
           onFilterToggle={() => setFilterPanelOpen((v) => !v)}
           activeFilterCount={activeFilterCount}
           onCreate={onOpenCreateItem}
+          bulkActionsNode={bulkActionsNode}
         />,
       );
     }
-  }, [setActions, loading, onRefetch, setFilterPanelOpen, activeFilterCount]);
+  }, [
+    setActions,
+    loading,
+    onRefetch,
+    setFilterPanelOpen,
+    activeFilterCount,
+    bulkActionsNode,
+  ]);
 
   return (
     <>
@@ -203,7 +218,11 @@ export function OperationalInventoryPage({
             error={error}
             emptyLabel={t("Chưa có tồn kho.")}
             minWidth={1300}
-            onRowClick={(row) => onViewItem(row.inventory_item_id)}
+            enableColumnResizing={true}
+            enableRowSelection={true}
+            rowSelection={rowSelection}
+            onRowSelectionChange={onRowSelectionChange}
+            variant="spreadsheet"
             expandedRowKeys={expandedStockRowKeys}
             renderSubRow={(row) => (
               <InventoryTimelineBlock
