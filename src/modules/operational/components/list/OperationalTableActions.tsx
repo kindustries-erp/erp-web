@@ -8,7 +8,6 @@ interface OperationalTableActionsProps {
   activeFilterCount: number;
   /** Nếu có, hiện nút "Tạo mới" */
   onCreate?: () => void;
-  /** Label và handler cho nút CTA phụ (VD: "Tạo đơn mẫu") */
   ctaLabel?: string;
   onCta?: () => void;
   bulkActionsNode?: React.ReactNode;

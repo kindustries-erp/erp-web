@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useState } from "react";
 import { Eye, Network } from "lucide-react";
+import { fmtQty } from "@/shared/utils/format";
 
 import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
@@ -175,6 +176,26 @@ export function OperationalInventoryPage({
     [t, itemTypeOptions],
   );
 
+  const summaryRow = useMemo(() => {
+    const totalOnHand = stockItems.reduce(
+      (acc, curr) => acc + Number(curr.on_hand_qty || 0),
+      0,
+    );
+    const totalStockValue = stockItems.reduce(
+      (acc, curr) => acc + Number(curr.stock_value || 0),
+      0,
+    );
+    return {
+      item_name: (
+        <span className="text-muted-foreground">
+          {t("Tổng (trang hiện tại)")}
+        </span>
+      ),
+      on_hand_qty: fmtQty(totalOnHand),
+      stock_value: fmtQty(totalStockValue),
+    };
+  }, [stockItems, t]);
+
   useEffect(() => {
     if (setActions) {
       setActions(
@@ -224,6 +245,7 @@ export function OperationalInventoryPage({
             onRowSelectionChange={onRowSelectionChange}
             variant="spreadsheet"
             expandedRowKeys={expandedStockRowKeys}
+            summaryRow={summaryRow}
             renderSubRow={(row) => (
               <InventoryTimelineBlock
                 itemId={row.inventory_item_id}

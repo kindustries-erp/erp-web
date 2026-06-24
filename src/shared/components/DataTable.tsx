@@ -1,4 +1,5 @@
-import React, { type ReactNode, useState } from "react";
+import React, { type ReactNode, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
 import { Settings2, GripVertical } from "lucide-react";
 import {
@@ -42,6 +43,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/shared/components/ui/table";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
@@ -112,6 +114,7 @@ interface DataTableProps<T> {
   rowSelection?: Record<string, boolean>;
   onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
   variant?: "default" | "spreadsheet";
+  summaryRow?: Record<string, ReactNode>;
 }
 
 interface SortableItemProps<T> {
@@ -185,7 +188,17 @@ function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
   );
 }
 
-function ColumnToggle<T>({ table }: { table: TanstackTable<T> }) {
+function ColumnToggle<T>({
+  table,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _visibility,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _order,
+}: {
+  table: TanstackTable<T>;
+  _visibility?: VisibilityState;
+  _order?: string[];
+}) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const hideableColumns = table.getAllLeafColumns().filter((col) => {
@@ -220,7 +233,7 @@ function ColumnToggle<T>({ table }: { table: TanstackTable<T> }) {
       <Popover.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground transition-colors outline-none cursor-pointer border border-transparent hover:border-border pointer-events-auto"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground transition-colors outline-none cursor-pointer border border-border pointer-events-auto shadow-sm"
           title={t("Hiển thị cột")}
           onClick={(e) => {
             e.stopPropagation();
@@ -260,6 +273,8 @@ function ColumnToggle<T>({ table }: { table: TanstackTable<T> }) {
   );
 }
 
+import { subscribePortalTarget } from "./portalStore";
+
 export function DataTable<T>({
   items,
   columns,
@@ -292,6 +307,7 @@ export function DataTable<T>({
   rowSelection,
   onRowSelectionChange,
   variant = "default",
+  summaryRow,
 }: DataTableProps<T>) {
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
@@ -399,9 +415,7 @@ export function DataTable<T>({
   if (actionsColumn) {
     tableColumns.push({
       id: "__actions",
-      header: enableColumnVisibility
-        ? ({ table }) => <ColumnToggle table={table} />
-        : () => actionsColumn.header ?? "",
+      header: () => actionsColumn.header ?? "",
       cell: ({ row }) =>
         actionsColumn.cell(
           row.original,
@@ -492,8 +506,25 @@ export function DataTable<T>({
     onColumnSizingChange: handleColumnSizingChange,
   });
 
+  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
+
+  useEffect(() => {
+    if (!enableColumnVisibility) return;
+    return subscribePortalTarget(setPortalTarget);
+  }, [enableColumnVisibility]);
+
   return (
     <>
+      {enableColumnVisibility && portalTarget
+        ? createPortal(
+            <ColumnToggle
+              table={table}
+              _visibility={internalVisibility}
+              _order={internalColumnOrder}
+            />,
+            portalTarget,
+          )
+        : null}
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
       <div
         className={cn(
@@ -755,6 +786,38 @@ export function DataTable<T>({
                 );
               })}
           </TableBody>
+          {summaryRow && (
+            <TableFooter>
+              <TableRow className="hover:bg-transparent">
+                {table.getAllLeafColumns().map((column, index) => {
+                  const meta = column.columnDef.meta as DataTableRowMeta;
+                  const isFirstCol = index === 0;
+                  return (
+                    <TableCell
+                      key={column.id}
+                      className={cn(
+                        meta.className,
+                        isFirstCol &&
+                          !enableRowSelection &&
+                          "sticky left-0 bg-muted/50 z-10 shadow-[1px_0_0_0_var(--border-light)]",
+                        variant === "spreadsheet" &&
+                          "border-r border-border px-2 py-1 text-xs truncate font-semibold",
+                      )}
+                      style={{
+                        maxWidth: enableColumnResizing
+                          ? column.getSize()
+                          : undefined,
+                      }}
+                    >
+                      {summaryRow[column.id] !== undefined
+                        ? summaryRow[column.id]
+                        : null}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
       {showPagination && (

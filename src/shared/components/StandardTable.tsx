@@ -36,6 +36,7 @@ export interface StandardTableProps<T> {
   rowSelection?: Record<string, boolean>;
   onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
   variant?: "default" | "spreadsheet";
+  summaryRow?: Record<string, React.ReactNode>;
 }
 
 export function StandardTable<T>({
@@ -67,6 +68,7 @@ export function StandardTable<T>({
   rowSelection,
   onRowSelectionChange,
   variant,
+  summaryRow,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -112,6 +114,7 @@ export function StandardTable<T>({
       rowSelection={rowSelection}
       onRowSelectionChange={onRowSelectionChange}
       variant={variant}
+      summaryRow={summaryRow}
     />
   );
 }
