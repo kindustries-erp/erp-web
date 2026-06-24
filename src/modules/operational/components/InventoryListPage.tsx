@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { extractApiError } from "@/shared/utils/apiError";
 import { type InventoryStockRow } from "@/modules/operational/api/operationalApi";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
@@ -97,8 +97,8 @@ export function InventoryListPage({
     (key) => rowSelection[key],
   ).length;
 
-  const bulkActionsNode =
-    selectedCount > 0 ? (
+  const bulkActionsNode = useMemo(() => {
+    return selectedCount > 0 ? (
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button
@@ -135,6 +135,7 @@ export function InventoryListPage({
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
     ) : null;
+  }, [selectedCount]);
 
   return (
     <>

@@ -44,6 +44,7 @@ export function createOperationalListKey(params: OperationalListQueryParams) {
 }
 
 export function useOperationalListQuery(params: OperationalListQueryParams) {
+  const sortStr = params.sort?.join(",");
   const normalized = useMemo(
     () => ({
       variant: params.variant,
@@ -61,7 +62,22 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       inventory_item_id: params.inventory_item_id || undefined,
       sort: params.sort || undefined,
     }),
-    [params],
+    [
+      params.variant,
+      params.page,
+      params.pageSize,
+      params.search,
+      params.branch_id,
+      params.supplier_id,
+      params.recurring,
+      params.payment_status,
+      params.status,
+      params.date_from,
+      params.date_to,
+      params.item_type,
+      params.inventory_item_id,
+      sortStr,
+    ],
   );
 
   return useAppQuery<
