@@ -33,6 +33,7 @@ export interface Einvoice {
   id: string;
   document_no: string;
   invoice_no?: string;
+  invoiceNo?: string;
   invoice_date?: string;
   buyer_name?: string;
   buyer_tax_code?: string;
@@ -47,11 +48,14 @@ export interface Einvoice {
   direction?: "IN" | "OUT";
   tax_status?: string;
   external_invoice_id?: string;
+  externalId?: string;
   viettel_transaction_id?: string;
   error_message?: string;
   created_at?: string;
   synced_at?: string;
   response_payload?: Record<string, unknown>;
+  xml_file_key?: string;
+  xmlFileKey?: string;
 }
 
 export async function getSinvoiceHealthApi(): Promise<SinvoiceConfig> {

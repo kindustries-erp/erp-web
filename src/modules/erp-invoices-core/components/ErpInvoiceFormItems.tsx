@@ -31,7 +31,7 @@ export function ErpInvoiceFormItems({
             {
               key: "description",
               header: t("description", "Diễn giải"),
-              width: "300px",
+              width: "200px",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
                   <input
@@ -47,7 +47,77 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div className="min-w-[200px]">{row.description || "—"}</div>
+                  <div className="min-w-[120px]">{row.description || "—"}</div>
+                ),
+            },
+            {
+              key: "unit",
+              header: t("unit", "ĐVT"),
+              width: "80px",
+              cell: (row: InvoiceItem, index: number) =>
+                editMode ? (
+                  <input
+                    className={inputCls}
+                    value={row.unit || ""}
+                    onChange={(e) => {
+                      const newItems = [...displayItems];
+                      newItems[index] = {
+                        ...newItems[index],
+                        unit: e.target.value,
+                      };
+                      setForm({ ...form, items: newItems });
+                    }}
+                  />
+                ) : (
+                  <div>{row.unit || "—"}</div>
+                ),
+            },
+            {
+              key: "quantity",
+              header: t("quantity", "SL"),
+              width: "80px",
+              align: "right",
+              cell: (row: InvoiceItem, index: number) =>
+                editMode ? (
+                  <input
+                    className={`${inputCls} text-right`}
+                    type="number"
+                    value={row.quantity || ""}
+                    onChange={(e) => {
+                      const newItems = [...displayItems];
+                      newItems[index] = {
+                        ...newItems[index],
+                        quantity: Number(e.target.value),
+                      };
+                      setForm({ ...form, items: newItems });
+                    }}
+                  />
+                ) : (
+                  <div>{row.quantity || "—"}</div>
+                ),
+            },
+            {
+              key: "unitPrice",
+              header: t("unitPrice", "Đơn giá"),
+              width: "100px",
+              align: "right",
+              cell: (row: InvoiceItem, index: number) =>
+                editMode ? (
+                  <input
+                    className={`${inputCls} text-right`}
+                    type="number"
+                    value={row.unitPrice || ""}
+                    onChange={(e) => {
+                      const newItems = [...displayItems];
+                      newItems[index] = {
+                        ...newItems[index],
+                        unitPrice: Number(e.target.value),
+                      };
+                      setForm({ ...form, items: newItems });
+                    }}
+                  />
+                ) : (
+                  <div>{fmtAmt(String(row.unitPrice || 0))}</div>
                 ),
             },
             {

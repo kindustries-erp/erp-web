@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, RefreshCw, Send, Settings, Trash2 } from "lucide-react";
+import {
+  FileText,
+  RefreshCw,
+  Send,
+  Settings,
+  Trash2,
+  FileCode,
+} from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -27,6 +34,7 @@ import {
   type SinvoiceConfig,
   type TaxPortalConfig,
 } from "@/modules/accounting/api/sinvoiceApi";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useDebounce } from "@/shared/hooks/useDebounce";
@@ -537,6 +545,31 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
+  async function handleSyncDetail(id: string) {
+    if (!taxPortalConfig?.gdtJwt) {
+      setMessage(
+        "Vui lòng cấu hình token Cổng thuế trước khi đồng bộ chi tiết.",
+      );
+      return;
+    }
+    setLoading(true);
+    setMessage("Đang đồng bộ chi tiết hóa đơn từ cổng thuế...");
+    try {
+      await erpInvoicesCoreApi.syncDetail(id, taxPortalConfig.gdtJwt);
+      setMessage("Đồng bộ chi tiết thành công");
+      await loadData();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      setMessage(
+        error?.response?.data?.message ??
+          error.message ??
+          "Đồng bộ chi tiết thất bại",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSaveSinvoiceConfig() {
     setLoading(true);
     setMessage("Đang lưu cấu hình Viettel v2.49...");
@@ -656,7 +689,16 @@ const HoaDonDienTu: React.FC = () => {
         key: "invoice_no",
         header: "Số hóa đơn",
         className: "font-mono",
-        cell: (inv) => inv.invoice_no || "-",
+        cell: (inv) => (
+          <div className="flex items-center gap-2">
+            <span>{inv.invoice_no || inv.invoiceNo || "-"}</span>
+            {(inv.xml_file_key || inv.xmlFileKey) && (
+              <span title="Đã có file XML">
+                <FileCode className="h-4 w-4 text-green-600" />
+              </span>
+            )}
+          </div>
+        ),
       },
       {
         key: "source",
@@ -716,11 +758,24 @@ const HoaDonDienTu: React.FC = () => {
             </button>
           ) : (
             <>
-              <div className="truncate max-w-[120px]">
+              <div className="truncate max-w-[120px]" title="Trạng thái CQT">
                 {inv.tax_status || "-"}
               </div>
-              <div className="truncate max-w-[120px]">
-                {inv.external_invoice_id || "-"}
+              <div className="flex items-center justify-end gap-2 mt-1">
+                <span
+                  className="truncate max-w-[100px] text-muted-foreground"
+                  title="ID trên Portal"
+                >
+                  {inv.external_invoice_id || inv.externalId || "-"}
+                </span>
+                <button
+                  type="button"
+                  title="Đồng bộ lại chi tiết"
+                  onClick={() => handleSyncDetail(inv.id)}
+                  className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                </button>
               </div>
             </>
           ),

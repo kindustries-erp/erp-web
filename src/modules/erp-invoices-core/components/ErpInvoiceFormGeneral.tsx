@@ -103,6 +103,18 @@ export function ErpInvoiceFormGeneral({
             <div>{form.description || "—"}</div>
           )}
         </DrawerField>
+        {!editMode &&
+          (form as CreateErpInvoicePayload & { invoiceType?: string })
+            .invoiceType && (
+            <DrawerField label={t("invoiceType", "Loại hóa đơn")}>
+              <div className="text-sm text-muted-foreground">
+                {
+                  (form as CreateErpInvoicePayload & { invoiceType?: string })
+                    .invoiceType
+                }
+              </div>
+            </DrawerField>
+          )}
       </DrawerSection>
 
       <DrawerSection

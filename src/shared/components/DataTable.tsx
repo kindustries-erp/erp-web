@@ -176,6 +176,7 @@ function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
 
 function ColumnToggle<T>({ table }: { table: TanstackTable<T> }) {
   const t = useT();
+  const [open, setOpen] = useState(false);
   const hideableColumns = table.getAllLeafColumns().filter((col) => {
     const meta = col.columnDef.meta as DataTableRowMeta;
     return meta?.hideable !== false && col.id !== "__actions";
@@ -204,12 +205,17 @@ function ColumnToggle<T>({ table }: { table: TanstackTable<T> }) {
   if (hideableColumns.length === 0) return null;
 
   return (
-    <Popover.Root modal={false}>
+    <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground transition-colors outline-none cursor-pointer border border-transparent hover:border-border"
+          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground transition-colors outline-none cursor-pointer border border-transparent hover:border-border pointer-events-auto"
           title={t("Hiển thị cột")}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <Settings2 size={16} />
         </button>

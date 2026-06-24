@@ -4,6 +4,9 @@ export interface ErpInvoiceItem {
   id?: string;
   invoiceId?: string;
   description?: string;
+  unit?: string;
+  quantity?: number;
+  unitPrice?: number;
   preVatAmount: number | string;
   vatRate?: number | string | null;
   vatAmount: number | string;
@@ -18,6 +21,7 @@ export interface ErpInvoice {
   invoiceDate: string;
   direction: "IN" | "OUT";
   status: string;
+  source?: string | null;
   sellerName?: string | null;
   sellerTaxCode?: string | null;
   sellerAddress?: string | null;
@@ -26,6 +30,7 @@ export interface ErpInvoice {
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
+  invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
   vatAmount: string;
@@ -57,6 +62,9 @@ export interface CreateErpInvoicePayload {
   buyerTaxCode?: string;
   buyerAddress?: string;
   description?: string;
+  unit?: string;
+  quantity?: number;
+  unitPrice?: number;
   preVatAmount?: number;
   vatRate?: number;
   vatAmount?: number;
@@ -74,6 +82,8 @@ export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
 export interface ErpInvoiceListParams {
   direction?: "IN" | "OUT";
   search?: string;
+  seller_name?: string;
+  buyer_name?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -104,24 +114,20 @@ export interface PortalInvoiceDto {
   direction?: "IN" | "OUT";
 }
 
-export interface PortalFetchPayload {
+export interface PortalSyncPayload {
   token: string;
   dateFrom: string;
   dateTo: string;
-  type: "purchase" | "sale";
+  type: "purchase" | "sold";
 }
 
-export interface PortalImportPayload {
-  token: string;
-  type: "purchase" | "sale";
-  items: PortalInvoiceDto[];
-}
-
-export interface PortalImportResult {
+export interface PortalSyncResult {
+  total: number;
   imported: number;
   skipped: number;
   direction: "IN" | "OUT";
   errors?: string[];
+  xmlDownloadQueued: number;
 }
 
 const BASE = "/api/v1/erp-invoices";
@@ -173,24 +179,28 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  portalFetch: async (
-    payload: PortalFetchPayload,
-  ): Promise<PortalInvoiceDto[]> => {
-    const { data } = await axiosInstance.post<{
-      data?: PortalInvoiceDto[];
-      items?: PortalInvoiceDto[];
-    }>(`${BASE}/portal/fetch`, payload);
-    return data.data ?? data.items ?? [];
+  reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/reparse-xml`,
+      { token },
+    );
+    return data;
   },
 
-  portalImport: async (
-    payload: PortalImportPayload,
-  ): Promise<PortalImportResult> => {
-    const { data } = await axiosInstance.post<{ data?: PortalImportResult }>(
-      `${BASE}/portal/import`,
+  syncDetail: async (id: string, token: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/sync-detail`,
+      { token },
+    );
+    return data;
+  },
+
+  portalSync: async (payload: PortalSyncPayload): Promise<PortalSyncResult> => {
+    const { data } = await axiosInstance.post<PortalSyncResult>(
+      `${BASE}/portal/sync`,
       payload,
     );
-    return data.data ?? (data as unknown as PortalImportResult);
+    return data;
   },
 
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {

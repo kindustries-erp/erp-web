@@ -1,6 +1,6 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import React, { type ReactNode } from "react";
+import React, { type ReactNode, useState } from "react";
 import { cn } from "@/shared/utils";
 
 export interface ActionItem {
@@ -27,6 +27,8 @@ export interface ActionDropdownProps {
 }
 
 export function ActionDropdown({ items }: ActionDropdownProps) {
+  const [open, setOpen] = useState(false);
+
   // Normalize items to easily handle separators
   const renderItem = (item: ActionItem) => {
     return (
@@ -94,12 +96,16 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
   if (visibleEntries.length === 0) return null;
 
   return (
-    <DropdownMenu.Root modal={false}>
+    <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none"
-          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none pointer-events-auto"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <MoreHorizontal size={16} />
         </button>
