@@ -93,6 +93,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.phanquyen",
     group: "system",
   },
+  "sys-tags": {
+    labelKey: "nav.items.sysTags",
+    group: "system",
+  },
   "erp-invoices": {
     labelKey: "nav.items.erpInvoices",
     group: "accounting",
@@ -153,6 +157,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
+  "sys-tags": [["breadcrumb.system"], ["nav.items.sysTags"]],
   "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
 };
 

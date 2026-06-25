@@ -215,6 +215,14 @@ export function SidebarNav({
               onClick={() => navTo("erp-activity-logs")}
               contextPage="erp-activity-logs"
             />
+            <NavItem
+              collapsed={c}
+              icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.sysTags")}
+              active={currentPage === "sys-tags"}
+              onClick={() => navTo("sys-tags")}
+              contextPage="sys-tags"
+            />
           </div>
         </>
       )}

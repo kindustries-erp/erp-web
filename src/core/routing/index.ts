@@ -37,5 +37,6 @@ export const ROUTES: RouteConfig[] = [
     label: "Phân quyền & Vai trò",
     group: "system",
   },
+  { key: "sys-tags", label: "Quản lý thẻ", group: "system" },
   { key: "settings-branch", label: "Chi nhánh", group: "settings" },
 ];
