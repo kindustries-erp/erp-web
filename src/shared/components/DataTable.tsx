@@ -2,6 +2,7 @@ import React, { type ReactNode, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
 import { Settings2, GripVertical } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import {
   DndContext,
   closestCenter,
@@ -115,6 +116,7 @@ interface DataTableProps<T> {
   onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
   variant?: "default" | "spreadsheet";
   summaryRow?: Record<string, ReactNode>;
+  defaultColumnOrder?: string[];
 }
 
 interface SortableItemProps<T> {
@@ -231,9 +233,10 @@ function ColumnToggle<T>({
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center w-8 h-8 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground transition-colors outline-none cursor-pointer border border-border pointer-events-auto shadow-sm"
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8 px-0"
           title={t("Hiển thị cột")}
           onClick={(e) => {
             e.stopPropagation();
@@ -241,12 +244,13 @@ function ColumnToggle<T>({
           }}
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <Settings2 size={16} />
-        </button>
+          <Settings2 className="h-4 w-4" />
+        </Button>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           align="end"
+          sideOffset={6}
           className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content bg-surface border border-border shadow-md"
         >
           <DndContext
@@ -308,6 +312,7 @@ export function DataTable<T>({
   onRowSelectionChange,
   variant = "default",
   summaryRow,
+  defaultColumnOrder,
 }: DataTableProps<T>) {
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
@@ -316,7 +321,31 @@ export function DataTable<T>({
   );
 
   const [internalColumnOrder, setInternalColumnOrder] = useState<string[]>(
-    () => (tableId ? getTablePreference(tableId)?.columnOrder || [] : []),
+    () => {
+      if (tableId) {
+        let pref = getTablePreference(tableId)?.columnOrder;
+
+        // Force override if defaultColumnOrder explicitly sets __actions first but pref doesn't have it
+        if (
+          pref &&
+          defaultColumnOrder &&
+          defaultColumnOrder[0] === "__actions" &&
+          pref[0] !== "__actions"
+        ) {
+          pref = [
+            "__actions",
+            "__expand",
+            "__selection",
+            ...pref.filter(
+              (c) => !["__actions", "__expand", "__selection"].includes(c),
+            ),
+          ];
+        }
+
+        if (pref && pref.length > 0) return pref;
+      }
+      return defaultColumnOrder || [];
+    },
   );
 
   const [internalColumnSizing, setInternalColumnSizing] =
@@ -423,17 +452,19 @@ export function DataTable<T>({
             ? (page - 1) * pageSize + row.index + 1
             : row.index + 1,
         ),
+      enableResizing: false,
+      size: 40,
       meta: {
         className: cn(
-          "w-[48px] px-0 text-center",
+          "w-[40px] px-0 text-center",
           variant !== "spreadsheet" &&
             "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "w-[48px] px-0 text-center",
+          "w-[40px] px-0 text-center",
           variant !== "spreadsheet" &&
-            "bg-surface sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
+            "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
           actionsColumn.headerClassName,
         ),
         skeletonClassName: "",
@@ -476,8 +507,8 @@ export function DataTable<T>({
         headerClassName: cn(
           "w-[40px] px-2 text-center",
           variant !== "spreadsheet"
-            ? "bg-surface sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
-            : "sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
+            ? "bg-muted sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
+            : "bg-muted sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
         ),
         skeletonClassName: "",
         hideable: false,
@@ -542,7 +573,7 @@ export function DataTable<T>({
             variant === "spreadsheet" && "border-collapse border-spacing-0",
           )}
         >
-          <TableHeader className="sticky top-0 z-30 bg-surface shadow-[0_1px_0_0_var(--border-light)]">
+          <TableHeader className="sticky top-0 z-30 bg-muted shadow-[0_1px_0_0_var(--border-light)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
@@ -556,13 +587,18 @@ export function DataTable<T>({
                       key={header.id}
                       className={cn(
                         meta?.headerClassName,
-                        "sticky top-0 bg-surface z-20 shadow-[0_1px_0_0_var(--border-light)]",
+                        "sticky top-0 bg-muted z-20 shadow-[0_1px_0_0_var(--border-light)]",
                         isFirstCol &&
                           !enableRowSelection &&
                           variant !== "spreadsheet" &&
                           "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
                         variant === "spreadsheet" &&
-                          "border-r border-border px-2 py-1 h-auto text-[11px]",
+                          "border-r border-border py-1 h-auto text-[11px]",
+                        variant === "spreadsheet" &&
+                          !["__actions", "__selection", "__expand"].includes(
+                            header.column.id,
+                          ) &&
+                          "px-2",
                         enableColumnResizing && "relative group",
                       )}
                       style={{
@@ -682,7 +718,12 @@ export function DataTable<T>({
                             !enableRowSelection &&
                             "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
                           variant === "spreadsheet" &&
-                            "border-r border-border px-2 py-1 text-xs truncate",
+                            "border-r border-border py-1 text-xs",
+                          variant === "spreadsheet" &&
+                            !["__actions", "__selection", "__expand"].includes(
+                              column.id,
+                            ) &&
+                            "px-2 truncate",
                         )}
                         style={{
                           maxWidth: enableColumnResizing
@@ -756,7 +797,14 @@ export function DataTable<T>({
                                 variant !== "spreadsheet" &&
                                 "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
                               variant === "spreadsheet" &&
-                                "border-r border-border px-2 py-1 text-xs truncate",
+                                "border-r border-border py-1 text-xs",
+                              variant === "spreadsheet" &&
+                                ![
+                                  "__actions",
+                                  "__selection",
+                                  "__expand",
+                                ].includes(cell.column.id) &&
+                                "px-2 truncate",
                             )}
                             style={{
                               maxWidth: enableColumnResizing
@@ -787,7 +835,7 @@ export function DataTable<T>({
               })}
           </TableBody>
           {summaryRow && (
-            <TableFooter>
+            <TableFooter className="sticky bottom-0 z-30 bg-muted shadow-[0_-1px_0_0_var(--border-light)]">
               <TableRow className="hover:bg-transparent">
                 {table.getAllLeafColumns().map((column, index) => {
                   const meta = column.columnDef.meta as DataTableRowMeta;
@@ -799,7 +847,7 @@ export function DataTable<T>({
                         meta.className,
                         isFirstCol &&
                           !enableRowSelection &&
-                          "sticky left-0 bg-muted/50 z-10 shadow-[1px_0_0_0_var(--border-light)]",
+                          "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
                         variant === "spreadsheet" &&
                           "border-r border-border px-2 py-1 text-xs truncate font-semibold",
                       )}

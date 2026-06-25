@@ -38,6 +38,7 @@ export interface StandardTableProps<T> {
   variant?: "default" | "spreadsheet";
   summaryRow?: Record<string, React.ReactNode>;
   containerClassName?: string;
+  defaultColumnOrder?: string[];
 }
 
 export function StandardTable<T>({
@@ -71,6 +72,7 @@ export function StandardTable<T>({
   variant,
   summaryRow,
   containerClassName,
+  defaultColumnOrder,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -118,6 +120,7 @@ export function StandardTable<T>({
       variant={variant}
       summaryRow={summaryRow}
       containerClassName={containerClassName}
+      defaultColumnOrder={defaultColumnOrder}
     />
   );
 }

@@ -186,11 +186,7 @@ export function OperationalInventoryPage({
       0,
     );
     return {
-      item_name: (
-        <span className="text-muted-foreground">
-          {t("Tổng (trang hiện tại)")}
-        </span>
-      ),
+      item_name: null,
       on_hand_qty: fmtQty(totalOnHand),
       stock_value: fmtQty(totalStockValue),
     };
@@ -206,7 +202,7 @@ export function OperationalInventoryPage({
           activeFilterCount={activeFilterCount}
           onCreate={onOpenCreateItem}
           bulkActionsNode={bulkActionsNode}
-          portalId="inventory-stock-table-v3"
+          portalId="inventory-stock-table"
         />,
       );
     }
@@ -229,7 +225,8 @@ export function OperationalInventoryPage({
       <div className="flex items-start flex-1 min-h-0">
         <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
           <StandardTable
-            tableId="inventory-stock-table-v3"
+            tableId="inventory-stock-table"
+            defaultColumnOrder={["__actions", "__expand", "__selection"]}
             enableColumnVisibility={true}
             items={stockItems}
             columns={stockColumns}

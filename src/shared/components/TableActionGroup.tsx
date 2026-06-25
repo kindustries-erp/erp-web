@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { RefreshCcw, Plus, MoreHorizontal } from "lucide-react";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import * as Popover from "@radix-ui/react-popover";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { cn } from "@/shared/utils";
@@ -70,28 +70,29 @@ export function TableActionGroup({
       )}
 
       {onCreate && (
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
+        <Popover.Root>
+          <Popover.Trigger asChild>
             <Button variant="secondary" size="icon" className="h-8 w-8 px-0">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
               align="end"
-              sideOffset={12}
+              sideOffset={6}
               className="z-[9999] min-w-[160px] rounded-lg bg-surface border border-border shadow-md p-1 popup-content"
             >
-              <DropdownMenu.Item
-                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)]"
+              <button
+                type="button"
+                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
                 onClick={onCreate}
               >
                 <Plus className="h-4 w-4 text-emerald-600" />
                 <span className="font-medium">{t(createLabel)}</span>
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+              </button>
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
       )}
     </div>
   );

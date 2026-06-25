@@ -112,8 +112,8 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          sideOffset={4}
-          align="end"
+          sideOffset={2}
+          align="start"
           className="z-[9999] min-w-[140px] rounded-lg p-1 popup-content"
         >
           {visibleEntries.map((entry, index) => {
