@@ -1,6 +1,0 @@
-services:
-  erp:
-    build: .
-    ports:
-      - "88080:80"
-    restart: unless-stopped
