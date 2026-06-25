@@ -65,7 +65,12 @@ export function PageLayout({
   children,
 }: PageLayoutProps) {
   return (
-    <div className={cn("space-y-4", className)}>
+    <div
+      className={cn(
+        "flex flex-col h-full overflow-hidden space-y-4",
+        className,
+      )}
+    >
       {!hideHeader && icon && (
         <PageHeader
           title={title}

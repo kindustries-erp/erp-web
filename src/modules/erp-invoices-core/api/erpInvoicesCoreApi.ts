@@ -4,6 +4,9 @@ export interface ErpInvoiceItem {
   id?: string;
   invoiceId?: string;
   description?: string;
+  unit?: string;
+  quantity?: number;
+  unitPrice?: number;
   preVatAmount: number | string;
   vatRate?: number | string | null;
   vatAmount: number | string;
@@ -18,6 +21,7 @@ export interface ErpInvoice {
   invoiceDate: string;
   direction: "IN" | "OUT";
   status: string;
+  source?: string | null;
   sellerName?: string | null;
   sellerTaxCode?: string | null;
   sellerAddress?: string | null;
@@ -26,6 +30,7 @@ export interface ErpInvoice {
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
+  invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
   vatAmount: string;
@@ -35,7 +40,6 @@ export interface ErpInvoice {
   salesOrderId?: string | null;
   paymentDocumentNos?: string | null;
   notes?: string | null;
-  // R2 Storage
   pdfFileKey?: string | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
@@ -58,6 +62,9 @@ export interface CreateErpInvoicePayload {
   buyerTaxCode?: string;
   buyerAddress?: string;
   description?: string;
+  unit?: string;
+  quantity?: number;
+  unitPrice?: number;
   preVatAmount?: number;
   vatRate?: number;
   vatAmount?: number;
@@ -75,6 +82,8 @@ export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
 export interface ErpInvoiceListParams {
   direction?: "IN" | "OUT";
   search?: string;
+  seller_name?: string;
+  buyer_name?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -90,6 +99,35 @@ export interface ErpInvoiceListResponse {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface PortalInvoiceDto {
+  shdon: string;
+  khhdon?: string | null;
+  tdlap?: string | null;
+  nbten?: string | null;
+  nbmst?: string | null;
+  tgtcthue?: string | number | null;
+  tgtthue?: string | number | null;
+  tgtttbso?: string | number | null;
+  tthai?: number | string | null;
+  direction?: "IN" | "OUT";
+}
+
+export interface PortalSyncPayload {
+  token: string;
+  dateFrom: string;
+  dateTo: string;
+  type: "purchase" | "sold";
+}
+
+export interface PortalSyncResult {
+  total: number;
+  imported: number;
+  skipped: number;
+  direction: "IN" | "OUT";
+  errors?: string[];
+  xmlDownloadQueued: number;
 }
 
 const BASE = "/api/v1/erp-invoices";
@@ -141,9 +179,29 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  // ---------------------------------------------------------------------------
-  // Bulk XML import
-  // ---------------------------------------------------------------------------
+  reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/reparse-xml`,
+      { token },
+    );
+    return data;
+  },
+
+  syncDetail: async (id: string, token: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/sync-detail`,
+      { token },
+    );
+    return data;
+  },
+
+  portalSync: async (payload: PortalSyncPayload): Promise<PortalSyncResult> => {
+    const { data } = await axiosInstance.post<PortalSyncResult>(
+      `${BASE}/portal/sync`,
+      payload,
+    );
+    return data;
+  },
 
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
     const formData = new FormData();
@@ -166,10 +224,6 @@ export const erpInvoicesCoreApi = {
     );
     return data;
   },
-
-  // ---------------------------------------------------------------------------
-  // Pre-signed URLs
-  // ---------------------------------------------------------------------------
 
   getDownloadUrl: async (
     id: string,
@@ -194,10 +248,6 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 };
-
-// ---------------------------------------------------------------------------
-// Bulk Import types
-// ---------------------------------------------------------------------------
 
 export interface BulkImportSkippedItem {
   filename: string;

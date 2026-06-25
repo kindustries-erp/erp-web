@@ -177,18 +177,26 @@ export function PartnerRolesTab() {
       key: "partner",
       header: t("doitac.headers.partner"),
       cell: (r) => partnerName(r.business_partner_id),
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "role",
       header: t("doitac.headers.role"),
       cell: (r) => roleLabel(r.role),
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
     },
     {
       key: "status",
       header: t("doitac.headers.status"),
-      cell: (r) => <StatusBadge active={r.is_active} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (r) => (
+        <div className="flex justify-center w-full">
+          <StatusBadge active={r.is_active} />
+        </div>
+      ),
     },
   ];
 

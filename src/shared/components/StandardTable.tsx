@@ -2,8 +2,9 @@ import React from "react";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import {
   ActionDropdown,
-  type ActionItem,
+  type ActionDropdownItem,
 } from "@/shared/components/ActionDropdown";
+import type { Updater } from "@tanstack/react-table";
 
 export interface StandardTableProps<T> {
   items: T[];
@@ -25,11 +26,19 @@ export interface StandardTableProps<T> {
   minWidth?: number;
   loading?: boolean;
   error?: string | null;
-  actions?: (row: T) => ActionItem[];
+  actions?: (row: T) => ActionDropdownItem[];
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
   tableId?: string;
+  enableColumnResizing?: boolean;
+  enableRowSelection?: boolean;
+  rowSelection?: Record<string, boolean>;
+  onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
+  variant?: "default" | "spreadsheet";
+  summaryRow?: Record<string, React.ReactNode>;
+  containerClassName?: string;
+  defaultColumnOrder?: string[];
 }
 
 export function StandardTable<T>({
@@ -56,6 +65,14 @@ export function StandardTable<T>({
   onRowClick,
   enableColumnVisibility = true,
   tableId,
+  enableColumnResizing,
+  enableRowSelection,
+  rowSelection,
+  onRowSelectionChange,
+  variant,
+  summaryRow,
+  containerClassName,
+  defaultColumnOrder,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -96,6 +113,14 @@ export function StandardTable<T>({
       renderSubRow={renderSubRow}
       enableColumnVisibility={enableColumnVisibility}
       tableId={tableId}
+      enableColumnResizing={enableColumnResizing}
+      enableRowSelection={enableRowSelection}
+      rowSelection={rowSelection}
+      onRowSelectionChange={onRowSelectionChange}
+      variant={variant}
+      summaryRow={summaryRow}
+      containerClassName={containerClassName}
+      defaultColumnOrder={defaultColumnOrder}
     />
   );
 }

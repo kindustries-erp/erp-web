@@ -22,7 +22,18 @@ export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
-  inventory: { labelKey: "nav.items.inventory", group: "inventory" },
+  "erp-inventory-stock": {
+    labelKey: "nav.items.erpInventoryStock",
+    group: "inventory",
+  },
+  "erp-inventory-tracking": {
+    labelKey: "nav.items.erpInventoryTracking",
+    group: "inventory",
+  },
+  "erp-inventory-vouchers": {
+    labelKey: "nav.items.erpInventoryVouchers",
+    group: "inventory",
+  },
   "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
   "mfg-purchase-orders": {
     labelKey: "nav.items.mfgPo",
@@ -38,8 +49,16 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInventoryItems",
     group: "inventory",
   },
-  "erp-inventory-masters": {
-    labelKey: "nav.items.erpInventoryMasters",
+  "erp-inventory-uom": {
+    labelKey: "nav.items.erpInventoryUom",
+    group: "catalog",
+  },
+  "erp-inventory-item-types": {
+    labelKey: "nav.items.erpInventoryItemTypes",
+    group: "catalog",
+  },
+  "erp-inventory-tracking-categories": {
+    labelKey: "nav.items.erpInventoryTrackingCategories",
     group: "catalog",
   },
   "erp-production": {
@@ -84,7 +103,21 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
-  inventory: [["breadcrumb.inventory"], ["breadcrumb.inventoryStock"]],
+  "erp-inventory-stock": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.inventoryGroup"],
+    ["breadcrumb.inventoryStock"],
+  ],
+  "erp-inventory-tracking": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.inventoryGroup"],
+    ["breadcrumb.inventoryTracking"],
+  ],
+  "erp-inventory-vouchers": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.inventoryGroup"],
+    ["breadcrumb.inventoryVouchers"],
+  ],
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
   "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
@@ -101,9 +134,20 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryItems"],
   ],
-  "erp-inventory-masters": [
-    ["breadcrumb.catalog"],
+  "erp-inventory-uom": [
+    ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryUom"],
+  ],
+  "erp-inventory-item-types": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryItemTypes"],
+  ],
+  "erp-inventory-tracking-categories": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryTrackingCategories"],
   ],
   "erp-activity-logs": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
   "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],

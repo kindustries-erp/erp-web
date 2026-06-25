@@ -15,14 +15,18 @@ import { Dashboard } from "@/pages/Dashboard";
 import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
-import { Kho } from "@/pages/Inventory";
+import { InventoryStockPage } from "@/pages/inventory/InventoryStockPage";
+import { InventoryTrackingPage } from "@/pages/inventory/InventoryTrackingPage";
+import { InventoryVouchersPage } from "@/pages/inventory/InventoryVouchersPage";
 import { MfgItems } from "@/pages/MfgItems";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
-import { InventoryMasterPage } from "@/pages/InventoryMasterPage";
+import { InventoryUomPage } from "@/pages/inventory/InventoryUomPage";
+import { InventoryItemTypesPage } from "@/pages/inventory/InventoryItemTypesPage";
+import { InventoryTrackingCategoriesPage } from "@/pages/inventory/InventoryTrackingCategoriesPage";
 import {
   ErpCustomersPage,
   ErpSuppliersPage,
@@ -41,14 +45,18 @@ import { PageKey } from "@/shared/types";
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   purchasing: MuaHang,
-  inventory: Kho,
+  "erp-inventory-stock": InventoryStockPage,
+  "erp-inventory-tracking": InventoryTrackingPage,
+  "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,
   "erp-production": ErpProductionPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
-  "erp-inventory-masters": InventoryMasterPage,
+  "erp-inventory-uom": InventoryUomPage,
+  "erp-inventory-item-types": InventoryItemTypesPage,
+  "erp-inventory-tracking-categories": InventoryTrackingCategoriesPage,
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
   "erp-employees": ErpEmployeesPage,

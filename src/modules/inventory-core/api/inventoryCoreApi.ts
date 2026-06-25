@@ -11,6 +11,8 @@ export type ListParams = BaseListParams & {
   ids?: string;
 };
 
+import type { InventoryConnectionsData } from "./../hooks/useInventoryGraph";
+
 export type InventorySerialListParams = BaseListParams & {
   itemType?: string;
   trackingPolicy?: string;
@@ -177,6 +179,10 @@ export const inventoryCoreApi = {
     const { data } = await axiosInstance.get<InventoryItemDetailResponse>(
       `${BASE}/${id}`,
     );
+    return data.data;
+  },
+  getConnections: async (id: string): Promise<InventoryConnectionsData> => {
+    const { data } = await axiosInstance.get(`${BASE}/${id}/connections`);
     return data.data;
   },
   movements: async (id: string): Promise<InventoryMovementsPayload> => {

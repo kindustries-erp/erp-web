@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { extractApiError } from "@/shared/utils/apiError";
 import { type InventoryStockRow } from "@/modules/operational/api/operationalApi";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
@@ -8,12 +8,11 @@ import {
   inventoryCoreApi,
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { Button } from "@/shared/components/ui/Button";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { ChevronDown, Download, Trash } from "lucide-react";
 
-export function InventoryListPage({
-  setActions,
-}: {
-  setActions?: (node: React.ReactNode) => void;
-}) {
+export function InventoryListPage() {
   const variant = "inventory" as const;
 
   const listStore = useOperationalListStore();
@@ -39,6 +38,7 @@ export function InventoryListPage({
   >({});
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
   const [creatingItem, setCreatingItem] = useState(false);
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -89,28 +89,76 @@ export function InventoryListPage({
     }
   }
 
+  const selectedCount = Object.keys(rowSelection).filter(
+    (key) => rowSelection[key],
+  ).length;
+
+  const bulkActionsNode = useMemo(() => {
+    return selectedCount > 0 ? (
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="px-3 py-2 bg-slate-800 text-white hover:bg-slate-700"
+          >
+            Thao tác ({selectedCount})
+            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="end"
+            sideOffset={4}
+            className="z-[9999] min-w-[140px] rounded-lg p-1 bg-surface shadow-md border border-border"
+          >
+            <DropdownMenu.Item
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-xs cursor-pointer outline-none hover:bg-muted"
+              onClick={() => {}}
+            >
+              <Download size={14} />
+              Xuất file
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator className="h-px bg-border my-1" />
+            <DropdownMenu.Item
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-xs cursor-pointer outline-none hover:bg-red-50 text-red-600"
+              onClick={() => {}}
+            >
+              <Trash size={14} />
+              Xóa
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+    ) : null;
+  }, [selectedCount]);
+
   return (
-    <OperationalInventoryPage
-      setActions={setActions}
-      loading={loading}
-      error={error}
-      stockItems={stockItems}
-      total={total}
-      totalPages={totalPages}
-      viewingItemId={viewingItemId}
-      creatingItem={creatingItem}
-      movLoadingId={movLoadingId}
-      movError={movError}
-      movMap={movMap}
-      onToggleInventoryExpand={handleToggleInventoryExpand}
-      onViewItem={(id) => setViewingItemId(id)}
-      onCloseViewItem={() => setViewingItemId(null)}
-      onOpenCreateItem={() => setCreatingItem(true)}
-      onCloseCreateItem={() => setCreatingItem(false)}
-      onRefetch={useCallback(
-        () => void listQuery.refetch(),
-        [listQuery.refetch],
-      )}
-    />
+    <>
+      <OperationalInventoryPage
+        loading={loading}
+        error={error}
+        stockItems={stockItems}
+        total={total}
+        totalPages={totalPages}
+        viewingItemId={viewingItemId}
+        creatingItem={creatingItem}
+        movLoadingId={movLoadingId}
+        movError={movError}
+        movMap={movMap}
+        onToggleInventoryExpand={handleToggleInventoryExpand}
+        onViewItem={(id) => setViewingItemId(id)}
+        onCloseViewItem={() => setViewingItemId(null)}
+        onOpenCreateItem={() => setCreatingItem(true)}
+        onCloseCreateItem={() => setCreatingItem(false)}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        bulkActionsNode={bulkActionsNode}
+        onRefetch={useCallback(
+          () => void listQuery.refetch(),
+          [listQuery.refetch],
+        )}
+      />
+    </>
   );
 }

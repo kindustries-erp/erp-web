@@ -1,11 +1,7 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
 import { Boxes, Trash2, Eye } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { StandardTable } from "@/shared/components/StandardTable";
 import { type DataTableColumn } from "@/shared/components/DataTable";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -21,19 +17,15 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { useUIStore } from "@/core/config/uiStore";
 import { type InventoryMasterOption } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { ErpInventoryItemsTab } from "@/pages/ErpInventoryItemsPage";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import {
-  useInventoryMasterListQuery,
-  type InventoryMasterQueryKind,
-} from "@/modules/inventory-core/hooks/useInventoryMasterListQuery";
+import { useInventoryMasterListQuery } from "@/modules/inventory-core/hooks/useInventoryMasterListQuery";
 import {
   useInventoryMasterDeleteMutation,
   useInventoryMasterSaveMutation,
 } from "@/modules/inventory-core/hooks/useInventoryMasterMutation";
 
-type MasterKind = "items" | "uom" | "item-type" | "tracking-category";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 
 interface MasterForm {
   code: string;
@@ -41,8 +33,6 @@ interface MasterForm {
   description: string;
   isActive: string;
 }
-
-// Removed global constants
 
 const emptyForm = (): MasterForm => ({
   code: "",
@@ -76,20 +66,10 @@ function statusBadge(isActive: boolean, t: (k: string) => string) {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function toMasterQueryKind(kind: MasterKind): InventoryMasterQueryKind {
-  return kind === "uom"
-    ? "uoms"
-    : kind === "item-type"
-      ? "item-types"
-      : "tracking-categories";
-}
-
-export function InventoryMasterPage() {
+export function InventoryTrackingCategoriesPage() {
   const t = useT();
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
-  const [activeTab, setActiveTab] = useState<MasterKind>("items");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortArray, setSortArray] = useState<string[]>(["-createdAt"]);
@@ -102,44 +82,13 @@ export function InventoryMasterPage() {
     [t],
   );
 
-  const TAB_OPTIONS = useMemo<
-    { key: MasterKind; label: string; description: string }[]
-  >(
-    () => [
-      {
-        key: "items",
-        label: t("inventoryMasters.tabs.itemsLabel"),
-        description: t("inventoryMasters.tabs.itemsDesc"),
-      },
-      {
-        key: "uom",
-        label: t("inventoryMasters.tabs.uomLabel"),
-        description: t("inventoryMasters.tabs.uomDesc"),
-      },
-      {
-        key: "item-type",
-        label: t("inventoryMasters.tabs.itemTypeLabel"),
-        description: t("inventoryMasters.tabs.itemTypeDesc"),
-      },
-      {
-        key: "tracking-category",
-        label: "Tracking Category",
-        description: "Cấu hình key/value label hiển thị cho tracking.",
-      },
-    ],
-    [t],
-  );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [viewOnly, setViewOnly] = useState(false);
-  const [editingKind, setEditingKind] = useState<MasterKind>("uom");
   const [editing, setEditing] = useState<InventoryMasterOption | null>(null);
   const [form, setForm] = useState<MasterForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [itemsActions, setItemsActions] = useState<React.ReactNode>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{
-    kind: MasterKind;
-    item: InventoryMasterOption;
-  } | null>(null);
+  const [deleteTarget, setDeleteTarget] =
+    useState<InventoryMasterOption | null>(null);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -152,87 +101,35 @@ export function InventoryMasterPage() {
     [STATUS_OPTIONS, t],
   );
 
-  const filterUom = useFilterPanel(filterConfig);
-  const filterItemType = useFilterPanel(filterConfig);
-  const filter = activeTab === "uom" ? filterUom : filterItemType;
+  const filterPanel = useFilterPanel(filterConfig);
 
-  const uomParams = useMemo(
-    () => ({
-      kind: "uoms" as const,
-      page,
-      pageSize,
-      sort: sortArray,
-      search: filterUom.state.search.trim() || undefined,
-      isActive:
-        filterUom.state.status === "true"
-          ? true
-          : filterUom.state.status === "false"
-            ? false
-            : undefined,
-    }),
-    [filterUom.state.search, filterUom.state.status, page, pageSize, sortArray],
-  );
-
-  const itemTypeParams = useMemo(
-    () => ({
-      kind: "item-types" as const,
-      page,
-      pageSize,
-      sort: sortArray,
-      search: filterItemType.state.search.trim() || undefined,
-      isActive:
-        filterItemType.state.status === "true"
-          ? true
-          : filterItemType.state.status === "false"
-            ? false
-            : undefined,
-    }),
-    [
-      filterItemType.state.search,
-      filterItemType.state.status,
-      page,
-      pageSize,
-      sortArray,
-    ],
-  );
-
-  const uomsQuery = useInventoryMasterListQuery(uomParams);
   const trackingCategoryParams = useMemo(
     () => ({
       kind: "tracking-categories" as const,
       page,
       pageSize,
       sort: sortArray,
-      search: filterItemType.state.search.trim() || undefined,
+      search: filterPanel.state.search.trim() || undefined,
       isActive:
-        filterItemType.state.status === "true"
+        filterPanel.state.status === "true"
           ? true
-          : filterItemType.state.status === "false"
+          : filterPanel.state.status === "false"
             ? false
             : undefined,
     }),
     [
-      filterItemType.state.search,
-      filterItemType.state.status,
+      filterPanel.state.search,
+      filterPanel.state.status,
       page,
       pageSize,
       sortArray,
     ],
   );
 
-  const itemTypesQuery = useInventoryMasterListQuery(itemTypeParams);
-  const trackingCategoriesQuery = useInventoryMasterListQuery(
-    trackingCategoryParams,
-  );
+  const currentQuery = useInventoryMasterListQuery(trackingCategoryParams);
   const saveMutation = useInventoryMasterSaveMutation();
   const deleteMutation = useInventoryMasterDeleteMutation();
 
-  const currentQuery =
-    activeTab === "uom"
-      ? uomsQuery
-      : activeTab === "item-type"
-        ? itemTypesQuery
-        : trackingCategoriesQuery;
   const currentItems = currentQuery.data?.items ?? [];
   const currentLoading = currentQuery.isLoading || currentQuery.isFetching;
   const currentError =
@@ -241,7 +138,6 @@ export function InventoryMasterPage() {
   function closeDrawer() {
     setDrawerOpen(false);
     setEditing(null);
-    setEditingKind(activeTab === "items" ? "uom" : activeTab);
     setForm(emptyForm());
     setSaveError(null);
     setViewOnly(false);
@@ -255,8 +151,7 @@ export function InventoryMasterPage() {
     });
   }
 
-  function openCreate(kind: MasterKind) {
-    setEditingKind(kind);
+  function openCreate() {
     setEditing(null);
     setForm(emptyForm());
     setSaveError(null);
@@ -264,8 +159,7 @@ export function InventoryMasterPage() {
     setDrawerOpen(true);
   }
 
-  function openDetail(kind: MasterKind, item: InventoryMasterOption) {
-    setEditingKind(kind);
+  function openDetail(item: InventoryMasterOption) {
     setEditing(item);
     setForm(buildForm(item));
     setSaveError(null);
@@ -281,12 +175,7 @@ export function InventoryMasterPage() {
     setSaveError(null);
     try {
       await saveMutation.mutateAsync({
-        kind:
-          editingKind === "uom"
-            ? "uom"
-            : editingKind === "item-type"
-              ? "item-type"
-              : "tracking-category",
+        kind: "tracking-category",
         id: editing?.id,
         payload: {
           code: form.code.trim(),
@@ -312,21 +201,16 @@ export function InventoryMasterPage() {
     }
   }
 
-  function handleDelete(kind: MasterKind, item: InventoryMasterOption) {
-    setDeleteTarget({ kind, item });
+  function handleDelete(item: InventoryMasterOption) {
+    setDeleteTarget(item);
   }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
     try {
       await deleteMutation.mutateAsync({
-        kind:
-          deleteTarget.kind === "uom"
-            ? "uom"
-            : deleteTarget.kind === "item-type"
-              ? "item-type"
-              : "tracking-category",
-        id: deleteTarget.item.id,
+        kind: "tracking-category",
+        id: deleteTarget.id,
       });
       showToast({
         title: t("inventoryMasters.toast.deleteSuccess"),
@@ -350,32 +234,48 @@ export function InventoryMasterPage() {
       {
         key: "code",
         header: t("inventoryMasters.columns.code"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "code",
         cell: (item) => (
-          <span className="font-medium font-mono">{item.code}</span>
+          <div className="w-full text-center">
+            <span className="font-medium font-mono">{item.code}</span>
+          </div>
         ),
       },
       {
         key: "name",
         header: t("inventoryMasters.columns.name"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "name",
-        cell: (item) => item.name,
+        cell: (item) => <div className="w-full text-center">{item.name}</div>,
       },
       {
         key: "description",
         header: t("inventoryMasters.columns.description"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "description",
-        cell: (item) => item.description || "—",
+        cell: (item) => (
+          <div className="w-full text-center">{item.description || "—"}</div>
+        ),
       },
       {
         key: "isActive",
         header: t("inventoryMasters.columns.status"),
+        headerClassName: "text-center",
+        className: "align-middle text-center",
         sortable: true,
         sortKey: "isActive",
-        cell: (item) => statusBadge(item.isActive, t),
+        cell: (item) => (
+          <div className="w-full text-center">
+            {statusBadge(item.isActive, t)}
+          </div>
+        ),
       },
     ],
     [t],
@@ -404,84 +304,51 @@ export function InventoryMasterPage() {
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
-      title={t("inventoryMasters.title")}
-      desc={t("inventoryMasters.desc")}
-      icon={<Boxes className="h-5 w-5" />}
-      tabs={TAB_OPTIONS.map((tab) => ({ value: tab.key, label: tab.label }))}
-      activeTab={activeTab}
-      onTabChange={(value) => {
-        setActiveTab(value as MasterKind);
-        setPage(1);
-      }}
-      actions={
-        activeTab === "items" ? (
-          itemsActions
-        ) : (
-          <TableActionGroup
-            onRefresh={() => void currentQuery.refetch()}
-            loading={currentLoading}
-            onFilterToggle={filter.togglePanel}
-            activeFilterCount={filter.activeFilterCount}
-            onCreate={() => openCreate(activeTab)}
-            createLabel={
-              activeTab === "uom"
-                ? t("inventoryMasters.actions.createUom")
-                : t("inventoryMasters.actions.createItemType")
-            }
-          />
-        )
-      }
-    >
-      {activeTab === "items" ? (
-        <ErpInventoryItemsTab setActions={setItemsActions} />
-      ) : (
-        <>
-          <div className="flex items-start">
-            <div className="min-w-0 flex-1 space-y-4">
-              <section>
-                <StandardTable<InventoryMasterOption>
-                  items={currentItems}
-                  columns={columns}
-                  getRowKey={(item) => item.id}
-                  loading={currentLoading}
-                  error={currentError}
-                  emptyLabel={t("inventoryMasters.table.emptyUom")}
-                  minWidth={760}
-                  loadingRows={6}
-                  onRowClick={(row) => openDetail(activeTab, row)}
-                  actions={(row) => [
-                    {
-                      label:
-                        t("inventoryMasters.table.actionDetail") || "Chi tiết",
-                      icon: <Eye className="h-3.5 w-3.5" />,
-                      onClick: () => openDetail(activeTab, row),
-                    },
-                    {
-                      label: t("inventoryMasters.table.actionDelete"),
-                      icon: <Trash2 className="h-3.5 w-3.5" />,
-                      variant: "danger",
-                      onClick: () => handleDelete(activeTab, row),
-                    },
-                  ]}
-                  page={page}
-                  pageSize={pageSize}
-                  total={currentQuery.data?.total ?? 0}
-                  totalPages={currentQuery.data?.totalPages ?? 0}
-                  onPage={setPage}
-                  onPageSize={(value) => {
-                    setPage(1);
-                    setPageSize(value);
-                  }}
-                  sortArray={sortArray}
-                  onSort={handleSort}
-                />
-              </section>
-            </div>
-            <FilterPanel config={filterConfig} filter={filter} />
-          </div>
-        </>
-      )}
+    <>
+      <SpreadsheetPageTemplate<InventoryMasterOption>
+        title={
+          t("nav.items.erpInventoryTrackingCategories") || "Tracking Category"
+        }
+        desc="Cấu hình key/value label hiển thị cho tracking."
+        icon={<Boxes className="h-5 w-5" />}
+        tableId="inventory-tracking-categories-table"
+        items={currentItems}
+        columns={columns}
+        getRowKey={(item) => item.id}
+        loading={currentLoading}
+        error={currentError}
+        emptyLabel={t("inventoryMasters.table.emptyUom")}
+        minWidth={760}
+        page={page}
+        pageSize={pageSize}
+        total={currentQuery.data?.total ?? 0}
+        totalPages={currentQuery.data?.totalPages ?? 0}
+        onPage={setPage}
+        onPageSize={(value) => {
+          setPage(1);
+          setPageSize(value);
+        }}
+        onRefresh={() => void currentQuery.refetch()}
+        onCreate={openCreate}
+        createLabel="Tạo mới"
+        filterConfig={filterConfig}
+        filter={filterPanel}
+        sortArray={sortArray}
+        onSort={handleSort}
+        rowActions={(row) => [
+          {
+            label: t("inventoryMasters.table.actionDetail") || "Chi tiết",
+            icon: <Eye className="h-3.5 w-3.5" />,
+            onClick: () => openDetail(row),
+          },
+          {
+            label: t("inventoryMasters.table.actionDelete"),
+            icon: <Trash2 className="h-3.5 w-3.5" />,
+            variant: "danger",
+            onClick: () => handleDelete(row),
+          },
+        ]}
+      />
 
       <ConfirmModal
         open={!!deleteTarget}
@@ -489,8 +356,8 @@ export function InventoryMasterPage() {
         message={
           deleteTarget
             ? t("inventoryMasters.confirm.deleteConfigMessage")
-                .replace("{0}", deleteTarget.item.name)
-                .replace("{1}", deleteTarget.item.code)
+                .replace("{0}", deleteTarget.name)
+                .replace("{1}", deleteTarget.code)
             : ""
         }
         confirmLabel={t("inventoryMasters.confirm.deleteConfirm")}
@@ -510,15 +377,7 @@ export function InventoryMasterPage() {
         onToggleEdit={
           viewOnly && editing ? () => setViewOnly(false) : undefined
         }
-        title={
-          editing
-            ? editingKind === "uom"
-              ? t("inventoryMasters.drawer.editUom")
-              : t("inventoryMasters.drawer.editItemType")
-            : editingKind === "uom"
-              ? t("inventoryMasters.drawer.createUom")
-              : t("inventoryMasters.drawer.createItemType")
-        }
+        title={editing ? "Cập nhật" : "Tạo mới"}
         subtitle={editing?.code || t("inventoryMasters.drawer.subtitleConfig")}
         actions={drawerActions}
         rightPanelTitle="Thông tin"
@@ -589,6 +448,6 @@ export function InventoryMasterPage() {
           </div>
         }
       />
-    </PageLayout>
+    </>
   );
 }

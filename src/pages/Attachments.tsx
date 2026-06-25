@@ -147,13 +147,20 @@ export function DinhKemChungTu() {
       key: "uploaded_at",
       header: "Ngày tải",
       cell: (a) => a.uploaded_at?.slice(0, 10) || "—",
-      className: "text-[color:var(--muted-fg)] whitespace-nowrap",
+      className: "text-[color:var(--muted-fg)] whitespace-nowrap text-right",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "attachment_type",
       header: "Loại",
-      cell: (a) => <TypeBadge type={a.attachment_type} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (a) => (
+        <div className="flex justify-center w-full">
+          <TypeBadge type={a.attachment_type} />
+        </div>
+      ),
       skeletonClassName: "w-24",
     },
     {
@@ -163,7 +170,8 @@ export function DinhKemChungTu() {
         const voucher = getVoucher(a) ?? voucherMap[voucherId(a)];
         return channelLabel(voucher);
       },
-      className: "whitespace-nowrap",
+      className: "whitespace-nowrap text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
@@ -173,36 +181,43 @@ export function DinhKemChungTu() {
         const voucher = getVoucher(a) ?? voucherMap[voucherId(a)];
         return voucher?.voucher_no ?? voucherId(a).slice(0, 8);
       },
-      className: "font-mono font-semibold",
+      className: "font-mono font-semibold text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "file",
       header: "Tên file",
       cell: fileName,
-      className: "max-w-[280px] truncate",
+      className: "max-w-[280px] truncate text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-44",
     },
     {
       key: "note",
       header: "Ghi chú",
       cell: (a) => a.note || "—",
-      className: "text-[color:var(--muted-fg)] max-w-[240px] truncate",
+      className:
+        "text-[color:var(--muted-fg)] max-w-[240px] truncate text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-36",
     },
     {
       key: "actions",
       header: "",
       cell: (a) => (
-        <button
-          title="Xem chi tiết"
-          onClick={() => selectAttachment(a)}
-          className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
+        <div className="flex justify-center w-full">
+          <button
+            title="Xem chi tiết"
+            onClick={() => selectAttachment(a)}
+            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
       ),
-      headerClassName: "w-[56px]",
+      className: "text-center",
+      headerClassName: "w-[56px] text-center",
       skeletonClassName: "",
     },
   ];

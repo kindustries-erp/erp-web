@@ -24,22 +24,27 @@ export function SidebarHeader({
     <div className="sidebar-header h-12 px-[10px] border-b border-border flex items-center gap-2 flex-shrink-0 transition-all duration-[220ms]">
       <Tooltip
         content={companyProfile?.company_name || t("nav.appName")}
-        side="right"
+        side="bottom"
       >
         <div
           className="sidebar-logo-wrap flex items-center gap-2 overflow-hidden flex-1 min-w-0 transition-all duration-[220ms] cursor-pointer hover:opacity-80"
           onClick={() => setCompanyProfileOpen(true)}
         >
-          <div className="w-8 h-8 min-w-[32px] bg-primary rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div
+            className={cn(
+              "w-7 h-7 min-w-[28px] rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden",
+              companyProfile?.logo ? "bg-white p-[2px]" : "bg-primary",
+            )}
+          >
             {companyProfile?.logo ? (
               <img
                 src={companyProfile.logo}
                 alt="Logo"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain rounded-[6px]"
               />
             ) : (
               <svg
-                className="w-[18px] h-[18px] fill-primary-fg"
+                className="w-[16px] h-[16px] fill-primary-fg"
                 viewBox="0 0 24 24"
               >
                 <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />

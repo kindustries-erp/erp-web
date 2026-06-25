@@ -1,7 +1,8 @@
-import { RefreshCcw, Plus } from "lucide-react";
+import { useCallback } from "react";
+import { RefreshCcw, Plus, MoreHorizontal } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
-import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 
@@ -14,9 +15,13 @@ interface TableActionGroupProps {
 
   onCreate?: () => void;
   createLabel?: string;
+  createActions?: import("@/shared/components/ActionDropdown").ActionDropdownItem[];
 
   children?: React.ReactNode;
+  portalId?: string;
 }
+
+import { setPortalTarget } from "./portalStore";
 
 export function TableActionGroup({
   onRefresh,
@@ -25,25 +30,21 @@ export function TableActionGroup({
   activeFilterCount = 0,
   onCreate,
   createLabel = "Tạo mới",
+  createActions,
   children,
+  portalId = "default",
 }: TableActionGroupProps) {
   const t = useT();
+
+  const refCallback = useCallback(
+    (el: Element | null) => {
+      setPortalTarget(portalId, el);
+    },
+    [portalId],
+  );
   return (
     <div className="flex items-center gap-2 w-full justify-end">
-      {onRefresh && (
-        <Button
-          variant="secondary"
-          size="sm"
-          className="px-3 py-2"
-          onClick={onRefresh}
-          disabled={loading}
-        >
-          <RefreshCcw
-            className={cn("h-3.5 w-3.5", loading && "animate-spin")}
-          />
-          <span>{t("Tải lại")}</span>
-        </Button>
-      )}
+      {children}
 
       {onFilterToggle && (
         <FilterButton
@@ -52,13 +53,85 @@ export function TableActionGroup({
         />
       )}
 
-      {children}
+      <div
+        ref={refCallback}
+        className="empty:hidden flex items-center justify-center"
+      />
 
-      {onCreate && (
-        <BtnPrimary onClick={onCreate}>
-          <Plus className="h-4 w-4 mr-1" />
-          {t(createLabel)}
-        </BtnPrimary>
+      {onRefresh && (
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8 px-0"
+          onClick={onRefresh}
+          disabled={loading}
+          title={t("Tải lại")}
+        >
+          <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
+        </Button>
+      )}
+
+      {(onCreate || (createActions && createActions.length > 0)) && (
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <Button variant="secondary" size="icon" className="h-8 w-8 px-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              align="end"
+              sideOffset={6}
+              className="z-[9999] min-w-[160px] rounded-lg bg-surface border border-border shadow-md p-1 popup-content"
+            >
+              {createActions && createActions.length > 0 ? (
+                createActions.map((action, index) => {
+                  // We handle only ActionItem here since it's a simple list in Popover.
+                  // For groups, one would use ActionDropdown, but here we just map items.
+                  if ("items" in action) return null;
+                  return (
+                    <Popover.Close key={index} asChild>
+                      <button
+                        type="button"
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!action.disabled && !action.loading) {
+                            setTimeout(() => {
+                              action.onClick();
+                            }, 0);
+                          }
+                        }}
+                        disabled={action.disabled}
+                        hidden={action.hidden}
+                      >
+                        {action.icon || (
+                          <Plus className="h-4 w-4 text-emerald-600" />
+                        )}
+                        <span className="font-medium">{action.label}</span>
+                      </button>
+                    </Popover.Close>
+                  );
+                })
+              ) : (
+                <Popover.Close asChild>
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
+                    onClick={() => {
+                      if (onCreate) {
+                        setTimeout(() => onCreate(), 0);
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4 text-emerald-600" />
+                    <span className="font-medium">{t(createLabel)}</span>
+                  </button>
+                </Popover.Close>
+              )}
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
       )}
     </div>
   );

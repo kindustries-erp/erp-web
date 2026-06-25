@@ -64,36 +64,48 @@ export function PartnersTabView(p: any) {
       key: "code",
       header: t("doitac.headers.code"),
       cell: (bp) => bp.code,
-      className: "font-mono font-semibold text-[color:var(--muted-fg)]",
+      className:
+        "font-mono font-semibold text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "name",
       header: t("doitac.headers.name"),
       cell: (bp) => bp.name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
     },
     {
       key: "kind",
       header: t("doitac.headers.kind"),
       cell: (bp) => kindLabel(bp.partner_kind),
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "tax_code",
       header: t("doitac.headers.taxCode"),
       cell: (bp) => bp.tax_code || "—",
-      className: "font-mono text-[color:var(--muted-fg)]",
+      className: "font-mono text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "phone",
       header: t("doitac.headers.phone"),
       cell: (bp) => bp.phone || "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "status",
       header: t("doitac.headers.status"),
-      cell: (bp) => <StatusBadge active={bp.is_active} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (bp) => (
+        <div className="flex justify-center w-full">
+          <StatusBadge active={bp.is_active} />
+        </div>
+      ),
     },
   ];
 

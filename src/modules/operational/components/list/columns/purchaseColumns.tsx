@@ -29,12 +29,13 @@ export function usePurchaseColumns({
   return useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
       {
-        key: "po_no",
-        header: t("Số PO"),
-        sortable: true,
-        sortKey: "purchase_no",
-        className: "!py-2 align-middle font-medium",
-        headerClassName: "min-w-[160px]",
+        key: "__expand",
+        header: "",
+        className:
+          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
+        headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
+        size: 40,
+        enableResizing: false,
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
           const isExpanded = !!expandedRowIds[rowKey];
@@ -45,8 +46,30 @@ export function usePurchaseColumns({
                 e.stopPropagation();
                 onToggleExpand(rowKey);
               }}
-              className="font-medium text-primary hover:underline focus:outline-none flex items-center gap-1.5 text-left text-sm"
+              className="focus:outline-none flex items-center justify-center w-full"
             >
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
+                  isExpanded && "rotate-90",
+                )}
+              />
+            </button>
+          );
+        },
+      },
+      {
+        key: "po_no",
+        header: t("Số PO"),
+        sortable: true,
+        sortKey: "purchase_no",
+        size: 250,
+        enableResizing: true,
+        className: "!py-2 align-middle font-medium text-left",
+        headerClassName: "text-center",
+        cell: (row) => {
+          return (
+            <div className="flex items-center gap-1.5 text-left text-sm">
               <Tooltip content={row.notes || t("Không có ghi chú")}>
                 <span className="font-semibold text-primary">
                   {row.purchase_no || "—"}
@@ -65,13 +88,7 @@ export function usePurchaseColumns({
                   {t("Nháp")}
                 </span>
               )}
-              <ChevronRight
-                className={cn(
-                  "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)] shrink-0",
-                  isExpanded && "rotate-90 text-primary",
-                )}
-              />
-            </button>
+            </div>
           );
         },
       },
@@ -80,11 +97,13 @@ export function usePurchaseColumns({
         header: t("Nhà cung cấp"),
         sortable: true,
         sortKey: "supplier_id",
-        className: "!py-2 align-middle",
-        headerClassName: "min-w-[150px]",
+        size: 400,
+        enableResizing: true,
+        className: "!py-2 align-middle text-left w-full",
+        headerClassName: "text-center w-full",
         cell: (row) => (
           <Tooltip content={row.supplier_name_snapshot || "—"}>
-            <div className="max-w-[200px] truncate">
+            <div className="w-full text-left truncate">
               {row.supplier_name_snapshot || "—"}
             </div>
           </Tooltip>
@@ -95,15 +114,19 @@ export function usePurchaseColumns({
         header: t("Ngày đặt"),
         sortable: true,
         sortKey: "order_date",
-        className: "!py-2 align-middle",
-        headerClassName: "min-w-[150px]",
+        size: 200,
+        enableResizing: true,
+        className: "!py-2 align-middle text-right",
+        headerClassName: "text-center",
         cell: (row) => {
           const dt = normalizeDateTime(row.document_date);
           if (!dt || dt === "—") return "—";
           const [d] = dt.split(" ");
           return (
             <Tooltip content={dt}>
-              <span className="font-semibold cursor-default">{d}</span>
+              <span className="font-semibold cursor-default block w-full text-right">
+                {d}
+              </span>
             </Tooltip>
           );
         },
@@ -113,15 +136,19 @@ export function usePurchaseColumns({
         header: t("Ngày nhập DK"),
         sortable: true,
         sortKey: "expected_date",
-        className: "!py-2 align-middle",
-        headerClassName: "min-w-[150px]",
+        size: 200,
+        enableResizing: true,
+        className: "!py-2 align-middle text-right",
+        headerClassName: "text-center",
         cell: (row) => {
           const dt = normalizeDateTime(row.due_date);
           if (!dt || dt === "—") return "—";
           const [d] = dt.split(" ");
           return (
             <Tooltip content={dt}>
-              <span className="font-semibold cursor-default">{d}</span>
+              <span className="font-semibold cursor-default block w-full text-right">
+                {d}
+              </span>
             </Tooltip>
           );
         },

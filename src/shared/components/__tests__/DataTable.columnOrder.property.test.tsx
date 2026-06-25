@@ -47,8 +47,10 @@ describe("DataTable - Property 2: Column order preserved without actionsColumn",
           />,
         );
 
-        // Query all <th> elements in the header row
-        const thElements = container.querySelectorAll("thead th");
+        // Query all <th> elements in the header row, excluding the structural spacer column
+        const thElements = Array.from(
+          container.querySelectorAll("thead th"),
+        ).filter((th) => !th.classList.contains("w-auto"));
 
         // Assert the number of rendered columns matches input
         expect(thElements).toHaveLength(columns.length);

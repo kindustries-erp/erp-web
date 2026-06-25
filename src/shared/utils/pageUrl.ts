@@ -4,25 +4,28 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "dashboard",
 
   "purchasing",
-  "inventory",
+  "erp-inventory-stock",
+  "erp-inventory-tracking",
+  "erp-inventory-vouchers",
   "mfg-items",
   "mfg-purchase-orders",
   "mfg-vehicles",
   "erp-bom",
-  "erp-production",
-  "erp-sales-orders",
-  "erp-goods-issues",
   "erp-inventory-items",
-  "erp-inventory-masters",
+  "erp-inventory-uom",
+  "erp-inventory-item-types",
+  "erp-inventory-tracking-categories",
   "erp-suppliers",
   "erp-customers",
   "erp-users",
   "erp-activity-logs",
+  "erp-permissions-core",
+  "erp-invoices",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
   "mua-hang": "purchasing",
-  kho: "inventory",
+  kho: "erp-inventory-stock",
 };
 
 export function pageToPath(page: PageKey, tab?: string): string {

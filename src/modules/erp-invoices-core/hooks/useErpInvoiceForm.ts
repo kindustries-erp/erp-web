@@ -45,6 +45,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   function openNew(direction: Direction) {
     setDetailInvoice(null);
@@ -56,56 +57,102 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDrawerOpen(true);
   }
 
-  function openDetail(inv: ErpInvoice) {
+  function mapInvoiceToForm(inv: ErpInvoice): CreateErpInvoicePayload {
+    return {
+      invoiceNo: inv.invoiceNo,
+      serialNo: inv.serialNo ?? undefined,
+      invoiceDate: inv.invoiceDate,
+      direction: inv.direction,
+      status: inv.status,
+      sellerName: inv.sellerName ?? "",
+      sellerTaxCode: inv.sellerTaxCode ?? "",
+      sellerAddress: inv.sellerAddress ?? "",
+      sellerBank: inv.sellerBank ?? "",
+      buyerName: inv.buyerName ?? "",
+      buyerTaxCode: inv.buyerTaxCode ?? "",
+      buyerAddress: inv.buyerAddress ?? "",
+      description: inv.description ?? "",
+      preVatAmount: Number(inv.preVatAmount),
+      vatRate: inv.vatRate != null ? Number(inv.vatRate) : undefined,
+      vatAmount: Number(inv.vatAmount),
+      discountAmount: Number(inv.discountAmount),
+      totalAmount: Number(inv.totalAmount),
+      purchaseOrderId: inv.purchaseOrderId ?? undefined,
+      salesOrderId: inv.salesOrderId ?? undefined,
+      paymentDocumentNos: inv.paymentDocumentNos ?? "",
+      notes: inv.notes ?? "",
+      items:
+        inv.items && inv.items.length > 0
+          ? inv.items
+          : [
+              {
+                description: inv.description || "",
+                preVatAmount: Number(inv.preVatAmount),
+                vatRate: inv.vatRate != null ? Number(inv.vatRate) : undefined,
+                vatAmount: Number(inv.vatAmount),
+                discountAmount: Number(inv.discountAmount),
+                totalAmount: Number(inv.totalAmount),
+              },
+            ],
+    };
+  }
+
+  async function openDetail(inv: ErpInvoice) {
+    // Show partial data first
     setDetailInvoice(inv);
+    setForm(mapInvoiceToForm(inv));
     setEditMode(false);
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setDrawerOpen(true);
+    setLoadingDetail(true);
+
+    try {
+      let fullInv = await erpInvoicesCoreApi.get(inv.id);
+      // Auto query detail if items are empty
+      if (!fullInv.items || fullInv.items.length === 0) {
+        const token = localStorage.getItem("erp_portal_token");
+        if (token) {
+          try {
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
+          } catch (syncErr) {
+            console.warn("Auto sync detail failed", syncErr);
+          }
+        }
+      }
+      setDetailInvoice(fullInv);
+      setForm(mapInvoiceToForm(fullInv));
+    } catch (err) {
+      console.error("Failed to fetch full invoice", err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
+
+  async function handleSyncDetail() {
+    if (!detailInvoice) return;
+    const token = localStorage.getItem("erp_portal_token");
+    if (!token) return;
+
+    setLoadingDetail(true);
+    try {
+      const fullInv = await erpInvoicesCoreApi.syncDetail(
+        detailInvoice.id,
+        token,
+      );
+      setDetailInvoice(fullInv);
+      setForm(mapInvoiceToForm(fullInv));
+      await onReload();
+    } catch (err) {
+      console.error("Failed to sync detail manually", err);
+    } finally {
+      setLoadingDetail(false);
+    }
   }
 
   function startEdit() {
     if (!detailInvoice) return;
-    setForm({
-      invoiceNo: detailInvoice.invoiceNo,
-      serialNo: detailInvoice.serialNo ?? undefined,
-      invoiceDate: detailInvoice.invoiceDate,
-      direction: detailInvoice.direction,
-      status: detailInvoice.status,
-      sellerName: detailInvoice.sellerName ?? "",
-      sellerTaxCode: detailInvoice.sellerTaxCode ?? "",
-      sellerAddress: detailInvoice.sellerAddress ?? "",
-      sellerBank: detailInvoice.sellerBank ?? "",
-      buyerName: detailInvoice.buyerName ?? "",
-      buyerTaxCode: detailInvoice.buyerTaxCode ?? "",
-      buyerAddress: detailInvoice.buyerAddress ?? "",
-      description: detailInvoice.description ?? "",
-      preVatAmount: Number(detailInvoice.preVatAmount),
-      vatRate:
-        detailInvoice.vatRate != null
-          ? Number(detailInvoice.vatRate)
-          : undefined,
-      vatAmount: Number(detailInvoice.vatAmount),
-      discountAmount: Number(detailInvoice.discountAmount),
-      totalAmount: Number(detailInvoice.totalAmount),
-      purchaseOrderId: detailInvoice.purchaseOrderId ?? undefined,
-      salesOrderId: detailInvoice.salesOrderId ?? undefined,
-      paymentDocumentNos: detailInvoice.paymentDocumentNos ?? "",
-      notes: detailInvoice.notes ?? "",
-      items:
-        detailInvoice.items && detailInvoice.items.length > 0
-          ? detailInvoice.items
-          : [
-              {
-                description: detailInvoice.description || "",
-                preVatAmount: detailInvoice.preVatAmount,
-                vatRate: detailInvoice.vatRate,
-                vatAmount: detailInvoice.vatAmount,
-                discountAmount: detailInvoice.discountAmount,
-                totalAmount: detailInvoice.totalAmount,
-              },
-            ],
-    });
+    setForm(mapInvoiceToForm(detailInvoice));
     setFormError(null);
     setEditMode(true);
   }
@@ -211,5 +258,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     handleSave,
     handleDelete,
     handleCancel,
+    loadingDetail,
+    handleSyncDetail,
   };
 }

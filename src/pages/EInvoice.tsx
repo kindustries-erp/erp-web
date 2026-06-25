@@ -1,5 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, RefreshCw, Send, Settings, Trash2 } from "lucide-react";
+import {
+  FileText,
+  RefreshCw,
+  Send,
+  Settings,
+  Trash2,
+  FileCode,
+} from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -27,6 +34,7 @@ import {
   type SinvoiceConfig,
   type TaxPortalConfig,
 } from "@/modules/accounting/api/sinvoiceApi";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useDebounce } from "@/shared/hooks/useDebounce";
@@ -537,6 +545,31 @@ const HoaDonDienTu: React.FC = () => {
     }
   }
 
+  async function handleSyncDetail(id: string) {
+    if (!taxPortalConfig?.gdtJwt) {
+      setMessage(
+        "Vui lòng cấu hình token Cổng thuế trước khi đồng bộ chi tiết.",
+      );
+      return;
+    }
+    setLoading(true);
+    setMessage("Đang đồng bộ chi tiết hóa đơn từ cổng thuế...");
+    try {
+      await erpInvoicesCoreApi.syncDetail(id, taxPortalConfig.gdtJwt);
+      setMessage("Đồng bộ chi tiết thành công");
+      await loadData();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      setMessage(
+        error?.response?.data?.message ??
+          error.message ??
+          "Đồng bộ chi tiết thất bại",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSaveSinvoiceConfig() {
     setLoading(true);
     setMessage("Đang lưu cấu hình Viettel v2.49...");
@@ -639,8 +672,8 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "invoice_date",
         header: "Ngày HĐ",
-        headerClassName: "pl-6",
-        className: "pl-6 text-[color:var(--muted-fg)]",
+        headerClassName: "text-center pl-6",
+        className: "pl-6 text-[color:var(--muted-fg)] text-right",
         cell: (inv) =>
           inv.invoice_date
             ? new Date(inv.invoice_date).toLocaleDateString("vi-VN")
@@ -649,35 +682,52 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "document_no",
         header: "Mã chứng từ",
-        className: "font-medium",
+        className: "font-medium text-left",
+        headerClassName: "text-center",
         cell: (inv) => inv.document_no || "-",
       },
       {
         key: "invoice_no",
         header: "Số hóa đơn",
-        className: "font-mono",
-        cell: (inv) => inv.invoice_no || "-",
+        className: "font-mono text-left",
+        headerClassName: "text-center",
+        cell: (inv) => (
+          <div className="flex items-center gap-2">
+            <span>{inv.invoice_no || inv.invoiceNo || "-"}</span>
+            {(inv.xml_file_key || inv.xmlFileKey) && (
+              <span title="Đã có file XML">
+                <FileCode className="h-4 w-4 text-green-600" />
+              </span>
+            )}
+          </div>
+        ),
       },
       {
         key: "source",
         header: "Nguồn",
+        className: "text-center",
+        headerClassName: "text-center",
         cell: (inv) => (
-          <Badge variant="outline">
-            {inv.source === "TAX_PORTAL" ? "Cổng thuế" : "Viettel v2.49"}
-          </Badge>
+          <div className="flex justify-center w-full">
+            <Badge variant="outline">
+              {inv.source === "TAX_PORTAL" ? "Cổng thuế" : "Viettel v2.49"}
+            </Badge>
+          </div>
         ),
       },
       {
         key: "partner",
         header: partnerHeader,
-        className: "max-w-[200px] truncate",
+        className: "max-w-[200px] truncate text-left",
+        headerClassName: "text-center",
         cell: (inv) =>
           mode === "input" ? inv.seller_name || "-" : inv.buyer_name || "-",
       },
       {
         key: "tax_code",
         header: taxHeader,
-        className: "font-mono text-xs",
+        className: "font-mono text-xs text-left",
+        headerClassName: "text-center",
         cell: (inv) =>
           mode === "input"
             ? inv.seller_tax_code || "-"
@@ -686,23 +736,27 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "total_amount",
         header: "Tổng tiền",
-        headerClassName: "text-right",
+        headerClassName: "text-center",
         className: "text-right font-mono",
         cell: (inv) => formatMoney(inv.total_amount),
       },
       {
         key: "status",
         header: "Trạng thái",
+        className: "text-center",
+        headerClassName: "text-center",
         cell: (inv) => (
-          <Badge variant={statusVariant(inv.status)}>
-            {statusLabel(inv.status)}
-          </Badge>
+          <div className="flex justify-center w-full">
+            <Badge variant={statusVariant(inv.status)}>
+              {statusLabel(inv.status)}
+            </Badge>
+          </div>
         ),
       },
       {
         key: "detail",
         header: "Chi tiết",
-        headerClassName: "text-right pr-6",
+        headerClassName: "text-center pr-6",
         className:
           "text-right pr-6 text-[10px] text-muted-foreground leading-tight",
         cell: (inv) =>
@@ -716,11 +770,24 @@ const HoaDonDienTu: React.FC = () => {
             </button>
           ) : (
             <>
-              <div className="truncate max-w-[120px]">
+              <div className="truncate max-w-[120px]" title="Trạng thái CQT">
                 {inv.tax_status || "-"}
               </div>
-              <div className="truncate max-w-[120px]">
-                {inv.external_invoice_id || "-"}
+              <div className="flex items-center justify-end gap-2 mt-1">
+                <span
+                  className="truncate max-w-[100px] text-muted-foreground"
+                  title="ID trên Portal"
+                >
+                  {inv.external_invoice_id || inv.externalId || "-"}
+                </span>
+                <button
+                  type="button"
+                  title="Đồng bộ lại chi tiết"
+                  onClick={() => handleSyncDetail(inv.id)}
+                  className="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                </button>
               </div>
             </>
           ),

@@ -1,6 +1,6 @@
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
-import { NavItem } from "./SidebarPrimitives";
+import { NavItem, NavGroup, NavGroupItem } from "./SidebarPrimitives";
 import {
   Boxes,
   Users,
@@ -13,6 +13,7 @@ import {
   History,
   Key,
   Receipt,
+  Package,
 } from "lucide-react";
 
 export function SidebarNav({
@@ -78,23 +79,65 @@ export function SidebarNav({
         <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
           {t("nav.sections.inventory")}
         </div>
-        <NavItem
+        <NavGroup
           collapsed={c}
-          icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
-          label={t("nav.items.inventory")}
-          active={currentPage === "inventory"}
-          onClick={() => navTo("inventory")}
-          contextPage="inventory"
-        />
+          icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
+          label={t("nav.items.inventoryGroup")}
+          active={
+            currentPage === "erp-inventory-stock" ||
+            currentPage === "erp-inventory-tracking" ||
+            currentPage === "erp-inventory-vouchers"
+          }
+        >
+          <NavGroupItem
+            label={t("nav.items.erpInventoryStock")}
+            active={currentPage === "erp-inventory-stock"}
+            onClick={() => navTo("erp-inventory-stock")}
+            contextPage="erp-inventory-stock"
+          />
+          <NavGroupItem
+            label={t("nav.items.erpInventoryTracking")}
+            active={currentPage === "erp-inventory-tracking"}
+            onClick={() => navTo("erp-inventory-tracking")}
+            contextPage="erp-inventory-tracking"
+          />
+          <NavGroupItem
+            label={t("nav.items.erpInventoryVouchers")}
+            active={currentPage === "erp-inventory-vouchers"}
+            onClick={() => navTo("erp-inventory-vouchers")}
+            contextPage="erp-inventory-vouchers"
+          />
+        </NavGroup>
 
-        <NavItem
+        <NavGroup
           collapsed={c}
           icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
           label={t("nav.items.erpInventoryMasters")}
-          active={currentPage === "erp-inventory-masters"}
-          onClick={() => navTo("erp-inventory-masters")}
-          contextPage="erp-inventory-masters"
-        />
+          active={
+            currentPage === "erp-inventory-uom" ||
+            currentPage === "erp-inventory-item-types" ||
+            currentPage === "erp-inventory-tracking-categories"
+          }
+        >
+          <NavGroupItem
+            label={t("nav.items.erpInventoryUom")}
+            active={currentPage === "erp-inventory-uom"}
+            onClick={() => navTo("erp-inventory-uom")}
+            contextPage="erp-inventory-uom"
+          />
+          <NavGroupItem
+            label={t("nav.items.erpInventoryItemTypes")}
+            active={currentPage === "erp-inventory-item-types"}
+            onClick={() => navTo("erp-inventory-item-types")}
+            contextPage="erp-inventory-item-types"
+          />
+          <NavGroupItem
+            label={t("nav.items.erpInventoryTrackingCategories")}
+            active={currentPage === "erp-inventory-tracking-categories"}
+            onClick={() => navTo("erp-inventory-tracking-categories")}
+            contextPage="erp-inventory-tracking-categories"
+          />
+        </NavGroup>
       </div>
 
       {__APP_ENV__ !== "klotus-production" && (

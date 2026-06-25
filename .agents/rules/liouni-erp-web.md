@@ -53,3 +53,30 @@ Apply to all work in this repo.
 
 If a file mentions Directus-first flows, Gitea deploys, old dev domains, or `erp-core`, classify it first.
 Only repo-local current-truth docs should drive new implementation by default.
+
+## SpreadsheetPageTemplate filtering bug
+
+When using `SpreadsheetPageTemplate`, NEVER pass `filterState`, `filterPanelOpen`, `activeFilterCount`, or `onFilterToggle` props. The template interface has been refactored. Always pass the FULL `FilterPanelReturn` object directly to the `filter` prop:
+
+```tsx
+// Correct
+const filterPanel = useFilterPanel(config);
+<SpreadsheetPageTemplate
+  ...
+  filter={filterPanel}
+/>
+
+// Wrong - will crash FilterPanel with "Cannot read properties of undefined (reading 'search')"
+<SpreadsheetPageTemplate
+  ...
+  filterState={filterPanel.state}
+/>
+```
+
+## Table Column Width / Layout Stretching
+
+When using `SpreadsheetPageTemplate` or `DataTable`, the table uses `table-layout: fixed`. To protect fixed-width columns (`__actions`, `__expand`, `__selection`) from browser stretching when the container is larger than the total column sizes:
+
+You do NOT need to set `w-full` on any columns. The `DataTable` template has been updated with a structural CSS fix (an invisible auto-sizing spacer column) that automatically absorbs any excess screen width.
+
+However, to prevent the table from appearing cramped on large monitors, you **should** define explicit `size` properties (e.g. `size: 150`, `size: 250`) on your normal data columns so `table.getTotalSize()` is reasonably large.

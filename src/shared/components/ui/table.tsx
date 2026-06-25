@@ -35,7 +35,10 @@ const TableRow = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tr
     ref={ref}
-    className={cn("border-b border-[color:var(--border-light)]", className)}
+    className={cn(
+      "group border-b border-[color:var(--border-light)] transition-colors hover:bg-surface-hover data-[state=selected]:bg-muted",
+      className,
+    )}
     {...props}
   />
 ));
@@ -68,4 +71,27 @@ const TableCell = React.forwardRef<
 ));
 TableCell.displayName = "TableCell";
 
-export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow };
+const TableFooter = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(({ className, ...props }, ref) => (
+  <tfoot
+    ref={ref}
+    className={cn(
+      "border-t border-[color:var(--border-light)] bg-muted/50 font-medium",
+      className,
+    )}
+    {...props}
+  />
+));
+TableFooter.displayName = "TableFooter";
+
+export {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  TableFooter,
+};

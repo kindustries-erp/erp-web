@@ -19,6 +19,9 @@ import {
   ClipboardList,
   Network,
   Factory,
+  Package,
+  Barcode,
+  ReceiptText,
 } from "lucide-react";
 
 const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
@@ -28,10 +31,14 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-customers": Users,
   purchasing: FileText,
   "erp-suppliers": Building2,
-  inventory: FileText,
+  "erp-inventory-stock": Package,
+  "erp-inventory-tracking": Barcode,
+  "erp-inventory-vouchers": ReceiptText,
   "erp-goods-issues": ClipboardList,
   "erp-inventory-items": Layers,
-  "erp-inventory-masters": Layers,
+  "erp-inventory-uom": Layers,
+  "erp-inventory-item-types": Layers,
+  "erp-inventory-tracking-categories": Layers,
   "mfg-items": Layers,
   "mfg-purchase-orders": FileText,
   "mfg-vehicles": Car,

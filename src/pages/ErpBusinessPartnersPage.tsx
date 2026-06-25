@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Building2, Trash2, Users, Pencil, Eye } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import {
-  DataTable,
-  type ActionsColumnConfig,
-  type DataTableColumn,
-} from "@/shared/components/DataTable";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 import {
   DrawerField,
   DrawerSection,
@@ -15,13 +11,10 @@ import {
 } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useDrawerStore } from "@/shared/stores/useDrawerStore";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useUIStore } from "@/core/config/uiStore";
@@ -157,45 +150,61 @@ export function ErpBusinessPartnersPage({
   );
 
   const columns: DataTableColumn<ErpBusinessPartner>[] = [
-    { key: "code", header: "Mã", cell: (item) => item.code || "—" },
-    { key: "name", header: "Tên", cell: (item) => item.name || "—" },
+    {
+      key: "code",
+      header: "Mã",
+      cell: (item) => item.code || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "name",
+      header: "Tên",
+      cell: (item) => item.name || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
     {
       key: "contactName",
       header: "Người liên hệ",
       cell: (item) => item.contactName || "—",
+      className: "text-left",
+      headerClassName: "text-center",
     },
-    { key: "phone", header: "SĐT", cell: (item) => item.phone || "—" },
-    { key: "email", header: "Email", cell: (item) => item.email || "—" },
+    {
+      key: "phone",
+      header: "SĐT",
+      cell: (item) => item.phone || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (item) => item.email || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
     {
       key: "status",
       header: "Trạng thái",
-      cell: (item) =>
-        item.status === "ACTIVE" ? (
-          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-            Hoạt động
-          </span>
-        ) : (
-          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-            Ngưng
-          </span>
-        ),
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (item) => (
+        <div className="flex justify-center w-full">
+          {item.status === "ACTIVE" ? (
+            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+              Hoạt động
+            </span>
+          ) : (
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              Ngưng
+            </span>
+          )}
+        </div>
+      ),
     },
   ];
-
-  const actionsColumn: ActionsColumnConfig<ErpBusinessPartner> = {
-    cell: (item) => (
-      <ActionDropdown
-        items={[
-          {
-            label: "Xóa",
-            icon: <Trash2 className="h-3.5 w-3.5" />,
-            variant: "danger",
-            onClick: () => setDeleteTarget(item),
-          },
-        ]}
-      />
-    ),
-  };
 
   async function handleConfirmDelete() {
     if (!deleteTarget) return;
@@ -346,42 +355,38 @@ export function ErpBusinessPartnersPage({
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
+    <SpreadsheetPageTemplate<ErpBusinessPartner>
       title={title}
       desc={desc}
       icon={icon}
-      actions={
-        <TableActionGroup
-          onRefresh={() => void load()}
-          loading={loading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={openCreate}
-        />
-      }
+      tableId={`business-partners-${partnerType.toLowerCase()}`}
+      items={filteredItems}
+      columns={columns}
+      getRowKey={(item) => item.id}
+      loading={loading}
+      error={fetchError}
+      emptyLabel={`Chưa có ${title.toLowerCase()} nào.`}
+      minWidth={980}
+      page={1}
+      pageSize={200}
+      total={filteredItems.length}
+      totalPages={1}
+      onPage={() => {}}
+      onPageSize={() => {}}
+      onRefresh={() => void load()}
+      onCreate={openCreate}
+      filterConfig={filterConfig}
+      filter={filter}
+      onRowClick={(item) => openView(item)}
+      rowActions={(item) => [
+        {
+          label: "Xóa",
+          icon: <Trash2 className="h-3.5 w-3.5" />,
+          variant: "danger",
+          onClick: () => setDeleteTarget(item),
+        },
+      ]}
     >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          {fetchError ? (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {fetchError}
-            </div>
-          ) : null}
-
-          <DataTable<ErpBusinessPartner>
-            items={filteredItems}
-            columns={columns}
-            getRowKey={(item) => item.id}
-            loading={loading}
-            emptyLabel={`Chưa có ${title.toLowerCase()} nào.`}
-            minWidth={980}
-            onRowClick={(item) => openView(item)}
-            actionsColumn={actionsColumn}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
-
       <ConfirmModal
         open={!!deleteTarget}
         title="Xác nhận xóa"
@@ -533,7 +538,7 @@ export function ErpBusinessPartnersPage({
           </>
         }
       />
-    </PageLayout>
+    </SpreadsheetPageTemplate>
   );
 }
 
