@@ -706,7 +706,7 @@ export function DataTable<T>({
             {loading &&
               Array.from({ length: loadingRows }).map((_, rowIndex) => (
                 <TableRow key={rowIndex} className="hover:bg-transparent">
-                  {table.getAllLeafColumns().map((column, index) => {
+                  {table.getVisibleLeafColumns().map((column, index) => {
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
                     return (
@@ -733,7 +733,14 @@ export function DataTable<T>({
                       >
                         {meta.skeletonClassName !== "" && (
                           <Skeleton
-                            className={cn("h-3 w-24", meta.skeletonClassName)}
+                            className={cn(
+                              "h-4 w-3/4 max-w-[120px]",
+                              meta.className?.includes("text-center") &&
+                                "mx-auto",
+                              meta.className?.includes("text-right") &&
+                                "ml-auto",
+                              meta.skeletonClassName,
+                            )}
                           />
                         )}
                       </TableCell>
