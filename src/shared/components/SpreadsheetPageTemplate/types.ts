@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
 import type { Updater } from "@tanstack/react-table";
-import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
+import type {
+  FilterPanelConfig,
+  FilterPanelReturn,
+} from "@/shared/hooks/useFilterPanel";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 
@@ -38,11 +41,7 @@ export interface SpreadsheetPageTemplateProps<T> {
 
   // --- Filter Panel ---
   filterConfig?: FilterPanelConfig;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  filterState?: any;
-  filterPanelOpen?: boolean;
-  onFilterToggle?: () => void;
-  activeFilterCount?: number;
+  filter?: FilterPanelReturn;
 
   // --- Selection & Expansion ---
   enableRowSelection?: boolean;

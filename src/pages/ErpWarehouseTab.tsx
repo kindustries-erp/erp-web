@@ -474,10 +474,7 @@ export function ErpWarehouseTab() {
         }}
         onRefresh={() => void vouchersQuery.refetch()}
         filterConfig={filterConfig}
-        filterState={filterPanel}
-        filterPanelOpen={filterPanel.panelOpen}
-        onFilterToggle={() => filterPanel.togglePanel()}
-        activeFilterCount={filterPanel.activeFilterCount}
+        filter={filterPanel}
         rowActions={(row) => [
           {
             label: t("Chi tiết"),

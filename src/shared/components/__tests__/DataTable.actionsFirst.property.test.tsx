@@ -62,8 +62,10 @@ describe("DataTable - Property 1: Actions column is always last when actionsColu
             />,
           );
 
-          // Get all header cells in the first header row
-          const headerCells = container.querySelectorAll("thead tr th");
+          // Get all header cells in the first header row, excluding the structural spacer column
+          const headerCells = Array.from(
+            container.querySelectorAll("thead tr th"),
+          ).filter((th) => !th.classList.contains("w-auto"));
           expect(headerCells.length).toBeGreaterThan(0);
 
           // The last header cell should contain the actions header text
@@ -73,7 +75,9 @@ describe("DataTable - Property 1: Actions column is always last when actionsColu
           // Also verify via data rows: last cell in data row should be the actions cell
           const dataRows = container.querySelectorAll("tbody tr");
           if (dataRows.length > 0) {
-            const cells = dataRows[0].querySelectorAll("td");
+            const cells = Array.from(dataRows[0].querySelectorAll("td")).filter(
+              (td) => !td.classList.contains("w-auto"),
+            );
             const lastDataCell = cells[cells.length - 1];
             expect(lastDataCell.textContent).toBe("ACTIONS");
           }

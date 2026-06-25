@@ -1,9 +1,6 @@
 import { FileText, PackagePlus, Network } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { FilterPanel } from "@/shared/components/FilterPanel";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useT } from "@/core/i18n";
-import { StandardTable } from "@/shared/components/StandardTable";
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
@@ -94,100 +91,85 @@ export function PurchaseOrderListPage() {
   });
 
   return (
-    <PageLayout
+    <SpreadsheetPageTemplate<OperationalDocument>
       title={t("Đơn mua hàng")}
       desc={t("Phụ tùng, nguyên vật liệu; có thể định kỳ và trigger nhập kho.")}
       icon={<FileText className="h-4 w-4" />}
-      actions={
-        <TableActionGroup
-          loading={loading}
-          onRefresh={listQuery.refetch}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={handleCreateNew}
-          createLabel={t("Tạo mới")}
-          portalId="purchase-orders-table"
-        />
+      tableId="purchase-orders-table"
+      loading={loading}
+      onRefresh={listQuery.refetch}
+      onCreate={handleCreateNew}
+      createLabel={t("Tạo mới")}
+      error={pageError}
+      items={items}
+      columns={columns}
+      total={total}
+      totalPages={totalPages}
+      page={page}
+      pageSize={pageSize}
+      onPage={setPage}
+      onPageSize={setPageSize}
+      sortArray={purchaseSort ? [purchaseSort] : undefined}
+      onSort={togglePurchaseSort}
+      expandedRowKeys={
+        expandedRowIds
+          ? Object.keys(expandedRowIds).filter((k) => expandedRowIds[k])
+          : undefined
       }
+      getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
+      onRowClick={(row) => openDetail(row)}
+      filterConfig={filterConfig}
+      filter={filter}
+      renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
+      rowActions={(row) => [
+        {
+          groupLabel: t("Tra cứu"),
+          items: [
+            {
+              label: t("Chi tiết"),
+              icon: <Eye className="h-[13px] w-[13px]" />,
+              onClick: () => openDetail(row),
+            },
+            {
+              label: t("connectionGraph.action"),
+              icon: <Network className="h-[13px] w-[13px]" />,
+              onClick: () => void openConnectionGraph(row),
+            },
+            {
+              label: t("Liên kết tiền"),
+              icon: <Link2 className="h-[13px] w-[13px]" />,
+              onClick: () => openSettlement(row),
+              hidden: Number(row.open_amount || 0) <= 0,
+            },
+          ],
+        },
+        {
+          groupLabel: t("Thao tác"),
+          items: [
+            {
+              label: t("common.receiveInventory"),
+              icon: <PackagePlus className="h-[13px] w-[13px]" />,
+              onClick: () => grDrawer.openCreate(row.id),
+              hidden: !canCreateReceipt || !canReceiveInventory(row),
+            },
+            {
+              label: t("Xóa"),
+              icon: <Trash2 className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              onClick: () => confirmDeleteDocument(row.id),
+              hidden: row.status !== "DRAFT",
+            },
+            {
+              label: t("Hủy phiếu"),
+              icon: <XCircle className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              onClick: () => confirmCancelDocument(row.id),
+              hidden: row.status === "DRAFT" || row.status === "CANCELLED",
+            },
+          ],
+        },
+      ]}
     >
-      {pageError && (
-        <div className="mb-4 text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 shrink-0">
-          {pageError}
-        </div>
-      )}
-
-      <div className="flex items-start flex-1 min-h-0">
-        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
-          <StandardTable<OperationalDocument>
-            tableId="purchase-orders-table"
-            items={items}
-            columns={columns}
-            total={total}
-            totalPages={totalPages}
-            page={page}
-            pageSize={pageSize}
-            onPage={setPage}
-            onPageSize={setPageSize}
-            sortArray={purchaseSort ? [purchaseSort] : undefined}
-            onSort={togglePurchaseSort}
-            expandedRowIds={expandedRowIds}
-            getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
-            onRowClick={(row) => openDetail(row)}
-            actions={(row) => [
-              {
-                groupLabel: t("Tra cứu"),
-                items: [
-                  {
-                    label: t("Chi tiết"),
-                    icon: <Eye className="h-[13px] w-[13px]" />,
-                    onClick: () => openDetail(row),
-                  },
-                  {
-                    label: t("connectionGraph.action"),
-                    icon: <Network className="h-[13px] w-[13px]" />,
-                    onClick: () => void openConnectionGraph(row),
-                  },
-                  {
-                    label: t("Liên kết tiền"),
-                    icon: <Link2 className="h-[13px] w-[13px]" />,
-                    onClick: () => openSettlement(row),
-                    hidden: Number(row.open_amount || 0) <= 0,
-                  },
-                ],
-              },
-              {
-                groupLabel: t("Thao tác"),
-                items: [
-                  {
-                    label: t("common.receiveInventory"),
-                    icon: <PackagePlus className="h-[13px] w-[13px]" />,
-                    onClick: () => grDrawer.openCreate(row.id),
-                    hidden: !canCreateReceipt || !canReceiveInventory(row),
-                  },
-                  {
-                    label: t("Xóa"),
-                    icon: <Trash2 className="h-[13px] w-[13px]" />,
-                    variant: "danger",
-                    onClick: () => confirmDeleteDocument(row.id),
-                    hidden: row.status !== "DRAFT",
-                  },
-                  {
-                    label: t("Hủy phiếu"),
-                    icon: <XCircle className="h-[13px] w-[13px]" />,
-                    variant: "danger",
-                    onClick: () => confirmCancelDocument(row.id),
-                    hidden:
-                      row.status === "DRAFT" || row.status === "CANCELLED",
-                  },
-                ],
-              },
-            ]}
-            renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
-
       <PurchaseOrderDrawer
         open={formOpen}
         loading={formLoading}
@@ -260,6 +242,6 @@ export function PurchaseOrderListPage() {
         loading={confirmLoading}
         danger
       />
-    </PageLayout>
+    </SpreadsheetPageTemplate>
   );
 }

@@ -31,10 +31,7 @@ export function SpreadsheetPageTemplate<T>({
   bulkActionsNode,
   customActionsNode,
   filterConfig,
-  filterState,
-  filterPanelOpen,
-  onFilterToggle,
-  activeFilterCount = 0,
+  filter,
   enableRowSelection = false,
   rowSelection,
   onRowSelectionChange,
@@ -95,8 +92,8 @@ export function SpreadsheetPageTemplate<T>({
         <TableActionGroup
           onRefresh={onRefresh}
           loading={loading}
-          onFilterToggle={onFilterToggle}
-          activeFilterCount={activeFilterCount}
+          onFilterToggle={filter?.togglePanel}
+          activeFilterCount={filter?.activeFilterCount || 0}
           onCreate={onCreate}
           createLabel={finalCreateLabel}
           createActions={createActions}
@@ -145,15 +142,8 @@ export function SpreadsheetPageTemplate<T>({
             loadingRows={loadingRows}
           />
         </div>
-        {filterConfig && filterState && (
-          <FilterPanel
-            config={filterConfig}
-            filter={{
-              activeFilterCount,
-              ...filterState,
-              panelOpen: !!filterPanelOpen,
-            }}
-          />
+        {filterConfig && filter && (
+          <FilterPanel config={filterConfig} filter={filter} />
         )}
       </div>
       {children}

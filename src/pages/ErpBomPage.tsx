@@ -1109,10 +1109,7 @@ export function ErpBomPage() {
       onRefresh={() => void loadBoms()}
       onCreate={openCreate}
       filterConfig={filterConfig}
-      filterState={filter}
-      filterPanelOpen={filter.panelOpen}
-      onFilterToggle={filter.togglePanel}
-      activeFilterCount={filter.activeFilterCount}
+      filter={filter}
       onRowClick={(item) => void openView(item)}
       renderSubRow={(item) => (
         <BomTree bomId={item.id} fgToBomMap={fgToBomMap} itemsMap={itemsMap} />

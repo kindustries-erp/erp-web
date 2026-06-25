@@ -428,10 +428,7 @@ export function ProductionOrderListPage() {
       onCreate={canCreate ? handleCreate : undefined}
       createLabel={t("Tạo mới")}
       filterConfig={filterConfig}
-      filterState={filter}
-      filterPanelOpen={filter.panelOpen}
-      onFilterToggle={filter.togglePanel}
-      activeFilterCount={filter.activeFilterCount}
+      filter={filter}
       sortArray={
         sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined
       }

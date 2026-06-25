@@ -330,10 +330,7 @@ export function InventoryUomPage() {
         onCreate={openCreate}
         createLabel={t("inventoryMasters.actions.createUom")}
         filterConfig={filterConfig}
-        filterState={filterPanel}
-        filterPanelOpen={filterPanel.panelOpen}
-        onFilterToggle={filterPanel.togglePanel}
-        activeFilterCount={filterPanel.activeFilterCount}
+        filter={filterPanel}
         sortArray={sortArray}
         onSort={handleSort}
         rowActions={(row) => [

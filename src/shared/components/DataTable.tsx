@@ -699,6 +699,10 @@ export function DataTable<T>({
                     </TableHead>
                   );
                 })}
+                <TableHead
+                  className="w-auto p-0 m-0 border-none"
+                  style={{ width: "auto" }}
+                />
               </TableRow>
             ))}
           </TableHeader>
@@ -746,13 +750,17 @@ export function DataTable<T>({
                       </TableCell>
                     );
                   })}
+                  <TableCell
+                    className="w-auto p-0 m-0 border-none"
+                    style={{ width: "auto" }}
+                  />
                 </TableRow>
               ))}
 
             {!loading && error && (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={tableColumns.length}
+                  colSpan={tableColumns.length + 1}
                   className="text-center text-[color:var(--warn-fg)] py-10"
                 >
                   {error}
@@ -763,7 +771,7 @@ export function DataTable<T>({
             {!loading && !error && items.length === 0 && (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={tableColumns.length}
+                  colSpan={tableColumns.length + 1}
                   className="text-center text-[color:var(--faint)] py-10"
                 >
                   {emptyLabel}
@@ -826,11 +834,15 @@ export function DataTable<T>({
                           </TableCell>
                         );
                       })}
+                      <TableCell
+                        className="w-auto p-0 m-0 border-none"
+                        style={{ width: "auto" }}
+                      />
                     </TableRow>
                     {renderSubRow && isExpanded && (
                       <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
                         <TableCell
-                          colSpan={row.getVisibleCells().length}
+                          colSpan={row.getVisibleCells().length + 1}
                           className="p-4 bg-muted/20"
                         >
                           {renderSubRow(row.original)}
@@ -844,7 +856,7 @@ export function DataTable<T>({
           {summaryRow && (
             <TableFooter className="sticky bottom-0 z-30 bg-muted shadow-[0_-1px_0_0_var(--border-light)]">
               <TableRow className="hover:bg-transparent">
-                {table.getAllLeafColumns().map((column, index) => {
+                {table.getVisibleLeafColumns().map((column, index) => {
                   const meta = column.columnDef.meta as DataTableRowMeta;
                   const isFirstCol = index === 0;
                   return (
@@ -870,6 +882,10 @@ export function DataTable<T>({
                     </TableCell>
                   );
                 })}
+                <TableCell
+                  className="w-auto p-0 m-0 border-none"
+                  style={{ width: "auto" }}
+                />
               </TableRow>
             </TableFooter>
           )}

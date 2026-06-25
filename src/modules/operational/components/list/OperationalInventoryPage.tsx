@@ -215,7 +215,7 @@ export function OperationalInventoryPage({
       onCreate={onOpenCreateItem}
       bulkActionsNode={bulkActionsNode}
       filterConfig={inventoryFilterConfig}
-      filterState={{
+      filter={{
         state: {
           period: "",
           dateFrom: "",
@@ -245,11 +245,13 @@ export function OperationalInventoryPage({
           }
         },
         resetAll: resetAllFilters,
+        openPanel: () => setFilterPanelOpen(true),
+        closePanel: () => setFilterPanelOpen(false),
+        togglePanel: () => setFilterPanelOpen((v) => !v),
         hasActiveFilter: activeFilterCount > 0,
+        activeFilterCount,
+        panelOpen: filterPanelOpen,
       }}
-      filterPanelOpen={filterPanelOpen}
-      onFilterToggle={() => setFilterPanelOpen((v) => !v)}
-      activeFilterCount={activeFilterCount}
       enableRowSelection={false}
       rowSelection={rowSelection}
       onRowSelectionChange={onRowSelectionChange}

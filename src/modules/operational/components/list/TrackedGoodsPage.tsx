@@ -204,13 +204,13 @@ export function TrackedGoodsPage() {
         }}
         onRefresh={() => query.refetch()}
         filterConfig={filterConfig}
-        filterState={{
+        filter={{
           state: {
             period: "",
             dateFrom: "",
             dateTo: "",
             channel: "",
-            search: searchInput,
+            search: search,
             amountMin: "",
             amountMax: "",
             status: "",
@@ -243,10 +243,9 @@ export function TrackedGoodsPage() {
           },
           resetAll: resetAllFilters,
           hasActiveFilter: activeFilterCount > 0,
+          activeFilterCount,
+          panelOpen: filterPanelOpen,
         }}
-        filterPanelOpen={filterPanelOpen}
-        onFilterToggle={() => setFilterPanelOpen((v) => !v)}
-        activeFilterCount={activeFilterCount}
       />
     </>
   );
