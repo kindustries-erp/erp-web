@@ -109,14 +109,35 @@ export function SidebarNav({
           />
         </NavGroup>
 
-        <NavItem
+        <NavGroup
           collapsed={c}
           icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
           label={t("nav.items.erpInventoryMasters")}
-          active={currentPage === "erp-inventory-masters"}
-          onClick={() => navTo("erp-inventory-masters")}
-          contextPage="erp-inventory-masters"
-        />
+          active={
+            currentPage === "erp-inventory-uom" ||
+            currentPage === "erp-inventory-item-types" ||
+            currentPage === "erp-inventory-tracking-categories"
+          }
+        >
+          <NavGroupItem
+            label={t("nav.items.erpInventoryUom")}
+            active={currentPage === "erp-inventory-uom"}
+            onClick={() => navTo("erp-inventory-uom")}
+            contextPage="erp-inventory-uom"
+          />
+          <NavGroupItem
+            label={t("nav.items.erpInventoryItemTypes")}
+            active={currentPage === "erp-inventory-item-types"}
+            onClick={() => navTo("erp-inventory-item-types")}
+            contextPage="erp-inventory-item-types"
+          />
+          <NavGroupItem
+            label={t("nav.items.erpInventoryTrackingCategories")}
+            active={currentPage === "erp-inventory-tracking-categories"}
+            onClick={() => navTo("erp-inventory-tracking-categories")}
+            contextPage="erp-inventory-tracking-categories"
+          />
+        </NavGroup>
       </div>
 
       {__APP_ENV__ !== "klotus-production" && (

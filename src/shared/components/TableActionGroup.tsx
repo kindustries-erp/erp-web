@@ -90,35 +90,44 @@ export function TableActionGroup({
                   // For groups, one would use ActionDropdown, but here we just map items.
                   if ("items" in action) return null;
                   return (
-                    <button
-                      key={index}
-                      type="button"
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!action.disabled && !action.loading) {
-                          action.onClick();
-                        }
-                      }}
-                      disabled={action.disabled}
-                      hidden={action.hidden}
-                    >
-                      {action.icon || (
-                        <Plus className="h-4 w-4 text-emerald-600" />
-                      )}
-                      <span className="font-medium">{action.label}</span>
-                    </button>
+                    <Popover.Close key={index} asChild>
+                      <button
+                        type="button"
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!action.disabled && !action.loading) {
+                            setTimeout(() => {
+                              action.onClick();
+                            }, 0);
+                          }
+                        }}
+                        disabled={action.disabled}
+                        hidden={action.hidden}
+                      >
+                        {action.icon || (
+                          <Plus className="h-4 w-4 text-emerald-600" />
+                        )}
+                        <span className="font-medium">{action.label}</span>
+                      </button>
+                    </Popover.Close>
                   );
                 })
               ) : (
-                <button
-                  type="button"
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
-                  onClick={onCreate}
-                >
-                  <Plus className="h-4 w-4 text-emerald-600" />
-                  <span className="font-medium">{t(createLabel)}</span>
-                </button>
+                <Popover.Close asChild>
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
+                    onClick={() => {
+                      if (onCreate) {
+                        setTimeout(() => onCreate(), 0);
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4 text-emerald-600" />
+                    <span className="font-medium">{t(createLabel)}</span>
+                  </button>
+                </Popover.Close>
               )}
             </Popover.Content>
           </Popover.Portal>

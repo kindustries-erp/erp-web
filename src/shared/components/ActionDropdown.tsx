@@ -42,7 +42,13 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
         onClick={(e) => {
           e.stopPropagation();
           if (!item.disabled && !item.loading) {
-            item.onClick();
+            if (!item.preventClose) {
+              setOpen(false);
+            }
+            // Delay execution slightly to allow dropdown to unmount before modal/drawer mounts
+            setTimeout(() => {
+              item.onClick();
+            }, 0);
           }
         }}
         className={cn(

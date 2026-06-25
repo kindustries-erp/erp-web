@@ -49,8 +49,16 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInventoryItems",
     group: "inventory",
   },
-  "erp-inventory-masters": {
-    labelKey: "nav.items.erpInventoryMasters",
+  "erp-inventory-uom": {
+    labelKey: "nav.items.erpInventoryUom",
+    group: "catalog",
+  },
+  "erp-inventory-item-types": {
+    labelKey: "nav.items.erpInventoryItemTypes",
+    group: "catalog",
+  },
+  "erp-inventory-tracking-categories": {
+    labelKey: "nav.items.erpInventoryTrackingCategories",
     group: "catalog",
   },
   "erp-production": {
@@ -126,9 +134,20 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryItems"],
   ],
-  "erp-inventory-masters": [
-    ["breadcrumb.catalog"],
+  "erp-inventory-uom": [
+    ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryUom"],
+  ],
+  "erp-inventory-item-types": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryItemTypes"],
+  ],
+  "erp-inventory-tracking-categories": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryTrackingCategories"],
   ],
   "erp-activity-logs": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
   "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],

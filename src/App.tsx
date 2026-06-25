@@ -24,7 +24,9 @@ import { ErpBomPage } from "@/pages/ErpBomPage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
-import { InventoryMasterPage } from "@/pages/InventoryMasterPage";
+import { InventoryUomPage } from "@/pages/inventory/InventoryUomPage";
+import { InventoryItemTypesPage } from "@/pages/inventory/InventoryItemTypesPage";
+import { InventoryTrackingCategoriesPage } from "@/pages/inventory/InventoryTrackingCategoriesPage";
 import {
   ErpCustomersPage,
   ErpSuppliersPage,
@@ -52,7 +54,9 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-production": ErpProductionPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
-  "erp-inventory-masters": InventoryMasterPage,
+  "erp-inventory-uom": InventoryUomPage,
+  "erp-inventory-item-types": InventoryItemTypesPage,
+  "erp-inventory-tracking-categories": InventoryTrackingCategoriesPage,
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
   "erp-employees": ErpEmployeesPage,
