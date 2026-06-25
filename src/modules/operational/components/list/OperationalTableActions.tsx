@@ -11,6 +11,7 @@ interface OperationalTableActionsProps {
   ctaLabel?: string;
   onCta?: () => void;
   bulkActionsNode?: React.ReactNode;
+  portalId?: string;
 }
 
 /**
@@ -26,6 +27,7 @@ export function OperationalTableActions({
   ctaLabel,
   onCta,
   bulkActionsNode,
+  portalId,
 }: OperationalTableActionsProps) {
   return (
     <TableActionGroup
@@ -34,6 +36,7 @@ export function OperationalTableActions({
       onFilterToggle={onFilterToggle}
       activeFilterCount={activeFilterCount}
       onCreate={onCreate}
+      portalId={portalId}
     >
       {bulkActionsNode}
       {ctaLabel && onCta ? (

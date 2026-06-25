@@ -206,6 +206,7 @@ export function OperationalInventoryPage({
           activeFilterCount={activeFilterCount}
           onCreate={onOpenCreateItem}
           bulkActionsNode={bulkActionsNode}
+          portalId="inventory-stock-table"
         />,
       );
     }

@@ -1103,6 +1103,7 @@ export function ErpBomPage() {
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
           onCreate={openCreate}
+          portalId="erp-bom-table"
         />
       }
     >

@@ -510,8 +510,8 @@ export function DataTable<T>({
 
   useEffect(() => {
     if (!enableColumnVisibility) return;
-    return subscribePortalTarget(setPortalTarget);
-  }, [enableColumnVisibility]);
+    return subscribePortalTarget(tableId || "default", setPortalTarget);
+  }, [enableColumnVisibility, tableId]);
 
   return (
     <>

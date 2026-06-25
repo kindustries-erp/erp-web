@@ -437,6 +437,7 @@ export function ProductionOrderListPage() {
           activeFilterCount={filter.activeFilterCount}
           onCreate={canCreate ? handleCreate : undefined}
           createLabel={t("Tạo mới")}
+          portalId="erp-production-table"
         />
       }
     >

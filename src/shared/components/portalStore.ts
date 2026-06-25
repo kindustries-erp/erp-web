@@ -1,15 +1,26 @@
-export let globalPortalTarget: Element | null = null;
-const portalListeners = new Set<(el: Element | null) => void>();
+const portalTargets = new Map<string, Element | null>();
+const portalListeners = new Map<string, Set<(el: Element | null) => void>>();
 
-export const setGlobalPortalTarget = (el: Element | null) => {
-  globalPortalTarget = el;
-  portalListeners.forEach((fn) => fn(el));
+export const setPortalTarget = (id: string, el: Element | null) => {
+  portalTargets.set(id, el);
+  const listeners = portalListeners.get(id);
+  if (listeners) {
+    listeners.forEach((fn) => fn(el));
+  }
 };
 
-export const subscribePortalTarget = (fn: (el: Element | null) => void) => {
-  portalListeners.add(fn);
-  fn(globalPortalTarget);
+export const subscribePortalTarget = (
+  id: string,
+  fn: (el: Element | null) => void,
+) => {
+  let listeners = portalListeners.get(id);
+  if (!listeners) {
+    listeners = new Set();
+    portalListeners.set(id, listeners);
+  }
+  listeners.add(fn);
+  fn(portalTargets.get(id) || null);
   return () => {
-    portalListeners.delete(fn);
+    listeners?.delete(fn);
   };
 };

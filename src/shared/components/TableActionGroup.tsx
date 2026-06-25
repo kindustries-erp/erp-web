@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { RefreshCcw, Plus, MoreHorizontal } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/shared/components/ui/Button";
@@ -16,9 +17,10 @@ interface TableActionGroupProps {
   createLabel?: string;
 
   children?: React.ReactNode;
+  portalId?: string;
 }
 
-import { setGlobalPortalTarget } from "./portalStore";
+import { setPortalTarget } from "./portalStore";
 
 export function TableActionGroup({
   onRefresh,
@@ -28,8 +30,16 @@ export function TableActionGroup({
   onCreate,
   createLabel = "Tạo mới",
   children,
+  portalId = "default",
 }: TableActionGroupProps) {
   const t = useT();
+
+  const refCallback = useCallback(
+    (el: Element | null) => {
+      setPortalTarget(portalId, el);
+    },
+    [portalId],
+  );
   return (
     <div className="flex items-center gap-2 w-full justify-end">
       {children}
@@ -42,7 +52,7 @@ export function TableActionGroup({
       )}
 
       <div
-        ref={setGlobalPortalTarget}
+        ref={refCallback}
         className="empty:hidden flex items-center justify-center"
       />
 

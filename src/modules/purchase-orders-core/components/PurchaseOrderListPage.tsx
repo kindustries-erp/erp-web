@@ -106,6 +106,7 @@ export function PurchaseOrderListPage() {
           activeFilterCount={filter.activeFilterCount}
           onCreate={handleCreateNew}
           createLabel={t("Tạo mới")}
+          portalId="purchase-orders-table"
         />
       }
     >
