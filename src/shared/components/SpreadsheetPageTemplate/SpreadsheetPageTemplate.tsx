@@ -109,6 +109,7 @@ export function SpreadsheetPageTemplate<T>({
           <FilterPanel
             config={filterConfig}
             filter={{
+              activeFilterCount,
               ...filterState,
               panelOpen: !!filterPanelOpen,
             }}
