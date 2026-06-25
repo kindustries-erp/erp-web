@@ -45,10 +45,46 @@ export function SpreadsheetPageTemplate<T>({
   rowActions,
   summaryRow,
   children,
+  onRowClick,
+  loadingRows,
 }: SpreadsheetPageTemplateProps<T>) {
   const t = useT();
   const finalEmptyLabel = emptyLabel ?? t("common.noData");
   const finalCreateLabel = createLabel ?? t("panel.createNew");
+
+  const processedColumns = React.useMemo(() => {
+    return columns.map((col) => {
+      let alignClass = "align-middle text-left";
+      const keyStr = String(col.key || "").toLowerCase();
+      const sortKeyStr = String(col.sortKey || "").toLowerCase();
+      const combined = `${keyStr} ${sortKeyStr}`;
+
+      if (
+        combined.includes("date") ||
+        combined.includes("qty") ||
+        combined.includes("amount") ||
+        combined.includes("price") ||
+        combined.includes("total") ||
+        combined.includes("tax") ||
+        combined.includes("discount") ||
+        combined.includes("rate")
+      ) {
+        alignClass = "align-middle text-right";
+      } else if (
+        combined.includes("status") ||
+        combined.includes("badge") ||
+        combined.includes("state")
+      ) {
+        alignClass = "align-middle text-center";
+      }
+
+      return {
+        ...col,
+        headerClassName: col.headerClassName ?? "text-center",
+        className: col.className ?? alignClass,
+      };
+    });
+  }, [columns]);
 
   return (
     <PageLayout
@@ -85,7 +121,7 @@ export function SpreadsheetPageTemplate<T>({
             enableColumnResizing={true}
             variant="spreadsheet"
             items={items}
-            columns={columns}
+            columns={processedColumns}
             getRowKey={getRowKey}
             loading={loading}
             emptyLabel={finalEmptyLabel}
@@ -105,6 +141,8 @@ export function SpreadsheetPageTemplate<T>({
             totalPages={totalPages}
             onPage={onPage}
             onPageSize={onPageSize}
+            onRowClick={onRowClick}
+            loadingRows={loadingRows}
           />
         </div>
         {filterConfig && filterState && (

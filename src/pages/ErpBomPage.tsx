@@ -13,13 +13,10 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUIStore } from "@/core/config/uiStore";
-import { PageLayout } from "@/shared/components/PageLayout";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { type DataTableColumn } from "@/shared/components/DataTable";
-import { StandardTable } from "@/shared/components/StandardTable";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   useFilterPanel,
@@ -939,10 +936,27 @@ export function ErpBomPage() {
     {
       key: "bomCode",
       header: t("Mã BOM"),
-      headerClassName: "text-center",
-      className: "align-middle text-right",
       sortable: true,
       sortKey: "bomCode",
+      cell: (item) => (
+        <div className="w-full">
+          <Tooltip content={item.bomCode}>
+            <span className="font-semibold text-primary block truncate max-w-[120px]">
+              {item.bomCode}
+            </span>
+          </Tooltip>
+        </div>
+      ),
+      skeletonClassName: "w-24",
+    },
+    {
+      key: "__expand",
+      header: "",
+      className:
+        "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
+      headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
+      size: 40,
+      enableResizing: false,
       cell: (item) => {
         const isExpanded = !!expandedBomIds[item.id];
         return (
@@ -952,45 +966,35 @@ export function ErpBomPage() {
               e.stopPropagation();
               toggleExpand(item.id);
             }}
-            className="font-medium text-primary hover:underline focus:outline-none flex items-center justify-end gap-1.5 text-right w-full"
+            className="focus:outline-none flex items-center justify-center w-full"
           >
-            <Tooltip content={item.bomCode}>
-              <span className="font-semibold text-primary block truncate max-w-[120px]">
-                {item.bomCode}
-              </span>
-            </Tooltip>
             <ChevronRight
               className={cn(
-                "h-3.5 w-3.5 transition-transform text-muted-foreground",
-                isExpanded && "rotate-90 text-primary",
+                "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
+                isExpanded && "rotate-90",
               )}
             />
           </button>
         );
       },
-      skeletonClassName: "w-24 ml-auto",
     },
     {
       key: "bomName",
       header: t("Tên BOM"),
-      headerClassName: "text-center",
-      className: "align-middle text-right",
       sortable: true,
       sortKey: "bomName",
       cell: (item) => (
-        <div className="w-full text-right overflow-hidden flex justify-end">
+        <div className="w-full overflow-hidden flex">
           <Tooltip content={item.bomName}>
             <span className="block truncate max-w-[160px]">{item.bomName}</span>
           </Tooltip>
         </div>
       ),
-      skeletonClassName: "w-40 ml-auto",
+      skeletonClassName: "w-40",
     },
     {
       key: "finishedGoodItemName",
       header: t("Thành phẩm"),
-      headerClassName: "text-center",
-      className: "align-middle text-right",
       sortable: true,
       sortKey: "finishedGoodItemName",
       cell: (item) => {
@@ -998,7 +1002,7 @@ export function ErpBomPage() {
           item.finishedGoodItemName ||
           (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—");
         return (
-          <div className="flex flex-col min-w-[80px] max-w-[200px] text-right ml-auto">
+          <div className="flex flex-col min-w-[80px] max-w-[200px]">
             <Tooltip content={name}>
               <span className="truncate font-medium text-foreground block">
                 {name}
@@ -1014,25 +1018,19 @@ export function ErpBomPage() {
           </div>
         );
       },
-      skeletonClassName: "w-36 ml-auto",
+      skeletonClassName: "w-36",
     },
     {
       key: "version",
       header: "Version",
-      headerClassName: "text-center",
-      className: "align-middle text-center",
       sortable: true,
       sortKey: "version",
-      cell: (item) => (
-        <div className="w-full text-center">{item.version || "—"}</div>
-      ),
-      skeletonClassName: "w-16 mx-auto",
+      cell: (item) => <div className="w-full">{item.version || "—"}</div>,
+      skeletonClassName: "w-16",
     },
     {
       key: "status",
       header: t("Trạng thái"),
-      headerClassName: "text-center",
-      className: "align-middle text-center",
       sortable: true,
       sortKey: "status",
       cell: (item) => {
@@ -1050,7 +1048,7 @@ export function ErpBomPage() {
         const s =
           statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
         return (
-          <div className="w-full text-center">
+          <div className="w-full">
             <span
               className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap inline-block ${s.cls}`}
             >
@@ -1059,153 +1057,132 @@ export function ErpBomPage() {
           </div>
         );
       },
-      skeletonClassName: "w-20 mx-auto",
+      skeletonClassName: "w-20",
     },
     {
       key: "effectiveFrom",
       header: t("Hiệu lực từ"),
-      headerClassName: "text-center",
-      className: "align-middle text-right",
       sortable: true,
       sortKey: "effectiveFrom",
       cell: (item) => (
-        <div className="w-full text-right">{fmtDate(item.effectiveFrom)}</div>
+        <div className="w-full">{fmtDate(item.effectiveFrom)}</div>
       ),
-      skeletonClassName: "w-20 ml-auto",
+      skeletonClassName: "w-20",
     },
     {
       key: "effectiveTo",
       header: t("Hiệu lực đến"),
-      headerClassName: "text-center",
-      className: "align-middle text-right",
       sortable: true,
       sortKey: "effectiveTo",
-      cell: (item) => (
-        <div className="w-full text-right">{fmtDate(item.effectiveTo)}</div>
-      ),
-      skeletonClassName: "w-20 ml-auto",
+      cell: (item) => <div className="w-full">{fmtDate(item.effectiveTo)}</div>,
+      skeletonClassName: "w-20",
     },
   ];
 
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
+    <SpreadsheetPageTemplate
       title="BOM"
       desc={t(
         "Quản lý định mức vật tư (Bill of Materials) cho các thành phẩm.",
       )}
       icon={<Network className="h-4 w-4" />}
-      actions={
-        <TableActionGroup
-          onRefresh={() => void loadBoms()}
-          loading={loading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={openCreate}
-          portalId="erp-bom-table"
-        />
+      tableId="erp-bom-table"
+      items={items}
+      columns={columns}
+      getRowKey={(item) => item.id}
+      loading={loading}
+      error={error}
+      emptyLabel={t("Chưa có BOM")}
+      minWidth={980}
+      loadingRows={6}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPage={setPage}
+      onPageSize={(value) => {
+        setPage(1);
+        setPageSize(value);
+      }}
+      onRefresh={() => void loadBoms()}
+      onCreate={openCreate}
+      filterConfig={filterConfig}
+      filterState={filter}
+      filterPanelOpen={filter.panelOpen}
+      onFilterToggle={filter.togglePanel}
+      activeFilterCount={filter.activeFilterCount}
+      onRowClick={(item) => void openView(item)}
+      renderSubRow={(item) => (
+        <BomTree bomId={item.id} fgToBomMap={fgToBomMap} itemsMap={itemsMap} />
+      )}
+      expandedRowKeys={Object.keys(expandedBomIds).filter(
+        (key) => expandedBomIds[key],
+      )}
+      sortArray={
+        sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined
       }
+      onSort={handleSort}
+      rowActions={(item) => [
+        {
+          groupLabel: t("Tra cứu"),
+          items: [
+            {
+              label: t("Chi tiết"),
+              onClick: () => void openView(item),
+              icon: <Eye className="h-[13px] w-[13px]" />,
+            },
+            {
+              label: t("common.exportExcel"),
+              onClick: () => void handleExport(item, "xlsx"),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+            },
+            {
+              label: t("common.exportCsv"),
+              onClick: () => void handleExport(item, "csv"),
+              icon: <FileText className="h-[13px] w-[13px]" />,
+            },
+          ],
+        },
+        {
+          groupLabel: t("Thao tác"),
+          items: [
+            {
+              label: t("common.clone"),
+              onClick: () => void handleClone(item),
+              icon: <Copy className="h-[13px] w-[13px]" />,
+            },
+            {
+              label: t("common.activate"),
+              onClick: () => {
+                setStatusTarget(item);
+                setTargetAction("ACTIVE");
+              },
+              icon: <CheckCircle className="h-[13px] w-[13px]" />,
+              hidden: item.status !== "INACTIVE",
+            },
+            {
+              label: t("common.inactivate"),
+              onClick: () => {
+                setStatusTarget(item);
+                setTargetAction("INACTIVE");
+              },
+              icon: <Ban className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              hidden: item.status !== "ACTIVE",
+            },
+            {
+              label: t("Xóa"),
+              onClick: () => setDeleteTarget(item),
+              icon: <Trash2 className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              hidden: item.status === "ACTIVE",
+            },
+          ],
+        },
+      ]}
     >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1">
-          <StandardTable<ErpBom>
-            tableId="erp-bom-table"
-            items={items}
-            columns={columns}
-            getRowKey={(item) => item.id}
-            loading={loading}
-            error={error}
-            emptyLabel={t("Chưa có BOM")}
-            minWidth={980}
-            loadingRows={6}
-            onRowClick={(item) => void openView(item)}
-            actions={(item) => [
-              {
-                groupLabel: t("Tra cứu"),
-                items: [
-                  {
-                    label: t("Chi tiết"),
-                    onClick: () => void openView(item),
-                    icon: <Eye className="h-[13px] w-[13px]" />,
-                  },
-                  {
-                    label: t("common.exportExcel"),
-                    onClick: () => void handleExport(item, "xlsx"),
-                    icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
-                  },
-                  {
-                    label: t("common.exportCsv"),
-                    onClick: () => void handleExport(item, "csv"),
-                    icon: <FileText className="h-[13px] w-[13px]" />,
-                  },
-                ],
-              },
-              {
-                groupLabel: t("Thao tác"),
-                items: [
-                  {
-                    label: t("common.clone"),
-                    onClick: () => void handleClone(item),
-                    icon: <Copy className="h-[13px] w-[13px]" />,
-                  },
-                  {
-                    label: t("common.activate"),
-                    onClick: () => {
-                      setStatusTarget(item);
-                      setTargetAction("ACTIVE");
-                    },
-                    icon: <CheckCircle className="h-[13px] w-[13px]" />,
-                    hidden: item.status !== "INACTIVE",
-                  },
-                  {
-                    label: t("common.inactivate"),
-                    onClick: () => {
-                      setStatusTarget(item);
-                      setTargetAction("INACTIVE");
-                    },
-                    icon: <Ban className="h-[13px] w-[13px]" />,
-                    variant: "danger",
-                    hidden: item.status !== "ACTIVE",
-                  },
-                  {
-                    label: t("Xóa"),
-                    onClick: () => setDeleteTarget(item),
-                    icon: <Trash2 className="h-[13px] w-[13px]" />,
-                    variant: "danger",
-                    hidden: item.status === "ACTIVE",
-                  },
-                ],
-              },
-            ]}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPage={setPage}
-            onPageSize={(value) => {
-              setPage(1);
-              setPageSize(value);
-            }}
-            renderSubRow={(item) => (
-              <BomTree
-                bomId={item.id}
-                fgToBomMap={fgToBomMap}
-                itemsMap={itemsMap}
-              />
-            )}
-            expandedRowIds={expandedBomIds}
-            sortArray={
-              sortBy
-                ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`]
-                : undefined
-            }
-            onSort={handleSort}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
-
       <ConfirmModal
         open={!!deleteTarget}
         title={t("Xác nhận xóa")}
@@ -1274,6 +1251,6 @@ export function ErpBomPage() {
         updateLine={updateLine}
         onExport={(format) => editing && handleExport(editing, format)}
       />
-    </PageLayout>
+    </SpreadsheetPageTemplate>
   );
 }

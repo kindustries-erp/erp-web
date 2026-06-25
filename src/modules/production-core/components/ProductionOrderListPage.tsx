@@ -8,11 +8,8 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { StandardTable } from "@/shared/components/StandardTable";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
@@ -305,12 +302,10 @@ export function ProductionOrderListPage() {
       {
         key: "referenceNo",
         header: t("Mã lệnh"),
-        headerClassName: "text-center",
-        className: "align-middle text-center",
         sortable: true,
         sortKey: "reference_no",
         cell: (item: ErpProductionOrder) => (
-          <div className="w-full text-center">
+          <div className="w-full">
             <span
               className="cursor-pointer font-medium text-emerald-600 hover:underline"
               onClick={() => handleEdit(item.id, !canUpdate)}
@@ -323,12 +318,10 @@ export function ProductionOrderListPage() {
       {
         key: "finishedGoodItemName",
         header: t("Thành phẩm"),
-        headerClassName: "text-center",
-        className: "align-middle text-center",
         sortable: true,
         sortKey: "finished_good_item_name",
         cell: (item: ErpProductionOrder) => (
-          <div className="w-full text-center">
+          <div className="w-full">
             {item.finishedGoodItemName || item.finishedGoodItemId || "—"}
           </div>
         ),
@@ -336,34 +329,24 @@ export function ProductionOrderListPage() {
       {
         key: "plannedStartDate",
         header: t("Ngày bắt đầu"),
-        headerClassName: "text-center",
-        className: "align-middle text-center",
         sortable: true,
         sortKey: "planned_start_date",
         cell: (item: ErpProductionOrder) => (
-          <div className="w-full text-center">
-            {fmtDate(item.plannedStartDate)}
-          </div>
+          <div className="w-full">{fmtDate(item.plannedStartDate)}</div>
         ),
       },
       {
         key: "plannedEndDate",
         header: t("Ngày kết thúc"),
-        headerClassName: "text-center",
-        className: "align-middle text-center",
         sortable: true,
         sortKey: "planned_end_date",
         cell: (item: ErpProductionOrder) => (
-          <div className="w-full text-center">
-            {fmtDate(item.plannedEndDate)}
-          </div>
+          <div className="w-full">{fmtDate(item.plannedEndDate)}</div>
         ),
       },
       {
         key: "qtyProduced",
         header: t("Tiến độ"),
-        headerClassName: "text-center",
-        className: "align-middle text-center",
         sortable: true,
         sortKey: "qty_produced",
         cell: (item: ErpProductionOrder) => {
@@ -396,12 +379,10 @@ export function ProductionOrderListPage() {
       {
         key: "status",
         header: t("Trạng thái"),
-        headerClassName: "text-center",
-        className: "align-middle text-center",
         sortable: true,
         sortKey: "status",
         cell: (item: ErpProductionOrder) => (
-          <div className="w-full text-center">
+          <div className="w-full">
             <span
               className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
                 item.status === "COMPLETED"
@@ -425,112 +406,93 @@ export function ProductionOrderListPage() {
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
+    <SpreadsheetPageTemplate
       title={t("Lệnh Sản Xuất")}
       desc={t("Quản lý và theo dõi tiến độ lệnh sản xuất.")}
       icon={<Factory className="h-5 w-5" />}
-      actions={
-        <TableActionGroup
-          loading={loading}
-          onRefresh={loadData}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={canCreate ? handleCreate : undefined}
-          createLabel={t("Tạo mới")}
-          portalId="erp-production-table"
-        />
+      tableId="erp-production-table"
+      items={orders}
+      columns={columns}
+      getRowKey={(i) => i.id}
+      loading={loading}
+      error={error}
+      emptyLabel={t("Chưa có lệnh sản xuất nào")}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={Math.ceil(total / pageSize)}
+      onPage={setPage}
+      onPageSize={setPageSize}
+      onRowClick={(item) => handleEdit(item.id, true)}
+      onRefresh={loadData}
+      onCreate={canCreate ? handleCreate : undefined}
+      createLabel={t("Tạo mới")}
+      filterConfig={filterConfig}
+      filterState={filter}
+      filterPanelOpen={filter.panelOpen}
+      onFilterToggle={filter.togglePanel}
+      activeFilterCount={filter.activeFilterCount}
+      sortArray={
+        sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined
       }
+      onSort={handleSort}
+      rowActions={(item) => [
+        {
+          groupLabel: t("Tra cứu"),
+          items: [
+            {
+              label: t("Chi tiết"),
+              onClick: () => handleEdit(item.id, true),
+              icon: <Eye className="h-[13px] w-[13px]" />,
+            },
+          ],
+        },
+        {
+          groupLabel: t("Thao tác"),
+          items: [
+            {
+              label:
+                item.status === "IN_PROGRESS"
+                  ? t("Tiếp tục sản xuất")
+                  : item.status === "COMPLETED"
+                    ? t("Xem kết quả sản xuất")
+                    : t("Tiến hành sản xuất"),
+              onClick: () => handleOpenProductionRun(item),
+              icon:
+                item.status === "IN_PROGRESS" ? (
+                  <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
+                ) : item.status === "COMPLETED" ? (
+                  <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
+                ) : (
+                  <PlayCircle className="h-[13px] w-[13px]" />
+                ),
+              hidden:
+                !canUpdate ||
+                !["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
+                  item.status || "",
+                ),
+            },
+            {
+              label: item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
+              onClick: () =>
+                item.status === "DRAFT"
+                  ? setDeleteTarget(item)
+                  : setCancelTarget(item),
+              icon:
+                item.status === "DRAFT" ? (
+                  <Trash2 className="h-[13px] w-[13px]" />
+                ) : (
+                  <XCircle className="h-[13px] w-[13px]" />
+                ),
+              variant: "danger",
+              hidden:
+                !canUpdate ||
+                (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
+            },
+          ],
+        },
+      ]}
     >
-      {error && (
-        <div className="mb-4 text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 shrink-0">
-          {error}
-        </div>
-      )}
-
-      <div className="flex items-start flex-1 min-h-0">
-        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
-          <StandardTable<ErpProductionOrder>
-            tableId="erp-production-table"
-            items={orders}
-            columns={columns}
-            getRowKey={(i) => i.id}
-            loading={loading}
-            emptyLabel={t("Chưa có lệnh sản xuất nào")}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={Math.ceil(total / pageSize)}
-            onPage={setPage}
-            onPageSize={setPageSize}
-            onRowClick={(item) => handleEdit(item.id, true)}
-            actions={(item) => [
-              {
-                groupLabel: t("Tra cứu"),
-                items: [
-                  {
-                    label: t("Chi tiết"),
-                    onClick: () => handleEdit(item.id, true),
-                    icon: <Eye className="h-[13px] w-[13px]" />,
-                  },
-                ],
-              },
-              {
-                groupLabel: t("Thao tác"),
-                items: [
-                  {
-                    label:
-                      item.status === "IN_PROGRESS"
-                        ? t("Tiếp tục sản xuất")
-                        : item.status === "COMPLETED"
-                          ? t("Xem kết quả sản xuất")
-                          : t("Tiến hành sản xuất"),
-                    onClick: () => handleOpenProductionRun(item),
-                    icon:
-                      item.status === "IN_PROGRESS" ? (
-                        <ArrowRight className="h-[13px] w-[13px] text-blue-600" />
-                      ) : item.status === "COMPLETED" ? (
-                        <CheckCircle2 className="h-[13px] w-[13px] text-emerald-600" />
-                      ) : (
-                        <PlayCircle className="h-[13px] w-[13px]" />
-                      ),
-                    hidden:
-                      !canUpdate ||
-                      !["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(
-                        item.status || "",
-                      ),
-                  },
-                  {
-                    label:
-                      item.status === "DRAFT" ? t("Xóa lệnh") : t("Hủy lệnh"),
-                    onClick: () =>
-                      item.status === "DRAFT"
-                        ? setDeleteTarget(item)
-                        : setCancelTarget(item),
-                    icon:
-                      item.status === "DRAFT" ? (
-                        <Trash2 className="h-[13px] w-[13px]" />
-                      ) : (
-                        <XCircle className="h-[13px] w-[13px]" />
-                      ),
-                    variant: "danger",
-                    hidden:
-                      !canUpdate ||
-                      (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
-                  },
-                ],
-              },
-            ]}
-            sortArray={
-              sortBy
-                ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`]
-                : undefined
-            }
-            onSort={handleSort}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
-
       <ProductionOrderDrawer
         open={drawerOpen}
         loading={drawerLoading}
@@ -608,6 +570,6 @@ export function ProductionOrderListPage() {
           onRefresh={loadData}
         />
       )}
-    </PageLayout>
+    </SpreadsheetPageTemplate>
   );
 }
