@@ -206,7 +206,7 @@ export function OperationalInventoryPage({
           activeFilterCount={activeFilterCount}
           onCreate={onOpenCreateItem}
           bulkActionsNode={bulkActionsNode}
-          portalId="inventory-stock-table-v2"
+          portalId="inventory-stock-table-v3"
         />,
       );
     }
@@ -229,7 +229,7 @@ export function OperationalInventoryPage({
       <div className="flex items-start flex-1 min-h-0">
         <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
           <StandardTable
-            tableId="inventory-stock-table-v2"
+            tableId="inventory-stock-table-v3"
             enableColumnVisibility={true}
             items={stockItems}
             columns={stockColumns}

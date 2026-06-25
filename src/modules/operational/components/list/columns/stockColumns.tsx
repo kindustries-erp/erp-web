@@ -24,14 +24,12 @@ export function useStockColumns({
   return useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
-        key: "item_code",
-        header: t("inventoryMasters.columns.sku"),
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        sortable: true,
-        sortKey: "item_code",
-        size: 150,
-        enableResizing: true,
+        key: "__expand",
+        header: "",
+        className: "w-[40px] px-2 text-center align-middle",
+        headerClassName: "w-[40px] px-2 text-center",
+        size: 40,
+        enableResizing: false,
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
           return (
@@ -41,16 +39,11 @@ export function useStockColumns({
                 e.stopPropagation();
                 onToggleExpand(row);
               }}
-              className="font-medium text-foreground hover:underline focus:outline-none flex items-center justify-start w-full gap-1.5 text-left text-sm"
+              className="focus:outline-none flex items-center justify-center w-full"
             >
-              <Tooltip content={row.item_code || "—"} side="top">
-                <span className="truncate max-w-full inline-block">
-                  {row.item_code || "—"}
-                </span>
-              </Tooltip>
               <ChevronRight
                 className={cn(
-                  "h-3.5 w-3.5 transition-transform text-[color:var(--muted-fg)] shrink-0",
+                  "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
                   expanded && "rotate-90",
                 )}
               />
@@ -59,13 +52,32 @@ export function useStockColumns({
         },
       },
       {
+        key: "item_code",
+        header: t("inventoryMasters.columns.sku"),
+        className: "align-middle text-left",
+        headerClassName: "text-center",
+        sortable: true,
+        sortKey: "item_code",
+        size: 140,
+        enableResizing: true,
+        cell: (row) => (
+          <div className="w-full text-left overflow-hidden">
+            <Tooltip content={row.item_code || "—"} side="top">
+              <span className="text-sm truncate block w-full font-medium text-foreground">
+                {row.item_code || "—"}
+              </span>
+            </Tooltip>
+          </div>
+        ),
+      },
+      {
         key: "item_name",
         header: t("inventoryMasters.columns.itemName"),
         className: "align-middle text-left",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "item_name",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => {
           const itemName = row.item_name || t("inventory.table.unnamed");
@@ -86,7 +98,7 @@ export function useStockColumns({
         header: t("inventory.table.columns.in"),
         className: "align-middle text-right",
         headerClassName: "text-center",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
@@ -99,7 +111,7 @@ export function useStockColumns({
         header: t("inventory.table.columns.out"),
         className: "align-middle text-right",
         headerClassName: "text-center",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
@@ -112,7 +124,7 @@ export function useStockColumns({
         header: t("inventory.table.columns.onHand"),
         className: "align-middle text-right",
         headerClassName: "text-center",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-emerald-600">
@@ -127,7 +139,7 @@ export function useStockColumns({
         headerClassName: "text-center",
         sortable: true,
         sortKey: "unit",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => (
           <span className="text-sm block w-full text-left">
@@ -140,7 +152,7 @@ export function useStockColumns({
         header: t("inventory.table.columns.lastTx"),
         className: "align-middle whitespace-nowrap text-right",
         headerClassName: "text-center",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => {
           if (!row.last_transaction_date) return "—";
@@ -165,7 +177,7 @@ export function useStockColumns({
         headerClassName: "text-center",
         sortable: true,
         sortKey: "item_type",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => {
           const itemType = row.item_type;
@@ -198,7 +210,7 @@ export function useStockColumns({
         headerClassName: "text-center",
         sortable: true,
         sortKey: "status",
-        size: 150,
+        size: 140,
         enableResizing: true,
         cell: (row) => (
           <div className="w-full text-center">
