@@ -27,6 +27,7 @@ export function SpreadsheetPageTemplate<T>({
   onRefresh,
   onCreate,
   createLabel,
+  createActions,
   bulkActionsNode,
   customActionsNode,
   filterConfig,
@@ -62,6 +63,7 @@ export function SpreadsheetPageTemplate<T>({
           activeFilterCount={activeFilterCount}
           onCreate={onCreate}
           createLabel={finalCreateLabel}
+          createActions={createActions}
           portalId={tableId}
         >
           {bulkActionsNode}

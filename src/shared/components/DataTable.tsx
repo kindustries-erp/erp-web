@@ -456,13 +456,13 @@ export function DataTable<T>({
       size: 40,
       meta: {
         className: cn(
-          "w-[40px] px-0 text-center",
+          "w-[40px] min-w-[40px] max-w-[40px] px-0 text-center",
           variant !== "spreadsheet" &&
             "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "w-[40px] px-0 text-center",
+          "w-[40px] min-w-[40px] max-w-[40px] px-0 text-center",
           variant !== "spreadsheet" &&
             "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
           actionsColumn.headerClassName,
@@ -500,12 +500,12 @@ export function DataTable<T>({
       size: 40,
       meta: {
         className: cn(
-          "w-[40px] px-2 text-center",
+          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
           variant !== "spreadsheet" &&
             "bg-surface sticky left-0 z-20 shadow-[1px_0_0_0_var(--border-light)]",
         ),
         headerClassName: cn(
-          "w-[40px] px-2 text-center",
+          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
           variant !== "spreadsheet"
             ? "bg-muted sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
             : "bg-muted sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",

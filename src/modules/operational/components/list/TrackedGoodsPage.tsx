@@ -1,22 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 
-import { StandardTable } from "@/shared/components/StandardTable";
-import type { DataTableColumn } from "@/shared/components/DataTable";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import { useInventorySerialsQuery } from "@/modules/inventory-core/hooks/useInventorySerialsQuery";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryCoreApi";
-import { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
-import { formatGMT7 } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { formatGMT7 } from "@/shared/utils/format";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { Barcode } from "lucide-react";
 
-export function TrackedGoodsPage({
-  setActions,
-}: {
-  setActions?: (node: React.ReactNode) => void;
-}) {
+export function TrackedGoodsPage() {
   const t = useT();
 
   const [page, setPage] = useState(1);
@@ -171,19 +166,7 @@ export function TrackedGoodsPage({
     setPage(1);
   }, []);
 
-  useEffect(() => {
-    if (setActions) {
-      setActions(
-        <OperationalTableActions
-          loading={loading}
-          onRefresh={() => query.refetch()}
-          onFilterToggle={() => setFilterPanelOpen((v) => !v)}
-          activeFilterCount={activeFilterCount}
-          onCreate={() => {}}
-        />,
-      );
-    }
-  }, [setActions, loading, query.refetch, activeFilterCount]);
+  // Actions are handled by SpreadsheetPageTemplate
 
   return (
     <>
@@ -192,81 +175,79 @@ export function TrackedGoodsPage({
           {error}
         </div>
       )}
-      <div className="flex items-start flex-1 min-h-0">
-        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
-          <StandardTable
-            tableId="inventory-tracked-goods-table"
-            enableColumnVisibility={true}
-            items={items}
-            columns={columns}
-            getRowKey={(row) => row.id}
-            loading={loading}
-            emptyLabel={t("Chưa có dữ liệu.")}
-            minWidth={1200}
-            sortArray={[sortField]}
-            onSort={(key) => {
-              if (sortField === key) setSortField(`-${key}`);
-              else if (sortField === `-${key}`) setSortField("");
-              else setSortField(key);
-            }}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            actions={() => []}
-            onPage={setPage}
-            onPageSize={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-          />
-        </div>
-        <FilterPanel
-          config={filterConfig}
-          filter={{
-            state: {
-              period: "",
-              dateFrom: "",
-              dateTo: "",
-              channel: "",
-              search: searchInput,
-              amountMin: "",
-              amountMax: "",
-              status: "",
-              counterpartySource: "",
-              custom: {
-                itemType: itemTypeFilter,
-                trackingPolicy: trackingPolicyFilter,
-              },
+      <SpreadsheetPageTemplate
+        title={t("Serial / Tracking")}
+        desc={t("Danh sách sản phẩm / vật tư có tracking")}
+        icon={<Barcode className="h-5 w-5" />}
+        tableId="inventory-tracked-goods-table"
+        items={items}
+        columns={columns}
+        getRowKey={(row) => row.id}
+        loading={loading}
+        error={error}
+        emptyLabel={t("Chưa có dữ liệu.")}
+        minWidth={1200}
+        sortArray={[sortField]}
+        onSort={(key) => {
+          if (sortField === key) setSortField(`-${key}`);
+          else if (sortField === `-${key}`) setSortField("");
+          else setSortField(key);
+        }}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        onRefresh={() => query.refetch()}
+        filterConfig={filterConfig}
+        filterState={{
+          state: {
+            period: "",
+            dateFrom: "",
+            dateTo: "",
+            channel: "",
+            search: searchInput,
+            amountMin: "",
+            amountMax: "",
+            status: "",
+            counterpartySource: "",
+            custom: {
+              itemType: itemTypeFilter,
+              trackingPolicy: trackingPolicyFilter,
             },
-            inputs: { search: searchInput, amountMin: "", amountMax: "" },
-            panelOpen: filterPanelOpen,
-            openPanel: () => setFilterPanelOpen(true),
-            closePanel: () => setFilterPanelOpen(false),
-            togglePanel: () => setFilterPanelOpen((v) => !v),
-            setPeriod: () => {},
-            setDateFrom: () => {},
-            setDateTo: () => {},
-            setChannel: () => {},
-            setSearchInput: setSearchInput,
-            setAmountMinInput: () => {},
-            setAmountMaxInput: () => {},
-            setStatus: () => {},
-            setCounterpartySource: () => {},
-            setCustom: (key: string, v: string) => {
-              if (key === "itemType") {
-                setItemTypeFilter(v);
-              } else if (key === "trackingPolicy") {
-                setTrackingPolicyFilter(v);
-              }
-              setPage(1);
-            },
-            resetAll: resetAllFilters,
-            hasActiveFilter: activeFilterCount > 0,
-            activeFilterCount,
-          }}
-        />
-      </div>
+          },
+          inputs: { search: searchInput, amountMin: "", amountMax: "" },
+          setSearchInput: setSearchInput,
+          openPanel: () => setFilterPanelOpen(true),
+          closePanel: () => setFilterPanelOpen(false),
+          togglePanel: () => setFilterPanelOpen((v) => !v),
+          setPeriod: () => {},
+          setDateFrom: () => {},
+          setDateTo: () => {},
+          setChannel: () => {},
+          setAmountMinInput: () => {},
+          setAmountMaxInput: () => {},
+          setStatus: () => {},
+          setCounterpartySource: () => {},
+          setCustom: (key: string, v: string) => {
+            if (key === "itemType") {
+              setItemTypeFilter(v);
+            } else if (key === "trackingPolicy") {
+              setTrackingPolicyFilter(v);
+            }
+            setPage(1);
+          },
+          resetAll: resetAllFilters,
+          hasActiveFilter: activeFilterCount > 0,
+        }}
+        filterPanelOpen={filterPanelOpen}
+        onFilterToggle={() => setFilterPanelOpen((v) => !v)}
+        activeFilterCount={activeFilterCount}
+      />
     </>
   );
 }

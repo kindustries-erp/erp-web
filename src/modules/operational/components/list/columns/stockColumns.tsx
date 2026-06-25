@@ -26,8 +26,9 @@ export function useStockColumns({
       {
         key: "__expand",
         header: "",
-        className: "w-[40px] px-2 text-center align-middle",
-        headerClassName: "w-[40px] px-2 text-center",
+        className:
+          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
+        headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
         size: 40,
         enableResizing: false,
         cell: (row) => {

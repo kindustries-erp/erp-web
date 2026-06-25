@@ -250,7 +250,7 @@ export function OperationalInventoryPage({
       filterPanelOpen={filterPanelOpen}
       onFilterToggle={() => setFilterPanelOpen((v) => !v)}
       activeFilterCount={activeFilterCount}
-      enableRowSelection={true}
+      enableRowSelection={false}
       rowSelection={rowSelection}
       onRowSelectionChange={onRowSelectionChange}
       expandedRowKeys={expandedStockRowKeys}

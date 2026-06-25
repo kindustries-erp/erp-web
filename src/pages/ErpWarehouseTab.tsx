@@ -11,18 +11,16 @@ import {
   PackageMinus,
   Trash2,
   XCircle,
-  RefreshCcw,
   Printer,
+  Eye,
 } from "lucide-react";
-import { cn } from "@/shared/utils";
 import { formatGMT7 } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-import { StandardTable } from "@/shared/components/StandardTable";
-import { type DataTableColumn } from "@/shared/components/DataTable";
-import { FilterButton, FilterPanel } from "@/shared/components/FilterPanel";
+import type { DataTableColumn } from "@/shared/components/DataTable";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { ReceiptText } from "lucide-react";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -53,11 +51,7 @@ import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi"
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export function ErpWarehouseTab({
-  setActions,
-}: {
-  setActions?: (node: React.ReactNode) => void;
-}) {
+export function ErpWarehouseTab() {
   const t = useT();
   const canReadReceipts = useHasPermission("goods_receipts", "read");
   const canReadIssues = useHasPermission("goods_issues", "read");
@@ -429,135 +423,108 @@ export function ErpWarehouseTab({
     [],
   );
 
-  // ── GR drawer actions (now delegated — kept for the URL-driven open logic below)
-
-  useEffect(() => {
-    if (setActions) {
-      setActions(
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="px-3 py-2"
-            disabled={loading}
-            onClick={() => void vouchersQuery.refetch()}
-          >
-            <RefreshCcw
-              className={cn("h-3.5 w-3.5 mr-1.5", loading && "animate-spin")}
-            />
-            <span>{t("Tải lại")}</span>
-          </Button>
-          <FilterButton
-            onClick={() => filterPanel.togglePanel()}
-            activeCount={filterPanel.activeFilterCount}
-          />
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-            onClick={() => grDrawer.openCreate()}
-          >
-            <PackagePlus className="h-3.5 w-3.5" />
-            {t("Nhập kho")}
-          </button>
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg hover:bg-primary/90"
-            onClick={() => giDrawer.openCreate()}
-          >
-            <PackageMinus className="h-3.5 w-3.5" />
-            {t("Xuất kho")}
-          </button>
-        </div>,
-      );
-    }
-  }, [setActions, loading, filterPanel.activeFilterCount]);
+  // Actions are now passed to SpreadsheetPageTemplate
 
   if (!canReadReceipts && !canReadIssues) return <Forbidden />;
 
   return (
     <>
-      {loadError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {loadError}
-        </div>
-      )}
-
-      <div className="flex items-start flex-1 min-h-0">
-        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
-          <StandardTable<WarehouseRow>
-            items={rows}
-            columns={columns}
-            getRowKey={(r) => `${r.type}-${r.id}`}
-            loading={loading}
-            sortArray={
-              activeSortKey
-                ? [
-                    activeSortOrder === "desc"
-                      ? `-${activeSortKey}`
-                      : activeSortKey,
-                  ]
-                : undefined
+      <SpreadsheetPageTemplate
+        title={t("inventory.tabVouchers")}
+        desc={t("inventory.descVouchers")}
+        icon={<ReceiptText className="h-5 w-5" />}
+        tableId="inventory-vouchers-table"
+        items={rows}
+        columns={columns}
+        getRowKey={(r) => `${r.type}-${r.id}`}
+        loading={loading}
+        error={loadError}
+        emptyLabel={t("Chưa có chứng từ kho.")}
+        minWidth={1000}
+        sortArray={
+          activeSortKey
+            ? [activeSortOrder === "desc" ? `-${activeSortKey}` : activeSortKey]
+            : undefined
+        }
+        onSort={(key) => {
+          if (activeSortKey === key) {
+            if (activeSortOrder === "asc") {
+              setActiveSortOrder("desc");
+              setSortOrder("desc");
+            } else {
+              setActiveSortKey(null);
+              setSortBy("date");
+              setSortOrder("desc");
             }
-            onSort={(key) => {
-              if (activeSortKey === key) {
-                if (activeSortOrder === "asc") {
-                  // lần 2: chuyển sang desc
-                  setActiveSortOrder("desc");
-                  setSortOrder("desc");
-                } else {
-                  // lần 3: reset về default
-                  setActiveSortKey(null);
-                  setSortBy("date");
-                  setSortOrder("desc");
-                }
+          } else {
+            setActiveSortKey(key);
+            setActiveSortOrder("asc");
+            setSortBy(key);
+            setSortOrder("asc");
+          }
+        }}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={totalPages}
+        onPage={setPage}
+        onPageSize={(v) => {
+          setPage(1);
+          setPageSize(v);
+        }}
+        onRefresh={() => void vouchersQuery.refetch()}
+        filterConfig={filterConfig}
+        filterState={filterPanel}
+        filterPanelOpen={filterPanel.panelOpen}
+        onFilterToggle={() => filterPanel.togglePanel()}
+        activeFilterCount={filterPanel.activeFilterCount}
+        rowActions={(row) => [
+          {
+            label: t("Chi tiết"),
+            icon: <Eye className="h-3.5 w-3.5" />,
+            onClick: () => {
+              if (row.type === "receipt") {
+                grDrawer.openDetail(row.id);
               } else {
-                // click column mới: bắt đầu từ asc
-                setActiveSortKey(key);
-                setActiveSortOrder("asc");
-                setSortBy(key);
-                setSortOrder("asc");
+                giDrawer.openDetail(row.id);
               }
-            }}
-            emptyLabel={t("Chưa có chứng từ kho.")}
-            minWidth={1000}
-            loadingRows={8}
-            actions={(row) => [
-              {
-                label: t("common.print"),
-                icon: <Printer className="h-3.5 w-3.5" />,
-                hidden: row.status === "DRAFT",
-                disabled: !!printTargetId,
-                onClick: () => handlePrintRow(row),
-              },
-              {
-                label: t("Xóa"),
-                icon: <Trash2 className="h-3.5 w-3.5" />,
-                variant: "danger",
-                hidden: row.status !== "DRAFT",
-                onClick: () => setDeleteTarget(row),
-              },
-              {
-                label:
-                  grCancelId === row.id ? t("Đang hủy...") : t("Hủy phiếu"),
-                icon: <XCircle className="h-3.5 w-3.5" />,
-                variant: "danger",
-                hidden: row.type !== "receipt" || row.status !== "POSTED",
-                onClick: () => setCancelTarget(row),
-              },
-            ]}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPage={setPage}
-            onPageSize={(v) => {
-              setPage(1);
-              setPageSize(v);
-            }}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filterPanel} />
-      </div>
+            },
+          },
+          {
+            label: t("common.print"),
+            icon: <Printer className="h-3.5 w-3.5" />,
+            hidden: row.status === "DRAFT",
+            disabled: !!printTargetId,
+            onClick: () => handlePrintRow(row),
+          },
+          {
+            label: t("Xóa"),
+            icon: <Trash2 className="h-3.5 w-3.5" />,
+            variant: "danger",
+            hidden: row.status !== "DRAFT",
+            onClick: () => setDeleteTarget(row),
+          },
+          {
+            label: grCancelId === row.id ? t("Đang hủy...") : t("Hủy phiếu"),
+            icon: <XCircle className="h-3.5 w-3.5" />,
+            variant: "danger",
+            hidden: row.type !== "receipt" || row.status !== "POSTED",
+            onClick: () => setCancelTarget(row),
+          },
+        ]}
+        createActions={[
+          {
+            label: t("Nhập kho"),
+            icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
+            onClick: () => grDrawer.openCreate(),
+          },
+          {
+            label: t("Xuất kho"),
+            icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
+            onClick: () => giDrawer.openCreate(),
+          },
+        ]}
+      />
 
       <ConfirmModal
         open={!!deleteTarget}
