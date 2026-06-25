@@ -1,9 +1,8 @@
-import { useMemo, useEffect, useState } from "react";
-import { Eye, Network } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Eye, Network, Package } from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
-import { StandardTable } from "@/shared/components/StandardTable";
-import { FilterPanel } from "@/shared/components/FilterPanel";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { InventoryItemFormDrawer } from "@/modules/inventory-core/components/InventoryItemFormDrawer";
 import { ConnectionGraphDrawer } from "@/modules/purchase-orders-core/components/ConnectionGraphDrawer";
 import { useInventoryGraph } from "@/modules/inventory-core/hooks/useInventoryGraph";
@@ -19,7 +18,6 @@ import {
 } from "@/modules/production-core/api/productionCoreApi";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
-import { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
 import { useT } from "@/core/i18n";
@@ -45,7 +43,6 @@ interface OperationalInventoryPageProps {
   onOpenCreateItem: () => void;
   onCloseCreateItem: () => void;
   onRefetch: () => void;
-  setActions?: (node: React.ReactNode) => void;
   rowSelection: Record<string, boolean>;
   onRowSelectionChange: (updater: Updater<Record<string, boolean>>) => void;
   bulkActionsNode?: React.ReactNode;
@@ -72,7 +69,6 @@ export function OperationalInventoryPage({
   onOpenCreateItem,
   onCloseCreateItem,
   onRefetch,
-  setActions,
   rowSelection,
   onRowSelectionChange,
   bulkActionsNode,
@@ -192,140 +188,104 @@ export function OperationalInventoryPage({
     };
   }, [stockItems, t]);
 
-  useEffect(() => {
-    if (setActions) {
-      setActions(
-        <OperationalTableActions
-          loading={loading}
-          onRefresh={onRefetch}
-          onFilterToggle={() => setFilterPanelOpen((v) => !v)}
-          activeFilterCount={activeFilterCount}
-          onCreate={onOpenCreateItem}
-          bulkActionsNode={bulkActionsNode}
-          portalId="inventory-stock-table"
-        />,
-      );
-    }
-  }, [
-    setActions,
-    loading,
-    onRefetch,
-    setFilterPanelOpen,
-    activeFilterCount,
-    bulkActionsNode,
-  ]);
-
   return (
-    <>
-      {error ? (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-      <div className="flex items-start flex-1 min-h-0">
-        <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
-          <StandardTable
-            tableId="inventory-stock-table"
-            defaultColumnOrder={["__actions", "__expand", "__selection"]}
-            enableColumnVisibility={true}
-            items={stockItems}
-            columns={stockColumns}
-            getRowKey={(row) =>
-              `${row.inventory_item_id}-${row.branch_id || "all"}`
-            }
-            loading={loading}
-            error={error}
-            emptyLabel={t("Chưa có tồn kho.")}
-            minWidth={1300}
-            enableColumnResizing={true}
-            enableRowSelection={true}
-            rowSelection={rowSelection}
-            onRowSelectionChange={onRowSelectionChange}
-            variant="spreadsheet"
-            expandedRowKeys={expandedStockRowKeys}
-            summaryRow={summaryRow}
-            renderSubRow={(row) => (
-              <InventoryTimelineBlock
-                itemId={row.inventory_item_id}
-                loadingId={movLoadingId}
-                error={movError}
-                data={movMap[row.inventory_item_id]}
-              />
-            )}
-            sortArray={inventorySort ? [inventorySort] : undefined}
-            onSort={(key) => toggleInventorySort(key)}
-            actions={(row) => [
-              {
-                label: t("inventory.action.details"),
-                icon: <Eye size={14} />,
-                onClick: () => onViewItem(row.inventory_item_id),
-              },
-              ...(isGraphAdmin
-                ? [
-                    {
-                      label: t("Đồ thị liên kết"),
-                      icon: <Network size={14} />,
-                      onClick: () => {
-                        setGraphItemId(row.inventory_item_id);
-                        setGraphOpen(true);
-                        void inventoryGraph.loadGraph(row.inventory_item_id);
-                      },
-                    },
-                  ]
-                : []),
-            ]}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPage={setPage}
-            onPageSize={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-          />
-        </div>
-        <FilterPanel
-          config={inventoryFilterConfig}
-          filter={{
-            state: {
-              period: "",
-              dateFrom: "",
-              dateTo: "",
-              channel: "",
-              search: searchInput,
-              amountMin: "",
-              amountMax: "",
-              status: "",
-              counterpartySource: "",
-              custom: { itemType: itemTypeFilter },
-            },
-            inputs: { search: searchInput, amountMin: "", amountMax: "" },
-            panelOpen: filterPanelOpen,
-            openPanel: () => setFilterPanelOpen(true),
-            closePanel: () => setFilterPanelOpen(false),
-            togglePanel: () => setFilterPanelOpen((v) => !v),
-            setPeriod: () => {},
-            setDateFrom: () => {},
-            setDateTo: () => {},
-            setChannel: () => {},
-            setSearchInput: (v: string) => setSearchInput(v),
-            setAmountMinInput: () => {},
-            setAmountMaxInput: () => {},
-            setStatus: () => {},
-            setCounterpartySource: () => {},
-            setCustom: (key: string, v: string) => {
-              if (key === "itemType") {
-                setItemTypeFilter(v);
-                setPage(1);
-              }
-            },
-            resetAll: resetAllFilters,
-            hasActiveFilter: activeFilterCount > 0,
-            activeFilterCount,
-          }}
+    <SpreadsheetPageTemplate
+      title={t("inventory.tabStock")}
+      desc={t("inventory.descStock")}
+      icon={<Package className="h-5 w-5" />}
+      tableId="inventory-stock-table"
+      loading={loading}
+      error={error}
+      items={stockItems}
+      columns={stockColumns}
+      getRowKey={(row: InventoryStockRow) =>
+        `${row.inventory_item_id}-${row.branch_id || "all"}`
+      }
+      emptyLabel={t("Chưa có tồn kho.")}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPage={setPage}
+      onPageSize={(size: number) => {
+        setPageSize(size);
+        setPage(1);
+      }}
+      onRefresh={onRefetch}
+      onCreate={onOpenCreateItem}
+      bulkActionsNode={bulkActionsNode}
+      filterConfig={inventoryFilterConfig}
+      filterState={{
+        state: {
+          period: "",
+          dateFrom: "",
+          dateTo: "",
+          channel: "",
+          search: searchInput,
+          amountMin: "",
+          amountMax: "",
+          status: "",
+          counterpartySource: "",
+          custom: { itemType: itemTypeFilter },
+        },
+        inputs: { search: searchInput, amountMin: "", amountMax: "" },
+        setPeriod: () => {},
+        setDateFrom: () => {},
+        setDateTo: () => {},
+        setChannel: () => {},
+        setSearchInput: (v: string) => setSearchInput(v),
+        setAmountMinInput: () => {},
+        setAmountMaxInput: () => {},
+        setStatus: () => {},
+        setCounterpartySource: () => {},
+        setCustom: (key: string, v: string) => {
+          if (key === "itemType") {
+            setItemTypeFilter(v);
+            setPage(1);
+          }
+        },
+        resetAll: resetAllFilters,
+        hasActiveFilter: activeFilterCount > 0,
+      }}
+      filterPanelOpen={filterPanelOpen}
+      onFilterToggle={() => setFilterPanelOpen((v) => !v)}
+      activeFilterCount={activeFilterCount}
+      enableRowSelection={true}
+      rowSelection={rowSelection}
+      onRowSelectionChange={onRowSelectionChange}
+      expandedRowKeys={expandedStockRowKeys}
+      renderSubRow={(row: InventoryStockRow) => (
+        <InventoryTimelineBlock
+          itemId={row.inventory_item_id}
+          loadingId={movLoadingId}
+          error={movError}
+          data={movMap[row.inventory_item_id]}
         />
-      </div>
+      )}
+      sortArray={inventorySort ? [inventorySort] : undefined}
+      onSort={(key: string) => toggleInventorySort(key)}
+      rowActions={(row: InventoryStockRow) => [
+        {
+          label: t("inventory.action.details"),
+          icon: <Eye size={14} />,
+          onClick: () => onViewItem(row.inventory_item_id),
+        },
+        ...(isGraphAdmin
+          ? [
+              {
+                label: t("Đồ thị liên kết"),
+                icon: <Network size={14} />,
+                onClick: () => {
+                  setGraphItemId(row.inventory_item_id);
+                  setGraphOpen(true);
+                  void inventoryGraph.loadGraph(row.inventory_item_id);
+                },
+              },
+            ]
+          : []),
+      ]}
+      summaryRow={summaryRow}
+    >
       <InventoryItemFormDrawer
         open={!!viewingItemId || creatingItem}
         onClose={() => {
@@ -377,6 +337,6 @@ export function OperationalInventoryPage({
         onSaved={() => {}}
         drawerState={poDrawer}
       />
-    </>
+    </SpreadsheetPageTemplate>
   );
 }

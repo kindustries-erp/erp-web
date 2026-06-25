@@ -12,11 +12,7 @@ import { Button } from "@/shared/components/ui/Button";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, Download, Trash } from "lucide-react";
 
-export function InventoryListPage({
-  setActions,
-}: {
-  setActions?: (node: React.ReactNode) => void;
-}) {
+export function InventoryListPage() {
   const variant = "inventory" as const;
 
   const listStore = useOperationalListStore();
@@ -140,7 +136,6 @@ export function InventoryListPage({
   return (
     <>
       <OperationalInventoryPage
-        setActions={setActions}
         loading={loading}
         error={error}
         stockItems={stockItems}
