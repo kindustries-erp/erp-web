@@ -1,5 +1,5 @@
 import { InventoryListPage } from "@/modules/operational/components/InventoryListPage";
 
-export default function InventoryStockPage() {
+export function InventoryStockPage() {
   return <InventoryListPage />;
 }
