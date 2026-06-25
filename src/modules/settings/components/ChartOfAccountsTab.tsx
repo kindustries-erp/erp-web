@@ -227,19 +227,23 @@ export function TKTab({
       key: "account_code",
       header: t("settings.tk.headers.accountCode"),
       cell: (c) => c.account_code,
-      className: "font-mono text-[color:var(--muted-fg)]",
+      className: "font-mono text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-16",
     },
     {
       key: "account_name",
       header: t("settings.tk.headers.accountName"),
       cell: (c) => c.account_name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-40",
     },
     {
       key: "account_type",
       header: t("settings.tk.headers.accountType"),
+      className: "text-left",
+      headerClassName: "text-center",
       cell: (c) =>
         ACC_TYPES.find((a) => a.value === c.account_type)?.label ??
         c.account_type,
@@ -252,20 +256,28 @@ export function TKTab({
         NORMAL_BALANCE_OPTS.find((o) => o.value === c.normal_balance)?.label ??
         c.normal_balance ??
         "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "level",
       header: t("settings.tk.headers.level"),
       cell: (c) => String(c.level ?? "—"),
-      className: "text-center",
+      className: "text-right",
+      headerClassName: "text-center",
       skeletonClassName: "w-8",
     },
     {
       key: "is_cash_account",
       header: t("settings.tk.headers.cashAccount"),
-      cell: (c) => <TagCell active={!!c.is_cash_account} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (c) => (
+        <div className="flex justify-center w-full">
+          <TagCell active={!!c.is_cash_account} />
+        </div>
+      ),
       skeletonClassName: "w-16",
     },
   ];

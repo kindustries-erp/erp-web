@@ -157,28 +157,59 @@ export function ErpBusinessPartnersPage({
   );
 
   const columns: DataTableColumn<ErpBusinessPartner>[] = [
-    { key: "code", header: "Mã", cell: (item) => item.code || "—" },
-    { key: "name", header: "Tên", cell: (item) => item.name || "—" },
+    {
+      key: "code",
+      header: "Mã",
+      cell: (item) => item.code || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "name",
+      header: "Tên",
+      cell: (item) => item.name || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
     {
       key: "contactName",
       header: "Người liên hệ",
       cell: (item) => item.contactName || "—",
+      className: "text-left",
+      headerClassName: "text-center",
     },
-    { key: "phone", header: "SĐT", cell: (item) => item.phone || "—" },
-    { key: "email", header: "Email", cell: (item) => item.email || "—" },
+    {
+      key: "phone",
+      header: "SĐT",
+      cell: (item) => item.phone || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "email",
+      header: "Email",
+      cell: (item) => item.email || "—",
+      className: "text-left",
+      headerClassName: "text-center",
+    },
     {
       key: "status",
       header: "Trạng thái",
-      cell: (item) =>
-        item.status === "ACTIVE" ? (
-          <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
-            Hoạt động
-          </span>
-        ) : (
-          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-            Ngưng
-          </span>
-        ),
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (item) => (
+        <div className="flex justify-center w-full">
+          {item.status === "ACTIVE" ? (
+            <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+              Hoạt động
+            </span>
+          ) : (
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              Ngưng
+            </span>
+          )}
+        </div>
+      ),
     },
   ];
 

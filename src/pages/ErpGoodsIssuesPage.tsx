@@ -442,30 +442,42 @@ export function ErpGoodsIssuesPage() {
       key: "issueNo",
       header: "Số phiếu xuất",
       cell: (item) => <span className="font-medium">{item.issueNo}</span>,
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
       key: "issueDate",
       header: "Ngày xuất",
       cell: (item) => fmtDate(item.issueDate),
+      className: "text-right",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "issueType",
       header: "Loại xuất",
       cell: (item) => item.issueType || "—",
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-16",
     },
     {
       key: "customerName",
       header: "Khách hàng",
       cell: (item) => item.customerName || item.customerId || "—",
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-36",
     },
     {
       key: "status",
       header: "Trạng thái",
-      cell: (item) => item.status || "—",
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (item) => (
+        <div className="flex justify-center w-full">{item.status || "—"}</div>
+      ),
       skeletonClassName: "w-16",
     },
   ];

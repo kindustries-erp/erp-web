@@ -64,13 +64,15 @@ export function TrackedGoodsPage({
       {
         key: "itemCode",
         header: t("Mã vật tư"),
-        className: "align-middle min-w-[220px]",
+        className: "align-middle min-w-[220px] text-left",
+        headerClassName: "text-center",
         cell: (row) => row.item?.sku || "—",
       },
       {
         key: "itemName",
         header: t("Tên vật tư"),
-        className: "align-middle min-w-[250px]",
+        className: "align-middle min-w-[250px] text-left",
+        headerClassName: "text-center",
         cell: (row) => (
           <div>
             <div className="font-medium">{row.item?.itemName || "—"}</div>
@@ -83,7 +85,8 @@ export function TrackedGoodsPage({
       {
         key: "serialNo",
         header: t("Mã Tracking / Serial"),
-        className: "align-middle min-w-[200px]",
+        className: "align-middle min-w-[200px] text-left",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "serial_no",
         cell: (row) => {
@@ -111,7 +114,8 @@ export function TrackedGoodsPage({
       {
         key: "createdAt",
         header: t("Ngày ghi nhận"),
-        className: "align-middle min-w-[160px]",
+        className: "align-middle min-w-[160px] text-right",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "created_at",
         cell: (row) => (

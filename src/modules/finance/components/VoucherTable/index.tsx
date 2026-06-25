@@ -123,20 +123,28 @@ export function VoucherTable({
         </SortHeader>
       ),
       cell: (v) => formatGMT7(v.document_date, "datetime"),
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-right",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "voucher_no",
       header: t("voucher.table.colNo"),
       cell: (v) => v.voucher_no,
-      className: "font-mono font-semibold",
+      className: "font-mono font-semibold text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "voucher_type",
       header: t("voucher.table.colType"),
-      cell: (v) => <VoucherTypeBadge type={v.voucher_type} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (v) => (
+        <div className="flex justify-center w-full">
+          <VoucherTypeBadge type={v.voucher_type} />
+        </div>
+      ),
       skeletonClassName: "w-16",
     },
     {
@@ -146,7 +154,8 @@ export function VoucherTable({
         channelNameResolver(
           v.cash_fund_id ?? v.company_bank_account_id ?? null,
         ),
-      className: "text-[color:var(--muted-fg)] whitespace-nowrap",
+      className: "text-[color:var(--muted-fg)] whitespace-nowrap text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
@@ -171,13 +180,17 @@ export function VoucherTable({
           </span>
         );
       },
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-32",
     },
     {
       key: "description",
       header: t("voucher.table.colDesc"),
       cell: (v) => v.description,
-      className: "text-[color:var(--muted-fg)] max-w-[180px] truncate",
+      className:
+        "text-[color:var(--muted-fg)] max-w-[180px] truncate text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-36",
     },
     {
@@ -193,21 +206,31 @@ export function VoucherTable({
         </SortHeader>
       ),
       cell: (v) => Number(v.amount).toLocaleString("vi-VN"),
-      headerClassName: "text-right",
+      headerClassName: "text-center",
       className: "text-right font-mono",
       skeletonClassName: "w-20 ml-auto",
     },
     {
       key: "status",
       header: t("voucher.table.colStatus"),
-      cell: (v) => <StatusBadge status={v.status} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (v) => (
+        <div className="flex justify-center w-full">
+          <StatusBadge status={v.status} />
+        </div>
+      ),
       skeletonClassName: "w-16",
     },
     {
       key: "attachment",
       header: t("voucher.table.colAttachment"),
+      className: "text-center",
+      headerClassName: "text-center",
       cell: (v) => (
-        <AttachmentCell attachments={voucherAttachments[v.id] ?? []} />
+        <div className="flex justify-center w-full">
+          <AttachmentCell attachments={voucherAttachments[v.id] ?? []} />
+        </div>
       ),
       skeletonClassName: "w-16",
     },

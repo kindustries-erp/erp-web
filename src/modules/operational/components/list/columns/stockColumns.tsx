@@ -80,39 +80,7 @@ export function useStockColumns({
           );
         },
       },
-      {
-        key: "item_type",
-        header: t("inventory.table.columns.type"),
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        sortable: true,
-        sortKey: "item_type",
-        size: 150,
-        enableResizing: true,
-        cell: (row) => {
-          const itemType = row.item_type;
-          let cls = "bg-slate-100 text-slate-600";
-          if (itemType === "RAW") cls = "bg-blue-100 text-blue-700";
-          else if (itemType === "FG") cls = "bg-emerald-100 text-emerald-700";
-          else if (itemType === "WIP") cls = "bg-amber-100 text-amber-700";
-          const typeText = itemType
-            ? t(
-                `inventory.itemTypes.${itemType.toLowerCase() as "raw" | "fg" | "wip"}`,
-              )
-            : "—";
-          return (
-            <div className="w-full text-left">
-              <Tooltip content={typeText} side="top">
-                <span
-                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-full ${cls}`}
-                >
-                  {typeText}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
+
       {
         key: "received_qty",
         header: t("inventory.table.columns.in"),
@@ -170,14 +138,14 @@ export function useStockColumns({
       {
         key: "last",
         header: t("inventory.table.columns.lastTx"),
-        className: "align-middle whitespace-nowrap text-left",
+        className: "align-middle whitespace-nowrap text-right",
         headerClassName: "text-center",
         size: 150,
         enableResizing: true,
         cell: (row) => {
           if (!row.last_transaction_date) return "—";
           return (
-            <div className="w-full text-left">
+            <div className="w-full text-right">
               <Tooltip
                 content={formatGMT7(row.last_transaction_date, "datetime-sec")}
                 side="top"
@@ -191,16 +159,49 @@ export function useStockColumns({
         },
       },
       {
+        key: "item_type",
+        header: t("inventory.table.columns.type"),
+        className: "align-middle text-center",
+        headerClassName: "text-center",
+        sortable: true,
+        sortKey: "item_type",
+        size: 150,
+        enableResizing: true,
+        cell: (row) => {
+          const itemType = row.item_type;
+          let cls = "bg-slate-100 text-slate-600";
+          if (itemType === "RAW") cls = "bg-blue-100 text-blue-700";
+          else if (itemType === "FG") cls = "bg-emerald-100 text-emerald-700";
+          else if (itemType === "WIP") cls = "bg-amber-100 text-amber-700";
+          const typeText = itemType
+            ? t(
+                `inventory.itemTypes.${itemType.toLowerCase() as "raw" | "fg" | "wip"}`,
+              )
+            : "—";
+          return (
+            <div className="w-full text-center">
+              <Tooltip content={typeText} side="top">
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold truncate max-w-full ${cls}`}
+                >
+                  {typeText}
+                </span>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
         key: "status",
         header: t("inventory.table.columns.status"),
-        className: "align-middle text-left",
+        className: "align-middle text-center",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "status",
         size: 150,
         enableResizing: true,
         cell: (row) => (
-          <div className="w-full text-left">
+          <div className="w-full text-center">
             <span
               className={
                 row.status === "ACTIVE" || !row.status

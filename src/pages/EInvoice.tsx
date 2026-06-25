@@ -672,8 +672,8 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "invoice_date",
         header: "Ngày HĐ",
-        headerClassName: "pl-6",
-        className: "pl-6 text-[color:var(--muted-fg)]",
+        headerClassName: "text-center pl-6",
+        className: "pl-6 text-[color:var(--muted-fg)] text-right",
         cell: (inv) =>
           inv.invoice_date
             ? new Date(inv.invoice_date).toLocaleDateString("vi-VN")
@@ -682,13 +682,15 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "document_no",
         header: "Mã chứng từ",
-        className: "font-medium",
+        className: "font-medium text-left",
+        headerClassName: "text-center",
         cell: (inv) => inv.document_no || "-",
       },
       {
         key: "invoice_no",
         header: "Số hóa đơn",
-        className: "font-mono",
+        className: "font-mono text-left",
+        headerClassName: "text-center",
         cell: (inv) => (
           <div className="flex items-center gap-2">
             <span>{inv.invoice_no || inv.invoiceNo || "-"}</span>
@@ -703,23 +705,29 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "source",
         header: "Nguồn",
+        className: "text-center",
+        headerClassName: "text-center",
         cell: (inv) => (
-          <Badge variant="outline">
-            {inv.source === "TAX_PORTAL" ? "Cổng thuế" : "Viettel v2.49"}
-          </Badge>
+          <div className="flex justify-center w-full">
+            <Badge variant="outline">
+              {inv.source === "TAX_PORTAL" ? "Cổng thuế" : "Viettel v2.49"}
+            </Badge>
+          </div>
         ),
       },
       {
         key: "partner",
         header: partnerHeader,
-        className: "max-w-[200px] truncate",
+        className: "max-w-[200px] truncate text-left",
+        headerClassName: "text-center",
         cell: (inv) =>
           mode === "input" ? inv.seller_name || "-" : inv.buyer_name || "-",
       },
       {
         key: "tax_code",
         header: taxHeader,
-        className: "font-mono text-xs",
+        className: "font-mono text-xs text-left",
+        headerClassName: "text-center",
         cell: (inv) =>
           mode === "input"
             ? inv.seller_tax_code || "-"
@@ -728,23 +736,27 @@ const HoaDonDienTu: React.FC = () => {
       {
         key: "total_amount",
         header: "Tổng tiền",
-        headerClassName: "text-right",
+        headerClassName: "text-center",
         className: "text-right font-mono",
         cell: (inv) => formatMoney(inv.total_amount),
       },
       {
         key: "status",
         header: "Trạng thái",
+        className: "text-center",
+        headerClassName: "text-center",
         cell: (inv) => (
-          <Badge variant={statusVariant(inv.status)}>
-            {statusLabel(inv.status)}
-          </Badge>
+          <div className="flex justify-center w-full">
+            <Badge variant={statusVariant(inv.status)}>
+              {statusLabel(inv.status)}
+            </Badge>
+          </div>
         ),
       },
       {
         key: "detail",
         header: "Chi tiết",
-        headerClassName: "text-right pr-6",
+        headerClassName: "text-center pr-6",
         className:
           "text-right pr-6 text-[10px] text-muted-foreground leading-tight",
         cell: (inv) =>

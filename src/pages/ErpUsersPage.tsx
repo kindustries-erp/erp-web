@@ -219,11 +219,15 @@ export function ErpUsersPage() {
       {
         key: "email",
         header: "Email",
+        className: "text-left",
+        headerClassName: "text-center",
         cell: (item) => <span className="font-medium">{item.email}</span>,
       },
       {
         key: "employee",
         header: "Employee linked",
+        className: "text-left",
+        headerClassName: "text-center",
         cell: (item) =>
           item.employee
             ? `${item.employee.fullName} (${item.employee.employeeCode})`
@@ -232,21 +236,27 @@ export function ErpUsersPage() {
       {
         key: "lastLoginAt",
         header: t("Lần đăng nhập cuối"),
+        className: "text-right",
+        headerClassName: "text-center",
         cell: (item) => formatDate(item.lastLoginAt),
       },
       {
         key: "status",
         header: t("Trạng thái"),
+        className: "text-center",
+        headerClassName: "text-center",
         cell: (item) => (
-          <span
-            className={
-              item.status === "ACTIVE"
-                ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-            }
-          >
-            {item.status}
-          </span>
+          <div className="flex justify-center w-full">
+            <span
+              className={
+                item.status === "ACTIVE"
+                  ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                  : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+              }
+            >
+              {item.status}
+            </span>
+          </div>
         ),
       },
     ],

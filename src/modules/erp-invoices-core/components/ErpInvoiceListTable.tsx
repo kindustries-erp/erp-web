@@ -66,23 +66,23 @@ export function ErpInvoiceListTable({
       key: "invoiceDate",
       header: t("invoiceDate", "Ngày HĐ"),
       sortable: true,
-      headerClassName: "w-[100px]",
-      className: "w-[100px]",
+      headerClassName: "text-center w-[100px]",
+      className: "text-right w-[100px]",
       cell: (inv) => inv.invoiceDate,
     },
     {
       key: "serialNo",
       header: t("serialNo", "Ký hiệu"),
-      headerClassName: "w-[100px]",
-      className: "text-muted-foreground w-[100px]",
+      headerClassName: "text-center w-[100px]",
+      className: "text-muted-foreground w-[100px] text-left",
       cell: (inv) => inv.serialNo || "—",
     },
     {
       key: "invoiceNo",
       header: t("invoiceNo", "Số HĐ"),
       sortable: true,
-      headerClassName: "w-[130px]",
-      className: "font-medium text-primary w-[130px]",
+      headerClassName: "text-center w-[130px]",
+      className: "font-medium text-primary w-[130px] text-left",
       cell: (inv) => (
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -130,8 +130,8 @@ export function ErpInvoiceListTable({
         direction === "IN" ? t("seller", "Bên bán") : t("buyer", "Bên mua"),
       sortable: true,
       sortKey: direction === "IN" ? "sellerName" : "buyerName",
-      headerClassName: "w-[320px]",
-      className: "w-[320px]",
+      headerClassName: "text-center w-[320px]",
+      className: "w-[320px] text-left",
       cell: (inv) => {
         const text =
           direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
@@ -145,8 +145,8 @@ export function ErpInvoiceListTable({
     {
       key: "taxCode",
       header: t("taxCode", "MST"),
-      headerClassName: "w-[110px]",
-      className: "text-muted-foreground text-xs w-[110px]",
+      headerClassName: "text-center w-[110px]",
+      className: "text-muted-foreground text-xs w-[110px] text-left",
       cell: (inv) =>
         direction === "IN" ? inv.sellerTaxCode || "—" : inv.buyerTaxCode || "—",
     },
@@ -154,6 +154,8 @@ export function ErpInvoiceListTable({
       key: "description",
       header: t("description", "Diễn giải"),
       sortable: true,
+      className: "text-left",
+      headerClassName: "text-center",
       cell: (row) => (
         <div className="max-w-[200px] truncate" title={row.description || ""}>
           {row.description || "—"}
@@ -164,21 +166,21 @@ export function ErpInvoiceListTable({
       key: "preVatAmount",
       header: t("preVatAmount", "Trước VAT"),
       sortable: true,
-      headerClassName: "text-right w-[110px]",
+      headerClassName: "text-center w-[110px]",
       className: "text-right w-[110px]",
       cell: (row) => fmtAmt(row.preVatAmount),
     },
     {
       key: "vatAmount",
       header: t("vatAmount", "Thuế VAT"),
-      headerClassName: "text-right w-[100px]",
+      headerClassName: "text-center w-[100px]",
       className: "text-right w-[100px]",
       cell: (inv) => fmtAmt(inv.vatAmount),
     },
     {
       key: "discountAmount",
       header: t("discountAmount", "Chiết khấu"),
-      headerClassName: "text-right w-[100px]",
+      headerClassName: "text-center w-[100px]",
       className: "text-right w-[100px]",
       cell: (inv) => fmtAmt(inv.discountAmount),
     },
@@ -186,7 +188,7 @@ export function ErpInvoiceListTable({
       key: "totalAmount",
       header: t("totalAmount", "Thành tiền"),
       sortable: true,
-      headerClassName: "text-right w-[120px]",
+      headerClassName: "text-center w-[120px]",
       className: "text-right font-semibold w-[120px]",
       cell: (inv) => fmtAmt(inv.totalAmount),
     },

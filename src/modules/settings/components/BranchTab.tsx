@@ -40,12 +40,26 @@ export function BranchTab() {
     load();
   }, []);
   const cols: DataTableColumn<Branch>[] = [
-    { key: "code", header: "Mã", cell: (b) => b.code },
-    { key: "name", header: "Tên chi nhánh", cell: (b) => b.name },
+    {
+      key: "code",
+      header: "Mã",
+      cell: (b) => b.code,
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "name",
+      header: "Tên chi nhánh",
+      cell: (b) => b.name,
+      className: "text-left",
+      headerClassName: "text-center",
+    },
     {
       key: "is_active",
       header: "Trạng thái",
       cell: (b) => (b.is_active ? "Hoạt động" : "Ngưng"),
+      className: "text-left",
+      headerClassName: "text-center",
     },
   ];
   return (

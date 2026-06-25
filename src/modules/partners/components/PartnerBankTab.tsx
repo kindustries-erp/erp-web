@@ -188,47 +188,59 @@ export function PartnerBankTab() {
       key: "partner",
       header: "Đối tác",
       cell: (b) => partnerName(b.business_partner_id),
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "bank_name",
       header: t("doitac.headers.bankName"),
       cell: (b) => b.bank_name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
     },
     {
       key: "account_number",
       header: t("doitac.headers.accountNumber"),
       cell: (b) => b.account_number,
-      className: "font-mono",
+      className: "font-mono text-left",
+      headerClassName: "text-center",
     },
     {
       key: "account_holder",
       header: t("doitac.headers.accountHolder"),
       cell: (b) => b.account_holder,
+      className: "text-left",
+      headerClassName: "text-center",
     },
     {
       key: "bank_branch",
       header: t("doitac.headers.bankBranch"),
       cell: () => "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "currency",
       header: t("doitac.headers.currency"),
       cell: (b) => b.currency ?? "VND",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "is_default",
       header: t("doitac.headers.isDefault"),
       cell: (b) =>
         b.is_default ? (
-          <span className="text-[color:var(--approve-fg)] font-bold">✓</span>
+          <div className="flex justify-center w-full">
+            <span className="text-[color:var(--approve-fg)] font-bold">✓</span>
+          </div>
         ) : (
-          <span className="text-[color:var(--faint)]">—</span>
+          <div className="flex justify-center w-full">
+            <span className="text-[color:var(--faint)]">—</span>
+          </div>
         ),
       className: "text-center",
+      headerClassName: "text-center",
     },
   ];
 

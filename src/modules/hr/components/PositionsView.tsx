@@ -94,6 +94,8 @@ export function ChucVuView(p: any) {
           {pos.position_code}
         </span>
       ),
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-16",
     },
     {
@@ -104,6 +106,8 @@ export function ChucVuView(p: any) {
           {pos.position_name}
         </span>
       ),
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-32",
     },
     {
@@ -114,6 +118,8 @@ export function ChucVuView(p: any) {
           {deptName(pos.department_id)}
         </span>
       ),
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-24",
     },
     {
@@ -135,17 +141,21 @@ export function ChucVuView(p: any) {
       key: "status",
       header: t("chucvu.headers.status"),
       cell: (pos) => (
-        <span
-          className={cn(
-            "inline-flex items-center px-[8px] py-[3px] rounded-[20px] text-[10px] font-medium",
-            pos.is_active
-              ? "bg-approve-bg text-approve-fg"
-              : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
-          )}
-        >
-          {pos.is_active ? t("status.active") : t("status.inactive")}
-        </span>
+        <div className="flex justify-center w-full">
+          <span
+            className={cn(
+              "inline-flex items-center px-[8px] py-[3px] rounded-[20px] text-[10px] font-medium",
+              pos.is_active
+                ? "bg-approve-bg text-approve-fg"
+                : "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
+            )}
+          >
+            {pos.is_active ? t("status.active") : t("status.inactive")}
+          </span>
+        </div>
       ),
+      className: "text-center",
+      headerClassName: "text-center",
       skeletonClassName: "w-16 rounded-full",
     },
   ];

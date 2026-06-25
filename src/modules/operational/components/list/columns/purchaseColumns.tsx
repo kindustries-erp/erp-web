@@ -33,8 +33,8 @@ export function usePurchaseColumns({
         header: t("Số PO"),
         sortable: true,
         sortKey: "purchase_no",
-        className: "!py-2 align-middle font-medium",
-        headerClassName: "min-w-[160px]",
+        className: "!py-2 align-middle font-medium text-left",
+        headerClassName: "min-w-[160px] text-center",
         cell: (row) => {
           const rowKey = `${row.document_type || variant}-${row.id}`;
           const isExpanded = !!expandedRowIds[rowKey];
@@ -80,11 +80,11 @@ export function usePurchaseColumns({
         header: t("Nhà cung cấp"),
         sortable: true,
         sortKey: "supplier_id",
-        className: "!py-2 align-middle",
-        headerClassName: "min-w-[150px]",
+        className: "!py-2 align-middle text-left",
+        headerClassName: "min-w-[150px] text-center",
         cell: (row) => (
           <Tooltip content={row.supplier_name_snapshot || "—"}>
-            <div className="max-w-[200px] truncate">
+            <div className="max-w-[200px] truncate w-full text-left">
               {row.supplier_name_snapshot || "—"}
             </div>
           </Tooltip>
@@ -95,15 +95,17 @@ export function usePurchaseColumns({
         header: t("Ngày đặt"),
         sortable: true,
         sortKey: "order_date",
-        className: "!py-2 align-middle",
-        headerClassName: "min-w-[150px]",
+        className: "!py-2 align-middle text-right",
+        headerClassName: "min-w-[150px] text-center",
         cell: (row) => {
           const dt = normalizeDateTime(row.document_date);
           if (!dt || dt === "—") return "—";
           const [d] = dt.split(" ");
           return (
             <Tooltip content={dt}>
-              <span className="font-semibold cursor-default">{d}</span>
+              <span className="font-semibold cursor-default block w-full text-right">
+                {d}
+              </span>
             </Tooltip>
           );
         },
@@ -113,15 +115,17 @@ export function usePurchaseColumns({
         header: t("Ngày nhập DK"),
         sortable: true,
         sortKey: "expected_date",
-        className: "!py-2 align-middle",
-        headerClassName: "min-w-[150px]",
+        className: "!py-2 align-middle text-right",
+        headerClassName: "min-w-[150px] text-center",
         cell: (row) => {
           const dt = normalizeDateTime(row.due_date);
           if (!dt || dt === "—") return "—";
           const [d] = dt.split(" ");
           return (
             <Tooltip content={dt}>
-              <span className="font-semibold cursor-default">{d}</span>
+              <span className="font-semibold cursor-default block w-full text-right">
+                {d}
+              </span>
             </Tooltip>
           );
         },

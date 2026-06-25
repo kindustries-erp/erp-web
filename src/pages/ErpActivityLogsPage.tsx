@@ -144,16 +144,22 @@ export function ErpActivityLogsPage() {
         key: "actorEmail",
         header: t("activityLogs.headers.actor") || "Actor",
         cell: (item) => item.actorEmail || "system",
+        className: "text-left",
+        headerClassName: "text-center",
       },
       {
         key: "actionType",
         header: t("activityLogs.headers.action") || "Action",
         cell: (item) => <span className="font-medium">{item.actionType}</span>,
+        className: "text-left",
+        headerClassName: "text-center",
       },
       {
         key: "module",
         header: t("activityLogs.headers.module") || "Module",
         cell: (item) => item.module,
+        className: "text-left",
+        headerClassName: "text-center",
       },
       {
         key: "entity",
@@ -174,25 +180,33 @@ export function ErpActivityLogsPage() {
             </div>
           );
         },
+        className: "text-left",
+        headerClassName: "text-center",
       },
       {
         key: "createdAt",
         header: t("activityLogs.headers.time") || "Thời gian",
         cell: (item) => formatDate(item.createdAt),
+        className: "text-right",
+        headerClassName: "text-center",
       },
       {
         key: "status",
         header: t("activityLogs.headers.status") || "Status",
+        className: "text-center",
+        headerClassName: "text-center",
         cell: (item) => (
-          <span
-            className={
-              item.status === "SUCCESS"
-                ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-                : "rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
-            }
-          >
-            {item.status}
-          </span>
+          <div className="flex justify-center w-full">
+            <span
+              className={
+                item.status === "SUCCESS"
+                  ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                  : "rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+              }
+            >
+              {item.status}
+            </span>
+          </div>
         ),
       },
     ],

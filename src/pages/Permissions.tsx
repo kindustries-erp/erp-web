@@ -254,14 +254,17 @@ export function PhanQuyen() {
       key: "name",
       header: t("rbac.headers.name"),
       cell: (role) => role.name,
-      className: "font-medium text-foreground whitespace-nowrap",
+      className: "font-medium text-foreground whitespace-nowrap text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-36",
     },
     {
       key: "description",
       header: t("rbac.headers.description"),
       cell: (role) => role.description || "—",
-      className: "text-[color:var(--muted-fg)] max-w-[300px] truncate",
+      className:
+        "text-[color:var(--muted-fg)] max-w-[300px] truncate text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-48",
     },
     {
@@ -288,7 +291,7 @@ export function PhanQuyen() {
         );
       },
       headerClassName: "text-center",
-      className: "text-foreground max-w-[420px]",
+      className: "text-foreground max-w-[420px] text-left",
       skeletonClassName: "w-56",
     },
   ];

@@ -1,5 +1,11 @@
 import { useMemo } from "react";
-import { Loader2, AlertCircle, PackagePlus, PackageMinus } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  PackagePlus,
+  PackageMinus,
+  History,
+} from "lucide-react";
 import { useT } from "@/core/i18n";
 import { fmtQty, formatGMT7 } from "@/shared/utils/format";
 import type {
@@ -202,7 +208,8 @@ export function InventoryTimelineBlock({
 
   return (
     <div className="py-2 px-1">
-      <div className="mb-3 font-semibold text-sm sm:text-base text-foreground pl-1">
+      <div className="mb-3 font-semibold text-sm sm:text-base text-foreground pl-1 flex items-center gap-2">
+        <History className="h-4 w-4 text-muted-foreground" />
         {t("inventory.history.title")}
       </div>
       <StandardTable
@@ -216,6 +223,7 @@ export function InventoryTimelineBlock({
         enableColumnVisibility={false}
         emptyLabel={t("inventory.history.empty")}
         minWidth={600}
+        containerClassName="max-h-[200px] overflow-y-auto"
       />
     </div>
   );

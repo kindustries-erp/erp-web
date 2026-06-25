@@ -225,7 +225,8 @@ export function ActivityLog() {
           </>
         );
       },
-      headerClassName: "w-[140px]",
+      className: "text-right",
+      headerClassName: "text-center w-[140px]",
       skeletonClassName: "w-20",
     },
     {
@@ -247,13 +248,20 @@ export function ActivityLog() {
           </div>
         );
       },
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
       key: "action",
       header: t("activitylog.headers.action"),
-      cell: (log) => <ActionBadge action={log.action} />,
-      headerClassName: "w-[110px]",
+      className: "text-center",
+      headerClassName: "text-center w-[110px]",
+      cell: (log) => (
+        <div className="flex justify-center w-full">
+          <ActionBadge action={log.action} />
+        </div>
+      ),
       skeletonClassName: "w-16 rounded-full",
     },
     {
@@ -267,6 +275,8 @@ export function ActivityLog() {
         ) : (
           <span className="text-xs text-[color:var(--faint)]">—</span>
         ),
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-24",
     },
     {
@@ -277,7 +287,8 @@ export function ActivityLog() {
           {log.ip ?? "—"}
         </span>
       ),
-      headerClassName: "w-[120px]",
+      className: "text-left",
+      headerClassName: "text-center w-[120px]",
       skeletonClassName: "w-20",
     },
   ];
