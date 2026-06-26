@@ -73,7 +73,17 @@ export function formatGMT7(
 ) {
   if (!value) return "—";
   try {
-    const d = new Date(value);
+    let valStr = value;
+    if (
+      typeof valStr === "string" &&
+      valStr.length > 10 &&
+      !valStr.endsWith("Z") &&
+      !valStr.match(/[+-]\d{2}:?\d{2}$/)
+    ) {
+      if (valStr.includes(" ")) valStr = valStr.replace(" ", "T");
+      valStr += "Z";
+    }
+    const d = new Date(valStr);
     if (isNaN(d.getTime())) return value;
     const formatter = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Asia/Ho_Chi_Minh",

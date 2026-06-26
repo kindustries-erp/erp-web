@@ -36,6 +36,7 @@ export interface InventorySerialRow {
     itemType: string;
     trackingPolicyId?: string | null;
     trackingCategoryId?: string | null;
+    trackingPolicyName?: string | null;
   };
 }
 
