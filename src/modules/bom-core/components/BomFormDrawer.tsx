@@ -55,6 +55,17 @@ export const emptyForm = (): BomForm => ({
   lines: [emptyLine()],
 });
 
+const formatNum = (
+  val: string | number | undefined | null,
+  decimals: number,
+  defaultStr: string,
+) => {
+  if (val === undefined || val === null || val === "") return defaultStr;
+  const num = parseFloat(String(val));
+  if (!isNaN(num)) return num.toFixed(decimals);
+  return String(val);
+};
+
 export function buildForm(bom: ErpBom): BomForm {
   return {
     bomCode: bom.bomCode ?? "",
@@ -68,9 +79,9 @@ export function buildForm(bom: ErpBom): BomForm {
     lines: bom.lines?.length
       ? bom.lines.map((line) => ({
           componentItemId: line.componentItemId ?? "",
-          qtyRequired: line.qtyRequired ?? "1",
+          qtyRequired: formatNum(line.qtyRequired, 1, "1"),
           uom: line.uom ?? "",
-          scrapRate: line.scrapRate ?? "0",
+          scrapRate: formatNum(line.scrapRate, 2, "0"),
           notes: line.notes ?? "",
         }))
       : [emptyLine()],
@@ -180,9 +191,9 @@ export function BomFormDrawer({
       const parsedLines = await bomCoreApi.parseBomLines(file);
       const newLines = parsedLines.map((pl) => ({
         componentItemId: pl.componentItemId || "",
-        qtyRequired: pl.qtyRequired ? String(pl.qtyRequired) : "1",
+        qtyRequired: formatNum(pl.qtyRequired, 1, "1"),
         uom: pl.uom || "",
-        scrapRate: pl.scrapRate ? String(pl.scrapRate) : "0",
+        scrapRate: formatNum(pl.scrapRate, 2, "0"),
         notes: pl.notes || "",
       }));
 
