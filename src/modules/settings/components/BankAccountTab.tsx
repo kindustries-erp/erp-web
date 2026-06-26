@@ -197,26 +197,32 @@ export function NHTab() {
       key: "bank_account_code",
       header: t("settings.nh.headers.bankAccountCode"),
       cell: (b) => b.bank_account_code || "—",
-      className: "font-mono text-[color:var(--muted-fg)]",
+      className: "font-mono text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-16",
     },
     {
       key: "bank_name",
       header: t("settings.nh.headers.bankName"),
       cell: (b) => b.bank_name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-32",
     },
     {
       key: "account_number",
       header: t("settings.nh.headers.accountNumber"),
       cell: (b) => b.account_number,
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
       key: "account_holder",
       header: t("settings.nh.headers.accountHolder"),
       cell: (b) => b.account_holder,
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
@@ -225,13 +231,16 @@ export function NHTab() {
       cell: (b) =>
         coaItems.find((c) => c.id === b.accounting_account_id)?.account_code ||
         "—",
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
     {
       key: "currency",
       header: t("settings.tk.headers.currency"),
       cell: (b) => b.currency,
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-12",
     },
   ];

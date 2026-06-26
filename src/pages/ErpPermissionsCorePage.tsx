@@ -222,13 +222,16 @@ export function ErpPermissionsCorePage() {
       key: "name",
       header: t("rbac.headers.name"),
       cell: (role) => role.name,
-      className: "font-medium text-foreground whitespace-nowrap",
+      className: "font-medium text-foreground whitespace-nowrap text-left",
+      headerClassName: "text-center",
     },
     {
       key: "description",
       header: t("rbac.headers.description"),
       cell: (role) => role.description || "—",
-      className: "text-[color:var(--muted-fg)] max-w-[300px] truncate",
+      className:
+        "text-[color:var(--muted-fg)] max-w-[300px] truncate text-left",
+      headerClassName: "text-center",
     },
     {
       key: "users",
@@ -255,7 +258,7 @@ export function ErpPermissionsCorePage() {
         );
       },
       headerClassName: "text-center",
-      className: "text-foreground max-w-[420px]",
+      className: "text-foreground max-w-[420px] text-left",
     },
   ];
 
@@ -263,7 +266,7 @@ export function ErpPermissionsCorePage() {
 
   return (
     <PageLayout
-      title="Phân quyền (Core)"
+      title={t("nav.items.phanquyen")}
       desc="Quản lý vai trò và phân quyền hệ thống sử dụng Core DB mới"
       icon={<Shield className="h-4 w-4" />}
       actions={

@@ -265,25 +265,32 @@ export function MfgItems() {
       key: "item_code",
       header: "Mã linh kiện",
       cell: (item) => <span className="font-medium">{item.item_code}</span>,
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-24",
     },
     {
       key: "item_name",
       header: "Tên linh kiện",
       cell: (item) => item.item_name,
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-36",
     },
     {
       key: "tracking_type",
       header: "Tracking",
       cell: (item) => item.tracking_type,
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-14",
     },
     {
       key: "uom",
       header: "ĐVT",
       cell: (item) => item.uom || "—",
+      className: "text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-12",
     },
     {
@@ -291,7 +298,7 @@ export function MfgItems() {
       header: "Tồn kho",
       cell: (item) => fmtQty(item.on_hand_qty),
       className: "text-right font-medium",
-      headerClassName: "text-right",
+      headerClassName: "text-center",
       skeletonClassName: "w-14 ml-auto",
     },
     {
@@ -299,13 +306,19 @@ export function MfgItems() {
       header: "Có thể dùng",
       cell: (item) => fmtQty(item.available_qty),
       className: "text-right",
-      headerClassName: "text-right",
+      headerClassName: "text-center",
       skeletonClassName: "w-14 ml-auto",
     },
     {
       key: "is_active",
       header: "Trạng thái",
-      cell: (item) => statusBadge(item.is_active),
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (item) => (
+        <div className="flex justify-center w-full">
+          {statusBadge(item.is_active)}
+        </div>
+      ),
       skeletonClassName: "w-16",
     },
   ];

@@ -7,6 +7,11 @@ import {
   type ErpGoodsIssue,
 } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { manufacturingApi } from "@/modules/manufacturing/api/manufacturingApi";
+import type { ErpVehicle } from "@/modules/manufacturing/api/manufacturingApi";
+import {
+  productionCoreApi,
+  type ProductionOrderMasterOption,
+} from "@/modules/production-core/api/productionCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useT } from "@/core/i18n";
 
@@ -14,6 +19,7 @@ const LOOKUP_LIMIT = 200;
 
 export interface GiLineForm {
   salesOrderLineId: string;
+  productionOrderMaterialId: string;
   itemId: string;
   itemName: string;
   serialId: string;
@@ -27,13 +33,21 @@ export interface GiForm {
   issueDate: string;
   issueType: string;
   customerId: string;
+  productionOrderId: string;
   status: string;
   remarks: string;
   lines: GiLineForm[];
 }
 
+export function isMoLinkedGiLocked(
+  gi?: Pick<ErpGoodsIssue, "productionOrderId" | "status"> | null,
+) {
+  return Boolean(gi?.productionOrderId) || !gi || gi.status !== "DRAFT";
+}
+
 export const emptyGiLine = (): GiLineForm => ({
   salesOrderLineId: "",
+  productionOrderMaterialId: "",
   itemId: "",
   itemName: "",
   serialId: "",
@@ -47,6 +61,7 @@ export const emptyGiForm = (): GiForm => ({
   issueDate: new Date().toISOString().slice(0, 10),
   issueType: "SALE",
   customerId: "",
+  productionOrderId: "",
   status: "DRAFT",
   remarks: "",
   lines: [emptyGiLine()],
@@ -58,11 +73,13 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
     issueType: gi.issueType ?? "SALE",
     customerId: gi.customerId ?? "",
+    productionOrderId: gi.productionOrderId ?? "",
     status: gi.status ?? "DRAFT",
     remarks: gi.remarks ?? "",
     lines: gi.lines?.length
       ? gi.lines.map((line) => ({
           salesOrderLineId: line.salesOrderLineId ?? "",
+          productionOrderMaterialId: line.productionOrderMaterialId ?? "",
           itemId: line.itemId ?? "",
           itemName: line.itemName ?? "",
           serialId: line.serialId ?? "",
@@ -79,18 +96,29 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
     issueType: form.issueType || "SALE",
-    customerId: form.customerId || undefined,
+    customerId:
+      form.issueType === "SALE" ? form.customerId || undefined : undefined,
+    productionOrderId:
+      form.issueType === "PRODUCTION"
+        ? form.productionOrderId || undefined
+        : undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
-    lines: form.lines.map((line) => ({
-      salesOrderLineId: line.salesOrderLineId || undefined,
-      itemId: line.itemId || undefined,
-      itemName: line.itemName || undefined,
-      serialId: line.serialId || undefined,
-      vehicleId: line.vehicleId || undefined,
-      qtyIssued: line.qtyIssued,
-      unitCost: line.unitCost || undefined,
-    })),
+    lines: form.lines
+      .filter((line) => {
+        const qty = Number(line.qtyIssued);
+        return !Number.isNaN(qty) && qty > 0;
+      })
+      .map((line) => ({
+        salesOrderLineId: line.salesOrderLineId || undefined,
+        productionOrderMaterialId: line.productionOrderMaterialId || undefined,
+        itemId: line.itemId || undefined,
+        itemName: line.itemName || undefined,
+        serialId: line.serialId || undefined,
+        vehicleId: line.vehicleId || undefined,
+        qtyIssued: line.qtyIssued,
+        unitCost: line.unitCost || undefined,
+      })),
   };
 }
 
@@ -162,6 +190,9 @@ export function useGiDrawer({
     Array<{ value: string; label: string }>
   >([]);
 
+  // Production Order options
+  const [moOptions, setMoOptions] = useState<ProductionOrderMasterOption[]>([]);
+
   const loadGiLookups = useCallback(async () => {
     try {
       const vehRes = await manufacturingApi.listVehicles({
@@ -170,25 +201,39 @@ export function useGiDrawer({
       });
       const vehList = vehRes.items ?? [];
       setVehicleOptions(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vehList.map((v: any) => ({
+        vehList.map((v: ErpVehicle) => ({
           value: v.id,
           label: `${v.frame_no ?? v.vin ?? v.id}${v.engine_no ? ` / ${v.engine_no}` : ""}`,
         })),
       );
+
+      const moOptions = await productionCoreApi.listMasterOptions({
+        page: 1,
+        pageSize: LOOKUP_LIMIT,
+        status: "CONFIRMED",
+      });
+      setMoOptions(moOptions);
     } catch {
       /* silent */
     }
   }, []);
 
-  const openCreate = useCallback(() => {
-    setEditing(null);
-    setViewOnly(false);
-    setForm(emptyGiForm());
-    setSaveError(null);
-    void loadGiLookups();
-    setOpen(true);
-  }, [loadGiLookups]);
+  const openCreate = useCallback(
+    (prefillProductionOrderId?: string) => {
+      setEditing(null);
+      setViewOnly(false);
+      const initial = emptyGiForm();
+      if (prefillProductionOrderId) {
+        initial.issueType = "PRODUCTION";
+        initial.productionOrderId = prefillProductionOrderId;
+      }
+      setForm(initial);
+      setSaveError(null);
+      void loadGiLookups();
+      setOpen(true);
+    },
+    [loadGiLookups],
+  );
 
   const openDetail = useCallback(
     async (id: string, viewOnlyMode = true) => {
@@ -278,6 +323,7 @@ export function useGiDrawer({
     fetchNextItems,
     loadingItems,
     vehicleOptions,
+    moOptions,
     openCreate,
     openDetail,
     close,

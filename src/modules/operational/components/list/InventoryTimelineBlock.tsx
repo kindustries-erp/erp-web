@@ -1,8 +1,20 @@
-import { Loader2, AlertCircle } from "lucide-react";
+import { useMemo } from "react";
+import {
+  Loader2,
+  AlertCircle,
+  PackagePlus,
+  PackageMinus,
+  History,
+} from "lucide-react";
 import { useT } from "@/core/i18n";
-import { normalizeDateTime, fmtQty } from "@/shared/utils/format";
-import { movementLabel } from "@/modules/operational/utils/operationalHelpers";
-import type { InventoryMovementsPayload } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { fmtQty, formatGMT7 } from "@/shared/utils/format";
+import type {
+  InventoryMovementsPayload,
+  InventoryMovement,
+} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { StandardTable } from "@/shared/components/StandardTable";
+import type { DataTableColumn } from "@/shared/components/DataTable";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 interface InventoryTimelineBlockProps {
   itemId: string;
@@ -24,18 +36,168 @@ export function InventoryTimelineBlock({
   const t = useT();
   const isLoading = loadingId === itemId;
 
+  const movements = data?.movements;
+  const sortedMovements = useMemo(() => {
+    if (!movements) return [];
+    return [...movements].sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [movements]);
+
+  const timelineColumns: DataTableColumn<InventoryMovement>[] = useMemo(
+    () => [
+      {
+        key: "time",
+        header: t("inventory.history.time"),
+        headerClassName: "text-center",
+        className: "text-right",
+        size: 150,
+        cell: (m) => {
+          if (!m.createdAt) return "—";
+          return (
+            <div className="w-full text-right">
+              <Tooltip
+                content={formatGMT7(m.createdAt, "datetime-sec")}
+                side="top"
+              >
+                <span className="cursor-help inline-block border-b border-dotted border-gray-400 text-xs">
+                  {formatGMT7(m.createdAt, "date")}
+                </span>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
+        key: "type",
+        header: t("Loại"),
+        headerClassName: "text-center",
+        className: "text-center",
+        size: 150,
+        cell: (m) => {
+          const isIn = Number(m.qtyIn || 0) > 0;
+          return (
+            <div className="flex justify-center items-center">
+              <span
+                title={isIn ? t("Nhập kho") : t("Xuất kho")}
+                className="flex-shrink-0"
+              >
+                {isIn ? (
+                  <PackagePlus className="h-4 w-4 text-emerald-600" />
+                ) : (
+                  <PackageMinus className="h-4 w-4 text-orange-600" />
+                )}
+              </span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "transactionType",
+        header: t("Loại giao dịch"),
+        headerClassName: "text-center",
+        className: "text-left",
+        size: 150,
+        cell: (m) => {
+          const rawType = m.documentType || m.transactionType;
+          if (!rawType) return "—";
+
+          let displayDoc = rawType;
+          if (rawType === "GOODS_RECEIPT") displayDoc = t("Nhập kho");
+          else if (rawType === "GOODS_ISSUE") displayDoc = t("Xuất kho");
+          else {
+            const txType = t(`inventory.txTypes.${rawType}`);
+            if (txType !== `inventory.txTypes.${rawType}`) {
+              displayDoc = txType;
+            } else {
+              const docTypeLower = rawType.toLowerCase();
+              const translatedDoc = t(`inventory.docTypes.${docTypeLower}`);
+              if (translatedDoc !== `inventory.docTypes.${docTypeLower}`) {
+                displayDoc = translatedDoc;
+              } else {
+                const translatedDocS = t(`inventory.docTypes.${docTypeLower}s`);
+                if (translatedDocS !== `inventory.docTypes.${docTypeLower}s`) {
+                  displayDoc = translatedDocS;
+                }
+              }
+            }
+          }
+
+          return (
+            <span className="truncate font-medium text-foreground text-xs sm:text-sm">
+              {displayDoc}
+            </span>
+          );
+        },
+      },
+      {
+        key: "notes",
+        header: t("Ghi chú"),
+        headerClassName: "text-center",
+        className: "text-left",
+        size: 150,
+        cell: (m) => {
+          if (!m.notes) return null;
+          return (
+            <span className="truncate text-xs text-muted-foreground">
+              {m.notes}
+            </span>
+          );
+        },
+      },
+      {
+        key: "change",
+        header: t("inventory.history.change"),
+        headerClassName: "text-center",
+        className: "text-right",
+        size: 150,
+        cell: (m) => {
+          const isIn = Number(m.qtyIn || 0) > 0;
+          const qty = isIn ? m.qtyIn : m.qtyOut;
+          return (
+            <div
+              className={
+                isIn
+                  ? "font-medium text-emerald-600 text-xs sm:text-sm w-full text-right"
+                  : "font-medium text-amber-600 text-xs sm:text-sm w-full text-right"
+              }
+            >
+              {isIn ? "+" : "-"}
+              {fmtQty(qty)}
+            </div>
+          );
+        },
+      },
+      {
+        key: "balance",
+        header: t("inventory.history.balance"),
+        headerClassName: "text-center",
+        className: "text-right",
+        size: 150,
+        cell: (m) => (
+          <div className="font-medium text-foreground text-xs sm:text-sm w-full text-right">
+            {fmtQty(m.balanceAfter)}
+          </div>
+        ),
+      },
+    ],
+    [t],
+  );
+
   if (isLoading) {
     return (
-      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-6 sm:p-8 flex items-center justify-center text-sm text-muted-foreground my-4 mr-2 -ml-4 sm:mr-4 sm:-ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-6 sm:p-8 flex items-center justify-center text-sm text-muted-foreground my-2 shadow-sm border border-border">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        {t("Đang tải lịch sử xuất nhập kho...")}
+        {t("inventory.history.loading")}
       </div>
     );
   }
 
   if (error && !data) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 sm:p-6 flex items-center justify-center text-sm text-red-700 my-4 mr-2 -ml-4 sm:mr-4 sm:-ml-6 md:mr-8 md:-ml-2 shadow-md">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 sm:p-6 flex items-center justify-center text-sm text-red-700 my-2 shadow-sm">
         <AlertCircle className="mr-2 h-5 w-5 shrink-0" />
         {error}
       </div>
@@ -45,95 +207,24 @@ export function InventoryTimelineBlock({
   if (!data) return null;
 
   return (
-    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-3 sm:p-4 md:p-6 overflow-x-auto my-4 mr-2 -ml-4 sm:mr-4 sm:-ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
-      <div className="min-w-[560px]">
-        <div className="mb-3 sm:mb-4 font-semibold text-sm sm:text-base text-foreground">
-          {t("Lịch sử xuất nhập kho")}
-        </div>
-        {data.movements.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-            {t("Chưa có phát sinh xuất nhập kho.")}
-          </div>
-        ) : (
-          <div className="w-full text-sm">
-            <div className="flex items-center text-muted-foreground border-b border-border pb-2 mb-2 px-2">
-              <div className="w-[90px] sm:w-[100px] font-medium">
-                {t("Thời gian")}
-              </div>
-              <div className="flex-1 font-medium">{t("Giao dịch")}</div>
-              <div className="w-[90px] sm:w-[120px] text-right font-medium">
-                {t("Thay đổi")}
-              </div>
-              <div className="w-[90px] sm:w-[120px] text-right font-medium">
-                {t("Tồn kho")}
-              </div>
-            </div>
-            <div className="space-y-1">
-              {data.movements.map((m) => {
-                const isIn = Number(m.qtyIn || 0) > 0;
-                const qty = isIn ? m.qtyIn : m.qtyOut;
-                const dt = normalizeDateTime(m.createdAt);
-                return (
-                  <div
-                    key={m.id}
-                    className="flex items-center hover:bg-muted/50 rounded py-2 px-2 transition-colors"
-                  >
-                    <div className="w-[90px] sm:w-[100px]">
-                      <div className="text-xs font-semibold text-foreground">
-                        {dt.slice(11, 16)}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground">
-                        {dt.slice(0, 10)}
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0 pr-2 sm:pr-4">
-                      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                        <span
-                          className={
-                            isIn
-                              ? "text-[11px] font-medium text-emerald-600"
-                              : "text-[11px] font-medium text-amber-600"
-                          }
-                        >
-                          {isIn ? t("Nhập") : t("Xuất")}
-                        </span>
-                        <span className="truncate font-medium text-foreground text-xs sm:text-sm">
-                          {movementLabel(m)}
-                        </span>
-                        {m.notes ? (
-                          <span className="hidden sm:inline truncate text-xs text-muted-foreground">
-                            • {m.notes}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="w-[90px] sm:w-[120px] text-right">
-                      <div
-                        className={
-                          isIn
-                            ? "font-medium text-emerald-600 text-xs sm:text-sm"
-                            : "font-medium text-amber-600 text-xs sm:text-sm"
-                        }
-                      >
-                        {isIn ? "+" : "-"}
-                        {fmtQty(qty)}
-                      </div>
-                    </div>
-
-                    <div className="w-[90px] sm:w-[120px] text-right">
-                      <div className="font-medium text-foreground text-xs sm:text-sm">
-                        {fmtQty(m.balanceAfter)}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+    <div className="py-2 px-1">
+      <div className="mb-3 font-semibold text-sm sm:text-base text-foreground pl-1 flex items-center gap-2">
+        <History className="h-4 w-4 text-muted-foreground" />
+        {t("inventory.history.title")}
       </div>
+      <StandardTable
+        tableId={`timeline-table-${itemId}`}
+        items={sortedMovements}
+        columns={timelineColumns}
+        getRowKey={(row) => row.id}
+        variant="spreadsheet"
+        enableColumnResizing={true}
+        enableRowSelection={false}
+        enableColumnVisibility={false}
+        emptyLabel={t("inventory.history.empty")}
+        minWidth={600}
+        containerClassName="max-h-[200px] overflow-y-auto"
+      />
     </div>
   );
 }

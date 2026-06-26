@@ -22,7 +22,18 @@ export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
-  inventory: { labelKey: "nav.items.inventory", group: "inventory" },
+  "erp-inventory-stock": {
+    labelKey: "nav.items.erpInventoryStock",
+    group: "inventory",
+  },
+  "erp-inventory-tracking": {
+    labelKey: "nav.items.erpInventoryTracking",
+    group: "inventory",
+  },
+  "erp-inventory-vouchers": {
+    labelKey: "nav.items.erpInventoryVouchers",
+    group: "inventory",
+  },
   "mfg-items": { labelKey: "nav.items.mfgItems", group: "manufacturing" },
   "mfg-purchase-orders": {
     labelKey: "nav.items.mfgPo",
@@ -30,10 +41,6 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "mfg-vehicles": { labelKey: "nav.items.mfgVehicles", group: "manufacturing" },
   "erp-bom": { labelKey: "nav.items.erpBom", group: "manufacturing" },
-  "erp-warehouse": {
-    labelKey: "nav.items.erpWarehouse",
-    group: "inventory",
-  },
   "erp-goods-issues": {
     labelKey: "nav.items.erpGoodsIssues",
     group: "inventory",
@@ -42,8 +49,16 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInventoryItems",
     group: "inventory",
   },
-  "erp-inventory-masters": {
-    labelKey: "nav.items.erpInventoryMasters",
+  "erp-inventory-uom": {
+    labelKey: "nav.items.erpInventoryUom",
+    group: "catalog",
+  },
+  "erp-inventory-item-types": {
+    labelKey: "nav.items.erpInventoryItemTypes",
+    group: "catalog",
+  },
+  "erp-inventory-tracking-categories": {
+    labelKey: "nav.items.erpInventoryTrackingCategories",
     group: "catalog",
   },
   "erp-production": {
@@ -78,6 +93,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.phanquyen",
     group: "system",
   },
+  "sys-tags": {
+    labelKey: "nav.items.sysTags",
+    group: "system",
+  },
   "erp-invoices": {
     labelKey: "nav.items.erpInvoices",
     group: "accounting",
@@ -88,12 +107,25 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
-  inventory: [["breadcrumb.inventory"], ["breadcrumb.inventoryStock"]],
+  "erp-inventory-stock": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.inventoryGroup"],
+    ["breadcrumb.inventoryStock"],
+  ],
+  "erp-inventory-tracking": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.inventoryGroup"],
+    ["breadcrumb.inventoryTracking"],
+  ],
+  "erp-inventory-vouchers": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.inventoryGroup"],
+    ["breadcrumb.inventoryVouchers"],
+  ],
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
   "mfg-purchase-orders": [["breadcrumb.manufacturing"], ["breadcrumb.mfgPo"]],
   "mfg-vehicles": [["breadcrumb.manufacturing"], ["breadcrumb.mfgVehicles"]],
   "erp-bom": [["breadcrumb.manufacturing"], ["breadcrumb.erpBom"]],
-  "erp-warehouse": [["breadcrumb.inventory"], ["breadcrumb.erpWarehouse"]],
   "erp-production": [
     ["breadcrumb.manufacturing"],
     ["breadcrumb.erpProduction"],
@@ -106,14 +138,26 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryItems"],
   ],
-  "erp-inventory-masters": [
-    ["breadcrumb.catalog"],
+  "erp-inventory-uom": [
+    ["breadcrumb.inventory"],
     ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryUom"],
+  ],
+  "erp-inventory-item-types": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryItemTypes"],
+  ],
+  "erp-inventory-tracking-categories": [
+    ["breadcrumb.inventory"],
+    ["breadcrumb.erpInventoryMasters"],
+    ["breadcrumb.erpInventoryTrackingCategories"],
   ],
   "erp-activity-logs": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
   "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
+  "sys-tags": [["breadcrumb.system"], ["nav.items.sysTags"]],
   "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
 };
 
@@ -153,7 +197,7 @@ export const useAppStore = create<AppState>()(
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
-      appTheme: "shell",
+      appTheme: "classic",
       locale: "vi",
       isLoggedIn: false,
       customBreadcrumbs: null,
@@ -278,7 +322,7 @@ export const useAppStore = create<AppState>()(
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["shell", "classic", "orcaq"];
+        const order: AppTheme[] = ["classic", "shell", "orcaq"];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
@@ -313,7 +357,7 @@ export const useAppStore = create<AppState>()(
         if (state) {
           applyDocumentTheme(state.appTheme);
         } else {
-          applyDocumentTheme("shell");
+          applyDocumentTheme("classic");
         }
       },
     },

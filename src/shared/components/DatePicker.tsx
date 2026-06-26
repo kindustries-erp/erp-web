@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import * as Popover from "@radix-ui/react-popover";
+import { useT } from "@/core/i18n";
 import { DayPicker } from "react-day-picker";
 import { format, isValid, parse } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -42,10 +43,12 @@ interface DatePickerProps {
 export function DatePicker({
   value,
   onChange,
-  placeholder = "Chọn ngày",
+  placeholder,
   className,
   disabled,
 }: DatePickerProps) {
+  const t = useT();
+  const displayPlaceholder = placeholder || t("Chọn ngày");
   const [open, setOpen] = useState(false);
 
   // Inject styles once
@@ -90,7 +93,9 @@ export function DatePicker({
           )}
         >
           <CalendarDays className="w-3.5 h-3.5 text-[color:var(--muted-fg)] flex-shrink-0" />
-          <span className="flex-1 text-xs">{displayText || placeholder}</span>
+          <span className="flex-1 text-xs">
+            {displayText || displayPlaceholder}
+          </span>
           {displayText && (
             <span
               role="button"

@@ -19,7 +19,7 @@ export function FormLoadingSkeleton() {
           </div>
         </DrawerSection>
       </div>
-      <div className="w-full xl:w-[320px] shrink-0 order-1 xl:order-2 space-y-4">
+      <div className="w-full xl:w-[320px] 2xl:w-[360px] shrink-0 order-1 xl:order-2 space-y-4">
         <DrawerSection title={t("Thông tin chung")}>
           <div className="space-y-4">
             <Skeleton className="h-10 w-full" />

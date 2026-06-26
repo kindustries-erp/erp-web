@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useT } from "@/core/i18n";
@@ -16,6 +16,14 @@ export function Login() {
     window.location.hostname === "127.0.0.1" ||
     window.location.hostname === "elite-liouni" ||
     window.location.hostname === "head-liouni";
+
+  const [isLioDevice, setIsLioDevice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsLioDevice(localStorage.getItem("is_lio_device") === "true");
+    }
+  }, []);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -203,7 +211,7 @@ export function Login() {
             {loading ? t("login.loading") : t("login.submit")}
           </Button>
 
-          {isLocalhost && (
+          {(isLocalhost || isLioDevice) && (
             <Button
               type="button"
               variant="outline"

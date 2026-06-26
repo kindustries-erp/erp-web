@@ -233,36 +233,47 @@ export function ContactsTab() {
       key: "partner",
       header: t("doitac.headers.code"),
       cell: (c) => partnerName(c.business_partner_id),
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "full_name",
       header: t("doitac.headers.contactName"),
       cell: (c) => c.full_name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
     },
     {
       key: "position",
       header: t("doitac.headers.position"),
       cell: (c) => c.position || "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "phone",
       header: t("doitac.headers.phone"),
       cell: (c) => c.phone || "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "email",
       header: t("doitac.headers.email"),
       cell: (c) => c.email || "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "status",
       header: t("doitac.headers.status"),
-      cell: (c) => <StatusBadge active={c.is_active} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (c) => (
+        <div className="flex justify-center w-full">
+          <StatusBadge active={c.is_active} />
+        </div>
+      ),
     },
   ];
 

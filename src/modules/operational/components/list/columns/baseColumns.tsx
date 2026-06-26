@@ -34,8 +34,8 @@ export function useBaseColumns({
       {
         key: "document",
         header: t("Chứng từ"),
-        className: "align-top",
-        headerClassName: "w-[180px]",
+        className: "align-top text-left",
+        headerClassName: "w-[180px] text-center",
         cell: (row) => (
           <div className="space-y-1">
             <div className="font-medium text-sm">{getDocNo(row)}</div>
@@ -51,8 +51,8 @@ export function useBaseColumns({
           variant === "receivables"
             ? t("Khách hàng / Nội dung")
             : t("Đối tác / Nội dung"),
-        className: "align-top",
-        headerClassName: "min-w-[220px]",
+        className: "align-top text-left",
+        headerClassName: "min-w-[220px] text-center",
         cell: (row) => (
           <div className="space-y-1">
             <div>{getPartner(row)}</div>
@@ -67,10 +67,10 @@ export function useBaseColumns({
       {
         key: "dates",
         header: t("Ngày"),
-        className: "align-top",
-        headerClassName: "w-[140px]",
+        className: "align-top text-right",
+        headerClassName: "w-[140px] text-center",
         cell: (row) => (
-          <div className="space-y-1 text-sm">
+          <div className="space-y-1 text-sm w-full text-right">
             <div>CT: {normalizeDate(row.document_date) || "—"}</div>
             <div className="text-xs text-[color:var(--muted-fg)]">
               ĐH: {normalizeDate(row.due_date) || "—"}
@@ -92,10 +92,10 @@ export function useBaseColumns({
       {
         key: "amounts",
         header: t("Số tiền"),
-        className: "align-top",
-        headerClassName: "w-[180px]",
+        className: "align-top text-right",
+        headerClassName: "w-[180px] text-center",
         cell: (row) => (
-          <div className="space-y-1 text-sm">
+          <div className="space-y-1 text-sm w-full text-right">
             <div>
               {t("Tổng")}: {money(row.total_amount)}
             </div>
@@ -111,10 +111,10 @@ export function useBaseColumns({
       {
         key: "status",
         header: t("Trạng thái"),
-        className: "align-top",
-        headerClassName: "w-[170px]",
+        className: "align-top text-center",
+        headerClassName: "w-[170px] text-center",
         cell: (row) => (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-center w-full">
             <StatusBadge status={row.status} />
             <StatusBadge status={row.payment_status} />
             {variant === "sales" && row.inventory_status ? (

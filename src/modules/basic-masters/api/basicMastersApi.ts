@@ -13,8 +13,10 @@ export interface BasicMasterInventoryItem {
   id: string;
   sku: string;
   itemName: string;
-  uom: string;
-  itemType: string;
+  uomId: string;
+  uom?: { id: string; code: string; name: string };
+  itemTypeId: string;
+  itemType?: { id: string; code: string; name: string };
   status?: string | null;
 }
 

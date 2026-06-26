@@ -1,27 +1,32 @@
 import { useEffect, useRef } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { Sidebar } from "@/core/components/layout/Sidebar";
+import { Sidebar } from "@/core/components/layout/sidebar";
 import { Topbar } from "@/core/components/layout/Topbar";
 import { TabBar } from "@/core/components/layout/TabBar";
 import { SlidePanel } from "@/shared/components/SlidePanel";
 import { Toast } from "@/shared/components/Toast";
+import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
 import { DocumentDependencyModal } from "@/core/components/DocumentDependencyModal";
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
+import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
-import { Kho } from "@/pages/Inventory";
+import { InventoryStockPage } from "@/pages/inventory/InventoryStockPage";
+import { InventoryTrackingPage } from "@/pages/inventory/InventoryTrackingPage";
+import { InventoryVouchersPage } from "@/pages/inventory/InventoryVouchersPage";
 import { MfgItems } from "@/pages/MfgItems";
 import { MfgVehicles } from "@/pages/MfgVehicles";
 import { ErpBomPage } from "@/pages/ErpBomPage";
-import { ErpWarehousePage } from "@/pages/ErpWarehousePage";
 import { ErpProductionPage } from "@/pages/ErpProductionPage";
 import { ErpSalesOrdersPage } from "@/pages/ErpSalesOrdersPage";
 import { ErpGoodsIssuesPage } from "@/pages/ErpGoodsIssuesPage";
-import { InventoryMasterPage } from "@/pages/InventoryMasterPage";
+import { InventoryUomPage } from "@/pages/inventory/InventoryUomPage";
+import { InventoryItemTypesPage } from "@/pages/inventory/InventoryItemTypesPage";
+import { InventoryTrackingCategoriesPage } from "@/pages/inventory/InventoryTrackingCategoriesPage";
 import {
   ErpCustomersPage,
   ErpSuppliersPage,
@@ -34,21 +39,25 @@ import { ErpInvoicePage } from "@/pages/ErpInvoicePage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
+import { SysTagsPage } from "@/pages/SysTagsPage";
 
 import { PageKey } from "@/shared/types";
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
   purchasing: MuaHang,
-  inventory: Kho,
+  "erp-inventory-stock": InventoryStockPage,
+  "erp-inventory-tracking": InventoryTrackingPage,
+  "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
   "erp-bom": ErpBomPage,
-  "erp-warehouse": ErpWarehousePage,
   "erp-production": ErpProductionPage,
   "erp-sales-orders": ErpSalesOrdersPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
-  "erp-inventory-masters": InventoryMasterPage,
+  "erp-inventory-uom": InventoryUomPage,
+  "erp-inventory-item-types": InventoryItemTypesPage,
+  "erp-inventory-tracking-categories": InventoryTrackingCategoriesPage,
   "erp-suppliers": ErpSuppliersPage,
   "erp-customers": ErpCustomersPage,
   "erp-employees": ErpEmployeesPage,
@@ -56,6 +65,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-activity-logs": ErpActivityLogsPage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicePage,
+  "sys-tags": SysTagsPage,
 };
 
 export default function App() {
@@ -99,6 +109,7 @@ export default function App() {
   return (
     <TooltipProvider>
       <div className="app-shell flex h-screen w-full overflow-hidden text-foreground">
+        <EnvStamp />
         <Sidebar />
         <div className="right-panel relative">
           <Topbar />
@@ -126,6 +137,7 @@ export default function App() {
           <TabBar />
         </div>
         <SlidePanel />
+        <TopProgressBar />
         <Toast />
         <ReloadPrompt />
         <AppContextMenu />

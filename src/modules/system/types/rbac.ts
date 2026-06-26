@@ -158,6 +158,17 @@ export const RBAC_COLLECTIONS: CollectionDef[] = [
     label: "Vai trò hệ thống",
     group: "Hệ thống",
   },
+  {
+    collection: "sys_tags",
+    label: "Tags",
+    group: "Hệ thống",
+  },
+  // Kế toán / Tài chính
+  {
+    collection: "invoices",
+    label: "Hóa đơn",
+    group: "Tài chính",
+  },
 ];
 
 export const CRUD_ACTIONS: { action: CrudAction; label: string }[] = [

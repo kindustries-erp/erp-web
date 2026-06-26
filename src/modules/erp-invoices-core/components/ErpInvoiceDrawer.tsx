@@ -1,5 +1,6 @@
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
+import { Download, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
@@ -13,6 +14,9 @@ interface Props {
   handleSave: (statusOverride?: string) => void;
   setEditMode: (mode: boolean) => void;
   setDeleteConfirm: (confirm: boolean) => void;
+  onDownload: (id: string, type: "pdf" | "xml") => void;
+  loadingDetail?: boolean;
+  onSyncDetail?: () => void;
   children: React.ReactNode;
 }
 
@@ -26,6 +30,9 @@ export function ErpInvoiceDrawer({
   handleSave,
   setEditMode,
   setDeleteConfirm,
+  onDownload,
+  loadingDetail,
+  onSyncDetail,
   children,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
@@ -99,17 +106,66 @@ export function ErpInvoiceDrawer({
       open={open}
       onClose={onClose}
       headerExtra={
-        !editMode && detailInvoice ? (
-          <Button variant="secondary" size="sm" onClick={startEdit}>
-            {t("actionEdit", "Chỉnh sửa")}
-          </Button>
-        ) : undefined
+        <div className="flex items-center gap-2">
+          {!editMode && detailInvoice && onSyncDetail && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onSyncDetail}
+              disabled={loadingDetail}
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-1.5 ${loadingDetail ? "animate-spin" : ""}`}
+              />
+              {t("actionSync", "Đồng bộ từ GDT")}
+            </Button>
+          )}
+          {!editMode && detailInvoice?.xmlFileKey && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDownload(detailInvoice.id, "xml")}
+            >
+              <Download className="w-4 h-4 mr-1.5" />
+              XML
+            </Button>
+          )}
+          {!editMode && detailInvoice?.pdfFileKey && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDownload(detailInvoice.id, "pdf")}
+            >
+              <Download className="w-4 h-4 mr-1.5" />
+              PDF
+            </Button>
+          )}
+          {!editMode && detailInvoice && (
+            <Button variant="secondary" size="sm" onClick={startEdit}>
+              {t("actionEdit", "Chỉnh sửa")}
+            </Button>
+          )}
+        </div>
       }
       title={drawerTitle}
       panelClassName="min-[1024px]:w-[1400px]"
       actions={editMode ? editActions : viewActions}
     >
-      {children}
+      <div className="relative w-full h-full min-h-[300px]">
+        {loadingDetail && (
+          <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+              <span className="text-sm text-gray-600 font-medium">
+                {t("loadingDetail", "Đang tải dữ liệu...")}
+              </span>
+            </div>
+          </div>
+        )}
+        <div className={loadingDetail ? "opacity-30 pointer-events-none" : ""}>
+          {children}
+        </div>
+      </div>
     </DrawerModal>
   );
 }

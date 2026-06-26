@@ -25,29 +25,35 @@ const STATUS_OPTIONS = [
 interface ItemForm {
   sku: string;
   itemName: string;
-  uom: string;
-  itemType: string;
+  uomId: string;
+  itemTypeId: string;
   status: string;
   note: string;
+  trackingPolicyId: string;
+  trackingCategoryId: string;
 }
 
 const emptyForm = (): ItemForm => ({
   sku: "",
   itemName: "",
-  uom: "PCS",
-  itemType: "FG",
+  uomId: "",
+  itemTypeId: "",
   status: "ACTIVE",
   note: "",
+  trackingPolicyId: "",
+  trackingCategoryId: "",
 });
 
 function buildForm(item: ErpInventoryItem): ItemForm {
   return {
     sku: item.sku ?? "",
     itemName: item.itemName ?? "",
-    uom: item.uom ?? "PCS",
-    itemType: item.itemType ?? "FG",
+    uomId: item.uomId ?? "",
+    itemTypeId: item.itemTypeId ?? "",
     status: item.status ?? "ACTIVE",
     note: item.note ?? "",
+    trackingPolicyId: item.trackingPolicyId ?? "",
+    trackingCategoryId: item.trackingCategoryId ?? "",
   };
 }
 
@@ -55,18 +61,23 @@ function toPayload(form: ItemForm): CreateInventoryItemPayload {
   return {
     sku: form.sku.trim(),
     itemName: form.itemName.trim(),
-    uom: form.uom || "PCS",
-    itemType: form.itemType || "FG",
+    uomId: form.uomId,
+    itemTypeId: form.itemTypeId,
     status: form.status || "ACTIVE",
     note: form.note.trim() || undefined,
+    trackingPolicyId: form.trackingPolicyId || undefined,
+    trackingCategoryId: form.trackingCategoryId || undefined,
   };
 }
 
-function buildMasterOptions(items: InventoryMasterOption[]) {
+function buildMasterOptions(
+  items: InventoryMasterOption[],
+  useCodeAsValue = false,
+) {
   return items
     .filter((item) => item.isActive)
     .map((item) => ({
-      value: item.code,
+      value: useCodeAsValue ? item.code : item.id,
       label: `${item.code} — ${item.name}`,
     }));
 }
@@ -96,19 +107,38 @@ export function InventoryItemFormDrawer({
   const [itemTypeOptions, setItemTypeOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [trackingCategoryOptions, setTrackingCategoryOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [trackingPolicyOptions, setTrackingPolicyOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   const loadMasters = useCallback(async () => {
     try {
-      const [uoms, itemTypes] = await Promise.all([
-        inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
-        inventoryCoreApi.listItemTypes({
-          page: 1,
-          pageSize: 200,
-          isActive: true,
-        }),
-      ]);
+      const [uoms, itemTypes, trackingCategories, trackingPolicies] =
+        await Promise.all([
+          inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
+          inventoryCoreApi.listItemTypes({
+            page: 1,
+            pageSize: 200,
+            isActive: true,
+          }),
+          inventoryCoreApi.listTrackingCategories({
+            page: 1,
+            pageSize: 200,
+            isActive: true,
+          }),
+          inventoryCoreApi.listTrackingPolicies({ page: 1, pageSize: 20 }),
+        ]);
       setUomOptions(buildMasterOptions(uoms.items));
       setItemTypeOptions(buildMasterOptions(itemTypes.items));
+      setTrackingCategoryOptions(buildMasterOptions(trackingCategories.items));
+      setTrackingPolicyOptions(
+        trackingPolicies.items
+          .filter((p) => p.isActive)
+          .map((p) => ({ value: p.id, label: `${p.code} — ${p.name}` })),
+      );
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // Ignore
@@ -250,12 +280,12 @@ export function InventoryItemFormDrawer({
 
             <DrawerField label="Đơn vị tính (ĐVT)" required>
               <Combobox
-                value={form.uom}
+                value={form.uomId}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({
                     ...prev,
-                    uom: value || form.uom || "PCS",
+                    uomId: value || form.uomId,
                   }))
                 }
                 options={uomOptions}
@@ -265,16 +295,48 @@ export function InventoryItemFormDrawer({
 
             <DrawerField label="Loại item">
               <Combobox
-                value={form.itemType}
+                value={form.itemTypeId}
                 allowClear={false}
                 onChange={(value) =>
                   setForm((prev) => ({
                     ...prev,
-                    itemType: value || form.itemType || "FG",
+                    itemTypeId: value || form.itemTypeId,
                   }))
                 }
                 options={itemTypeOptions}
                 placeholder="Chọn loại"
+              />
+            </DrawerField>
+
+            <DrawerField label="Tracking policy">
+              <Combobox
+                value={form.trackingPolicyId}
+                allowClear
+                onChange={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    trackingPolicyId: value || "",
+                    // Clear category when policy changes
+                    trackingCategoryId: value ? prev.trackingCategoryId : "",
+                  }))
+                }
+                options={trackingPolicyOptions}
+                placeholder="Chọn chính sách tracking"
+              />
+            </DrawerField>
+
+            <DrawerField label="Tracking category">
+              <Combobox
+                value={form.trackingCategoryId}
+                allowClear
+                onChange={(value) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    trackingCategoryId: value || "",
+                  }))
+                }
+                options={trackingCategoryOptions}
+                placeholder="Chọn nhóm tracking"
               />
             </DrawerField>
 

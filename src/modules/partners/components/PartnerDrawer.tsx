@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import {
-  DrawerModal,
   DrawerSection,
   DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
@@ -33,19 +36,17 @@ export function PartnerDrawer({
   saveError,
   stackOffset = 0,
   zIndex,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
+  const mode = editing ? "edit" : "create";
+
   return (
-    <DrawerModal
+    <StandardFormDrawer
       open={drawerOpen}
       onClose={closeDrawer}
-      confirmOnClose={isDirty && !editing}
+      mode={mode}
       title={editing ? "Chỉnh sửa đối tác" : "Thêm đối tác mới"}
       subtitle={editing ? editing.name : "Điền thông tin bên dưới"}
-      panelClassName="partner-drawer-panel !w-[800px] !max-w-[calc(100vw-40px)]" // Make it wide
-      bodyClassName="partner-drawer-body"
-      stackOffset={stackOffset}
-      zIndex={zIndex || 600}
+      panelClassName="!w-[1100px] !max-w-[calc(100vw-40px)]"
       actions={[
         { label: "Hủy", onClick: closeDrawer },
         {
@@ -56,30 +57,37 @@ export function PartnerDrawer({
           onClick: handleSave,
         },
       ]}
-    >
-      <div className="partner-drawer-grid grid grid-cols-1 gap-4">
-        <MainInfoCard {...{ form, setField }} />
-        <ContactsCard
-          {...{ contactRows, setContactField, removeContactRow, addContactRow }}
-        />
-        <BanksCard {...{ bankRows, setBankField, removeBankRow, addBankRow }} />
-        <RoleCard {...{ form, setField }} />
-      </div>
-      {saveError && (
-        <div className="mt-4 text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2">
-          {saveError}
+      error={saveError}
+      leftPanel={
+        <div className="flex flex-col gap-6">
+          <ContactsCard
+            {...{
+              contactRows,
+              setContactField,
+              removeContactRow,
+              addContactRow,
+            }}
+          />
+          <BanksCard
+            {...{ bankRows, setBankField, removeBankRow, addBankRow }}
+          />
         </div>
-      )}
-    </DrawerModal>
+      }
+      rightPanel={
+        <div className="flex flex-col gap-6">
+          <MainInfoCard {...{ form, setField }} />
+          <RoleCard {...{ form, setField }} />
+        </div>
+      }
+    />
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function MainInfoCard({ form, setField }: any) {
   return (
-    <div className="partner-card partner-card-main border border-border rounded-lg p-4 bg-surface">
+    <div className="flex flex-col gap-3">
       <DrawerSection title="Thông tin đối tác">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-3">
+        <div className="grid grid-cols-1 gap-x-3">
           <DrawerField label="Mã đối tác" required>
             <input
               type="text"
@@ -142,27 +150,23 @@ function MainInfoCard({ form, setField }: any) {
               placeholder="contact@example.com"
             />
           </DrawerField>
-          <div className="md:col-span-2 xl:col-span-3">
-            <DrawerField label="Địa chỉ">
-              <input
-                type="text"
-                className={inputCls}
-                value={form.address}
-                onChange={(e) => setField("address", e.target.value)}
-                placeholder="Địa chỉ đầy đủ"
-              />
-            </DrawerField>
-          </div>
-          <div className="md:col-span-2 xl:col-span-3">
-            <DrawerField label="Ghi chú">
-              <textarea
-                className={inputCls}
-                rows={2}
-                value={form.note}
-                onChange={(e) => setField("note", e.target.value)}
-              />
-            </DrawerField>
-          </div>
+          <DrawerField label="Địa chỉ">
+            <input
+              type="text"
+              className={inputCls}
+              value={form.address}
+              onChange={(e) => setField("address", e.target.value)}
+              placeholder="Địa chỉ đầy đủ"
+            />
+          </DrawerField>
+          <DrawerField label="Ghi chú">
+            <textarea
+              className={inputCls}
+              rows={2}
+              value={form.note}
+              onChange={(e) => setField("note", e.target.value)}
+            />
+          </DrawerField>
           <DrawerField label="Trạng thái">
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
@@ -183,75 +187,81 @@ function ContactsCard({
   setContactField,
   removeContactRow,
   addContactRow,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
-    <div className="partner-card partner-card-contact border border-border rounded-lg p-4 bg-surface mt-4">
-      <DrawerSection title={`Liên hệ (${contactRows.length})`}>
-        <div className="partner-sublist space-y-4">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {contactRows.map((row: any, idx: number) => (
-            <div
-              key={row.tempId}
-              className="partner-subitem border-b border-border pb-4 last:border-b-0 last:pb-0"
-            >
-              <div className="partner-subitem-head flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Liên hệ {idx + 1}</span>
-                <button
-                  type="button"
-                  onClick={() => removeContactRow(idx)}
-                  className="text-xs text-red-500 hover:text-red-600"
-                >
-                  Xóa
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
-                <DrawerField label="Họ và tên">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={row.full_name}
-                    onChange={(e) =>
-                      setContactField(idx, "full_name", e.target.value)
-                    }
-                    placeholder="Tên người liên hệ"
-                  />
-                </DrawerField>
-                <DrawerField label="Chức vụ">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={row.position}
-                    onChange={(e) =>
-                      setContactField(idx, "position", e.target.value)
-                    }
-                    placeholder="VD: Kế toán trưởng"
-                  />
-                </DrawerField>
-                <DrawerField label="Điện thoại">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={row.phone}
-                    onChange={(e) =>
-                      setContactField(idx, "phone", e.target.value)
-                    }
-                    placeholder="0912 345 678"
-                  />
-                </DrawerField>
-                <DrawerField label="Email">
-                  <input
-                    type="email"
-                    className={inputCls}
-                    value={row.email}
-                    onChange={(e) =>
-                      setContactField(idx, "email", e.target.value)
-                    }
-                    placeholder="contact@example.com"
-                  />
-                </DrawerField>
-              </div>
-              <div className="partner-check-row flex gap-4 mt-2">
+    <DrawerSection title={`Liên hệ (${contactRows.length})`}>
+      <DocumentLineTable
+        data={contactRows}
+        getRowKey={(row: any) => row.tempId}
+        onAddLine={addContactRow}
+        onRemoveLine={removeContactRow}
+        columns={[
+          {
+            key: "full_name",
+            header: "Họ và tên",
+            minWidth: 150,
+            cell: (row: any, idx: number) => (
+              <input
+                type="text"
+                className={inputCls}
+                value={row.full_name}
+                onChange={(e) =>
+                  setContactField(idx, "full_name", e.target.value)
+                }
+                placeholder="Tên người liên hệ"
+              />
+            ),
+          },
+          {
+            key: "position",
+            header: "Chức vụ",
+            minWidth: 120,
+            cell: (row: any, idx: number) => (
+              <input
+                type="text"
+                className={inputCls}
+                value={row.position}
+                onChange={(e) =>
+                  setContactField(idx, "position", e.target.value)
+                }
+                placeholder="Chức vụ"
+              />
+            ),
+          },
+          {
+            key: "phone",
+            header: "Điện thoại",
+            minWidth: 120,
+            cell: (row: any, idx: number) => (
+              <input
+                type="text"
+                className={inputCls}
+                value={row.phone}
+                onChange={(e) => setContactField(idx, "phone", e.target.value)}
+                placeholder="0912 345 678"
+              />
+            ),
+          },
+          {
+            key: "email",
+            header: "Email",
+            minWidth: 150,
+            cell: (row: any, idx: number) => (
+              <input
+                type="email"
+                className={inputCls}
+                value={row.email}
+                onChange={(e) => setContactField(idx, "email", e.target.value)}
+                placeholder="Email"
+              />
+            ),
+          },
+          {
+            key: "settings",
+            header: "Cài đặt",
+            minWidth: 150,
+            cell: (row: any, idx: number) => (
+              <div className="flex flex-col gap-1 py-1">
                 <Check
                   checked={row.is_default_receiver}
                   onChange={(v: boolean) =>
@@ -274,86 +284,87 @@ function ContactsCard({
                   label="Đang hoạt động"
                 />
               </div>
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="partner-add-line mt-2 text-xs text-primary hover:text-primary/80"
-          onClick={addContactRow}
-        >
-          + Thêm liên hệ
-        </button>
-      </DrawerSection>
-    </div>
+            ),
+          },
+        ]}
+      />
+    </DrawerSection>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function BanksCard({ bankRows, setBankField, removeBankRow, addBankRow }: any) {
   return (
-    <div className="partner-card partner-card-bank border border-border rounded-lg p-4 bg-surface mt-4">
-      <DrawerSection title={`Tài khoản ngân hàng (${bankRows.length})`}>
-        <div className="partner-sublist space-y-4">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {bankRows.map((row: any, idx: number) => (
-            <div
-              key={row.tempId}
-              className="partner-subitem border-b border-border pb-4 last:border-b-0 last:pb-0"
-            >
-              <div className="partner-subitem-head flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Tài khoản {idx + 1}</span>
-                <button
-                  type="button"
-                  onClick={() => removeBankRow(idx)}
-                  className="text-xs text-red-500 hover:text-red-600"
-                >
-                  Xóa
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
-                <DrawerField label="Tên ngân hàng">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={row.bank_name}
-                    onChange={(e) =>
-                      setBankField(idx, "bank_name", e.target.value)
-                    }
-                    placeholder="VD: Vietcombank"
-                  />
-                </DrawerField>
-                <DrawerField label="Số tài khoản">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={row.account_number}
-                    onChange={(e) =>
-                      setBankField(idx, "account_number", e.target.value)
-                    }
-                    placeholder="0071001xxx"
-                  />
-                </DrawerField>
-                <DrawerField label="Chủ tài khoản">
-                  <input
-                    type="text"
-                    className={inputCls}
-                    value={row.account_holder}
-                    onChange={(e) =>
-                      setBankField(idx, "account_holder", e.target.value)
-                    }
-                  />
-                </DrawerField>
-                <DrawerField label="Tiền tệ">
-                  <Combobox
-                    options={CURRENCY_OPTS}
-                    value={row.currency}
-                    onChange={(v) => setBankField(idx, "currency", v || "VND")}
-                    allowClear={false}
-                  />
-                </DrawerField>
-              </div>
-              <div className="partner-check-row flex gap-4 mt-2">
+    <DrawerSection title={`Tài khoản ngân hàng (${bankRows.length})`}>
+      <DocumentLineTable
+        data={bankRows}
+        getRowKey={(row: any) => row.tempId}
+        onAddLine={addBankRow}
+        onRemoveLine={removeBankRow}
+        columns={[
+          {
+            key: "bank_name",
+            header: "Tên ngân hàng",
+            minWidth: 150,
+            cell: (row: any, idx: number) => (
+              <input
+                type="text"
+                className={inputCls}
+                value={row.bank_name}
+                onChange={(e) => setBankField(idx, "bank_name", e.target.value)}
+                placeholder="VD: Vietcombank"
+              />
+            ),
+          },
+          {
+            key: "account_number",
+            header: "Số tài khoản",
+            minWidth: 140,
+            cell: (row: any, idx: number) => (
+              <input
+                type="text"
+                className={inputCls}
+                value={row.account_number}
+                onChange={(e) =>
+                  setBankField(idx, "account_number", e.target.value)
+                }
+                placeholder="0071001xxx"
+              />
+            ),
+          },
+          {
+            key: "account_holder",
+            header: "Chủ tài khoản",
+            minWidth: 150,
+            cell: (row: any, idx: number) => (
+              <input
+                type="text"
+                className={inputCls}
+                value={row.account_holder}
+                onChange={(e) =>
+                  setBankField(idx, "account_holder", e.target.value)
+                }
+              />
+            ),
+          },
+          {
+            key: "currency",
+            header: "Tiền tệ",
+            minWidth: 100,
+            cell: (row: any, idx: number) => (
+              <Combobox
+                options={CURRENCY_OPTS}
+                value={row.currency}
+                onChange={(v) => setBankField(idx, "currency", v || "VND")}
+                allowClear={false}
+              />
+            ),
+          },
+          {
+            key: "settings",
+            header: "Cài đặt",
+            minWidth: 150,
+            cell: (row: any, idx: number) => (
+              <div className="flex flex-col gap-1 py-1">
                 <Check
                   checked={row.is_default}
                   onChange={(v: boolean) => setBankField(idx, "is_default", v)}
@@ -365,25 +376,17 @@ function BanksCard({ bankRows, setBankField, removeBankRow, addBankRow }: any) {
                   label="Đang hoạt động"
                 />
               </div>
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="partner-add-line mt-2 text-xs text-primary hover:text-primary/80"
-          onClick={addBankRow}
-        >
-          + Thêm tài khoản ngân hàng
-        </button>
-      </DrawerSection>
-    </div>
+            ),
+          },
+        ]}
+      />
+    </DrawerSection>
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function RoleCard({ form, setField }: any) {
   return (
-    <div className="partner-card partner-card-role border border-border rounded-lg p-4 bg-surface mt-4">
+    <div className="flex flex-col gap-3">
       <DrawerSection title="Vai trò đối tác">
         <div className="grid grid-cols-1 gap-x-3">
           <DrawerField label="Tạo / cập nhật vai trò">
@@ -414,7 +417,6 @@ function RoleCard({ form, setField }: any) {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function Check({ checked, onChange, label }: any) {
   return (
     <label className="flex items-center gap-2 cursor-pointer">

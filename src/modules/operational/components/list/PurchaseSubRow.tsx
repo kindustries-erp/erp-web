@@ -128,14 +128,14 @@ export function PurchaseSubRow({ rowId }: PurchaseSubRowProps) {
 
   if (loading)
     return (
-      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-8 flex items-center justify-center text-sm text-muted-foreground my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border">
+      <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-8 flex items-center justify-center text-sm text-muted-foreground my-2 shadow-sm border border-border">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         {t("Đang tải chi tiết...")}
       </div>
     );
   if (error)
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex items-center justify-center text-sm text-red-700 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex items-center justify-center text-sm text-red-700 my-2 shadow-sm">
         <AlertCircle className="mr-2 h-5 w-5" />
         {error}
       </div>
@@ -143,7 +143,7 @@ export function PurchaseSubRow({ rowId }: PurchaseSubRowProps) {
   if (!detail) return null;
 
   return (
-    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 my-4 mr-4 -ml-6 md:mr-8 md:-ml-2 shadow-md border border-border flex flex-col md:flex-row gap-6">
+    <div className="rounded-xl bg-slate-50 dark:bg-zinc-950/50 p-4 md:p-6 my-2 shadow-sm border border-border flex flex-col md:flex-row gap-6">
       <div className="flex-1 min-w-0">
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="font-semibold text-base text-foreground whitespace-nowrap shrink-0">
@@ -165,7 +165,7 @@ export function PurchaseSubRow({ rowId }: PurchaseSubRowProps) {
             {t("Không có dòng chi tiết.")}
           </div>
         ) : (
-          <div className="w-full overflow-y-auto max-h-[300px]">
+          <div className="w-full overflow-auto max-h-[300px]">
             <DocumentLineTable
               columns={[
                 {

@@ -510,36 +510,48 @@ export function RoleFilteredPartnersTab({
       key: "code",
       header: "Mã",
       cell: (bp) => bp.code,
-      className: "font-mono font-semibold text-[color:var(--muted-fg)]",
+      className:
+        "font-mono font-semibold text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "name",
       header: "Tên",
       cell: (bp) => bp.name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
     },
     {
       key: "kind",
       header: "Loại",
       cell: (bp) => kindLabel(bp.partner_kind),
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "tax_code",
       header: "MST",
       cell: (bp) => bp.tax_code || "—",
-      className: "font-mono text-[color:var(--muted-fg)]",
+      className: "font-mono text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "phone",
       header: "Điện thoại",
       cell: (bp) => bp.phone || "—",
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
     },
     {
       key: "status",
       header: "Trạng thái",
-      cell: (bp) => <StatusBadge active={bp.is_active} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (bp) => (
+        <div className="flex justify-center w-full">
+          <StatusBadge active={bp.is_active} />
+        </div>
+      ),
     },
   ];
 

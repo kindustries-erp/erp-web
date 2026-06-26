@@ -7,10 +7,16 @@ import {
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import type { PaginatedResponse } from "@/shared/types/pagination";
 
-export type InventoryMasterQueryKind = "uoms" | "item-types";
+export type InventoryMasterQueryKind =
+  | "uoms"
+  | "item-types"
+  | "tracking-categories";
 
 export interface UseInventoryMasterListQueryParams {
   kind: InventoryMasterQueryKind;
+  page?: number;
+  pageSize?: number;
+  sort?: string[];
   search?: string;
   isActive?: boolean;
 }
@@ -20,12 +26,13 @@ export function useInventoryMasterListQuery(
 ) {
   const normalizedParams = useMemo(
     () => ({
-      page: 1,
-      pageSize: 200,
+      page: params.page ?? 1,
+      pageSize: params.pageSize ?? 200,
+      sort: params.sort,
       search: params.search?.trim() || undefined,
       isActive: params.isActive,
     }),
-    [params.isActive, params.search],
+    [params.isActive, params.search, params.page, params.pageSize, params.sort],
   );
 
   return useAppQuery<PaginatedResponse<InventoryMasterOption>>({
@@ -33,8 +40,13 @@ export function useInventoryMasterListQuery(
     queryFn: () =>
       params.kind === "uoms"
         ? inventoryCoreApi.listUoms(normalizedParams)
-        : inventoryCoreApi.listItemTypes(normalizedParams),
+        : params.kind === "item-types"
+          ? inventoryCoreApi.listItemTypes(normalizedParams)
+          : inventoryCoreApi.listTrackingCategories(normalizedParams),
     placeholderData: (previousData) => previousData,
-    enabled: params.kind === "uoms" || params.kind === "item-types",
+    enabled:
+      params.kind === "uoms" ||
+      params.kind === "item-types" ||
+      params.kind === "tracking-categories",
   });
 }

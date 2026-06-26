@@ -7,7 +7,8 @@ export interface ErpBomLine {
   componentItemCode?: string;
   componentItemName?: string;
   qtyRequired: string;
-  uom: string;
+  uomId?: string;
+  uom?: string;
   scrapRate?: string;
   notes?: string;
 }
@@ -78,5 +79,31 @@ export const bomCoreApi = {
   },
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
+  },
+  export: async (id: string, format: "xlsx" | "csv"): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/export`, {
+      params: { format },
+      responseType: "blob",
+    });
+    return data;
+  },
+  downloadImportTemplate: async (): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/import/template`, {
+      responseType: "blob",
+    });
+    return data;
+  },
+  parseBomLines: async (file: File): Promise<ErpBomLine[]> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const { data } = await axiosInstance.post<{
+      message: string;
+      data: ErpBomLine[];
+    }>(`${BASE}/import/parse`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data.data;
   },
 };

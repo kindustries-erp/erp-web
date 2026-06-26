@@ -190,19 +190,23 @@ export function QuyTab() {
       key: "fund_code",
       header: t("settings.quy.headers.fundCode"),
       cell: (q) => q.fund_code,
-      className: "font-mono text-[color:var(--muted-fg)]",
+      className: "font-mono text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-16",
     },
     {
       key: "fund_name",
       header: t("settings.quy.headers.fundName"),
       cell: (q) => q.fund_name,
-      className: "font-medium",
+      className: "font-medium text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-32",
     },
     {
       key: "accounting_account_id",
       header: t("settings.tk.headers.accountingAccount"),
+      className: "text-left",
+      headerClassName: "text-center",
       cell: (q) =>
         coaItems.find((c) => c.id === q.accounting_account_id)?.account_code ||
         "—",
@@ -212,13 +216,20 @@ export function QuyTab() {
       key: "currency",
       header: t("settings.tk.headers.currency"),
       cell: (q) => q.currency,
-      className: "text-[color:var(--muted-fg)]",
+      className: "text-[color:var(--muted-fg)] text-left",
+      headerClassName: "text-center",
       skeletonClassName: "w-12",
     },
     {
       key: "status",
       header: t("settings.tk.headers.status"),
-      cell: (q) => <TagCell active={q.is_active} isDefault={false} />,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (q) => (
+        <div className="flex justify-center w-full">
+          <TagCell active={q.is_active} isDefault={false} />
+        </div>
+      ),
       skeletonClassName: "w-16",
     },
   ];

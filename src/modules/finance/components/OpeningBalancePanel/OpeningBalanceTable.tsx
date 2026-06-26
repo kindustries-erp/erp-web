@@ -1,4 +1,5 @@
 import { cn } from "@/shared/utils";
+import { formatGMT7 } from "@/shared/utils/format";
 import { Panel } from "@/shared/components/Panel";
 import { Skeleton } from "@/shared/components/Skeleton";
 import type {
@@ -122,7 +123,7 @@ export function OpeningBalanceTable(props: any) {
                   {b.fiscal_period}
                 </td>
                 <td className="text-xs px-[10px] py-[8px] border-b border-[color:var(--border-light)] text-[color:var(--muted-fg)]">
-                  {b.balance_date}
+                  {formatGMT7(b.balance_date, "date")}
                 </td>
                 <td className="text-xs px-[10px] py-[8px] border-b border-[color:var(--border-light)]">
                   {coaLabel(b.account_id)}

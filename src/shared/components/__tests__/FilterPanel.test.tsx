@@ -112,6 +112,35 @@ describe("FilterPanel", () => {
     expect(desktopDiv).toHaveClass("w-0");
   });
 
+  it("renders with w-[210px] when panelOpen is true (desktop)", () => {
+    const config: FilterPanelConfig = { search: true, period: true };
+    const filter = makeFilter({ panelOpen: true });
+
+    const { container } = render(
+      <FilterPanel config={config} filter={filter} />,
+    );
+
+    // Desktop div (hidden md:block) should have w-[210px] class
+    const desktopDiv = container.querySelector(".md\\:block");
+    expect(desktopDiv).toHaveClass("w-[210px]");
+  });
+
+  it("renders active filter count badge inside header when hasActiveFilter is true", () => {
+    const config: FilterPanelConfig = { search: true };
+    const filter = makeFilter({
+      panelOpen: true,
+      hasActiveFilter: true,
+      activeFilterCount: 5,
+    });
+
+    render(<FilterPanel config={config} filter={filter} />);
+
+    // Active filter count badge (5) should be present in the panel header (rendered twice: mobile and desktop)
+    const badges = screen.getAllByText("Bộ lọc (5)");
+    expect(badges.length).toBeGreaterThan(0);
+    expect(badges[0]).toBeInTheDocument();
+  });
+
   it("renders filter sections when panelOpen is true and config enables them", () => {
     const config: FilterPanelConfig = { search: true, period: true };
     const filter = makeFilter({ panelOpen: true });
@@ -180,8 +209,7 @@ describe("FilterButton", () => {
   it("renders with correct activeCount badge", () => {
     render(<FilterButton onClick={vi.fn()} activeCount={3} />);
 
-    expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("Bộ lọc")).toBeInTheDocument();
+    expect(screen.getByText("Bộ lọc (3)")).toBeInTheDocument();
   });
 
   it("does not render badge when activeCount is 0", () => {

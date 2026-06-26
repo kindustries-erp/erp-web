@@ -223,6 +223,8 @@ export function ErpEmployeesPage() {
           {item.employeeCode || "—"}
         </span>
       ),
+      className: "text-left",
+      headerClassName: "text-center",
     },
     {
       key: "name",
@@ -235,11 +237,15 @@ export function ErpEmployeesPage() {
           )}
         </div>
       ),
+      className: "text-left",
+      headerClassName: "text-center",
     },
     {
       key: "phone",
       header: "Điện thoại",
       cell: (item) => item.phone || "—",
+      className: "text-left",
+      headerClassName: "text-center",
     },
     {
       key: "startDate",
@@ -248,20 +254,26 @@ export function ErpEmployeesPage() {
         item.startDate
           ? new Date(item.startDate).toLocaleDateString("vi-VN")
           : "—",
+      className: "text-right",
+      headerClassName: "text-center",
     },
     {
       key: "status",
       header: "Trạng thái",
+      className: "text-center",
+      headerClassName: "text-center",
       cell: (item) => (
-        <span
-          className={
-            item.status === "ACTIVE"
-              ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
-              : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
-          }
-        >
-          {item.status}
-        </span>
+        <div className="flex justify-center w-full">
+          <span
+            className={
+              item.status === "ACTIVE"
+                ? "rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700"
+                : "rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600"
+            }
+          >
+            {item.status}
+          </span>
+        </div>
       ),
     },
   ];

@@ -8,9 +8,10 @@ interface OperationalTableActionsProps {
   activeFilterCount: number;
   /** Nếu có, hiện nút "Tạo mới" */
   onCreate?: () => void;
-  /** Label và handler cho nút CTA phụ (VD: "Tạo đơn mẫu") */
   ctaLabel?: string;
   onCta?: () => void;
+  bulkActionsNode?: React.ReactNode;
+  portalId?: string;
 }
 
 /**
@@ -25,6 +26,8 @@ export function OperationalTableActions({
   onCreate,
   ctaLabel,
   onCta,
+  bulkActionsNode,
+  portalId,
 }: OperationalTableActionsProps) {
   return (
     <TableActionGroup
@@ -33,7 +36,9 @@ export function OperationalTableActions({
       onFilterToggle={onFilterToggle}
       activeFilterCount={activeFilterCount}
       onCreate={onCreate}
+      portalId={portalId}
     >
+      {bulkActionsNode}
       {ctaLabel && onCta ? (
         <Button
           variant="secondary"

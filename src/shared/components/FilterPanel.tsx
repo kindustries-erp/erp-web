@@ -32,18 +32,16 @@ export function FilterButton({
       size="sm"
       onClick={onClick}
       className={cn(
-        "relative px-3 py-2",
+        "relative px-3 py-2 min-w-[90px] justify-center",
         activeCount > 0 && "border-primary/50 text-primary",
         className,
       )}
     >
       <Filter className="h-3.5 w-3.5" />
-      <span>{t("Bộ lọc")}</span>
-      {activeCount > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-fg">
-          {activeCount}
-        </span>
-      )}
+      <span>
+        {t("Bộ lọc")}
+        {activeCount > 0 && ` (${activeCount})`}
+      </span>
     </Button>
   );
 }
@@ -201,12 +199,8 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
         </div>
         <span className="text-sm font-semibold text-foreground">
           {t("Bộ lọc")}
+          {filter.hasActiveFilter && ` (${filter.activeFilterCount})`}
         </span>
-        {filter.hasActiveFilter && (
-          <span className="bg-primary text-primary-fg text-[10px] font-semibold px-[7px] py-[2px] rounded-[20px]">
-            {filter.activeFilterCount}
-          </span>
-        )}
       </div>
       <div className="flex items-center gap-1">
         {filter.hasActiveFilter && (
@@ -232,17 +226,17 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
       <div
         className={cn(
           "hidden md:block shrink-0 self-start sticky top-0 overflow-hidden",
-          "rounded-xl card-shadow",
+          "rounded-xl",
           "transition-[width,opacity,margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
           filter.panelOpen
-            ? "w-[280px] opacity-100 ml-5"
+            ? "w-[210px] opacity-100 ml-5"
             : "w-0 opacity-0 ml-0",
           className,
         )}
       >
         <div
           className={cn(
-            "w-[280px] rounded-xl p-4 bg-surface border border-border card-shadow",
+            "w-[210px] rounded-xl p-4 bg-surface border border-border shadow-sm",
             "overflow-y-auto max-h-[calc(100vh-120px)]",
             "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             filter.panelOpen

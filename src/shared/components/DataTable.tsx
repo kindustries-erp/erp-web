@@ -1,12 +1,42 @@
-import React, { type ReactNode } from "react";
+import React, { type ReactNode, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import * as Popover from "@radix-ui/react-popover";
+import { Settings2, GripVertical } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+import { useUserPreferences } from "@/shared/hooks/useUserPreferences";
+
 import {
   flexRender,
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
+  type Table as TanstackTable,
+  type VisibilityState,
+  type Column,
+  type Updater,
+  type ColumnSizingState,
 } from "@tanstack/react-table";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { TablePagination } from "@/shared/components/TablePagination";
+import { useT } from "@/core/i18n";
 import {
   Table,
   TableBody,
@@ -14,7 +44,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/shared/components/ui/table";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
 
 export interface DataTableColumn<T> {
@@ -26,6 +58,12 @@ export interface DataTableColumn<T> {
   skeletonClassName?: string;
   sortable?: boolean;
   sortKey?: string;
+  hideable?: boolean;
+  label?: ReactNode;
+  size?: number;
+  minSize?: number;
+  maxSize?: number;
+  enableResizing?: boolean;
 }
 
 export interface ActionsColumnConfig<T> {
@@ -41,6 +79,8 @@ interface DataTableRowMeta {
   skeletonClassName?: string;
   sortable?: boolean;
   sortKey?: string;
+  hideable?: boolean;
+  label?: ReactNode;
 }
 
 interface DataTableProps<T> {
@@ -68,7 +108,176 @@ interface DataTableProps<T> {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   onSort?: (key: string) => void;
+  enableColumnVisibility?: boolean;
+  tableId?: string;
+  enableColumnResizing?: boolean;
+  enableRowSelection?: boolean;
+  rowSelection?: Record<string, boolean>;
+  onRowSelectionChange?: (updater: Updater<Record<string, boolean>>) => void;
+  variant?: "default" | "spreadsheet";
+  summaryRow?: Record<string, ReactNode>;
+  defaultColumnOrder?: string[];
 }
+
+interface SortableItemProps<T> {
+  id: string;
+  column: Column<T, unknown>;
+}
+
+function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1 : 0,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const meta = column.columnDef.meta as DataTableRowMeta;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] hover:bg-[color:var(--popup-bg-hover)] bg-surface"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab hover:text-foreground text-muted-foreground transition-colors outline-none"
+      >
+        <GripVertical size={14} />
+      </div>
+
+      <label className="flex items-center gap-2 cursor-pointer flex-1 select-none">
+        <div
+          className="flex items-center justify-center w-4 h-4 rounded-[4px] border border-border bg-surface data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-colors"
+          data-state={column.getIsVisible() ? "checked" : "unchecked"}
+        >
+          {column.getIsVisible() && (
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-primary-fg"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          )}
+        </div>
+        <input
+          type="checkbox"
+          className="sr-only"
+          checked={column.getIsVisible()}
+          onChange={(e) => column.toggleVisibility(e.target.checked)}
+        />
+        <span className="truncate">{meta?.label as ReactNode}</span>
+      </label>
+    </div>
+  );
+}
+
+function ColumnToggle<T>({
+  table,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _visibility,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _order,
+}: {
+  table: TanstackTable<T>;
+  _visibility?: VisibilityState;
+  _order?: string[];
+}) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const hideableColumns = table.getAllLeafColumns().filter((col) => {
+    const meta = col.columnDef.meta as DataTableRowMeta;
+    return meta?.hideable !== false && col.id !== "__actions";
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const currentOrder = table.getAllLeafColumns().map((c) => c.id);
+      const oldOrderIndex = currentOrder.findIndex((id) => id === active.id);
+      const newOrderIndex = currentOrder.findIndex((id) => id === over.id);
+
+      const newOrder = arrayMove(currentOrder, oldOrderIndex, newOrderIndex);
+      table.setColumnOrder(newOrder);
+    }
+  };
+
+  if (hideableColumns.length === 0) return null;
+
+  return (
+    <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
+      <Popover.Trigger asChild>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="h-8 w-8 px-0"
+          title={t("Hiển thị cột")}
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(true);
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <Settings2 className="h-4 w-4" />
+        </Button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={6}
+          className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content bg-surface border border-border shadow-md"
+        >
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={hideableColumns.map((col) => col.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {hideableColumns.map((column) => (
+                <SortableColumnItem<T>
+                  key={column.id}
+                  id={column.id}
+                  column={column}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
+import { subscribePortalTarget } from "./portalStore";
 
 export function DataTable<T>({
   items,
@@ -80,7 +289,7 @@ export function DataTable<T>({
   filters,
   minWidth = 700,
   loadingRows = 6,
-  elevated = true,
+  elevated = false,
   containerClassName,
   actionsColumn,
   page,
@@ -95,7 +304,104 @@ export function DataTable<T>({
   sortBy,
   sortOrder,
   onSort,
+  enableColumnVisibility,
+  tableId,
+  enableColumnResizing,
+  enableRowSelection,
+  rowSelection,
+  onRowSelectionChange,
+  variant = "default",
+  summaryRow,
+  defaultColumnOrder,
 }: DataTableProps<T>) {
+  const { getTablePreference, setTablePreferences } = useUserPreferences();
+
+  const [internalVisibility, setInternalVisibility] = useState<VisibilityState>(
+    () => (tableId ? getTablePreference(tableId)?.columnVisibility || {} : {}),
+  );
+
+  const [internalColumnOrder, setInternalColumnOrder] = useState<string[]>(
+    () => {
+      if (tableId) {
+        let pref = getTablePreference(tableId)?.columnOrder;
+
+        // Force override if defaultColumnOrder explicitly sets __actions first but pref doesn't have it
+        if (
+          pref &&
+          defaultColumnOrder &&
+          defaultColumnOrder[0] === "__actions" &&
+          pref[0] !== "__actions"
+        ) {
+          pref = [
+            "__actions",
+            "__expand",
+            "__selection",
+            ...pref.filter(
+              (c) => !["__actions", "__expand", "__selection"].includes(c),
+            ),
+          ];
+        }
+
+        if (pref && pref.length > 0) return pref;
+      }
+      return defaultColumnOrder || [];
+    },
+  );
+
+  const [internalColumnSizing, setInternalColumnSizing] =
+    useState<ColumnSizingState>(() =>
+      tableId ? getTablePreference(tableId)?.columnSizing || {} : {},
+    );
+
+  const handleColumnVisibilityChange = (
+    updaterOrValue: Updater<VisibilityState>,
+  ) => {
+    setInternalVisibility(updaterOrValue);
+    if (tableId) {
+      const newState =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(internalVisibility)
+          : updaterOrValue;
+      setTablePreferences(tableId, {
+        columnOrder: internalColumnOrder,
+        columnVisibility: newState,
+        columnSizing: internalColumnSizing,
+      });
+    }
+  };
+
+  const handleColumnOrderChange = (updaterOrValue: Updater<string[]>) => {
+    setInternalColumnOrder(updaterOrValue);
+    if (tableId) {
+      const newState =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(internalColumnOrder)
+          : updaterOrValue;
+      setTablePreferences(tableId, {
+        columnOrder: newState,
+        columnVisibility: internalVisibility,
+        columnSizing: internalColumnSizing,
+      });
+    }
+  };
+
+  const handleColumnSizingChange = (
+    updaterOrValue: Updater<ColumnSizingState>,
+  ) => {
+    setInternalColumnSizing(updaterOrValue);
+    if (tableId) {
+      const newState =
+        typeof updaterOrValue === "function"
+          ? updaterOrValue(internalColumnSizing)
+          : updaterOrValue;
+      setTablePreferences(tableId, {
+        columnOrder: internalColumnOrder,
+        columnVisibility: internalVisibility,
+        columnSizing: newState,
+      });
+    }
+  };
+
   const showPagination =
     page != null &&
     pageSize != null &&
@@ -119,12 +425,18 @@ export function DataTable<T>({
             ? (page - 1) * pageSize + row.index + 1
             : row.index + 1,
         ),
+      size: column.size,
+      minSize: column.minSize,
+      maxSize: column.maxSize,
+      enableResizing: column.enableResizing,
       meta: {
         className: column.className,
         headerClassName: column.headerClassName,
         skeletonClassName: column.skeletonClassName,
         sortable: column.sortable,
         sortKey: column.sortKey || column.key,
+        hideable: column.hideable !== false,
+        label: column.label || column.header || column.key,
       } satisfies DataTableRowMeta,
     }),
   );
@@ -140,16 +452,66 @@ export function DataTable<T>({
             ? (page - 1) * pageSize + row.index + 1
             : row.index + 1,
         ),
+      enableResizing: false,
+      size: 40,
       meta: {
         className: cn(
-          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0",
+          "w-[40px] min-w-[40px] max-w-[40px] px-0 text-center",
+          variant !== "spreadsheet" &&
+            "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "sticky right-0 bg-surface shadow-[-1px_0_0_0_var(--border-light)] z-10 w-[48px] px-0",
+          "w-[40px] min-w-[40px] max-w-[40px] px-0 text-center",
+          variant !== "spreadsheet" &&
+            "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
           actionsColumn.headerClassName,
         ),
         skeletonClassName: "",
+        hideable: false,
+      } satisfies DataTableRowMeta,
+    });
+  }
+
+  if (enableRowSelection) {
+    tableColumns.unshift({
+      id: "__selection",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          className="translate-y-[2px]"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="translate-y-[2px]"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ),
+      enableResizing: false,
+      size: 40,
+      meta: {
+        className: cn(
+          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
+          variant !== "spreadsheet" &&
+            "bg-surface sticky left-0 z-20 shadow-[1px_0_0_0_var(--border-light)]",
+        ),
+        headerClassName: cn(
+          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
+          variant !== "spreadsheet"
+            ? "bg-muted sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
+            : "bg-muted sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
+        ),
+        skeletonClassName: "",
+        hideable: false,
       } satisfies DataTableRowMeta,
     });
   }
@@ -161,20 +523,57 @@ export function DataTable<T>({
     getRowId: getRowKey,
     manualPagination: true,
     manualSorting: true,
+    columnResizeMode: "onChange",
+    state: {
+      columnVisibility: internalVisibility,
+      columnOrder: internalColumnOrder,
+      rowSelection: rowSelection || {},
+      columnSizing: internalColumnSizing,
+    },
+    enableRowSelection,
+    onRowSelectionChange,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    onColumnOrderChange: handleColumnOrderChange,
+    onColumnSizingChange: handleColumnSizingChange,
   });
+
+  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
+
+  useEffect(() => {
+    if (!enableColumnVisibility) return;
+    return subscribePortalTarget(tableId || "default", setPortalTarget);
+  }, [enableColumnVisibility, tableId]);
 
   return (
     <>
+      {enableColumnVisibility && portalTarget
+        ? createPortal(
+            <ColumnToggle
+              table={table}
+              _visibility={internalVisibility}
+              _order={internalColumnOrder}
+            />,
+            portalTarget,
+          )
+        : null}
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
       <div
         className={cn(
-          "bg-surface border border-border rounded-[10px] overflow-x-auto",
+          "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0",
           elevated && "card-shadow",
           containerClassName,
         )}
       >
-        <Table style={{ minWidth }} className="table-fixed">
-          <TableHeader>
+        <Table
+          style={{
+            minWidth: enableColumnResizing ? table.getTotalSize() : minWidth,
+          }}
+          className={cn(
+            "table-fixed",
+            variant === "spreadsheet" && "border-collapse border-spacing-0",
+          )}
+        >
+          <TableHeader className="sticky top-0 z-30 bg-muted shadow-[0_1px_0_0_var(--border-light)]">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
@@ -188,9 +587,25 @@ export function DataTable<T>({
                       key={header.id}
                       className={cn(
                         meta?.headerClassName,
+                        "sticky top-0 bg-muted z-20 shadow-[0_1px_0_0_var(--border-light)]",
                         isFirstCol &&
-                          "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                          !enableRowSelection &&
+                          variant !== "spreadsheet" &&
+                          "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
+                        variant === "spreadsheet" &&
+                          "border-r border-border py-1 h-auto text-[11px]",
+                        variant === "spreadsheet" &&
+                          !["__actions", "__selection", "__expand"].includes(
+                            header.column.id,
+                          ) &&
+                          "px-2",
+                        enableColumnResizing && "relative group",
                       )}
+                      style={{
+                        width: enableColumnResizing
+                          ? header.getSize()
+                          : undefined,
+                      }}
                     >
                       {header.isPlaceholder ? null : meta.sortable ? (
                         <div
@@ -266,9 +681,28 @@ export function DataTable<T>({
                           header.getContext(),
                         )
                       )}
+                      {enableColumnResizing && header.column.getCanResize() && (
+                        <div
+                          {...{
+                            onMouseDown: header.getResizeHandler(),
+                            onTouchStart: header.getResizeHandler(),
+                            className: cn(
+                              "absolute right-0 top-0 h-full w-[4px] cursor-col-resize select-none touch-none bg-transparent group-hover:bg-primary/30 z-50",
+                              header.column.getIsResizing()
+                                ? "bg-primary/50 w-[4px]"
+                                : "",
+                            ),
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
                     </TableHead>
                   );
                 })}
+                <TableHead
+                  className="w-auto p-0 m-0 border-none"
+                  style={{ width: "auto" }}
+                />
               </TableRow>
             ))}
           </TableHeader>
@@ -276,7 +710,7 @@ export function DataTable<T>({
             {loading &&
               Array.from({ length: loadingRows }).map((_, rowIndex) => (
                 <TableRow key={rowIndex} className="hover:bg-transparent">
-                  {table.getAllLeafColumns().map((column, index) => {
+                  {table.getVisibleLeafColumns().map((column, index) => {
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
                     return (
@@ -285,24 +719,48 @@ export function DataTable<T>({
                         className={cn(
                           meta.className,
                           isFirstCol &&
+                            !enableRowSelection &&
                             "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                          variant === "spreadsheet" &&
+                            "border-r border-border py-1 text-xs",
+                          variant === "spreadsheet" &&
+                            !["__actions", "__selection", "__expand"].includes(
+                              column.id,
+                            ) &&
+                            "px-2 truncate",
                         )}
+                        style={{
+                          maxWidth: enableColumnResizing
+                            ? column.getSize()
+                            : undefined,
+                        }}
                       >
                         {meta.skeletonClassName !== "" && (
                           <Skeleton
-                            className={cn("h-3 w-24", meta.skeletonClassName)}
+                            className={cn(
+                              "h-4 w-3/4 max-w-[120px]",
+                              meta.className?.includes("text-center") &&
+                                "mx-auto",
+                              meta.className?.includes("text-right") &&
+                                "ml-auto",
+                              meta.skeletonClassName,
+                            )}
                           />
                         )}
                       </TableCell>
                     );
                   })}
+                  <TableCell
+                    className="w-auto p-0 m-0 border-none"
+                    style={{ width: "auto" }}
+                  />
                 </TableRow>
               ))}
 
             {!loading && error && (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={tableColumns.length}
+                  colSpan={tableColumns.length + 1}
                   className="text-center text-[color:var(--warn-fg)] py-10"
                 >
                   {error}
@@ -313,7 +771,7 @@ export function DataTable<T>({
             {!loading && !error && items.length === 0 && (
               <TableRow className="hover:bg-transparent">
                 <TableCell
-                  colSpan={tableColumns.length}
+                  colSpan={tableColumns.length + 1}
                   className="text-center text-[color:var(--faint)] py-10"
                 >
                   {emptyLabel}
@@ -350,8 +808,24 @@ export function DataTable<T>({
                             className={cn(
                               meta.className,
                               isFirstCol &&
-                                "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                                !enableRowSelection &&
+                                variant !== "spreadsheet" &&
+                                "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
+                              variant === "spreadsheet" &&
+                                "border-r border-border py-1 text-xs",
+                              variant === "spreadsheet" &&
+                                ![
+                                  "__actions",
+                                  "__selection",
+                                  "__expand",
+                                ].includes(cell.column.id) &&
+                                "px-2 truncate",
                             )}
+                            style={{
+                              maxWidth: enableColumnResizing
+                                ? cell.column.getSize()
+                                : undefined,
+                            }}
                           >
                             {flexRender(
                               cell.column.columnDef.cell,
@@ -360,12 +834,16 @@ export function DataTable<T>({
                           </TableCell>
                         );
                       })}
+                      <TableCell
+                        className="w-auto p-0 m-0 border-none"
+                        style={{ width: "auto" }}
+                      />
                     </TableRow>
                     {renderSubRow && isExpanded && (
                       <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
                         <TableCell
-                          colSpan={tableColumns.length}
-                          className="p-4 pl-14 bg-muted/20"
+                          colSpan={row.getVisibleCells().length + 1}
+                          className="p-4 bg-muted/20"
                         >
                           {renderSubRow(row.original)}
                         </TableCell>
@@ -375,6 +853,42 @@ export function DataTable<T>({
                 );
               })}
           </TableBody>
+          {summaryRow && (
+            <TableFooter className="sticky bottom-0 z-30 bg-muted shadow-[0_-1px_0_0_var(--border-light)]">
+              <TableRow className="hover:bg-transparent">
+                {table.getVisibleLeafColumns().map((column, index) => {
+                  const meta = column.columnDef.meta as DataTableRowMeta;
+                  const isFirstCol = index === 0;
+                  return (
+                    <TableCell
+                      key={column.id}
+                      className={cn(
+                        meta.className,
+                        isFirstCol &&
+                          !enableRowSelection &&
+                          "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
+                        variant === "spreadsheet" &&
+                          "border-r border-border px-2 py-1 text-xs truncate font-semibold",
+                      )}
+                      style={{
+                        maxWidth: enableColumnResizing
+                          ? column.getSize()
+                          : undefined,
+                      }}
+                    >
+                      {summaryRow[column.id] !== undefined
+                        ? summaryRow[column.id]
+                        : null}
+                    </TableCell>
+                  );
+                })}
+                <TableCell
+                  className="w-auto p-0 m-0 border-none"
+                  style={{ width: "auto" }}
+                />
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
       {showPagination && (

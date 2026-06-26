@@ -10,6 +10,7 @@ export interface DocumentLineTableColumn<T> {
   minWidth?: string | number;
   align?: "left" | "center" | "right";
   sortable?: boolean;
+  fixed?: "left" | "right";
   cell: (row: T, index: number) => ReactNode;
 }
 
@@ -24,6 +25,8 @@ export interface DocumentLineTableProps<T> {
   viewOnly?: boolean;
   sortConfig?: { key: string; direction: "asc" | "desc" } | null;
   onSort?: (key: string) => void;
+  rowClassName?: (row: T, index: number) => string;
+  tableContainerClassName?: string;
 }
 
 export function DocumentLineTable<T>({
@@ -37,6 +40,8 @@ export function DocumentLineTable<T>({
   viewOnly,
   sortConfig,
   onSort,
+  rowClassName,
+  tableContainerClassName,
 }: DocumentLineTableProps<T>) {
   const t = useT();
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -86,7 +91,10 @@ export function DocumentLineTable<T>({
       </div>
       <div
         ref={bottomScrollRef}
-        className="w-full overflow-x-auto rounded-lg border border-[color:var(--border)]"
+        className={cn(
+          "w-full overflow-x-auto rounded-lg border border-[color:var(--border)]",
+          tableContainerClassName,
+        )}
         onScroll={handleBottomScroll}
       >
         <table ref={tableRef} className="w-full text-sm text-left relative">
@@ -95,13 +103,20 @@ export function DocumentLineTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-3 py-2 font-medium ${
+                  className={cn(
+                    "px-3 py-2 font-medium",
                     col.align === "center"
                       ? "text-center"
                       : col.align === "right"
                         ? "text-right"
-                        : "text-left"
-                  } ${col.sortable ? "cursor-pointer hover:bg-muted/80 transition-colors select-none" : ""}`}
+                        : "text-left",
+                    col.sortable &&
+                      "cursor-pointer hover:bg-muted/80 transition-colors select-none",
+                    col.fixed === "left" &&
+                      "sticky left-0 bg-muted z-20 shadow-[1px_0_0_0_var(--border)]",
+                    col.fixed === "right" &&
+                      "sticky right-0 bg-muted z-20 shadow-[-1px_0_0_0_var(--border)]",
+                  )}
                   style={{ width: col.width, minWidth: col.minWidth }}
                   onClick={() => col.sortable && onSort?.(col.key)}
                 >
@@ -187,18 +202,26 @@ export function DocumentLineTable<T>({
               data.map((row, idx) => (
                 <tr
                   key={getRowKey(row, idx)}
-                  className="group hover:bg-muted/30 transition-colors"
+                  className={cn(
+                    "group hover:bg-muted/30 transition-colors",
+                    rowClassName?.(row, idx),
+                  )}
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`px-3 py-2 align-top mt-2 ${
+                      className={cn(
+                        "px-3 py-2 align-top mt-2",
                         col.align === "center"
                           ? "text-center"
                           : col.align === "right"
                             ? "text-right"
-                            : "text-left"
-                      }`}
+                            : "text-left",
+                        col.fixed === "left" &&
+                          "sticky left-0 bg-background group-hover:bg-muted/30 z-10 shadow-[1px_0_0_0_var(--border)]",
+                        col.fixed === "right" &&
+                          "sticky right-0 bg-background group-hover:bg-muted/30 z-10 shadow-[-1px_0_0_0_var(--border)]",
+                      )}
                     >
                       {col.cell(row, idx)}
                     </td>

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { NotificationPopover } from "@/core/components/layout/NotificationPopover";
+import { NotificationPopover } from "@/core/components/layout/sidebar/components/NotificationPopover";
 
 vi.mock("@/core/i18n", () => ({
   useT: () => (key: string) => {

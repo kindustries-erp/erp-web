@@ -23,6 +23,29 @@ export function normalizeDateTime(value?: string | null) {
   }
 }
 
+export function normalizeDateTimeGMT7(value?: string | null) {
+  if (!value) return "";
+  try {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+    return `${partMap.year}-${partMap.month}-${partMap.day} ${partMap.hour}:${partMap.minute}:${partMap.second}`;
+  } catch {
+    return String(value);
+  }
+}
+
 export function today() {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -42,6 +65,48 @@ export function fmtQty(value?: number | string | null) {
 export function fmtDate(value?: string | null) {
   if (!value) return "—";
   return value.slice(0, 10);
+}
+
+export function formatGMT7(
+  value?: string | null,
+  formatStr: "date" | "datetime" | "datetime-sec" = "date",
+) {
+  if (!value) return "—";
+  try {
+    let valStr = value;
+    if (
+      typeof valStr === "string" &&
+      valStr.length > 10 &&
+      !valStr.endsWith("Z") &&
+      !valStr.match(/[+-]\d{2}:?\d{2}$/)
+    ) {
+      if (valStr.includes(" ")) valStr = valStr.replace(" ", "T");
+      valStr += "Z";
+    }
+    const d = new Date(valStr);
+    if (isNaN(d.getTime())) return value;
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: formatStr.startsWith("datetime") ? "2-digit" : undefined,
+      minute: formatStr.startsWith("datetime") ? "2-digit" : undefined,
+      second: formatStr === "datetime-sec" ? "2-digit" : undefined,
+      hour12: false,
+    });
+    const parts = formatter.formatToParts(d);
+    const partMap = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+    if (formatStr === "date") {
+      return `${partMap.day}/${partMap.month}/${partMap.year}`;
+    }
+    if (formatStr === "datetime-sec") {
+      return `${partMap.day}/${partMap.month}/${partMap.year} ${partMap.hour}:${partMap.minute}:${partMap.second}`;
+    }
+    return `${partMap.day}/${partMap.month}/${partMap.year} ${partMap.hour}:${partMap.minute}`;
+  } catch {
+    return String(value);
+  }
 }
 
 export function extractItemCodeAndName(
