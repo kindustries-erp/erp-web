@@ -13,7 +13,7 @@ import {
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
-import { Upload, Download, Loader2 } from "lucide-react";
+import { Upload, Download, Loader2, Trash2 } from "lucide-react";
 
 export interface BomLineForm {
   componentItemId: string;
@@ -386,6 +386,35 @@ export function BomFormDrawer({
                       accept=".xlsx,.csv"
                       onChange={handleFileUpload}
                     />
+                    {(!editing || form.status === "DRAFT") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              t("Bạn có chắc chắn muốn xóa tất cả linh kiện?"),
+                            )
+                          ) {
+                            setForm((prev) => ({
+                              ...prev,
+                              lines: [
+                                {
+                                  componentItemId: "",
+                                  qtyRequired: "1",
+                                  uom: "",
+                                  scrapRate: "0",
+                                  notes: "",
+                                },
+                              ],
+                            }));
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-red-600 rounded hover:bg-red-50 focus:outline-none ml-1"
+                      >
+                        <Trash2 size={14} />
+                        {t("Xóa tất cả")}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -401,6 +430,7 @@ export function BomFormDrawer({
           }
         >
           <DocumentLineTable
+            tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
             data={filteredLines}
             getRowKey={(_, idx) => String(idx)}
             viewOnly={viewOnly}
@@ -439,8 +469,16 @@ export function BomFormDrawer({
                 minWidth: 90,
                 cell: (line, idx) => (
                   <input
+                    type="number"
+                    step="0.1"
                     value={line.qtyRequired}
                     readOnly={viewOnly || !!editing}
+                    onBlur={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val)) {
+                        updateLine(idx, { qtyRequired: val.toFixed(1) });
+                      }
+                    }}
                     onChange={(e) =>
                       updateLine(idx, { qtyRequired: e.target.value })
                     }
@@ -469,8 +507,16 @@ export function BomFormDrawer({
                 minWidth: 95,
                 cell: (line, idx) => (
                   <input
+                    type="number"
+                    step="0.01"
                     value={line.scrapRate}
                     readOnly={viewOnly || !!editing}
+                    onBlur={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val)) {
+                        updateLine(idx, { scrapRate: val.toFixed(2) });
+                      }
+                    }}
                     onChange={(e) =>
                       updateLine(idx, { scrapRate: e.target.value })
                     }
