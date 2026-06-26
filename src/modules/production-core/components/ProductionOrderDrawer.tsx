@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
@@ -180,6 +181,16 @@ export function ProductionOrderDrawer({
     return matchSearch && requiredQty > availableQty;
   });
 
+  const aggregatedRequired = useMemo(() => {
+    const map: Record<string, number> = {};
+    bomLines?.forEach((line: BomLikeLine) => {
+      const effId =
+        alternativeItems[line.path || line.itemId || ""] || line.itemId || "";
+      map[effId] = (map[effId] || 0) + Number(line.qtyRequired || 0);
+    });
+    return map;
+  }, [bomLines, alternativeItems]);
+
   const leftPanel = (
     <div className="flex h-full flex-col space-y-6">
       <DrawerSection
@@ -248,9 +259,10 @@ export function ProductionOrderDrawer({
               }
               viewOnly={true}
               rowClassName={(line: BomLikeLine) => {
-                const requiredQty = Number(line.qtyRequired || 0);
-                const displayRequired = requiredQty;
-
+                if (
+                  (line as Record<string, unknown>).itemTypeCode === "SERVICE"
+                )
+                  return "";
                 const linePath = line.path || line.itemId || "";
                 const effectiveItemId =
                   alternativeItems[linePath] || line.itemId || "";
@@ -258,6 +270,8 @@ export function ProductionOrderDrawer({
                   balances[effectiveItemId] || { availableQty: 0 }
                 ).availableQty;
 
+                const displayRequired =
+                  aggregatedRequired[effectiveItemId] || 0;
                 const isLacking = displayRequired > availableQty;
                 return (!editing || isDraft) && isLacking ? "bg-red-50" : "";
               }}

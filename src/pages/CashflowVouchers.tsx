@@ -29,6 +29,7 @@ import {
   type CashflowVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 
 const BUSINESS_TYPE_OPTIONS = [
   "CUSTOMER_RECEIPT",
@@ -73,8 +74,10 @@ const EMPTY_FORM: FormState = {
 export function CashflowVouchersPage() {
   const t = useT();
   const { setCustomBreadcrumbs } = useAppStore();
+  const canRead = useHasPermission("erp_cashflow_vouchers", "read");
   const canCreate = useHasPermission("erp_cashflow_vouchers", "create");
   const canUpdate = useHasPermission("erp_cashflow_vouchers", "update");
+  const canDelete = useHasPermission("erp_cashflow_vouchers", "delete");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +110,7 @@ export function CashflowVouchersPage() {
   }, [setCustomBreadcrumbs]);
 
   const loadList = async () => {
+    if (!canRead) return;
     setLoading(true);
     setError(null);
     try {
@@ -315,6 +319,8 @@ export function CashflowVouchersPage() {
       );
     }
   };
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout
@@ -580,7 +586,7 @@ export function CashflowVouchersPage() {
                               CANCEL
                             </button>
                           )}
-                          {voucher.status !== "POSTED" && canUpdate && (
+                          {voucher.status !== "POSTED" && canDelete && (
                             <button
                               className="rounded border px-2 py-1 text-red-700"
                               onClick={(e) => {

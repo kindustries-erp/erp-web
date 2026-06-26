@@ -54,7 +54,15 @@ import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi"
 export function ErpWarehouseTab() {
   const t = useT();
   const canReadReceipts = useHasPermission("goods_receipts", "read");
+  const canCreateReceipt = useHasPermission("goods_receipts", "create");
+  const canUpdateReceipt = useHasPermission("goods_receipts", "update");
+  const canDeleteReceipt = useHasPermission("goods_receipts", "delete");
+
   const canReadIssues = useHasPermission("goods_issues", "read");
+  const canCreateIssue = useHasPermission("goods_issues", "create");
+  const canUpdateIssue = useHasPermission("goods_issues", "update");
+  const canDeleteIssue = useHasPermission("goods_issues", "delete");
+
   const showToast = useUIStore((s) => s.showToast);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const queryClient = useQueryClient();
@@ -498,15 +506,25 @@ export function ErpWarehouseTab() {
             label: t("Xóa"),
             icon: <Trash2 className="h-3.5 w-3.5" />,
             variant: "danger",
-            hidden: row.status !== "DRAFT",
-            onClick: () => setDeleteTarget(row),
+            hidden:
+              row.status !== "DRAFT" ||
+              (row.type === "receipt" && !canDeleteReceipt) ||
+              (row.type === "issue" && !canDeleteIssue),
+            onClick: () => {
+              setDeleteTarget(row);
+            },
           },
           {
-            label: grCancelId === row.id ? t("Đang hủy...") : t("Hủy phiếu"),
+            label: t("Hủy phiếu"),
             icon: <XCircle className="h-3.5 w-3.5" />,
             variant: "danger",
-            hidden: row.type !== "receipt" || row.status !== "POSTED",
-            onClick: () => setCancelTarget(row),
+            hidden:
+              row.status !== "POSTED" ||
+              (row.type === "receipt" && !canUpdateReceipt) ||
+              (row.type === "issue" && !canUpdateIssue),
+            onClick: () => {
+              setCancelTarget(row);
+            },
           },
         ]}
         createActions={[
@@ -514,12 +532,13 @@ export function ErpWarehouseTab() {
             label: t("Nhập kho"),
             icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
             onClick: () => grDrawer.openCreate(),
+            hidden: !canCreateReceipt,
           },
           {
             label: t("Xuất kho"),
             icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
             onClick: () => giDrawer.openCreate(),
-            hidden: true,
+            hidden: !canCreateIssue,
           },
         ]}
       />
