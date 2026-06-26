@@ -24,9 +24,9 @@ export interface InventorySerialRow {
   serialNo: string;
   itemId: string;
   vinId?: string | null;
-  vin?: string | null;
+  vinNo?: string | null;
   engineNo?: string | null;
-  lotId?: string | null;
+  customId?: string | null;
   createdAt: string;
   updatedAt?: string | null;
   item: {
@@ -34,9 +34,18 @@ export interface InventorySerialRow {
     sku: string;
     itemName: string;
     itemType: string;
-    trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM" | null;
-    trackingCategoryKey?: string | null;
+    trackingPolicyId?: string | null;
+    trackingCategoryId?: string | null;
   };
+}
+
+export interface ErpTrackingPolicy {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+  isDeleted?: boolean;
 }
 
 export interface ErpInventoryItem {
@@ -49,8 +58,12 @@ export interface ErpInventoryItem {
   itemType?: { id: string; code: string; name: string };
   status?: string | null;
   note?: string | null;
-  trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM" | null;
-  trackingCategoryKey?: string | null;
+  /** FK → erp_tracking_policies */
+  trackingPolicyId?: string | null;
+  trackingPolicy?: ErpTrackingPolicy | null;
+  /** FK → erp_tracking_categories */
+  trackingCategoryId?: string | null;
+  trackingCategory?: InventoryMasterOption | null;
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
@@ -94,8 +107,8 @@ export interface CreateInventoryItemPayload {
   itemTypeId: string;
   status?: string;
   note?: string;
-  trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
-  trackingCategoryKey?: string;
+  trackingPolicyId?: string;
+  trackingCategoryId?: string;
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
@@ -114,6 +127,7 @@ const BASE = "/api/v1/inventory/items";
 const UOM_BASE = "/api/v1/inventory/uoms";
 const ITEM_TYPE_BASE = "/api/v1/inventory/item-types";
 const TRACKING_CATEGORY_BASE = "/api/v1/inventory/tracking-categories";
+const TRACKING_POLICY_BASE = "/api/v1/inventory/tracking-policies";
 
 type InventoryItemDetailResponse = {
   message: string;
@@ -344,5 +358,20 @@ export const inventoryCoreApi = {
   },
   delete: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
+  },
+  listTrackingPolicies: async (
+    params?: ListParams & { isActive?: boolean },
+  ): Promise<PaginatedResponse<ErpTrackingPolicy>> => {
+    const requestParams = {
+      ...p(params),
+      ...(params?.isActive !== undefined ? { isActive: params.isActive } : {}),
+    };
+    const key = `inventory-tracking-policies:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<
+        PaginatedResponse<ErpTrackingPolicy>
+      >(TRACKING_POLICY_BASE, { params: requestParams });
+      return data;
+    });
   },
 };
