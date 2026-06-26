@@ -45,6 +45,12 @@
   transform: translateX(calc(100% + 16px));
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+@media (min-width: 1024px) {
+  .slide-panel {
+    max-width: calc(100vw - 220px);
+  }
+}
 .slide-panel-overlay.open .slide-panel {
   transform: translateX(0);
 }

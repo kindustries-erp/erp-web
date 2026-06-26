@@ -48,11 +48,23 @@ import {
 } from "@/shared/components/ui/table";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
+import { format as formatDate, isValid } from "date-fns";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Badge } from "@/shared/components/ui/badge";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getNestedValue(obj: any, path: string | number | symbol) {
+  if (typeof path !== "string") return obj[path];
+  return path.split(".").reduce((acc, part) => acc && acc[part], obj);
+}
 
 export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
-  cell: (item: T, index: number) => ReactNode;
+  cell?: (item: T, index: number) => ReactNode;
+  dataIndex?: keyof T | string;
+  valueType?: "text" | "number" | "date" | "status";
+  dateFormat?: string;
   className?: string;
   headerClassName?: string;
   skeletonClassName?: string;
@@ -415,30 +427,92 @@ export function DataTable<T>({
     : columns;
 
   const tableColumns: ColumnDef<T, unknown>[] = effectiveColumns.map(
-    (column) => ({
-      id: column.key,
-      header: () => column.header,
-      cell: ({ row }) =>
-        column.cell(
-          row.original,
-          page && pageSize
-            ? (page - 1) * pageSize + row.index + 1
-            : row.index + 1,
-        ),
-      size: column.size,
-      minSize: column.minSize,
-      maxSize: column.maxSize,
-      enableResizing: column.enableResizing,
-      meta: {
-        className: column.className,
-        headerClassName: column.headerClassName,
-        skeletonClassName: column.skeletonClassName,
-        sortable: column.sortable,
-        sortKey: column.sortKey || column.key,
-        hideable: column.hideable !== false,
-        label: column.label || column.header || column.key,
-      } satisfies DataTableRowMeta,
-    }),
+    (column) => {
+      let cellClass = column.className;
+      let headerClass = column.headerClassName;
+      if (column.valueType === "number" || column.valueType === "date") {
+        cellClass = cn("text-right", cellClass);
+        headerClass = cn("text-right", headerClass);
+      }
+      return {
+        id: column.key,
+        header: () => column.header,
+        cell: ({ row }) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          let value: any;
+          if (column.cell) {
+            value = column.cell(
+              row.original,
+              page && pageSize
+                ? (page - 1) * pageSize + row.index + 1
+                : row.index + 1,
+            );
+          } else if (column.dataIndex) {
+            value = getNestedValue(row.original, column.dataIndex);
+          }
+
+          if (column.valueType === "text" && typeof value === "string") {
+            return (
+              <Tooltip content={value}>
+                <div className="truncate max-w-[200px]">{value}</div>
+              </Tooltip>
+            );
+          }
+          if (column.valueType === "number" && typeof value === "number") {
+            return value.toLocaleString();
+          }
+          if (column.valueType === "date" && value) {
+            const dateObj = new Date(value);
+            if (isValid(dateObj)) {
+              const dateStr = formatDate(
+                dateObj,
+                column.dateFormat || "dd/MM/yyyy HH:mm",
+              );
+              const fullDateStr = formatDate(dateObj, "dd/MM/yyyy HH:mm:ss");
+              return (
+                <Tooltip content={fullDateStr}>
+                  <span>{dateStr}</span>
+                </Tooltip>
+              );
+            }
+          }
+          if (column.valueType === "status" && typeof value === "string") {
+            let variant:
+              | "default"
+              | "secondary"
+              | "destructive"
+              | "outline"
+              | "ghost" = "default";
+            const lower = value.toLowerCase();
+            if (["active", "approved", "success", "completed"].includes(lower))
+              variant = "default";
+            else if (["draft", "pending", "processing"].includes(lower))
+              variant = "secondary";
+            else if (
+              ["cancelled", "rejected", "failed", "error"].includes(lower)
+            )
+              variant = "destructive";
+
+            return <Badge variant={variant}>{value}</Badge>;
+          }
+
+          return value as ReactNode;
+        },
+        size: column.size,
+        minSize: column.minSize,
+        maxSize: column.maxSize,
+        enableResizing: column.enableResizing,
+        meta: {
+          className: cellClass,
+          headerClassName: headerClass,
+          skeletonClassName: column.skeletonClassName,
+          sortable: column.sortable,
+          sortKey: column.sortKey || column.key,
+          hideable: column.hideable !== false,
+          label: column.label || column.header || column.key,
+        } satisfies DataTableRowMeta,
+      };
+    },
   );
 
   if (actionsColumn) {
