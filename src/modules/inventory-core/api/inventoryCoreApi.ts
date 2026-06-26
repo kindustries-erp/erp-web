@@ -6,7 +6,7 @@ import type {
 } from "@/shared/types/pagination";
 
 export type ListParams = BaseListParams & {
-  itemType?: string;
+  itemTypeId?: string;
   status?: string;
   ids?: string;
 };
@@ -14,7 +14,7 @@ export type ListParams = BaseListParams & {
 import type { InventoryConnectionsData } from "./../hooks/useInventoryGraph";
 
 export type InventorySerialListParams = BaseListParams & {
-  itemType?: string;
+  itemTypeId?: string;
   trackingPolicy?: string;
   itemId?: string;
 };
@@ -43,8 +43,10 @@ export interface ErpInventoryItem {
   id: string;
   sku: string;
   itemName: string;
-  uom: string;
-  itemType: string;
+  uomId: string;
+  uom?: { id: string; code: string; name: string };
+  itemTypeId: string;
+  itemType?: { id: string; code: string; name: string };
   status?: string | null;
   note?: string | null;
   trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM" | null;
@@ -88,8 +90,8 @@ export interface InventoryMovementsPayload {
 export interface CreateInventoryItemPayload {
   sku: string;
   itemName: string;
-  uom: string;
-  itemType: string;
+  uomId: string;
+  itemTypeId: string;
   status?: string;
   note?: string;
   trackingPolicy?: "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
@@ -134,7 +136,7 @@ function p(params: ListParams = {}) {
     pageSize: params.pageSize ?? 20,
     ...(params.sort?.length ? { sort: params.sort.join(",") } : {}),
     ...(params.search ? { search: params.search } : {}),
-    ...(params.itemType ? { itemType: params.itemType } : {}),
+    ...(params.itemTypeId ? { itemTypeId: params.itemTypeId } : {}),
     ...(params.status ? { status: params.status } : {}),
     ...(params.ids ? { ids: params.ids } : {}),
   };
@@ -161,7 +163,7 @@ export const inventoryCoreApi = {
       pageSize: params?.pageSize ?? 20,
       ...(params?.sort?.length ? { sort: params.sort.join(",") } : {}),
       ...(params?.search ? { search: params.search } : {}),
-      ...(params?.itemType ? { itemType: params.itemType } : {}),
+      ...(params?.itemTypeId ? { itemTypeId: params.itemTypeId } : {}),
       ...(params?.trackingPolicy
         ? { trackingPolicy: params.trackingPolicy }
         : {}),
