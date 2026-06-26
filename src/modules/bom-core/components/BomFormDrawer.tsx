@@ -38,7 +38,7 @@ export interface BomForm {
 export const emptyLine = (): BomLineForm => ({
   componentItemId: "",
   qtyRequired: "1",
-  uom: "PCS",
+  uom: "",
   scrapRate: "0",
   notes: "",
 });
@@ -47,7 +47,7 @@ export const emptyForm = (): BomForm => ({
   bomCode: "",
   bomName: "",
   finishedGoodItemId: "",
-  version: "v1",
+  version: "1.0",
   status: "ACTIVE",
   effectiveFrom: "",
   effectiveTo: "",
@@ -60,7 +60,7 @@ export function buildForm(bom: ErpBom): BomForm {
     bomCode: bom.bomCode ?? "",
     bomName: bom.bomName ?? "",
     finishedGoodItemId: bom.finishedGoodItemId ?? "",
-    version: bom.version ?? "v1",
+    version: bom.version ?? "1.0",
     status: bom.status ?? "ACTIVE",
     effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
     effectiveTo: bom.effectiveTo ? bom.effectiveTo.slice(0, 10) : "",
@@ -69,7 +69,7 @@ export function buildForm(bom: ErpBom): BomForm {
       ? bom.lines.map((line) => ({
           componentItemId: line.componentItemId ?? "",
           qtyRequired: line.qtyRequired ?? "1",
-          uom: line.uom ?? "PCS",
+          uom: line.uom ?? "",
           scrapRate: line.scrapRate ?? "0",
           notes: line.notes ?? "",
         }))
@@ -82,7 +82,7 @@ export function toPayload(form: BomForm) {
     bomCode: form.bomCode.trim(),
     bomName: form.bomName.trim(),
     finishedGoodItemId: form.finishedGoodItemId || undefined,
-    version: form.version.trim() || "v1",
+    version: form.version.trim() || "1.0",
     status: form.status || "ACTIVE",
     effectiveFrom: form.effectiveFrom || undefined,
     effectiveTo: form.effectiveTo || undefined,
@@ -90,7 +90,7 @@ export function toPayload(form: BomForm) {
     lines: form.lines.map((line) => ({
       componentItemId: line.componentItemId || undefined,
       qtyRequired: line.qtyRequired,
-      uom: line.uom.trim() || "PCS",
+      uom: line.uom.trim() || "",
       scrapRate: line.scrapRate || undefined,
       notes: line.notes.trim() || undefined,
     })),
@@ -116,6 +116,8 @@ export interface BomFormDrawerProps {
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<BomLineForm>) => void;
+  itemUomMap?: Map<string, string>;
+  uomOptions?: Array<{ value: string; label: string }>;
   onExport?: (format: "xlsx" | "csv") => void;
 }
 
@@ -138,6 +140,8 @@ export function BomFormDrawer({
   addLine,
   removeLine,
   updateLine,
+  itemUomMap,
+  uomOptions,
   onExport,
 }: BomFormDrawerProps) {
   const t = useT();
@@ -177,7 +181,7 @@ export function BomFormDrawer({
       const newLines = parsedLines.map((pl) => ({
         componentItemId: pl.componentItemId || "",
         qtyRequired: pl.qtyRequired ? String(pl.qtyRequired) : "1",
-        uom: pl.uom || "PCS",
+        uom: pl.uom || "",
         scrapRate: pl.scrapRate ? String(pl.scrapRate) : "0",
         notes: pl.notes || "",
       }));
@@ -411,9 +415,15 @@ export function BomFormDrawer({
                   <Combobox
                     value={line.componentItemId}
                     readOnly={viewOnly || !!editing}
-                    onChange={(value) =>
-                      updateLine(idx, { componentItemId: value })
-                    }
+                    onChange={(value) => {
+                      const patch: Partial<BomLineForm> = {
+                        componentItemId: value,
+                      };
+                      if (itemUomMap && itemUomMap.has(value)) {
+                        patch.uom = itemUomMap.get(value)!;
+                      }
+                      updateLine(idx, patch);
+                    }}
                     options={mergedItemOptions}
                     placeholder={t("Chọn linh kiện")}
                     searchPlaceholder={t("Tìm SKU / tên linh kiện")}
@@ -441,13 +451,15 @@ export function BomFormDrawer({
               {
                 key: "uom",
                 header: t("ĐVT"),
-                minWidth: 80,
+                minWidth: 120,
                 cell: (line, idx) => (
-                  <input
+                  <Combobox
                     value={line.uom}
                     readOnly={viewOnly || !!editing}
-                    onChange={(e) => updateLine(idx, { uom: e.target.value })}
-                    className={inputCls}
+                    onChange={(value) => updateLine(idx, { uom: value })}
+                    options={uomOptions || []}
+                    placeholder={t("Chọn ĐVT")}
+                    allowClear={false}
                   />
                 ),
               },
