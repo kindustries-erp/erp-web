@@ -72,7 +72,7 @@ export function TrackedGoodsPage() {
           <div>
             <div className="font-medium">{row.item?.itemName || "—"}</div>
             <div className="text-xs text-gray-500">
-              {row.item?.itemType} • {row.item?.trackingPolicy}
+              {row.item?.itemType} • {row.item?.trackingPolicyId}
             </div>
           </div>
         ),
@@ -85,11 +85,11 @@ export function TrackedGoodsPage() {
         sortable: true,
         sortKey: "serial_no",
         cell: (row) => {
-          if (row.vin || row.engineNo) {
+          if (row.vinNo || row.engineNo) {
             return (
               <div>
                 <div className="font-medium text-blue-600">
-                  VIN: {row.vin || "—"} / EN: {row.engineNo || "—"}
+                  VIN: {row.vinNo || "—"} / EN: {row.engineNo || "—"}
                 </div>
                 {row.serialNo && (
                   <div className="text-xs text-gray-500 mt-0.5">
