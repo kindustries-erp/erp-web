@@ -183,8 +183,9 @@ export function useGrDrawer({
     }
   }, []);
 
-  // ── Load PO detail when purchaseOrderId changes
+  // ── Load PO detail when purchaseOrderId changes or drawer opens
   useEffect(() => {
+    if (!open) return;
     if (!form.purchaseOrderId) {
       setPoDetail(null);
       return;
@@ -201,10 +202,11 @@ export function useGrDrawer({
         }
       })
       .catch(() => setPoDetail(null));
-  }, [form.purchaseOrderId, fetchItemsDict]);
+  }, [form.purchaseOrderId, fetchItemsDict, open]);
 
-  // ── Load MO detail when productionOrderId changes
+  // ── Load MO detail when productionOrderId changes or drawer opens
   useEffect(() => {
+    if (!open) return;
     if (!form.productionOrderId) {
       setMoDetail(null);
       return;
@@ -218,7 +220,7 @@ export function useGrDrawer({
         }
       })
       .catch(() => setMoDetail(null));
-  }, [form.productionOrderId, fetchItemsDict]);
+  }, [form.productionOrderId, fetchItemsDict, open]);
 
   // ── Load PO list for the combobox
   const loadPoOptions = useCallback(async () => {

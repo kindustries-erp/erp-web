@@ -1,5 +1,7 @@
 import { useAppStore, BREADCRUMBS } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useCompanyProfile } from "@/core/api/companyProfileApi";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
@@ -15,6 +17,7 @@ export function Topbar() {
   );
   const employee = useAuthStore((s) => s.employee);
   const t = useT();
+  const { data: companyProfile } = useCompanyProfile();
   const crumbs = customBreadcrumbs ??
     BREADCRUMBS[currentPage] ?? [[currentPage]];
 
@@ -112,6 +115,15 @@ export function Topbar() {
             {t("topbar.impersonation.stopButton")}
           </button>
         </div>
+      )}
+
+      {/* Company Name */}
+      {!impersonation?.active && companyProfile?.company_name && (
+        <Tooltip content={companyProfile.company_name} side="bottom">
+          <div className="ml-auto text-xs font-medium text-[color:var(--muted-fg)] truncate max-w-[400px] cursor-default">
+            {companyProfile.company_name}
+          </div>
+        </Tooltip>
       )}
     </div>
   );

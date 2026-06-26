@@ -382,6 +382,11 @@ export function ProductionOrderDrawer({
                     const linePath = line.path || line.itemId || "";
                     const effectiveItemId =
                       alternativeItems[linePath] || line.itemId || "";
+
+                    if (line.itemTypeCode === "SERVICE") {
+                      return <span className="text-muted-foreground">—</span>;
+                    }
+
                     const availableQty = (
                       balances[effectiveItemId] || { availableQty: 0 }
                     ).availableQty;
