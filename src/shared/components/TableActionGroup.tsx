@@ -89,6 +89,7 @@ export function TableActionGroup({
                   // We handle only ActionItem here since it's a simple list in Popover.
                   // For groups, one would use ActionDropdown, but here we just map items.
                   if ("items" in action) return null;
+                  if (action.hidden) return null;
                   return (
                     <Popover.Close key={index} asChild>
                       <button

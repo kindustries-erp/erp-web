@@ -20,6 +20,7 @@ export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
   const canCreateReceipt = useHasPermission("goods_receipts", "create");
+  const isAdmin = useHasPermission("*", "*");
 
   // GR drawer — reuses the same form as ErpWarehousePage
   const grDrawer = useGrDrawer({
@@ -117,7 +118,6 @@ export function PurchaseOrderListPage() {
           : undefined
       }
       getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
-      onRowClick={(row) => openDetail(row)}
       filterConfig={filterConfig}
       filter={filter}
       renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
@@ -134,6 +134,7 @@ export function PurchaseOrderListPage() {
               label: t("connectionGraph.action"),
               icon: <Network className="h-[13px] w-[13px]" />,
               onClick: () => void openConnectionGraph(row),
+              hidden: !isAdmin,
             },
             {
               label: t("Liên kết tiền"),

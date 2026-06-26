@@ -519,6 +519,7 @@ export function ErpWarehouseTab() {
             label: t("Xuất kho"),
             icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
             onClick: () => giDrawer.openCreate(),
+            hidden: true,
           },
         ]}
       />

@@ -34,7 +34,7 @@
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 172px;
+  width: 180px;
   background: var(--sidebar-bg);
   border: none;
   border-radius: 14px;

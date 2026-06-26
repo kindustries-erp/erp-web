@@ -154,10 +154,20 @@ export function InventoryListPage() {
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
         bulkActionsNode={bulkActionsNode}
-        onRefetch={useCallback(
-          () => void listQuery.refetch(),
-          [listQuery.refetch],
-        )}
+        onRefetch={useCallback(() => {
+          void listQuery.refetch();
+          const expandedIds = Object.keys(expandedStockItemIds).filter(
+            (key) => expandedStockItemIds[key],
+          );
+          expandedIds.forEach((id) => {
+            inventoryCoreApi
+              .movements(id)
+              .then((data) => {
+                setMovMap((prev) => ({ ...prev, [id]: data }));
+              })
+              .catch(() => {});
+          });
+        }, [listQuery.refetch, expandedStockItemIds, setMovMap])}
       />
     </>
   );

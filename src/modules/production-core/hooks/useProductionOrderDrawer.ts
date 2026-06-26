@@ -23,6 +23,7 @@ export interface BomLikeLine {
   itemId?: string;
   itemName?: string | null;
   itemCode?: string | null;
+  itemTypeCode?: string | null;
   qtyRequired?: string | null;
   qtyIssued?: string | null;
   uom?: string | null;
@@ -48,6 +49,7 @@ export interface ExplosionNode {
   itemId: string;
   itemName?: string;
   itemCode?: string;
+  itemTypeCode?: string | null;
   qtyRequired: number | string;
   uom?: string;
   isLeaf?: boolean;
@@ -309,6 +311,8 @@ export function useProductionOrderDrawer({
                     originalItemId: n.itemId,
                     itemCode: n.itemCode ?? matched?.originalItemCode ?? null,
                     itemName: n.itemName ?? matched?.originalItemName ?? null,
+                    itemTypeCode:
+                      n.itemTypeCode ?? matched?.itemTypeCode ?? null,
                     qtyRequired: String(n.qtyRequired),
                     qtyIssued: matched?.qtyIssued ?? "0",
                     uom: n.uom ?? matched?.uom ?? null,
