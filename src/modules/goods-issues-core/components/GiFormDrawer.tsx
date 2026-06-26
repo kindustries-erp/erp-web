@@ -21,6 +21,7 @@ import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { GoodsIssuePrintTemplate } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 interface GiFormDrawerProps {
   drawer: UseGiDrawerReturn;
@@ -58,6 +59,8 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     setGlobalLoading(saving);
   }, [saving, setGlobalLoading]);
 
+  const canUpdate = useHasPermission("goods_issues", "update");
+
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
     contentRef: printRef,
@@ -77,11 +80,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     { value: "CANCELLED", label: t("Đã hủy") },
   ];
   const moLinkedLocked = isMoLinkedGiLocked(editing);
+  const isAdmin = useHasPermission("*", "*");
 
   // Derive actions
   const actions = [];
   if (viewOnly) {
-    if (editing && editing.status !== "DRAFT") {
+    if (editing && editing.status !== "DRAFT" && isAdmin) {
       actions.push({
         label: t("common.print"),
         onClick: handlePrint,
@@ -153,6 +157,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
         onToggleEdit={
           viewOnly &&
           editing &&
+          canUpdate &&
           !moLinkedLocked &&
           !["POSTED", "CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
             ? () => setViewOnly(false)

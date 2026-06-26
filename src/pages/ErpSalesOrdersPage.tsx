@@ -47,6 +47,10 @@ function fmtDate(value?: string | null) {
 
 export function ErpSalesOrdersPage() {
   const canRead = useHasPermission("sales_orders", "read");
+  const canCreate = useHasPermission("sales_orders", "create");
+  const canUpdate = useHasPermission("sales_orders", "update");
+  const canDelete = useHasPermission("sales_orders", "delete");
+
   const [items, setItems] = useState<ErpSalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -368,7 +372,7 @@ export function ErpSalesOrdersPage() {
           loading={loading}
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
-          onCreate={openCreate}
+          onCreate={canCreate ? openCreate : undefined}
           createLabel="Tạo mới"
         />
       }
@@ -402,30 +406,36 @@ export function ErpSalesOrdersPage() {
                 label: "Chỉnh sửa",
                 icon: <Pencil className="h-4 w-4" />,
                 onClick: () => void openEdit(item),
+                hidden: !canUpdate,
               },
               {
                 label: actingId === item.id ? "Đang reserve..." : "Reserve",
                 icon: <PackageCheck className="h-4 w-4" />,
                 onClick: () => void handleReserve(item),
+                hidden: !canUpdate,
               },
               {
                 label: actingId === item.id ? "Đang unreserve..." : "Unreserve",
                 icon: <RotateCcw className="h-4 w-4" />,
                 onClick: () => void handleUnreserve(item),
+                hidden: !canUpdate,
               },
               {
                 label: "Xóa",
                 onClick: () => setDeleteTarget(item),
                 icon: <Trash2 className="h-4 w-4" />,
                 variant: "danger",
-                hidden: item.status !== "DRAFT",
+                hidden: !canDelete || item.status !== "DRAFT",
               },
               {
                 label: "Hủy phiếu",
                 onClick: () => setCancelTarget(item),
                 icon: <XCircle className="h-4 w-4" />,
                 variant: "danger",
-                hidden: item.status === "DRAFT" || item.status === "CANCELLED",
+                hidden:
+                  !canUpdate ||
+                  item.status === "DRAFT" ||
+                  item.status === "CANCELLED",
               },
             ]}
           />
@@ -483,6 +493,14 @@ export function ErpSalesOrdersPage() {
         addLine={addLine}
         removeLine={removeLine}
         updateLine={updateLine}
+        onToggleEdit={
+          viewOnly &&
+          canUpdate &&
+          editing &&
+          !["CANCELLED"].includes(editing.status || "DRAFT")
+            ? () => setViewOnly(false)
+            : undefined
+        }
       />
     </PageLayout>
   );

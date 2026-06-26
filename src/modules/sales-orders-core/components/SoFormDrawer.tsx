@@ -136,6 +136,8 @@ export interface SoFormDrawerProps {
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<SoLineForm>) => void;
+
+  onToggleEdit?: () => void;
 }
 
 export function SoFormDrawer({
@@ -163,6 +165,7 @@ export function SoFormDrawer({
   addLine,
   removeLine,
   updateLine,
+  onToggleEdit,
 }: SoFormDrawerProps) {
   const t = useT();
   const viewOnly = mode === "view";
@@ -188,6 +191,7 @@ export function SoFormDrawer({
       open={open}
       mode={mode}
       onClose={onClose}
+      onToggleEdit={onToggleEdit}
       title={
         viewOnly
           ? t("Xem đơn bán hàng")

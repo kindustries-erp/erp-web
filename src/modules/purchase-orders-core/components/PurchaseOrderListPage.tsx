@@ -19,6 +19,9 @@ import { canReceiveInventory } from "@/modules/operational/utils/operationalHelp
 export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
+  const canCreatePo = useHasPermission("purchase_orders", "create");
+  const canUpdatePo = useHasPermission("purchase_orders", "update");
+  const canDeletePo = useHasPermission("purchase_orders", "delete");
   const canCreateReceipt = useHasPermission("goods_receipts", "create");
   const isAdmin = useHasPermission("*", "*");
 
@@ -99,7 +102,7 @@ export function PurchaseOrderListPage() {
       tableId="purchase-orders-table"
       loading={loading}
       onRefresh={listQuery.refetch}
-      onCreate={handleCreateNew}
+      onCreate={canCreatePo ? handleCreateNew : undefined}
       createLabel={t("Tạo mới")}
       error={pageError}
       items={items}
@@ -158,14 +161,14 @@ export function PurchaseOrderListPage() {
               icon: <Trash2 className="h-[13px] w-[13px]" />,
               variant: "danger",
               onClick: () => confirmDeleteDocument(row.id),
-              hidden: row.status !== "DRAFT",
+              hidden: row.status !== "DRAFT" || !canDeletePo,
             },
             {
               label: t("Hủy phiếu"),
               icon: <XCircle className="h-[13px] w-[13px]" />,
               variant: "danger",
               onClick: () => confirmCancelDocument(row.id),
-              hidden: row.status === "DRAFT" || row.status === "CANCELLED",
+              hidden: row.status !== "CONFIRMED" || !canUpdatePo,
             },
           ],
         },
@@ -179,7 +182,7 @@ export function PurchaseOrderListPage() {
         poReceipts={poReceipts}
         onClose={handleCloseForm}
         onSaved={handleFormSaved}
-        onToggleEdit={handleToggleEdit}
+        onToggleEdit={canUpdatePo ? handleToggleEdit : undefined}
       />
 
       <SettlementDrawer

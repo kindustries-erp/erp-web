@@ -46,6 +46,7 @@ export function ProductionOrderListPage() {
   const canRead = useHasPermission("production", "read");
   const canCreate = useHasPermission("production", "create");
   const canUpdate = useHasPermission("production", "update");
+  const canDelete = useHasPermission("production", "delete");
 
   const [orders, setOrders] = useState<ErpProductionOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -483,7 +484,7 @@ export function ProductionOrderListPage() {
                 ),
               variant: "danger",
               hidden:
-                !canUpdate ||
+                !canDelete ||
                 (item.status !== "DRAFT" && item.status !== "CONFIRMED"),
             },
           ],

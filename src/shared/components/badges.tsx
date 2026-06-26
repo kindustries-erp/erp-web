@@ -5,7 +5,7 @@ import type { VoucherStatus } from "@/modules/finance/api/financeApi";
 // ── VoucherStatus badge ───────────────────────────────────────────────────────
 
 /** i18n keys for VoucherStatus labels */
-const STATUS_I18N_KEYS: Record<VoucherStatus, string> = {
+const STATUS_I18N_KEYS: Record<string, string> = {
   DRAFT: "voucher.status.draft",
   PENDING_APPROVAL: "voucher.status.pendingApproval",
   APPROVED: "voucher.status.approved",
@@ -14,20 +14,45 @@ const STATUS_I18N_KEYS: Record<VoucherStatus, string> = {
 };
 
 /** Fallback Vietnamese labels (used when i18n is not available) */
-export const STATUS_LABELS: Record<VoucherStatus, string> = {
+export const STATUS_LABELS: Record<string, string> = {
   DRAFT: "Nháp",
   PENDING_APPROVAL: "Chờ duyệt",
   APPROVED: "Đã duyệt",
   REJECTED: "Từ chối",
   CANCELLED: "Đã hủy",
+  CONFIRMED: "Đã chốt",
+  RECEIVED: "Đã nhận",
+  ISSUED: "Đã xuất",
+  COMPLETED: "Hoàn thành",
+  CLOSED: "Đã đóng",
+  POSTED: "Đã vào sổ",
+  NOT_RECEIVED: "Chưa nhập",
+  PARTIALLY_RECEIVED: "Đang nhập",
+  FULLY_RECEIVED: "Đã nhập",
+  NOT_ISSUED: "Chưa xuất",
+  PARTIALLY_ISSUED: "Đang xuất",
+  FULLY_ISSUED: "Đã xuất",
 };
 
-const STATUS_CLS: Record<VoucherStatus, string> = {
+const STATUS_CLS: Record<string, string> = {
   DRAFT: "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
   PENDING_APPROVAL: "bg-warn-bg text-warn-fg",
   APPROVED: "bg-approve-bg text-approve-fg",
   REJECTED: "bg-[#fde8e8] text-[#d92a2a]",
-  CANCELLED: "bg-[color:var(--muted)] text-[color:var(--muted-fg)]",
+  CANCELLED:
+    "bg-[color:var(--muted)] text-[color:var(--muted-fg)] text-red-700 bg-red-100", // Wait, let's use a standard red for Cancelled
+  CONFIRMED: "bg-blue-100 text-blue-700",
+  RECEIVED: "bg-emerald-100 text-emerald-700",
+  ISSUED: "bg-emerald-100 text-emerald-700",
+  COMPLETED: "bg-emerald-100 text-emerald-700",
+  CLOSED: "bg-gray-200 text-gray-700",
+  POSTED: "bg-approve-bg text-approve-fg",
+  NOT_RECEIVED: "bg-gray-100 text-gray-600",
+  PARTIALLY_RECEIVED: "bg-blue-100 text-blue-700",
+  FULLY_RECEIVED: "bg-emerald-100 text-emerald-700",
+  NOT_ISSUED: "bg-gray-100 text-gray-600",
+  PARTIALLY_ISSUED: "bg-blue-100 text-blue-700",
+  FULLY_ISSUED: "bg-emerald-100 text-emerald-700",
 };
 
 interface StatusBadgeProps {

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ChevronRight, Warehouse } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { normalizeDateTime } from "@/shared/utils/format";
@@ -9,6 +9,7 @@ import type {
   OperationalDocument,
   OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
+import { StatusBadge } from "@/shared/components/badges";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
@@ -63,31 +64,18 @@ export function usePurchaseColumns({
         header: t("Số PO"),
         sortable: true,
         sortKey: "purchase_no",
-        size: 250,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle font-medium text-left",
         headerClassName: "text-center",
         cell: (row) => {
           return (
-            <div className="flex items-center gap-1.5 text-left text-sm">
+            <div className="flex items-center gap-1.5 text-left text-sm max-w-[120px]">
               <Tooltip content={row.notes || t("Không có ghi chú")}>
-                <span className="font-semibold text-primary">
+                <span className="font-semibold text-primary truncate">
                   {row.purchase_no || "—"}
                 </span>
               </Tooltip>
-              {row.inventory_status &&
-                row.inventory_status !== "NOT_RECEIVED" && (
-                  <Tooltip content={t("Có lịch sử nhập kho")}>
-                    <div className="flex items-center text-muted-foreground/80 cursor-help">
-                      <Warehouse className="w-3 h-3" />
-                    </div>
-                  </Tooltip>
-                )}
-              {row.status === "DRAFT" && (
-                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
-                  {t("Nháp")}
-                </span>
-              )}
             </div>
           );
         },
@@ -97,7 +85,7 @@ export function usePurchaseColumns({
         header: t("Nhà cung cấp"),
         sortable: true,
         sortKey: "supplier_id",
-        size: 400,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-left w-full",
         headerClassName: "text-center w-full",
@@ -114,7 +102,7 @@ export function usePurchaseColumns({
         header: t("Ngày đặt"),
         sortable: true,
         sortKey: "order_date",
-        size: 200,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -136,7 +124,7 @@ export function usePurchaseColumns({
         header: t("Ngày nhập DK"),
         sortable: true,
         sortKey: "expected_date",
-        size: 200,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -152,6 +140,32 @@ export function usePurchaseColumns({
             </Tooltip>
           );
         },
+      },
+      {
+        key: "inventory_status",
+        header: t("Trạng thái nhập kho"),
+        size: 140,
+        enableResizing: true,
+        className: "!py-2 align-middle text-center",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <div className="w-full flex justify-center">
+            <StatusBadge status={row.inventory_status || "NOT_RECEIVED"} />
+          </div>
+        ),
+      },
+      {
+        key: "status",
+        header: t("Trạng thái"),
+        size: 140,
+        enableResizing: true,
+        className: "!py-2 align-middle text-center",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <div className="w-full flex justify-center">
+            <StatusBadge status={row.status} />
+          </div>
+        ),
       },
     ],
     [expandedRowIds, onToggleExpand, t, variant],

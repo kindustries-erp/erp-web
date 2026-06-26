@@ -34,6 +34,7 @@ export function PurchaseOrderDrawer({
     open,
     editing,
     viewOnly,
+    poReceipts,
     onClose,
     onSaved,
   });

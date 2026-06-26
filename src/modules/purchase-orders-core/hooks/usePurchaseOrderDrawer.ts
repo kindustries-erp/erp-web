@@ -15,6 +15,7 @@ export interface UsePurchaseOrderDrawerProps {
   open: boolean;
   editing: OperationalDocument | null;
   viewOnly?: boolean;
+  poReceipts?: unknown[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
 }
@@ -23,6 +24,7 @@ export function usePurchaseOrderDrawer({
   open,
   editing,
   viewOnly,
+  poReceipts,
   onClose,
   onSaved,
 }: UsePurchaseOrderDrawerProps) {
@@ -70,6 +72,11 @@ export function usePurchaseOrderDrawer({
   ) => {
     if (field === "poNo" && !!editing) return true;
     if (!isPurchaseLocked) return false;
+
+    // User enhancement: if there's receipt history, lock qty
+    const hasReceiptHistory = poReceipts && poReceipts.length > 0;
+    if (hasReceiptHistory && field === "qty") return true;
+
     if (!isPurchaseHeaderEditableAfterConfirm) return true;
     return !["description", "qty", "expectedDate", "status"].includes(field);
   };
