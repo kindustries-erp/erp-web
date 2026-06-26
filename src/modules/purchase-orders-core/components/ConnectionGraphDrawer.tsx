@@ -208,6 +208,21 @@ function GraphNode({ data }: NodeProps<Node<GraphNodeData>>) {
                 .onDetailsClick;
               if (typeof onClickFn === "function") {
                 onClickFn();
+              } else if (data.docId) {
+                // Determine document type mapping based on nodeType
+                let docType = "";
+                if (data.nodeType === "purchase_order")
+                  docType = "erp_purchase_order";
+                else if (data.nodeType === "invoice") docType = "erp_invoice";
+                // Note: We might need to handle GR and PV if they have their own detail drawers
+                if (docType) {
+                  // We do not close the current drawer, just dispatch the event to open another one on top
+                  window.dispatchEvent(
+                    new CustomEvent("open_erp_document", {
+                      detail: { type: docType, id: data.docId },
+                    }),
+                  );
+                }
               }
             }}
           >

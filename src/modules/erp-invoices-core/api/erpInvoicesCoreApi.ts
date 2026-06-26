@@ -87,6 +87,7 @@ export interface ErpInvoiceListParams {
   date_from?: string;
   date_to?: string;
   status?: string;
+  tag_id?: string;
   page?: number;
   pageSize?: number;
   sort_by?: string;

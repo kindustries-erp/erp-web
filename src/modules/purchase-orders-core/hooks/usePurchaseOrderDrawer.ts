@@ -10,6 +10,7 @@ import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
 import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
+import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 
 export interface UsePurchaseOrderDrawerProps {
   open: boolean;
@@ -18,6 +19,8 @@ export interface UsePurchaseOrderDrawerProps {
   poReceipts?: unknown[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
+  /** Pending tag IDs (Option B: applied after create) */
+  pendingTagIds?: string[];
 }
 
 export function usePurchaseOrderDrawer({
@@ -27,6 +30,7 @@ export function usePurchaseOrderDrawer({
   poReceipts,
   onClose,
   onSaved,
+  pendingTagIds = [],
 }: UsePurchaseOrderDrawerProps) {
   const store = useOperationalFormStore();
   const {
@@ -295,10 +299,26 @@ export function usePurchaseOrderDrawer({
           editing.id,
           payload as CreateOperationalPayload,
         );
-      else
-        await operationalApi.createPurchase(
+      else {
+        const result = await operationalApi.createPurchase(
           payload as CreateOperationalPayload,
         );
+        // Option B: apply pending tags after create
+        if (pendingTagIds.length > 0) {
+          const createdId = result?.id;
+          if (createdId) {
+            try {
+              await updateEntityTags(
+                "erp_purchase_order",
+                createdId,
+                pendingTagIds,
+              );
+            } catch {
+              // tags are non-critical
+            }
+          }
+        }
+      }
       await onSaved();
       onClose();
     } catch (e) {

@@ -187,6 +187,7 @@ interface AppState {
   login: () => void;
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
+  preloadTab: (page: PageKey) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -255,6 +256,24 @@ export const useAppStore = create<AppState>()(
           forbidden: false,
           mobileSidebarOpen: false,
         });
+      },
+
+      preloadTab: (page) => {
+        const { openTabs } = get();
+        if (openTabs.includes(page)) return;
+        const newTabs = [...openTabs];
+        const group = SECTION_ROOTS[page]?.group;
+        if (group) {
+          let lastIdx = -1;
+          newTabs.forEach((t, i) => {
+            if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
+          });
+          if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
+          else newTabs.push(page);
+        } else {
+          newTabs.push(page);
+        }
+        set({ openTabs: newTabs });
       },
 
       closeTab: (key) => {

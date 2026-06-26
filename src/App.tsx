@@ -84,7 +84,7 @@ export default function App() {
         syncFromUrl(parsed.page);
       } else {
         history.replaceState(null, "", "/");
-        syncFromUrl("purchasing");
+        syncFromUrl("dashboard");
       }
     };
     sync();

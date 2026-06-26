@@ -15,6 +15,7 @@ import { type OperationalDocument } from "@/modules/operational/api/operationalA
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
+import { useState, useEffect } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
@@ -24,6 +25,7 @@ export function PurchaseOrderListPage() {
   const canDeletePo = useHasPermission("purchase_orders", "delete");
   const canCreateReceipt = useHasPermission("goods_receipts", "create");
   const isAdmin = useHasPermission("*", "*");
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
 
   // GR drawer — reuses the same form as ErpWarehousePage
   const grDrawer = useGrDrawer({
@@ -87,6 +89,30 @@ export function PurchaseOrderListPage() {
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const viewId = params.get("viewId");
+    if (viewId) {
+      openDetail({ id: viewId } as OperationalDocument);
+      // Clean up the URL
+      params.delete("viewId");
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState(null, "", newUrl);
+    }
+
+    // Custom event listener from Tag connections drawer
+    const handleOpenDoc = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.type === "erp_purchase_order" && detail.id) {
+        openDetail({ id: detail.id } as OperationalDocument);
+      }
+    };
+    window.addEventListener("open_erp_document", handleOpenDoc);
+    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
+  }, [openDetail]);
 
   const columns = usePurchaseColumns({
     variant: "purchase",
@@ -180,9 +206,14 @@ export function PurchaseOrderListPage() {
         editing={editingRow}
         viewOnly={viewOnly}
         poReceipts={poReceipts}
-        onClose={handleCloseForm}
+        onClose={() => {
+          handleCloseForm();
+          setPendingTagIds([]);
+        }}
         onSaved={handleFormSaved}
         onToggleEdit={canUpdatePo ? handleToggleEdit : undefined}
+        pendingTagIds={pendingTagIds}
+        onPendingTagsChange={setPendingTagIds}
       />
 
       <SettlementDrawer

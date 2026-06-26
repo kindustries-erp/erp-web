@@ -53,6 +53,7 @@ export function useErpInvoicesList() {
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         status: status || undefined,
+        tag_id: (filterPanel.state.custom?.tag_id as string) || undefined,
         page,
         pageSize,
         sort_by: sortBy || undefined,

@@ -15,6 +15,7 @@ import {
   Key,
   Receipt,
   Package,
+  LayoutDashboard,
 } from "lucide-react";
 
 export function SidebarNav({
@@ -64,6 +65,20 @@ export function SidebarNav({
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      {/* Dashboard */}
+      <div className="sidebar-nav-section py-2">
+        <NavItem
+          collapsed={c}
+          icon={
+            <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+          }
+          label={t("nav.items.dashboard")}
+          active={currentPage === "dashboard"}
+          onClick={() => navTo("dashboard")}
+          contextPage="dashboard"
+        />
+      </div>
+
       {/* Sales */}
       {showSales && (
         <div className="sidebar-nav-section py-2">

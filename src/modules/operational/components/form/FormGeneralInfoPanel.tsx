@@ -21,6 +21,7 @@ import { ExpenseFields } from "@/modules/operational/components/form/ExpenseFiel
 import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
 import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
 import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface FormGeneralInfoPanelProps {
   variant: FormVariant;
@@ -33,6 +34,13 @@ interface FormGeneralInfoPanelProps {
   branchOptions: Array<{ value: string; label: string }>;
   partnerOptions: Array<{ value: string; label: string }>;
   poReceipts?: ErpPoReceipt[];
+  /** ID of the existing document (null when creating) */
+  entityId?: string | null;
+  /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' */
+  entityType?: string;
+  /** Pending tag IDs for new-create Option B flow */
+  pendingTagIds?: string[];
+  onPendingTagsChange?: (ids: string[]) => void;
 }
 
 /**
@@ -49,6 +57,10 @@ export function FormGeneralInfoPanel({
   branchOptions,
   partnerOptions,
   poReceipts,
+  entityId,
+  entityType,
+  pendingTagIds = [],
+  onPendingTagsChange,
 }: FormGeneralInfoPanelProps) {
   const t = useT();
   const {
@@ -350,6 +362,29 @@ export function FormGeneralInfoPanel({
                   <PurchaseReceiptHistory receipts={poReceipts} />
                 </div>
               )}
+
+              {/* Tags — purchase & sales only */}
+              {(variant === "purchase" || variant === "sales") &&
+                entityType && (
+                  <DrawerField label={t("Thẻ nhãn")}>
+                    {entityId ? (
+                      <EntityTagSelector
+                        entityType={entityType}
+                        entityId={entityId}
+                        readOnly={viewOnly}
+                      />
+                    ) : !viewOnly ? (
+                      <EntityTagSelector
+                        entityType={entityType}
+                        entityId="__pending__"
+                        readOnly={false}
+                        pendingMode
+                        pendingTagIds={pendingTagIds}
+                        onPendingChange={onPendingTagsChange}
+                      />
+                    ) : null}
+                  </DrawerField>
+                )}
             </div>
           </div>
         </div>

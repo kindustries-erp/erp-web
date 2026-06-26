@@ -11,12 +11,18 @@ import {
   type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface Props {
   form: CreateErpInvoicePayload;
   editMode: boolean;
   fieldSet: (key: string, value: unknown) => void;
   fmtAmt: (val: string | null | undefined) => string;
+  /** ID of an existing invoice (null when creating new) */
+  invoiceId?: string | null;
+  /** Pending tag IDs for new-create Option B flow */
+  pendingTagIds?: string[];
+  onPendingTagsChange?: (ids: string[]) => void;
 }
 
 export function ErpInvoiceFormGeneral({
@@ -24,6 +30,9 @@ export function ErpInvoiceFormGeneral({
   editMode,
   fieldSet,
   fmtAmt,
+  invoiceId,
+  pendingTagIds = [],
+  onPendingTagsChange,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
@@ -295,6 +304,26 @@ export function ErpInvoiceFormGeneral({
             </div>
           </div>
         )}
+
+        {/* Tags */}
+        <DrawerSection title={t("tags", "Thẻ nhãn")}>
+          {invoiceId ? (
+            <EntityTagSelector
+              entityType="erp_invoice"
+              entityId={invoiceId}
+              readOnly={!editMode}
+            />
+          ) : editMode ? (
+            <EntityTagSelector
+              entityType="erp_invoice"
+              entityId="__pending__"
+              readOnly={false}
+              pendingMode
+              pendingTagIds={pendingTagIds}
+              onPendingChange={onPendingTagsChange}
+            />
+          ) : null}
+        </DrawerSection>
       </DrawerSection>
     </div>
   );

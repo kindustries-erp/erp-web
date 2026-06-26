@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { Package, Eye, Trash2, Edit2 } from "lucide-react";
+import { Package, Eye, Trash2, Edit2, Network } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { useTags, useTagsMutations } from "@/modules/tags/hooks/useTags";
 import { SysTag } from "@/modules/tags/api/tagsApi";
 import { TagFormModal } from "@/modules/tags";
+import { TagConnectionsDrawer } from "@/modules/tags/components/TagConnectionsDrawer";
 import { useUIStore } from "@/core/config/uiStore";
 
 export function SysTagsPage() {
@@ -21,6 +22,8 @@ export function SysTagsPage() {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [tagToDelete, setTagToDelete] = useState<SysTag | null>(null);
+
+  const [viewingTag, setViewingTag] = useState<SysTag | null>(null);
 
   const columns = useMemo<DataTableColumn<SysTag>[]>(
     () => [
@@ -111,6 +114,13 @@ export function SysTagsPage() {
             },
           },
           {
+            label: "Xem liên kết",
+            icon: <Network className="w-3.5 h-3.5" />,
+            onClick: () => {
+              setViewingTag(row);
+            },
+          },
+          {
             label: "Chỉnh sửa",
             icon: <Edit2 className="w-3.5 h-3.5" />,
             onClick: () => {
@@ -136,6 +146,16 @@ export function SysTagsPage() {
           tag={editingTag}
           initialMode={drawerMode}
           onClose={() => setFormOpen(false)}
+        />
+      )}
+
+      {viewingTag && (
+        <TagConnectionsDrawer
+          open={!!viewingTag}
+          onClose={() => setViewingTag(null)}
+          tagId={viewingTag.id}
+          tagName={viewingTag.name}
+          tagColor={viewingTag.color}
         />
       )}
 

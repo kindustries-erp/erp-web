@@ -10,6 +10,7 @@ import type {
   OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
@@ -164,6 +165,23 @@ export function usePurchaseColumns({
         cell: (row) => (
           <div className="w-full flex justify-center">
             <StatusBadge status={row.status} />
+          </div>
+        ),
+      },
+      {
+        key: "tags",
+        header: t("Thẻ nhãn"),
+        size: 160,
+        enableResizing: true,
+        className: "!py-2 align-middle text-left",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <div onClick={(e) => e.stopPropagation()}>
+            <EntityTagSelector
+              entityType="erp_purchase_order"
+              entityId={row.id}
+              readOnly
+            />
           </div>
         ),
       },

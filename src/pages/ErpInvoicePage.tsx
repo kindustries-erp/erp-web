@@ -4,6 +4,8 @@ import { Button } from "@/shared/components/ui/Button";
 import { FilterPanel, FilterButton } from "@/shared/components/FilterPanel";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { money } from "@/shared/utils/format";
+import { useQuery } from "@tanstack/react-query";
+import { getTags } from "@/modules/tags/api/tagsApi";
 
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
@@ -27,7 +29,7 @@ import {
   RefreshCw,
   DownloadCloud,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 type TabValue = "IN" | "OUT";
 
@@ -40,6 +42,33 @@ export function ErpInvoicePage() {
   const [xmlModalOpen, setXmlModalOpen] = useState(false);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
   const showToast = useUIStore((s) => s.showToast);
+  const { data: allTags = [] } = useQuery({
+    queryKey: ["sys-tags"],
+    queryFn: getTags,
+  });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const viewId = params.get("viewId");
+    if (viewId) {
+      formHook.openDetail({ id: viewId } as ErpInvoice);
+      params.delete("viewId");
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState(null, "", newUrl);
+    }
+
+    // Custom event listener from Tag connections drawer
+    const handleOpenDoc = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.type === "erp_invoice" && detail.id) {
+        formHook.openDetail({ id: detail.id } as ErpInvoice);
+      }
+    };
+    window.addEventListener("open_erp_document", handleOpenDoc);
+    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
+  }, [formHook]);
 
   async function handleDownload(id: string, type: "pdf" | "xml") {
     try {
@@ -123,9 +152,16 @@ export function ErpInvoicePage() {
           type: "combobox" as const,
           onSearch: (v: string) => setCustom("buyer_name", v),
         },
+        {
+          key: "tag_id",
+          label: t("tag", "Thẻ nhãn"),
+          placeholder: t("allTags", "Tất cả thẻ"),
+          options: allTags.map((tag) => ({ value: tag.id, label: tag.name })),
+          type: "combobox" as const,
+        },
       ],
     }),
-    [t, listHook.STATUS_OPTIONS, setCustom],
+    [t, listHook.STATUS_OPTIONS, setCustom, allTags],
   );
 
   return (
@@ -250,6 +286,9 @@ export function ErpInvoicePage() {
                 editMode={formHook.editMode}
                 fieldSet={fieldSet}
                 fmtAmt={fmtAmt}
+                invoiceId={formHook.detailInvoice?.id ?? null}
+                pendingTagIds={formHook.pendingTagIds}
+                onPendingTagsChange={formHook.setPendingTagIds}
               />
             </div>
           </div>
