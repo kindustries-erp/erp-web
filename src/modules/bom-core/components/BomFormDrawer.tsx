@@ -212,16 +212,10 @@ export function BomFormDrawer({
         );
       });
 
-      setForm((prev) => {
-        const currentValidLines = prev.lines.filter((l) => !!l.componentItemId);
-        return {
-          ...prev,
-          lines:
-            currentValidLines.length > 0 || newLines.length === 0
-              ? [...currentValidLines, ...newLines]
-              : newLines,
-        };
-      });
+      setForm((prev) => ({
+        ...prev,
+        lines: newLines.length > 0 ? newLines : [emptyLine()],
+      }));
       toast.success(t("Tải lên danh sách thành công"));
     } catch (err: unknown) {
       console.error(err);
