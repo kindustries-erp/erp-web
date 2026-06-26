@@ -71,40 +71,42 @@ export function TrackedGoodsPage() {
         cell: (row) => (
           <div>
             <div className="font-medium">{row.item?.itemName || "—"}</div>
-            <div className="text-xs text-gray-500">
-              {row.item?.itemType} • {row.item?.trackingPolicyId}
-            </div>
+            <div className="text-xs text-gray-500">{row.item?.itemType}</div>
           </div>
         ),
       },
       {
         key: "serialNo",
-        header: t("Mã Tracking / Serial"),
-        className: "align-middle min-w-[200px] text-left",
+        header: t("SerialNo"),
+        className:
+          "align-middle min-w-[150px] text-left font-medium text-blue-600",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "serial_no",
-        cell: (row) => {
-          if (row.vinNo || row.engineNo) {
-            return (
-              <div>
-                <div className="font-medium text-blue-600">
-                  VIN: {row.vinNo || "—"} / EN: {row.engineNo || "—"}
-                </div>
-                {row.serialNo && (
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    ID nội bộ: {row.serialNo}
-                  </div>
-                )}
-              </div>
-            );
-          }
-          return (
-            <div className="font-medium text-blue-600">
-              {row.serialNo || "—"}
-            </div>
-          );
-        },
+        cell: (row) => row.serialNo || "—",
+      },
+      {
+        key: "vinNo",
+        header: t("Số VIN"),
+        className:
+          "align-middle min-w-[150px] text-left font-medium text-blue-600",
+        headerClassName: "text-center",
+        cell: (row) => row.vinNo || "—",
+      },
+      {
+        key: "engineNo",
+        header: t("Số máy"),
+        className:
+          "align-middle min-w-[150px] text-left font-medium text-blue-600",
+        headerClassName: "text-center",
+        cell: (row) => row.engineNo || "—",
+      },
+      {
+        key: "trackingPolicyName",
+        header: t("Chính sách Tracking"),
+        className: "align-middle min-w-[180px] text-left",
+        headerClassName: "text-center",
+        cell: (row) => row.item?.trackingPolicyName || "—",
       },
       {
         key: "createdAt",
