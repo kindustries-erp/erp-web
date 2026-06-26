@@ -147,20 +147,20 @@ export function SidebarNav({
                   contextPage="erp-inventory-stock"
                 />
               )}
-              {canReadInventoryItems && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryTracking")}
-                  active={currentPage === "erp-inventory-tracking"}
-                  onClick={() => navTo("erp-inventory-tracking")}
-                  contextPage="erp-inventory-tracking"
-                />
-              )}
               {canReadInventoryVouchers && (
                 <NavGroupItem
                   label={t("nav.items.erpInventoryVouchers")}
                   active={currentPage === "erp-inventory-vouchers"}
                   onClick={() => navTo("erp-inventory-vouchers")}
                   contextPage="erp-inventory-vouchers"
+                />
+              )}
+              {canReadInventoryItems && (
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTracking")}
+                  active={currentPage === "erp-inventory-tracking"}
+                  onClick={() => navTo("erp-inventory-tracking")}
+                  contextPage="erp-inventory-tracking"
                 />
               )}
             </NavGroup>

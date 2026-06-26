@@ -80,11 +80,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     { value: "CANCELLED", label: t("Đã hủy") },
   ];
   const moLinkedLocked = isMoLinkedGiLocked(editing);
+  const isAdmin = useHasPermission("*", "*");
 
   // Derive actions
   const actions = [];
   if (viewOnly) {
-    if (editing && editing.status !== "DRAFT") {
+    if (editing && editing.status !== "DRAFT" && isAdmin) {
       actions.push({
         label: t("common.print"),
         onClick: handlePrint,

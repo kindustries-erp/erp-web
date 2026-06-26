@@ -48,6 +48,7 @@ import {
 } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { StatusBadge } from "@/shared/components/badges";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ export function ErpWarehouseTab() {
   const canCreateIssue = useHasPermission("goods_issues", "create");
   const canUpdateIssue = useHasPermission("goods_issues", "update");
   const canDeleteIssue = useHasPermission("goods_issues", "delete");
+  const isAdmin = useHasPermission("*", "*");
 
   const showToast = useUIStore((s) => s.showToast);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
@@ -380,16 +382,6 @@ export function ErpWarehouseTab() {
               )}
             </span>
             <span className="font-medium text-foreground">{row.voucherNo}</span>
-            {row.status === "DRAFT" && (
-              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-                {t("Nháp")}
-              </span>
-            )}
-            {row.status === "CANCELLED" && (
-              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
-                {t("Đã hủy")}
-              </span>
-            )}
           </div>
         ),
       },
@@ -426,6 +418,17 @@ export function ErpWarehouseTab() {
         header: t("Ghi chú"),
         className: "min-w-[300px]",
         cell: (row) => row.remarks ?? "—",
+      },
+      {
+        key: "status",
+        header: t("Trạng thái"),
+        className: "w-[140px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <div className="w-full flex justify-center">
+            <StatusBadge status={row.status || ""} />
+          </div>
+        ),
       },
     ],
     [],
@@ -498,7 +501,7 @@ export function ErpWarehouseTab() {
           {
             label: t("common.print"),
             icon: <Printer className="h-3.5 w-3.5" />,
-            hidden: row.status === "DRAFT",
+            hidden: row.status === "DRAFT" || !isAdmin,
             disabled: !!printTargetId,
             onClick: () => handlePrintRow(row),
           },

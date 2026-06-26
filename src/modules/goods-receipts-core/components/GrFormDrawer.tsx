@@ -70,6 +70,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   }, [saving, setGlobalLoading]);
 
   const canUpdate = useHasPermission("goods_receipts", "update");
+  const isAdmin = useHasPermission("*", "*");
 
   const t = useT();
   const printRef = useRef<HTMLDivElement>(null);
@@ -82,7 +83,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const actions =
     viewOnly || loading
       ? [
-          ...(editing && editing.status !== "DRAFT"
+          ...(editing && editing.status !== "DRAFT" && isAdmin
             ? [
                 {
                   label: t("common.print"),
