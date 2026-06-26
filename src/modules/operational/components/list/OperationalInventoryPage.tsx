@@ -23,7 +23,11 @@ import { useOperationalListStore } from "@/modules/operational/hooks/useOperatio
 import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
-import type { InventoryMovementsPayload } from "@/modules/inventory-core/api/inventoryCoreApi";
+import {
+  inventoryCoreApi,
+  type InventoryMovementsPayload,
+} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { useAppQuery } from "@/shared/hooks/useAppQuery";
 import type { Updater } from "@tanstack/react-table";
 
 interface OperationalInventoryPageProps {
@@ -148,14 +152,19 @@ export function OperationalInventoryPage({
       : null,
   });
 
-  const itemTypeOptions = useMemo(
-    () => [
-      { value: "RAW", label: t("inventory.itemTypes.raw") },
-      { value: "FG", label: t("inventory.itemTypes.fg") },
-      { value: "WIP", label: t("inventory.itemTypes.wip") },
-    ],
-    [t],
-  );
+  const { data: itemTypesData } = useAppQuery({
+    queryKey: ["inventory-item-types", "active"],
+    queryFn: () =>
+      inventoryCoreApi.listItemTypes({ pageSize: 100, isActive: true }),
+  });
+
+  const itemTypeOptions = useMemo(() => {
+    const items = itemTypesData?.items || [];
+    return items.map((it) => ({
+      value: it.code,
+      label: it.name,
+    }));
+  }, [itemTypesData]);
 
   const inventoryFilterConfig: FilterPanelConfig = useMemo(
     () => ({
