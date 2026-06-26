@@ -7,7 +7,8 @@ export interface ErpBomLine {
   componentItemCode?: string;
   componentItemName?: string;
   qtyRequired: string;
-  uom: string;
+  uomId?: string;
+  uom?: string;
   scrapRate?: string;
   notes?: string;
 }

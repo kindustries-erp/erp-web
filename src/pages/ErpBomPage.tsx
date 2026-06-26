@@ -555,6 +555,12 @@ export function ErpBomPage() {
     entities: "inventoryItems",
   });
 
+  const { data: uomsData } = useBasicMasterInfinite({
+    search: "",
+    limit: 100,
+    entities: "uoms",
+  });
+
   // Persistent cache: id -> label, survives search-term changes so selected
   // items never lose their labels when the API page no longer includes them.
   const cachedItems = useRef<Record<string, string>>({});
@@ -620,6 +626,31 @@ export function ErpBomPage() {
       label,
     }));
   }, [itemsData, form.finishedGoodItemId, form.lines, editing, t]);
+
+  const itemUomMap = useMemo(() => {
+    const map = new Map<string, string>();
+    itemsData?.pages.forEach((p) => {
+      (p.items.inventoryItems || []).forEach((i) => {
+        if (i.uomId) {
+          map.set(i.id, i.uomId);
+        }
+      });
+    });
+    return map;
+  }, [itemsData]);
+
+  const uomOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    uomsData?.pages.forEach((p) => {
+      (p.items.uoms || []).forEach((u) => {
+        map.set(u.id, u.name);
+      });
+    });
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [uomsData]);
 
   const BOM_STATUS_OPTIONS = [
     { value: "ACTIVE", label: t("Đang áp dụng") },
@@ -1110,7 +1141,6 @@ export function ErpBomPage() {
       onCreate={openCreate}
       filterConfig={filterConfig}
       filter={filter}
-      onRowClick={(item) => void openView(item)}
       renderSubRow={(item) => (
         <BomTree bomId={item.id} fgToBomMap={fgToBomMap} itemsMap={itemsMap} />
       )}
@@ -1246,6 +1276,8 @@ export function ErpBomPage() {
         addLine={addLine}
         removeLine={removeLine}
         updateLine={updateLine}
+        itemUomMap={itemUomMap}
+        uomOptions={uomOptions}
         onExport={(format) => editing && handleExport(editing, format)}
       />
     </SpreadsheetPageTemplate>

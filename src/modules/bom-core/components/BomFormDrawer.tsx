@@ -13,12 +13,12 @@ import {
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
-import { Upload, Download, Loader2 } from "lucide-react";
+import { Upload, Download, Loader2, Trash2 } from "lucide-react";
 
 export interface BomLineForm {
   componentItemId: string;
   qtyRequired: string;
-  uom: string;
+  uomId: string;
   scrapRate: string;
   notes: string;
 }
@@ -38,7 +38,7 @@ export interface BomForm {
 export const emptyLine = (): BomLineForm => ({
   componentItemId: "",
   qtyRequired: "1",
-  uom: "PCS",
+  uomId: "",
   scrapRate: "0",
   notes: "",
 });
@@ -47,7 +47,7 @@ export const emptyForm = (): BomForm => ({
   bomCode: "",
   bomName: "",
   finishedGoodItemId: "",
-  version: "v1",
+  version: "1.0",
   status: "ACTIVE",
   effectiveFrom: "",
   effectiveTo: "",
@@ -55,12 +55,23 @@ export const emptyForm = (): BomForm => ({
   lines: [emptyLine()],
 });
 
+const formatNum = (
+  val: string | number | undefined | null,
+  decimals: number,
+  defaultStr: string,
+) => {
+  if (val === undefined || val === null || val === "") return defaultStr;
+  const num = parseFloat(String(val));
+  if (!isNaN(num)) return num.toFixed(decimals);
+  return String(val);
+};
+
 export function buildForm(bom: ErpBom): BomForm {
   return {
     bomCode: bom.bomCode ?? "",
     bomName: bom.bomName ?? "",
     finishedGoodItemId: bom.finishedGoodItemId ?? "",
-    version: bom.version ?? "v1",
+    version: bom.version ?? "1.0",
     status: bom.status ?? "ACTIVE",
     effectiveFrom: bom.effectiveFrom ? bom.effectiveFrom.slice(0, 10) : "",
     effectiveTo: bom.effectiveTo ? bom.effectiveTo.slice(0, 10) : "",
@@ -68,9 +79,9 @@ export function buildForm(bom: ErpBom): BomForm {
     lines: bom.lines?.length
       ? bom.lines.map((line) => ({
           componentItemId: line.componentItemId ?? "",
-          qtyRequired: line.qtyRequired ?? "1",
-          uom: line.uom ?? "PCS",
-          scrapRate: line.scrapRate ?? "0",
+          qtyRequired: formatNum(line.qtyRequired, 1, "1"),
+          uomId: line.uomId ?? "",
+          scrapRate: formatNum(line.scrapRate, 2, "0"),
           notes: line.notes ?? "",
         }))
       : [emptyLine()],
@@ -82,7 +93,7 @@ export function toPayload(form: BomForm) {
     bomCode: form.bomCode.trim(),
     bomName: form.bomName.trim(),
     finishedGoodItemId: form.finishedGoodItemId || undefined,
-    version: form.version.trim() || "v1",
+    version: form.version.trim() || "1.0",
     status: form.status || "ACTIVE",
     effectiveFrom: form.effectiveFrom || undefined,
     effectiveTo: form.effectiveTo || undefined,
@@ -90,7 +101,7 @@ export function toPayload(form: BomForm) {
     lines: form.lines.map((line) => ({
       componentItemId: line.componentItemId || undefined,
       qtyRequired: line.qtyRequired,
-      uom: line.uom.trim() || "PCS",
+      uomId: line.uomId || undefined,
       scrapRate: line.scrapRate || undefined,
       notes: line.notes.trim() || undefined,
     })),
@@ -116,6 +127,8 @@ export interface BomFormDrawerProps {
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<BomLineForm>) => void;
+  itemUomMap?: Map<string, string>;
+  uomOptions?: Array<{ value: string; label: string }>;
   onExport?: (format: "xlsx" | "csv") => void;
 }
 
@@ -138,6 +151,8 @@ export function BomFormDrawer({
   addLine,
   removeLine,
   updateLine,
+  itemUomMap,
+  uomOptions,
   onExport,
 }: BomFormDrawerProps) {
   const t = useT();
@@ -176,9 +191,9 @@ export function BomFormDrawer({
       const parsedLines = await bomCoreApi.parseBomLines(file);
       const newLines = parsedLines.map((pl) => ({
         componentItemId: pl.componentItemId || "",
-        qtyRequired: pl.qtyRequired ? String(pl.qtyRequired) : "1",
-        uom: pl.uom || "PCS",
-        scrapRate: pl.scrapRate ? String(pl.scrapRate) : "0",
+        qtyRequired: formatNum(pl.qtyRequired, 1, "1"),
+        uomId: pl.uomId || "",
+        scrapRate: formatNum(pl.scrapRate, 2, "0"),
         notes: pl.notes || "",
       }));
 
@@ -197,16 +212,10 @@ export function BomFormDrawer({
         );
       });
 
-      setForm((prev) => {
-        const currentValidLines = prev.lines.filter((l) => !!l.componentItemId);
-        return {
-          ...prev,
-          lines:
-            currentValidLines.length > 0 || newLines.length === 0
-              ? [...currentValidLines, ...newLines]
-              : newLines,
-        };
-      });
+      setForm((prev) => ({
+        ...prev,
+        lines: newLines.length > 0 ? newLines : [emptyLine()],
+      }));
       toast.success(t("Tải lên danh sách thành công"));
     } catch (err: unknown) {
       console.error(err);
@@ -382,6 +391,35 @@ export function BomFormDrawer({
                       accept=".xlsx,.csv"
                       onChange={handleFileUpload}
                     />
+                    {(!editing || form.status === "DRAFT") && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              t("Bạn có chắc chắn muốn xóa tất cả linh kiện?"),
+                            )
+                          ) {
+                            setForm((prev) => ({
+                              ...prev,
+                              lines: [
+                                {
+                                  componentItemId: "",
+                                  qtyRequired: "1",
+                                  uomId: "",
+                                  scrapRate: "0",
+                                  notes: "",
+                                },
+                              ],
+                            }));
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-red-600 rounded hover:bg-red-50 focus:outline-none ml-1"
+                      >
+                        <Trash2 size={14} />
+                        {t("Xóa tất cả")}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -397,6 +435,7 @@ export function BomFormDrawer({
           }
         >
           <DocumentLineTable
+            tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
             data={filteredLines}
             getRowKey={(_, idx) => String(idx)}
             viewOnly={viewOnly}
@@ -411,9 +450,15 @@ export function BomFormDrawer({
                   <Combobox
                     value={line.componentItemId}
                     readOnly={viewOnly || !!editing}
-                    onChange={(value) =>
-                      updateLine(idx, { componentItemId: value })
-                    }
+                    onChange={(value) => {
+                      const patch: Partial<BomLineForm> = {
+                        componentItemId: value,
+                      };
+                      if (itemUomMap && itemUomMap.has(value)) {
+                        patch.uomId = itemUomMap.get(value)!;
+                      }
+                      updateLine(idx, patch);
+                    }}
                     options={mergedItemOptions}
                     placeholder={t("Chọn linh kiện")}
                     searchPlaceholder={t("Tìm SKU / tên linh kiện")}
@@ -429,8 +474,16 @@ export function BomFormDrawer({
                 minWidth: 90,
                 cell: (line, idx) => (
                   <input
+                    type="number"
+                    step="0.1"
                     value={line.qtyRequired}
                     readOnly={viewOnly || !!editing}
+                    onBlur={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val)) {
+                        updateLine(idx, { qtyRequired: val.toFixed(1) });
+                      }
+                    }}
                     onChange={(e) =>
                       updateLine(idx, { qtyRequired: e.target.value })
                     }
@@ -441,13 +494,15 @@ export function BomFormDrawer({
               {
                 key: "uom",
                 header: t("ĐVT"),
-                minWidth: 80,
+                minWidth: 120,
                 cell: (line, idx) => (
-                  <input
-                    value={line.uom}
+                  <Combobox
+                    value={line.uomId}
                     readOnly={viewOnly || !!editing}
-                    onChange={(e) => updateLine(idx, { uom: e.target.value })}
-                    className={inputCls}
+                    onChange={(value) => updateLine(idx, { uomId: value })}
+                    options={uomOptions || []}
+                    placeholder={t("Chọn ĐVT")}
+                    allowClear={false}
                   />
                 ),
               },
@@ -457,8 +512,16 @@ export function BomFormDrawer({
                 minWidth: 95,
                 cell: (line, idx) => (
                   <input
+                    type="number"
+                    step="0.01"
                     value={line.scrapRate}
                     readOnly={viewOnly || !!editing}
+                    onBlur={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val)) {
+                        updateLine(idx, { scrapRate: val.toFixed(2) });
+                      }
+                    }}
                     onChange={(e) =>
                       updateLine(idx, { scrapRate: e.target.value })
                     }

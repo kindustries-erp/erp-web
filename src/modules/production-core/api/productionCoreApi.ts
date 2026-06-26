@@ -252,7 +252,7 @@ export const productionCoreApi = {
       warehouseCode?: string;
       unitCost?: number;
       identifiers?: Array<{
-        vin?: string;
+        vinNo?: string;
         engineNo?: string;
         serialNo?: string;
         lotNo?: string;

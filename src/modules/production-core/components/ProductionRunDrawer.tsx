@@ -43,7 +43,7 @@ const UNIT_ROW_THRESHOLD = 50;
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface ProductionIdentifier {
-  vin: string;
+  vinNo: string;
   engineNo: string;
   serialNo: string;
   lotNo: string;
@@ -54,7 +54,7 @@ type TrackingPolicy = "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
 
 function emptyIdentifier(): ProductionIdentifier {
   return {
-    vin: "",
+    vinNo: "",
     engineNo: "",
     serialNo: "",
     lotNo: "",
@@ -70,7 +70,7 @@ function isIdentifierValid(
   id: ProductionIdentifier,
   policy: TrackingPolicy,
 ): boolean {
-  if (policy === "VEHICLE") return !!id.vin.trim() && !!id.engineNo.trim();
+  if (policy === "VEHICLE") return !!id.vinNo.trim() && !!id.engineNo.trim();
   if (policy === "SERIAL") return !!id.serialNo.trim();
   if (policy === "LOT") return !!id.lotNo.trim();
   return true;
@@ -88,7 +88,7 @@ function findVehicleDuplicate(ids: ProductionIdentifier[]) {
   const seenVin = new Set<string>();
   const seenEngine = new Set<string>();
   for (const row of ids) {
-    const vin = row.vin.trim().toUpperCase();
+    const vin = row.vinNo.trim().toUpperCase();
     const engine = row.engineNo.trim().toUpperCase();
     if (vin) {
       if (seenVin.has(vin)) return "Số VIN bị trùng trong danh sách";
@@ -110,7 +110,7 @@ function parseVehicleBulkInput(input: string) {
     .map((line) => {
       const parts = line.includes("\t") ? line.split("\t") : line.split(",");
       return {
-        vin: (parts[0] ?? "").trim(),
+        vinNo: (parts[0] ?? "").trim(),
         engineNo: (parts[1] ?? "").trim(),
         serialNo: "",
         lotNo: "",
@@ -195,8 +195,8 @@ function IdentifierTable({
                         disabled={saving}
                         className={cn(inputCls, "w-28")}
                         placeholder={t("Số VIN")}
-                        value={id.vin}
-                        onChange={(e) => onChange(i, "vin", e.target.value)}
+                        value={id.vinNo}
+                        onChange={(e) => onChange(i, "vinNo", e.target.value)}
                       />
                     </td>
                     <td className="px-1 py-1">

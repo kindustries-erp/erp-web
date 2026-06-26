@@ -39,6 +39,7 @@ import { ErpInvoicePage } from "@/pages/ErpInvoicePage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
+import { SysTagsPage } from "@/pages/SysTagsPage";
 
 import { PageKey } from "@/shared/types";
 
@@ -64,6 +65,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-activity-logs": ErpActivityLogsPage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices": ErpInvoicePage,
+  "sys-tags": SysTagsPage,
 };
 
 export default function App() {
