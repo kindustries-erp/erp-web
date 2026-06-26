@@ -18,7 +18,7 @@ import { Upload, Download, Loader2, Trash2 } from "lucide-react";
 export interface BomLineForm {
   componentItemId: string;
   qtyRequired: string;
-  uom: string;
+  uomId: string;
   scrapRate: string;
   notes: string;
 }
@@ -38,7 +38,7 @@ export interface BomForm {
 export const emptyLine = (): BomLineForm => ({
   componentItemId: "",
   qtyRequired: "1",
-  uom: "",
+  uomId: "",
   scrapRate: "0",
   notes: "",
 });
@@ -80,7 +80,7 @@ export function buildForm(bom: ErpBom): BomForm {
       ? bom.lines.map((line) => ({
           componentItemId: line.componentItemId ?? "",
           qtyRequired: formatNum(line.qtyRequired, 1, "1"),
-          uom: line.uom ?? "",
+          uomId: line.uomId ?? "",
           scrapRate: formatNum(line.scrapRate, 2, "0"),
           notes: line.notes ?? "",
         }))
@@ -101,7 +101,7 @@ export function toPayload(form: BomForm) {
     lines: form.lines.map((line) => ({
       componentItemId: line.componentItemId || undefined,
       qtyRequired: line.qtyRequired,
-      uom: line.uom.trim() || "",
+      uomId: line.uomId || undefined,
       scrapRate: line.scrapRate || undefined,
       notes: line.notes.trim() || undefined,
     })),
@@ -192,7 +192,7 @@ export function BomFormDrawer({
       const newLines = parsedLines.map((pl) => ({
         componentItemId: pl.componentItemId || "",
         qtyRequired: formatNum(pl.qtyRequired, 1, "1"),
-        uom: pl.uom || "",
+        uomId: pl.uomId || "",
         scrapRate: formatNum(pl.scrapRate, 2, "0"),
         notes: pl.notes || "",
       }));
@@ -412,7 +412,7 @@ export function BomFormDrawer({
                                 {
                                   componentItemId: "",
                                   qtyRequired: "1",
-                                  uom: "",
+                                  uomId: "",
                                   scrapRate: "0",
                                   notes: "",
                                 },
@@ -461,7 +461,7 @@ export function BomFormDrawer({
                         componentItemId: value,
                       };
                       if (itemUomMap && itemUomMap.has(value)) {
-                        patch.uom = itemUomMap.get(value)!;
+                        patch.uomId = itemUomMap.get(value)!;
                       }
                       updateLine(idx, patch);
                     }}
@@ -503,9 +503,9 @@ export function BomFormDrawer({
                 minWidth: 120,
                 cell: (line, idx) => (
                   <Combobox
-                    value={line.uom}
+                    value={line.uomId}
                     readOnly={viewOnly || !!editing}
-                    onChange={(value) => updateLine(idx, { uom: value })}
+                    onChange={(value) => updateLine(idx, { uomId: value })}
                     options={uomOptions || []}
                     placeholder={t("Chọn ĐVT")}
                     allowClear={false}

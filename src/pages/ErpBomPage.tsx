@@ -631,8 +631,8 @@ export function ErpBomPage() {
     const map = new Map<string, string>();
     itemsData?.pages.forEach((p) => {
       (p.items.inventoryItems || []).forEach((i) => {
-        if (i.uom?.name) {
-          map.set(i.id, i.uom.name);
+        if (i.uomId) {
+          map.set(i.id, i.uomId);
         }
       });
     });
@@ -646,9 +646,9 @@ export function ErpBomPage() {
         map.set(u.id, u.name);
       });
     });
-    return Array.from(map.values()).map((name) => ({
-      value: name,
-      label: name,
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
     }));
   }, [uomsData]);
 
