@@ -254,6 +254,7 @@ export const en: Dict = {
     clone: "Clone",
     activate: "Activate",
     inactivate: "Inactivate",
+    inventoryStatus: "Inventory",
   },
   status: {
     approved: "Approved",
@@ -1654,7 +1655,7 @@ export const en: Dict = {
   "Tất cả linh kiện": "All components",
   "Số PO": "PO No",
   "Ngày đặt": "Order Date",
-  "Ngày nhập DK": "Expected Receipt Date",
+  "Ngày nhập DK": "Expected Date",
   "Tải lại": "Refresh",
   "Bộ lọc": "Filter",
   "Chi tiết": "Details",

@@ -3,9 +3,13 @@ import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel, PanelMore, PanelBadge } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
 
 const APPROVALS_DATA = [
+  // ... (omitting the rest of the array since it's unmodified, wait I need to keep the exact replacement)
+  // The instruction should be just for the component start. Let's just do it exactly.
   {
     typeKey: "payNCC",
     time: "01p",
@@ -31,6 +35,13 @@ const APPROVALS_DATA = [
 
 export function Dashboard() {
   const t = useT();
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
+  if (!isAdminEmail) {
+    return <ComingSoon />;
+  }
+
   const barIn = "#e0e0de";
   const barOut = "#1a1a1a";
   return (

@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { ChevronRight } from "lucide-react";
+import {
+  ChevronRight,
+  PackageCheck,
+  PackageOpen,
+  PackageX,
+} from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { normalizeDateTime } from "@/shared/utils/format";
@@ -16,6 +21,7 @@ interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
   expandedRowIds: Record<string, boolean>;
   onToggleExpand: (key: string) => void;
+  isAdminEmail?: boolean;
 }
 
 /**
@@ -26,6 +32,7 @@ export function usePurchaseColumns({
   variant,
   expandedRowIds,
   onToggleExpand,
+  isAdminEmail,
 }: UsePurchaseColumnsOptions): DataTableColumn<OperationalDocument>[] {
   const t = useT();
   return useMemo<DataTableColumn<OperationalDocument>[]>(
@@ -144,16 +151,30 @@ export function usePurchaseColumns({
       },
       {
         key: "inventory_status",
-        header: t("Trạng thái nhập kho"),
+        header: t("common.inventoryStatus"),
         size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
         headerClassName: "text-center",
-        cell: (row) => (
-          <div className="w-full flex justify-center">
-            <StatusBadge status={row.inventory_status || "NOT_RECEIVED"} />
-          </div>
-        ),
+        cell: (row: OperationalDocument) => {
+          const st = row.inventory_status || "NOT_RECEIVED";
+          let icon = <PackageX className="h-5 w-5 text-muted-foreground" />;
+          let label = "Chưa nhập";
+          if (st === "RECEIVED" || st === "DONE") {
+            icon = <PackageCheck className="h-5 w-5 text-emerald-500" />;
+            label = "Đã nhập";
+          } else if (st === "PARTIAL_RECEIVED" || st === "PARTIAL") {
+            icon = <PackageOpen className="h-5 w-5 text-amber-500" />;
+            label = "Nhập một phần";
+          }
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip content={label}>
+                <div className="cursor-pointer">{icon}</div>
+              </Tooltip>
+            </div>
+          );
+        },
       },
       {
         key: "status",
@@ -162,30 +183,43 @@ export function usePurchaseColumns({
         enableResizing: true,
         className: "!py-2 align-middle text-center",
         headerClassName: "text-center",
-        cell: (row) => (
-          <div className="w-full flex justify-center">
-            <StatusBadge status={row.status} />
-          </div>
-        ),
+        cell: (row) => {
+          let displayStatus = "CONFIRMED";
+          if (row.status === "DRAFT") displayStatus = "DRAFT";
+          else if (row.status === "CANCELLED") displayStatus = "CANCELLED";
+
+          return (
+            <div className="w-full flex justify-center">
+              <StatusBadge
+                status={displayStatus}
+                className="w-[75px] inline-block text-center"
+              />
+            </div>
+          );
+        },
       },
-      {
-        key: "tags",
-        header: t("Thẻ nhãn"),
-        size: 160,
-        enableResizing: true,
-        className: "!py-2 align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => (
-          <div onClick={(e) => e.stopPropagation()}>
-            <EntityTagSelector
-              entityType="erp_purchase_order"
-              entityId={row.id}
-              readOnly
-            />
-          </div>
-        ),
-      },
+      ...(isAdminEmail
+        ? [
+            {
+              key: "tags",
+              header: t("Thẻ nhãn"),
+              size: 160,
+              enableResizing: true,
+              className: "!py-2 align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: OperationalDocument) => (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <EntityTagSelector
+                    entityType="erp_purchase_order"
+                    entityId={row.id}
+                    readOnly
+                  />
+                </div>
+              ),
+            },
+          ]
+        : []),
     ],
-    [expandedRowIds, onToggleExpand, t, variant],
+    [expandedRowIds, onToggleExpand, t, variant, isAdminEmail],
   );
 }

@@ -20,6 +20,7 @@ export interface PurchaseOrderDrawerProps {
   /** Pending tag IDs for Option B create flow */
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
+  isAdminEmail?: boolean;
 }
 
 export function PurchaseOrderDrawer({
@@ -33,6 +34,7 @@ export function PurchaseOrderDrawer({
   onToggleEdit,
   pendingTagIds = [],
   onPendingTagsChange,
+  isAdminEmail,
 }: PurchaseOrderDrawerProps) {
   const t = useT();
   const drawerState = usePurchaseOrderDrawer({
@@ -162,6 +164,7 @@ export function PurchaseOrderDrawer({
           entityType="erp_purchase_order"
           pendingTagIds={pendingTagIds}
           onPendingTagsChange={onPendingTagsChange}
+          isAdminEmail={isAdminEmail}
         />
       }
     />

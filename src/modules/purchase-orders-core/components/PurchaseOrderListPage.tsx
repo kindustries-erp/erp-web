@@ -17,6 +17,7 @@ import { type OperationalDocument } from "@/modules/operational/api/operationalA
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useState, useEffect } from "react";
 
 export function PurchaseOrderListPage() {
@@ -27,6 +28,10 @@ export function PurchaseOrderListPage() {
   const canDeletePo = useHasPermission("purchase_orders", "delete");
   const canCreateReceipt = useHasPermission("goods_receipts", "create");
   const isAdmin = useHasPermission("*", "*");
+
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
 
   // GR drawer — reuses the same form as ErpWarehousePage
@@ -95,7 +100,7 @@ export function PurchaseOrderListPage() {
     entityId: row.id,
   }));
   const { data: batchTagResults = [], isLoading: batchLoading } =
-    useBatchEntityTags(batchQueries);
+    useBatchEntityTags(isAdminEmail ? batchQueries : []);
   const queryClient = useQueryClient();
   // Populate individual entity tag caches so useEntityTags hooks read from cache
   useEffect(() => {
@@ -141,6 +146,7 @@ export function PurchaseOrderListPage() {
     variant: "purchase",
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
+    isAdminEmail,
   });
 
   return (
@@ -235,6 +241,7 @@ export function PurchaseOrderListPage() {
         }}
         onSaved={handleFormSaved}
         onToggleEdit={canUpdatePo ? handleToggleEdit : undefined}
+        isAdminEmail={isAdminEmail}
         pendingTagIds={pendingTagIds}
         onPendingTagsChange={setPendingTagIds}
       />

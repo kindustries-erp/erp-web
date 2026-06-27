@@ -193,8 +193,8 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      currentPage: "purchasing",
-      openTabs: ["purchasing"],
+      currentPage: "dashboard",
+      openTabs: ["dashboard"],
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
@@ -282,7 +282,7 @@ export const useAppStore = create<AppState>()(
         const newTabs = openTabs.filter((t) => t !== key);
         if (currentPage === key) {
           const nextPage =
-            newTabs[Math.min(idx, newTabs.length - 1)] ?? "purchasing";
+            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
           const path = pageToPath(nextPage);
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
@@ -300,7 +300,7 @@ export const useAppStore = create<AppState>()(
         const { openTabs, currentPage, navigate } = get();
         const newTabs = openTabs.filter((t) => STATIC_TABS[t]);
         if (!newTabs.includes(currentPage)) {
-          navigate(newTabs[newTabs.length - 1] ?? "purchasing");
+          navigate(newTabs[newTabs.length - 1] ?? "dashboard");
         } else {
           set({ openTabs: newTabs });
         }
@@ -315,7 +315,7 @@ export const useAppStore = create<AppState>()(
           return Boolean(STATIC_TABS[tab]);
         });
         if (!keepTabs.includes(currentPage)) {
-          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "purchasing");
+          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "dashboard");
         } else {
           set({ openTabs: keepTabs });
         }
@@ -360,8 +360,8 @@ export const useAppStore = create<AppState>()(
       logout: () =>
         set({
           isLoggedIn: false,
-          currentPage: "purchasing",
-          openTabs: ["purchasing"],
+          currentPage: "dashboard",
+          openTabs: ["dashboard"],
         }),
     }),
     {

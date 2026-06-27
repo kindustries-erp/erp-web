@@ -253,6 +253,7 @@ export const vi = {
     clone: "Nhân bản",
     activate: "Áp dụng",
     inactivate: "Ngừng áp dụng",
+    inventoryStatus: "Nhập kho",
   },
   status: {
     approved: "Đã duyệt",

@@ -41,6 +41,7 @@ interface FormGeneralInfoPanelProps {
   /** Pending tag IDs for new-create Option B flow */
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
+  isAdminEmail?: boolean;
 }
 
 /**
@@ -61,6 +62,7 @@ export function FormGeneralInfoPanel({
   entityType,
   pendingTagIds = [],
   onPendingTagsChange,
+  isAdminEmail,
 }: FormGeneralInfoPanelProps) {
   const t = useT();
   const {
@@ -364,7 +366,8 @@ export function FormGeneralInfoPanel({
               )}
 
               {/* Tags — purchase & sales only */}
-              {(variant === "purchase" || variant === "sales") &&
+              {isAdminEmail &&
+                (variant === "purchase" || variant === "sales") &&
                 entityType && (
                   <DrawerField label={t("Thẻ nhãn")}>
                     {entityId ? (
