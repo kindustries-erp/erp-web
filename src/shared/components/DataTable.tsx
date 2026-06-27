@@ -633,7 +633,7 @@ export function DataTable<T>({
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
       <div
         className={cn(
-          "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0",
+          "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0 shadow-[0_4px_16px_rgb(0,0,0,0.08)]",
           elevated && "card-shadow",
           containerClassName,
         )}

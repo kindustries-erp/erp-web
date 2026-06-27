@@ -225,7 +225,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
       {/* Desktop: inline column — same style as dashboard cards */}
       <div
         className={cn(
-          "hidden md:block shrink-0 self-start sticky top-0 overflow-hidden",
+          "hidden md:block shrink-0 self-start sticky top-0",
           "rounded-xl",
           "transition-[width,opacity,margin] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
           filter.panelOpen
@@ -236,7 +236,7 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
       >
         <div
           className={cn(
-            "w-[210px] rounded-xl p-4 bg-surface border border-border shadow-sm",
+            "w-[210px] rounded-xl p-4 bg-surface border border-border shadow-[0_4px_16px_rgb(0,0,0,0.08)]",
             "overflow-y-auto max-h-[calc(100vh-120px)]",
             "transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
             filter.panelOpen
