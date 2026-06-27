@@ -1,6 +1,7 @@
 import { FileText, PackagePlus, Network } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { useT } from "@/core/i18n";
+import { useQueryClient } from "@tanstack/react-query";
+import { useBatchEntityTags } from "@/modules/tags/hooks/useTags";
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
@@ -11,6 +12,7 @@ import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import { useT } from "@/core/i18n";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -86,6 +88,27 @@ export function PurchaseOrderListPage() {
 
   const loading = listQuery.isLoading || listQuery.isFetching;
   const items = (listQuery.data?.items || []) as OperationalDocument[];
+
+  // Pre-fetch tags for all purchase order rows using batch endpoint
+  const batchQueries = items.map((row) => ({
+    entityType: "erp_purchase_order",
+    entityId: row.id,
+  }));
+  const { data: batchTagResults = [], isLoading: batchLoading } =
+    useBatchEntityTags(batchQueries);
+  const queryClient = useQueryClient();
+  // Populate individual entity tag caches so useEntityTags hooks read from cache
+  useEffect(() => {
+    if (!batchLoading && batchTagResults.length) {
+      batchTagResults.forEach((tags, idx) => {
+        const entityId = batchQueries[idx].entityId;
+        queryClient.setQueryData(
+          ["sys-tags", "entity", "erp_purchase_order", entityId],
+          tags,
+        );
+      });
+    }
+  }, [batchLoading, batchTagResults, queryClient, batchQueries]);
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();

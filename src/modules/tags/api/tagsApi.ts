@@ -8,6 +8,7 @@ export interface SysTag {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
+  connectionCount?: number;
 }
 
 export interface CreateTagDto {
@@ -71,5 +72,15 @@ export async function getTagConnections(
   tagId: string,
 ): Promise<Record<string, unknown>[]> {
   const { data } = await axiosInstance.get(`${BASE}/${tagId}/connections`);
+  return data;
+}
+
+export async function getBatchEntityTags(
+  queries: { entityType: string; entityId: string }[],
+): Promise<SysTag[][]> {
+  const { data } = await axiosInstance.post<SysTag[][]>(
+    `${BASE}/entity-tags/batch`,
+    { queries },
+  );
   return data;
 }

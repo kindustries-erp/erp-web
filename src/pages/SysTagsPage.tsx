@@ -53,6 +53,16 @@ export function SysTagsPage() {
           </span>
         ),
       },
+      {
+        key: "connectionCount",
+        header: "Số liên kết",
+        cell: (row) => (
+          <div className="flex items-center gap-1 text-[color:var(--color-secondary-text)]">
+            <Network className="w-3.5 h-3.5" />
+            <span>{row.connectionCount || 0}</span>
+          </div>
+        ),
+      },
     ],
     [],
   );
