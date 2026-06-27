@@ -35,7 +35,8 @@ import { ErpUsersPage } from "@/pages/ErpUsersPage";
 import { ErpEmployeesPage } from "@/pages/ErpEmployeesPage";
 import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { ErpPermissionsCorePage } from "@/pages/ErpPermissionsCorePage";
-import { ErpInvoicePage } from "@/pages/ErpInvoicePage";
+import { ErpInvoicesInPage } from "@/pages/ErpInvoicesInPage";
+import { ErpInvoicesOutPage } from "@/pages/ErpInvoicesOutPage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -64,7 +65,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "erp-permissions-core": ErpPermissionsCorePage,
-  "erp-invoices": ErpInvoicePage,
+  "erp-invoices-in": ErpInvoicesInPage,
+  "erp-invoices-out": ErpInvoicesOutPage,
   "sys-tags": SysTagsPage,
 };
 

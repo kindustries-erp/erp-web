@@ -28,7 +28,7 @@ export function SubItem({
   return (
     <div
       className={cn(
-        "py-[6px] pl-3 pr-4 cursor-pointer text-sm whitespace-nowrap overflow-hidden",
+        "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden",
         "text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground",
         active && "!text-foreground font-medium",
       )}
@@ -99,7 +99,7 @@ export function NavItem({
         onContextMenu={contextPage ? onContextMenu : undefined}
       >
         <span className="nav-icon flex-shrink-0">{icon}</span>
-        <span className="nav-label hide-on-collapse text-sm overflow-hidden whitespace-nowrap flex-1 transition-all duration-150">
+        <span className="nav-label hide-on-collapse text-[12px] overflow-hidden whitespace-nowrap flex-1 transition-all duration-150">
           {label}
         </span>
         {hasArrow && (
@@ -198,7 +198,7 @@ export function NavGroupItem({
   return (
     <div
       className={cn(
-        "py-[6px] pl-3 pr-4 cursor-pointer text-[13px] whitespace-nowrap overflow-hidden rounded-r-md",
+        "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-r-md",
         "text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground",
         active && "!text-foreground font-medium bg-[color:var(--muted)]",
       )}

@@ -74,7 +74,7 @@ interface Props {
   initialDirection: "IN" | "OUT";
 }
 
-export function PortalSyncModal({
+export function PortalSyncDrawer({
   open,
   onClose,
   onSynced,

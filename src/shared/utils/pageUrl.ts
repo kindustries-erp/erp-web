@@ -20,7 +20,8 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-users",
   "erp-activity-logs",
   "erp-permissions-core",
-  "erp-invoices",
+  "erp-invoices-in",
+  "erp-invoices-out",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {

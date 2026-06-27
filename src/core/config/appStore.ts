@@ -97,8 +97,12 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "system",
   },
-  "erp-invoices": {
-    labelKey: "nav.items.erpInvoices",
+  "erp-invoices-in": {
+    labelKey: "nav.items.erpInvoicesIn",
+    group: "accounting",
+  },
+  "erp-invoices-out": {
+    labelKey: "nav.items.erpInvoicesOut",
     group: "accounting",
   },
 };
@@ -158,7 +162,8 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
   "sys-tags": [["breadcrumb.system"], ["nav.items.sysTags"]],
-  "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
+  "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
+  "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
 };
 
 interface AppState {

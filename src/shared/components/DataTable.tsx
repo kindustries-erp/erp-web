@@ -129,6 +129,7 @@ interface DataTableProps<T> {
   variant?: "default" | "spreadsheet";
   summaryRow?: Record<string, ReactNode>;
   defaultColumnOrder?: string[];
+  sidePanel?: ReactNode;
 }
 
 interface SortableItemProps<T> {
@@ -325,6 +326,7 @@ export function DataTable<T>({
   variant = "default",
   summaryRow,
   defaultColumnOrder,
+  sidePanel,
 }: DataTableProps<T>) {
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
@@ -631,159 +633,313 @@ export function DataTable<T>({
           )
         : null}
       {filters && <div className="flex gap-2 mb-3 flex-wrap">{filters}</div>}
-      <div
-        className={cn(
-          "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0 shadow-panel",
-          elevated && "card-shadow",
-          containerClassName,
-        )}
-      >
-        <Table
-          style={{
-            minWidth: enableColumnResizing ? table.getTotalSize() : minWidth,
-          }}
+      <div className="flex items-stretch flex-1 min-h-0 w-full">
+        <div
           className={cn(
-            "table-fixed",
-            variant === "spreadsheet" && "border-collapse border-spacing-0",
+            "bg-surface border border-border rounded-[10px] overflow-auto relative flex-1 min-h-0 shadow-panel",
+            elevated && "card-shadow",
+            containerClassName,
           )}
         >
-          <TableHeader className="sticky top-0 z-30 bg-muted shadow-[0_1px_0_0_var(--border-light)]">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="hover:bg-transparent border-b border-border"
-              >
-                {headerGroup.headers.map((header, index) => {
-                  const meta = header.column.columnDef.meta as DataTableRowMeta;
-                  const isFirstCol = index === 0;
-                  return (
-                    <TableHead
-                      key={header.id}
-                      className={cn(
-                        meta?.headerClassName,
-                        "sticky top-0 bg-muted z-20 shadow-[0_1px_0_0_var(--border-light)]",
-                        isFirstCol &&
-                          !enableRowSelection &&
-                          variant !== "spreadsheet" &&
-                          "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
-                        variant === "spreadsheet" &&
-                          "border-r border-border py-1 h-auto text-[11px]",
-                        variant === "spreadsheet" &&
-                          !["__actions", "__selection", "__expand"].includes(
-                            header.column.id,
-                          ) &&
-                          "px-2",
-                        enableColumnResizing && "relative group",
-                      )}
-                      style={{
-                        width: enableColumnResizing
-                          ? header.getSize()
-                          : undefined,
-                      }}
-                    >
-                      {header.isPlaceholder ? null : meta.sortable ? (
-                        <div
-                          className={cn(
-                            "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors",
-                            meta.headerClassName?.includes("text-right") &&
-                              "justify-end",
-                            meta.headerClassName?.includes("text-center") &&
-                              "justify-center",
-                          )}
-                          onClick={() => onSort?.(meta.sortKey!)}
-                        >
-                          {flexRender(
+          <Table
+            style={{
+              minWidth: enableColumnResizing ? table.getTotalSize() : minWidth,
+            }}
+            className={cn(
+              "table-fixed",
+              variant === "spreadsheet" && "border-collapse border-spacing-0",
+            )}
+          >
+            <TableHeader className="sticky top-0 z-30 bg-muted shadow-[0_1px_0_0_var(--border-light)]">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  className="hover:bg-transparent border-b border-border"
+                >
+                  {headerGroup.headers.map((header, index) => {
+                    const meta = header.column.columnDef
+                      .meta as DataTableRowMeta;
+                    const isFirstCol = index === 0;
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={cn(
+                          meta?.headerClassName,
+                          "sticky top-0 bg-muted z-20 shadow-[0_1px_0_0_var(--border-light)]",
+                          isFirstCol &&
+                            !enableRowSelection &&
+                            variant !== "spreadsheet" &&
+                            "left-0 z-30 shadow-[1px_1px_0_0_var(--border-light)]",
+                          variant === "spreadsheet" &&
+                            "border-r border-border py-1 h-auto text-[11px]",
+                          variant === "spreadsheet" &&
+                            !["__actions", "__selection", "__expand"].includes(
+                              header.column.id,
+                            ) &&
+                            "px-2",
+                          enableColumnResizing && "relative group",
+                        )}
+                        style={{
+                          width: enableColumnResizing
+                            ? header.getSize()
+                            : undefined,
+                        }}
+                      >
+                        {header.isPlaceholder ? null : meta.sortable ? (
+                          <div
+                            className={cn(
+                              "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors",
+                              meta.headerClassName?.includes("text-right") &&
+                                "justify-end",
+                              meta.headerClassName?.includes("text-center") &&
+                                "justify-center",
+                            )}
+                            onClick={() => onSort?.(meta.sortKey!)}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                            <div className="flex flex-col -space-y-[3px]">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={
+                                  sortBy === meta.sortKey && sortOrder === "asc"
+                                    ? 3.5
+                                    : 1.5
+                                }
+                                className={cn(
+                                  "transition-all duration-150",
+                                  sortBy === meta.sortKey
+                                    ? sortOrder === "asc"
+                                      ? "text-foreground"
+                                      : "text-muted-foreground/5"
+                                    : "text-muted-foreground/35",
+                                )}
+                              >
+                                <path d="m18 15-6-6-6 6" />
+                              </svg>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={
+                                  sortBy === meta.sortKey &&
+                                  sortOrder === "desc"
+                                    ? 3.5
+                                    : 1.5
+                                }
+                                className={cn(
+                                  "transition-all duration-150",
+                                  sortBy === meta.sortKey
+                                    ? sortOrder === "desc"
+                                      ? "text-foreground"
+                                      : "text-muted-foreground/5"
+                                    : "text-muted-foreground/35",
+                                )}
+                              >
+                                <path d="m6 9 6 6 6-6" />
+                              </svg>
+                            </div>
+                          </div>
+                        ) : (
+                          flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
+                          )
+                        )}
+                        {enableColumnResizing &&
+                          header.column.getCanResize() && (
+                            <div
+                              {...{
+                                onMouseDown: header.getResizeHandler(),
+                                onTouchStart: header.getResizeHandler(),
+                                className: cn(
+                                  "absolute right-0 top-0 h-full w-[4px] cursor-col-resize select-none touch-none bg-transparent group-hover:bg-primary/30 z-50",
+                                  header.column.getIsResizing()
+                                    ? "bg-primary/50 w-[4px]"
+                                    : "",
+                                ),
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
                           )}
-                          <div className="flex flex-col -space-y-[3px]">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="10"
-                              height="10"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={
-                                sortBy === meta.sortKey && sortOrder === "asc"
-                                  ? 3.5
-                                  : 1.5
-                              }
-                              className={cn(
-                                "transition-all duration-150",
-                                sortBy === meta.sortKey
-                                  ? sortOrder === "asc"
-                                    ? "text-foreground"
-                                    : "text-muted-foreground/5"
-                                  : "text-muted-foreground/35",
-                              )}
-                            >
-                              <path d="m18 15-6-6-6 6" />
-                            </svg>
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="10"
-                              height="10"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={
-                                sortBy === meta.sortKey && sortOrder === "desc"
-                                  ? 3.5
-                                  : 1.5
-                              }
-                              className={cn(
-                                "transition-all duration-150",
-                                sortBy === meta.sortKey
-                                  ? sortOrder === "desc"
-                                    ? "text-foreground"
-                                    : "text-muted-foreground/5"
-                                  : "text-muted-foreground/35",
-                              )}
-                            >
-                              <path d="m6 9 6 6 6-6" />
-                            </svg>
-                          </div>
-                        </div>
-                      ) : (
-                        flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )
-                      )}
-                      {enableColumnResizing && header.column.getCanResize() && (
-                        <div
-                          {...{
-                            onMouseDown: header.getResizeHandler(),
-                            onTouchStart: header.getResizeHandler(),
-                            className: cn(
-                              "absolute right-0 top-0 h-full w-[4px] cursor-col-resize select-none touch-none bg-transparent group-hover:bg-primary/30 z-50",
-                              header.column.getIsResizing()
-                                ? "bg-primary/50 w-[4px]"
-                                : "",
-                            ),
+                      </TableHead>
+                    );
+                  })}
+                  <TableHead
+                    className="w-auto p-0 m-0 border-none"
+                    style={{ width: "auto" }}
+                  />
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {loading &&
+                Array.from({ length: loadingRows }).map((_, rowIndex) => (
+                  <TableRow key={rowIndex} className="hover:bg-transparent">
+                    {table.getVisibleLeafColumns().map((column, index) => {
+                      const meta = column.columnDef.meta as DataTableRowMeta;
+                      const isFirstCol = index === 0;
+                      return (
+                        <TableCell
+                          key={column.id}
+                          className={cn(
+                            meta.className,
+                            isFirstCol &&
+                              !enableRowSelection &&
+                              "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                            variant === "spreadsheet" &&
+                              "border-r border-border py-1 text-xs",
+                            variant === "spreadsheet" &&
+                              ![
+                                "__actions",
+                                "__selection",
+                                "__expand",
+                              ].includes(column.id) &&
+                              "px-2 truncate",
+                          )}
+                          style={{
+                            maxWidth: enableColumnResizing
+                              ? column.getSize()
+                              : undefined,
                           }}
-                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {meta.skeletonClassName !== "" && (
+                            <Skeleton
+                              className={cn(
+                                "h-4 w-3/4 max-w-[120px]",
+                                meta.className?.includes("text-center") &&
+                                  "mx-auto",
+                                meta.className?.includes("text-right") &&
+                                  "ml-auto",
+                                meta.skeletonClassName,
+                              )}
+                            />
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                    <TableCell
+                      className="w-auto p-0 m-0 border-none"
+                      style={{ width: "auto" }}
+                    />
+                  </TableRow>
+                ))}
+
+              {!loading && error && (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell
+                    colSpan={tableColumns.length + 1}
+                    className="text-center text-[color:var(--warn-fg)] py-10"
+                  >
+                    {error}
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {!loading && !error && items.length === 0 && (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell
+                    colSpan={tableColumns.length + 1}
+                    className="text-center text-[color:var(--faint)] py-10"
+                  >
+                    {emptyLabel}
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {!loading &&
+                !error &&
+                table.getRowModel().rows.map((row) => {
+                  const isExpanded = expandedRowKeys?.includes(
+                    getRowKey(row.original),
+                  );
+                  return (
+                    <React.Fragment key={row.id}>
+                      <TableRow
+                        data-state={row.getIsSelected() && "selected"}
+                        className={cn(
+                          onRowClick && "cursor-pointer",
+                          isExpanded &&
+                            "bg-muted/5 font-medium border-l-2 border-l-primary",
+                        )}
+                        onClick={
+                          onRowClick
+                            ? () => onRowClick(row.original)
+                            : undefined
+                        }
+                      >
+                        {row.getVisibleCells().map((cell, index) => {
+                          const meta = cell.column.columnDef
+                            .meta as DataTableRowMeta;
+                          const isFirstCol = index === 0;
+                          return (
+                            <TableCell
+                              key={cell.id}
+                              className={cn(
+                                meta.className,
+                                isFirstCol &&
+                                  !enableRowSelection &&
+                                  variant !== "spreadsheet" &&
+                                  "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
+                                variant === "spreadsheet" &&
+                                  "border-r border-border py-1 text-xs",
+                                variant === "spreadsheet" &&
+                                  ![
+                                    "__actions",
+                                    "__selection",
+                                    "__expand",
+                                  ].includes(cell.column.id) &&
+                                  "px-2 truncate",
+                              )}
+                              style={{
+                                maxWidth: enableColumnResizing
+                                  ? cell.column.getSize()
+                                  : undefined,
+                              }}
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                        <TableCell
+                          className="w-auto p-0 m-0 border-none"
+                          style={{ width: "auto" }}
                         />
+                      </TableRow>
+                      {renderSubRow && isExpanded && (
+                        <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
+                          <TableCell
+                            colSpan={row.getVisibleCells().length + 1}
+                            className="p-4 bg-muted/20"
+                          >
+                            {renderSubRow(row.original)}
+                          </TableCell>
+                        </TableRow>
                       )}
-                    </TableHead>
+                    </React.Fragment>
                   );
                 })}
-                <TableHead
-                  className="w-auto p-0 m-0 border-none"
-                  style={{ width: "auto" }}
-                />
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {loading &&
-              Array.from({ length: loadingRows }).map((_, rowIndex) => (
-                <TableRow key={rowIndex} className="hover:bg-transparent">
+            </TableBody>
+            {summaryRow && (
+              <TableFooter className="sticky bottom-0 z-30 bg-muted shadow-[0_-1px_0_0_var(--border-light)]">
+                <TableRow className="hover:bg-transparent">
                   {table.getVisibleLeafColumns().map((column, index) => {
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
@@ -794,14 +950,9 @@ export function DataTable<T>({
                           meta.className,
                           isFirstCol &&
                             !enableRowSelection &&
-                            "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
+                            "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
                           variant === "spreadsheet" &&
-                            "border-r border-border py-1 text-xs",
-                          variant === "spreadsheet" &&
-                            !["__actions", "__selection", "__expand"].includes(
-                              column.id,
-                            ) &&
-                            "px-2 truncate",
+                            "border-r border-border px-2 py-1 text-xs truncate font-semibold",
                         )}
                         style={{
                           maxWidth: enableColumnResizing
@@ -809,18 +960,9 @@ export function DataTable<T>({
                             : undefined,
                         }}
                       >
-                        {meta.skeletonClassName !== "" && (
-                          <Skeleton
-                            className={cn(
-                              "h-4 w-3/4 max-w-[120px]",
-                              meta.className?.includes("text-center") &&
-                                "mx-auto",
-                              meta.className?.includes("text-right") &&
-                                "ml-auto",
-                              meta.skeletonClassName,
-                            )}
-                          />
-                        )}
+                        {summaryRow[column.id] !== undefined
+                          ? summaryRow[column.id]
+                          : null}
                       </TableCell>
                     );
                   })}
@@ -829,141 +971,11 @@ export function DataTable<T>({
                     style={{ width: "auto" }}
                   />
                 </TableRow>
-              ))}
-
-            {!loading && error && (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={tableColumns.length + 1}
-                  className="text-center text-[color:var(--warn-fg)] py-10"
-                >
-                  {error}
-                </TableCell>
-              </TableRow>
+              </TableFooter>
             )}
-
-            {!loading && !error && items.length === 0 && (
-              <TableRow className="hover:bg-transparent">
-                <TableCell
-                  colSpan={tableColumns.length + 1}
-                  className="text-center text-[color:var(--faint)] py-10"
-                >
-                  {emptyLabel}
-                </TableCell>
-              </TableRow>
-            )}
-
-            {!loading &&
-              !error &&
-              table.getRowModel().rows.map((row) => {
-                const isExpanded = expandedRowKeys?.includes(
-                  getRowKey(row.original),
-                );
-                return (
-                  <React.Fragment key={row.id}>
-                    <TableRow
-                      data-state={row.getIsSelected() && "selected"}
-                      className={cn(
-                        onRowClick && "cursor-pointer",
-                        isExpanded &&
-                          "bg-muted/5 font-medium border-l-2 border-l-primary",
-                      )}
-                      onClick={
-                        onRowClick ? () => onRowClick(row.original) : undefined
-                      }
-                    >
-                      {row.getVisibleCells().map((cell, index) => {
-                        const meta = cell.column.columnDef
-                          .meta as DataTableRowMeta;
-                        const isFirstCol = index === 0;
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className={cn(
-                              meta.className,
-                              isFirstCol &&
-                                !enableRowSelection &&
-                                variant !== "spreadsheet" &&
-                                "sticky left-0 bg-surface group-hover:bg-surface-hover shadow-[1px_0_0_0_var(--border-light)] z-10",
-                              variant === "spreadsheet" &&
-                                "border-r border-border py-1 text-xs",
-                              variant === "spreadsheet" &&
-                                ![
-                                  "__actions",
-                                  "__selection",
-                                  "__expand",
-                                ].includes(cell.column.id) &&
-                                "px-2 truncate",
-                            )}
-                            style={{
-                              maxWidth: enableColumnResizing
-                                ? cell.column.getSize()
-                                : undefined,
-                            }}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                      <TableCell
-                        className="w-auto p-0 m-0 border-none"
-                        style={{ width: "auto" }}
-                      />
-                    </TableRow>
-                    {renderSubRow && isExpanded && (
-                      <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
-                        <TableCell
-                          colSpan={row.getVisibleCells().length + 1}
-                          className="p-4 bg-muted/20"
-                        >
-                          {renderSubRow(row.original)}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-          </TableBody>
-          {summaryRow && (
-            <TableFooter className="sticky bottom-0 z-30 bg-muted shadow-[0_-1px_0_0_var(--border-light)]">
-              <TableRow className="hover:bg-transparent">
-                {table.getVisibleLeafColumns().map((column, index) => {
-                  const meta = column.columnDef.meta as DataTableRowMeta;
-                  const isFirstCol = index === 0;
-                  return (
-                    <TableCell
-                      key={column.id}
-                      className={cn(
-                        meta.className,
-                        isFirstCol &&
-                          !enableRowSelection &&
-                          "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
-                        variant === "spreadsheet" &&
-                          "border-r border-border px-2 py-1 text-xs truncate font-semibold",
-                      )}
-                      style={{
-                        maxWidth: enableColumnResizing
-                          ? column.getSize()
-                          : undefined,
-                      }}
-                    >
-                      {summaryRow[column.id] !== undefined
-                        ? summaryRow[column.id]
-                        : null}
-                    </TableCell>
-                  );
-                })}
-                <TableCell
-                  className="w-auto p-0 m-0 border-none"
-                  style={{ width: "auto" }}
-                />
-              </TableRow>
-            </TableFooter>
-          )}
-        </Table>
+          </Table>
+        </div>
+        {sidePanel}
       </div>
       {showPagination && (
         <TablePagination

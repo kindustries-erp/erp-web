@@ -257,14 +257,28 @@ export function SidebarNav({
             {t("nav.sections.accounting")}
           </div>
           {canReadInvoices && (
-            <NavItem
+            <NavGroup
               collapsed={c}
               icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInvoices")}
-              active={currentPage === "erp-invoices"}
-              onClick={() => navTo("erp-invoices")}
-              contextPage="erp-invoices"
-            />
+              active={
+                currentPage === "erp-invoices-in" ||
+                currentPage === "erp-invoices-out"
+              }
+            >
+              <NavGroupItem
+                label={t("nav.items.inbound")}
+                active={currentPage === "erp-invoices-in"}
+                onClick={() => navTo("erp-invoices-in")}
+                contextPage="erp-invoices-in"
+              />
+              <NavGroupItem
+                label={t("nav.items.outbound")}
+                active={currentPage === "erp-invoices-out"}
+                onClick={() => navTo("erp-invoices-out")}
+                contextPage="erp-invoices-out"
+              />
+            </NavGroup>
           )}
         </div>
       )}
