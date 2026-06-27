@@ -377,8 +377,12 @@ export function ErpBusinessPartnersPage({
       onCreate={openCreate}
       filterConfig={filterConfig}
       filter={filter}
-      onRowClick={(item) => openView(item)}
       rowActions={(item) => [
+        {
+          label: "Chi tiết",
+          icon: <Eye className="h-3.5 w-3.5" />,
+          onClick: () => openView(item),
+        },
         {
           label: "Xóa",
           icon: <Trash2 className="h-3.5 w-3.5" />,
@@ -418,7 +422,8 @@ export function ErpBusinessPartnersPage({
               : `Tạo ${title.toLowerCase()}`
         }
         actions={drawerActions}
-        panelClassName="min-[1024px]:min-w-[1000px] xl:min-w-[1100px]"
+        layout="1-column"
+        size="md"
         leftPanel={
           <DrawerSection title="Thông tin chính">
             <div className="grid gap-4 md:grid-cols-2">
@@ -507,10 +512,6 @@ export function ErpBusinessPartnersPage({
                 />
               </DrawerField>
             </div>
-          </DrawerSection>
-        }
-        rightPanel={
-          <>
             <DrawerField label="Trạng thái">
               <Combobox
                 options={[
@@ -535,7 +536,7 @@ export function ErpBusinessPartnersPage({
                 }
               />
             </DrawerField>
-          </>
+          </DrawerSection>
         }
       />
     </SpreadsheetPageTemplate>

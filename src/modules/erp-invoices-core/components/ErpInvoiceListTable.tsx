@@ -201,7 +201,6 @@ export function ErpInvoiceListTable({
       items={invoices}
       columns={columns}
       getRowKey={(inv) => inv.id}
-      onRowClick={(inv) => openDetail(inv)}
       actions={(inv) => {
         const items = [];
         items.push({

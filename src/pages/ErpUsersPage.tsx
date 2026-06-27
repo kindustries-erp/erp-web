@@ -8,10 +8,10 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   DrawerAction,
   DrawerField,
-  DrawerModal,
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -382,56 +382,60 @@ export function ErpUsersPage() {
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
-      <DrawerModal
+      <StandardFormDrawer
         open={drawerOpen}
+        mode={editingUser ? "edit" : "create"}
         onClose={() => setDrawerOpen(false)}
         title={editingUser ? t("Cập nhật user") : t("Tạo user mới")}
         subtitle={t("Flow production-grade cho ERP CORE")}
         actions={drawerActions}
-      >
-        <DrawerSection title={t("Thông tin user")}>
-          <DrawerField label="Email" required>
-            <input
-              className={inputCls}
-              value={form.email}
-              disabled={!!editingUser}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, email: e.target.value }))
-              }
-              placeholder="user@example.com"
-            />
-          </DrawerField>
-          {!editingUser && (
-            <DrawerField label={t("Mật khẩu")} required>
+        layout="1-column"
+        leftPanel={
+          <DrawerSection title={t("Thông tin user")}>
+            <DrawerField label="Email" required>
               <input
-                type="password"
                 className={inputCls}
-                value={form.password}
+                value={form.email}
+                disabled={!!editingUser}
                 onChange={(e) =>
-                  setForm((prev) => ({ ...prev, password: e.target.value }))
+                  setForm((prev) => ({ ...prev, email: e.target.value }))
                 }
-                placeholder={t("Tối thiểu 8 ký tự")}
+                placeholder="user@example.com"
               />
             </DrawerField>
-          )}
-          <DrawerField label={t("Liên kết employee")}>
-            <Combobox
-              options={employees.map((emp) => ({
-                value: emp.id,
-                label: `${emp.fullName} (${emp.employeeCode})`,
-              }))}
-              value={form.employeeId}
-              onChange={(val) =>
-                setForm((prev) => ({ ...prev, employeeId: val }))
-              }
-              placeholder={t("Không liên kết")}
-            />
-          </DrawerField>
-        </DrawerSection>
-      </DrawerModal>
+            {!editingUser && (
+              <DrawerField label={t("Mật khẩu")} required>
+                <input
+                  type="password"
+                  className={inputCls}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                  placeholder={t("Tối thiểu 8 ký tự")}
+                />
+              </DrawerField>
+            )}
+            <DrawerField label={t("Liên kết employee")}>
+              <Combobox
+                options={employees.map((emp) => ({
+                  value: emp.id,
+                  label: `${emp.fullName} (${emp.employeeCode})`,
+                }))}
+                value={form.employeeId}
+                onChange={(val) =>
+                  setForm((prev) => ({ ...prev, employeeId: val }))
+                }
+                placeholder={t("Không liên kết")}
+              />
+            </DrawerField>
+          </DrawerSection>
+        }
+      />
 
-      <DrawerModal
+      <StandardFormDrawer
         open={detailOpen}
+        mode="view"
         onClose={() => setDetailOpen(false)}
         title={selectedUser?.email || t("Chi tiết user")}
         subtitle={t("Timeline audit theo core_user")}
@@ -442,62 +446,67 @@ export function ErpUsersPage() {
             primary: true,
           },
         ]}
-      >
-        <DrawerSection title={t("Thông tin hiện tại")}>
-          <div className="space-y-2 text-sm">
-            <div>
-              <span className="font-medium">Email:</span> {selectedUser?.email}
-            </div>
-            <div>
-              <span className="font-medium">{t("Trạng thái:")}</span>{" "}
-              {selectedUser?.status}
-            </div>
-            <div>
-              <span className="font-medium">Employee:</span>{" "}
-              {selectedUser?.employee
-                ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
-                : "—"}
-            </div>
-            <div>
-              <span className="font-medium">Last login:</span>{" "}
-              {formatDate(selectedUser?.lastLoginAt ?? null)}
-            </div>
-          </div>
-        </DrawerSection>
-        <DrawerSection title={t("Timeline audit")}>
-          {timelineLoading ? (
-            <div className="text-sm text-muted-foreground">
-              {t("Đang tải timeline...")}
-            </div>
-          ) : timeline.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              {t("Chưa có log")}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {timeline.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-xl border border-border bg-surface p-3 text-sm"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-medium">{entry.actionType}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(entry.createdAt)}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {entry.actorEmail || "system"} • {entry.status}
-                  </div>
-                  {entry.message ? (
-                    <div className="mt-2 text-sm">{entry.message}</div>
-                  ) : null}
+        layout="1-column"
+        leftPanel={
+          <>
+            <DrawerSection title={t("Thông tin hiện tại")}>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium">Email:</span>{" "}
+                  {selectedUser?.email}
                 </div>
-              ))}
-            </div>
-          )}
-        </DrawerSection>
-      </DrawerModal>
+                <div>
+                  <span className="font-medium">{t("Trạng thái:")}</span>{" "}
+                  {selectedUser?.status}
+                </div>
+                <div>
+                  <span className="font-medium">Employee:</span>{" "}
+                  {selectedUser?.employee
+                    ? `${selectedUser.employee.fullName} (${selectedUser.employee.employeeCode})`
+                    : "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Last login:</span>{" "}
+                  {formatDate(selectedUser?.lastLoginAt ?? null)}
+                </div>
+              </div>
+            </DrawerSection>
+            <DrawerSection title={t("Timeline audit")}>
+              {timelineLoading ? (
+                <div className="text-sm text-muted-foreground">
+                  {t("Đang tải timeline...")}
+                </div>
+              ) : timeline.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  {t("Chưa có log")}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {timeline.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="rounded-xl border border-border bg-surface p-3 text-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-medium">{entry.actionType}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(entry.createdAt)}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {entry.actorEmail || "system"} • {entry.status}
+                      </div>
+                      {entry.message ? (
+                        <div className="mt-2 text-sm">{entry.message}</div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </DrawerSection>
+          </>
+        }
+      />
 
       <ConfirmModal
         open={!!impersonateTarget}

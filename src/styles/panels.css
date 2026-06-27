@@ -48,7 +48,10 @@
 
 @media (min-width: 1024px) {
   .slide-panel {
-    max-width: calc(100vw - 220px);
+    /* 180px sidebar (expanded) + 8px gap + 20px right offset = 208px
+       Using expanded width as hard floor so drawer never covers sidebar
+       even when sidebar hover-expands from collapsed (52px) state */
+    max-width: calc(100vw - 208px);
   }
 }
 .slide-panel-overlay.open .slide-panel {
@@ -79,10 +82,27 @@
     max-width: 100vw;
     border-radius: 0;
     border: none;
+    /* Safe area for notch/home indicator on iOS */
+    padding-bottom: env(safe-area-inset-bottom);
   }
   /* Panels overlay each other at full width on mobile */
   .slide-panel-overlay.open .slide-panel {
     transform: translateX(0) !important;
+  }
+}
+
+/* ── Tablet: 500px – 1023px (sidebar is overlay, not in flow) ── */
+@media (min-width: 500px) and (max-width: 1023px) {
+  .slide-panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh !important;
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+    border: none;
+    border-left: 1px solid var(--border);
   }
 }
 

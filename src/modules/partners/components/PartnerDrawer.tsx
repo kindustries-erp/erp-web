@@ -46,7 +46,7 @@ export function PartnerDrawer({
       mode={mode}
       title={editing ? "Chỉnh sửa đối tác" : "Thêm đối tác mới"}
       subtitle={editing ? editing.name : "Điền thông tin bên dưới"}
-      panelClassName="!w-[1100px] !max-w-[calc(100vw-40px)]"
+      size="xl"
       actions={[
         { label: "Hủy", onClick: closeDrawer },
         {
