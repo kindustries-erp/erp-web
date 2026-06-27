@@ -67,7 +67,7 @@ export function PageLayout({
   return (
     <div
       className={cn(
-        "flex flex-col h-full overflow-hidden space-y-4 px-[18px] pt-[18px]",
+        "flex flex-col h-full overflow-hidden space-y-4 px-6 pt-[18px]",
         className,
       )}
     >

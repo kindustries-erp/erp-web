@@ -17,6 +17,7 @@ function applyDocumentTheme(appTheme: AppTheme) {
 }
 
 export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
+  dashboard: { labelKey: "nav.items.dashboard", closable: false },
   purchasing: { labelKey: "nav.items.purchasing", closable: false },
 };
 
@@ -170,6 +171,7 @@ interface AppState {
   locale: "vi" | "en";
   isLoggedIn: boolean;
   forbidden: boolean;
+  companyProfileOpen: boolean;
   customBreadcrumbs: Array<[string, string?]> | null;
   setForbidden: (value: boolean) => void;
   navigate: (page: PageKey) => void;
@@ -180,6 +182,7 @@ interface AppState {
   reorderTabs: (sourceKey: PageKey, targetKey: PageKey) => void;
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
+  setCompanyProfileOpen: (open: boolean) => void;
   toggleAppTheme: () => void;
   setAppTheme: (theme: AppTheme) => void;
   toggleLocale: () => void;
@@ -201,6 +204,7 @@ export const useAppStore = create<AppState>()(
       appTheme: "classic",
       locale: "vi",
       isLoggedIn: false,
+      companyProfileOpen: false,
       customBreadcrumbs: null,
 
       setForbidden: (value) => set({ forbidden: value }),
@@ -339,6 +343,7 @@ export const useAppStore = create<AppState>()(
         setTimeout(() => window.dispatchEvent(new Event("resize")), 240);
       },
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
+      setCompanyProfileOpen: (open) => set({ companyProfileOpen: open }),
 
       toggleAppTheme: () => {
         const order: AppTheme[] = ["classic", "shell", "orcaq"];

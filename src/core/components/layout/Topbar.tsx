@@ -5,12 +5,18 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
+import { Building2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 
 export function Topbar() {
-  const { currentPage, navigate, setMobileSidebarOpen, customBreadcrumbs } =
-    useAppStore();
+  const {
+    currentPage,
+    navigate,
+    setMobileSidebarOpen,
+    customBreadcrumbs,
+    setCompanyProfileOpen,
+  } = useAppStore();
   const impersonation = useAuthStore((s) => s.impersonation);
   const stopImpersonationAction = useAuthStore(
     (s) => s.stopImpersonationAction,
@@ -22,7 +28,7 @@ export function Topbar() {
     BREADCRUMBS[currentPage] ?? [[currentPage]];
 
   return (
-    <div className="topbar h-8 flex items-center gap-[10px] flex-shrink-0">
+    <div className="topbar flex items-center gap-[10px] flex-shrink-0">
       {/* Hamburger (mobile) */}
       <Button
         variant="secondary"
@@ -120,9 +126,15 @@ export function Topbar() {
       {/* Company Name */}
       {!impersonation?.active && companyProfile?.company_name && (
         <Tooltip content={companyProfile.company_name} side="bottom">
-          <div className="ml-auto text-xs font-medium text-[color:var(--muted-fg)] truncate max-w-[400px] cursor-default">
-            {companyProfile.company_name}
-          </div>
+          <button
+            onClick={() => setCompanyProfileOpen(true)}
+            className="ml-auto flex items-center gap-2 text-xs font-medium text-[color:var(--muted-fg)] hover:text-foreground transition-colors max-w-[400px]"
+          >
+            <Building2 className="w-[15px] h-[15px] flex-shrink-0" />
+            <span className="truncate hidden md:block">
+              {companyProfile.company_name}
+            </span>
+          </button>
         </Tooltip>
       )}
     </div>

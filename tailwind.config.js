@@ -24,6 +24,9 @@ export default {
         "approve-bg": "var(--approve-bg)",
         "approve-fg": "var(--approve-fg)",
       },
+      boxShadow: {
+        panel: "0 4px 16px rgba(0, 0, 0, 0.08)",
+      },
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },

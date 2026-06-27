@@ -168,11 +168,11 @@
 
 /* ── App Content ── */
 .app-content {
-  /* topbar(32px) top */
-  padding-top: 32px;
+  /* topbar(48px) top */
+  padding-top: 48px;
   padding-bottom: 12px !important;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 6px;
+  padding-right: 6px;
 }
 
 .theme-classic .app-content {
@@ -190,7 +190,7 @@
   z-index: 20;
   flex-shrink: 0;
   background: var(--background);
-  padding: 0 26px;
+  padding: 8px 30px;
   border-bottom: 0.5px solid var(--glass-border);
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
@@ -198,7 +198,7 @@
 
 .theme-classic .topbar {
   background: var(--background);
-  padding: 0 26px;
+  padding: 8px 30px;
 }
 
 /* ── Tab Bar ── */
@@ -212,7 +212,7 @@
   flex-shrink: 0;
   background: var(--background);
   border-top: 0.5px solid var(--glass-border);
-  padding: 0 26px;
+  padding: 0 30px;
   overflow-x: auto;
   scrollbar-width: none;
   border-bottom-left-radius: inherit;
@@ -393,17 +393,17 @@
   }
 
   .topbar {
-    padding: 0 22px;
+    padding: 8px 28px;
   }
 
   .theme-classic .topbar {
-    padding: 0 22px;
+    padding: 8px 28px;
   }
 
   .app-content {
     margin: 0;
-    /* topbar(32px) top */
-    padding-top: 32px !important;
+    /* topbar(48px) top */
+    padding-top: 48px !important;
     padding-bottom: 8px !important;
     padding-left: 4px;
     padding-right: 4px;
