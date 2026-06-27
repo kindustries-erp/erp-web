@@ -128,9 +128,9 @@ export function Topbar() {
         <Tooltip content={companyProfile.company_name} side="bottom">
           <button
             onClick={() => setCompanyProfileOpen(true)}
-            className="ml-auto flex items-center gap-2 text-xs font-medium text-[color:var(--muted-fg)] hover:text-foreground transition-colors max-w-[400px]"
+            className="ml-auto flex items-center gap-2 text-[10px] font-medium text-[color:var(--muted-fg)] hover:text-foreground transition-colors max-w-[400px]"
           >
-            <Building2 className="w-[15px] h-[15px] flex-shrink-0" />
+            <Building2 className="w-[14px] h-[14px] flex-shrink-0" />
             <span className="truncate hidden md:block">
               {companyProfile.company_name}
             </span>

@@ -18,7 +18,6 @@ function applyDocumentTheme(appTheme: AppTheme) {
 
 export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
   dashboard: { labelKey: "nav.items.dashboard", closable: false },
-  purchasing: { labelKey: "nav.items.purchasing", closable: false },
 };
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {

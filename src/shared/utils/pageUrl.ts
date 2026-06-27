@@ -29,7 +29,7 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
 };
 
 export function pageToPath(page: PageKey, tab?: string): string {
-  const slug = page === "purchasing" ? "" : page;
+  const slug = page === "dashboard" ? "" : page;
   const base = slug ? `/${slug}` : "/";
   return tab ? `${base}?tab=${encodeURIComponent(tab)}` : base;
 }
@@ -46,7 +46,7 @@ export function pathToPage(
   let page: PageKey | undefined;
 
   if (slug === "") {
-    page = "purchasing";
+    page = "dashboard";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
       ? (slug as PageKey)
