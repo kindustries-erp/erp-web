@@ -39,25 +39,63 @@ export const bankStatementApi = {
     sortBy?: string;
     sortOrder?: "ASC" | "DESC";
     transactionType?: string;
+    tagIds?: string[];
   }) => {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
     );
     const res = await axiosInstance.get(
       "/api/v1/bank-transactions-core/transactions",
-      { params: cleanParams },
+      {
+        params: cleanParams,
+        paramsSerializer: { indexes: null },
+      },
     );
     return res.data;
   },
 
-  importFile: async (data: {
-    file: File;
+  getDashboardStats: async (params: {
+    startDate?: string;
+    endDate?: string;
+    sourceType?: "BANK" | "CASH";
+    branchId?: string;
+    tagIds?: string[];
+  }): Promise<{
+    totalCashIn: number;
+    totalCashOut: number;
+    netCashFlow: number;
+    cashTrend: Array<{ label: string; cashIn: number; cashOut: number }>;
+    categoryBreakdown: Array<{ label: string; color: string; amount: number }>;
+    sourceBreakdown: Array<{
+      label: string;
+      cashIn: number;
+      cashOut: number;
+      trend: Array<{ label: string; cashIn: number; cashOut: number }>;
+    }>;
+    topTransactionsIn: Array<any>;
+    topTransactionsOut: Array<any>;
+  }> => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
+    );
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/dashboard-stats",
+      {
+        params: cleanParams,
+        paramsSerializer: { indexes: null },
+      },
+    );
+    return res.data;
+  },
+
+  importFiles: async (data: {
+    files: File[];
     branchId: string;
     bankAccountId?: string;
     cashBookId?: string;
   }): Promise<{ success: boolean; count: number; importBatchId: string }> => {
     const formData = new FormData();
-    formData.append("file", data.file);
+    data.files.forEach((f) => formData.append("files", f));
     formData.append("branchId", data.branchId);
     if (data.bankAccountId)
       formData.append("bankAccountId", data.bankAccountId);
@@ -105,9 +143,10 @@ export const bankStatementApi = {
     return res.data;
   },
   updateBankAccount: async (id: string, data: any) => {
+    const { branchId, ...payload } = data;
     const res = await axiosInstance.patch(
       `/api/v1/bank-transactions-core/bank-accounts/${id}`,
-      data,
+      payload,
     );
     return res.data;
   },

@@ -4,12 +4,14 @@ import { Building2, Wallet, Plus, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useT } from "@/core/i18n";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { getTags } from "@/modules/tags/api/tagsApi";
 import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
 import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -33,6 +35,11 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           : await bankStatementApi.getCashBooks();
       return data as any[];
     },
+  });
+
+  const { data: tags = [] } = useQuery({
+    queryKey: ["sys-tags"],
+    queryFn: getTags,
   });
 
   const filterConfig = useMemo(() => {
@@ -68,13 +75,21 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       ],
     });
 
+    custom.push({
+      key: "tagIds",
+      label: "Danh mục (Tags)",
+      placeholder: "Chọn danh mục",
+      options: tags.map((t) => ({ value: t.id, label: t.name })),
+      multiple: true,
+    });
+
     return {
       search: true,
       period: true,
       noDefaultPeriod: true,
       custom,
     };
-  }, [branches, accountsData, type]);
+  }, [branches, accountsData, type, tags]);
 
   const filter = useFilterPanel(filterConfig, () => setPage(1));
 
@@ -103,20 +118,60 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         branchId: filter.state.custom.branchId || undefined,
         bankAccountId: filter.state.custom.bankAccountId || undefined,
         cashBookId: filter.state.custom.cashBookId || undefined,
-        transactionType: filter.state.custom.transactionType || undefined,
+        transactionType: filter.state.custom.transactionType as
+          | string
+          | undefined,
+        tagIds: filter.state.custom.tagIds as unknown as string[] | undefined,
       }),
   });
+
+  const summaryRow = useMemo(() => {
+    if (!data?.items || data.items.length === 0) return undefined;
+
+    const totalDebit = data.items.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.debitAmount) || 0),
+      0,
+    );
+    const totalCredit = data.items.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
+      0,
+    );
+    const netAmount = totalCredit - totalDebit;
+
+    return {
+      transDate: null,
+      amount:
+        netAmount > 0 ? (
+          <span className="text-green-600 font-medium">
+            +{money(netAmount)}
+          </span>
+        ) : netAmount < 0 ? (
+          <span className="text-red-600 font-medium">
+            -{money(Math.abs(netAmount))}
+          </span>
+        ) : (
+          money(0)
+        ),
+    };
+  }, [data?.items]);
 
   const columns: any[] = [
     {
       key: "transDate",
       dataIndex: "transDate",
       header: t("bankStatement.columns.transDate"),
-      cell: (row: any) => formatGMT7(row.transDate, "datetime"),
+      cell: (row: any) => formatGMT7(row.transDate, "date"),
       size: 150,
       sortable: true,
     },
 
+    {
+      key: "description",
+      dataIndex: "description",
+      header: t("bankStatement.columns.description"),
+      size: 400,
+      valueType: "text",
+    },
     {
       key: "amount",
       header: "Số tiền",
@@ -148,11 +203,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       sortable: false,
     },
     {
-      key: "description",
-      dataIndex: "description",
-      header: t("bankStatement.columns.description"),
-      size: 400,
-      valueType: "text",
+      key: "tags",
+      header: "Danh mục",
+      cell: (row: any) => (
+        <EntityTagSelector entityType="bank_transaction" entityId={row.id} />
+      ),
+      size: 200,
     },
     {
       key: "correspondentName",
@@ -227,6 +283,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         items={data?.items || []}
         columns={columns}
         getRowKey={(row: any) => row.id}
+        summaryRow={summaryRow}
         loading={isLoading}
         page={page}
         pageSize={pageSize}

@@ -125,6 +125,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "bankStatement.cashTitle",
     group: "accounting",
   },
+  "cashflow-dashboard": {
+    labelKey: "nav.items.cashflowDashboard",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
@@ -193,6 +197,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.accounting"],
     ["nav.items.cashflow"],
     ["bankStatement.cashTitle"],
+  ],
+  "cashflow-dashboard": [
+    ["breadcrumb.accounting"],
+    ["nav.items.cashflow"],
+    ["nav.items.dashboard"],
   ],
 };
 

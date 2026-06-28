@@ -290,10 +290,17 @@ export function SidebarNav({
               active={
                 currentPage === "bank-statement" ||
                 currentPage === "cash-statement" ||
+                currentPage === "cashflow-dashboard" ||
                 currentPage === "settings-bank" ||
                 currentPage === "settings-cash-fund"
               }
             >
+              <NavGroupItem
+                label={t("nav.items.dashboard")}
+                active={currentPage === "cashflow-dashboard"}
+                onClick={() => navTo("cashflow-dashboard")}
+                contextPage="cashflow-dashboard"
+              />
               <NavGroupItem
                 label={t("bankStatement.bankTitle")}
                 active={currentPage === "bank-statement"}

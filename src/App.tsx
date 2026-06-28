@@ -45,11 +45,13 @@ import { BankStatementPage } from "@/pages/BankStatementPage";
 import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
 import { ThietLapQuy } from "@/pages/SettingsCashFund";
 import { SettingsBranch } from "@/pages/SettingsBranch";
+import { CashflowDashboard } from "@/pages/CashflowDashboard";
 
 import { PageKey } from "@/shared/types";
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,

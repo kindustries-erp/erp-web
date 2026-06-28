@@ -30,7 +30,25 @@ export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
       options={{
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                let label = context.dataset.label || "";
+                if (label) {
+                  label += ": ";
+                }
+                if (context.parsed.y !== null) {
+                  label += yCallback
+                    ? yCallback(context.parsed.y)
+                    : context.parsed.y + "B";
+                }
+                return label;
+              },
+            },
+          },
+        },
         scales: {
           x: {
             grid: { display: false },

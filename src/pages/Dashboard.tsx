@@ -1,89 +1,146 @@
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { LayoutDashboard } from "lucide-react";
 import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { Panel, PanelMore, PanelBadge } from "@/shared/components/Panel";
+import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
+import { Panel, PanelMore } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
+import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
-
-const APPROVALS_DATA = [
-  // ... (omitting the rest of the array since it's unmodified, wait I need to keep the exact replacement)
-  // The instruction should be just for the component start. Let's just do it exactly.
-  {
-    typeKey: "payNCC",
-    time: "01p",
-    urgent: true,
-    name: "Cty TNHH Công Nghệ ABC",
-    amount: "₫ 450,000,000",
-  },
-  {
-    typeKey: "advanceSalary",
-    time: "Hôm nay",
-    urgent: false,
-    name: "Khối Sản Xuất · Tháng 10",
-    amount: "₫ 1,200,000,000",
-  },
-  {
-    typeKey: "buyFA",
-    time: "Hôm nay",
-    urgent: false,
-    name: "Hệ thống máy chủ mới",
-    amount: "₫ 850,000,000",
-  },
-];
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { FilterPanel } from "@/shared/components/FilterPanel";
+import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { getTags } from "@/modules/tags/api/tagsApi";
+import { getBranchesApi } from "@/modules/branches/api/branchApi";
+import { money } from "@/shared/utils/format";
 
 export function Dashboard() {
   const t = useT();
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches"],
+    queryFn: () => getBranchesApi(),
+  });
+
+  const { data: tags = [] } = useQuery({
+    queryKey: ["sys-tags"],
+    queryFn: getTags,
+  });
+
+  const filterConfig = React.useMemo(() => {
+    const custom: any[] = [
+      {
+        key: "branchId",
+        label: "Chi nhánh",
+        placeholder: "Tất cả chi nhánh",
+        options: branches.map((b: any) => ({ value: b.id, label: b.name })),
+      },
+      {
+        key: "sourceType",
+        label: "Nguồn tiền",
+        placeholder: "Tất cả",
+        options: [
+          { value: "BANK", label: "Ngân hàng" },
+          { value: "CASH", label: "Sổ quỹ" },
+        ],
+      },
+      {
+        key: "tagIds",
+        label: "Danh mục (Tags)",
+        placeholder: "Chọn danh mục",
+        options: tags.map((t) => ({ value: t.id, label: t.name })),
+        multiple: true,
+      },
+    ];
+
+    return {
+      period: true,
+      noDefaultPeriod: true,
+      custom,
+    };
+  }, [branches, tags]);
+
+  const filter = useFilterPanel(filterConfig, () => {});
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: [
+      "dashboard-stats",
+      filter.state.dateFrom,
+      filter.state.dateTo,
+      filter.state.custom.branchId,
+      filter.state.custom.sourceType,
+      filter.state.custom.tagIds,
+    ],
+    queryFn: () =>
+      bankStatementApi.getDashboardStats({
+        startDate: filter.state.dateFrom || undefined,
+        endDate: filter.state.dateTo || undefined,
+        branchId: filter.state.custom.branchId || undefined,
+        sourceType: (filter.state.custom.sourceType as any) || undefined,
+        tagIds:
+          (filter.state.custom.tagIds as unknown as string[]) || undefined,
+      }),
+  });
+
+  const barIn = "#10b981"; // Emerald 500
+  const barOut = "#ef4444"; // Red 500
+
+  const cashTrendLabels = data?.cashTrend?.map((t: any) => t.label) || [];
+  const cashTrendIn = data?.cashTrend?.map((t: any) => t.cashIn) || [];
+  const cashTrendOut = data?.cashTrend?.map((t: any) => t.cashOut) || [];
+
+  const defaultColors = [
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#ec4899",
+    "#14b8a6",
+  ];
+
+  const totalExpenseBreakdown =
+    data?.categoryBreakdown?.reduce(
+      (acc: number, c: any) => acc + c.amount,
+      0,
+    ) || 1;
+  const donutItems = (data?.categoryBreakdown || []).map(
+    (c: any, i: number) => ({
+      label: c.label || t("common.other"),
+      value: Math.round((c.amount / totalExpenseBreakdown) * 100),
+      color: c.color || defaultColors[i % defaultColors.length],
+    }),
+  );
+
   if (!isAdminEmail) {
     return <ComingSoon />;
   }
 
-  const barIn = "#e0e0de";
-  const barOut = "#1a1a1a";
   return (
-    <PageLayout
+    <DashboardTemplate
       title={t("dashboard.title")}
       desc={t("dashboard.desc")}
       icon={<LayoutDashboard className="h-4 w-4" />}
-      actions={
-        <>
-          <Btn>{t("common.thisMonth")}</Btn>
-          <BtnPrimary icon={<IconDownload />}>{t("common.export")}</BtnPrimary>
-        </>
-      }
+      filterConfig={filterConfig}
+      filter={filter}
+      loading={isLoading}
+      onRefresh={() => refetch()}
     >
       {/* KPIs */}
-      <div className="grid grid-cols-4 max-[900px]:grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 max-[900px]:grid-cols-2 gap-3 mb-4">
         <KpiCard
-          label={t("dashboard.kpi.cash")}
-          value="₫ 24.5B"
-          icon={<IconWallet />}
-          badge={<KpiBadge variant="up">↑ +13.6%</KpiBadge>}
-        />
-        <KpiCard
-          label={t("dashboard.kpi.ar")}
-          value="₫ 8.2B"
+          label={t("dashboard.kpi.totalCashIn")}
+          value={isLoading ? "..." : money(data?.totalCashIn || 0)}
           icon={<IconTrendUp />}
-          badge={<KpiBadge variant="up">↑ +9.2%</KpiBadge>}
         />
         <KpiCard
-          label={t("dashboard.kpi.ap")}
-          value="₫ 4.7B"
+          label={t("dashboard.kpi.totalCashOut")}
+          value={isLoading ? "..." : money(data?.totalCashOut || 0)}
           icon={<IconTrendDown />}
-          badge={<KpiBadge variant="down">↓ -1.8%</KpiBadge>}
-        />
-        <KpiCard
-          label={t("dashboard.kpi.pending")}
-          value="24"
-          icon={<IconFile warn />}
-          badge={
-            <KpiBadge variant="warn">{t("dashboard.kpi.nearLimit")}</KpiBadge>
-          }
-          warn
         />
       </div>
 
@@ -91,22 +148,28 @@ export function Dashboard() {
       <div className="grid grid-cols-1 min-[900px]:grid-cols-[1fr_300px] gap-3">
         <Panel title={t("dashboard.cashTrend")} extra={<PanelMore />}>
           <div className="relative h-[210px]">
-            <BarChart
-              labels={["T1", "T2", "T3", "T4", "T5", "T6"]}
-              datasets={[
-                {
-                  data: [12, 15, 18, 22, 19, 25],
-                  color: barIn,
-                  label: t("dashboard.cashIn"),
-                },
-                {
-                  data: [8, 10, 14, 16, 12, 18],
-                  color: barOut,
-                  label: t("dashboard.cashOut"),
-                },
-              ]}
-              yMax={30}
-            />
+            {!isLoading && cashTrendLabels.length > 0 ? (
+              <BarChart
+                labels={cashTrendLabels}
+                yCallback={(v) => money(Number(v))}
+                datasets={[
+                  {
+                    data: cashTrendIn,
+                    color: barIn,
+                    label: t("dashboard.cashIn"),
+                  },
+                  {
+                    data: cashTrendOut,
+                    color: barOut,
+                    label: t("dashboard.cashOut"),
+                  },
+                ]}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
+                {isLoading ? t("common.loading") : t("common.noData")}
+              </div>
+            )}
           </div>
           <div className="flex gap-4 mt-[10px]">
             <LegendItem color={barIn} label={t("dashboard.cashIn")} />
@@ -114,64 +177,26 @@ export function Dashboard() {
           </div>
         </Panel>
 
-        <Panel
-          title={t("dashboard.urgentApproval")}
-          badge={<PanelBadge>3</PanelBadge>}
-        >
-          {APPROVALS_DATA.map((a) => (
-            <div
-              key={a.name}
-              className="py-[11px] border-b border-[color:var(--border-light)] last:border-b-0"
-            >
-              <div className="flex items-center justify-between mb-[3px]">
-                <span className="text-[10px] font-medium text-[color:var(--muted-fg)] uppercase tracking-[0.05em]">
-                  {t(`dashboard.approvalType.${a.typeKey}`)}
-                </span>
-                <span
-                  className={`text-[10px] px-2 py-[2px] rounded-[20px] font-medium ${a.urgent ? "bg-down-bg text-down-fg" : "bg-approve-bg text-approve-fg"}`}
-                >
-                  {a.time}
-                </span>
+        <Panel title={t("dashboard.expenseByCategory")}>
+          {!isLoading && donutItems.length > 0 ? (
+            <>
+              <div className="relative h-[160px] mb-2">
+                <DonutChart items={donutItems} />
               </div>
-              <div className="text-sm font-medium text-foreground mb-[3px]">
-                {a.name}
-              </div>
-              <div className="text-sm font-semibold text-foreground">
-                {a.amount}
-              </div>
+              <DonutLegend items={donutItems} />
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
+              {isLoading ? t("common.loading") : t("common.noData")}
             </div>
-          ))}
-          <a className="text-xs text-[color:var(--muted-fg)] cursor-pointer py-2 block border-t border-[color:var(--border-light)] text-center hover:text-foreground mt-1">
-            {t("dashboard.viewAll")} (24)
-          </a>
+          )}
         </Panel>
       </div>
-    </PageLayout>
+    </DashboardTemplate>
   );
 }
 
 // ── Helpers ──
-function Btn({ children }: { children: React.ReactNode }) {
-  return (
-    <button className="px-[14px] py-[7px] rounded-lg border border-border bg-surface text-xs font-medium cursor-pointer text-foreground flex items-center gap-[6px] hover:bg-surface-hover whitespace-nowrap">
-      {children}
-    </button>
-  );
-}
-function BtnPrimary({
-  children,
-  icon,
-}: {
-  children: React.ReactNode;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <button className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap">
-      {icon}
-      {children}
-    </button>
-  );
-}
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
     <div className="flex items-center gap-[6px] text-xs text-[color:var(--muted-fg)]">
@@ -185,38 +210,6 @@ function LegendItem({ color, label }: { color: string; label: string }) {
 }
 
 // ── Icons ──
-function IconDownload() {
-  return (
-    <svg
-      width="13"
-      height="13"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
-}
-function IconWallet() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      className="text-[color:var(--muted-fg)]"
-    >
-      <rect x="2" y="7" width="20" height="14" rx="2" />
-      <path d="M16 3H8l-2 4h12z" />
-    </svg>
-  );
-}
 function IconTrendUp() {
   return (
     <svg
@@ -226,13 +219,14 @@ function IconTrendUp() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      className="text-[color:var(--muted-fg)]"
+      className="text-green-600"
     >
       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
       <polyline points="17 6 23 6 23 12" />
     </svg>
   );
 }
+
 function IconTrendDown() {
   return (
     <svg
@@ -242,25 +236,10 @@ function IconTrendDown() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      className="text-[color:var(--muted-fg)]"
+      className="text-red-600"
     >
       <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
       <polyline points="17 18 23 18 23 12" />
-    </svg>
-  );
-}
-function IconFile({ warn }: { warn?: boolean }) {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={warn ? "#f0a500" : "currentColor"}
-      strokeWidth="2"
-    >
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
     </svg>
   );
 }
