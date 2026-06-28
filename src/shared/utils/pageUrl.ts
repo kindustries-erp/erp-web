@@ -22,6 +22,16 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-permissions-core",
   "erp-invoices-in",
   "erp-invoices-out",
+  "bank-statement",
+  "cash-statement",
+  "settings-bank",
+  "settings-cash-fund",
+  "settings-branch",
+  "erp-production",
+  "erp-sales-orders",
+  "erp-goods-issues",
+  "erp-employees",
+  "sys-tags",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {

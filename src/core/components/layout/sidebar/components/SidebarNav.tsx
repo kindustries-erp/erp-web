@@ -16,6 +16,7 @@ import {
   Receipt,
   Package,
   LayoutDashboard,
+  Wallet,
 } from "lucide-react";
 
 export function SidebarNav({
@@ -51,7 +52,8 @@ export function SidebarNav({
   const showManufacturing = canReadBom || canReadProduction;
 
   const canReadInvoices = useHasPermission("invoices", "read");
-  const showAccounting = canReadInvoices;
+  const canReadBankStatements = useHasPermission("bank_statements", "read");
+  const showAccounting = canReadInvoices || canReadBankStatements;
 
   const canReadEmployees = useHasPermission("employees", "read");
   const canReadAdminUsers = useHasPermission("admin_users", "read");
@@ -280,6 +282,44 @@ export function SidebarNav({
               />
             </NavGroup>
           )}
+          {canReadBankStatements && (
+            <NavGroup
+              collapsed={c}
+              icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.cashflow")}
+              active={
+                currentPage === "bank-statement" ||
+                currentPage === "cash-statement" ||
+                currentPage === "settings-bank" ||
+                currentPage === "settings-cash-fund"
+              }
+            >
+              <NavGroupItem
+                label={t("bankStatement.bankTitle")}
+                active={currentPage === "bank-statement"}
+                onClick={() => navTo("bank-statement")}
+                contextPage="bank-statement"
+              />
+              <NavGroupItem
+                label={t("bankStatement.cashTitle")}
+                active={currentPage === "cash-statement"}
+                onClick={() => navTo("cash-statement")}
+                contextPage="cash-statement"
+              />
+              <NavGroupItem
+                label={t("thietlap.tabs.ngan-hang")}
+                active={currentPage === "settings-bank"}
+                onClick={() => navTo("settings-bank")}
+                contextPage="settings-bank"
+              />
+              <NavGroupItem
+                label={t("thietlap.tabs.quy")}
+                active={currentPage === "settings-cash-fund"}
+                onClick={() => navTo("settings-cash-fund")}
+                contextPage="settings-cash-fund"
+              />
+            </NavGroup>
+          )}
         </div>
       )}
 
@@ -318,6 +358,16 @@ export function SidebarNav({
                 contextPage="erp-permissions-core"
               />
             </>
+          )}
+          {canReadAdminUsers && (
+            <NavItem
+              collapsed={c}
+              icon={<Building2 className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("thietlap.tabs.chi-nhanh")}
+              active={currentPage === "settings-branch"}
+              onClick={() => navTo("settings-branch")}
+              contextPage="settings-branch"
+            />
           )}
           {canReadActivityLogs && (
             <NavItem

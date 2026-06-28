@@ -28,6 +28,7 @@ export function SpreadsheetPageTemplate<T>({
   onCreate,
   createLabel,
   createActions,
+  extraActions,
   bulkActionsNode,
   customActionsNode,
   filterConfig,
@@ -97,6 +98,7 @@ export function SpreadsheetPageTemplate<T>({
           onCreate={onCreate}
           createLabel={finalCreateLabel}
           createActions={createActions}
+          extraActions={extraActions}
           portalId={tableId}
         >
           {bulkActionsNode}

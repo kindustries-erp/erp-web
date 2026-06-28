@@ -456,7 +456,7 @@ export function DataTable<T>({
           if (column.valueType === "text" && typeof value === "string") {
             return (
               <Tooltip content={value}>
-                <div className="truncate max-w-[200px]">{value}</div>
+                <div className="truncate w-full">{value}</div>
               </Tooltip>
             );
           }

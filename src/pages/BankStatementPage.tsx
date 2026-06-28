@@ -1,0 +1,291 @@
+import React, { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Building2, Wallet, Plus, Upload } from "lucide-react";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { useT } from "@/core/i18n";
+import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
+import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
+import { money, formatGMT7 } from "@/shared/utils/format";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { getBranchesApi } from "@/modules/branches/api/branchApi";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+
+export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
+  const t = useT();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [sortArray, setSortArray] = useState<string[]>(["-transDate"]);
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches:list"],
+    queryFn: getBranchesApi,
+  });
+
+  const { data: accountsData = [] } = useQuery<any[]>({
+    queryKey: [type === "bank" ? "bank-accounts" : "cash-books"],
+    queryFn: async () => {
+      const data =
+        type === "bank"
+          ? await bankStatementApi.getBankAccounts()
+          : await bankStatementApi.getCashBooks();
+      return data as any[];
+    },
+  });
+
+  const filterConfig = useMemo(() => {
+    const custom: any[] = [
+      {
+        key: "branchId",
+        label: "Chi nhánh",
+        placeholder: "Tất cả chi nhánh",
+        options: branches.map((b) => ({ value: b.id, label: b.name })),
+      },
+    ];
+
+    if (accountsData && accountsData.length > 0) {
+      custom.push({
+        key: type === "bank" ? "bankAccountId" : "cashBookId",
+        label: type === "bank" ? "Ngân hàng" : "Sổ quỹ",
+        placeholder: type === "bank" ? "Tất cả ngân hàng" : "Tất cả sổ quỹ",
+        options: accountsData.map((a: any) => ({
+          value: a.id,
+          label:
+            type === "bank" ? `${a.bankCode} - ${a.accountNumber}` : a.name,
+        })),
+      });
+    }
+
+    custom.push({
+      key: "transactionType",
+      label: "Loại giao dịch",
+      placeholder: "Tất cả",
+      options: [
+        { value: "IN", label: "Tiền vào" },
+        { value: "OUT", label: "Tiền ra" },
+      ],
+    });
+
+    return {
+      search: true,
+      period: true,
+      noDefaultPeriod: true,
+      custom,
+    };
+  }, [branches, accountsData, type]);
+
+  const filter = useFilterPanel(filterConfig, () => setPage(1));
+
+  const sortBy = sortArray[0]?.replace("-", "");
+  const sortOrder = sortArray[0]?.startsWith("-") ? "DESC" : "ASC";
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: [
+      "bank-transactions",
+      type,
+      page,
+      pageSize,
+      filter.state,
+      sortArray,
+    ],
+    queryFn: () =>
+      bankStatementApi.getTransactions({
+        sourceType: type === "bank" ? "BANK" : "CASH",
+        page,
+        pageSize,
+        sortBy,
+        sortOrder,
+        search: filter.state.search || undefined,
+        startDate: filter.state.dateFrom || undefined,
+        endDate: filter.state.dateTo || undefined,
+        branchId: filter.state.custom.branchId || undefined,
+        bankAccountId: filter.state.custom.bankAccountId || undefined,
+        cashBookId: filter.state.custom.cashBookId || undefined,
+        transactionType: filter.state.custom.transactionType || undefined,
+      }),
+  });
+
+  const columns: any[] = [
+    {
+      key: "transDate",
+      dataIndex: "transDate",
+      header: t("bankStatement.columns.transDate"),
+      cell: (row: any) => formatGMT7(row.transDate, "datetime"),
+      size: 150,
+      sortable: true,
+    },
+
+    {
+      key: "amount",
+      header: "Số tiền",
+      cell: (row: any) => {
+        const debit = parseFloat(row.debitAmount) || 0;
+        const credit = parseFloat(row.creditAmount) || 0;
+        if (credit > 0)
+          return (
+            <span className="text-green-600 font-medium">+{money(credit)}</span>
+          );
+        if (debit > 0)
+          return (
+            <span className="text-red-600 font-medium">-{money(debit)}</span>
+          );
+        return money(0);
+      },
+      className: "text-right",
+      size: 150,
+      sortable: true,
+      sortKey: "amount",
+    },
+    {
+      key: "balance",
+      dataIndex: "balance",
+      header: t("bankStatement.columns.balance"),
+      cell: (row: any) => money(row.balance),
+      className: "text-right font-medium",
+      size: 150,
+      sortable: false,
+    },
+    {
+      key: "description",
+      dataIndex: "description",
+      header: t("bankStatement.columns.description"),
+      size: 400,
+      valueType: "text",
+    },
+    {
+      key: "correspondentName",
+      dataIndex: "correspondentName",
+      header: t("bankStatement.columns.correspondentName"),
+      size: 200,
+      valueType: "text",
+    },
+    {
+      key: "correspondentAccount",
+      dataIndex: "correspondentAccount",
+      header: t("bankStatement.columns.correspondentAccount"),
+      size: 150,
+      valueType: "text",
+    },
+    {
+      key: "correspondentBank",
+      dataIndex: "correspondentBank",
+      header: t("bankStatement.columns.correspondentBank"),
+      size: 150,
+      valueType: "text",
+    },
+    {
+      key: "account",
+      header: type === "bank" ? "Ngân hàng" : "Sổ quỹ",
+      cell: (row: any) => {
+        const text =
+          type === "bank"
+            ? row.bankAccount?.bankName
+              ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
+              : ""
+            : row.cashBook?.name || "";
+        return (
+          <Tooltip content={text}>
+            <div className="truncate max-w-[200px]">{text}</div>
+          </Tooltip>
+        );
+      },
+      size: 200,
+    },
+    {
+      key: "branch",
+      dataIndex: "branch.name",
+      header: "Chi nhánh",
+      size: 150,
+      valueType: "text",
+    },
+    {
+      key: "referenceNumber",
+      dataIndex: "referenceNumber",
+      header: t("bankStatement.columns.referenceNumber"),
+      size: 150,
+      valueType: "text",
+    },
+  ];
+
+  return (
+    <>
+      <SpreadsheetPageTemplate
+        title={
+          type === "bank"
+            ? t("bankStatement.bankTitle")
+            : t("bankStatement.cashTitle")
+        }
+        desc={
+          type === "bank"
+            ? t("bankStatement.bankDesc")
+            : t("bankStatement.cashDesc")
+        }
+        icon={type === "bank" ? <Building2 /> : <Wallet />}
+        tableId={`bank-statement-${type}-table-v3`}
+        items={data?.items || []}
+        columns={columns}
+        getRowKey={(row: any) => row.id}
+        loading={isLoading}
+        page={page}
+        pageSize={pageSize}
+        total={data?.total || 0}
+        totalPages={data?.totalPages || 0}
+        onPage={setPage}
+        onPageSize={setPageSize}
+        onRefresh={refetch}
+        filterConfig={filterConfig}
+        filter={filter}
+        sortArray={sortArray}
+        onSort={(colKey) => {
+          setSortArray((prev) => {
+            const current = prev[0];
+            if (current === colKey) return [`-${colKey}`];
+            if (current === `-${colKey}`) return [];
+            return [colKey];
+          });
+          setPage(1);
+        }}
+        createActions={[
+          ...(type === "cash"
+            ? [
+                {
+                  label: "Tạo mới",
+                  icon: <Plus className="w-4 h-4 text-emerald-600" />,
+                  onClick: () => setIsCreateOpen(true),
+                },
+              ]
+            : [
+                {
+                  label: t("bankStatement.importBtn"),
+                  icon: <Upload className="w-4 h-4 text-emerald-600" />,
+                  onClick: () => setIsImportOpen(true),
+                },
+              ]),
+        ]}
+      />
+
+      <ImportStatementDrawer
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        type={type}
+        onSuccess={() => {
+          setIsImportOpen(false);
+          refetch();
+        }}
+      />
+
+      {type === "cash" && (
+        <CreateCashTransactionDrawer
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onSuccess={() => {
+            setIsCreateOpen(false);
+            refetch();
+          }}
+        />
+      )}
+    </>
+  );
+};

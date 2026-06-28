@@ -34,6 +34,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   // --- Actions & Controls ---
   onRefresh?: () => void;
   onCreate?: () => void;
+  extraActions?: ReactNode;
   createLabel?: string;
   createActions?: ActionDropdownItem[];
   bulkActionsNode?: ReactNode;

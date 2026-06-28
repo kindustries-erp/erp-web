@@ -41,6 +41,10 @@ import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { SysTagsPage } from "@/pages/SysTagsPage";
+import { BankStatementPage } from "@/pages/BankStatementPage";
+import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
+import { ThietLapQuy } from "@/pages/SettingsCashFund";
+import { SettingsBranch } from "@/pages/SettingsBranch";
 
 import { PageKey } from "@/shared/types";
 
@@ -68,6 +72,11 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
   "sys-tags": SysTagsPage,
+  "bank-statement": () => <BankStatementPage type="bank" />,
+  "cash-statement": () => <BankStatementPage type="cash" />,
+  "settings-bank": ThietLapNganHang,
+  "settings-cash-fund": ThietLapQuy,
+  "settings-branch": SettingsBranch,
 };
 
 export default function App() {

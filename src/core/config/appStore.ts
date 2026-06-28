@@ -105,6 +105,26 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInvoicesOut",
     group: "accounting",
   },
+  "settings-branch": {
+    labelKey: "thietlap.tabs.chi-nhanh",
+    group: "settings",
+  },
+  "settings-bank": {
+    labelKey: "thietlap.tabs.ngan-hang",
+    group: "settings",
+  },
+  "settings-cash-fund": {
+    labelKey: "thietlap.tabs.quy",
+    group: "settings",
+  },
+  "bank-statement": {
+    labelKey: "bankStatement.bankTitle",
+    group: "accounting",
+  },
+  "cash-statement": {
+    labelKey: "bankStatement.cashTitle",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
@@ -164,6 +184,16 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "sys-tags": [["breadcrumb.system"], ["nav.items.sysTags"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "bank-statement": [
+    ["breadcrumb.accounting"],
+    ["nav.items.cashflow"],
+    ["bankStatement.bankTitle"],
+  ],
+  "cash-statement": [
+    ["breadcrumb.accounting"],
+    ["nav.items.cashflow"],
+    ["bankStatement.cashTitle"],
+  ],
 };
 
 interface AppState {
@@ -176,8 +206,10 @@ interface AppState {
   isLoggedIn: boolean;
   forbidden: boolean;
   companyProfileOpen: boolean;
+  currentBranchId: string | null;
   customBreadcrumbs: Array<[string, string?]> | null;
   setForbidden: (value: boolean) => void;
+  setCurrentBranchId: (id: string | null) => void;
   navigate: (page: PageKey) => void;
   syncFromUrl: (page: PageKey) => void;
   closeTab: (key: PageKey) => void;
@@ -209,9 +241,11 @@ export const useAppStore = create<AppState>()(
       locale: "vi",
       isLoggedIn: false,
       companyProfileOpen: false,
+      currentBranchId: null,
       customBreadcrumbs: null,
 
       setForbidden: (value) => set({ forbidden: value }),
+      setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
 
       navigate: (page) => {
@@ -380,6 +414,7 @@ export const useAppStore = create<AppState>()(
         appTheme: s.appTheme,
         locale: s.locale,
         isLoggedIn: s.isLoggedIn,
+        currentBranchId: s.currentBranchId,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
