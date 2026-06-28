@@ -140,22 +140,42 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
 
     return {
       transDate: null,
-      amount:
-        netAmount > 0 ? (
+      thu:
+        totalCredit > 0 ? (
           <span className="text-green-600 font-medium">
-            +{money(netAmount)}
-          </span>
-        ) : netAmount < 0 ? (
-          <span className="text-red-600 font-medium">
-            -{money(Math.abs(netAmount))}
+            +{money(totalCredit)}
           </span>
         ) : (
           money(0)
         ),
+      chi:
+        totalDebit > 0 ? (
+          <span className="text-red-600 font-medium">{money(totalDebit)}</span>
+        ) : (
+          money(0)
+        ),
     };
-  }, [data?.items]);
+  }, [data]);
 
   const columns: any[] = [
+    {
+      key: "account",
+      header: type === "bank" ? "Ngân hàng" : "Sổ quỹ",
+      cell: (row: any) => {
+        const text =
+          type === "bank"
+            ? row.bankAccount?.bankName
+              ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
+              : ""
+            : row.cashBook?.name || "";
+        return (
+          <Tooltip content={text}>
+            <div className="truncate w-full">{text}</div>
+          </Tooltip>
+        );
+      },
+      size: 150,
+    },
     {
       key: "transDate",
       dataIndex: "transDate",
@@ -170,28 +190,43 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       dataIndex: "description",
       header: t("bankStatement.columns.description"),
       size: 400,
-      valueType: "text",
+      cell: (row: any) => (
+        <div className="whitespace-normal break-words w-full">
+          {row.description}
+        </div>
+      ),
     },
     {
-      key: "amount",
-      header: "Số tiền",
+      key: "thu",
+      header: t("bankStatement.columns.thu"),
       cell: (row: any) => {
-        const debit = parseFloat(row.debitAmount) || 0;
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
             <span className="text-green-600 font-medium">+{money(credit)}</span>
           );
-        if (debit > 0)
-          return (
-            <span className="text-red-600 font-medium">-{money(debit)}</span>
-          );
-        return money(0);
+        return null;
       },
       className: "text-right",
       size: 150,
       sortable: true,
-      sortKey: "amount",
+      sortKey: "creditAmount",
+    },
+    {
+      key: "chi",
+      header: t("bankStatement.columns.chi"),
+      cell: (row: any) => {
+        const debit = parseFloat(row.debitAmount) || 0;
+        if (debit > 0)
+          return (
+            <span className="text-red-600 font-medium">{money(debit)}</span>
+          );
+        return null;
+      },
+      className: "text-right",
+      size: 150,
+      sortable: true,
+      sortKey: "debitAmount",
     },
     {
       key: "balance",
@@ -206,7 +241,14 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       key: "tags",
       header: "Danh mục",
       cell: (row: any) => (
-        <EntityTagSelector entityType="bank_transaction" entityId={row.id} />
+        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
+          <div className="w-max">
+            <EntityTagSelector
+              entityType="bank_transaction"
+              entityId={row.id}
+            />
+          </div>
+        </div>
       ),
       size: 200,
     },
@@ -230,24 +272,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       header: t("bankStatement.columns.correspondentBank"),
       size: 150,
       valueType: "text",
-    },
-    {
-      key: "account",
-      header: type === "bank" ? "Ngân hàng" : "Sổ quỹ",
-      cell: (row: any) => {
-        const text =
-          type === "bank"
-            ? row.bankAccount?.bankName
-              ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
-              : ""
-            : row.cashBook?.name || "";
-        return (
-          <Tooltip content={text}>
-            <div className="truncate max-w-[200px]">{text}</div>
-          </Tooltip>
-        );
-      },
-      size: 200,
     },
     {
       key: "branch",

@@ -14,12 +14,14 @@ interface DonutChartProps {
   items: DonutItem[];
   cutout?: string;
   onClick?: (item: DonutItem) => void;
+  valueFormatter?: (value: number) => string;
 }
 
 export function DonutChart({
   items,
   cutout = "65%",
   onClick,
+  valueFormatter,
 }: DonutChartProps) {
   const { borderColor } = useChartTheme();
   return (
@@ -55,7 +57,9 @@ export function DonutChart({
                   label += ": ";
                 }
                 if (context.parsed !== null) {
-                  label += context.parsed + "%";
+                  label += valueFormatter
+                    ? valueFormatter(context.parsed)
+                    : context.parsed + "%";
                 }
                 return label;
               },
@@ -70,9 +74,11 @@ export function DonutChart({
 export function DonutLegend({
   items,
   onClick,
+  valueFormatter,
 }: {
   items: DonutItem[];
   onClick?: (item: DonutItem) => void;
+  valueFormatter?: (value: number) => string;
 }) {
   return (
     <div className="mt-[10px] flex flex-col gap-[5px]">
@@ -93,7 +99,9 @@ export function DonutLegend({
             />
             {x.label}
           </div>
-          <div className="text-[color:var(--muted-fg)]">{x.value}%</div>
+          <div className="text-[color:var(--muted-fg)]">
+            {valueFormatter ? valueFormatter(x.value) : `${x.value}%`}
+          </div>
         </div>
       ))}
     </div>

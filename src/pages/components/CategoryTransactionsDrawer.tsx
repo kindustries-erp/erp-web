@@ -51,6 +51,18 @@ export function CategoryTransactionsDrawer({
 
   const columns = [
     {
+      key: "source",
+      header: t("bankStatement.columns.sourceName"),
+      cell: (row: any) => {
+        if (row.sourceType === "BANK")
+          return row.bankAccount?.bankName
+            ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
+            : "Bank";
+        return row.cashBook?.name || "Cash";
+      },
+      size: 150,
+    },
+    {
       key: "transDate",
       dataIndex: "transDate",
       header: t("bankStatement.columns.transDate"),
@@ -63,23 +75,35 @@ export function CategoryTransactionsDrawer({
       dataIndex: "description",
       header: t("bankStatement.columns.description"),
       size: 400,
-      valueType: "text" as const,
+      cell: (row: any) => (
+        <div className="whitespace-normal break-words w-full">
+          {row.description}
+        </div>
+      ),
     },
     {
-      key: "amount",
-      header: "Số tiền",
+      key: "thu",
+      header: t("bankStatement.columns.thu"),
       cell: (row: any) => {
-        const debit = parseFloat(row.debitAmount) || 0;
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
             <span className="text-green-600 font-medium">+{money(credit)}</span>
           );
+        return null;
+      },
+      size: 150,
+    },
+    {
+      key: "chi",
+      header: t("bankStatement.columns.chi"),
+      cell: (row: any) => {
+        const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
           return (
-            <span className="text-red-600 font-medium">-{money(debit)}</span>
+            <span className="text-red-600 font-medium">{money(debit)}</span>
           );
-        return money(0);
+        return null;
       },
       size: 150,
     },
@@ -87,18 +111,15 @@ export function CategoryTransactionsDrawer({
       key: "tags",
       header: "Danh mục",
       cell: (row: any) => (
-        <EntityTagSelector entityType="bank_transaction" entityId={row.id} />
+        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
+          <div className="w-max">
+            <EntityTagSelector
+              entityType="bank_transaction"
+              entityId={row.id}
+            />
+          </div>
+        </div>
       ),
-      size: 200,
-    },
-    {
-      key: "source",
-      header: "Nguồn tiền",
-      cell: (row: any) => {
-        if (row.sourceType === "BANK")
-          return row.bankAccount?.accountNumber || "Bank";
-        return row.cashBook?.name || "Cash";
-      },
       size: 200,
     },
     {
@@ -118,13 +139,12 @@ export function CategoryTransactionsDrawer({
     (acc: number, row: any) => acc + (parseFloat(row.debitAmount) || 0),
     0,
   );
-  const netValue = currentPageCredit - currentPageDebit;
 
   return (
     <DrawerModal
       open={open}
       onClose={onClose}
-      title={`Chi phí danh mục: ${tagLabel || ""}`}
+      title={`Giao dịch danh mục: ${tagLabel || ""}`}
       bodyClassName="p-0 bg-background"
       panelClassName="w-[1100px] max-w-[95vw]"
     >
@@ -146,6 +166,8 @@ export function CategoryTransactionsDrawer({
           getRowKey={(row: any) => row.id}
           loading={isLoading}
           variant="spreadsheet"
+          minWidth={1500}
+          enableColumnResizing={true}
           page={page}
           pageSize={pageSize}
           total={data?.meta?.totalItems || data?.total || 0}
@@ -155,17 +177,14 @@ export function CategoryTransactionsDrawer({
             description: (
               <span className="font-semibold text-right block"></span>
             ),
-            amount: (
-              <span className="font-semibold">
-                {netValue > 0 ? (
-                  <span className="text-green-600">+{money(netValue)}</span>
-                ) : netValue < 0 ? (
-                  <span className="text-red-600">
-                    -{money(Math.abs(netValue))}
-                  </span>
-                ) : (
-                  money(0)
-                )}
+            thu: (
+              <span className="text-green-600 font-semibold">
+                +{money(currentPageCredit)}
+              </span>
+            ),
+            chi: (
+              <span className="text-red-600 font-semibold">
+                {money(currentPageDebit)}
               </span>
             ),
           }}

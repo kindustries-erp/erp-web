@@ -134,21 +134,28 @@ export function CashflowDashboard() {
     }
   };
 
-  const totalExpenseBreakdown =
-    data?.categoryBreakdown?.reduce(
-      (acc: number, c: any) => acc + c.amount,
-      0,
-    ) || 1;
   const donutItems = (data?.categoryBreakdown || []).map(
     (c: any, i: number) => ({
       id: c.tagId,
       label: c.label || t("common.other"),
-      value: Math.round((c.amount / totalExpenseBreakdown) * 100),
+      value: c.amount,
       color: c.color || defaultColors[i % defaultColors.length],
     }),
   );
 
   const topTransactionsCols = [
+    {
+      key: "source",
+      header: t("bankStatement.columns.sourceName"),
+      cell: (row: any) => {
+        if (row.sourceType === "BANK")
+          return row.bankAccount?.bankName
+            ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
+            : "Bank";
+        return row.cashBook?.name || "Cash";
+      },
+      size: 150,
+    },
     {
       key: "transDate",
       dataIndex: "transDate",
@@ -160,24 +167,36 @@ export function CashflowDashboard() {
       key: "description",
       dataIndex: "description",
       header: t("bankStatement.columns.description"),
-      size: 800,
-      valueType: "text" as const,
+      size: 400,
+      cell: (row: any) => (
+        <div className="whitespace-normal break-words w-full">
+          {row.description}
+        </div>
+      ),
     },
     {
-      key: "amount",
-      header: "Số tiền",
+      key: "thu",
+      header: t("bankStatement.columns.thu"),
       cell: (row: any) => {
-        const debit = parseFloat(row.debitAmount) || 0;
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
             <span className="text-green-600 font-medium">+{money(credit)}</span>
           );
+        return null;
+      },
+      size: 150,
+    },
+    {
+      key: "chi",
+      header: t("bankStatement.columns.chi"),
+      cell: (row: any) => {
+        const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
           return (
-            <span className="text-red-600 font-medium">-{money(debit)}</span>
+            <span className="text-red-600 font-medium">{money(debit)}</span>
           );
-        return money(0);
+        return null;
       },
       size: 150,
     },
@@ -185,18 +204,15 @@ export function CashflowDashboard() {
       key: "tags",
       header: "Danh mục",
       cell: (row: any) => (
-        <EntityTagSelector entityType="bank_transaction" entityId={row.id} />
+        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
+          <div className="w-max">
+            <EntityTagSelector
+              entityType="bank_transaction"
+              entityId={row.id}
+            />
+          </div>
+        </div>
       ),
-      size: 200,
-    },
-    {
-      key: "source",
-      header: "Nguồn tiền",
-      cell: (row: any) => {
-        if (row.sourceType === "BANK")
-          return row.bankAccount?.accountNumber || "Bank";
-        return row.cashBook?.name || "Cash";
-      },
       size: 200,
     },
     {
@@ -221,6 +237,20 @@ export function CashflowDashboard() {
       0,
     );
   }, [data?.topTransactionsOut]);
+
+  const top20Transactions = React.useMemo(() => {
+    const combined = [
+      ...(data?.topTransactionsIn || []),
+      ...(data?.topTransactionsOut || []),
+    ];
+    return combined
+      .sort((a, b) => {
+        const dateA = new Date(a.transDate || 0).getTime();
+        const dateB = new Date(b.transDate || 0).getTime();
+        return dateB - dateA;
+      })
+      .slice(0, 20);
+  }, [data?.topTransactionsIn, data?.topTransactionsOut]);
 
   if (!isAdminEmail) {
     return <ComingSoon />;
@@ -292,10 +322,20 @@ export function CashflowDashboard() {
         <Panel title={t("dashboard.expenseByCategory")}>
           {!isLoading && donutItems.length > 0 ? (
             <>
-              <div className="relative h-[160px] mb-2">
-                <DonutChart items={donutItems} onClick={handleCategoryClick} />
+              <div className="relative h-[160px] mb-2 shrink-0">
+                <DonutChart
+                  items={donutItems}
+                  onClick={handleCategoryClick}
+                  valueFormatter={(v) => money(v)}
+                />
               </div>
-              <DonutLegend items={donutItems} onClick={handleCategoryClick} />
+              <div className="max-h-[160px] overflow-y-auto pr-1">
+                <DonutLegend
+                  items={donutItems}
+                  onClick={handleCategoryClick}
+                  valueFormatter={(v) => money(v)}
+                />
+              </div>
             </>
           ) : (
             <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
@@ -353,43 +393,29 @@ export function CashflowDashboard() {
       <div className="grid grid-cols-1 gap-6 mt-8 mb-4">
         <div>
           <h3 className="text-lg font-semibold mb-3">
-            Top 10 Giao dịch Thu Lớn Nhất
+            Top 20 Giao dịch Nổi Bật
           </h3>
           <StandardTable
-            items={data?.topTransactionsIn || []}
+            items={top20Transactions}
             columns={topTransactionsCols}
             getRowKey={(row: any) => row.id}
             loading={isLoading}
             variant="spreadsheet"
+            minWidth={1500}
+            enableColumnResizing={true}
+            containerClassName="max-h-[500px] overflow-auto"
             summaryRow={{
               description: (
                 <span className="font-semibold text-right block"></span>
               ),
-              amount: (
+              thu: (
                 <span className="text-green-600 font-semibold">
                   +{money(topTransactionsInTotal)}
                 </span>
               ),
-            }}
-          />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold mb-3">
-            Top 10 Giao dịch Chi Lớn Nhất
-          </h3>
-          <StandardTable
-            items={data?.topTransactionsOut || []}
-            columns={topTransactionsCols}
-            getRowKey={(row: any) => row.id}
-            loading={isLoading}
-            variant="spreadsheet"
-            summaryRow={{
-              description: (
-                <span className="font-semibold text-right block"></span>
-              ),
-              amount: (
+              chi: (
                 <span className="text-red-600 font-semibold">
-                  -{money(topTransactionsOutTotal)}
+                  {money(topTransactionsOutTotal)}
                 </span>
               ),
             }}
