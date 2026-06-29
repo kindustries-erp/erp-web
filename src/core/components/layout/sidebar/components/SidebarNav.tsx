@@ -11,12 +11,12 @@ import {
   Network,
   Factory,
   Shield,
-  History,
-  Key,
   Receipt,
   Package,
   LayoutDashboard,
   Wallet,
+  Settings,
+  UserSquare2,
 } from "lucide-react";
 
 export function SidebarNav({
@@ -43,9 +43,7 @@ export function SidebarNav({
     "inventory_vouchers",
     "read",
   );
-  const showInventoryGroup1 = canReadInventoryItems || canReadInventoryVouchers;
-  const showInventoryGroup2 = canReadInventoryItems;
-  const showInventory = showInventoryGroup1 || showInventoryGroup2;
+  const showInventory = canReadInventoryItems || canReadInventoryVouchers;
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
@@ -56,14 +54,21 @@ export function SidebarNav({
   const showAccounting = canReadInvoices || canReadBankStatements;
 
   const canReadEmployees = useHasPermission("employees", "read");
+  const showHR = canReadEmployees;
+
   const canReadAdminUsers = useHasPermission("admin_users", "read");
   const canReadActivityLogs = useHasPermission("activity_logs", "read");
   const canReadSysTags = useHasPermission("sys_tags", "read");
-  const showSystem =
-    canReadEmployees ||
+
+  const showSettingsAccess = canReadAdminUsers;
+  const showSettingsGeneral =
     canReadAdminUsers ||
     canReadActivityLogs ||
-    canReadSysTags;
+    canReadSysTags ||
+    canReadBankStatements;
+  const showSettingsInventory = canReadInventoryItems;
+  const showSettings =
+    showSettingsAccess || showSettingsGeneral || showSettingsInventory;
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -139,86 +144,41 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* Kho */}
+      {/* Kho (Inventory) */}
       {showInventory && (
         <div className="sidebar-nav-section py-2">
           <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
             {t("nav.sections.inventory")}
           </div>
-          {showInventoryGroup1 && (
-            <NavGroup
+          {canReadInventoryItems && (
+            <NavItem
               collapsed={c}
               icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.inventoryGroup")}
-              active={
-                currentPage === "erp-inventory-stock" ||
-                currentPage === "erp-inventory-tracking" ||
-                currentPage === "erp-inventory-vouchers"
-              }
-            >
-              {canReadInventoryItems && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryStock")}
-                  active={currentPage === "erp-inventory-stock"}
-                  onClick={() => navTo("erp-inventory-stock")}
-                  contextPage="erp-inventory-stock"
-                />
-              )}
-              {canReadInventoryVouchers && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryVouchers")}
-                  active={currentPage === "erp-inventory-vouchers"}
-                  onClick={() => navTo("erp-inventory-vouchers")}
-                  contextPage="erp-inventory-vouchers"
-                />
-              )}
-              {canReadInventoryItems && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryTracking")}
-                  active={currentPage === "erp-inventory-tracking"}
-                  onClick={() => navTo("erp-inventory-tracking")}
-                  contextPage="erp-inventory-tracking"
-                />
-              )}
-            </NavGroup>
+              label={t("nav.items.erpInventoryStock")}
+              active={currentPage === "erp-inventory-stock"}
+              onClick={() => navTo("erp-inventory-stock")}
+              contextPage="erp-inventory-stock"
+            />
           )}
-
-          {showInventoryGroup2 && (
-            <NavGroup
+          {canReadInventoryVouchers && (
+            <NavItem
+              collapsed={c}
+              icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.erpInventoryVouchers")}
+              active={currentPage === "erp-inventory-vouchers"}
+              onClick={() => navTo("erp-inventory-vouchers")}
+              contextPage="erp-inventory-vouchers"
+            />
+          )}
+          {canReadInventoryItems && (
+            <NavItem
               collapsed={c}
               icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.erpInventoryMasters")}
-              active={
-                currentPage === "erp-inventory-uom" ||
-                currentPage === "erp-inventory-item-types" ||
-                currentPage === "erp-inventory-tracking-categories"
-              }
-            >
-              {canReadInventoryItems && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryUom")}
-                  active={currentPage === "erp-inventory-uom"}
-                  onClick={() => navTo("erp-inventory-uom")}
-                  contextPage="erp-inventory-uom"
-                />
-              )}
-              {canReadInventoryItems && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryItemTypes")}
-                  active={currentPage === "erp-inventory-item-types"}
-                  onClick={() => navTo("erp-inventory-item-types")}
-                  contextPage="erp-inventory-item-types"
-                />
-              )}
-              {canReadInventoryItems && (
-                <NavGroupItem
-                  label={t("nav.items.erpInventoryTrackingCategories")}
-                  active={currentPage === "erp-inventory-tracking-categories"}
-                  onClick={() => navTo("erp-inventory-tracking-categories")}
-                  contextPage="erp-inventory-tracking-categories"
-                />
-              )}
-            </NavGroup>
+              label={t("nav.items.erpInventoryTracking")}
+              active={currentPage === "erp-inventory-tracking"}
+              onClick={() => navTo("erp-inventory-tracking")}
+              contextPage="erp-inventory-tracking"
+            />
           )}
         </div>
       )}
@@ -288,15 +248,13 @@ export function SidebarNav({
               icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.cashflow")}
               active={
-                currentPage === "bank-statement" ||
-                currentPage === "cash-statement" ||
                 currentPage === "cashflow-dashboard" ||
-                currentPage === "settings-bank" ||
-                currentPage === "settings-cash-fund"
+                currentPage === "bank-statement" ||
+                currentPage === "cash-statement"
               }
             >
               <NavGroupItem
-                label={t("nav.items.dashboard")}
+                label={t("nav.items.cashflowDashboard")}
                 active={currentPage === "cashflow-dashboard"}
                 onClick={() => navTo("cashflow-dashboard")}
                 contextPage="cashflow-dashboard"
@@ -313,88 +271,146 @@ export function SidebarNav({
                 onClick={() => navTo("cash-statement")}
                 contextPage="cash-statement"
               />
-              <NavGroupItem
-                label={t("thietlap.tabs.ngan-hang")}
-                active={currentPage === "settings-bank"}
-                onClick={() => navTo("settings-bank")}
-                contextPage="settings-bank"
-              />
-              <NavGroupItem
-                label={t("thietlap.tabs.quy")}
-                active={currentPage === "settings-cash-fund"}
-                onClick={() => navTo("settings-cash-fund")}
-                contextPage="settings-cash-fund"
-              />
             </NavGroup>
           )}
         </div>
       )}
 
-      {/* Hệ thống / Admin */}
-      {showSystem && (
+      {/* Human Resources */}
+      {showHR && (
         <div className="sidebar-nav-section py-2">
           <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-            {t("nav.sections.system")}
+            {t("nav.sections.hr")}
           </div>
-          {canReadEmployees && (
-            <NavItem
+          <NavItem
+            collapsed={c}
+            icon={<UserSquare2 className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.erpEmployees")}
+            active={currentPage === "erp-employees"}
+            onClick={() => navTo("erp-employees")}
+            contextPage="erp-employees"
+          />
+        </div>
+      )}
+
+      {/* Settings & System */}
+      {showSettings && (
+        <div className="sidebar-nav-section py-2">
+          <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+            {t("nav.sections.settings")}
+          </div>
+
+          {showSettingsAccess && (
+            <NavGroup
               collapsed={c}
-              icon={<Users className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.erpEmployees")}
-              active={currentPage === "erp-employees"}
-              onClick={() => navTo("erp-employees")}
-              contextPage="erp-employees"
-            />
-          )}
-          {canReadAdminUsers && (
-            <>
-              <NavItem
-                collapsed={c}
-                icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.accessControl")}
+              active={
+                currentPage === "erp-users" ||
+                currentPage === "erp-permissions-core"
+              }
+            >
+              <NavGroupItem
                 label={t("nav.items.users")}
                 active={currentPage === "erp-users"}
                 onClick={() => navTo("erp-users")}
                 contextPage="erp-users"
               />
-              <NavItem
-                collapsed={c}
-                icon={<Key className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              <NavGroupItem
                 label={t("nav.items.phanquyen")}
                 active={currentPage === "erp-permissions-core"}
                 onClick={() => navTo("erp-permissions-core")}
                 contextPage="erp-permissions-core"
               />
-            </>
+            </NavGroup>
           )}
-          {canReadAdminUsers && (
-            <NavItem
+
+          {showSettingsGeneral && (
+            <NavGroup
               collapsed={c}
-              icon={<Building2 className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("thietlap.tabs.chi-nhanh")}
-              active={currentPage === "settings-branch"}
-              onClick={() => navTo("settings-branch")}
-              contextPage="settings-branch"
-            />
+              icon={<Settings className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.catalog")}
+              active={
+                currentPage === "settings-branch" ||
+                currentPage === "settings-bank" ||
+                currentPage === "settings-cash-fund" ||
+                currentPage === "sys-tags" ||
+                currentPage === "erp-activity-logs"
+              }
+            >
+              {canReadAdminUsers && (
+                <NavGroupItem
+                  label={t("thietlap.tabs.chi-nhanh")}
+                  active={currentPage === "settings-branch"}
+                  onClick={() => navTo("settings-branch")}
+                  contextPage="settings-branch"
+                />
+              )}
+              {canReadBankStatements && (
+                <>
+                  <NavGroupItem
+                    label={t("thietlap.tabs.ngan-hang")}
+                    active={currentPage === "settings-bank"}
+                    onClick={() => navTo("settings-bank")}
+                    contextPage="settings-bank"
+                  />
+                  <NavGroupItem
+                    label={t("thietlap.tabs.quy")}
+                    active={currentPage === "settings-cash-fund"}
+                    onClick={() => navTo("settings-cash-fund")}
+                    contextPage="settings-cash-fund"
+                  />
+                </>
+              )}
+              {canReadSysTags && (
+                <NavGroupItem
+                  label={t("nav.items.sysTags")}
+                  active={currentPage === "sys-tags"}
+                  onClick={() => navTo("sys-tags")}
+                  contextPage="sys-tags"
+                />
+              )}
+              {canReadActivityLogs && (
+                <NavGroupItem
+                  label={t("nav.items.activitylog")}
+                  active={currentPage === "erp-activity-logs"}
+                  onClick={() => navTo("erp-activity-logs")}
+                  contextPage="erp-activity-logs"
+                />
+              )}
+            </NavGroup>
           )}
-          {canReadActivityLogs && (
-            <NavItem
+
+          {showSettingsInventory && (
+            <NavGroup
               collapsed={c}
-              icon={<History className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.activitylog")}
-              active={currentPage === "erp-activity-logs"}
-              onClick={() => navTo("erp-activity-logs")}
-              contextPage="erp-activity-logs"
-            />
-          )}
-          {canReadSysTags && (
-            <NavItem
-              collapsed={c}
-              icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.sysTags")}
-              active={currentPage === "sys-tags"}
-              onClick={() => navTo("sys-tags")}
-              contextPage="sys-tags"
-            />
+              icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.erpInventoryMasters")}
+              active={
+                currentPage === "erp-inventory-uom" ||
+                currentPage === "erp-inventory-item-types" ||
+                currentPage === "erp-inventory-tracking-categories"
+              }
+            >
+              <NavGroupItem
+                label={t("nav.items.erpInventoryUom")}
+                active={currentPage === "erp-inventory-uom"}
+                onClick={() => navTo("erp-inventory-uom")}
+                contextPage="erp-inventory-uom"
+              />
+              <NavGroupItem
+                label={t("nav.items.erpInventoryItemTypes")}
+                active={currentPage === "erp-inventory-item-types"}
+                onClick={() => navTo("erp-inventory-item-types")}
+                contextPage="erp-inventory-item-types"
+              />
+              <NavGroupItem
+                label={t("nav.items.erpInventoryTrackingCategories")}
+                active={currentPage === "erp-inventory-tracking-categories"}
+                onClick={() => navTo("erp-inventory-tracking-categories")}
+                contextPage="erp-inventory-tracking-categories"
+              />
+            </NavGroup>
           )}
         </div>
       )}

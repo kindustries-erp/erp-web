@@ -51,15 +51,15 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "erp-inventory-uom": {
     labelKey: "nav.items.erpInventoryUom",
-    group: "catalog",
+    group: "settings",
   },
   "erp-inventory-item-types": {
     labelKey: "nav.items.erpInventoryItemTypes",
-    group: "catalog",
+    group: "settings",
   },
   "erp-inventory-tracking-categories": {
     labelKey: "nav.items.erpInventoryTrackingCategories",
-    group: "catalog",
+    group: "settings",
   },
   "erp-production": {
     labelKey: "nav.items.erpProduction",
@@ -79,23 +79,23 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "erp-activity-logs": {
     labelKey: "nav.items.activitylog",
-    group: "system",
+    group: "settings",
   },
   "erp-employees": {
     labelKey: "nav.items.erpEmployees",
-    group: "system",
+    group: "hr",
   },
   "erp-users": {
     labelKey: "nav.items.users",
-    group: "system",
+    group: "settings",
   },
   "erp-permissions-core": {
     labelKey: "nav.items.phanquyen",
-    group: "system",
+    group: "settings",
   },
   "sys-tags": {
     labelKey: "nav.items.sysTags",
-    group: "system",
+    group: "settings",
   },
   "erp-invoices-in": {
     labelKey: "nav.items.erpInvoicesIn",
@@ -167,25 +167,25 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.erpInventoryItems"],
   ],
   "erp-inventory-uom": [
-    ["breadcrumb.inventory"],
+    ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryUom"],
   ],
   "erp-inventory-item-types": [
-    ["breadcrumb.inventory"],
+    ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryItemTypes"],
   ],
   "erp-inventory-tracking-categories": [
-    ["breadcrumb.inventory"],
+    ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryTrackingCategories"],
   ],
-  "erp-activity-logs": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
-  "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],
-  "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
-  "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
-  "sys-tags": [["breadcrumb.system"], ["nav.items.sysTags"]],
+  "erp-activity-logs": [["breadcrumb.settings"], ["breadcrumb.activitylog"]],
+  "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
+  "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
+  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
+  "sys-tags": [["breadcrumb.settings"], ["nav.items.sysTags"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
   "bank-statement": [
@@ -203,6 +203,9 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["nav.items.cashflow"],
     ["nav.items.dashboard"],
   ],
+  "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
+  "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
+  "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
 };
 
 interface AppState {
