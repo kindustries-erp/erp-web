@@ -224,7 +224,7 @@ export function TabBar() {
       <div className="tab-bar-wrapper relative z-50 shrink-0">
         <div
           ref={containerRef}
-          className="tab-bar-inner flex items-center px-2 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
+          className="tab-bar-inner flex items-center px-6 gap-0 bg-[color:var(--background)] border-t border-[color:var(--glass-border)] relative overflow-x-auto overflow-y-hidden custom-scrollbar w-full h-9"
           onDragOver={handleContainerDragOver}
           onDrop={handleContainerDrop}
           onDragLeave={handleContainerDragLeave}

@@ -1,3 +1,4 @@
+import { Skeleton } from "@/shared/components/Skeleton";
 import { cn } from "@/shared/utils";
 import React from "react";
 
@@ -8,6 +9,7 @@ interface KpiCardProps {
   icon?: React.ReactNode;
   badge?: React.ReactNode;
   warn?: boolean;
+  loading?: boolean;
 }
 
 export function KpiCard({
@@ -18,6 +20,7 @@ export function KpiCard({
   badge,
   warn,
   compact,
+  loading,
 }: KpiCardProps & { compact?: boolean }) {
   return (
     <div
@@ -63,7 +66,16 @@ export function KpiCard({
             : "text-[22px] max-[480px]:text-[18px]",
         )}
       >
-        {value}
+        {loading ? (
+          <Skeleton
+            className={cn(
+              "mt-1 mb-1 rounded",
+              compact ? "h-5 w-20" : "h-7 w-28",
+            )}
+          />
+        ) : (
+          value
+        )}
       </div>
       {sub && (
         <div className="text-[11px] text-[color:var(--faint)] mt-[3px]">

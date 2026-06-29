@@ -4,6 +4,7 @@ import { LayoutDashboard } from "lucide-react";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
+import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -133,13 +134,15 @@ export function Dashboard() {
       {/* KPIs */}
       <div className="grid grid-cols-2 max-[900px]:grid-cols-2 gap-3 mb-4">
         <KpiCard
+          loading={isLoading}
           label={t("dashboard.kpi.totalCashIn")}
-          value={isLoading ? "..." : money(data?.totalCashIn || 0)}
+          value={money(data?.totalCashIn || 0)}
           icon={<IconTrendUp />}
         />
         <KpiCard
+          loading={isLoading}
           label={t("dashboard.kpi.totalCashOut")}
-          value={isLoading ? "..." : money(data?.totalCashOut || 0)}
+          value={money(data?.totalCashOut || 0)}
           icon={<IconTrendDown />}
         />
       </div>
@@ -165,9 +168,11 @@ export function Dashboard() {
                   },
                 ]}
               />
+            ) : isLoading ? (
+              <ChartSkeleton type="bar" />
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-                {isLoading ? t("common.loading") : t("common.noData")}
+                {t("common.noData")}
               </div>
             )}
           </div>
@@ -185,9 +190,13 @@ export function Dashboard() {
               </div>
               <DonutLegend items={donutItems} />
             </>
+          ) : isLoading ? (
+            <div className="h-[200px]">
+              <ChartSkeleton type="donut" />
+            </div>
           ) : (
             <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
-              {isLoading ? t("common.loading") : t("common.noData")}
+              {t("common.noData")}
             </div>
           )}
         </Panel>

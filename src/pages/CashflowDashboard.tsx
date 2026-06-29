@@ -4,6 +4,7 @@ import { LayoutDashboard } from "lucide-react";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
+import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -272,6 +273,7 @@ export function CashflowDashboard() {
         {bankAccounts.map((acc: any) => (
           <KpiCard
             compact
+            loading={isFetching}
             key={acc.id}
             label={`${acc.bankName || acc.bankCode} - ${acc.accountNumber}`}
             value={money(acc.currentBalance || 0)}
@@ -280,6 +282,7 @@ export function CashflowDashboard() {
         {cashBooks.map((book: any) => (
           <KpiCard
             compact
+            loading={isFetching}
             key={book.id}
             label={book.name}
             value={money(book.currentBalance || 0)}
@@ -308,9 +311,11 @@ export function CashflowDashboard() {
                   },
                 ]}
               />
+            ) : isLoading ? (
+              <ChartSkeleton type="bar" />
             ) : (
               <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-                {isLoading ? t("common.loading") : t("common.noData")}
+                {t("common.noData")}
               </div>
             )}
           </div>
@@ -338,9 +343,13 @@ export function CashflowDashboard() {
                 />
               </div>
             </>
+          ) : isLoading ? (
+            <div className="h-[200px]">
+              <ChartSkeleton type="donut" />
+            </div>
           ) : (
             <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
-              {isLoading ? t("common.loading") : t("common.noData")}
+              {t("common.noData")}
             </div>
           )}
         </Panel>
@@ -383,9 +392,13 @@ export function CashflowDashboard() {
         ) : (
           <Panel title="Dòng tiền theo Nguồn" extra={<PanelMore />}>
             <div className="relative h-[210px]">
-              <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-                {isLoading ? t("common.loading") : t("common.noData")}
-              </div>
+              {isLoading ? (
+                <ChartSkeleton type="bar" />
+              ) : (
+                <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
+                  {t("common.noData")}
+                </div>
+              )}
             </div>
           </Panel>
         )}

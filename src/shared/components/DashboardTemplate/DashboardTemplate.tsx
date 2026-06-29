@@ -46,7 +46,7 @@ export function DashboardTemplate({
       }
     >
       <div className="flex items-stretch flex-1 min-h-0">
-        <div className="flex-1 min-w-0 flex flex-col h-full overflow-y-auto pb-4 space-y-4">
+        <div className="flex-1 min-w-0 flex flex-col h-full overflow-y-auto pb-4 space-y-4 px-2 -mx-2">
           {children}
         </div>
         {filterConfig && filter && (
