@@ -123,7 +123,7 @@ export function ErpBusinessPartnersPage({
     try {
       const res = await businessPartnersCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         search: search || undefined,
         partnerType,
       });

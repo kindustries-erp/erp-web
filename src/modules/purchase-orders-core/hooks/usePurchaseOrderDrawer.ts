@@ -108,7 +108,7 @@ export function usePurchaseOrderDrawer({
     if (!open) return;
     getBusinessPartnersPagedApi({
       page: 1,
-      pageSize: 200,
+      pageSize: 500,
       partnerType: "VENDOR",
     })
       .then((res) => {

@@ -10,7 +10,7 @@ import { useOperationalListQuery } from "@/modules/operational/hooks/useOperatio
 export function usePurchaseOrderList() {
   const t = useT();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
     {},

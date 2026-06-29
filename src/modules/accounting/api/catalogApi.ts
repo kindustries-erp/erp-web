@@ -94,7 +94,7 @@ export async function getCompanyBankAccountsApi(): Promise<
     const { data } = await axiosInstance.get<
       PaginatedResponse<CompanyBankAccount>
     >("/api/v1/company-bank-accounts", {
-      params: { page: 1, pageSize: 200, sort: "bank_account_code" },
+      params: { page: 1, pageSize: 500, sort: "bank_account_code" },
     });
     return data.items;
   });
@@ -209,7 +209,7 @@ export async function getBusinessPartnerRolesApi(): Promise<
   const { data } = await axiosInstance.get<
     PaginatedResponse<BusinessPartnerRole>
   >("/api/v1/business-partner-roles", {
-    params: { page: 1, pageSize: 200, sort: "-created_at" },
+    params: { page: 1, pageSize: 500, sort: "-created_at" },
   });
   return data.items;
 }

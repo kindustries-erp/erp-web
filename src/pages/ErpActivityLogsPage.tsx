@@ -39,7 +39,7 @@ export function ErpActivityLogsPage() {
   const [items, setItems] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 

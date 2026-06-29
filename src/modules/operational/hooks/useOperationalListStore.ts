@@ -74,7 +74,7 @@ const defaultState = (): OperationalListState => ({
   searchInput: "",
   search: "",
   page: 1,
-  pageSize: 20,
+  pageSize: 50,
   branchFilter: "",
   paymentStatusFilter: "",
   statusFilter: "",

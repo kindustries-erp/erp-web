@@ -22,7 +22,7 @@ export function CategoryTransactionsDrawer({
 }) {
   const t = useT();
   const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(20);
+  const [pageSize, setPageSize] = React.useState(50);
 
   const [search, setSearch] = React.useState("");
 

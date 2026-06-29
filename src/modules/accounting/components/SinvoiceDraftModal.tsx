@@ -127,7 +127,7 @@ export function SinvoiceDraftModal({
     });
     setError(null);
     setPartnersLoading(true);
-    getPaymentVoucherLookupBusinessPartnersApi({ pageSize: 200 })
+    getPaymentVoucherLookupBusinessPartnersApi({ pageSize: 500 })
       .then(setPartners)
       .catch(() => setPartners([]))
       .finally(() => setPartnersLoading(false));

@@ -137,7 +137,7 @@ export function OperationalFormDrawer({
     const partnerRole = variant === "sales" ? "CUSTOMER" : "VENDOR";
     getBusinessPartnersPagedApi({
       page: 1,
-      pageSize: 200,
+      pageSize: 500,
       partnerType: partnerRole,
     })
       .then((res) => {

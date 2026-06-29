@@ -72,7 +72,7 @@ export function ErpWarehouseTab() {
   // ── filter state (same pattern as page mua hàng)
   // ── list state
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(40);
+  const [pageSize, setPageSize] = useState(50);
   const [sortBy, setSortBy] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   // activeSortKey: column đang được user chọn sort; null = default (không có active sort)

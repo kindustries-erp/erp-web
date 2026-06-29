@@ -129,6 +129,7 @@ export interface PortalSyncResult {
   direction: "IN" | "OUT";
   errors?: string[];
   xmlDownloadQueued: number;
+  note?: string;
 }
 
 const BASE = "/api/v1/erp-invoices";
@@ -200,7 +201,19 @@ export const erpInvoicesCoreApi = {
     const { data } = await axiosInstance.post<PortalSyncResult>(
       `${BASE}/portal/sync`,
       payload,
+      { timeout: 300000 },
     );
+    return data;
+  },
+
+  bulkDownloadXml: async (payload: {
+    token: string;
+    direction: "IN" | "OUT";
+  }) => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      count: number;
+    }>(`${BASE}/portal/bulk-download-xml`, payload);
     return data;
   },
 

@@ -54,7 +54,7 @@ export const bomCoreApi = {
     const { data } = await axiosInstance.get<PaginatedResponse<ErpBom>>(BASE, {
       params: {
         page: 1,
-        pageSize: 20,
+        pageSize: 50,
         ...params,
       },
     });

@@ -71,7 +71,7 @@ export function InventoryTrackingCategoriesPage() {
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [sortArray, setSortArray] = useState<string[]>(["-createdAt"]);
 
   const STATUS_OPTIONS = useMemo(

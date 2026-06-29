@@ -58,7 +58,7 @@ describe("shared react-query helpers", () => {
     expect(
       createInventoryItemsListKey({
         page: 1,
-        pageSize: 20,
+        pageSize: 50,
         search: "",
         status: undefined,
         itemType: "FG",
@@ -66,20 +66,20 @@ describe("shared react-query helpers", () => {
     ).toEqual([
       "inventory-items",
       "list",
-      { itemType: "FG", page: 1, pageSize: 20 },
+      { itemType: "FG", page: 1, pageSize: 50 },
     ]);
 
     expect(
       createInventoryMastersKey("uoms", {
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         search: "",
         isActive: true,
       }),
     ).toEqual([
       "inventory-masters",
       "uoms",
-      { isActive: true, page: 1, pageSize: 200 },
+      { isActive: true, page: 1, pageSize: 500 },
     ]);
   });
 });

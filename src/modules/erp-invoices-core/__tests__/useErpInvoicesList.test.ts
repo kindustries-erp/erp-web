@@ -30,7 +30,7 @@ describe("useErpInvoicesList", () => {
       total: 0,
       totalPages: 0,
       page: 1,
-      pageSize: 40,
+      pageSize: 50,
     });
   });
 
@@ -98,7 +98,7 @@ describe("useErpInvoicesList", () => {
       total: 1,
       totalPages: 1,
       page: 1,
-      pageSize: 40,
+      pageSize: 50,
     });
 
     const { result } = renderHook(() => useErpInvoicesList());
@@ -108,7 +108,7 @@ describe("useErpInvoicesList", () => {
       expect.objectContaining({
         direction: "IN",
         page: 1,
-        pageSize: 40,
+        pageSize: 50,
         sort_by: "invoiceDate",
         sort_order: "desc",
       }),

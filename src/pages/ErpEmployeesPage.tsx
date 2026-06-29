@@ -50,7 +50,7 @@ export function ErpEmployeesPage() {
   const [items, setItems] = useState<ErpEmployee[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [saving, setSaving] = useState(false);
   const drawerStore = useDrawerStore();

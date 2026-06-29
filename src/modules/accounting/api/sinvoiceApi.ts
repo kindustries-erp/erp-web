@@ -215,11 +215,11 @@ export async function syncTaxPortalApi(params: {
   direction: "IN" | "OUT";
   startDate?: string;
   endDate?: string;
-  pageSize?: 15 | 30 | 50;
+  pageSize?: 50 | 100 | 200;
 }): Promise<TaxPortalSyncResponse> {
   const res = await axiosInstance.get("/api/v1/sinvoice/tax-portal/sync", {
     params,
-    timeout: 60000,
+    timeout: 300000,
   });
   return res.data;
 }

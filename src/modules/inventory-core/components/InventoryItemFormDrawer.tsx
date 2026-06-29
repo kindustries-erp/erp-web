@@ -118,18 +118,18 @@ export function InventoryItemFormDrawer({
     try {
       const [uoms, itemTypes, trackingCategories, trackingPolicies] =
         await Promise.all([
-          inventoryCoreApi.listUoms({ page: 1, pageSize: 200, isActive: true }),
+          inventoryCoreApi.listUoms({ page: 1, pageSize: 500, isActive: true }),
           inventoryCoreApi.listItemTypes({
             page: 1,
-            pageSize: 200,
+            pageSize: 500,
             isActive: true,
           }),
           inventoryCoreApi.listTrackingCategories({
             page: 1,
-            pageSize: 200,
+            pageSize: 500,
             isActive: true,
           }),
-          inventoryCoreApi.listTrackingPolicies({ page: 1, pageSize: 20 }),
+          inventoryCoreApi.listTrackingPolicies({ page: 1, pageSize: 50 }),
         ]);
       setUomOptions(buildMasterOptions(uoms.items));
       setItemTypeOptions(buildMasterOptions(itemTypes.items));

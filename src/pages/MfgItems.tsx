@@ -89,7 +89,7 @@ export function MfgItems() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [searchInput, setSearchInput] = useState("");
@@ -156,7 +156,7 @@ export function MfgItems() {
     try {
       const [stock, txns] = await Promise.all([
         manufacturingApi.getComponentStockSummary(item.id),
-        manufacturingApi.listComponentTxns(item.id, { page: 1, pageSize: 20 }),
+        manufacturingApi.listComponentTxns(item.id, { page: 1, pageSize: 50 }),
       ]);
       setDetailData(stock);
       setTxnRows(txns.items);

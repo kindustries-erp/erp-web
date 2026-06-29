@@ -46,7 +46,7 @@ type TaxTabKey =
   | "hoa-don-mua-vao"
   | "cau-hinh";
 
-const TAX_PORTAL_PAGE_SIZE_OPTIONS = [15, 30, 50] as const;
+const TAX_PORTAL_PAGE_SIZE_OPTIONS = [50, 100, 200] as const;
 
 const TAB_LABELS = (t: any): Array<{ key: TaxTabKey; label: string }> => [
   { key: "hoa-don-nhap", label: t("hoadondientuPage.tabs.draft") },
@@ -95,10 +95,10 @@ function getDefaultDateRange() {
   };
 }
 
-function normalizeTaxPortalPageSize(pageSize: number): 15 | 30 | 50 {
-  return TAX_PORTAL_PAGE_SIZE_OPTIONS.includes(pageSize as 15 | 30 | 50)
-    ? (pageSize as 15 | 30 | 50)
-    : 15;
+function normalizeTaxPortalPageSize(pageSize: number): 50 | 100 | 200 {
+  return TAX_PORTAL_PAGE_SIZE_OPTIONS.includes(pageSize as 50 | 100 | 200)
+    ? (pageSize as 50 | 100 | 200)
+    : 50;
 }
 
 function isTaxPortalRangeOverOneMonth(startDate?: string, endDate?: string) {
@@ -130,7 +130,7 @@ const HoaDonDienTu: React.FC = () => {
     startDate: defaultDateRange.startDate,
     endDate: defaultDateRange.endDate,
     page: 1,
-    pageSize: 15,
+    pageSize: 50,
     total: 0,
     totalPages: 1,
     sumTotalAmount: 0,
@@ -141,7 +141,7 @@ const HoaDonDienTu: React.FC = () => {
     startDate: defaultDateRange.startDate,
     endDate: defaultDateRange.endDate,
     page: 1,
-    pageSize: 15,
+    pageSize: 50,
     total: 0,
     totalPages: 1,
     sumTotalAmount: 0,
@@ -152,7 +152,7 @@ const HoaDonDienTu: React.FC = () => {
     startDate: defaultDateRange.startDate,
     endDate: defaultDateRange.endDate,
     page: 1,
-    pageSize: 15,
+    pageSize: 50,
     total: 0,
     totalPages: 1,
     sumTotalAmount: 0,
@@ -163,7 +163,7 @@ const HoaDonDienTu: React.FC = () => {
     startDate: defaultDateRange.startDate,
     endDate: defaultDateRange.endDate,
     page: 1,
-    pageSize: 15,
+    pageSize: 50,
     total: 0,
     totalPages: 1,
     sumTotalAmount: 0,
@@ -859,7 +859,7 @@ const HoaDonDienTu: React.FC = () => {
                       startDate: defaultDateRange.startDate,
                       endDate: defaultDateRange.endDate,
                       page: 1,
-                      pageSize: 15,
+                      pageSize: 50,
                     }))
                   }
                   className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"

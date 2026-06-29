@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import {
   PlusCircle,
@@ -23,6 +24,7 @@ import { type DataTableColumn } from "@/shared/components/DataTable";
 
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
+import { useInvoiceSyncProgress } from "@/modules/erp-invoices-core/hooks/useInvoiceSyncProgress";
 import {
   erpInvoicesCoreApi,
   type ErpInvoice,
@@ -45,6 +47,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const listHook = useErpInvoicesList(direction);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
   const showToast = useUIStore((s) => s.showToast);
+
+  // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
+  useInvoiceSyncProgress(listHook.loadInvoices);
 
   const [xmlModalOpen, setXmlModalOpen] = useState(false);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
@@ -404,6 +409,31 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             label: t("syncGdt", "Đồng bộ từ GDT"),
             icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
             onClick: () => setSyncModalOpen(true),
+          },
+          {
+            label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
+            icon: <RefreshCw className="w-4 h-4 text-orange-600" />,
+            onClick: async () => {
+              const token = localStorage.getItem("erp_portal_token");
+              if (!token) {
+                toast.error(
+                  "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
+                );
+                return;
+              }
+              try {
+                const res = await erpInvoicesCoreApi.bulkDownloadXml({
+                  token,
+                  direction,
+                });
+                toast.success(res.message);
+                // Optionally reload after some time or let user refresh manually
+              } catch (e: any) {
+                toast.error(
+                  e.response?.data?.message || e.message || "Lỗi tải lại XML",
+                );
+              }
+            },
           },
         ]}
       />

@@ -227,7 +227,7 @@ export function useGrDrawer({
     try {
       const res = await purchaseOrdersCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         exclude_status: "DRAFT",
       });
       setPoOptions(
@@ -246,7 +246,7 @@ export function useGrDrawer({
     try {
       const res = await productionCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         exclude_status: "DRAFT",
       });
       setMoOptions(
