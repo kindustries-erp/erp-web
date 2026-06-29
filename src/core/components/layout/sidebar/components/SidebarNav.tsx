@@ -15,6 +15,8 @@ import {
   Key,
   Receipt,
   Package,
+  LayoutDashboard,
+  Wallet,
 } from "lucide-react";
 
 export function SidebarNav({
@@ -50,7 +52,8 @@ export function SidebarNav({
   const showManufacturing = canReadBom || canReadProduction;
 
   const canReadInvoices = useHasPermission("invoices", "read");
-  const showAccounting = canReadInvoices;
+  const canReadBankStatements = useHasPermission("bank_statements", "read");
+  const showAccounting = canReadInvoices || canReadBankStatements;
 
   const canReadEmployees = useHasPermission("employees", "read");
   const canReadAdminUsers = useHasPermission("admin_users", "read");
@@ -64,6 +67,20 @@ export function SidebarNav({
 
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      {/* Dashboard */}
+      <div className="sidebar-nav-section py-2">
+        <NavItem
+          collapsed={c}
+          icon={
+            <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+          }
+          label={t("nav.items.dashboard")}
+          active={currentPage === "dashboard"}
+          onClick={() => navTo("dashboard")}
+          contextPage="dashboard"
+        />
+      </div>
+
       {/* Sales */}
       {showSales && (
         <div className="sidebar-nav-section py-2">
@@ -242,14 +259,73 @@ export function SidebarNav({
             {t("nav.sections.accounting")}
           </div>
           {canReadInvoices && (
-            <NavItem
+            <NavGroup
               collapsed={c}
               icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
               label={t("nav.items.erpInvoices")}
-              active={currentPage === "erp-invoices"}
-              onClick={() => navTo("erp-invoices")}
-              contextPage="erp-invoices"
-            />
+              active={
+                currentPage === "erp-invoices-in" ||
+                currentPage === "erp-invoices-out"
+              }
+            >
+              <NavGroupItem
+                label={t("nav.items.inbound")}
+                active={currentPage === "erp-invoices-in"}
+                onClick={() => navTo("erp-invoices-in")}
+                contextPage="erp-invoices-in"
+              />
+              <NavGroupItem
+                label={t("nav.items.outbound")}
+                active={currentPage === "erp-invoices-out"}
+                onClick={() => navTo("erp-invoices-out")}
+                contextPage="erp-invoices-out"
+              />
+            </NavGroup>
+          )}
+          {canReadBankStatements && (
+            <NavGroup
+              collapsed={c}
+              icon={<Wallet className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.cashflow")}
+              active={
+                currentPage === "bank-statement" ||
+                currentPage === "cash-statement" ||
+                currentPage === "cashflow-dashboard" ||
+                currentPage === "settings-bank" ||
+                currentPage === "settings-cash-fund"
+              }
+            >
+              <NavGroupItem
+                label={t("nav.items.dashboard")}
+                active={currentPage === "cashflow-dashboard"}
+                onClick={() => navTo("cashflow-dashboard")}
+                contextPage="cashflow-dashboard"
+              />
+              <NavGroupItem
+                label={t("bankStatement.bankTitle")}
+                active={currentPage === "bank-statement"}
+                onClick={() => navTo("bank-statement")}
+                contextPage="bank-statement"
+              />
+              <NavGroupItem
+                label={t("bankStatement.cashTitle")}
+                active={currentPage === "cash-statement"}
+                onClick={() => navTo("cash-statement")}
+                contextPage="cash-statement"
+              />
+              <NavGroupItem
+                label={t("thietlap.tabs.ngan-hang")}
+                active={currentPage === "settings-bank"}
+                onClick={() => navTo("settings-bank")}
+                contextPage="settings-bank"
+              />
+              <NavGroupItem
+                label={t("thietlap.tabs.quy")}
+                active={currentPage === "settings-cash-fund"}
+                onClick={() => navTo("settings-cash-fund")}
+                contextPage="settings-cash-fund"
+              />
+            </NavGroup>
           )}
         </div>
       )}
@@ -289,6 +365,16 @@ export function SidebarNav({
                 contextPage="erp-permissions-core"
               />
             </>
+          )}
+          {canReadAdminUsers && (
+            <NavItem
+              collapsed={c}
+              icon={<Building2 className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("thietlap.tabs.chi-nhanh")}
+              active={currentPage === "settings-branch"}
+              onClick={() => navTo("settings-branch")}
+              contextPage="settings-branch"
+            />
           )}
           {canReadActivityLogs && (
             <NavItem

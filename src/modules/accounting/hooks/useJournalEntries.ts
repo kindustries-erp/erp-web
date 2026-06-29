@@ -29,7 +29,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 export function useJournalEntries() {
   const [items, setItems] = useState<JournalEntry[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");

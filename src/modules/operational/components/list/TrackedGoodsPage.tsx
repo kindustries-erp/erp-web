@@ -15,7 +15,7 @@ export function TrackedGoodsPage() {
   const t = useT();
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [itemTypeFilter, setItemTypeFilter] = useState("");

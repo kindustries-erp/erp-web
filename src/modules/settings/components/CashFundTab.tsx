@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Pencil, Trash2, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { useT } from "@/core/i18n";
 import {
   DrawerModal,
@@ -10,98 +10,69 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { SectionHeader, ErrorBanner } from "./shared";
 import {
-  ActionDropdown,
-  type ActionItem,
-} from "@/shared/components/ActionDropdown";
-import { Checkbox } from "@/shared/components/ui/checkbox";
-import {
-  getCashFundsPagedApi,
-  createCashFundApi,
-  updateCashFundApi,
-  deleteCashFundApi,
-  type CashFund,
-  type CreateCashFundDto,
-} from "@/modules/finance/api/financeApi";
-import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
-import {
-  getChartOfAccountsApi,
-  type ChartOfAccount,
-} from "@/modules/accounting/api/catalogApi";
-import { SectionHeader, TagCell, ErrorBanner, extractApiError } from "./shared";
+  bankStatementApi,
+  type ErpCashBook,
+} from "@/modules/bank-statements/api/bankStatementApi";
+import { useAppStore } from "@/core/config/appStore";
+import { money } from "@/shared/utils/format";
 
 interface QuyForm {
-  fund_code: string;
-  fund_name: string;
-  accounting_account_id: string;
+  name: string;
   currency: string;
-  branch_id: string;
-  is_active: boolean;
-  note: string;
+  isActive: boolean;
+  openingBalance: number;
+  periodDate: string;
 }
+
 const emptyQuyForm: QuyForm = {
-  fund_code: "",
-  fund_name: "",
-  accounting_account_id: "",
+  name: "",
   currency: "VND",
-  branch_id: "",
-  is_active: true,
-  note: "",
+  isActive: true,
+  openingBalance: 0,
+  periodDate: "",
 };
-function buildQuyForm(f: CashFund): QuyForm {
+
+function buildQuyForm(f: ErpCashBook): QuyForm {
   return {
-    fund_code: f.fund_code,
-    fund_name: f.fund_name,
-    accounting_account_id: f.accounting_account_id ?? "",
+    name: f.name ?? "",
     currency: f.currency ?? "VND",
-    branch_id: f.branch_id ?? "",
-    is_active: f.is_active,
-    note: f.note ?? "",
+    isActive: f.isActive ?? true,
+    openingBalance: f.openingBalance ?? 0,
+    periodDate: f.periodDate ?? "",
   };
 }
 
 export function QuyTab() {
-  const [items, setItems] = useState<CashFund[]>([]);
-  const [coaItems, setCoaItems] = useState<ChartOfAccount[]>([]);
-  const [branchOptions, setBranchOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const { currentBranchId } = useAppStore();
+  const [items, setItems] = useState<ErpCashBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<CashFund | null>(null);
+  const [editing, setEditing] = useState<ErpCashBook | null>(null);
   const [form, setForm] = useState<QuyForm>(emptyQuyForm);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CashFund | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ErpCashBook | null>(null);
   const [deleting, setDeleting] = useState(false);
   const t = useT();
 
   useEffect(() => {
-    getChartOfAccountsApi()
-      .then(setCoaItems)
-      .catch(() => {});
-    getBranchOptionsApi()
-      .then(setBranchOptions)
-      .catch(() => {});
-  }, []);
+    if (currentBranchId) {
+      loadFunds();
+    }
+  }, [currentBranchId]);
 
-  useEffect(() => {
-    loadFunds(page, pageSize);
-  }, [page, pageSize]);
-
-  async function loadFunds(pg: number, ps: number) {
+  async function loadFunds() {
+    if (!currentBranchId) return;
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getCashFundsPagedApi({ page: pg, pageSize: ps });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
+      const res = await bankStatementApi.getCashBooks(currentBranchId);
+      setItems(res);
     } catch {
       setFetchError(t("settings.quy.fetchError"));
     } finally {
@@ -109,61 +80,58 @@ export function QuyTab() {
     }
   }
 
-  function handlePageSize(ps: number) {
-    setPageSize(ps);
-    setPage(1);
-  }
   function openNew() {
     setEditing(null);
     setForm(emptyQuyForm);
     setSaveError(null);
     setDrawerOpen(true);
   }
-  function openEdit(item: CashFund) {
+
+  function openEdit(item: ErpCashBook) {
     setEditing(item);
     setForm(buildQuyForm(item));
     setSaveError(null);
     setDrawerOpen(true);
   }
+
   function closeDrawer() {
     setDrawerOpen(false);
     setEditing(null);
     setSaveError(null);
   }
+
   const setField = <K extends keyof QuyForm>(k: K, v: QuyForm[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
   async function handleSave() {
-    if (
-      !form.fund_code.trim() ||
-      !form.fund_name.trim() ||
-      !form.accounting_account_id
-    ) {
+    if (!form.name.trim()) {
       setSaveError(t("settings.quy.requiredError"));
       return;
     }
     setSaving(true);
     setSaveError(null);
     try {
-      const dto: CreateCashFundDto = {
-        fund_code: form.fund_code.trim(),
-        fund_name: form.fund_name.trim(),
-        accounting_account_id: form.accounting_account_id,
+      const dto = {
+        branchId: currentBranchId!,
+        name: form.name.trim(),
         currency: form.currency || "VND",
-        branch_id: form.branch_id || null,
-        is_active: form.is_active,
-        note: form.note.trim() || undefined,
+        isActive: form.isActive,
+        openingBalance: form.openingBalance || 0,
+        periodDate: form.periodDate || undefined,
       };
+
       if (editing) {
-        await updateCashFundApi(editing.id, dto);
+        await bankStatementApi.updateCashBook(editing.id, dto);
       } else {
-        await createCashFundApi(dto);
+        await bankStatementApi.createCashBook(dto);
       }
       closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else loadFunds(page, pageSize);
+      loadFunds();
     } catch (e: unknown) {
-      setSaveError(extractApiError(e, t("settings.tk.unknownError")));
+      const err = e as any;
+      setSaveError(
+        err?.response?.data?.message || err?.message || "Đã xảy ra lỗi",
+      );
     } finally {
       setSaving(false);
     }
@@ -173,10 +141,9 @@ export function QuyTab() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await deleteCashFundApi(deleteTarget.id);
+      await bankStatementApi.deleteCashBook(deleteTarget.id);
       setDeleteTarget(null);
-      if (items.length === 1 && page > 1) setPage(page - 1);
-      else loadFunds(page, pageSize);
+      loadFunds();
     } catch {
       setDeleteTarget(null);
     } finally {
@@ -184,53 +151,39 @@ export function QuyTab() {
     }
   }
 
-  const isDirty = !!form.fund_code.trim() || !!form.fund_name.trim();
-  const columns: DataTableColumn<CashFund>[] = [
+  const isDirty = !!form.name.trim();
+  const columns: DataTableColumn<ErpCashBook>[] = [
     {
-      key: "fund_code",
-      header: t("settings.quy.headers.fundCode"),
-      cell: (q) => q.fund_code,
-      className: "font-mono text-[color:var(--muted-fg)] text-left",
-      headerClassName: "text-center",
-      skeletonClassName: "w-16",
-    },
-    {
-      key: "fund_name",
+      key: "name",
       header: t("settings.quy.headers.fundName"),
-      cell: (q) => q.fund_name,
+      cell: (q) => q.name,
       className: "font-medium text-left",
       headerClassName: "text-center",
       skeletonClassName: "w-32",
     },
     {
-      key: "accounting_account_id",
-      header: t("settings.tk.headers.accountingAccount"),
-      className: "text-left",
+      key: "openingBalance",
+      header: "Số dư đầu kỳ",
+      cell: (b) => (b.openingBalance ? money(b.openingBalance) : "—"),
+      className: "text-right",
       headerClassName: "text-center",
-      cell: (q) =>
-        coaItems.find((c) => c.id === q.accounting_account_id)?.account_code ||
-        "—",
-      skeletonClassName: "w-28",
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "periodDate",
+      header: "Ngày chốt dư",
+      cell: (b) => b.periodDate || "—",
+      className: "text-center text-[color:var(--muted-fg)]",
+      headerClassName: "text-center",
+      skeletonClassName: "w-20",
     },
     {
       key: "currency",
       header: t("settings.tk.headers.currency"),
       cell: (q) => q.currency,
-      className: "text-[color:var(--muted-fg)] text-left",
+      className: "text-[color:var(--muted-fg)] text-center",
       headerClassName: "text-center",
       skeletonClassName: "w-12",
-    },
-    {
-      key: "status",
-      header: t("settings.tk.headers.status"),
-      className: "text-center",
-      headerClassName: "text-center",
-      cell: (q) => (
-        <div className="flex justify-center w-full">
-          <TagCell active={q.is_active} isDefault={false} />
-        </div>
-      ),
-      skeletonClassName: "w-16",
     },
   ];
 
@@ -249,32 +202,25 @@ export function QuyTab() {
         loading={loading}
         error={fetchError}
         emptyLabel={t("common.noData")}
-        minWidth={600}
+        minWidth={750}
         loadingRows={4}
         actionsColumn={{
-          cell: (q) => {
-            const actionItems: ActionItem[] = [
-              {
-                label: t("common.edit"),
-                onClick: () => openEdit(q),
-                icon: <Pencil size={14} />,
-              },
-              {
-                label: t("common.delete"),
-                onClick: () => setDeleteTarget(q),
-                icon: <Trash2 size={14} />,
-                variant: "danger",
-              },
-            ];
-            return <ActionDropdown items={actionItems} />;
-          },
+          cell: (q) => (
+            <ActionDropdown
+              items={[
+                {
+                  label: t("common.edit"),
+                  onClick: () => openEdit(q),
+                },
+                {
+                  label: t("common.delete"),
+                  onClick: () => setDeleteTarget(q),
+                  variant: "danger",
+                },
+              ]}
+            />
+          ),
         }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
       />
 
       <DrawerModal
@@ -284,7 +230,7 @@ export function QuyTab() {
         title={
           editing ? t("settings.quy.editTitle") : t("settings.quy.createTitle")
         }
-        subtitle={editing ? editing.fund_name : t("settings.quy.subtitle")}
+        subtitle={editing ? editing.name : t("settings.quy.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
           {
@@ -297,45 +243,13 @@ export function QuyTab() {
         ]}
       >
         <DrawerSection title={t("settings.quy.sectionInfo")}>
-          <DrawerField label={t("settings.quy.headers.fundCode")} required>
-            <input
-              type="text"
-              className={inputCls}
-              value={form.fund_code}
-              onChange={(e) => setField("fund_code", e.target.value)}
-              placeholder={t("settings.quy.codePlaceholder")}
-            />
-          </DrawerField>
           <DrawerField label={t("settings.quy.headers.fundName")} required>
             <input
               type="text"
               className={inputCls}
-              value={form.fund_name}
-              onChange={(e) => setField("fund_name", e.target.value)}
-              placeholder={t("settings.quy.namePlaceholder")}
-            />
-          </DrawerField>
-          <DrawerField
-            label={t("settings.tk.headers.accountingAccount")}
-            required
-          >
-            <Combobox
-              options={coaItems.map((c) => ({
-                value: c.id,
-                label: `${c.account_code} — ${c.account_name}`,
-              }))}
-              value={form.accounting_account_id}
-              onChange={(v) => setField("accounting_account_id", v)}
-              placeholder={t("common.selectAccount")}
-            />
-          </DrawerField>
-          <DrawerField label="Chi nhánh">
-            <Combobox
-              options={branchOptions}
-              value={form.branch_id}
-              onChange={(v) => setField("branch_id", v)}
-              placeholder="Tất cả chi nhánh"
-              allowClear={true}
+              value={form.name}
+              onChange={(e) => setField("name", e.target.value)}
+              placeholder={t("settings.quy.fundNamePlaceholder")}
             />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
@@ -349,26 +263,30 @@ export function QuyTab() {
               allowClear={false}
             />
           </DrawerField>
-          <DrawerField label={t("settings.tk.headers.status")}>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox
-                checked={form.is_active}
-                onCheckedChange={(v) => setField("is_active", v === true)}
-              />
-              <span className="text-xs text-foreground">
-                {t("common.active")}
-              </span>
-            </label>
-          </DrawerField>
-          <DrawerField label={t("common.note")}>
-            <textarea
+        </DrawerSection>
+
+        <DrawerSection title="Số dư đầu kỳ">
+          <DrawerField label="Số tiền">
+            <input
+              type="number"
               className={inputCls}
-              rows={2}
-              value={form.note}
-              onChange={(e) => setField("note", e.target.value)}
+              value={form.openingBalance}
+              onChange={(e) =>
+                setField("openingBalance", Number(e.target.value))
+              }
+              placeholder="0"
+            />
+          </DrawerField>
+          <DrawerField label="Ngày chốt dư">
+            <input
+              type="date"
+              className={inputCls}
+              value={form.periodDate}
+              onChange={(e) => setField("periodDate", e.target.value)}
             />
           </DrawerField>
         </DrawerSection>
+
         {saveError && <ErrorBanner msg={saveError} />}
       </DrawerModal>
 
@@ -377,7 +295,7 @@ export function QuyTab() {
         title={t("confirmModal.defaultTitle")}
         message={t("settings.quy.deleteMessage").replace(
           "{0}",
-          deleteTarget?.fund_name ?? "",
+          deleteTarget?.name ?? "",
         )}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}

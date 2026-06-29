@@ -25,9 +25,7 @@ import {
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const LOOKUP_LIMIT = 200;
+import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 
 import {
   SoFormDrawer,
@@ -55,7 +53,7 @@ export function ErpSalesOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
@@ -89,6 +87,7 @@ export function ErpSalesOrdersPage() {
   const [deleting, setDeleting] = useState(false);
   const [cancelTarget, setCancelTarget] = useState<ErpSalesOrder | null>(null);
   const [canceling, setCanceling] = useState(false);
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
@@ -154,6 +153,30 @@ export function ErpSalesOrdersPage() {
     void loadOrders();
   }, [loadOrders]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const viewId = params.get("viewId");
+    if (viewId) {
+      openView({ id: viewId } as ErpSalesOrder);
+      // Clean up the URL
+      params.delete("viewId");
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState(null, "", newUrl);
+    }
+
+    // Custom event listener from Tag connections drawer
+    const handleOpenDoc = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.type === "erp_sales_order" && detail.id) {
+        openView({ id: detail.id } as ErpSalesOrder);
+      }
+    };
+    window.addEventListener("open_erp_document", handleOpenDoc);
+    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
+  }, []);
+
   function resetForm() {
     setForm(emptyForm());
     setEditing(null);
@@ -164,6 +187,7 @@ export function ErpSalesOrdersPage() {
   function closeDrawer() {
     setDrawerOpen(false);
     resetForm();
+    setPendingTagIds([]);
   }
 
   function openCreate() {
@@ -255,12 +279,23 @@ export function ErpSalesOrdersPage() {
       if (editing) {
         await salesOrdersCoreApi.update(editing.id, payload);
       } else {
-        await salesOrdersCoreApi.create(payload);
+        const created = await salesOrdersCoreApi.create(payload);
+        // Option B: apply pending tags after create
+        if (pendingTagIds.length > 0 && created?.id) {
+          try {
+            await updateEntityTags(
+              "erp_sales_order",
+              created.id,
+              pendingTagIds,
+            );
+          } catch {
+            // tags are non-critical
+          }
+        }
       }
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadOrders();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu sales order",
@@ -276,7 +311,6 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.reserve(item.id);
       await loadOrders();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể reserve SO",
@@ -292,7 +326,6 @@ export function ErpSalesOrdersPage() {
     try {
       await salesOrdersCoreApi.unreserve(item.id);
       await loadOrders();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể unreserve SO",
@@ -309,7 +342,6 @@ export function ErpSalesOrdersPage() {
       await salesOrdersCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
       await loadOrders();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Không thể xóa SO");
     } finally {
@@ -324,7 +356,6 @@ export function ErpSalesOrdersPage() {
       await salesOrdersCoreApi.cancel(cancelTarget.id);
       setCancelTarget(null);
       await loadOrders();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Không thể hủy SO");
     } finally {
@@ -493,6 +524,8 @@ export function ErpSalesOrdersPage() {
         addLine={addLine}
         removeLine={removeLine}
         updateLine={updateLine}
+        pendingTagIds={pendingTagIds}
+        onPendingTagsChange={setPendingTagIds}
         onToggleEdit={
           viewOnly &&
           canUpdate &&

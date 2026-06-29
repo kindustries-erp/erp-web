@@ -124,7 +124,6 @@ export function CashflowVouchersPage() {
       if (!selected && res.items?.length) {
         setSelected(res.items[0]);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message ||
@@ -197,7 +196,7 @@ export function CashflowVouchersPage() {
         await createCashflowVoucherAttachmentApi({
           cashflow_voucher_id: selected.id,
           file: uploaded.id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           attachment_type: attachmentType as any,
           note: attachmentNote || undefined,
         });
@@ -205,7 +204,6 @@ export function CashflowVouchersPage() {
       setAttachmentFiles([]);
       setAttachmentNote("");
       await loadDetailSidecars(selected.id);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Upload đính kèm thất bại",
@@ -225,7 +223,6 @@ export function CashflowVouchersPage() {
       try {
         await deleteCashflowVoucherAttachmentApi(attachment.id);
         await loadDetailSidecars(selected.id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         setError(
           e?.response?.data?.message || e?.message || "Xóa đính kèm thất bại",
@@ -269,7 +266,6 @@ export function CashflowVouchersPage() {
       setForm(EMPTY_FORM);
       await loadList();
       setSelected(created);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Tạo phiếu thất bại",
@@ -284,7 +280,6 @@ export function CashflowVouchersPage() {
       const updated = await postCashflowVoucherApi(voucher.id);
       await loadList();
       setSelected(updated);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Ghi sổ thất bại");
     }
@@ -297,7 +292,6 @@ export function CashflowVouchersPage() {
       const updated = await cancelCashflowVoucherApi(voucher.id, reason);
       await loadList();
       setSelected(updated);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Hủy phiếu thất bại",
@@ -312,7 +306,6 @@ export function CashflowVouchersPage() {
       await deleteCashflowVoucherApi(voucher.id);
       if (selected?.id === voucher.id) setSelected(null);
       await loadList();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Xóa phiếu thất bại",

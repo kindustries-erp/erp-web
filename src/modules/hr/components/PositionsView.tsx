@@ -46,7 +46,6 @@ const IconBriefcase = () => (
   </svg>
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ChucVuView(p: any) {
   const {
     t,
@@ -293,7 +292,6 @@ function PositionDrawer({
   setField,
   depts,
   saveError,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <DrawerModal
@@ -337,7 +335,6 @@ function PositionDrawer({
         </DrawerField>
         <DrawerField label={t("chucvu.headers.department")}>
           <Combobox
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             options={depts.map((d: any) => ({
               value: d.id,
               label: d.department_name,

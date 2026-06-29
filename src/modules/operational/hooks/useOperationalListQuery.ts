@@ -97,7 +97,6 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
         >;
       }
       if (normalized.variant === "purchase")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operationalApi.listPurchases(normalized as any);
 
       throw new Error(`Unsupported variant: ${normalized.variant}`);

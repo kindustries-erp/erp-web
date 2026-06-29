@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useFaviconEffect(companyProfile: any, appName: string) {
   useEffect(() => {
     if (companyProfile?.company_name) {

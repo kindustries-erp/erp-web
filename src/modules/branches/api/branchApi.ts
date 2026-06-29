@@ -16,7 +16,6 @@ export interface CreateBranchDto {
 
 export type UpdateBranchDto = Partial<CreateBranchDto>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeBranch(item: any): Branch {
   return {
     id: item.id,
@@ -28,7 +27,6 @@ function normalizeBranch(item: any): Branch {
 
 export async function getBranchesApi(): Promise<Branch[]> {
   return dedupeRequest("branches:list", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await axiosInstance.get<{ items?: any[]; data?: any[] }>(
       "/api/v1/branches",
       { params: { page: 1, pageSize: 500, sort: "code" } },
@@ -50,7 +48,6 @@ export async function getBranchOptionsApi(): Promise<
 }
 
 export async function createBranchApi(dto: CreateBranchDto): Promise<Branch> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await axiosInstance.post<{ message: string; data: any }>(
     "/api/v1/branches",
     dto,
@@ -62,7 +59,6 @@ export async function updateBranchApi(
   id: string,
   dto: UpdateBranchDto,
 ): Promise<Branch> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await axiosInstance.patch<{ message: string; data: any }>(
     `/api/v1/branches/${id}`,
     dto,

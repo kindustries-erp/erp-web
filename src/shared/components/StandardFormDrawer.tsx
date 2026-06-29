@@ -1,17 +1,30 @@
 import { useState, useEffect } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
-import { Button } from "./ui/Button";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/shared/utils";
 import type { DrawerMode } from "../stores/useDrawerStore";
 import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
 
+// ── Size presets ──────────────────────────────────────────────────────────────
+// All sizes are bounded by max-width: calc(100vw - 208px) on desktop (panels.css)
+// so the drawer never covers the sidebar.
+const SIZE_CLASS: Record<string, string> = {
+  sm: "w-full md:w-[95vw] lg:w-[500px] xl:w-[500px] 2xl:w-[550px]",
+  md: "w-full md:w-[95vw] lg:w-[700px] xl:w-[700px] 2xl:w-[750px]",
+  lg: "w-full md:w-[95vw] lg:w-[1000px] xl:w-[1000px] 2xl:w-[1100px]",
+  xl: "w-full md:w-[95vw] lg:w-[90vw] xl:w-[1200px] 2xl:w-[1400px]",
+  full: "w-full md:w-[95vw] lg:w-[90vw] xl:w-full 2xl:w-full",
+};
+
 export interface StandardFormDrawerProps {
   open: boolean;
   mode: DrawerMode;
   onClose: () => void;
   onToggleEdit?: () => void;
+
+  /** Optional icon rendered in the drawer header */
+  icon?: React.ReactNode;
 
   title: string;
   titleExtra?: React.ReactNode;
@@ -22,7 +35,25 @@ export interface StandardFormDrawerProps {
   loading?: boolean;
   error?: string | null;
 
+  /** Layout variant — defaults to "2-columns" */
   layout?: "1-column" | "2-columns";
+
+  /**
+   * Panel width preset. Ignored when `panelClassName` overrides width explicitly.
+   * - sm  : ~500px  — 1-column simple forms (profile, tags)
+   * - md  : ~700px  — medium-complexity forms
+   * - lg  : ~1000px — default 2-column
+   * - xl  : ~1200–1400px — wide 2-column (PO, Sales, Production)
+   * - full: max available within sidebar constraint
+   * Defaults to "sm" for 1-column, "xl" for 2-columns.
+   */
+  size?: "sm" | "md" | "lg" | "xl" | "full";
+
+  /**
+   * When true, show a confirm dialog before closing (passed through to DrawerModal).
+   * Useful for edit-mode forms that may have unsaved changes.
+   */
+  confirmOnClose?: boolean;
 
   leftPanel: React.ReactNode;
   rightPanel?: React.ReactNode;
@@ -45,6 +76,7 @@ export function StandardFormDrawer({
   mode,
   onClose,
   onToggleEdit,
+  icon,
   title,
   titleExtra,
   subtitle,
@@ -52,6 +84,8 @@ export function StandardFormDrawer({
   loading,
   error,
   layout = "2-columns",
+  size,
+  confirmOnClose,
   leftPanel,
   rightPanel,
   panelClassName,
@@ -70,23 +104,29 @@ export function StandardFormDrawer({
     }
   }, [open, rightPanelDefaultCollapsed]);
 
-  // When in view mode and an edit toggle is provided, show the Edit button.
+  // ── Edit button — outlined-primary style matching CompanyProfileDrawer ──
+  // view mode: border-primary outline, hover fills primary bg
   const headerExtra =
     mode === "view" && onToggleEdit ? (
-      <Button variant="secondary" size="sm" onClick={onToggleEdit}>
+      <button
+        type="button"
+        onClick={onToggleEdit}
+        className="px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg"
+      >
         {t("Chỉnh sửa")}
-      </Button>
+      </button>
     ) : undefined;
 
-  const defaultPanelClassName =
-    layout === "1-column"
-      ? "w-full md:w-[95vw] lg:w-[500px] xl:w-[500px] 2xl:w-[550px]"
-      : "w-full md:w-[95vw] lg:w-[90vw] xl:w-[1200px] 2xl:w-[1400px]";
+  // Resolve size → className (layout default: 1-column → sm, 2-columns → xl)
+  const resolvedSize = size ?? (layout === "1-column" ? "sm" : "xl");
+  const defaultPanelClassName = SIZE_CLASS[resolvedSize];
 
   return (
     <DrawerModal
       open={open}
       onClose={onClose}
+      icon={icon}
+      confirmOnClose={confirmOnClose}
       headerExtra={headerExtra}
       panelClassName={cn(defaultPanelClassName, panelClassName)}
       title={title}
@@ -97,11 +137,8 @@ export function StandardFormDrawer({
       {loading ? (
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
-        <div className="w-full pb-4">
-          <div className="rounded-xl border border-border bg-surface p-6 card-shadow">
-            {leftPanel}
-          </div>
-        </div>
+        // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
+        <div className="w-full pb-4">{leftPanel}</div>
       ) : (
         <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full relative h-full">
           {/* Cột trái: Chi tiết / Main Content */}

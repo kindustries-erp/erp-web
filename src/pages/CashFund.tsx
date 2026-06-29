@@ -201,7 +201,6 @@ export const TienMat = forwardRef(
     } = handlers;
 
     useImperativeHandle(ref, () => ({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       openNew: (type: string) => openNew(type as any),
     }));
 

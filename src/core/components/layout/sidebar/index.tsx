@@ -23,12 +23,13 @@ export function Sidebar() {
     navigate,
     toggleSidebar,
     setMobileSidebarOpen,
+    companyProfileOpen,
+    setCompanyProfileOpen,
   } = useAppStore();
   const { employee } = useAuthStore();
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [companyProfileOpen, setCompanyProfileOpen] = useState(false);
 
   const { data: companyProfile } = useCompanyProfile();
 

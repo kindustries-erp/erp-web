@@ -6,7 +6,8 @@ import {
   type DataTableColumn,
   type ActionsColumnConfig,
 } from "@/shared/components/DataTable";
-import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
+import { DrawerSection } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -16,8 +17,7 @@ import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Button } from "@/shared/components/ui/Button";
+
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import {
@@ -39,7 +39,7 @@ export function ErpActivityLogsPage() {
   const [items, setItems] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [selected, setSelected] = useState<AuditLogEntry | null>(null);
 
@@ -109,7 +109,6 @@ export function ErpActivityLogsPage() {
       });
       setItems(res.data);
       setTotal(res.total);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -266,8 +265,9 @@ export function ErpActivityLogsPage() {
         <FilterPanel config={filterConfig} filter={filter} />
       </div>
 
-      <DrawerModal
+      <StandardFormDrawer
         open={Boolean(selected)}
+        mode="view"
         onClose={() => setSelected(null)}
         title={selected?.actionType || "Chi tiết log"}
         subtitle={
@@ -278,60 +278,62 @@ export function ErpActivityLogsPage() {
         actions={[
           { label: "Đóng", onClick: () => setSelected(null), primary: true },
         ]}
-      >
-        {selected && (
-          <>
-            <DrawerSection title="Thông tin chính">
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium">Actor:</span>{" "}
-                  {selected.actorEmail || "system"}
-                </div>
-                <div>
-                  <span className="font-medium">Entity:</span>{" "}
-                  {selected.entityType || "—"} / {selected.entityId || "—"}
-                </div>
-                <div>
-                  <span className="font-medium">Route:</span>{" "}
-                  {selected.httpMethod || "—"} {selected.route || "—"}
-                </div>
-                <div>
-                  <span className="font-medium">Message:</span>{" "}
-                  {selected.message || "—"}
-                </div>
-              </div>
-            </DrawerSection>
-            <DrawerSection title="Snapshot JSON">
-              <div className="space-y-3">
-                <div>
-                  <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                    Before
+        layout="1-column"
+        leftPanel={
+          selected ? (
+            <>
+              <DrawerSection title="Thông tin chính">
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="font-medium">Actor:</span>{" "}
+                    {selected.actorEmail || "system"}
                   </div>
-                  <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
-                    {JSON.stringify(selected.beforeSnapshot, null, 2)}
-                  </pre>
-                </div>
-                <div>
-                  <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                    After
+                  <div>
+                    <span className="font-medium">Entity:</span>{" "}
+                    {selected.entityType || "—"} / {selected.entityId || "—"}
                   </div>
-                  <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
-                    {JSON.stringify(selected.afterSnapshot, null, 2)}
-                  </pre>
-                </div>
-                <div>
-                  <div className="mb-1 text-xs font-semibold text-muted-foreground">
-                    Error
+                  <div>
+                    <span className="font-medium">Route:</span>{" "}
+                    {selected.httpMethod || "—"} {selected.route || "—"}
                   </div>
-                  <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
-                    {JSON.stringify(selected.errorSnapshot, null, 2)}
-                  </pre>
+                  <div>
+                    <span className="font-medium">Message:</span>{" "}
+                    {selected.message || "—"}
+                  </div>
                 </div>
-              </div>
-            </DrawerSection>
-          </>
-        )}
-      </DrawerModal>
+              </DrawerSection>
+              <DrawerSection title="Snapshot JSON">
+                <div className="space-y-3">
+                  <div>
+                    <div className="mb-1 text-xs font-semibold text-muted-foreground">
+                      Before
+                    </div>
+                    <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
+                      {JSON.stringify(selected.beforeSnapshot, null, 2)}
+                    </pre>
+                  </div>
+                  <div>
+                    <div className="mb-1 text-xs font-semibold text-muted-foreground">
+                      After
+                    </div>
+                    <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
+                      {JSON.stringify(selected.afterSnapshot, null, 2)}
+                    </pre>
+                  </div>
+                  <div>
+                    <div className="mb-1 text-xs font-semibold text-muted-foreground">
+                      Error
+                    </div>
+                    <pre className="overflow-x-auto rounded-xl bg-muted p-3 text-xs">
+                      {JSON.stringify(selected.errorSnapshot, null, 2)}
+                    </pre>
+                  </div>
+                </div>
+              </DrawerSection>
+            </>
+          ) : null
+        }
+      />
     </PageLayout>
   );
 }

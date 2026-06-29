@@ -12,7 +12,6 @@ import type {
 } from "@/modules/accounting/api/catalogApi";
 import { fmt, IconEdit, IconPlus, IconTrash } from "./helpers";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function OpeningBalanceTable(props: any) {
   const {
     t,
@@ -27,7 +26,6 @@ export function OpeningBalanceTable(props: any) {
     onEdit,
     onDelete,
   } = props as {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     t: any;
     type: "CASH" | "BANK";
     items: OpeningBalance[];

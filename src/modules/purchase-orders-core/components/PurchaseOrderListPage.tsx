@@ -1,6 +1,7 @@
 import { FileText, PackagePlus, Network } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { useT } from "@/core/i18n";
+import { useQueryClient } from "@tanstack/react-query";
+import { useBatchEntityTags } from "@/modules/tags/hooks/useTags";
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
@@ -11,10 +12,13 @@ import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import { useT } from "@/core/i18n";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useState, useEffect } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
@@ -24,6 +28,11 @@ export function PurchaseOrderListPage() {
   const canDeletePo = useHasPermission("purchase_orders", "delete");
   const canCreateReceipt = useHasPermission("goods_receipts", "create");
   const isAdmin = useHasPermission("*", "*");
+
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
 
   // GR drawer — reuses the same form as ErpWarehousePage
   const grDrawer = useGrDrawer({
@@ -84,14 +93,60 @@ export function PurchaseOrderListPage() {
 
   const loading = listQuery.isLoading || listQuery.isFetching;
   const items = (listQuery.data?.items || []) as OperationalDocument[];
+
+  // Pre-fetch tags for all purchase order rows using batch endpoint
+  const batchQueries = items.map((row) => ({
+    entityType: "erp_purchase_order",
+    entityId: row.id,
+  }));
+  const { data: batchTagResults = [], isLoading: batchLoading } =
+    useBatchEntityTags(isAdminEmail ? batchQueries : []);
+  const queryClient = useQueryClient();
+  // Populate individual entity tag caches so useEntityTags hooks read from cache
+  useEffect(() => {
+    if (!batchLoading && batchTagResults.length) {
+      batchTagResults.forEach((tags, idx) => {
+        const entityId = batchQueries[idx].entityId;
+        queryClient.setQueryData(
+          ["sys-tags", "entity", "erp_purchase_order", entityId],
+          tags,
+        );
+      });
+    }
+  }, [batchLoading, batchTagResults, queryClient, batchQueries]);
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const viewId = params.get("viewId");
+    if (viewId) {
+      openDetail({ id: viewId } as OperationalDocument);
+      // Clean up the URL
+      params.delete("viewId");
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState(null, "", newUrl);
+    }
+
+    // Custom event listener from Tag connections drawer
+    const handleOpenDoc = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.type === "erp_purchase_order" && detail.id) {
+        openDetail({ id: detail.id } as OperationalDocument);
+      }
+    };
+    window.addEventListener("open_erp_document", handleOpenDoc);
+    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
+  }, [openDetail]);
 
   const columns = usePurchaseColumns({
     variant: "purchase",
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
+    isAdminEmail,
   });
 
   return (
@@ -180,9 +235,15 @@ export function PurchaseOrderListPage() {
         editing={editingRow}
         viewOnly={viewOnly}
         poReceipts={poReceipts}
-        onClose={handleCloseForm}
+        onClose={() => {
+          handleCloseForm();
+          setPendingTagIds([]);
+        }}
         onSaved={handleFormSaved}
         onToggleEdit={canUpdatePo ? handleToggleEdit : undefined}
+        isAdminEmail={isAdminEmail}
+        pendingTagIds={pendingTagIds}
+        onPendingTagsChange={setPendingTagIds}
       />
 
       <SettlementDrawer

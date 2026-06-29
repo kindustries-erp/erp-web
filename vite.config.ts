@@ -87,6 +87,10 @@ export default defineConfig(({ mode }) => {
               handler: "NetworkOnly",
             },
             {
+              urlPattern: /\/portal\/progress/i,
+              handler: "NetworkOnly",
+            },
+            {
               urlPattern: apiUrlPattern,
               handler: "NetworkFirst",
               options: {

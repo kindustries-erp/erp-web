@@ -16,7 +16,7 @@ export function SidebarHeader({
   hoverExpanded: boolean;
   toggleSidebar: () => void;
   setCompanyProfileOpen: (v: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   companyProfile: any;
 }) {
   const t = useT();

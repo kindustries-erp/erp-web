@@ -148,7 +148,7 @@ export function ErpGoodsIssuesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [searchInput, setSearchInput] = useState("");
@@ -388,7 +388,6 @@ export function ErpGoodsIssuesPage() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadIssues();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu goods issue",
@@ -406,7 +405,6 @@ export function ErpGoodsIssuesPage() {
     try {
       await goodsIssuesCoreApi.post(item.id);
       await loadIssues();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message ||
@@ -425,7 +423,6 @@ export function ErpGoodsIssuesPage() {
       await goodsIssuesCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
       await loadIssues();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể xóa goods issue",

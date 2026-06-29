@@ -20,7 +20,7 @@ export function useRoles() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
 

@@ -46,7 +46,7 @@ export async function getCashFundsApi(): Promise<CashFund[]> {
   return dedupeRequest("cash-funds:list", async () => {
     const { data } = await axiosInstance.get<PaginatedResponse<CashFund>>(
       "/api/v1/cash-funds",
-      { params: { page: 1, pageSize: 200, sort: "fund_code" } },
+      { params: { page: 1, pageSize: 500, sort: "fund_code" } },
     );
     return data.items;
   });

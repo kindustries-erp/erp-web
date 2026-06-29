@@ -56,7 +56,8 @@ export function usePortalSync() {
         });
         setResult(res);
         toast.success(
-          `Đã đồng bộ ${res.imported} HĐ mới, bỏ qua ${res.skipped} trùng. Đang tải ${res.xmlDownloadQueued} file XML...`,
+          res.note ||
+            `Đã đồng bộ ${res.imported} HĐ mới, bỏ qua ${res.skipped} trùng. Đang tải ${res.xmlDownloadQueued} file XML...`,
           { duration: 6000 },
         );
         return res;

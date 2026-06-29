@@ -1,3 +1,4 @@
+import React from "react";
 import { useAppStore, BREADCRUMBS } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
@@ -5,12 +6,22 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
+import { Building2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
+import { useQuery } from "@tanstack/react-query";
+import { getBranchesApi } from "@/modules/branches/api/branchApi";
 
 export function Topbar() {
-  const { currentPage, navigate, setMobileSidebarOpen, customBreadcrumbs } =
-    useAppStore();
+  const {
+    currentPage,
+    navigate,
+    setMobileSidebarOpen,
+    customBreadcrumbs,
+    setCompanyProfileOpen,
+    currentBranchId,
+    setCurrentBranchId,
+  } = useAppStore();
   const impersonation = useAuthStore((s) => s.impersonation);
   const stopImpersonationAction = useAuthStore(
     (s) => s.stopImpersonationAction,
@@ -21,8 +32,19 @@ export function Topbar() {
   const crumbs = customBreadcrumbs ??
     BREADCRUMBS[currentPage] ?? [[currentPage]];
 
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches:list"],
+    queryFn: getBranchesApi,
+  });
+
+  React.useEffect(() => {
+    if (!currentBranchId && branches.length > 0) {
+      setCurrentBranchId(branches[0].id);
+    }
+  }, [branches, currentBranchId, setCurrentBranchId]);
+
   return (
-    <div className="topbar h-8 flex items-center gap-[10px] flex-shrink-0">
+    <div className="topbar flex items-center gap-[10px] flex-shrink-0">
       {/* Hamburger (mobile) */}
       <Button
         variant="secondary"
@@ -117,14 +139,22 @@ export function Topbar() {
         </div>
       )}
 
-      {/* Company Name */}
-      {!impersonation?.active && companyProfile?.company_name && (
-        <Tooltip content={companyProfile.company_name} side="bottom">
-          <div className="ml-auto text-xs font-medium text-[color:var(--muted-fg)] truncate max-w-[400px] cursor-default">
-            {companyProfile.company_name}
-          </div>
-        </Tooltip>
-      )}
+      {/* Company Name & Branch Selector */}
+      <div className="ml-auto flex items-center gap-4">
+        {!impersonation?.active && companyProfile?.company_name && (
+          <Tooltip content={companyProfile.company_name} side="bottom">
+            <button
+              onClick={() => setCompanyProfileOpen(true)}
+              className="flex items-center gap-2 text-[10px] font-medium text-[color:var(--muted-fg)] hover:text-foreground transition-colors max-w-[200px]"
+            >
+              <Building2 className="w-[14px] h-[14px] flex-shrink-0" />
+              <span className="truncate hidden md:block">
+                {companyProfile.company_name}
+              </span>
+            </button>
+          </Tooltip>
+        )}
+      </div>
     </div>
   );
 }

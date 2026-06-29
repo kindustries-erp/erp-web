@@ -1,6 +1,6 @@
 export interface ListParams {
   page?: number; // 1-based, default 1
-  pageSize?: number; // default 20
+  pageSize?: number; // default 15
   sort?: string[]; // e.g. ["-created_at"], fallback ["id"]
   search?: string;
   [key: string]: unknown; // allow extra filter params
@@ -14,7 +14,7 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export const DEFAULT_PAGE_SIZE = 20;
+export const DEFAULT_PAGE_SIZE = 15;
 export const DEFAULT_SORT = ["-created_at"];
 export const FALLBACK_SORT = ["id"];
 

@@ -39,7 +39,7 @@ export function periodFromDate(date: string) {
 export function firstDayOfPeriod(period: string) {
   return `${period}-01`;
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export function periodLabel(period: string, t: any) {
   const [y, m] = period.split("-").map(Number);
   return Number.isFinite(y) && Number.isFinite(m)

@@ -133,6 +133,7 @@ export function AppContextMenu() {
 
   // Always compute based on menu.page (the right-clicked tab)
   const targetPage = menu.page;
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const targetIndex = openTabs.indexOf(targetPage);
   const isStaticTab = Boolean(STATIC_TABS[targetPage]);

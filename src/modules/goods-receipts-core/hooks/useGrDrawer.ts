@@ -227,7 +227,7 @@ export function useGrDrawer({
     try {
       const res = await purchaseOrdersCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         exclude_status: "DRAFT",
       });
       setPoOptions(
@@ -246,7 +246,7 @@ export function useGrDrawer({
     try {
       const res = await productionCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         exclude_status: "DRAFT",
       });
       setMoOptions(
@@ -313,7 +313,6 @@ export function useGrDrawer({
       try {
         const payload = buildGrPayload(form);
         if (statusOverride) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (payload as any).status = statusOverride;
         }
         if (editing) {

@@ -494,7 +494,7 @@ export function ErpBomPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -916,7 +916,6 @@ export function ErpBomPage() {
       void loadAllBoms();
       if (!editing && page !== 1) setPage(1);
       else await loadBoms();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || t("Không thể lưu BOM"),
@@ -933,7 +932,6 @@ export function ErpBomPage() {
       await bomCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
       await loadBoms();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || t("Không thể xóa BOM"),
@@ -951,7 +949,6 @@ export function ErpBomPage() {
       setStatusTarget(null);
       setTargetAction(null);
       await loadBoms();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message ||

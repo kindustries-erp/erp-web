@@ -24,13 +24,13 @@ vi.mock("@/shared/hooks/useFilterPanel", () => ({
 describe("useErpInvoicesList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     (erpInvoicesCoreApi.list as any).mockResolvedValue({
       items: [],
       total: 0,
       totalPages: 0,
       page: 1,
-      pageSize: 40,
+      pageSize: 50,
     });
   });
 
@@ -92,14 +92,13 @@ describe("useErpInvoicesList", () => {
   });
 
   it("should fetch invoices correctly", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mockList = erpInvoicesCoreApi.list as any;
     mockList.mockResolvedValueOnce({
       items: [{ id: "1", invoiceNo: "INV-01" } as unknown as ErpInvoice],
       total: 1,
       totalPages: 1,
       page: 1,
-      pageSize: 40,
+      pageSize: 50,
     });
 
     const { result } = renderHook(() => useErpInvoicesList());
@@ -109,7 +108,7 @@ describe("useErpInvoicesList", () => {
       expect.objectContaining({
         direction: "IN",
         page: 1,
-        pageSize: 40,
+        pageSize: 50,
         sort_by: "invoiceDate",
         sort_order: "desc",
       }),

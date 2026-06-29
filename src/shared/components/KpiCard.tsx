@@ -1,3 +1,4 @@
+import { Skeleton } from "@/shared/components/Skeleton";
 import { cn } from "@/shared/utils";
 import React from "react";
 
@@ -5,9 +6,10 @@ interface KpiCardProps {
   label: string;
   value: string;
   sub?: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   badge?: React.ReactNode;
   warn?: boolean;
+  loading?: boolean;
 }
 
 export function KpiCard({
@@ -17,25 +19,63 @@ export function KpiCard({
   icon,
   badge,
   warn,
-}: KpiCardProps) {
+  compact,
+  loading,
+}: KpiCardProps & { compact?: boolean }) {
   return (
     <div
       className={cn(
-        "bg-surface border rounded-xl p-4 max-[480px]:p-3 card-shadow",
+        "bg-surface border rounded-xl card-shadow",
+        compact ? "p-3 max-[480px]:p-2" : "p-4 max-[480px]:p-3",
         warn ? "border-[#f59e0b] border-[1.5px]" : "border-border",
       )}
     >
-      <div className="flex items-center justify-between mb-[10px]">
-        <div className="w-7 h-7 flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]">
-          {icon}
+      {(icon || badge) && (
+        <div
+          className={cn(
+            "flex items-center justify-between",
+            compact ? "mb-1" : "mb-[10px]",
+          )}
+        >
+          {icon && (
+            <div
+              className={cn(
+                "flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]",
+                compact ? "w-5 h-5" : "w-7 h-7",
+              )}
+            >
+              {icon}
+            </div>
+          )}
+          {badge}
         </div>
-        {badge}
-      </div>
-      <div className="text-[10px] text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-1">
+      )}
+      <div
+        className={cn(
+          "text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-1",
+          compact ? "text-[9px]" : "text-[10px]",
+        )}
+      >
         {label}
       </div>
-      <div className="text-[22px] max-[480px]:text-[18px] font-semibold text-foreground">
-        {value}
+      <div
+        className={cn(
+          "font-semibold text-foreground",
+          compact
+            ? "text-[16px] max-[480px]:text-[14px]"
+            : "text-[22px] max-[480px]:text-[18px]",
+        )}
+      >
+        {loading ? (
+          <Skeleton
+            className={cn(
+              "mt-1 mb-1 rounded",
+              compact ? "h-5 w-20" : "h-7 w-28",
+            )}
+          />
+        ) : (
+          value
+        )}
       </div>
       {sub && (
         <div className="text-[11px] text-[color:var(--faint)] mt-[3px]">

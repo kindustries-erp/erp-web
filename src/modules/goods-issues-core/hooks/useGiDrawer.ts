@@ -264,7 +264,6 @@ export function useGiDrawer({
       try {
         const payload = buildGiPayload(form);
         if (statusOverride) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (payload as any).status = statusOverride;
         }
         if (editing) {
