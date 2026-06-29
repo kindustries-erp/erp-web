@@ -14,8 +14,7 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Button } from "@/shared/components/ui/Button";
+
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
@@ -85,7 +84,7 @@ export function ErpEmployeesPage() {
           startDate: editingData.startDate || "",
           leaveDate: editingData.leaveDate || "",
           status: editingData.status || "ACTIVE",
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           notes: (editingData as any).notes || "",
         });
       } else {
@@ -145,7 +144,6 @@ export function ErpEmployeesPage() {
       }
       setItems(filtered);
       setTotal(status ? filtered.length : res.total);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -174,9 +172,9 @@ export function ErpEmployeesPage() {
       return;
     }
     const payload = { ...form };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     if (!payload.startDate) payload.startDate = null as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     if (!payload.leaveDate) payload.leaveDate = null as any;
 
     setSaving(true);
@@ -199,7 +197,6 @@ export function ErpEmployeesPage() {
       }
       drawerStore.closeDrawer();
       await loadEmployees();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -350,7 +347,6 @@ export function ErpEmployeesPage() {
                                   title: "Đã ngưng hoạt động nhân viên",
                                 });
                                 void loadEmployees();
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               } catch (e: any) {
                                 showToast({
                                   variant: "destructive",
@@ -374,7 +370,6 @@ export function ErpEmployeesPage() {
                                 });
                                 showToast({ title: "Đã kích hoạt nhân viên" });
                                 void loadEmployees();
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               } catch (e: any) {
                                 showToast({
                                   variant: "destructive",

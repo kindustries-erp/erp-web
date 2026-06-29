@@ -30,8 +30,7 @@ import {
   inputCls,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Combobox } from "@/shared/components/Combobox";
+
 import { BankVoucherDrawer } from "@/modules/finance/components/BankDeposit/BankVoucherDrawer";
 import { BankDepositDashboard } from "@/modules/finance/components/BankDeposit/BankDepositDashboard";
 import { PaymentVoucherAccountingModal } from "@/modules/finance/components/PaymentVoucherAccountingModal";
@@ -46,8 +45,7 @@ import {
   useSearchFilter,
 } from "@/shared/hooks/useFilterState";
 import { useBankVoucherHandlers } from "@/modules/finance/hooks/useBankVoucherHandlers";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { SimpleJournalEntryFormLine } from "@/modules/accounting/types/journalEntry";
+
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   buildCreatePayloadFromSimple,
@@ -275,7 +273,6 @@ export const TienGui = forwardRef(
     } = handlers;
 
     useImperativeHandle(ref, () => ({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       openNew: (type: string) => openNew(type as any),
     }));
 
@@ -675,7 +672,7 @@ function buildOptionSets(
   partners: BusinessPartner[],
   employees: Employee[],
   companyBankAccounts: CompanyBankAccount[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   partnerBankAccounts: any[],
   voucherType: string,
 ) {
@@ -730,7 +727,6 @@ function buildOptionSets(
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildDrawerActions(args: any): DrawerAction[] {
   const {
     editing,

@@ -48,7 +48,6 @@ type TaxTabKey =
 
 const TAX_PORTAL_PAGE_SIZE_OPTIONS = [15, 30, 50] as const;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TAB_LABELS = (t: any): Array<{ key: TaxTabKey; label: string }> => [
   { key: "hoa-don-nhap", label: t("hoadondientuPage.tabs.draft") },
   { key: "hoa-don-da-phat-hanh", label: t("hoadondientuPage.tabs.issued") },
@@ -356,7 +355,6 @@ const HoaDonDienTu: React.FC = () => {
         loadOutputData(),
         loadInputData(),
       ]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -380,7 +378,6 @@ const HoaDonDienTu: React.FC = () => {
     ) as TaxTabKey | null;
     if (
       tabFromUrl &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       TAB_LABELS(t).some((tab: any) => tab.key === tabFromUrl)
     ) {
       setActiveTab(tabFromUrl);
@@ -443,7 +440,6 @@ const HoaDonDienTu: React.FC = () => {
     );
   }, [draftInvoices, issuedInvoices, outputInvoices, inputInvoices]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function handleDraftSaved(result: any) {
     setMessage(
       result?.response?.message ?? "Đã lưu hóa đơn nháp nội bộ thành công.",
@@ -464,7 +460,6 @@ const HoaDonDienTu: React.FC = () => {
       setMessage("Đồng bộ hóa đơn nháp thành công.");
       await loadData();
       setActiveTab("hoa-don-nhap");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -492,13 +487,11 @@ const HoaDonDienTu: React.FC = () => {
 
       try {
         await loadData();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (reloadError: any) {
         setMessage(
           `Đồng bộ hóa đơn đã phát hành thành công (${result?.count ?? 0} hóa đơn) nhưng tải lại danh sách thất bại: ${reloadError?.response?.data?.message ?? reloadError?.message ?? "Lỗi không xác định"}`,
         );
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -533,7 +526,6 @@ const HoaDonDienTu: React.FC = () => {
       );
       await loadData();
       setActiveTab(direction === "IN" ? "hoa-don-mua-vao" : "hoa-don-ban-ra");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -558,7 +550,6 @@ const HoaDonDienTu: React.FC = () => {
       await erpInvoicesCoreApi.syncDetail(id, taxPortalConfig.gdtJwt);
       setMessage("Đồng bộ chi tiết thành công");
       await loadData();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -582,7 +573,6 @@ const HoaDonDienTu: React.FC = () => {
           : `Lưu cấu hình Viettel v2.49 thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
       );
       await loadData();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -605,7 +595,6 @@ const HoaDonDienTu: React.FC = () => {
       await resetConfigApi();
       setMessage("Xóa cấu hình Viettel v2.49 thành công.");
       await loadData();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -629,7 +618,6 @@ const HoaDonDienTu: React.FC = () => {
           : `Lưu cấu hình cổng thuế thành công nhưng kiểm tra kết nối thất bại. ${connection?.message ?? "Không có phản hồi test kết nối."}`,
       );
       await loadData();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??
@@ -650,7 +638,6 @@ const HoaDonDienTu: React.FC = () => {
       await resetTaxPortalConfigApi();
       setMessage("Xóa cấu hình cổng thuế thành công.");
       await loadData();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       setMessage(
         error?.response?.data?.message ??

@@ -8,6 +8,7 @@ import { SysTag } from "@/modules/tags/api/tagsApi";
 import { TagFormModal } from "@/modules/tags";
 import { TagConnectionsDrawer } from "@/modules/tags/components/TagConnectionsDrawer";
 import { useUIStore } from "@/core/config/uiStore";
+import { Badge } from "@/shared/components/ui/badge";
 
 export function SysTagsPage() {
   const { showToast } = useUIStore();
@@ -31,17 +32,19 @@ export function SysTagsPage() {
         key: "name",
         header: "Tên thẻ",
         cell: (row) => (
-          <div className="flex items-center gap-2">
-            {row.color && (
-              <span
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: row.color }}
-              />
-            )}
-            <span className="font-medium text-[color:var(--color-primary-text)]">
-              {row.name}
-            </span>
-          </div>
+          <Badge
+            variant="outline"
+            className="gap-1 px-2 py-0.5 rounded-full text-[11px]"
+            style={{
+              backgroundColor: row.color
+                ? `${row.color}15`
+                : "var(--color-surface)",
+              color: row.color || "var(--color-primary-text)",
+              borderColor: row.color ? `${row.color}30` : "var(--color-border)",
+            }}
+          >
+            {row.name}
+          </Badge>
         ),
       },
       {

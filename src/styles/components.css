@@ -70,13 +70,13 @@
 
 /* ── Card Shadow ── */
 .shadow-panel {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.15);
 }
 
 .card-shadow {
   background: var(--surface) !important;
   border-color: var(--border) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Popup / Dropdown Content (portal elements) ── */

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/core/config/appStore";
 import { useT } from "@/core/i18n";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+
 import {
   bankStatementApi,
   type ErpCashBook,
@@ -17,6 +17,7 @@ import { money } from "@/shared/utils/format";
 import toast from "react-hot-toast";
 
 export function ThietLapQuy() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { setCustomBreadcrumbs, currentBranchId } = useAppStore();
   const t = useT();
   const [drawerOpen, setDrawerOpen] = useState(false);

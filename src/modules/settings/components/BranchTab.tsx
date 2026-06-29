@@ -129,7 +129,6 @@ export function BranchTab() {
                 else await createBranchApi(dto);
                 setOpen(false);
                 load();
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
               } catch (error: any) {
                 const message =
                   error?.response?.data?.message ||

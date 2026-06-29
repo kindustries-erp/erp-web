@@ -24,7 +24,7 @@ export interface CoreProfileResponse {
   permissions?: {
     resource: string;
     action: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     conditions?: any;
   }[];
   createdAt: string;

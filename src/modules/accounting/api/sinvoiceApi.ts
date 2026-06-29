@@ -88,13 +88,11 @@ export async function listLocalEinvoicesApi(params?: {
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createSinvoiceApi(data: any = {}): Promise<any> {
   const res = await axiosInstance.post("/api/v1/viettel-v2/draft", data);
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function syncSinvoiceApi(): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/sync");
   return res.data;
@@ -104,7 +102,6 @@ export async function syncSinvoiceDraftApi(params?: {
   startDate?: string;
   endDate?: string;
   size?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/sync-draft", {
     params,
@@ -117,7 +114,6 @@ export async function syncSinvoiceIssuedApi(params?: {
   endDate?: string;
   pageNum?: number;
   rowPerPage?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/sync-issued", {
     params,
@@ -152,25 +148,21 @@ export async function listLocalIssuedEinvoicesApi(params?: {
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function runSinvoiceDemoFlowApi(): Promise<any> {
   const res = await axiosInstance.post("/api/v1/sinvoice/demo-flow");
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getConfigApi(): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/config");
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function saveConfigApi(data: any): Promise<any> {
   const res = await axiosInstance.post("/api/v1/sinvoice/config", data);
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function resetConfigApi(): Promise<any> {
   const res = await axiosInstance.delete("/api/v1/sinvoice/config");
   return res.data;
@@ -183,7 +175,6 @@ export async function getTaxPortalConfigApi(): Promise<TaxPortalConfig | null> {
 
 export async function saveTaxPortalConfigApi(
   data: TaxPortalConfig,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   const res = await axiosInstance.post(
     "/api/v1/sinvoice/tax-portal/config",
@@ -192,7 +183,6 @@ export async function saveTaxPortalConfigApi(
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function resetTaxPortalConfigApi(): Promise<any> {
   const res = await axiosInstance.delete("/api/v1/sinvoice/tax-portal/config");
   return res.data;
@@ -238,7 +228,6 @@ export async function downloadSinvoiceApi(
   invoiceNo: string,
   pattern: string,
   fileType: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   const res = await axiosInstance.get("/api/v1/sinvoice/download", {
     params: { invoiceNo, pattern, fileType },
@@ -246,7 +235,6 @@ export async function downloadSinvoiceApi(
   return res.data;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getViettelTemplatesApi(): Promise<any> {
   const res = await axiosInstance.get("/api/v1/viettel-v2/templates");
   return res.data;

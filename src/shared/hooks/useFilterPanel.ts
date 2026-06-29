@@ -165,8 +165,7 @@ export function useFilterPanel(
 
   const setDateFrom = useCallback(
     (v: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      setDateFromRaw((prev) => {
+      setDateFromRaw(() => {
         const newVal = v && dateTo && dateTo < v ? monthFirstDay(dateTo) : v;
         return newVal;
       });

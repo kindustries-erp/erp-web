@@ -136,6 +136,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
       0,
     );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const netAmount = totalCredit - totalDebit;
 
     return {

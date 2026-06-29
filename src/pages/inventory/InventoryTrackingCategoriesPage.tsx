@@ -191,7 +191,6 @@ export function InventoryTrackingCategoriesPage() {
         variant: "success",
       });
       closeDrawer();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message ||
@@ -217,7 +216,6 @@ export function InventoryTrackingCategoriesPage() {
         variant: "success",
       });
       setDeleteTarget(null);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       showToast({
         title:

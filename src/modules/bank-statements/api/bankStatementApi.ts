@@ -42,6 +42,7 @@ export const bankStatementApi = {
     tagIds?: string[];
   }) => {
     const cleanParams = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
     );
     const res = await axiosInstance.get(
@@ -76,6 +77,7 @@ export const bankStatementApi = {
     topTransactionsOut: Array<any>;
   }> => {
     const cleanParams = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
     );
     const res = await axiosInstance.get(
@@ -143,6 +145,7 @@ export const bankStatementApi = {
     return res.data;
   },
   updateBankAccount: async (id: string, data: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { branchId, ...payload } = data;
     const res = await axiosInstance.patch(
       `/api/v1/bank-transactions-core/bank-accounts/${id}`,

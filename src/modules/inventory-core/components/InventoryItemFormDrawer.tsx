@@ -204,7 +204,6 @@ export function InventoryItemFormDrawer({
       });
       onSuccess?.();
       onClose();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(e?.response?.data?.message || e?.message || "Không thể lưu");
     } finally {

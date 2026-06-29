@@ -91,7 +91,7 @@ interface ViettelTemplate {
 export interface SinvoiceDraftModalProps {
   open: boolean;
   onClose: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onSaved?: (result: any) => void | Promise<void>;
   initialForm?: Partial<CreateArSalesInvoiceWithViettelDto>;
   title?: string;
@@ -307,7 +307,6 @@ export function SinvoiceDraftModal({
                     buyer_name: partner?.display_name ?? partner?.name ?? "",
                     buyer_tax_code: partner?.tax_code ?? "",
                     buyer_address: partner?.address ?? "",
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   } as any);
                 }}
                 placeholder="Tìm và chọn khách hàng..."
@@ -333,14 +332,12 @@ export function SinvoiceDraftModal({
             <input
               className={inputCls}
               value={
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (form as any).buyer_name ||
                 selectedPartner?.display_name ||
                 selectedPartner?.name ||
                 ""
               }
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 setForm({ ...(form as any), buyer_name: e.target.value } as any)
               }
             />
@@ -349,15 +346,12 @@ export function SinvoiceDraftModal({
             <input
               className={inputCls}
               value={
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (form as any).buyer_tax_code || selectedPartner?.tax_code || ""
               }
               onChange={(e) =>
                 setForm({
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   ...(form as any),
                   buyer_tax_code: e.target.value,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any)
               }
             />
@@ -366,15 +360,12 @@ export function SinvoiceDraftModal({
             <input
               className={inputCls}
               value={
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (form as any).buyer_address || selectedPartner?.address || ""
               }
               onChange={(e) =>
                 setForm({
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   ...(form as any),
                   buyer_address: e.target.value,
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any)
               }
               placeholder="Bắt buộc nếu có MST"

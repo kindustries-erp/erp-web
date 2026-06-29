@@ -52,7 +52,6 @@ import { format as formatDate, isValid } from "date-fns";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getNestedValue(obj: any, path: string | number | symbol) {
   if (typeof path !== "string") return obj[path];
   return path.split(".").reduce((acc, part) => acc && acc[part], obj);
@@ -205,10 +204,6 @@ function SortableColumnItem<T>({ id, column }: SortableItemProps<T>) {
 
 function ColumnToggle<T>({
   table,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _visibility,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _order,
 }: {
   table: TanstackTable<T>;
   _visibility?: VisibilityState;
@@ -440,7 +435,6 @@ export function DataTable<T>({
         id: column.key,
         header: () => column.header,
         cell: ({ row }) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let value: any;
           if (column.cell) {
             value = column.cell(

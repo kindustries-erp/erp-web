@@ -3,6 +3,7 @@ import { Package, X, Plus } from "lucide-react";
 import { useTags, useEntityTags, useTagsMutations } from "../hooks/useTags";
 import { SysTag } from "../api/tagsApi";
 import * as Popover from "@radix-ui/react-popover";
+import { Badge } from "@/shared/components/ui/badge";
 import { TagConnectionsDrawer } from "./TagConnectionsDrawer";
 
 interface EntityTagSelectorProps {
@@ -119,10 +120,11 @@ export function EntityTagSelector({
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {entityTags.map((tag) => (
-        <span
+        <Badge
           key={tag.id}
+          variant="outline"
           onClick={() => setViewingTag(tag)}
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border border-[color:var(--color-border)] cursor-pointer hover:shadow-sm transition-shadow"
+          className="gap-1.5 px-2 py-0.5 rounded-full text-xs cursor-pointer hover:shadow-sm transition-shadow"
           style={{
             backgroundColor: tag.color
               ? `${tag.color}15`
@@ -143,7 +145,7 @@ export function EntityTagSelector({
               <X className="w-3 h-3" />
             </button>
           )}
-        </span>
+        </Badge>
       ))}
 
       {!readOnly && (

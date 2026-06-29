@@ -133,11 +133,9 @@ export interface CreateOperationalPaymentLinkPayload {
   notes?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizePurchaseRow(row: any): OperationalDocument {
   const lines = Array.isArray(row?.lines)
-    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      row.lines.map((line: any) => ({
+    ? row.lines.map((line: any) => ({
         ...line,
         inventory_item_id: line.inventory_item_id ?? line.itemId ?? null,
         item_code: line.itemCode ?? line.item_code ?? undefined,
@@ -213,12 +211,11 @@ function toCorePurchasePayload(
     supplierId: payload.supplier_id || undefined,
     orderDate: payload.document_date,
     expectedDate:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (payload as any).expected_receipt_date || payload.due_date || undefined,
     status: payload.status,
     paymentStatus: payload.payment_status,
     remarks: payload.notes || undefined,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     supplierInvoiceNo: (payload as any).supplier_invoice_no || undefined,
   };
 
@@ -245,25 +242,22 @@ function params(input: ListParams = {}) {
     sort: (input.sort ?? ["-document_date"]).join(","),
     ...(input.search ? { search: input.search } : {}),
     ...(input.branch_id ? { branch_id: input.branch_id } : {}),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     ...((input as any).supplier_id
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        { supplier_id: (input as any).supplier_id }
+      ? { supplier_id: (input as any).supplier_id }
       : {}),
     ...(input.status ? { status: input.status } : {}),
     ...(input.payment_status ? { payment_status: input.payment_status } : {}),
     ...(input.invoice_status ? { invoice_status: input.invoice_status } : {}),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     ...((input as any).date_from
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        { date_from: (input as any).date_from }
+      ? { date_from: (input as any).date_from }
       : {}),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     ...((input as any).date_to ? { date_to: (input as any).date_to } : {}),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     ...((input as any).inventory_item_id
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        { inventory_item_id: (input as any).inventory_item_id }
+      ? { inventory_item_id: (input as any).inventory_item_id }
       : {}),
   };
 }
@@ -278,7 +272,6 @@ async function list(path: string, input?: ListParams) {
 export const operationalApi = {
   listSales: (input?: ListParams) => list("sales-service-orders", input),
   listPurchases: async (input?: ListParams) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await axiosInstance.get<PaginatedResponse<any>>(
       "/api/v1/purchase-orders",
       {
@@ -314,7 +307,6 @@ export const operationalApi = {
     return data.data;
   },
   createPurchase: async (payload: CreateOperationalPayload) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await axiosInstance.post<{ data: any }>(
       "/api/v1/purchase-orders",
       toCorePurchasePayload(payload),
@@ -342,7 +334,6 @@ export const operationalApi = {
     id: string,
     payload: Partial<CreateOperationalPayload>,
   ) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await axiosInstance.patch<{ data: any }>(
       `/api/v1/purchase-orders/${id}`,
       toCorePurchasePayload(payload),
@@ -367,7 +358,6 @@ export const operationalApi = {
     return data.data;
   },
   getDocument: async (documentType: OperationalDocumentType, id: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await axiosInstance.get<{ data: any }>(
       `/api/v1/${resolvePath(documentType)}/${id}`,
     );

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Shield, UserPlus } from "lucide-react";
+
+import { Shield } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -13,10 +13,7 @@ import {
 } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { SearchInput } from "@/shared/components/SearchInput";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Button } from "@/shared/components/ui/Button";
+
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
@@ -97,7 +94,6 @@ export function ErpUsersPage() {
       });
       setItems(res.data);
       setTotal(res.total);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",
@@ -176,7 +172,6 @@ export function ErpUsersPage() {
       setForm({ email: "", password: "", employeeId: "" });
       setEditingUser(null);
       await loadUsers();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       showToast({
         variant: "destructive",

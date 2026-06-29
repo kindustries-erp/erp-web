@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useT } from "@/core/i18n";
+
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { useAppStore } from "@/core/config/appStore";
 import {
@@ -22,7 +22,6 @@ export const CreateCashTransactionDrawer = ({
   onClose,
   onSuccess,
 }: Props) => {
-  const t = useT();
   const currentBranchId = useAppStore((state) => state.currentBranchId);
   const [cashBookId, setCashBookId] = useState("");
   const [transDate, setTransDate] = useState("");

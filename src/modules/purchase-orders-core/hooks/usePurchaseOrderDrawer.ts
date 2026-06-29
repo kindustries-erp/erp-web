@@ -136,7 +136,6 @@ export function usePurchaseOrderDrawer({
     basicMastersApi
       .list({ limit: 200, entities: "inventoryItems,erpInvoices" })
       .then((res) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const options = (res.items.inventoryItems || []).map((item: any) => ({
           value: item.id,
           label: item.itemName || "(Chưa có tên)",

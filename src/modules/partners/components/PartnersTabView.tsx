@@ -18,7 +18,6 @@ import {
 import { PageHeader, StatusBadge } from "./shared";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function PartnersTabView(p: any) {
   const {
     t,
@@ -208,7 +207,6 @@ function PartnerDrawer({
   removeBankRow,
   addBankRow,
   saveError,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <DrawerModal
@@ -246,7 +244,7 @@ function PartnerDrawer({
     </DrawerModal>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function MainInfoCard({ form, setField }: any) {
   return (
     <div className="partner-card partner-card-main">
@@ -354,13 +352,12 @@ function ContactsCard({
   setContactField,
   removeContactRow,
   addContactRow,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <div className="partner-card partner-card-contact">
       <DrawerSection title={`Liên hệ (${contactRows.length})`}>
         <div className="partner-sublist">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {}
           {contactRows.map((row: any, idx: number) => (
             <div key={row.tempId} className="partner-subitem">
               <div className="partner-subitem-head">
@@ -452,13 +449,13 @@ function ContactsCard({
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function BanksCard({ bankRows, setBankField, removeBankRow, addBankRow }: any) {
   return (
     <div className="partner-card partner-card-bank">
       <DrawerSection title={`Tài khoản ngân hàng (${bankRows.length})`}>
         <div className="partner-sublist">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {}
           {bankRows.map((row: any, idx: number) => (
             <div key={row.tempId} className="partner-subitem">
               <div className="partner-subitem-head">
@@ -531,7 +528,7 @@ function BanksCard({ bankRows, setBankField, removeBankRow, addBankRow }: any) {
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function RoleCard({ form, setField }: any) {
   return (
     <div className="partner-card partner-card-role">
@@ -564,7 +561,7 @@ function RoleCard({ form, setField }: any) {
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function Check({ checked, onChange, label }: any) {
   return (
     <label className="flex items-center gap-2 cursor-pointer">

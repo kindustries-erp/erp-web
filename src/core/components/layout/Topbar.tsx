@@ -6,7 +6,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useT } from "@/core/i18n";
 import { PageKey } from "@/shared/types";
 import { triggerContextMenu } from "@/shared/components/ContextMenu";
-import { Building2, GitBranch } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";

@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { LayoutDashboard } from "lucide-react";
-import { KpiCard, KpiBadge } from "@/shared/components/KpiCard";
+import { KpiCard } from "@/shared/components/KpiCard";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
@@ -10,7 +10,6 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
@@ -114,7 +113,9 @@ export function CashflowDashboard() {
   const cashTrendOut = data?.cashTrend?.map((t: any) => t.cashOut) || [];
 
   const sourceLabels = data?.sourceBreakdown?.map((t: any) => t.label) || [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sourceIn = data?.sourceBreakdown?.map((t: any) => t.cashIn) || [];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sourceOut = data?.sourceBreakdown?.map((t: any) => t.cashOut) || [];
 
   const defaultColors = [
@@ -447,6 +448,7 @@ function LegendItem({ color, label }: { color: string; label: string }) {
 }
 
 // ── Icons ──
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function IconTrendUp() {
   return (
     <svg
@@ -464,6 +466,7 @@ function IconTrendUp() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function IconTrendDown() {
   return (
     <svg

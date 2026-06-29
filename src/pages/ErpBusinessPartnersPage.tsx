@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Building2, Trash2, Users, Pencil, Eye } from "lucide-react";
+
+import { Building2, Trash2, Users, Eye } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import {
@@ -68,10 +68,13 @@ export function ErpBusinessPartnersPage({
   desc: string;
 }) {
   const canRead = useHasPermission("business_partners", "read");
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canCreate = useHasPermission("business_partners", "create");
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canUpdate = useHasPermission("business_partners", "update");
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const canDelete = useHasPermission("business_partners", "delete");
 
