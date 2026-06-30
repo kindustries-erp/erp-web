@@ -42,6 +42,8 @@ import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { SysTagsPage } from "@/pages/SysTagsPage";
 import { BankStatementPage } from "@/pages/BankStatementPage";
+import { GeneralJournalPage } from "@/pages/finance/GeneralJournalPage";
+import { ChartOfAccountsPage } from "@/pages/finance/ChartOfAccountsPage";
 import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
 import { ThietLapQuy } from "@/pages/SettingsCashFund";
 import { SettingsBranch } from "@/pages/SettingsBranch";
@@ -80,6 +82,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "sys-tags": SysTagsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,
+  "journal-entry": GeneralJournalPage,
+  "settings-accounts": ChartOfAccountsPage,
   "settings-bank": ThietLapNganHang,
   "settings-cash-fund": ThietLapQuy,
   "settings-branch": SettingsBranch,

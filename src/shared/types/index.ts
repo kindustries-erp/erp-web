@@ -13,6 +13,7 @@ export type PageKey =
   | "payables"
   | "ledger"
   | "journal"
+  | "journal-entry"
   | "employees"
   | "departments"
   | "positions"

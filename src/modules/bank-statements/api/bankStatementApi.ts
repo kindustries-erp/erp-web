@@ -130,6 +130,14 @@ export const bankStatementApi = {
     return res.data;
   },
 
+  updateTransaction: async (id: string, data: any): Promise<any> => {
+    const res = await axiosInstance.patch(
+      `/api/v1/bank-transactions-core/transactions/${id}`,
+      data,
+    );
+    return res.data;
+  },
+
   rollbackBatch: async (batchId: string) => {
     const res = await axiosInstance.delete(
       `/api/v1/bank-transactions-core/transactions/batch/${batchId}`,

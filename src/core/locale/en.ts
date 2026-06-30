@@ -1844,4 +1844,15 @@ export const en: Dict = {
     loading: "Loading graph...",
     empty: "No connection data found.",
   },
+  accounts: {
+    title: "Chart of Accounts (TT99/2025)",
+    code: "Code",
+    name: "Account Name",
+    type: "Type",
+    asset: "Asset",
+    liability: "Liability",
+    equity: "Equity",
+    revenue: "Revenue",
+    expense: "Expense",
+  },
 };

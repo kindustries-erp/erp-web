@@ -1,9 +1,12 @@
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import {} from "@/core/i18n";
+import { Combobox } from "@/shared/components/Combobox";
 import { formatGMT7, money } from "@/shared/utils/format";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Save } from "lucide-react";
+import { accountingApi } from "@/modules/accounting/api/accountingApi";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 interface Props {
   isOpen: boolean;
@@ -21,6 +24,51 @@ export function BankTransactionDetailDrawer({
     queryFn: () => bankStatementApi.getTransaction(transactionId!),
     enabled: isOpen && !!transactionId,
   });
+
+  const queryClient = useQueryClient();
+  const { data: chartOfAccounts } = useQuery({
+    queryKey: ["chart-of-accounts", transaction?.branchId],
+    queryFn: () =>
+      accountingApi.getChartOfAccounts({ branchId: transaction?.branchId }),
+    enabled: !!transaction?.branchId,
+  });
+
+  const [selectedAccount, setSelectedAccount] = useState<string>("");
+
+  useEffect(() => {
+    if (transaction) {
+      setSelectedAccount(transaction.correspondentAccountingAccountId || "");
+    } else {
+      setSelectedAccount("");
+    }
+  }, [transaction, isOpen]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: {
+      id: string;
+      correspondentAccountingAccountId: string | null;
+    }) =>
+      bankStatementApi.updateTransaction(data.id, {
+        correspondentAccountingAccountId: data.correspondentAccountingAccountId,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["bank-transaction", transactionId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
+      toast.success(
+        "Đã cập nhật tài khoản đối ứng thành công và tự động đồng bộ sang Nhật ký chung!",
+      );
+    },
+  });
+
+  const handleSaveAccount = () => {
+    if (!transactionId) return;
+    updateMutation.mutate({
+      id: transactionId,
+      correspondentAccountingAccountId: selectedAccount || null,
+    });
+  };
 
   const openErpInvoice = (id: string) => {
     const event = new CustomEvent("open_erp_document", {
@@ -138,6 +186,45 @@ export function BankTransactionDetailDrawer({
                 Chưa có hóa đơn nào được cấn trừ.
               </div>
             )}
+          </DrawerSection>
+        )}
+        {transaction && (
+          <DrawerSection title="Hạch toán (Tài khoản đối ứng)">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">
+                  Tài khoản đối ứng
+                </label>
+                <Combobox
+                  options={
+                    chartOfAccounts?.map((acc: any) => ({
+                      value: acc.id,
+                      label: `${acc.accountCode} - ${acc.accountName}`,
+                    })) || []
+                  }
+                  value={selectedAccount}
+                  onChange={setSelectedAccount}
+                  placeholder="-- Chọn tài khoản đối ứng --"
+                  className="w-full"
+                />
+              </div>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium flex items-center gap-1"
+                onClick={handleSaveAccount}
+                disabled={
+                  updateMutation.isPending ||
+                  selectedAccount ===
+                    (transaction.correspondentAccountingAccountId || "")
+                }
+              >
+                <Save className="w-4 h-4" />
+                {updateMutation.isPending ? "Đang lưu..." : "Lưu & Hạch toán"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400 mt-2 italic">
+              * Lưu ý: Khi lưu, hệ thống sẽ tự động cập nhật hoặc phát sinh bút
+              toán Nhật ký chung tương ứng.
+            </p>
           </DrawerSection>
         )}
       </div>

@@ -375,6 +375,30 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
+            {showAccounting && (
+              <>
+                <NavItem
+                  collapsed={c}
+                  icon={
+                    <FileText className="w-4 h-4 opacity-65 flex-shrink-0" />
+                  }
+                  label={t("nav.items.reportJournal")}
+                  active={
+                    currentPage === "journal" || currentPage === "journal-entry"
+                  }
+                  onClick={() => navTo("journal-entry" as PageKey)}
+                  contextPage={"journal-entry" as PageKey}
+                />
+                <NavItem
+                  collapsed={c}
+                  icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                  label={t("nav.items.catalogAccounts")}
+                  active={currentPage === "settings-accounts"}
+                  onClick={() => navTo("settings-accounts" as PageKey)}
+                  contextPage={"settings-accounts" as PageKey}
+                />
+              </>
+            )}
           </div>
         )}
 
