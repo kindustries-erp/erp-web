@@ -8,6 +8,7 @@ import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { useAppStore } from "@/core/config/appStore";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 
 export const GeneralJournalPage = () => {
   const t = useT();
@@ -15,6 +16,9 @@ export const GeneralJournalPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [sortArray, setSortArray] = useState<string[]>(["-date"]);
+  const [selectedBankTxnId, setSelectedBankTxnId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     setCustomBreadcrumbs([
@@ -81,6 +85,10 @@ export const GeneralJournalPage = () => {
             _date: entry.date,
             _status: entry.status,
             _description: entry.description,
+            _reference: entry.reference,
+            _branch: entry.branch?.name,
+            _sourceId: entry.sourceId,
+            _sourceType: entry.sourceType,
             isFirstLine: index === 0,
             rowSpan: index === 0 ? entry.lines.length : 0,
           });
@@ -93,6 +101,10 @@ export const GeneralJournalPage = () => {
           _date: entry.date,
           _status: entry.status,
           _description: entry.description,
+          _reference: entry.reference,
+          _branch: entry.branch?.name,
+          _sourceId: entry.sourceId,
+          _sourceType: entry.sourceType,
           isFirstLine: true,
           rowSpan: 1,
         });
@@ -171,6 +183,39 @@ export const GeneralJournalPage = () => {
           </div>
         ),
       },
+      {
+        key: "_branch",
+        header: "Chi nhánh",
+        size: 150,
+        cell: (row: any) => (
+          <span className="text-gray-600 dark:text-gray-400">
+            {row._branch || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "_reference",
+        header: "Tham chiếu",
+        size: 130,
+        cell: (row: any) => {
+          if (!row._reference) return <span className="text-gray-400">-</span>;
+          if (row._sourceType === "BANK" && row._sourceId) {
+            return (
+              <span
+                className="text-blue-600 hover:underline cursor-pointer"
+                onClick={() => setSelectedBankTxnId(row._sourceId)}
+              >
+                {row._reference}
+              </span>
+            );
+          }
+          return (
+            <span className="text-gray-600 dark:text-gray-400">
+              {row._reference}
+            </span>
+          );
+        },
+      },
     ],
     [],
   );
@@ -192,33 +237,41 @@ export const GeneralJournalPage = () => {
   }, [flattenedData]);
 
   return (
-    <SpreadsheetPageTemplate
-      title={t("Nhật ký chung")}
-      icon={<BookOpen className="w-5 h-5 text-gray-700 dark:text-gray-300" />}
-      tableId="general-journal-table"
-      items={flattenedData}
-      columns={columns}
-      getRowKey={(row: any) => row._id}
-      loading={isFetching}
-      page={page}
-      pageSize={pageSize}
-      total={journalData?.total || 0}
-      totalPages={journalData?.totalPages || 0}
-      onPage={setPage}
-      onPageSize={setPageSize}
-      onRefresh={refetch}
-      filterConfig={filterConfig}
-      filter={filter}
-      sortArray={sortArray}
-      summaryRow={summaryRow}
-      onSort={(colKey) => {
-        setSortArray((prev) => {
-          const current = prev[0];
-          if (current === colKey) return [`-${colKey}`];
-          if (current === `-${colKey}`) return [];
-          return [colKey];
-        });
-      }}
-    />
+    <>
+      <SpreadsheetPageTemplate
+        title={t("Nhật ký chung")}
+        icon={<BookOpen className="w-5 h-5 text-gray-700 dark:text-gray-300" />}
+        tableId="general-journal-table"
+        items={flattenedData}
+        columns={columns}
+        getRowKey={(row: any) => row._id}
+        loading={isFetching}
+        page={page}
+        pageSize={pageSize}
+        total={journalData?.total || 0}
+        totalPages={journalData?.totalPages || 0}
+        onPage={setPage}
+        onPageSize={setPageSize}
+        onRefresh={refetch}
+        filterConfig={filterConfig}
+        filter={filter}
+        sortArray={sortArray}
+        summaryRow={summaryRow}
+        onSort={(colKey) => {
+          setSortArray((prev) => {
+            const current = prev[0];
+            if (current === colKey) return [`-${colKey}`];
+            if (current === `-${colKey}`) return [];
+            return [colKey];
+          });
+        }}
+      />
+
+      <BankTransactionDetailDrawer
+        isOpen={!!selectedBankTxnId}
+        onClose={() => setSelectedBankTxnId(null)}
+        transactionId={selectedBankTxnId}
+      />
+    </>
   );
 };
