@@ -46,6 +46,12 @@ export interface ErpInvoice {
   createdAt?: string;
   updatedAt?: string;
   items?: ErpInvoiceItem[];
+  voucherNetOffs?: {
+    id: string;
+    bankTransactionId: string;
+    netOffAmount: number;
+    bankTransaction?: any;
+  }[];
 }
 
 export interface CreateErpInvoicePayload {
@@ -202,6 +208,27 @@ export const erpInvoicesCoreApi = {
       `${BASE}/portal/sync`,
       payload,
       { timeout: 300000 },
+    );
+    return data;
+  },
+
+  linkVouchers: async (
+    id: string,
+    payload: { bankTransactionId: string; netOffAmount?: number }[],
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.post<{ message: string }>(
+      `${BASE}/${id}/net-off-vouchers`,
+      payload,
+    );
+    return data;
+  },
+
+  removeVoucherLink: async (
+    id: string,
+    voucherId: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.delete<{ message: string }>(
+      `${BASE}/${id}/net-off-vouchers/${voucherId}`,
     );
     return data;
   },

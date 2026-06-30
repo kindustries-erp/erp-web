@@ -55,6 +55,13 @@ export const bankStatementApi = {
     return res.data;
   },
 
+  getTransaction: async (id: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/transactions/${id}`,
+    );
+    return res.data;
+  },
+
   getDashboardStats: async (params: {
     startDate?: string;
     endDate?: string;

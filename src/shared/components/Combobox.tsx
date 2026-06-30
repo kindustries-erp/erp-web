@@ -45,6 +45,9 @@ export function Combobox({
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
+
   const selected = options.find((o) => o.value === value);
 
   const filtered = query.trim()
@@ -69,16 +72,19 @@ export function Combobox({
       return () => cancelAnimationFrame(id);
     } else {
       setQuery("");
-      if (onSearch) onSearch("");
+      if (onSearchRef.current) onSearchRef.current("");
     }
-  }, [open, onSearch]);
+  }, [open]);
 
   useEffect(() => {
-    if (onSearch) {
-      const id = setTimeout(() => onSearch(query), 300);
+    if (onSearchRef.current) {
+      const id = setTimeout(
+        () => onSearchRef.current && onSearchRef.current(query),
+        300,
+      );
       return () => clearTimeout(id);
     }
-  }, [query, onSearch]);
+  }, [query]);
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>

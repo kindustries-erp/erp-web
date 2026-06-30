@@ -35,6 +35,8 @@ import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/Er
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceXmlUploadDrawer } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadDrawer";
 import { PortalSyncDrawer } from "@/modules/erp-invoices-core/components/PortalSyncDrawer";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
+import { ErpInvoiceNetOffSection } from "@/modules/erp-invoices-core/components/ErpInvoiceNetOffSection";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
@@ -53,6 +55,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
   const [xmlModalOpen, setXmlModalOpen] = useState(false);
   const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
+    null,
+  );
 
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
@@ -75,6 +80,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       const detail = (e as CustomEvent).detail;
       if (detail && detail.type === "erp_invoice" && detail.id) {
         formHook.openDetail({ id: detail.id } as ErpInvoice);
+      } else if (detail && detail.type === "bank_transaction" && detail.id) {
+        setDetailTransactionId(detail.id);
       }
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
@@ -305,12 +312,126 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         className: "text-right font-semibold w-[120px]",
         cell: (inv) => fmtAmt(inv.totalAmount),
       },
+      {
+        key: "netOffAmount",
+        header: t("invoice.columns.netOffAmount", "Đã cấn trừ"),
+        headerClassName: "text-center w-[120px]",
+        className: "text-right w-[120px]",
+        cell: (inv: any) => {
+          const netOff = parseFloat(inv.netOffAmount) || 0;
+          if (netOff === 0) return "--";
+          return (
+            <span className="text-blue-600">{fmtAmt(inv.netOffAmount)}</span>
+          );
+        },
+      },
+      {
+        key: "remainingAmount",
+        header: t("invoice.columns.remainingAmount", "Còn lại"),
+        headerClassName: "text-center w-[120px]",
+        className: "text-right font-semibold w-[120px]",
+        cell: (inv: any) => {
+          const total = parseFloat(inv.totalAmount) || 0;
+          const netOff = parseFloat(inv.netOffAmount) || 0;
+          const remaining = total - netOff;
+          if (remaining === 0)
+            return <span className="text-emerald-600">0</span>;
+          return (
+            <span className="text-orange-600">
+              {fmtAmt(remaining.toString())}
+            </span>
+          );
+        },
+      },
     ],
     [direction, t],
   );
 
   const activeSortKey = listHook.sortBy;
   const activeSortOrder = listHook.sortOrder;
+
+  const summaryRow = useMemo(() => {
+    if (!listHook.invoices || listHook.invoices.length === 0) return undefined;
+
+    const totalPreVatAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.preVatAmount) || 0),
+      0,
+    );
+    const totalVatAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.vatAmount) || 0),
+      0,
+    );
+    const totalDiscountAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.discountAmount) || 0),
+      0,
+    );
+    const totalTotalAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.totalAmount) || 0),
+      0,
+    );
+    const totalNetOff = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
+      0,
+    );
+    const totalRemaining = listHook.invoices.reduce(
+      (acc: number, curr: any) =>
+        acc +
+        ((parseFloat(curr.totalAmount) || 0) -
+          (parseFloat(curr.netOffAmount) || 0)),
+      0,
+    );
+
+    return {
+      preVatAmount:
+        totalPreVatAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-medium">
+            {fmtAmt(totalPreVatAmount.toString())}
+          </span>
+        ),
+      vatAmount:
+        totalVatAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-medium">
+            {fmtAmt(totalVatAmount.toString())}
+          </span>
+        ),
+      discountAmount:
+        totalDiscountAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-medium">
+            {fmtAmt(totalDiscountAmount.toString())}
+          </span>
+        ),
+      totalAmount:
+        totalTotalAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-semibold">
+            {fmtAmt(totalTotalAmount.toString())}
+          </span>
+        ),
+      netOffAmount:
+        totalNetOff === 0 ? (
+          "--"
+        ) : (
+          <span className="text-blue-600 font-medium">
+            {fmtAmt(totalNetOff.toString())}
+          </span>
+        ),
+      remainingAmount:
+        totalRemaining === 0 ? (
+          <span className="text-emerald-600 font-medium">0</span>
+        ) : (
+          <span className="text-orange-600 font-medium">
+            {fmtAmt(totalRemaining.toString())}
+          </span>
+        ),
+    };
+  }, [listHook.invoices]);
 
   return (
     <>
@@ -326,6 +447,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         items={listHook.invoices}
         columns={columns}
         getRowKey={(r) => r.id}
+        summaryRow={summaryRow}
         loading={listHook.loading}
         emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
         minWidth={1200}
@@ -451,34 +573,48 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onDownload={handleDownload}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
-      >
-        <div className="flex flex-col gap-5">
-          {formHook.formError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-              {formHook.formError}
-            </div>
-          )}
-          <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
+        leftPanel={
+          <div className="flex flex-col gap-5">
+            {formHook.formError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+                {formHook.formError}
+              </div>
+            )}
             <ErpInvoiceFormItems
               form={formHook.form}
               editMode={formHook.editMode}
               setForm={formHook.setForm}
               fmtAmt={fmtAmt}
             />
-            <ErpInvoiceFormGeneral
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key, value) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              fmtAmt={fmtAmt}
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-            />
+            {formHook.detailInvoice?.id && (
+              <ErpInvoiceNetOffSection
+                invoiceId={formHook.detailInvoice.id}
+                direction={direction}
+                voucherNetOffs={formHook.detailInvoice.voucherNetOffs || []}
+                editMode={formHook.editMode}
+                onRefresh={() =>
+                  formHook.openDetail({
+                    id: formHook.detailInvoice!.id,
+                  } as ErpInvoice)
+                }
+              />
+            )}
           </div>
-        </div>
-      </ErpInvoiceDrawer>
+        }
+        rightPanel={
+          <ErpInvoiceFormGeneral
+            form={formHook.form}
+            editMode={formHook.editMode}
+            fieldSet={(key, value) =>
+              formHook.setForm((prev) => ({ ...prev, [key]: value }))
+            }
+            fmtAmt={fmtAmt}
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pendingTagIds={formHook.pendingTagIds}
+            onPendingTagsChange={formHook.setPendingTagIds}
+          />
+        }
+      />
 
       <ConfirmModal
         open={formHook.deleteConfirm}
@@ -521,6 +657,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             void listHook.loadInvoices();
           }
         }}
+      />
+
+      <BankTransactionDetailDrawer
+        isOpen={!!detailTransactionId}
+        onClose={() => setDetailTransactionId(null)}
+        transactionId={detailTransactionId}
       />
     </>
   );

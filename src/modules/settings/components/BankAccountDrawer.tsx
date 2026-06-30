@@ -99,10 +99,10 @@ export function BankAccountDrawer({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["bank-accounts", currentBranchId],
+        queryKey: ["bank-accounts"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["bankAccounts", currentBranchId],
+        queryKey: ["bankAccounts"],
       });
       onSuccess();
       onClose();

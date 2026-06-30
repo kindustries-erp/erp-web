@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Building2 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -22,6 +23,7 @@ import { SectionHeader, IconEdit, IconTrash } from "./shared";
 
 export function BranchTab() {
   const t = useT();
+  const queryClient = useQueryClient();
   const [items, setItems] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -128,6 +130,8 @@ export function BranchTab() {
                 if (editing) await updateBranchApi(editing.id, dto);
                 else await createBranchApi(dto);
                 setOpen(false);
+                queryClient.invalidateQueries({ queryKey: ["branchOptions"] });
+                queryClient.invalidateQueries({ queryKey: ["branches:list"] });
                 load();
               } catch (error: any) {
                 const message =
@@ -174,6 +178,8 @@ export function BranchTab() {
         onConfirm={async () => {
           if (del) await deleteBranchApi(del.id);
           setDel(null);
+          queryClient.invalidateQueries({ queryKey: ["branchOptions"] });
+          queryClient.invalidateQueries({ queryKey: ["branches:list"] });
           load();
         }}
       />
