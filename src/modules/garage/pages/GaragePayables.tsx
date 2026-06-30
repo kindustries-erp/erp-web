@@ -1,0 +1,158 @@
+import React, { useMemo, useState } from "react";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { useGaragePayables, useSyncGaragePayables } from "../hooks/useGarage";
+import { useGarageStore } from "../store/garageStore";
+import { GarageBranchSelector } from "../components/GarageBranchSelector";
+import { DrawerModal } from "@/shared/components/DrawerModal";
+import { RefreshCw, WalletCards } from "lucide-react";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+
+export function GaragePayables() {
+  const { selectedBranchId } = useGarageStore();
+
+  const filterConfig = useMemo(() => {
+    return {
+      period: true,
+      noDefaultPeriod: true,
+      custom: [],
+    };
+  }, []);
+
+  const filter = useFilterPanel(filterConfig, () => {});
+
+  const {
+    data: items,
+    isLoading,
+    refetch,
+  } = useGaragePayables(selectedBranchId);
+  const { mutate: syncData, isPending: isSyncing } = useSyncGaragePayables();
+
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+
+  const columns = [
+    {
+      key: "code",
+      header: "Mã Phiếu Chi",
+      sortable: true,
+      cell: (item: any) => (
+        <span className="font-medium text-red-600">{item.code}</span>
+      ),
+    },
+    {
+      key: "name",
+      header: "Tên Nhà Cung Cấp",
+      sortable: true,
+      cell: (item: any) => item.name,
+    },
+    {
+      key: "totalAmount",
+      header: "Tổng Tiền",
+      sortable: true,
+      cell: (item: any) =>
+        new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(item.totalAmount) || 0),
+    },
+    {
+      key: "paidAmount",
+      header: "Đã Thanh Toán",
+      sortable: true,
+      cell: (item: any) =>
+        new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(item.paidAmount) || 0),
+    },
+  ];
+
+  const handleSync = () => {
+    if (!selectedBranchId) return;
+    syncData({
+      branchId: selectedBranchId,
+      from: filter.state.dateFrom || undefined,
+      to: filter.state.dateTo || undefined,
+    });
+  };
+
+  return (
+    <>
+      <SpreadsheetPageTemplate
+        title="Garage Payables"
+        desc="Manage synced payables from Greenway"
+        icon={<WalletCards className="w-5 h-5 text-red-600" />}
+        tableId="garage-payables-table"
+        items={items || []}
+        columns={columns}
+        getRowKey={(item: any) => item.id}
+        loading={isLoading}
+        onRefresh={() => refetch()}
+        filterConfig={filterConfig}
+        filter={filter}
+        customActionsNode={<GarageBranchSelector />}
+        extraActions={
+          <button
+            onClick={handleSync}
+            disabled={!selectedBranchId || isSyncing}
+            className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            Sync Payables
+          </button>
+        }
+        onRowClick={(item) => setSelectedItem(item)}
+        page={1}
+        pageSize={items?.length || 10}
+        total={items?.length || 0}
+        totalPages={1}
+        onPage={() => {}}
+        onPageSize={() => {}}
+      />
+
+      <DrawerModal
+        open={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        title={`Payable Details: ${selectedItem?.code || ""}`}
+      >
+        {selectedItem && (
+          <div className="p-4 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-sm text-gray-500">Supplier Name</span>
+                <p className="font-medium">{selectedItem.name}</p>
+              </div>
+              <div>
+                <span className="text-sm text-gray-500">Total Amount</span>
+                <p className="font-medium text-red-600">
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(Number(selectedItem.totalAmount) || 0)}
+                </p>
+              </div>
+              <div>
+                <span className="text-sm text-gray-500">Paid Amount</span>
+                <p className="font-medium text-green-600">
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(Number(selectedItem.paidAmount) || 0)}
+                </p>
+              </div>
+            </div>
+            {selectedItem.rawData && (
+              <div className="mt-6">
+                <h4 className="text-sm font-semibold mb-2">Raw JSON Data</h4>
+                <pre className="bg-gray-50 p-4 rounded-md text-xs overflow-auto max-h-96">
+                  {JSON.stringify(selectedItem.rawData, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
+      </DrawerModal>
+    </>
+  );
+}

@@ -3,7 +3,8 @@ import type { Dict } from "./vi";
 export const en: Dict = {
   nav: {
     appName: "ERP System",
-    appSubtitle: "Enterprise Management",
+    appSubtitle: "Business Management",
+    searchPlaceholder: "Search menu...",
     sections: {
       accounting: "ACCOUNTING",
       hr: "HR",
@@ -81,6 +82,11 @@ export const en: Dict = {
       catalogRoles: "Partner Roles",
       catalogOpeningBalance: "Opening Balances",
       catalogVoucherNumbering: "Voucher Numbering",
+      garage: "Garage",
+      garageDashboard: "Garage Dashboard",
+      garageCases: "Garage Cases",
+      garageReceivables: "Garage Receivables",
+      garagePayables: "Garage Payables",
     },
     bottom: {
       themeLight: "Light mode",

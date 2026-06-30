@@ -46,6 +46,10 @@ import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
 import { ThietLapQuy } from "@/pages/SettingsCashFund";
 import { SettingsBranch } from "@/pages/SettingsBranch";
 import { CashflowDashboard } from "@/pages/CashflowDashboard";
+import { GarageDashboard } from "@/modules/garage/pages/GarageDashboard";
+import { GarageCases } from "@/modules/garage/pages/GarageCases";
+import { GarageReceivables } from "@/modules/garage/pages/GarageReceivables";
+import { GaragePayables } from "@/modules/garage/pages/GaragePayables";
 
 import { PageKey } from "@/shared/types";
 
@@ -79,6 +83,10 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "settings-bank": ThietLapNganHang,
   "settings-cash-fund": ThietLapQuy,
   "settings-branch": SettingsBranch,
+  "garage-dashboard": GarageDashboard,
+  "garage-cases": GarageCases,
+  "garage-receivables": GarageReceivables,
+  "garage-payables": GaragePayables,
 };
 
 export default function App() {

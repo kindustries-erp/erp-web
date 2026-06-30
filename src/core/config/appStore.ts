@@ -129,6 +129,22 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.cashflowDashboard",
     group: "accounting",
   },
+  "garage-dashboard": {
+    labelKey: "nav.items.garageDashboard",
+    group: "garage",
+  },
+  "garage-cases": {
+    labelKey: "nav.items.garageCases",
+    group: "garage",
+  },
+  "garage-receivables": {
+    labelKey: "nav.items.garageReceivables",
+    group: "garage",
+  },
+  "garage-payables": {
+    labelKey: "nav.items.garagePayables",
+    group: "garage",
+  },
 };
 
 export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
@@ -206,6 +222,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
   "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
   "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
+  "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
+  "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
+  "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
+  "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
 };
 
 interface AppState {
@@ -239,6 +259,8 @@ interface AppState {
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
   preloadTab: (page: PageKey) => void;
+  sidebarSearchQuery: string;
+  setSidebarSearchQuery: (q: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -255,10 +277,12 @@ export const useAppStore = create<AppState>()(
       companyProfileOpen: false,
       currentBranchId: null,
       customBreadcrumbs: null,
+      sidebarSearchQuery: "",
 
       setForbidden: (value) => set({ forbidden: value }),
       setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
+      setSidebarSearchQuery: (q) => set({ sidebarSearchQuery: q }),
 
       navigate: (page) => {
         const { openTabs } = get();

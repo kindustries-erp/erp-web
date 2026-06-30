@@ -2,6 +2,7 @@ export const vi = {
   nav: {
     appName: "Hệ thống ERP",
     appSubtitle: "Quản trị doanh nghiệp",
+    searchPlaceholder: "Tìm kiếm menu...",
     sections: {
       accounting: "KẾ TOÁN",
       hr: "NHÂN SỰ",
@@ -79,6 +80,11 @@ export const vi = {
       catalogRoles: "Vai trò đối tác",
       catalogOpeningBalance: "Số dư đầu kỳ",
       catalogVoucherNumbering: "Số thứ tự CT",
+      garage: "Garage",
+      garageDashboard: "Tổng quan Garage",
+      garageCases: "Quản lý Cases",
+      garageReceivables: "Phải thu từ Garage",
+      garagePayables: "Phải trả cho Garage",
     },
     bottom: {
       themeLight: "Giao diện sáng",
