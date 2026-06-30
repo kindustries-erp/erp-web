@@ -409,6 +409,8 @@ export const vi = {
       description: "Diễn giải",
       debit: "Nợ",
       credit: "Có",
+      debitAccount: "TK Nợ",
+      creditAccount: "TK Có",
       status: "Trạng thái",
     },
     status: {

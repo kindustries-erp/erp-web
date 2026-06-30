@@ -77,6 +77,23 @@ export const GeneralJournalPage = () => {
     const result: any[] = [];
     journalData.items.forEach((entry: any) => {
       if (entry.lines && entry.lines.length > 0) {
+        const debitAccounts = Array.from(
+          new Set(
+            entry.lines
+              .filter((l: any) => Number(l.debit) > 0 && l.account?.accountCode)
+              .map((l: any) => l.account.accountCode),
+          ),
+        ).join(", ");
+        const creditAccounts = Array.from(
+          new Set(
+            entry.lines
+              .filter(
+                (l: any) => Number(l.credit) > 0 && l.account?.accountCode,
+              )
+              .map((l: any) => l.account.accountCode),
+          ),
+        ).join(", ");
+
         entry.lines.forEach((line: any, index: number) => {
           result.push({
             ...line,
@@ -89,6 +106,8 @@ export const GeneralJournalPage = () => {
             _branch: entry.branch?.name,
             _sourceId: entry.sourceId,
             _sourceType: entry.sourceType,
+            _entryDebitAccounts: debitAccounts,
+            _entryCreditAccounts: creditAccounts,
             isFirstLine: index === 0,
             rowSpan: index === 0 ? entry.lines.length : 0,
           });
@@ -116,6 +135,12 @@ export const GeneralJournalPage = () => {
   const columns = useMemo(
     () => [
       {
+        key: "_date",
+        header: "Ngày hạch toán",
+        size: 130,
+        cell: (row: any) => <span>{formatGMT7(row._date, "date")}</span>,
+      },
+      {
         key: "_entryNo",
         header: "Số CT",
         size: 120,
@@ -126,18 +151,29 @@ export const GeneralJournalPage = () => {
         ),
       },
       {
-        key: "_date",
-        header: "Ngày hạch toán",
-        size: 130,
-        cell: (row: any) => <span>{formatGMT7(row._date, "date")}</span>,
+        key: "debitAccount",
+        header: t("journalEntries.columns.debitAccount") || "TK Nợ",
+        size: 80,
+        cell: (row: any) => {
+          const isDebit = Number(row.debit) > 0;
+          return (
+            <span className="font-mono text-sm">
+              {isDebit ? row._entryCreditAccounts : row._entryDebitAccounts}
+            </span>
+          );
+        },
       },
       {
-        key: "account.accountCode",
-        header: "TK",
+        key: "creditAccount",
+        header: t("journalEntries.columns.creditAccount") || "TK Có",
         size: 80,
-        cell: (row: any) => (
-          <span className="font-mono text-sm">{row.account?.accountCode}</span>
-        ),
+        cell: (row: any) => {
+          return (
+            <span className="font-mono text-sm">
+              {row.account?.accountCode}
+            </span>
+          );
+        },
       },
       {
         key: "debit",
@@ -217,7 +253,7 @@ export const GeneralJournalPage = () => {
         },
       },
     ],
-    [],
+    [t],
   );
 
   const summaryRow = useMemo(() => {

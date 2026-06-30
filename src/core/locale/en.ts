@@ -410,12 +410,14 @@ export const en: Dict = {
       reset: "Reset filters",
     },
     columns: {
-      voucherNo: "Voucher no.",
+      voucherNo: "Voucher No.",
       date: "Date",
       period: "Period",
       description: "Description",
       debit: "Debit",
       credit: "Credit",
+      debitAccount: "Debit Acc.",
+      creditAccount: "Credit Acc.",
       status: "Status",
     },
     status: {
