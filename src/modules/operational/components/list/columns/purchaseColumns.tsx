@@ -15,17 +15,11 @@ import type {
   OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
 import { StatusBadge } from "@/shared/components/badges";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
   expandedRowIds: Record<string, boolean>;
   onToggleExpand: (key: string) => void;
-  isAdminEmail?: boolean;
-  /** When true, renders a loading skeleton in the tags column instead of
-   *  EntityTagSelector, preventing per-row API calls while the batch request
-   *  is still in-flight. */
-  isTagsLoading?: boolean;
 }
 
 /**
@@ -36,8 +30,6 @@ export function usePurchaseColumns({
   variant,
   expandedRowIds,
   onToggleExpand,
-  isAdminEmail,
-  isTagsLoading,
 }: UsePurchaseColumnsOptions): DataTableColumn<OperationalDocument>[] {
   const t = useT();
   return useMemo<DataTableColumn<OperationalDocument>[]>(
@@ -203,32 +195,7 @@ export function usePurchaseColumns({
           );
         },
       },
-      ...(isAdminEmail
-        ? [
-            {
-              key: "tags",
-              header: t("Thẻ nhãn"),
-              size: 160,
-              enableResizing: true,
-              className: "!py-2 align-middle text-left",
-              headerClassName: "text-center",
-              cell: (row: OperationalDocument) => (
-                <div onClick={(e) => e.stopPropagation()}>
-                  {isTagsLoading ? (
-                    <div className="h-5 w-16 animate-pulse bg-slate-200 rounded dark:bg-slate-700" />
-                  ) : (
-                    <EntityTagSelector
-                      entityType="erp_purchase_order"
-                      entityId={row.id}
-                      readOnly
-                    />
-                  )}
-                </div>
-              ),
-            },
-          ]
-        : []),
     ],
-    [expandedRowIds, onToggleExpand, t, variant, isAdminEmail, isTagsLoading],
+    [expandedRowIds, onToggleExpand, t, variant],
   );
 }

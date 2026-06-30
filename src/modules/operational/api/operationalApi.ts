@@ -259,6 +259,8 @@ function params(input: ListParams = {}) {
     ...((input as any).inventory_item_id
       ? { inventory_item_id: (input as any).inventory_item_id }
       : {}),
+
+    ...((input as any).tag_id ? { tag_id: (input as any).tag_id } : {}),
   };
 }
 

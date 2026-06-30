@@ -1,7 +1,6 @@
 import { FileText, PackagePlus, Network } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { useQueryClient } from "@tanstack/react-query";
-import { useBatchEntityTags } from "@/modules/tags/hooks/useTags";
+
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
@@ -18,7 +17,7 @@ import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperatio
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
@@ -94,43 +93,6 @@ export function PurchaseOrderListPage() {
   const loading = listQuery.isLoading || listQuery.isFetching;
   const items = (listQuery.data?.items || []) as OperationalDocument[];
 
-  // Pre-fetch tags for all purchase order rows using batch endpoint.
-  // useMemo stabilises the array reference so the batch query key stays the
-  // same between renders and React Query does not fire a new batch request on
-  // every render cycle.
-  const batchQueries = useMemo(
-    () =>
-      items.map((row) => ({
-        entityType: "erp_purchase_order",
-        entityId: row.id,
-      })),
-    [items],
-  );
-  const { data: batchTagResults = [], isLoading: batchLoading } =
-    useBatchEntityTags(isAdminEmail ? batchQueries : []);
-  const queryClient = useQueryClient();
-  const [isTagsCacheReady, setIsTagsCacheReady] = useState(false);
-
-  // Populate individual entity tag caches so useEntityTags hooks read from cache
-  useEffect(() => {
-    if (batchLoading) {
-      setIsTagsCacheReady(false);
-      return;
-    }
-
-    if (!batchLoading && batchTagResults.length > 0) {
-      batchTagResults.forEach((tags, idx) => {
-        const entityId = batchQueries[idx].entityId;
-        queryClient.setQueryData(
-          ["sys-tags", "entity", "erp_purchase_order", entityId],
-          tags,
-        );
-      });
-      setIsTagsCacheReady(true);
-    } else if (!batchLoading && batchTagResults.length === 0) {
-      setIsTagsCacheReady(true);
-    }
-  }, [batchLoading, batchTagResults, queryClient, batchQueries]);
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
@@ -163,8 +125,6 @@ export function PurchaseOrderListPage() {
     variant: "purchase",
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
-    isAdminEmail,
-    isTagsLoading: !isTagsCacheReady,
   });
 
   return (
