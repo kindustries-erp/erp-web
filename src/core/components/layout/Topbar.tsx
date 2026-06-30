@@ -151,7 +151,7 @@ export function Topbar() {
             value={sidebarSearchQuery}
             onChange={setSidebarSearchQuery}
             placeholder={t("nav.searchPlaceholder")}
-            className="w-64 text-xs h-8"
+            className="w-56 text-xs h-8"
           />
         </div>
 
