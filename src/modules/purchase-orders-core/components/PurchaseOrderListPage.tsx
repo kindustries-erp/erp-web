@@ -109,9 +109,16 @@ export function PurchaseOrderListPage() {
   const { data: batchTagResults = [], isLoading: batchLoading } =
     useBatchEntityTags(isAdminEmail ? batchQueries : []);
   const queryClient = useQueryClient();
+  const [isTagsCacheReady, setIsTagsCacheReady] = useState(false);
+
   // Populate individual entity tag caches so useEntityTags hooks read from cache
   useEffect(() => {
-    if (!batchLoading && batchTagResults.length) {
+    if (batchLoading) {
+      setIsTagsCacheReady(false);
+      return;
+    }
+
+    if (!batchLoading && batchTagResults.length > 0) {
       batchTagResults.forEach((tags, idx) => {
         const entityId = batchQueries[idx].entityId;
         queryClient.setQueryData(
@@ -119,6 +126,9 @@ export function PurchaseOrderListPage() {
           tags,
         );
       });
+      setIsTagsCacheReady(true);
+    } else if (!batchLoading && batchTagResults.length === 0) {
+      setIsTagsCacheReady(true);
     }
   }, [batchLoading, batchTagResults, queryClient, batchQueries]);
   const total = listQuery.data?.total || 0;
@@ -154,7 +164,7 @@ export function PurchaseOrderListPage() {
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
     isAdminEmail,
-    isTagsLoading: batchLoading,
+    isTagsLoading: !isTagsCacheReady,
   });
 
   return (

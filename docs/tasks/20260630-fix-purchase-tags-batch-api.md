@@ -14,16 +14,19 @@ When navigating to `/purchasing`, the API `/api/v1/sys-tags/entity-tags/list?ent
 ## Fix
 
 ### File 1: `PurchaseOrderListPage.tsx`
+
 - Import `useMemo` from `"react"`.
 - Wrap `batchQueries` in `useMemo(() => ..., [items])` to stabilize the reference.
 - Pass `batchLoading` as `isTagsLoading` prop to `usePurchaseColumns`.
 
 ### File 2: `purchaseColumns.tsx`
+
 - Add `isTagsLoading?: boolean` to `UsePurchaseColumnsOptions`.
 - Add `isTagsLoading` to `useMemo` dependency array.
 - In the `tags` column cell: render a skeleton when `isTagsLoading`, otherwise render `EntityTagSelector`.
 
 ## Verification
+
 - [ ] Only 1 POST to `/entity-tags/batch` on page load.
 - [ ] No individual `/entity-tags/list` requests fired on page load.
 - [ ] Tag display correct after batch resolves.
