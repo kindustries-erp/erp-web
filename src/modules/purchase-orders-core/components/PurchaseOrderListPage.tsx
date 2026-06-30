@@ -18,7 +18,7 @@ import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperatio
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
@@ -94,11 +94,18 @@ export function PurchaseOrderListPage() {
   const loading = listQuery.isLoading || listQuery.isFetching;
   const items = (listQuery.data?.items || []) as OperationalDocument[];
 
-  // Pre-fetch tags for all purchase order rows using batch endpoint
-  const batchQueries = items.map((row) => ({
-    entityType: "erp_purchase_order",
-    entityId: row.id,
-  }));
+  // Pre-fetch tags for all purchase order rows using batch endpoint.
+  // useMemo stabilises the array reference so the batch query key stays the
+  // same between renders and React Query does not fire a new batch request on
+  // every render cycle.
+  const batchQueries = useMemo(
+    () =>
+      items.map((row) => ({
+        entityType: "erp_purchase_order",
+        entityId: row.id,
+      })),
+    [items],
+  );
   const { data: batchTagResults = [], isLoading: batchLoading } =
     useBatchEntityTags(isAdminEmail ? batchQueries : []);
   const queryClient = useQueryClient();
@@ -147,6 +154,7 @@ export function PurchaseOrderListPage() {
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
     isAdminEmail,
+    isTagsLoading: batchLoading,
   });
 
   return (
