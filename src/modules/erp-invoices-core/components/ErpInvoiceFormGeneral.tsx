@@ -8,6 +8,7 @@ import {
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 
 interface Props {
   form: CreateErpInvoicePayload;
@@ -34,6 +35,13 @@ export function ErpInvoiceFormGeneral({
 
   const [relatedPos, setRelatedPos] = useState<ErpPurchaseOrder[]>([]);
   const [loadingPos, setLoadingPos] = useState(false);
+  const [branchOptions, setBranchOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+
+  useEffect(() => {
+    getBranchOptionsApi().then(setBranchOptions).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!editMode && form.invoiceNo && form.direction === "IN") {
@@ -63,6 +71,27 @@ export function ErpInvoiceFormGeneral({
   return (
     <>
       <div className="space-y-4">
+        <DrawerField label={t("branchId", "Chi nhánh")}>
+          {editMode ? (
+            <select
+              className={inputCls}
+              value={form.branchId || ""}
+              onChange={(e) => fieldSet("branchId", e.target.value)}
+            >
+              <option value="">-- Chọn chi nhánh --</option>
+              {branchOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="font-medium">
+              {branchOptions.find((o) => o.value === form.branchId)?.label ||
+                "—"}
+            </div>
+          )}
+        </DrawerField>
         <DrawerField label={t("invoiceNo", "Số HĐ")}>
           {editMode ? (
             <input
@@ -250,30 +279,6 @@ export function ErpInvoiceFormGeneral({
         {t("relatedDocs", "Chứng từ liên quan")}
       </div>
       <div className="space-y-4">
-        <DrawerField label="Chứng từ thanh toán">
-          {editMode ? (
-            <div className="flex gap-2">
-              <input
-                className={inputCls}
-                placeholder="Nhập số phiếu thu/chi (cách nhau dấu phẩy)"
-                value={form.paymentDocumentNos || ""}
-                onChange={(e) => fieldSet("paymentDocumentNos", e.target.value)}
-              />
-              <button
-                type="button"
-                className="px-3 py-1 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 flex-shrink-0"
-                onClick={() =>
-                  alert("Tính năng tạo phiếu thu/chi đang được phát triển.")
-                }
-              >
-                + Tạo nhanh
-              </button>
-            </div>
-          ) : (
-            <div>{form.paymentDocumentNos || "—"}</div>
-          )}
-        </DrawerField>
-
         {!editMode && form.direction === "IN" && (
           <div className="mt-4">
             <div className="text-sm font-medium mb-2">Đơn mua hàng (PO)</div>

@@ -16,6 +16,7 @@ export interface ErpInvoiceItem {
 
 export interface ErpInvoice {
   id: string;
+  branchId?: string | null;
   invoiceNo: string;
   serialNo?: string | null;
   invoiceDate: string;
@@ -55,6 +56,7 @@ export interface ErpInvoice {
 }
 
 export interface CreateErpInvoicePayload {
+  branchId?: string;
   invoiceNo: string;
   serialNo?: string;
   invoiceDate: string;
