@@ -13,6 +13,7 @@ import {
   XCircle,
   Printer,
   Eye,
+  FileSpreadsheet,
 } from "lucide-react";
 import { formatGMT7 } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -104,6 +105,7 @@ export function ErpWarehouseTab() {
     data: GoodsIssuePrintData;
   } | null>(null);
   const [printTargetId, setPrintTargetId] = useState<string | null>(null);
+  const [xlsxExportingId, setXlsxExportingId] = useState<string | null>(null);
 
   const handlePrintGr = useReactToPrint({
     contentRef: printGrRef,
@@ -219,6 +221,39 @@ export function ErpWarehouseTab() {
       console.error(e);
       setPrintTargetId(null);
       showToast({ title: "Lỗi tải dữ liệu in", variant: "destructive" });
+    }
+  };
+
+  const handleExportXlsx = async (row: WarehouseRow) => {
+    try {
+      setXlsxExportingId(row.id);
+      let blob: Blob;
+      let filename = "";
+      if (row.type === "receipt") {
+        blob = await goodsReceiptsCoreApi.exportXlsx(row.id);
+        filename = `PhieuNhapKho_${row.voucherNo}.xlsx`;
+      } else {
+        blob = await goodsIssuesCoreApi.exportXlsx(row.id);
+        filename = `PhieuXuatKho_${row.voucherNo}.xlsx`;
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export XLSX error:", error);
+      showToast({
+        title: t("Lỗi xuất file"),
+        description: t("Không thể xuất file XLSX, vui lòng thử lại sau."),
+        variant: "destructive",
+      });
+    } finally {
+      setXlsxExportingId(null);
     }
   };
 
@@ -505,6 +540,13 @@ export function ErpWarehouseTab() {
             hidden: row.status === "DRAFT" || !isAdmin,
             disabled: !!printTargetId,
             onClick: () => handlePrintRow(row),
+          },
+          {
+            label: t("Xuất XLSX"),
+            icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+            hidden: row.status === "DRAFT",
+            disabled: xlsxExportingId === row.id,
+            onClick: () => handleExportXlsx(row),
           },
           {
             label: t("Xóa"),

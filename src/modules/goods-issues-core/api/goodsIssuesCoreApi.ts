@@ -113,6 +113,12 @@ export const goodsIssuesCoreApi = {
     );
     return data.data;
   },
+  exportXlsx: async (id: string): Promise<Blob> => {
+    const response = await axiosInstance.get(`${BASE}/${id}/export-xlsx`, {
+      responseType: "blob",
+    });
+    return response.data;
+  },
   cancel: async (id: string): Promise<ErpGoodsIssue> => {
     const { data } = await axiosInstance.post<GiDetailResponse>(
       `${BASE}/${id}/cancel`,

@@ -103,6 +103,12 @@ export const goodsReceiptsCoreApi = {
     );
     return data.data;
   },
+  exportXlsx: async (id: string): Promise<Blob> => {
+    const response = await axiosInstance.get(`${BASE}/${id}/export-xlsx`, {
+      responseType: "blob",
+    });
+    return response.data;
+  },
   nextNo: async (date?: string): Promise<string> => {
     const { data } = await axiosInstance.get<{ nextNo: string }>(
       `${BASE}/next-no`,
