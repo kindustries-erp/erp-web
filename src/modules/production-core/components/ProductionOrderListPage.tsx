@@ -7,6 +7,7 @@ import {
   PlayCircle,
   ArrowRight,
   CheckCircle2,
+  FileSpreadsheet,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -115,6 +116,8 @@ export function ProductionOrderListPage() {
     null,
   );
   const [drawerLoading, setDrawerLoading] = useState(false);
+
+  const [xlsxExportingId, setXlsxExportingId] = useState<string | null>(null);
 
   const [cancelTarget, setCancelTarget] = useState<ErpProductionOrder | null>(
     null,
@@ -298,6 +301,37 @@ export function ProductionOrderListPage() {
     onSaved: loadData,
   });
 
+  const handleExportXlsx = useCallback(
+    async (id: string, refNo?: string | null) => {
+      try {
+        setXlsxExportingId(id);
+        const blob = await productionCoreApi.exportXlsx(id);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute(
+          "download",
+          `LenhSanXuat_${refNo || id.split("-")[0]}.xlsx`,
+        );
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err: any) {
+        console.error(err);
+        showToast({
+          title: t("Lỗi xuất file"),
+          description:
+            err.response?.data?.message || t("Đã xảy ra lỗi khi xuất Excel."),
+          variant: "destructive",
+        });
+      } finally {
+        setXlsxExportingId(null);
+      }
+    },
+    [showToast, t],
+  );
+
   const columns = useMemo(
     () => [
       {
@@ -442,6 +476,12 @@ export function ProductionOrderListPage() {
               label: t("Chi tiết"),
               onClick: () => handleEdit(item.id, true),
               icon: <Eye className="h-[13px] w-[13px]" />,
+            },
+            {
+              label: t("Xuất XLSX"),
+              onClick: () => handleExportXlsx(item.id, item.referenceNo),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+              disabled: xlsxExportingId === item.id,
             },
           ],
         },

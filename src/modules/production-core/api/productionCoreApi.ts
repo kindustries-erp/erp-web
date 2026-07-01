@@ -319,4 +319,13 @@ export const productionCoreApi = {
         details: item,
       }));
   },
+  exportXlsx: async (id: string): Promise<Blob> => {
+    const response = await axiosInstance.get(
+      `${BASE_ORDERS}/${id}/export-xlsx`,
+      {
+        responseType: "blob",
+      },
+    );
+    return response.data;
+  },
 };
