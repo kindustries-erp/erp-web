@@ -12,6 +12,8 @@
     "format": "prettier --write .",
     "lint": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --fix",
     "lint:check": "eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings=0",
+    "type:check": "tsc --noEmit",
+    "check:ci": "tsc --noEmit && eslint \"src/**/*.{ts,tsx,js,jsx}\" --max-warnings=0 && prettier --check .",
     "docker:build": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml build",
     "docker:up": "docker compose -f /opt/stacks/liouni-erp-web/docker-compose.yml up -d",
     "docker:deploy": "bun run docker:build; bun run docker:up",

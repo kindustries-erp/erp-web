@@ -41,7 +41,7 @@ Use this skill only inside this repository.
 - Do not let historical Directus/Gitea-era docs drive new implementation by default
 - No code without a task file under `docs/tasks/`
 - Keep task checklist updated in realtime
-- Before commit/push, run `bun run lint:check`, `bunx tsc --noEmit`, `bun run test`, and `bun run build`
+- Before commit/push, run `bun run check:ci`, `bun run test`, and `bun run build`
 - When task docs are stale, verify with code + build/test + git state before correcting status/checklist
 
 ## Team-scale reminders
