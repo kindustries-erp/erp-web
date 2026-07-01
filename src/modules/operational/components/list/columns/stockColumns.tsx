@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
@@ -33,13 +34,15 @@ export function useStockColumns({
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
           return (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(row);
               }}
-              className="focus:outline-none flex items-center justify-center w-full"
+              className="w-full flex items-center justify-center"
             >
               <ChevronRight
                 className={cn(
@@ -47,7 +50,7 @@ export function useStockColumns({
                   expanded && "rotate-90",
                 )}
               />
-            </button>
+            </Button>
           );
         },
       },

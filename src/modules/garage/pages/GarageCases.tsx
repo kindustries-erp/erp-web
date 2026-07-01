@@ -11,6 +11,7 @@ import { useGarageStore } from "../store/garageStore";
 import { GarageBranchSelector } from "../components/GarageBranchSelector";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { RefreshCw, Car } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 
 export function GarageCases() {
@@ -154,16 +155,16 @@ export function GarageCases() {
         filter={filter}
         customActionsNode={<GarageBranchSelector />}
         extraActions={
-          <button
+          <Button
             onClick={handleSync}
             disabled={!selectedBranchId || isSyncing}
-            className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
           >
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
             />
             Sync Cases
-          </button>
+          </Button>
         }
         onRowClick={(item) => setSelectedCase(item)}
         page={page}
@@ -185,7 +186,7 @@ export function GarageCases() {
         {selectedCase && (
           <div className="p-4 space-y-4">
             <div className="flex justify-end border-b pb-4">
-              <button
+              <Button
                 onClick={() =>
                   syncCaseDetail({
                     branchId: selectedBranchId!,
@@ -193,13 +194,14 @@ export function GarageCases() {
                   })
                 }
                 disabled={isSyncingDetail}
-                className="flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded"
+                variant="outline"
+                className="text-blue-600 bg-blue-50 hover:bg-blue-100"
               >
                 <RefreshCw
                   className={`w-4 h-4 mr-2 ${isSyncingDetail ? "animate-spin" : ""}`}
                 />
                 Sync Details
-              </button>
+              </Button>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

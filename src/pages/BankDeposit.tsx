@@ -8,7 +8,8 @@ import {
 } from "react";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { ReasonConfirmModal } from "@/shared/components/ReasonConfirmModal";
-import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
+
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
@@ -472,20 +473,15 @@ export const TienGui = forwardRef(
     const canEditVoucher = !editing || editing.status === "DRAFT";
     const editToggle =
       editing && canEditVoucher && canUpdateVoucher ? (
-        <button
+        <Button
           onClick={handleToggleEditMode}
-          className={cn(
-            "px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors",
-            drawerEditMode
-              ? "border-[color:var(--border)] text-[color:var(--muted-fg)] bg-[color:var(--muted)] hover:bg-surface-hover"
-              : "border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg",
-          )}
+          variant={drawerEditMode ? "secondary" : "outline"}
         >
           {drawerEditMode
             ? t("voucher.drawer.cancel")
             : t("voucher.drawer.edit")}
-        </button>
-      ) : null;
+        </Button>
+      ) : undefined;
     const drawerActions = buildDrawerActions({
       editing,
       drawerEditMode,

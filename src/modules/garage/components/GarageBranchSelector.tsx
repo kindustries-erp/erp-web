@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useGarageBranches, useSyncGarageBranches } from "../hooks/useGarage";
 import { useGarageStore } from "../store/garageStore";
 import { RefreshCw } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 
 export function GarageBranchSelector() {
   const { data: branches, isLoading } = useGarageBranches();
@@ -31,15 +32,16 @@ export function GarageBranchSelector() {
           </option>
         ))}
       </select>
-      <button
+      <Button
         type="button"
-        className="p-2 border rounded-md hover:bg-gray-100 disabled:opacity-50"
+        variant="outline"
+        size="icon"
         onClick={() => syncBranches()}
         disabled={isSyncing}
         title="Sync Branches"
       >
         <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -17,6 +17,7 @@ export interface DrawerAction {
   align?: "left" | "right";
   /** Visual variant — 'outline' renders a distinct outlined style */
   variant?: "danger" | "outline" | "secondary" | "ghost" | "link";
+  type?: "button" | "submit" | "reset";
 }
 
 export const DEFAULT_STACK_OFFSET = -2;
@@ -66,6 +67,7 @@ function Btn({ action }: { action: DrawerAction }) {
 
   return (
     <Button
+      type={action.type || "button"}
       variant={variant}
       size="sm"
       disabled={action.disabled || action.loading}

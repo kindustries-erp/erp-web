@@ -1,5 +1,6 @@
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
 import {
   DrawerField,
   DrawerSection,
@@ -147,10 +148,12 @@ export function FormGeneralInfoPanel({
           </span>
         }
         titleExtra={
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setShowGeneralInfo((s) => !s)}
-            className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+            className="-mr-1 text-muted-foreground"
             title={showGeneralInfo ? t("Thu gọn") : t("Mở rộng")}
           >
             {showGeneralInfo ? (
@@ -158,7 +161,7 @@ export function FormGeneralInfoPanel({
             ) : (
               <ChevronLeft className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         }
       >
         <div

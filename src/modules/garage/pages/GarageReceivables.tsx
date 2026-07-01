@@ -9,6 +9,7 @@ import { GarageBranchSelector } from "../components/GarageBranchSelector";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { RefreshCw, WalletCards } from "lucide-react";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { Button } from "@/shared/components/ui/Button";
 
 export function GarageReceivables() {
   const { selectedBranchId } = useGarageStore();
@@ -94,16 +95,16 @@ export function GarageReceivables() {
         filter={filter}
         customActionsNode={<GarageBranchSelector />}
         extraActions={
-          <button
+          <Button
             onClick={handleSync}
             disabled={!selectedBranchId || isSyncing}
-            className="flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+            variant="primary"
           >
             <RefreshCw
               className={`w-4 h-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
             />
             Sync Receivables
-          </button>
+          </Button>
         }
         onRowClick={(item) => setSelectedItem(item)}
         page={1}
