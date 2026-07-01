@@ -212,6 +212,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "sys-tags": [["breadcrumb.settings"], ["nav.items.sysTags"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
+  "settings-accounts": [
+    ["breadcrumb.accounting"],
+    ["nav.items.catalogAccounts"],
+  ],
   "bank-statement": [
     ["breadcrumb.accounting"],
     ["nav.items.cashflow"],
