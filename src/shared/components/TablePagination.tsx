@@ -19,11 +19,9 @@ export function TablePagination({
   totalPages,
   onPage,
   onPageSize,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [50, 100, 200],
 }: TablePaginationProps) {
-  if (total === 0) return null;
-
-  const from = (page - 1) * pageSize + 1;
+  const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
 
   const maxShow = 5;

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Boxes, ChevronRight, ChevronLeft } from "lucide-react";
 import { Combobox } from "@/shared/components/Combobox";
+import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import {
   DrawerAction,
@@ -258,10 +259,12 @@ export function GoodsReceiptViewDrawer({
             <DrawerSection
               title={showGeneralInfo ? "Thông tin chung" : ""}
               titleExtra={
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => setShowGeneralInfo((s) => !s)}
-                  className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+                  className="-mr-1 text-muted-foreground"
                   title={showGeneralInfo ? "Thu gọn" : "Mở rộng"}
                 >
                   {showGeneralInfo ? (
@@ -269,7 +272,7 @@ export function GoodsReceiptViewDrawer({
                   ) : (
                     <ChevronLeft className="w-4 h-4" />
                   )}
-                </button>
+                </Button>
               }
             >
               {showGeneralInfo && (

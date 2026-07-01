@@ -1,6 +1,6 @@
 import { FileText, PackagePlus, Network } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { useT } from "@/core/i18n";
+
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
@@ -11,15 +11,27 @@ import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
 import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import { useT } from "@/core/i18n";
 import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useState, useEffect } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
   const pageState = usePurchaseOrderPage();
+  const canCreatePo = useHasPermission("purchase_orders", "create");
+  const canUpdatePo = useHasPermission("purchase_orders", "update");
+  const canDeletePo = useHasPermission("purchase_orders", "delete");
   const canCreateReceipt = useHasPermission("goods_receipts", "create");
+  const isAdmin = useHasPermission("*", "*");
+
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
 
   // GR drawer — reuses the same form as ErpWarehousePage
   const grDrawer = useGrDrawer({
@@ -80,9 +92,34 @@ export function PurchaseOrderListPage() {
 
   const loading = listQuery.isLoading || listQuery.isFetching;
   const items = (listQuery.data?.items || []) as OperationalDocument[];
+
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const viewId = params.get("viewId");
+    if (viewId) {
+      openDetail({ id: viewId } as OperationalDocument);
+      // Clean up the URL
+      params.delete("viewId");
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState(null, "", newUrl);
+    }
+
+    // Custom event listener from Tag connections drawer
+    const handleOpenDoc = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && detail.type === "erp_purchase_order" && detail.id) {
+        openDetail({ id: detail.id } as OperationalDocument);
+      }
+    };
+    window.addEventListener("open_erp_document", handleOpenDoc);
+    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
+  }, [openDetail]);
 
   const columns = usePurchaseColumns({
     variant: "purchase",
@@ -98,7 +135,7 @@ export function PurchaseOrderListPage() {
       tableId="purchase-orders-table"
       loading={loading}
       onRefresh={listQuery.refetch}
-      onCreate={handleCreateNew}
+      onCreate={canCreatePo ? handleCreateNew : undefined}
       createLabel={t("Tạo mới")}
       error={pageError}
       items={items}
@@ -117,7 +154,6 @@ export function PurchaseOrderListPage() {
           : undefined
       }
       getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
-      onRowClick={(row) => openDetail(row)}
       filterConfig={filterConfig}
       filter={filter}
       renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
@@ -134,6 +170,7 @@ export function PurchaseOrderListPage() {
               label: t("connectionGraph.action"),
               icon: <Network className="h-[13px] w-[13px]" />,
               onClick: () => void openConnectionGraph(row),
+              hidden: !isAdmin,
             },
             {
               label: t("Liên kết tiền"),
@@ -157,14 +194,14 @@ export function PurchaseOrderListPage() {
               icon: <Trash2 className="h-[13px] w-[13px]" />,
               variant: "danger",
               onClick: () => confirmDeleteDocument(row.id),
-              hidden: row.status !== "DRAFT",
+              hidden: row.status !== "DRAFT" || !canDeletePo,
             },
             {
               label: t("Hủy phiếu"),
               icon: <XCircle className="h-[13px] w-[13px]" />,
               variant: "danger",
               onClick: () => confirmCancelDocument(row.id),
-              hidden: row.status === "DRAFT" || row.status === "CANCELLED",
+              hidden: row.status !== "CONFIRMED" || !canUpdatePo,
             },
           ],
         },
@@ -176,9 +213,15 @@ export function PurchaseOrderListPage() {
         editing={editingRow}
         viewOnly={viewOnly}
         poReceipts={poReceipts}
-        onClose={handleCloseForm}
+        onClose={() => {
+          handleCloseForm();
+          setPendingTagIds([]);
+        }}
         onSaved={handleFormSaved}
-        onToggleEdit={handleToggleEdit}
+        onToggleEdit={canUpdatePo ? handleToggleEdit : undefined}
+        isAdminEmail={isAdminEmail}
+        pendingTagIds={pendingTagIds}
+        onPendingTagsChange={setPendingTagIds}
       />
 
       <SettlementDrawer

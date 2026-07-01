@@ -4,10 +4,10 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 type Direction = "IN" | "OUT";
 
-export function useErpInvoicesList() {
-  const [direction, setDirection] = useState<Direction>("IN");
+export function useErpInvoicesList(initialDirection: Direction = "IN") {
+  const [direction, setDirection] = useState<Direction>(initialDirection);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(40);
+  const [pageSize, setPageSize] = useState(50);
   const [invoices, setInvoices] = useState<ErpInvoice[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -53,6 +53,7 @@ export function useErpInvoicesList() {
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         status: status || undefined,
+        tag_id: (filterPanel.state.custom?.tag_id as string) || undefined,
         page,
         pageSize,
         sort_by: sortBy || undefined,

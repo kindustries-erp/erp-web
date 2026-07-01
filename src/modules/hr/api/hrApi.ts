@@ -78,7 +78,7 @@ export interface CreateEmployeeDto {
 export async function getDepartmentsApi(): Promise<Department[]> {
   const { data } = await axiosInstance.get<PaginatedResponse<Department>>(
     "/api/v1/departments",
-    { params: { page: 1, pageSize: 200, sort: "department_name" } },
+    { params: { page: 1, pageSize: 500, sort: "department_name" } },
   );
   return data.items;
 }
@@ -135,7 +135,7 @@ export async function deleteDepartmentApi(id: string): Promise<void> {
 export async function getPositionsApi(): Promise<Position[]> {
   const { data } = await axiosInstance.get<PaginatedResponse<Position>>(
     "/api/v1/positions",
-    { params: { page: 1, pageSize: 200, sort: "position_name" } },
+    { params: { page: 1, pageSize: 500, sort: "position_name" } },
   );
   return data.items;
 }

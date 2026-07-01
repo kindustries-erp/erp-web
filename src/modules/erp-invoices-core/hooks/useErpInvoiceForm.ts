@@ -7,6 +7,7 @@ import {
 import { today } from "@/shared/utils/format";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useTranslation } from "react-i18next";
+import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 
 type Direction = "IN" | "OUT";
 
@@ -46,6 +47,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
 
   function openNew(direction: Direction) {
     setDetailInvoice(null);
@@ -54,6 +56,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setFormError(null);
     setDeleteConfirm(false);
     setCancelConfirm(false);
+    setPendingTagIds([]);
     setDrawerOpen(true);
   }
 
@@ -188,7 +191,15 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         setDetailInvoice(updated);
         setEditMode(false);
       } else {
-        await erpInvoicesCoreApi.create(payload);
+        const created = await erpInvoicesCoreApi.create(payload);
+        // Option B: apply pending tags to the newly created invoice
+        if (pendingTagIds.length > 0) {
+          try {
+            await updateEntityTags("erp_invoice", created.id, pendingTagIds);
+          } catch {
+            // tags are non-critical, don't block UX
+          }
+        }
         closeDrawer();
       }
       await onReload();
@@ -246,11 +257,13 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     formError,
     deleteConfirm,
     cancelConfirm,
+    pendingTagIds,
     setDrawerOpen,
     setEditMode,
     setForm,
     setDeleteConfirm,
     setCancelConfirm,
+    setPendingTagIds,
     openNew,
     openDetail,
     startEdit,

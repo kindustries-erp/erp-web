@@ -20,7 +20,20 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-users",
   "erp-activity-logs",
   "erp-permissions-core",
-  "erp-invoices",
+  "erp-invoices-in",
+  "erp-invoices-out",
+  "bank-statement",
+  "cash-statement",
+  "settings-bank",
+  "settings-cash-fund",
+  "settings-branch",
+  "erp-production",
+  "erp-sales-orders",
+  "erp-goods-issues",
+  "erp-employees",
+  "sys-tags",
+  "garage-dashboard",
+  "garage-cases",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
@@ -29,7 +42,7 @@ const LEGACY_SLUGS: Record<string, PageKey> = {
 };
 
 export function pageToPath(page: PageKey, tab?: string): string {
-  const slug = page === "purchasing" ? "" : page;
+  const slug = page === "dashboard" ? "" : page;
   const base = slug ? `/${slug}` : "/";
   return tab ? `${base}?tab=${encodeURIComponent(tab)}` : base;
 }
@@ -46,7 +59,7 @@ export function pathToPage(
   let page: PageKey | undefined;
 
   if (slug === "") {
-    page = "purchasing";
+    page = "dashboard";
   } else {
     page = ALL_PAGE_KEYS.includes(slug as PageKey)
       ? (slug as PageKey)

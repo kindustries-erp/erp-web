@@ -10,21 +10,27 @@ import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
 import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
+import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 
 export interface UsePurchaseOrderDrawerProps {
   open: boolean;
   editing: OperationalDocument | null;
   viewOnly?: boolean;
+  poReceipts?: unknown[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
+  /** Pending tag IDs (Option B: applied after create) */
+  pendingTagIds?: string[];
 }
 
 export function usePurchaseOrderDrawer({
   open,
   editing,
   viewOnly,
+  poReceipts,
   onClose,
   onSaved,
+  pendingTagIds = [],
 }: UsePurchaseOrderDrawerProps) {
   const store = useOperationalFormStore();
   const {
@@ -70,6 +76,11 @@ export function usePurchaseOrderDrawer({
   ) => {
     if (field === "poNo" && !!editing) return true;
     if (!isPurchaseLocked) return false;
+
+    // User enhancement: if there's receipt history, lock qty
+    const hasReceiptHistory = poReceipts && poReceipts.length > 0;
+    if (hasReceiptHistory && field === "qty") return true;
+
     if (!isPurchaseHeaderEditableAfterConfirm) return true;
     return !["description", "qty", "expectedDate", "status"].includes(field);
   };
@@ -97,7 +108,7 @@ export function usePurchaseOrderDrawer({
     if (!open) return;
     getBusinessPartnersPagedApi({
       page: 1,
-      pageSize: 200,
+      pageSize: 500,
       partnerType: "VENDOR",
     })
       .then((res) => {
@@ -125,7 +136,6 @@ export function usePurchaseOrderDrawer({
     basicMastersApi
       .list({ limit: 200, entities: "inventoryItems,erpInvoices" })
       .then((res) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const options = (res.items.inventoryItems || []).map((item: any) => ({
           value: item.id,
           label: item.itemName || "(Chưa có tên)",
@@ -288,10 +298,26 @@ export function usePurchaseOrderDrawer({
           editing.id,
           payload as CreateOperationalPayload,
         );
-      else
-        await operationalApi.createPurchase(
+      else {
+        const result = await operationalApi.createPurchase(
           payload as CreateOperationalPayload,
         );
+        // Option B: apply pending tags after create
+        if (pendingTagIds.length > 0) {
+          const createdId = result?.id;
+          if (createdId) {
+            try {
+              await updateEntityTags(
+                "erp_purchase_order",
+                createdId,
+                pendingTagIds,
+              );
+            } catch {
+              // tags are non-critical
+            }
+          }
+        }
+      }
       await onSaved();
       onClose();
     } catch (e) {

@@ -10,6 +10,7 @@ import { SearchInput } from "@/shared/components/SearchInput";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Button } from "@/shared/components/ui/Button";
 import {
   PARTNER_KIND_OPTS,
   CURRENCY_OPTS,
@@ -18,7 +19,6 @@ import {
 import { PageHeader, StatusBadge } from "./shared";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function PartnersTabView(p: any) {
   const {
     t,
@@ -208,7 +208,6 @@ function PartnerDrawer({
   removeBankRow,
   addBankRow,
   saveError,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <DrawerModal
@@ -246,7 +245,7 @@ function PartnerDrawer({
     </DrawerModal>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function MainInfoCard({ form, setField }: any) {
   return (
     <div className="partner-card partner-card-main">
@@ -354,20 +353,25 @@ function ContactsCard({
   setContactField,
   removeContactRow,
   addContactRow,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <div className="partner-card partner-card-contact">
       <DrawerSection title={`Liên hệ (${contactRows.length})`}>
         <div className="partner-sublist">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {}
           {contactRows.map((row: any, idx: number) => (
             <div key={row.tempId} className="partner-subitem">
               <div className="partner-subitem-head">
                 <span>Liên hệ {idx + 1}</span>
-                <button type="button" onClick={() => removeContactRow(idx)}>
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto font-normal text-red-600 hover:text-red-700"
+                  onClick={() => removeContactRow(idx)}
+                >
                   Xóa
-                </button>
+                </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
                 <DrawerField label="Họ và tên">
@@ -441,31 +445,39 @@ function ContactsCard({
             </div>
           ))}
         </div>
-        <button
+        <Button
           type="button"
-          className="partner-add-line"
+          variant="outline"
+          size="sm"
+          className="w-full mt-3 border-dashed"
           onClick={addContactRow}
         >
           + Thêm liên hệ
-        </button>
+        </Button>
       </DrawerSection>
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function BanksCard({ bankRows, setBankField, removeBankRow, addBankRow }: any) {
   return (
     <div className="partner-card partner-card-bank">
       <DrawerSection title={`Tài khoản ngân hàng (${bankRows.length})`}>
         <div className="partner-sublist">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {}
           {bankRows.map((row: any, idx: number) => (
             <div key={row.tempId} className="partner-subitem">
               <div className="partner-subitem-head">
                 <span>Tài khoản {idx + 1}</span>
-                <button type="button" onClick={() => removeBankRow(idx)}>
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto font-normal text-red-600 hover:text-red-700"
+                  onClick={() => removeBankRow(idx)}
+                >
                   Xóa
-                </button>
+                </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
                 <DrawerField label="Tên ngân hàng">
@@ -524,14 +536,20 @@ function BanksCard({ bankRows, setBankField, removeBankRow, addBankRow }: any) {
             </div>
           ))}
         </div>
-        <button type="button" className="partner-add-line" onClick={addBankRow}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full mt-3 border-dashed"
+          onClick={addBankRow}
+        >
           + Thêm tài khoản ngân hàng
-        </button>
+        </Button>
       </DrawerSection>
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function RoleCard({ form, setField }: any) {
   return (
     <div className="partner-card partner-card-role">
@@ -564,7 +582,7 @@ function RoleCard({ form, setField }: any) {
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function Check({ checked, onChange, label }: any) {
   return (
     <label className="flex items-center gap-2 cursor-pointer">

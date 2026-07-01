@@ -7,13 +7,13 @@ interface DrawerState {
   type: string | null;
   mode: DrawerMode;
   entityId: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   entityData: any | null;
   openDrawer: (
     type: string,
     mode: DrawerMode,
     id?: string | null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     data?: any,
   ) => void;
   closeDrawer: () => void;

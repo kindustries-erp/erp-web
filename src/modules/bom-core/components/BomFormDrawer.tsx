@@ -345,7 +345,7 @@ export function BomFormDrawer({
       }
       subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
       actions={drawerActions}
-      panelClassName="min-[1024px]:min-w-[1100px] min-[1280px]:min-w-[1280px]"
+      size="xl"
       rightPanelTitle={t("Thông tin chung")}
       error={saveError}
       loading={drawerLoading}

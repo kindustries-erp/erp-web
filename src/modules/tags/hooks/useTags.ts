@@ -5,6 +5,7 @@ import {
   updateTag,
   deleteTag,
   getEntityTags,
+  getBatchEntityTags,
   updateEntityTags,
   getTagConnections,
 } from "../api/tagsApi";
@@ -21,6 +22,18 @@ export function useEntityTags(entityType: string, entityId: string) {
     queryKey: ["sys-tags", "entity", entityType, entityId],
     queryFn: () => getEntityTags(entityType, entityId),
     enabled: !!entityType && !!entityId,
+    staleTime: Infinity,
+    refetchOnMount: false,
+  });
+}
+
+export function useBatchEntityTags(
+  queries: { entityType: string; entityId: string }[],
+) {
+  return useQuery({
+    queryKey: ["sys-tags", "entity", "batch", queries],
+    queryFn: () => getBatchEntityTags(queries),
+    enabled: queries.length > 0,
   });
 }
 

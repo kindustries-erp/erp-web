@@ -241,7 +241,7 @@ export function ErpPermissionsCorePage() {
         return usersList.length > 0 ? (
           <div className="overflow-x-auto pb-1">
             <div className="flex w-max max-w-none gap-1 whitespace-nowrap">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {}
               {usersList.map((user: any) => (
                 <Badge
                   key={user.id}

@@ -1,5 +1,6 @@
 import React from "react";
 import { SysTag } from "../api/tagsApi";
+import { Badge } from "@/shared/components/ui/badge";
 
 interface TagDisplayProps {
   tags: SysTag[];
@@ -15,9 +16,10 @@ export function TagDisplay({ tags, maxVisible = 3 }: TagDisplayProps) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {visibleTags.map((tag) => (
-        <span
+        <Badge
           key={tag.id}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border"
+          variant="outline"
+          className="gap-1 px-2 py-0.5 rounded-full text-[11px]"
           style={{
             backgroundColor: tag.color
               ? `${tag.color}15`
@@ -28,18 +30,19 @@ export function TagDisplay({ tags, maxVisible = 3 }: TagDisplayProps) {
           title={tag.description || tag.name}
         >
           {tag.name}
-        </span>
+        </Badge>
       ))}
       {remainingCount > 0 && (
-        <span
-          className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[11px] font-medium bg-[color:var(--color-surface)] border border-[color:var(--color-border)] text-[color:var(--color-secondary-text)]"
+        <Badge
+          variant="secondary"
+          className="px-1.5 py-0.5 rounded-full text-[11px] bg-[color:var(--color-surface)] border border-[color:var(--color-border)] text-[color:var(--color-secondary-text)]"
           title={tags
             .slice(maxVisible)
             .map((t) => t.name)
             .join(", ")}
         >
           +{remainingCount}
-        </span>
+        </Badge>
       )}
     </div>
   );

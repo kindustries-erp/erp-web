@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/shared/utils";
-import { formatGMT7 } from "@/shared/utils/format";
+import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
@@ -34,13 +34,15 @@ export function useStockColumns({
         cell: (row) => {
           const expanded = !!expandedStockItemIds[row.inventory_item_id];
           return (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(row);
               }}
-              className="focus:outline-none flex items-center justify-center w-full"
+              className="w-full flex items-center justify-center"
             >
               <ChevronRight
                 className={cn(
@@ -48,7 +50,7 @@ export function useStockColumns({
                   expanded && "rotate-90",
                 )}
               />
-            </button>
+            </Button>
           );
         },
       },
@@ -61,15 +63,8 @@ export function useStockColumns({
         sortKey: "item_code",
         size: 140,
         enableResizing: true,
-        cell: (row) => (
-          <div className="w-full text-left overflow-hidden">
-            <Tooltip content={row.item_code || "—"} side="top">
-              <span className="text-sm truncate block w-full font-medium text-foreground">
-                {row.item_code || "—"}
-              </span>
-            </Tooltip>
-          </div>
-        ),
+        dataIndex: "item_code",
+        valueType: "text",
       },
       {
         key: "item_name",
@@ -80,18 +75,8 @@ export function useStockColumns({
         sortKey: "item_name",
         size: 140,
         enableResizing: true,
-        cell: (row) => {
-          const itemName = row.item_name || t("inventory.table.unnamed");
-          return (
-            <div className="w-full text-left overflow-hidden">
-              <Tooltip content={itemName} side="top">
-                <span className="text-sm truncate block w-full">
-                  {itemName}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        },
+        dataIndex: "item_name",
+        valueType: "text",
       },
 
       {
@@ -155,21 +140,9 @@ export function useStockColumns({
         headerClassName: "text-center",
         size: 140,
         enableResizing: true,
-        cell: (row) => {
-          if (!row.last_transaction_date) return "—";
-          return (
-            <div className="w-full text-right">
-              <Tooltip
-                content={formatGMT7(row.last_transaction_date, "datetime-sec")}
-                side="top"
-              >
-                <span className="cursor-help inline-block border-b border-dotted border-gray-400 text-xs">
-                  {formatGMT7(row.last_transaction_date, "date")}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        },
+        dataIndex: "last_transaction_date",
+        valueType: "date",
+        dateFormat: "dd/MM/yyyy",
       },
       {
         key: "item_type",
@@ -213,19 +186,8 @@ export function useStockColumns({
         sortKey: "status",
         size: 140,
         enableResizing: true,
-        cell: (row) => (
-          <div className="w-full text-center">
-            <span
-              className={
-                row.status === "ACTIVE" || !row.status
-                  ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200"
-                  : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border"
-              }
-            >
-              {row.status || "ACTIVE"}
-            </span>
-          </div>
-        ),
+        dataIndex: "status",
+        valueType: "status",
       },
     ],
     [expandedStockItemIds, onToggleExpand, t],

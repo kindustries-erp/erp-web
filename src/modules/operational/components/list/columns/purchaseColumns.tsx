@@ -1,14 +1,21 @@
 import { useMemo } from "react";
-import { ChevronRight, Warehouse } from "lucide-react";
+import {
+  ChevronRight,
+  PackageCheck,
+  PackageOpen,
+  PackageX,
+} from "lucide-react";
 import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { normalizeDateTime } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type {
   OperationalDocument,
   OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
+import { StatusBadge } from "@/shared/components/badges";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
@@ -40,13 +47,15 @@ export function usePurchaseColumns({
           const rowKey = `${row.document_type || variant}-${row.id}`;
           const isExpanded = !!expandedRowIds[rowKey];
           return (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(rowKey);
               }}
-              className="focus:outline-none flex items-center justify-center w-full"
+              className="w-full flex items-center justify-center"
             >
               <ChevronRight
                 className={cn(
@@ -54,7 +63,7 @@ export function usePurchaseColumns({
                   isExpanded && "rotate-90",
                 )}
               />
-            </button>
+            </Button>
           );
         },
       },
@@ -63,31 +72,18 @@ export function usePurchaseColumns({
         header: t("Số PO"),
         sortable: true,
         sortKey: "purchase_no",
-        size: 250,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle font-medium text-left",
         headerClassName: "text-center",
         cell: (row) => {
           return (
-            <div className="flex items-center gap-1.5 text-left text-sm">
+            <div className="flex items-center gap-1.5 text-left text-sm max-w-[120px]">
               <Tooltip content={row.notes || t("Không có ghi chú")}>
-                <span className="font-semibold text-primary">
+                <span className="font-semibold text-primary truncate">
                   {row.purchase_no || "—"}
                 </span>
               </Tooltip>
-              {row.inventory_status &&
-                row.inventory_status !== "NOT_RECEIVED" && (
-                  <Tooltip content={t("Có lịch sử nhập kho")}>
-                    <div className="flex items-center text-muted-foreground/80 cursor-help">
-                      <Warehouse className="w-3 h-3" />
-                    </div>
-                  </Tooltip>
-                )}
-              {row.status === "DRAFT" && (
-                <span className="rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 border border-amber-200 whitespace-nowrap">
-                  {t("Nháp")}
-                </span>
-              )}
             </div>
           );
         },
@@ -97,7 +93,7 @@ export function usePurchaseColumns({
         header: t("Nhà cung cấp"),
         sortable: true,
         sortKey: "supplier_id",
-        size: 400,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-left w-full",
         headerClassName: "text-center w-full",
@@ -114,7 +110,7 @@ export function usePurchaseColumns({
         header: t("Ngày đặt"),
         sortable: true,
         sortKey: "order_date",
-        size: 200,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -136,7 +132,7 @@ export function usePurchaseColumns({
         header: t("Ngày nhập DK"),
         sortable: true,
         sortKey: "expected_date",
-        size: 200,
+        size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -150,6 +146,55 @@ export function usePurchaseColumns({
                 {d}
               </span>
             </Tooltip>
+          );
+        },
+      },
+      {
+        key: "inventory_status",
+        header: t("common.inventoryStatus"),
+        size: 140,
+        enableResizing: true,
+        className: "!py-2 align-middle text-center",
+        headerClassName: "text-center",
+        cell: (row: OperationalDocument) => {
+          const st = row.inventory_status || "NOT_RECEIVED";
+          let icon = <PackageX className="h-5 w-5 text-muted-foreground" />;
+          let label = "Chưa nhập";
+          if (st === "RECEIVED" || st === "DONE") {
+            icon = <PackageCheck className="h-5 w-5 text-emerald-500" />;
+            label = "Đã nhập";
+          } else if (st === "PARTIAL_RECEIVED" || st === "PARTIAL") {
+            icon = <PackageOpen className="h-5 w-5 text-amber-500" />;
+            label = "Nhập một phần";
+          }
+          return (
+            <div className="w-full flex justify-center">
+              <Tooltip content={label}>
+                <div className="cursor-pointer">{icon}</div>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
+        key: "status",
+        header: t("Trạng thái"),
+        size: 140,
+        enableResizing: true,
+        className: "!py-2 align-middle text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          let displayStatus = "CONFIRMED";
+          if (row.status === "DRAFT") displayStatus = "DRAFT";
+          else if (row.status === "CANCELLED") displayStatus = "CANCELLED";
+
+          return (
+            <div className="w-full flex justify-center">
+              <StatusBadge
+                status={displayStatus}
+                className="w-[75px] inline-block text-center"
+              />
+            </div>
           );
         },
       },

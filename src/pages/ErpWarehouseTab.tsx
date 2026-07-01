@@ -48,13 +48,23 @@ import {
 } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { StatusBadge } from "@/shared/components/badges";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ErpWarehouseTab() {
   const t = useT();
   const canReadReceipts = useHasPermission("goods_receipts", "read");
+  const canCreateReceipt = useHasPermission("goods_receipts", "create");
+  const canUpdateReceipt = useHasPermission("goods_receipts", "update");
+  const canDeleteReceipt = useHasPermission("goods_receipts", "delete");
+
   const canReadIssues = useHasPermission("goods_issues", "read");
+  const canCreateIssue = useHasPermission("goods_issues", "create");
+  const canUpdateIssue = useHasPermission("goods_issues", "update");
+  const canDeleteIssue = useHasPermission("goods_issues", "delete");
+  const isAdmin = useHasPermission("*", "*");
+
   const showToast = useUIStore((s) => s.showToast);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   const queryClient = useQueryClient();
@@ -62,7 +72,7 @@ export function ErpWarehouseTab() {
   // ── filter state (same pattern as page mua hàng)
   // ── list state
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(40);
+  const [pageSize, setPageSize] = useState(50);
   const [sortBy, setSortBy] = useState<string>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   // activeSortKey: column đang được user chọn sort; null = default (không có active sort)
@@ -257,6 +267,7 @@ export function ErpWarehouseTab() {
   const filterConfig: FilterPanelConfig = {
     search: true,
     period: true,
+    noDefaultPeriod: true,
     status: {
       placeholder: t("Trạng thái"),
       options: STATUS_OPTIONS,
@@ -372,16 +383,6 @@ export function ErpWarehouseTab() {
               )}
             </span>
             <span className="font-medium text-foreground">{row.voucherNo}</span>
-            {row.status === "DRAFT" && (
-              <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-                {t("Nháp")}
-              </span>
-            )}
-            {row.status === "CANCELLED" && (
-              <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
-                {t("Đã hủy")}
-              </span>
-            )}
           </div>
         ),
       },
@@ -418,6 +419,17 @@ export function ErpWarehouseTab() {
         header: t("Ghi chú"),
         className: "min-w-[300px]",
         cell: (row) => row.remarks ?? "—",
+      },
+      {
+        key: "status",
+        header: t("Trạng thái"),
+        className: "w-[140px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <div className="w-full flex justify-center">
+            <StatusBadge status={row.status || ""} />
+          </div>
+        ),
       },
     ],
     [],
@@ -490,7 +502,7 @@ export function ErpWarehouseTab() {
           {
             label: t("common.print"),
             icon: <Printer className="h-3.5 w-3.5" />,
-            hidden: row.status === "DRAFT",
+            hidden: row.status === "DRAFT" || !isAdmin,
             disabled: !!printTargetId,
             onClick: () => handlePrintRow(row),
           },
@@ -498,15 +510,25 @@ export function ErpWarehouseTab() {
             label: t("Xóa"),
             icon: <Trash2 className="h-3.5 w-3.5" />,
             variant: "danger",
-            hidden: row.status !== "DRAFT",
-            onClick: () => setDeleteTarget(row),
+            hidden:
+              row.status !== "DRAFT" ||
+              (row.type === "receipt" && !canDeleteReceipt) ||
+              (row.type === "issue" && !canDeleteIssue),
+            onClick: () => {
+              setDeleteTarget(row);
+            },
           },
           {
-            label: grCancelId === row.id ? t("Đang hủy...") : t("Hủy phiếu"),
+            label: t("Hủy phiếu"),
             icon: <XCircle className="h-3.5 w-3.5" />,
             variant: "danger",
-            hidden: row.type !== "receipt" || row.status !== "POSTED",
-            onClick: () => setCancelTarget(row),
+            hidden:
+              row.status !== "POSTED" ||
+              (row.type === "receipt" && !canUpdateReceipt) ||
+              (row.type === "issue" && !canUpdateIssue),
+            onClick: () => {
+              setCancelTarget(row);
+            },
           },
         ]}
         createActions={[
@@ -514,11 +536,13 @@ export function ErpWarehouseTab() {
             label: t("Nhập kho"),
             icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
             onClick: () => grDrawer.openCreate(),
+            hidden: !canCreateReceipt,
           },
           {
             label: t("Xuất kho"),
             icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
             onClick: () => giDrawer.openCreate(),
+            hidden: !canCreateIssue,
           },
         ]}
       />

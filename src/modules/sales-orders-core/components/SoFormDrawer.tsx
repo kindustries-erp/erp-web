@@ -13,6 +13,7 @@ import type {
   CreateSoPayload,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 export interface SoLineForm {
   itemId: string;
@@ -136,6 +137,11 @@ export interface SoFormDrawerProps {
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<SoLineForm>) => void;
+
+  onToggleEdit?: () => void;
+  /** Pending tag IDs for Option B create flow */
+  pendingTagIds?: string[];
+  onPendingTagsChange?: (ids: string[]) => void;
 }
 
 export function SoFormDrawer({
@@ -163,6 +169,9 @@ export function SoFormDrawer({
   addLine,
   removeLine,
   updateLine,
+  onToggleEdit,
+  pendingTagIds = [],
+  onPendingTagsChange,
 }: SoFormDrawerProps) {
   const t = useT();
   const viewOnly = mode === "view";
@@ -188,6 +197,7 @@ export function SoFormDrawer({
       open={open}
       mode={mode}
       onClose={onClose}
+      onToggleEdit={onToggleEdit}
       title={
         viewOnly
           ? t("Xem đơn bán hàng")
@@ -384,6 +394,24 @@ export function SoFormDrawer({
                 className={`${inputCls} min-h-[88px]`}
                 placeholder={t("Ghi chú đơn bán hàng")}
               />
+            </DrawerField>
+            <DrawerField label={t("Thẻ nhãn")}>
+              {editing ? (
+                <EntityTagSelector
+                  entityType="erp_sales_order"
+                  entityId={editing.id}
+                  readOnly={viewOnly}
+                />
+              ) : !viewOnly ? (
+                <EntityTagSelector
+                  entityType="erp_sales_order"
+                  entityId="__pending__"
+                  readOnly={false}
+                  pendingMode
+                  pendingTagIds={pendingTagIds}
+                  onPendingChange={onPendingTagsChange}
+                />
+              ) : null}
             </DrawerField>
           </div>
         </DrawerSection>

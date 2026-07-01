@@ -73,8 +73,7 @@ export function TagFormModal({
       onToggleEdit={() => setMode("edit")}
       title={isCreate ? "Thêm thẻ mới" : "Chi tiết thẻ"}
       loading={submitting}
-      layout="2-columns"
-      hideRightPanel={true}
+      layout="1-column"
       actions={
         viewOnly
           ? [

@@ -137,7 +137,7 @@ export function OperationalFormDrawer({
     const partnerRole = variant === "sales" ? "CUSTOMER" : "VENDOR";
     getBusinessPartnersPagedApi({
       page: 1,
-      pageSize: 200,
+      pageSize: 500,
       partnerType: partnerRole,
     })
       .then((res) => {
@@ -165,7 +165,6 @@ export function OperationalFormDrawer({
     basicMastersApi
       .list({ limit: 200, entities: "inventoryItems" })
       .then((res) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const options = (res.items.inventoryItems || []).map((item: any) => ({
           value: item.id,
           label: item.itemName || "(Chưa có tên)",

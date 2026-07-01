@@ -18,6 +18,8 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Skeleton } from "@/shared/components/Skeleton";
+
+import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   goodsIssuesCoreApi,
@@ -148,7 +150,7 @@ export function ErpGoodsIssuesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [searchInput, setSearchInput] = useState("");
@@ -388,7 +390,6 @@ export function ErpGoodsIssuesPage() {
       closeDrawer();
       if (!editing && page !== 1) setPage(1);
       else await loadIssues();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message || e?.message || "Không thể lưu goods issue",
@@ -406,7 +407,6 @@ export function ErpGoodsIssuesPage() {
     try {
       await goodsIssuesCoreApi.post(item.id);
       await loadIssues();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message ||
@@ -425,7 +425,6 @@ export function ErpGoodsIssuesPage() {
       await goodsIssuesCoreApi.remove(deleteTarget.id);
       setDeleteTarget(null);
       await loadIssues();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Không thể xóa goods issue",
@@ -499,16 +498,16 @@ export function ErpGoodsIssuesPage() {
           placeholder="Tìm số phiếu xuất"
           className={`${inputCls} min-w-[260px] bg-surface`}
         />
-        <button
+        <Button
           type="button"
           onClick={() => {
             setPage(1);
             setSearch(searchInput.trim());
           }}
-          className="inline-flex items-center rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted"
+          variant="outline"
         >
           Search
-        </button>
+        </Button>
       </>
     ),
     [searchInput],
@@ -538,14 +537,10 @@ export function ErpGoodsIssuesPage() {
       desc="Xuất kho giao hàng cho đơn bán."
       icon={<Boxes className="h-5 w-5" />}
       actions={
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-fg"
-        >
+        <Button type="button" onClick={openCreate} variant="primary">
           <Plus className="h-3.5 w-3.5" />
           Tạo mới
-        </button>
+        </Button>
       }
     >
       <DataTable
@@ -749,14 +744,15 @@ export function ErpGoodsIssuesPage() {
             <DrawerSection title="Dòng xuất kho">
               {!viewOnly && (
                 <div className="mb-3 flex justify-end">
-                  <button
+                  <Button
                     type="button"
                     onClick={addLine}
-                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                    variant="outline"
+                    size="sm"
                   >
                     <Plus className="h-3.5 w-3.5" />
                     Thêm dòng
-                  </button>
+                  </Button>
                 </div>
               )}
               <div className="space-y-3">
@@ -770,13 +766,15 @@ export function ErpGoodsIssuesPage() {
                         Dòng {index + 1}
                       </div>
                       {!viewOnly && (
-                        <button
+                        <Button
                           type="button"
                           onClick={() => removeLine(index)}
-                          className="text-xs font-medium text-red-600 hover:text-red-700"
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           Xóa dòng
-                        </button>
+                        </Button>
                       )}
                     </div>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

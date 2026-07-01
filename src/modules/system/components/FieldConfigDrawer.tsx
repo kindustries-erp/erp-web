@@ -50,16 +50,20 @@ export function FieldConfigDrawer({
   selectedPermission,
   selectedConfig,
   onPermissionConfigChange,
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLoadCollectionFields,
 }: FieldConfigDrawerProps) {
   const t = useT();
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [availableFields, setAvailableFields] = useState<PermissionFieldDef[]>(
     [],
   );
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fieldsLoading, setFieldsLoading] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fieldsError, setFieldsError] = useState<string | null>(null);
 
@@ -165,7 +169,6 @@ function FieldSelector({
   selectedConfig,
   selectedPermission,
   onPermissionConfigChange,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <DrawerField label={t("permissionMatrix.fieldConfig.fields")}>

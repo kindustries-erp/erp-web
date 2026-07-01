@@ -17,7 +17,7 @@ function applyDocumentTheme(appTheme: AppTheme) {
 }
 
 export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
-  purchasing: { labelKey: "nav.items.purchasing", closable: false },
+  dashboard: { labelKey: "nav.items.dashboard", closable: false },
 };
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
@@ -51,15 +51,15 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "erp-inventory-uom": {
     labelKey: "nav.items.erpInventoryUom",
-    group: "catalog",
+    group: "settings",
   },
   "erp-inventory-item-types": {
     labelKey: "nav.items.erpInventoryItemTypes",
-    group: "catalog",
+    group: "settings",
   },
   "erp-inventory-tracking-categories": {
     labelKey: "nav.items.erpInventoryTrackingCategories",
-    group: "catalog",
+    group: "settings",
   },
   "erp-production": {
     labelKey: "nav.items.erpProduction",
@@ -77,29 +77,81 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.suppliers",
     group: "purchasing",
   },
+  "journal-entry": {
+    labelKey: "nav.items.reportJournal",
+    group: "reports",
+  },
+  "settings-accounts": {
+    labelKey: "nav.items.catalogAccounts",
+    group: "settings",
+  },
   "erp-activity-logs": {
     labelKey: "nav.items.activitylog",
-    group: "system",
+    group: "settings",
   },
   "erp-employees": {
     labelKey: "nav.items.erpEmployees",
-    group: "system",
+    group: "hr",
   },
   "erp-users": {
     labelKey: "nav.items.users",
-    group: "system",
+    group: "settings",
   },
   "erp-permissions-core": {
     labelKey: "nav.items.phanquyen",
-    group: "system",
+    group: "settings",
   },
   "sys-tags": {
     labelKey: "nav.items.sysTags",
-    group: "system",
+    group: "settings",
   },
-  "erp-invoices": {
-    labelKey: "nav.items.erpInvoices",
+  "erp-invoices-in": {
+    labelKey: "nav.items.erpInvoicesIn",
     group: "accounting",
+  },
+  "erp-invoices-out": {
+    labelKey: "nav.items.erpInvoicesOut",
+    group: "accounting",
+  },
+  "settings-branch": {
+    labelKey: "thietlap.tabs.chi-nhanh",
+    group: "settings",
+  },
+  "settings-bank": {
+    labelKey: "thietlap.tabs.ngan-hang",
+    group: "settings",
+  },
+  "settings-cash-fund": {
+    labelKey: "thietlap.tabs.quy",
+    group: "settings",
+  },
+  "bank-statement": {
+    labelKey: "bankStatement.bankTitle",
+    group: "accounting",
+  },
+  "cash-statement": {
+    labelKey: "bankStatement.cashTitle",
+    group: "accounting",
+  },
+  "cashflow-dashboard": {
+    labelKey: "nav.items.cashflowDashboard",
+    group: "accounting",
+  },
+  "garage-dashboard": {
+    labelKey: "nav.items.garageDashboard",
+    group: "garage",
+  },
+  "garage-cases": {
+    labelKey: "nav.items.garageCases",
+    group: "garage",
+  },
+  "garage-receivables": {
+    labelKey: "nav.items.garageReceivables",
+    group: "garage",
+  },
+  "garage-payables": {
+    labelKey: "nav.items.garagePayables",
+    group: "garage",
   },
 };
 
@@ -139,26 +191,49 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.erpInventoryItems"],
   ],
   "erp-inventory-uom": [
-    ["breadcrumb.inventory"],
+    ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryUom"],
   ],
   "erp-inventory-item-types": [
-    ["breadcrumb.inventory"],
+    ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryItemTypes"],
   ],
   "erp-inventory-tracking-categories": [
-    ["breadcrumb.inventory"],
+    ["breadcrumb.settings"],
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryTrackingCategories"],
   ],
-  "erp-activity-logs": [["breadcrumb.system"], ["breadcrumb.activitylog"]],
-  "erp-employees": [["breadcrumb.system"], ["breadcrumb.erpEmployees"]],
-  "erp-users": [["breadcrumb.system"], ["breadcrumb.users"]],
-  "erp-permissions-core": [["breadcrumb.system"], ["breadcrumb.phanquyen"]],
-  "sys-tags": [["breadcrumb.system"], ["nav.items.sysTags"]],
-  "erp-invoices": [["breadcrumb.accounting"], ["breadcrumb.erpInvoices"]],
+  "erp-activity-logs": [["breadcrumb.settings"], ["breadcrumb.activitylog"]],
+  "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
+  "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
+  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
+  "sys-tags": [["breadcrumb.settings"], ["nav.items.sysTags"]],
+  "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
+  "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "bank-statement": [
+    ["breadcrumb.accounting"],
+    ["nav.items.cashflow"],
+    ["bankStatement.bankTitle"],
+  ],
+  "cash-statement": [
+    ["breadcrumb.accounting"],
+    ["nav.items.cashflow"],
+    ["bankStatement.cashTitle"],
+  ],
+  "cashflow-dashboard": [
+    ["breadcrumb.accounting"],
+    ["nav.items.cashflow"],
+    ["nav.items.dashboard"],
+  ],
+  "settings-branch": [["breadcrumb.settings"], ["thietlap.tabs.chi-nhanh"]],
+  "settings-bank": [["breadcrumb.settings"], ["thietlap.tabs.ngan-hang"]],
+  "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
+  "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
+  "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
+  "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
+  "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
 };
 
 interface AppState {
@@ -170,8 +245,11 @@ interface AppState {
   locale: "vi" | "en";
   isLoggedIn: boolean;
   forbidden: boolean;
+  companyProfileOpen: boolean;
+  currentBranchId: string | null;
   customBreadcrumbs: Array<[string, string?]> | null;
   setForbidden: (value: boolean) => void;
+  setCurrentBranchId: (id: string | null) => void;
   navigate: (page: PageKey) => void;
   syncFromUrl: (page: PageKey) => void;
   closeTab: (key: PageKey) => void;
@@ -180,6 +258,7 @@ interface AppState {
   reorderTabs: (sourceKey: PageKey, targetKey: PageKey) => void;
   toggleSidebar: () => void;
   setMobileSidebarOpen: (open: boolean) => void;
+  setCompanyProfileOpen: (open: boolean) => void;
   toggleAppTheme: () => void;
   setAppTheme: (theme: AppTheme) => void;
   toggleLocale: () => void;
@@ -187,23 +266,31 @@ interface AppState {
   login: () => void;
   logout: () => void;
   setCustomBreadcrumbs: (crumbs: Array<[string, string?]> | null) => void;
+  preloadTab: (page: PageKey) => void;
+  sidebarSearchQuery: string;
+  setSidebarSearchQuery: (q: string) => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      currentPage: "purchasing",
-      openTabs: ["purchasing"],
+      currentPage: "dashboard",
+      openTabs: ["dashboard"],
       forbidden: false,
       sidebarCollapsed: false,
       mobileSidebarOpen: false,
       appTheme: "classic",
       locale: "vi",
       isLoggedIn: false,
+      companyProfileOpen: false,
+      currentBranchId: null,
       customBreadcrumbs: null,
+      sidebarSearchQuery: "",
 
       setForbidden: (value) => set({ forbidden: value }),
+      setCurrentBranchId: (id) => set({ currentBranchId: id }),
       setCustomBreadcrumbs: (crumbs) => set({ customBreadcrumbs: crumbs }),
+      setSidebarSearchQuery: (q) => set({ sidebarSearchQuery: q }),
 
       navigate: (page) => {
         const { openTabs } = get();
@@ -257,13 +344,31 @@ export const useAppStore = create<AppState>()(
         });
       },
 
+      preloadTab: (page) => {
+        const { openTabs } = get();
+        if (openTabs.includes(page)) return;
+        const newTabs = [...openTabs];
+        const group = SECTION_ROOTS[page]?.group;
+        if (group) {
+          let lastIdx = -1;
+          newTabs.forEach((t, i) => {
+            if (SECTION_ROOTS[t]?.group === group) lastIdx = i;
+          });
+          if (lastIdx >= 0) newTabs.splice(lastIdx + 1, 0, page);
+          else newTabs.push(page);
+        } else {
+          newTabs.push(page);
+        }
+        set({ openTabs: newTabs });
+      },
+
       closeTab: (key) => {
         const { openTabs, currentPage } = get();
         const idx = openTabs.indexOf(key);
         const newTabs = openTabs.filter((t) => t !== key);
         if (currentPage === key) {
           const nextPage =
-            newTabs[Math.min(idx, newTabs.length - 1)] ?? "purchasing";
+            newTabs[Math.min(idx, newTabs.length - 1)] ?? "dashboard";
           const path = pageToPath(nextPage);
           const current = window.location.pathname + window.location.search;
           if (current !== path) history.pushState(null, "", path);
@@ -281,7 +386,7 @@ export const useAppStore = create<AppState>()(
         const { openTabs, currentPage, navigate } = get();
         const newTabs = openTabs.filter((t) => STATIC_TABS[t]);
         if (!newTabs.includes(currentPage)) {
-          navigate(newTabs[newTabs.length - 1] ?? "purchasing");
+          navigate(newTabs[newTabs.length - 1] ?? "dashboard");
         } else {
           set({ openTabs: newTabs });
         }
@@ -296,7 +401,7 @@ export const useAppStore = create<AppState>()(
           return Boolean(STATIC_TABS[tab]);
         });
         if (!keepTabs.includes(currentPage)) {
-          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "purchasing");
+          navigate(keepTabs[keepTabs.length - 1] ?? key ?? "dashboard");
         } else {
           set({ openTabs: keepTabs });
         }
@@ -320,6 +425,7 @@ export const useAppStore = create<AppState>()(
         setTimeout(() => window.dispatchEvent(new Event("resize")), 240);
       },
       setMobileSidebarOpen: (open) => set({ mobileSidebarOpen: open }),
+      setCompanyProfileOpen: (open) => set({ companyProfileOpen: open }),
 
       toggleAppTheme: () => {
         const order: AppTheme[] = ["classic", "shell", "orcaq"];
@@ -341,8 +447,8 @@ export const useAppStore = create<AppState>()(
       logout: () =>
         set({
           isLoggedIn: false,
-          currentPage: "purchasing",
-          openTabs: ["purchasing"],
+          currentPage: "dashboard",
+          openTabs: ["dashboard"],
         }),
     }),
     {
@@ -352,6 +458,7 @@ export const useAppStore = create<AppState>()(
         appTheme: s.appTheme,
         locale: s.locale,
         isLoggedIn: s.isLoggedIn,
+        currentBranchId: s.currentBranchId,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

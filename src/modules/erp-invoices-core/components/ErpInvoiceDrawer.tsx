@@ -1,4 +1,4 @@
-import { DrawerModal } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Button } from "@/shared/components/ui/Button";
 import { Download, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -17,7 +17,8 @@ interface Props {
   onDownload: (id: string, type: "pdf" | "xml") => void;
   loadingDetail?: boolean;
   onSyncDetail?: () => void;
-  children: React.ReactNode;
+  leftPanel: React.ReactNode;
+  rightPanel: React.ReactNode;
 }
 
 export function ErpInvoiceDrawer({
@@ -33,7 +34,8 @@ export function ErpInvoiceDrawer({
   onDownload,
   loadingDetail,
   onSyncDetail,
-  children,
+  leftPanel,
+  rightPanel,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
@@ -101,71 +103,78 @@ export function ErpInvoiceDrawer({
         })
       : t("invoice", "Hóa đơn");
 
+  // Extra action buttons in header (Sync, Download) — shown in view mode
+  const titleExtra =
+    !editMode && detailInvoice ? (
+      <div className="flex items-center gap-2">
+        {onSyncDetail && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSyncDetail}
+            disabled={loadingDetail}
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-1.5 ${loadingDetail ? "animate-spin" : ""}`}
+            />
+            {t("actionSync", "Đồng bộ từ GDT")}
+          </Button>
+        )}
+        {detailInvoice.xmlFileKey && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDownload(detailInvoice.id, "xml")}
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            XML
+          </Button>
+        )}
+        {detailInvoice.pdfFileKey && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDownload(detailInvoice.id, "pdf")}
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            PDF
+          </Button>
+        )}
+      </div>
+    ) : undefined;
+
   return (
-    <DrawerModal
+    <StandardFormDrawer
       open={open}
+      mode={editMode ? "edit" : "view"}
       onClose={onClose}
-      headerExtra={
-        <div className="flex items-center gap-2">
-          {!editMode && detailInvoice && onSyncDetail && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onSyncDetail}
-              disabled={loadingDetail}
-            >
-              <RefreshCw
-                className={`w-4 h-4 mr-1.5 ${loadingDetail ? "animate-spin" : ""}`}
-              />
-              {t("actionSync", "Đồng bộ từ GDT")}
-            </Button>
+      onToggleEdit={!editMode && detailInvoice ? startEdit : undefined}
+      titleExtra={titleExtra}
+      title={drawerTitle}
+      size="xl"
+      layout="2-columns"
+      rightPanelTitle={t("generalInfo", "Thông tin chung")}
+      actions={editMode ? editActions : viewActions}
+      leftPanel={
+        <div className="relative w-full h-full">
+          {loadingDetail && (
+            <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center rounded-md">
+              <div className="flex flex-col items-center gap-3">
+                <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+                <span className="text-sm text-gray-600 font-medium">
+                  {t("loadingDetail", "Đang tải dữ liệu...")}
+                </span>
+              </div>
+            </div>
           )}
-          {!editMode && detailInvoice?.xmlFileKey && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDownload(detailInvoice.id, "xml")}
-            >
-              <Download className="w-4 h-4 mr-1.5" />
-              XML
-            </Button>
-          )}
-          {!editMode && detailInvoice?.pdfFileKey && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDownload(detailInvoice.id, "pdf")}
-            >
-              <Download className="w-4 h-4 mr-1.5" />
-              PDF
-            </Button>
-          )}
-          {!editMode && detailInvoice && (
-            <Button variant="secondary" size="sm" onClick={startEdit}>
-              {t("actionEdit", "Chỉnh sửa")}
-            </Button>
-          )}
+          <div
+            className={loadingDetail ? "opacity-30 pointer-events-none" : ""}
+          >
+            {leftPanel}
+          </div>
         </div>
       }
-      title={drawerTitle}
-      panelClassName="min-[1024px]:w-[1400px]"
-      actions={editMode ? editActions : viewActions}
-    >
-      <div className="relative w-full h-full min-h-[300px]">
-        {loadingDetail && (
-          <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-              <span className="text-sm text-gray-600 font-medium">
-                {t("loadingDetail", "Đang tải dữ liệu...")}
-              </span>
-            </div>
-          </div>
-        )}
-        <div className={loadingDetail ? "opacity-30 pointer-events-none" : ""}>
-          {children}
-        </div>
-      </div>
-    </DrawerModal>
+      rightPanel={rightPanel}
+    />
   );
 }

@@ -183,8 +183,9 @@ export function useGrDrawer({
     }
   }, []);
 
-  // ── Load PO detail when purchaseOrderId changes
+  // ── Load PO detail when purchaseOrderId changes or drawer opens
   useEffect(() => {
+    if (!open) return;
     if (!form.purchaseOrderId) {
       setPoDetail(null);
       return;
@@ -201,10 +202,11 @@ export function useGrDrawer({
         }
       })
       .catch(() => setPoDetail(null));
-  }, [form.purchaseOrderId, fetchItemsDict]);
+  }, [form.purchaseOrderId, fetchItemsDict, open]);
 
-  // ── Load MO detail when productionOrderId changes
+  // ── Load MO detail when productionOrderId changes or drawer opens
   useEffect(() => {
+    if (!open) return;
     if (!form.productionOrderId) {
       setMoDetail(null);
       return;
@@ -218,14 +220,14 @@ export function useGrDrawer({
         }
       })
       .catch(() => setMoDetail(null));
-  }, [form.productionOrderId, fetchItemsDict]);
+  }, [form.productionOrderId, fetchItemsDict, open]);
 
   // ── Load PO list for the combobox
   const loadPoOptions = useCallback(async () => {
     try {
       const res = await purchaseOrdersCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         exclude_status: "DRAFT",
       });
       setPoOptions(
@@ -244,7 +246,7 @@ export function useGrDrawer({
     try {
       const res = await productionCoreApi.list({
         page: 1,
-        pageSize: 200,
+        pageSize: 500,
         exclude_status: "DRAFT",
       });
       setMoOptions(
@@ -311,7 +313,6 @@ export function useGrDrawer({
       try {
         const payload = buildGrPayload(form);
         if (statusOverride) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (payload as any).status = statusOverride;
         }
         if (editing) {

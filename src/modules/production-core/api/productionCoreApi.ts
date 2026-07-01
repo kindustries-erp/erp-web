@@ -110,6 +110,7 @@ export interface ErpProductionOrderMaterial {
   uom?: string | null;
   itemName?: string | null;
   itemCode?: string | null;
+  itemTypeCode?: string | null;
   originalItemId?: string | null;
   originalItemName?: string | null;
   originalItemCode?: string | null;

@@ -6,11 +6,12 @@ import {
 } from "@/shared/hooks/useFilterPanel";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useOperationalListQuery } from "@/modules/operational/hooks/useOperationalListQuery";
+import { useTags } from "@/modules/tags/hooks/useTags";
 
 export function usePurchaseOrderList() {
   const t = useT();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [purchaseSort, setPurchaseSort] = useState<string>("");
   const [expandedRowIds, setExpandedRowIds] = useState<Record<string, boolean>>(
     {},
@@ -60,6 +61,13 @@ export function usePurchaseOrderList() {
     [itemsData],
   );
 
+  const { data: allTags = [], isLoading: tagsLoading } = useTags();
+
+  const tagOptions = useMemo(
+    () => allTags.map((tag) => ({ value: tag.id, label: tag.name })),
+    [allTags],
+  );
+
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
       search: true,
@@ -86,6 +94,14 @@ export function usePurchaseOrderList() {
           onLoadMore: fetchNextItems,
           loading: loadingItems,
         },
+        {
+          key: "tag_id",
+          label: t("Thẻ nhãn"),
+          placeholder: t("Lọc theo tag"),
+          options: tagOptions,
+          type: "combobox",
+          loading: tagsLoading,
+        },
       ],
     }),
     [
@@ -95,6 +111,8 @@ export function usePurchaseOrderList() {
       loadingSuppliers,
       fetchNextItems,
       loadingItems,
+      tagOptions,
+      tagsLoading,
       t,
     ],
   );
@@ -109,6 +127,7 @@ export function usePurchaseOrderList() {
     search: filter.state.search || undefined,
     supplier_id: filter.state.custom["supplier_id"] || undefined,
     inventory_item_id: filter.state.custom["inventory_item_id"] || undefined,
+    tag_id: filter.state.custom["tag_id"] || undefined,
     date_from: filter.state.dateFrom || undefined,
     date_to: filter.state.dateTo || undefined,
     sort: purchaseSortArray,

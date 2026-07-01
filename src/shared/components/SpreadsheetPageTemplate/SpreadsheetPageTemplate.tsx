@@ -28,6 +28,7 @@ export function SpreadsheetPageTemplate<T>({
   onCreate,
   createLabel,
   createActions,
+  extraActions,
   bulkActionsNode,
   customActionsNode,
   filterConfig,
@@ -97,6 +98,7 @@ export function SpreadsheetPageTemplate<T>({
           onCreate={onCreate}
           createLabel={finalCreateLabel}
           createActions={createActions}
+          extraActions={extraActions}
           portalId={tableId}
         >
           {bulkActionsNode}
@@ -109,7 +111,7 @@ export function SpreadsheetPageTemplate<T>({
           {error}
         </div>
       ) : null}
-      <div className="flex items-start flex-1 min-h-0">
+      <div className="flex items-stretch flex-1 min-h-0">
         <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
           <StandardTable
             tableId={tableId}
@@ -140,11 +142,13 @@ export function SpreadsheetPageTemplate<T>({
             onPageSize={onPageSize}
             onRowClick={onRowClick}
             loadingRows={loadingRows}
+            sidePanel={
+              filterConfig && filter ? (
+                <FilterPanel config={filterConfig} filter={filter} />
+              ) : undefined
+            }
           />
         </div>
-        {filterConfig && filter && (
-          <FilterPanel config={filterConfig} filter={filter} />
-        )}
       </div>
       {children}
     </PageLayout>

@@ -55,7 +55,7 @@ export async function getBusinessPartnersApi(): Promise<BusinessPartner[]> {
     const { data } = await axiosInstance.get<
       PaginatedResponse<BusinessPartner>
     >("/api/v1/business-partners", {
-      params: { page: 1, pageSize: 200, sort: "name" },
+      params: { page: 1, pageSize: 500, sort: "name" },
     });
     return data.items;
   });

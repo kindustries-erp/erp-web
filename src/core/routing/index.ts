@@ -15,6 +15,8 @@ export const ROUTES: RouteConfig[] = [
   { key: "dashboard", label: "Bảng điều khiển", group: "dashboard" },
   { key: "cashflow", label: "Tổng hợp dòng tiền", group: "cashflow" },
   { key: "cashflow-vouchers", label: "Phiếu thu chi", group: "cashflow" },
+  { key: "bank-statement", label: "Sao kê Ngân hàng", group: "cashflow" },
+  { key: "cash-statement", label: "Sao kê Tiền mặt", group: "cashflow" },
   { key: "cash-fund", label: "Tiền mặt", group: "cashflow" },
   { key: "bank-deposit", label: "UNT / UNC", group: "cashflow" },
   { key: "attachments", label: "Tài liệu đính kèm", group: "cashflow" },

@@ -1,8 +1,10 @@
 import { Doughnut } from "react-chartjs-2";
 import "@/shared/utils/chartSetup";
 import { useChartTheme } from "@/shared/utils/chartTheme";
+import { cn } from "@/shared/utils";
 
 interface DonutItem {
+  id?: string;
   label: string;
   value: number;
   color: string;
@@ -11,9 +13,16 @@ interface DonutItem {
 interface DonutChartProps {
   items: DonutItem[];
   cutout?: string;
+  onClick?: (item: DonutItem) => void;
+  valueFormatter?: (value: number) => string;
 }
 
-export function DonutChart({ items, cutout = "65%" }: DonutChartProps) {
+export function DonutChart({
+  items,
+  cutout = "65%",
+  onClick,
+  valueFormatter,
+}: DonutChartProps) {
   const { borderColor } = useChartTheme();
   return (
     <Doughnut
@@ -32,19 +41,56 @@ export function DonutChart({ items, cutout = "65%" }: DonutChartProps) {
         responsive: true,
         maintainAspectRatio: false,
         cutout,
-        plugins: { legend: { display: false } },
+        onClick: (event, elements) => {
+          if (onClick && elements && elements.length > 0) {
+            const index = elements[0].index;
+            onClick(items[index]);
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                let label = context.label || "";
+                if (label) {
+                  label += ": ";
+                }
+                if (context.parsed !== null) {
+                  label += valueFormatter
+                    ? valueFormatter(context.parsed)
+                    : context.parsed + "%";
+                }
+                return label;
+              },
+            },
+          },
+        },
       }}
     />
   );
 }
 
-export function DonutLegend({ items }: { items: DonutItem[] }) {
+export function DonutLegend({
+  items,
+  onClick,
+  valueFormatter,
+}: {
+  items: DonutItem[];
+  onClick?: (item: DonutItem) => void;
+  valueFormatter?: (value: number) => string;
+}) {
   return (
     <div className="mt-[10px] flex flex-col gap-[5px]">
       {items.map((x) => (
         <div
           key={x.label}
-          className="flex items-center justify-between text-xs"
+          className={cn(
+            "flex items-center justify-between text-xs",
+            onClick &&
+              "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 rounded-md px-1 -mx-1",
+          )}
+          onClick={() => onClick?.(x)}
         >
           <div className="flex items-center gap-[6px] text-[color:var(--muted-fg)]">
             <div
@@ -53,7 +99,9 @@ export function DonutLegend({ items }: { items: DonutItem[] }) {
             />
             {x.label}
           </div>
-          <div className="text-[color:var(--muted-fg)]">{x.value}%</div>
+          <div className="text-[color:var(--muted-fg)]">
+            {valueFormatter ? valueFormatter(x.value) : `${x.value}%`}
+          </div>
         </div>
       ))}
     </div>

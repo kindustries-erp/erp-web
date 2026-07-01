@@ -58,6 +58,7 @@ export function PageLayout({
   activeTab,
   onTabChange,
   hideTabs,
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   stickyOffset = "-26px",
   hideHeader,
@@ -67,7 +68,7 @@ export function PageLayout({
   return (
     <div
       className={cn(
-        "flex flex-col h-full overflow-hidden space-y-4",
+        "flex flex-col h-full overflow-hidden space-y-4 px-5 pt-[18px]",
         className,
       )}
     >

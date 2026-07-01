@@ -1,5 +1,6 @@
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
 import {
   DrawerField,
   DrawerSection,
@@ -21,6 +22,7 @@ import { ExpenseFields } from "@/modules/operational/components/form/ExpenseFiel
 import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
 import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
 import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface FormGeneralInfoPanelProps {
   variant: FormVariant;
@@ -33,6 +35,14 @@ interface FormGeneralInfoPanelProps {
   branchOptions: Array<{ value: string; label: string }>;
   partnerOptions: Array<{ value: string; label: string }>;
   poReceipts?: ErpPoReceipt[];
+  /** ID of the existing document (null when creating) */
+  entityId?: string | null;
+  /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' */
+  entityType?: string;
+  /** Pending tag IDs for new-create Option B flow */
+  pendingTagIds?: string[];
+  onPendingTagsChange?: (ids: string[]) => void;
+  isAdminEmail?: boolean;
 }
 
 /**
@@ -49,6 +59,11 @@ export function FormGeneralInfoPanel({
   branchOptions,
   partnerOptions,
   poReceipts,
+  entityId,
+  entityType,
+  pendingTagIds = [],
+  onPendingTagsChange,
+  isAdminEmail,
 }: FormGeneralInfoPanelProps) {
   const t = useT();
   const {
@@ -133,10 +148,12 @@ export function FormGeneralInfoPanel({
           </span>
         }
         titleExtra={
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setShowGeneralInfo((s) => !s)}
-            className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+            className="-mr-1 text-muted-foreground"
             title={showGeneralInfo ? t("Thu gọn") : t("Mở rộng")}
           >
             {showGeneralInfo ? (
@@ -144,7 +161,7 @@ export function FormGeneralInfoPanel({
             ) : (
               <ChevronLeft className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         }
       >
         <div
@@ -350,6 +367,30 @@ export function FormGeneralInfoPanel({
                   <PurchaseReceiptHistory receipts={poReceipts} />
                 </div>
               )}
+
+              {/* Tags — purchase & sales only */}
+              {isAdminEmail &&
+                (variant === "purchase" || variant === "sales") &&
+                entityType && (
+                  <DrawerField label={t("Thẻ nhãn")}>
+                    {entityId ? (
+                      <EntityTagSelector
+                        entityType={entityType}
+                        entityId={entityId}
+                        readOnly={viewOnly}
+                      />
+                    ) : !viewOnly ? (
+                      <EntityTagSelector
+                        entityType={entityType}
+                        entityId="__pending__"
+                        readOnly={false}
+                        pendingMode
+                        pendingTagIds={pendingTagIds}
+                        onPendingChange={onPendingTagsChange}
+                      />
+                    ) : null}
+                  </DrawerField>
+                )}
             </div>
           </div>
         </div>

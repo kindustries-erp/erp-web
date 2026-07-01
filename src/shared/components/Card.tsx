@@ -17,8 +17,7 @@ export function Card({ children, className, noHover }: CardProps) {
       className={cn(
         "rounded-xl border border-border bg-surface p-3",
         !noHover && "card-shadow",
-        noHover &&
-          "shadow-[0_1px_4px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03)]",
+        noHover && "shadow-panel",
         className,
       )}
     >

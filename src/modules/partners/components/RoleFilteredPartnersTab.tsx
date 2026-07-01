@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 import { Pencil, Trash2 } from "lucide-react";
 import { extractApiError } from "@/shared/utils/apiError";
 import {
@@ -175,7 +176,7 @@ export function RoleFilteredPartnersTab({
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [searchInput, setSearchInput] = useState("");
@@ -788,23 +789,29 @@ export function RoleFilteredPartnersTab({
                     </label>
                   </div>
                   {contactRows.length > 1 && (
-                    <button
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
                       onClick={() => removeContactRow(idx)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="p-0 h-auto font-normal text-xs text-red-500"
                     >
                       Xóa liên hệ này
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
-              <button
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
                 onClick={() =>
                   setContactRows((r) => [...r, emptyContactDraft()])
                 }
-                className="text-xs text-blue-500 hover:underline mt-1"
+                className="p-0 h-auto font-normal text-xs mt-1"
               >
                 + Thêm liên hệ
-              </button>
+              </Button>
             </DrawerSection>
           </div>
 
@@ -868,21 +875,27 @@ export function RoleFilteredPartnersTab({
                     Tài khoản mặc định
                   </label>
                   {bankRows.length > 1 && (
-                    <button
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
                       onClick={() => removeBankRow(idx)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="p-0 h-auto font-normal text-xs text-red-500"
                     >
                       Xóa tài khoản này
-                    </button>
+                    </Button>
                   )}
                 </div>
               ))}
-              <button
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
                 onClick={() => setBankRows((r) => [...r, emptyBankDraft()])}
-                className="text-xs text-blue-500 hover:underline mt-1"
+                className="p-0 h-auto font-normal text-xs mt-1"
               >
                 + Thêm tài khoản
-              </button>
+              </Button>
             </DrawerSection>
           </div>
         </div>

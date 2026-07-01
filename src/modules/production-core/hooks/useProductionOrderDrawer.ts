@@ -23,6 +23,7 @@ export interface BomLikeLine {
   itemId?: string;
   itemName?: string | null;
   itemCode?: string | null;
+  itemTypeCode?: string | null;
   qtyRequired?: string | null;
   qtyIssued?: string | null;
   uom?: string | null;
@@ -48,6 +49,7 @@ export interface ExplosionNode {
   itemId: string;
   itemName?: string;
   itemCode?: string;
+  itemTypeCode?: string | null;
   qtyRequired: number | string;
   uom?: string;
   isLeaf?: boolean;
@@ -309,6 +311,8 @@ export function useProductionOrderDrawer({
                     originalItemId: n.itemId,
                     itemCode: n.itemCode ?? matched?.originalItemCode ?? null,
                     itemName: n.itemName ?? matched?.originalItemName ?? null,
+                    itemTypeCode:
+                      n.itemTypeCode ?? matched?.itemTypeCode ?? null,
                     qtyRequired: String(n.qtyRequired),
                     qtyIssued: matched?.qtyIssued ?? "0",
                     uom: n.uom ?? matched?.uom ?? null,
@@ -562,6 +566,44 @@ export function useProductionOrderDrawer({
     }
   }, [open, editing, loadItems]);
 
+  const getPayload = (status: string) => {
+    const materialOverrides = Object.entries(alternativeItems)
+      .filter(([, altId]) => !!altId)
+      .map(([pathOrItemId, alternativeItemId]) => {
+        const node = bomLines.find(
+          (l) => (l.path || l.itemId) === pathOrItemId,
+        );
+        return {
+          path: node?.path,
+          originalItemId: node?.itemId || pathOrItemId,
+          alternativeItemId,
+          notes: "Thay thế bởi người dùng khi tạo lệnh sản xuất",
+        };
+      });
+
+    return {
+      finishedGoodItemId: form.finishedGoodItemId,
+      qtyToProduce: form.qtyToProduce,
+      ...(form.warehouseCode.trim()
+        ? { warehouseCode: form.warehouseCode.trim() }
+        : {}),
+      ...(form.referenceNo.trim()
+        ? { referenceNo: form.referenceNo.trim() }
+        : {}),
+      ...(form.plannedStartDate
+        ? { plannedStartDate: form.plannedStartDate }
+        : {}),
+      ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
+      ...(form.bomId ? { bomId: form.bomId } : {}),
+      status,
+      ...(materialOverrides.length > 0 ? { materialOverrides } : {}),
+      outputMetadata: {
+        ...(editing?.outputMetadata || {}),
+        lineNotes,
+      },
+    };
+  };
+
   const handleSubmit = async (status: string = "CONFIRMED") => {
     if (!form.finishedGoodItemId) {
       setError("Vui lòng chọn thành phẩm");
@@ -575,41 +617,7 @@ export function useProductionOrderDrawer({
     setSaving(true);
     setError(null);
     try {
-      const materialOverrides = Object.entries(alternativeItems)
-        .filter(([, altId]) => !!altId)
-        .map(([pathOrItemId, alternativeItemId]) => {
-          const node = bomLines.find(
-            (l) => (l.path || l.itemId) === pathOrItemId,
-          );
-          return {
-            path: node?.path,
-            originalItemId: node?.itemId || pathOrItemId,
-            alternativeItemId,
-            notes: "Thay thế bởi người dùng khi tạo lệnh sản xuất",
-          };
-        });
-
-      const payload = {
-        finishedGoodItemId: form.finishedGoodItemId,
-        qtyToProduce: form.qtyToProduce,
-        ...(form.warehouseCode.trim()
-          ? { warehouseCode: form.warehouseCode.trim() }
-          : {}),
-        ...(form.referenceNo.trim()
-          ? { referenceNo: form.referenceNo.trim() }
-          : {}),
-        ...(form.plannedStartDate
-          ? { plannedStartDate: form.plannedStartDate }
-          : {}),
-        ...(form.plannedEndDate ? { plannedEndDate: form.plannedEndDate } : {}),
-        ...(form.bomId ? { bomId: form.bomId } : {}),
-        status,
-        ...(materialOverrides.length > 0 ? { materialOverrides } : {}),
-        outputMetadata: {
-          ...(editing?.outputMetadata || {}),
-          lineNotes,
-        },
-      };
+      const payload = getPayload(status);
 
       if (!editing) {
         await productionCoreApi.execute(payload);
@@ -645,9 +653,21 @@ export function useProductionOrderDrawer({
 
   const handleConfirmOrder = async () => {
     if (!editing?.id) return;
+    if (!form.finishedGoodItemId) {
+      setError("Vui lòng chọn thành phẩm");
+      return;
+    }
+    if (!form.qtyToProduce.trim() || Number(form.qtyToProduce) <= 0) {
+      setError("Số lượng sản xuất phải lớn hơn 0");
+      return;
+    }
+
     setSaving(true);
     setError(null);
     try {
+      const payload = getPayload("DRAFT");
+      await productionCoreApi.update(editing.id, payload);
+
       await productionCoreApi.confirm(editing.id);
       showToast({
         title: "Xác nhận lệnh sản xuất thành công",

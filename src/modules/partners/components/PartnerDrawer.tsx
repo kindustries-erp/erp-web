@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import {
   DrawerSection,
@@ -19,6 +17,7 @@ import {
 export function PartnerDrawer({
   drawerOpen,
   closeDrawer,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isDirty,
   editing,
   saving,
@@ -34,7 +33,9 @@ export function PartnerDrawer({
   removeBankRow,
   addBankRow,
   saveError,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   stackOffset = 0,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   zIndex,
 }: any) {
   const mode = editing ? "edit" : "create";
@@ -46,7 +47,7 @@ export function PartnerDrawer({
       mode={mode}
       title={editing ? "Chỉnh sửa đối tác" : "Thêm đối tác mới"}
       subtitle={editing ? editing.name : "Điền thông tin bên dưới"}
-      panelClassName="!w-[1100px] !max-w-[calc(100vw-40px)]"
+      size="xl"
       actions={[
         { label: "Hủy", onClick: closeDrawer },
         {

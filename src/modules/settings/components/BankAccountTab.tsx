@@ -10,97 +10,79 @@ import {
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import {
-  getCompanyBankAccountsPagedApi,
-  createCompanyBankAccountApi,
-  updateCompanyBankAccountApi,
-  deleteCompanyBankAccountApi,
-  getChartOfAccountsApi,
-  type CompanyBankAccount,
-  type CreateCompanyBankAccountDto,
-  type ChartOfAccount,
-} from "@/modules/accounting/api/catalogApi";
-import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { SectionHeader, ErrorBanner } from "./shared";
+import {
+  bankStatementApi,
+  type ErpBankAccount,
+} from "@/modules/bank-statements/api/bankStatementApi";
+import { useAppStore } from "@/core/config/appStore";
+import { money } from "@/shared/utils/format";
 
 interface BankForm {
-  bank_account_code: string;
-  bank_name: string;
-  account_number: string;
-  account_holder: string;
-  accounting_account_id: string;
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
   currency: string;
-  branch_id: string;
+  isActive: boolean;
+  openingBalance: number;
+  periodDate: string;
 }
+
 const emptyBankForm: BankForm = {
-  bank_account_code: "",
-  bank_name: "",
-  account_number: "",
-  account_holder: "",
-  accounting_account_id: "",
+  bankCode: "",
+  bankName: "",
+  accountNumber: "",
+  accountName: "",
   currency: "VND",
-  branch_id: "",
+  isActive: true,
+  openingBalance: 0,
+  periodDate: "",
 };
-function buildBankForm(b: CompanyBankAccount): BankForm {
+
+function buildBankForm(b: ErpBankAccount): BankForm {
   return {
-    bank_account_code: b.bank_account_code ?? "",
-    bank_name: b.bank_name,
-    account_number: b.account_number,
-    account_holder: b.account_holder,
-    accounting_account_id: b.accounting_account_id ?? "",
+    bankCode: b.bankCode ?? "",
+    bankName: b.bankName ?? "",
+    accountNumber: b.accountNumber ?? "",
+    accountName: b.accountName ?? "",
     currency: b.currency ?? "VND",
-    branch_id: b.branch_id ?? "",
+    isActive: b.isActive ?? true,
+    openingBalance: b.openingBalance ?? 0,
+    periodDate: b.periodDate ?? "",
   };
 }
 
 export function NHTab() {
-  const [items, setItems] = useState<CompanyBankAccount[]>([]);
-  const [coaItems, setCoaItems] = useState<ChartOfAccount[]>([]);
-  const [branchOptions, setBranchOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
+  const { currentBranchId } = useAppStore();
+  const [items, setItems] = useState<ErpBankAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState<CompanyBankAccount | null>(null);
+  const [editing, setEditing] = useState<ErpBankAccount | null>(null);
   const [form, setForm] = useState<BankForm>(emptyBankForm);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CompanyBankAccount | null>(
-    null,
-  );
+
+  const [deleteTarget, setDeleteTarget] = useState<ErpBankAccount | null>(null);
   const [deleting, setDeleting] = useState(false);
   const t = useT();
 
   useEffect(() => {
-    getChartOfAccountsApi()
-      .then(setCoaItems)
-      .catch(() => {});
-    getBranchOptionsApi()
-      .then(setBranchOptions)
-      .catch(() => {});
-  }, []);
+    if (currentBranchId) {
+      loadItems();
+    }
+  }, [currentBranchId]);
 
-  useEffect(() => {
-    loadItems(page, pageSize);
-  }, [page, pageSize]);
-
-  async function loadItems(pg: number, ps: number) {
+  async function loadItems() {
+    if (!currentBranchId) return;
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getCompanyBankAccountsPagedApi({
-        page: pg,
-        pageSize: ps,
-      });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
+      const res = await bankStatementApi.getBankAccounts();
+      setItems(res);
     } catch {
       setFetchError(t("settings.nh.fetchError"));
     } finally {
@@ -108,35 +90,34 @@ export function NHTab() {
     }
   }
 
-  function handlePageSize(ps: number) {
-    setPageSize(ps);
-    setPage(1);
-  }
   function openNew() {
     setEditing(null);
     setForm(emptyBankForm);
     setSaveError(null);
     setDrawerOpen(true);
   }
-  function openEdit(item: CompanyBankAccount) {
+
+  function openEdit(item: ErpBankAccount) {
     setEditing(item);
     setForm(buildBankForm(item));
     setSaveError(null);
     setDrawerOpen(true);
   }
+
   function closeDrawer() {
     setDrawerOpen(false);
     setEditing(null);
     setSaveError(null);
   }
+
   const setField = <K extends keyof BankForm>(k: K, v: BankForm[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
   async function handleSave() {
     if (
-      !form.bank_name.trim() ||
-      !form.account_number.trim() ||
-      !form.account_holder.trim()
+      !form.bankName.trim() ||
+      !form.accountNumber.trim() ||
+      !form.accountName.trim()
     ) {
       setSaveError(t("settings.nh.requiredError"));
       return;
@@ -144,32 +125,29 @@ export function NHTab() {
     setSaving(true);
     setSaveError(null);
     try {
-      const dto: CreateCompanyBankAccountDto = {
-        bank_account_code: form.bank_account_code.trim(),
-        bank_name: form.bank_name.trim(),
-        account_number: form.account_number.trim(),
-        account_holder: form.account_holder.trim(),
-        accounting_account_id: form.accounting_account_id || "",
+      const dto = {
+        branchId: currentBranchId!,
+        bankCode: form.bankCode.trim(),
+        bankName: form.bankName.trim(),
+        accountNumber: form.accountNumber.trim(),
+        accountName: form.accountName.trim(),
         currency: form.currency || "VND",
-        branch_id: form.branch_id || null,
+        isActive: form.isActive,
+        openingBalance: form.openingBalance || 0,
+        periodDate: form.periodDate || undefined,
       };
+
       if (editing) {
-        await updateCompanyBankAccountApi(editing.id, dto);
+        await bankStatementApi.updateBankAccount(editing.id, dto);
       } else {
-        await createCompanyBankAccountApi(dto);
+        await bankStatementApi.createBankAccount(dto);
       }
       closeDrawer();
-      if (!editing && page !== 1) setPage(1);
-      else loadItems(page, pageSize);
+      loadItems();
     } catch (e: unknown) {
-      const err = e as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
+      const err = e as any;
       setSaveError(
-        err?.response?.data?.message ||
-          err?.message ||
-          t("settings.tk.unknownError"),
+        err?.response?.data?.message || err?.message || "Đã xảy ra lỗi",
       );
     } finally {
       setSaving(false);
@@ -180,10 +158,9 @@ export function NHTab() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await deleteCompanyBankAccountApi(deleteTarget.id);
+      await bankStatementApi.deleteBankAccount(deleteTarget.id);
       setDeleteTarget(null);
-      if (items.length === 1 && page > 1) setPage(page - 1);
-      else loadItems(page, pageSize);
+      loadItems();
     } catch {
       setDeleteTarget(null);
     } finally {
@@ -191,47 +168,53 @@ export function NHTab() {
     }
   }
 
-  const isDirty = !!form.bank_name.trim() || !!form.account_number.trim();
-  const columns: DataTableColumn<CompanyBankAccount>[] = [
+  const isDirty = !!form.bankName.trim() || !!form.accountNumber.trim();
+  const columns: DataTableColumn<ErpBankAccount>[] = [
     {
-      key: "bank_account_code",
+      key: "bankCode",
       header: t("settings.nh.headers.bankAccountCode"),
-      cell: (b) => b.bank_account_code || "—",
+      cell: (b) => b.bankCode || "—",
       className: "font-mono text-[color:var(--muted-fg)] text-left",
       headerClassName: "text-center",
       skeletonClassName: "w-16",
     },
     {
-      key: "bank_name",
+      key: "bankName",
       header: t("settings.nh.headers.bankName"),
-      cell: (b) => b.bank_name,
+      cell: (b) => b.bankName,
       className: "font-medium text-left",
       headerClassName: "text-center",
       skeletonClassName: "w-32",
     },
     {
-      key: "account_number",
+      key: "accountNumber",
       header: t("settings.nh.headers.accountNumber"),
-      cell: (b) => b.account_number,
+      cell: (b) => b.accountNumber,
       className: "text-left",
       headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
-      key: "account_holder",
+      key: "accountName",
       header: t("settings.nh.headers.accountHolder"),
-      cell: (b) => b.account_holder,
+      cell: (b) => b.accountName,
       className: "text-left",
       headerClassName: "text-center",
       skeletonClassName: "w-28",
     },
     {
-      key: "accounting_account_id",
-      header: t("settings.tk.headers.accountingAccount"),
-      cell: (b) =>
-        coaItems.find((c) => c.id === b.accounting_account_id)?.account_code ||
-        "—",
-      className: "text-left",
+      key: "openingBalance",
+      header: "Số dư đầu kỳ",
+      cell: (b) => (b.openingBalance ? money(b.openingBalance) : "—"),
+      className: "text-right",
+      headerClassName: "text-center",
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "periodDate",
+      header: "Ngày chốt dư",
+      cell: (b) => b.periodDate || "—",
+      className: "text-center text-[color:var(--muted-fg)]",
       headerClassName: "text-center",
       skeletonClassName: "w-20",
     },
@@ -239,7 +222,7 @@ export function NHTab() {
       key: "currency",
       header: t("settings.tk.headers.currency"),
       cell: (b) => b.currency,
-      className: "text-[color:var(--muted-fg)] text-left",
+      className: "text-[color:var(--muted-fg)] text-center",
       headerClassName: "text-center",
       skeletonClassName: "w-12",
     },
@@ -279,12 +262,6 @@ export function NHTab() {
             />
           ),
         }}
-        page={page}
-        pageSize={pageSize}
-        total={total}
-        totalPages={totalPages}
-        onPage={setPage}
-        onPageSize={handlePageSize}
       />
 
       <DrawerModal
@@ -294,7 +271,7 @@ export function NHTab() {
         title={
           editing ? t("settings.nh.editTitle") : t("settings.nh.createTitle")
         }
-        subtitle={editing ? editing.bank_name : t("settings.nh.subtitle")}
+        subtitle={editing ? editing.bankName : t("settings.nh.subtitle")}
         actions={[
           { label: t("common.cancel"), onClick: closeDrawer },
           {
@@ -311,8 +288,8 @@ export function NHTab() {
             <input
               type="text"
               className={inputCls}
-              value={form.bank_account_code}
-              onChange={(e) => setField("bank_account_code", e.target.value)}
+              value={form.bankCode}
+              onChange={(e) => setField("bankCode", e.target.value)}
               placeholder={t("settings.nh.codePlaceholder")}
             />
           </DrawerField>
@@ -320,8 +297,8 @@ export function NHTab() {
             <input
               type="text"
               className={inputCls}
-              value={form.bank_name}
-              onChange={(e) => setField("bank_name", e.target.value)}
+              value={form.bankName}
+              onChange={(e) => setField("bankName", e.target.value)}
               placeholder={t("settings.nh.bankNamePlaceholder")}
             />
           </DrawerField>
@@ -329,8 +306,8 @@ export function NHTab() {
             <input
               type="text"
               className={inputCls}
-              value={form.account_number}
-              onChange={(e) => setField("account_number", e.target.value)}
+              value={form.accountNumber}
+              onChange={(e) => setField("accountNumber", e.target.value)}
               placeholder={t("settings.nh.accountNumberPlaceholder")}
             />
           </DrawerField>
@@ -338,29 +315,9 @@ export function NHTab() {
             <input
               type="text"
               className={inputCls}
-              value={form.account_holder}
-              onChange={(e) => setField("account_holder", e.target.value)}
+              value={form.accountName}
+              onChange={(e) => setField("accountName", e.target.value)}
               placeholder={t("settings.nh.accountHolderPlaceholder")}
-            />
-          </DrawerField>
-          <DrawerField label={t("settings.tk.headers.accountingAccount")}>
-            <Combobox
-              options={coaItems.map((c) => ({
-                value: c.id,
-                label: `${c.account_code} — ${c.account_name}`,
-              }))}
-              value={form.accounting_account_id}
-              onChange={(v) => setField("accounting_account_id", v)}
-              placeholder={t("common.selectAccount")}
-            />
-          </DrawerField>
-          <DrawerField label="Chi nhánh">
-            <Combobox
-              options={branchOptions}
-              value={form.branch_id}
-              onChange={(v) => setField("branch_id", v)}
-              placeholder="Tất cả chi nhánh"
-              allowClear={true}
             />
           </DrawerField>
           <DrawerField label={t("settings.tk.headers.currency")}>
@@ -375,6 +332,29 @@ export function NHTab() {
             />
           </DrawerField>
         </DrawerSection>
+
+        <DrawerSection title="Số dư đầu kỳ">
+          <DrawerField label="Số tiền">
+            <input
+              type="number"
+              className={inputCls}
+              value={form.openingBalance}
+              onChange={(e) =>
+                setField("openingBalance", Number(e.target.value))
+              }
+              placeholder="0"
+            />
+          </DrawerField>
+          <DrawerField label="Ngày chốt dư">
+            <input
+              type="date"
+              className={inputCls}
+              value={form.periodDate}
+              onChange={(e) => setField("periodDate", e.target.value)}
+            />
+          </DrawerField>
+        </DrawerSection>
+
         {saveError && <ErrorBanner msg={saveError} />}
       </DrawerModal>
 
@@ -383,7 +363,7 @@ export function NHTab() {
         title={t("confirmModal.defaultTitle")}
         message={t("settings.nh.deleteMessage").replace(
           "{0}",
-          deleteTarget?.bank_name ?? "",
+          deleteTarget?.bankName ?? "",
         )}
         confirmLabel={t("confirmModal.defaultConfirm")}
         loading={deleting}

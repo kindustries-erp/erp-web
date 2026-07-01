@@ -9,11 +9,11 @@ import type { PaginatedResponse } from "@/shared/types/pagination";
 
 export function useInventoryMastersOptionsQuery() {
   const uomParams = useMemo(
-    () => ({ page: 1, pageSize: 200, isActive: true }),
+    () => ({ page: 1, pageSize: 500, isActive: true }),
     [],
   );
   const itemTypeParams = useMemo(
-    () => ({ page: 1, pageSize: 200, isActive: true }),
+    () => ({ page: 1, pageSize: 500, isActive: true }),
     [],
   );
 

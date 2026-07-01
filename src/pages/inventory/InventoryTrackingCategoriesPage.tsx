@@ -71,7 +71,7 @@ export function InventoryTrackingCategoriesPage() {
   const canRead = useHasPermission("inventory_items", "read");
   const showToast = useUIStore((s) => s.showToast);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [sortArray, setSortArray] = useState<string[]>(["-createdAt"]);
 
   const STATUS_OPTIONS = useMemo(
@@ -191,7 +191,6 @@ export function InventoryTrackingCategoriesPage() {
         variant: "success",
       });
       closeDrawer();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setSaveError(
         e?.response?.data?.message ||
@@ -217,7 +216,6 @@ export function InventoryTrackingCategoriesPage() {
         variant: "success",
       });
       setDeleteTarget(null);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       showToast({
         title:
@@ -380,7 +378,7 @@ export function InventoryTrackingCategoriesPage() {
         title={editing ? "Cập nhật" : "Tạo mới"}
         subtitle={editing?.code || t("inventoryMasters.drawer.subtitleConfig")}
         actions={drawerActions}
-        rightPanelTitle="Thông tin"
+        layout="1-column"
         leftPanel={
           <>
             {saveError && (
@@ -390,6 +388,17 @@ export function InventoryTrackingCategoriesPage() {
             )}
             <DrawerSection title={t("inventoryMasters.drawer.sectionConfig")}>
               <div className="flex flex-col gap-3">
+                <DrawerField label={t("inventoryMasters.fields.code")} required>
+                  <input
+                    value={form.code}
+                    disabled={viewOnly}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, code: e.target.value }))
+                    }
+                    className={inputCls}
+                    placeholder={t("inventoryMasters.fields.codePlaceholder")}
+                  />
+                </DrawerField>
                 <DrawerField label={t("inventoryMasters.fields.name")} required>
                   <input
                     value={form.name}
@@ -417,35 +426,23 @@ export function InventoryTrackingCategoriesPage() {
                     )}
                   />
                 </DrawerField>
+                <DrawerField label={t("inventoryMasters.fields.status")}>
+                  <Combobox
+                    value={form.isActive}
+                    disabled={viewOnly}
+                    allowClear={false}
+                    onChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        isActive: value || "true",
+                      }))
+                    }
+                    options={STATUS_OPTIONS}
+                  />
+                </DrawerField>
               </div>
             </DrawerSection>
           </>
-        }
-        rightPanel={
-          <div className="flex flex-col gap-3 pt-1">
-            <DrawerField label={t("inventoryMasters.fields.code")} required>
-              <input
-                value={form.code}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, code: e.target.value }))
-                }
-                className={inputCls}
-                placeholder={t("inventoryMasters.fields.codePlaceholder")}
-              />
-            </DrawerField>
-            <DrawerField label={t("inventoryMasters.fields.status")}>
-              <Combobox
-                value={form.isActive}
-                disabled={viewOnly}
-                allowClear={false}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, isActive: value || "true" }))
-                }
-                options={STATUS_OPTIONS}
-              />
-            </DrawerField>
-          </div>
         }
       />
     </>

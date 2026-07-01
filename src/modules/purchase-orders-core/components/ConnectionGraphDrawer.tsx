@@ -17,7 +17,8 @@ import "@xyflow/react/dist/style.css";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { useT } from "@/core/i18n";
 import { cn } from "@/shared/utils";
-import { Network, Loader2, ChevronRight } from "lucide-react";
+import { Network, Loader2, ExternalLink } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { format } from "date-fns";
 import type {
@@ -199,20 +200,37 @@ function GraphNode({ data }: NodeProps<Node<GraphNodeData>>) {
               )}
             </span>
           </div>
-          <button
+          <Button
             type="button"
-            className="text-[10px] text-[color:var(--muted-fg)] hover:text-foreground cursor-pointer flex items-center gap-0.5 transition-colors z-20"
+            variant="link"
+            size="sm"
+            className="text-[10px] h-auto p-0 flex items-center gap-0.5 z-20 text-muted-foreground"
             onClick={(e) => {
               e.stopPropagation();
               const onClickFn = (data as Record<string, unknown>)
                 .onDetailsClick;
               if (typeof onClickFn === "function") {
                 onClickFn();
+              } else if (data.docId) {
+                // Determine document type mapping based on nodeType
+                let docType = "";
+                if (data.nodeType === "purchase_order")
+                  docType = "erp_purchase_order";
+                else if (data.nodeType === "invoice") docType = "erp_invoice";
+                // Note: We might need to handle GR and PV if they have their own detail drawers
+                if (docType) {
+                  // We do not close the current drawer, just dispatch the event to open another one on top
+                  window.dispatchEvent(
+                    new CustomEvent("open_erp_document", {
+                      detail: { type: docType, id: data.docId },
+                    }),
+                  );
+                }
               }
             }}
           >
-            Details <ChevronRight className="w-3 h-3" />
-          </button>
+            Chi tiết <ExternalLink className="w-3 h-3" />
+          </Button>
         </div>
 
         <div className="flex items-center justify-end mt-5">

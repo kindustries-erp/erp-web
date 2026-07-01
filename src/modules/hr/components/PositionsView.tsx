@@ -6,6 +6,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
@@ -46,7 +47,6 @@ const IconBriefcase = () => (
   </svg>
 );
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function ChucVuView(p: any) {
   const {
     t,
@@ -168,12 +168,9 @@ export function ChucVuView(p: any) {
             onClick={() => setFilterPanelOpen((v) => !v)}
             activeCount={activeFilterCount}
           />
-          <button
-            onClick={openNew}
-            className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
-          >
+          <Button onClick={openNew} variant="primary">
             <IconPlus /> {t("chucvu.add")}
-          </button>
+          </Button>
         </div>
       </div>
       <div className="flex items-start">
@@ -293,7 +290,6 @@ function PositionDrawer({
   setField,
   depts,
   saveError,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }: any) {
   return (
     <DrawerModal
@@ -337,7 +333,6 @@ function PositionDrawer({
         </DrawerField>
         <DrawerField label={t("chucvu.headers.department")}>
           <Combobox
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             options={depts.map((d: any) => ({
               value: d.id,
               label: d.department_name,

@@ -1,6 +1,7 @@
 export type PageKey =
   | "dashboard"
   | "cashflow"
+  | "cashflow-dashboard"
   | "cashflow-vouchers"
   | "cash-fund"
   | "bank-deposit"
@@ -12,6 +13,7 @@ export type PageKey =
   | "payables"
   | "ledger"
   | "journal"
+  | "journal-entry"
   | "employees"
   | "departments"
   | "positions"
@@ -46,7 +48,14 @@ export type PageKey =
   | "erp-activity-logs"
   | "erp-permissions-core"
   | "sys-tags"
-  | "erp-invoices";
+  | "erp-invoices-in"
+  | "erp-invoices-out"
+  | "bank-statement"
+  | "cash-statement"
+  | "garage-dashboard"
+  | "garage-cases"
+  | "garage-receivables"
+  | "garage-payables";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

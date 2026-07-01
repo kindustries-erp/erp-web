@@ -62,7 +62,7 @@ export function NhanSu() {
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -114,7 +114,7 @@ export function NhanSu() {
     Promise.all([
       getDepartmentsApi(),
       getPositionsApi(),
-      getRolesApi({ pageSize: 200 }),
+      getRolesApi({ pageSize: 500 }),
     ])
       .then(([d, p, r]) => {
         setDepts(d);

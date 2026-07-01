@@ -39,6 +39,7 @@ export interface StandardTableProps<T> {
   summaryRow?: Record<string, React.ReactNode>;
   containerClassName?: string;
   defaultColumnOrder?: string[];
+  sidePanel?: React.ReactNode;
 }
 
 export function StandardTable<T>({
@@ -73,6 +74,7 @@ export function StandardTable<T>({
   summaryRow,
   containerClassName,
   defaultColumnOrder,
+  sidePanel,
 }: StandardTableProps<T>) {
   return (
     <DataTable
@@ -121,6 +123,7 @@ export function StandardTable<T>({
       summaryRow={summaryRow}
       containerClassName={containerClassName}
       defaultColumnOrder={defaultColumnOrder}
+      sidePanel={sidePanel}
     />
   );
 }

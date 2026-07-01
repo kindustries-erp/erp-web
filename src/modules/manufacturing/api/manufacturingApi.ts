@@ -171,14 +171,6 @@ export interface UpdateComponentDto {
   notes?: string;
 }
 
-export interface PoImportResult {
-  total_rows: number;
-  success_pos: number;
-  failed_rows: number;
-  errors: { row: number; field: string; message: string }[];
-  created_pos: { po_no: string; id: string; line_count: number }[];
-}
-
 const BASE = "/api/v1/erp-manufacturing";
 
 function p(input: MfgListParams = {}) {
@@ -201,7 +193,6 @@ function p(input: MfgListParams = {}) {
 }
 
 function normalizePaginated<T>(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   raw: any,
   page: number,
   pageSize: number,
@@ -242,7 +233,6 @@ export const manufacturingApi = {
 
   getComponent: async (
     id: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<ErpItem & { stock_summary?: any }> => {
     const { data } = await axiosInstance.get(`${BASE}/items/components/${id}`);
     return data;
@@ -306,31 +296,6 @@ export const manufacturingApi = {
   cancelPo: async (id: string) => {
     const { data } = await axiosInstance.post(
       `${BASE}/purchase-orders/${id}/cancel`,
-    );
-    return data;
-  },
-
-  downloadPoTemplate: () => {
-    const url = `${BASE}/purchase-orders/template/download`;
-    return axiosInstance.get(url, { responseType: "blob" }).then((res) => {
-      const blob = new Blob([res.data as BlobPart], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "erp-po-import-template.xlsx";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-  },
-
-  importPoExcel: async (file: File): Promise<PoImportResult> => {
-    const form = new FormData();
-    form.append("file", file);
-    const { data } = await axiosInstance.post<PoImportResult>(
-      `${BASE}/purchase-orders/import`,
-      form,
-      { headers: { "Content-Type": "multipart/form-data" } },
     );
     return data;
   },

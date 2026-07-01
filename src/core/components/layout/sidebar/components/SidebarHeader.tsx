@@ -1,7 +1,7 @@
 import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { useT } from "@/core/i18n";
 import { IconChevronLeft, IconPin } from "./sidebarIcons";
+import { useT } from "@/core/i18n";
 
 export function SidebarHeader({
   c,
@@ -16,7 +16,6 @@ export function SidebarHeader({
   hoverExpanded: boolean;
   toggleSidebar: () => void;
   setCompanyProfileOpen: (v: boolean) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   companyProfile: any;
 }) {
   const t = useT();
@@ -32,24 +31,16 @@ export function SidebarHeader({
         >
           <div
             className={cn(
-              "w-7 h-7 min-w-[28px] rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden",
-              companyProfile?.logo ? "bg-white p-[2px]" : "bg-primary",
+              "w-6 h-6 min-w-[24px] rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden",
+              "bg-primary",
             )}
           >
-            {companyProfile?.logo ? (
-              <img
-                src={companyProfile.logo}
-                alt="Logo"
-                className="w-full h-full object-contain rounded-[6px]"
-              />
-            ) : (
-              <svg
-                className="w-[16px] h-[16px] fill-primary-fg"
-                viewBox="0 0 24 24"
-              >
-                <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />
-              </svg>
-            )}
+            <svg
+              className="w-[16px] h-[16px] fill-primary-fg"
+              viewBox="0 0 24 24"
+            >
+              <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />
+            </svg>
           </div>
           <div className="flex-1 min-w-0 overflow-hidden">
             <p className="font-semibold text-[13px] leading-[1.2] text-foreground line-clamp-2">

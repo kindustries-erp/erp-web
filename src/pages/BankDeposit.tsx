@@ -8,7 +8,8 @@ import {
 } from "react";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { ReasonConfirmModal } from "@/shared/components/ReasonConfirmModal";
-import { cn } from "@/shared/utils";
+import { Button } from "@/shared/components/ui/Button";
+
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import type { BusinessPartner } from "@/modules/partners/api/partnerApi";
@@ -30,8 +31,7 @@ import {
   inputCls,
   type DrawerAction,
 } from "@/shared/components/DrawerModal";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Combobox } from "@/shared/components/Combobox";
+
 import { BankVoucherDrawer } from "@/modules/finance/components/BankDeposit/BankVoucherDrawer";
 import { BankDepositDashboard } from "@/modules/finance/components/BankDeposit/BankDepositDashboard";
 import { PaymentVoucherAccountingModal } from "@/modules/finance/components/PaymentVoucherAccountingModal";
@@ -46,8 +46,7 @@ import {
   useSearchFilter,
 } from "@/shared/hooks/useFilterState";
 import { useBankVoucherHandlers } from "@/modules/finance/hooks/useBankVoucherHandlers";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { SimpleJournalEntryFormLine } from "@/modules/accounting/types/journalEntry";
+
 import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   buildCreatePayloadFromSimple,
@@ -275,7 +274,6 @@ export const TienGui = forwardRef(
     } = handlers;
 
     useImperativeHandle(ref, () => ({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       openNew: (type: string) => openNew(type as any),
     }));
 
@@ -475,20 +473,15 @@ export const TienGui = forwardRef(
     const canEditVoucher = !editing || editing.status === "DRAFT";
     const editToggle =
       editing && canEditVoucher && canUpdateVoucher ? (
-        <button
+        <Button
           onClick={handleToggleEditMode}
-          className={cn(
-            "px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors",
-            drawerEditMode
-              ? "border-[color:var(--border)] text-[color:var(--muted-fg)] bg-[color:var(--muted)] hover:bg-surface-hover"
-              : "border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg",
-          )}
+          variant={drawerEditMode ? "secondary" : "outline"}
         >
           {drawerEditMode
             ? t("voucher.drawer.cancel")
             : t("voucher.drawer.edit")}
-        </button>
-      ) : null;
+        </Button>
+      ) : undefined;
     const drawerActions = buildDrawerActions({
       editing,
       drawerEditMode,
@@ -675,7 +668,7 @@ function buildOptionSets(
   partners: BusinessPartner[],
   employees: Employee[],
   companyBankAccounts: CompanyBankAccount[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   partnerBankAccounts: any[],
   voucherType: string,
 ) {
@@ -730,7 +723,6 @@ function buildOptionSets(
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildDrawerActions(args: any): DrawerAction[] {
   const {
     editing,

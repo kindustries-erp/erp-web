@@ -3,6 +3,7 @@ import { Wallet } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel } from "@/shared/components/Panel";
 import { FileUploadBox } from "@/shared/components/FileUploadBox";
+import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 import {
@@ -29,6 +30,7 @@ import {
   type CashflowVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { Forbidden } from "@/pages/Forbidden";
 
 const BUSINESS_TYPE_OPTIONS = [
   "CUSTOMER_RECEIPT",
@@ -73,8 +75,10 @@ const EMPTY_FORM: FormState = {
 export function CashflowVouchersPage() {
   const t = useT();
   const { setCustomBreadcrumbs } = useAppStore();
+  const canRead = useHasPermission("erp_cashflow_vouchers", "read");
   const canCreate = useHasPermission("erp_cashflow_vouchers", "create");
   const canUpdate = useHasPermission("erp_cashflow_vouchers", "update");
+  const canDelete = useHasPermission("erp_cashflow_vouchers", "delete");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +111,7 @@ export function CashflowVouchersPage() {
   }, [setCustomBreadcrumbs]);
 
   const loadList = async () => {
+    if (!canRead) return;
     setLoading(true);
     setError(null);
     try {
@@ -120,7 +125,6 @@ export function CashflowVouchersPage() {
       if (!selected && res.items?.length) {
         setSelected(res.items[0]);
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message ||
@@ -193,7 +197,7 @@ export function CashflowVouchersPage() {
         await createCashflowVoucherAttachmentApi({
           cashflow_voucher_id: selected.id,
           file: uploaded.id,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           attachment_type: attachmentType as any,
           note: attachmentNote || undefined,
         });
@@ -201,7 +205,6 @@ export function CashflowVouchersPage() {
       setAttachmentFiles([]);
       setAttachmentNote("");
       await loadDetailSidecars(selected.id);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Upload đính kèm thất bại",
@@ -221,7 +224,6 @@ export function CashflowVouchersPage() {
       try {
         await deleteCashflowVoucherAttachmentApi(attachment.id);
         await loadDetailSidecars(selected.id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         setError(
           e?.response?.data?.message || e?.message || "Xóa đính kèm thất bại",
@@ -265,7 +267,6 @@ export function CashflowVouchersPage() {
       setForm(EMPTY_FORM);
       await loadList();
       setSelected(created);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Tạo phiếu thất bại",
@@ -280,7 +281,6 @@ export function CashflowVouchersPage() {
       const updated = await postCashflowVoucherApi(voucher.id);
       await loadList();
       setSelected(updated);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e?.response?.data?.message || e?.message || "Ghi sổ thất bại");
     }
@@ -293,7 +293,6 @@ export function CashflowVouchersPage() {
       const updated = await cancelCashflowVoucherApi(voucher.id, reason);
       await loadList();
       setSelected(updated);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Hủy phiếu thất bại",
@@ -308,13 +307,14 @@ export function CashflowVouchersPage() {
       await deleteCashflowVoucherApi(voucher.id);
       if (selected?.id === voucher.id) setSelected(null);
       await loadList();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(
         e?.response?.data?.message || e?.message || "Xóa phiếu thất bại",
       );
     }
   };
+
+  if (!canRead) return <Forbidden />;
 
   return (
     <PageLayout
@@ -470,20 +470,20 @@ export function CashflowVouchersPage() {
             </div>
           )}
           <div className="mt-4 flex gap-2">
-            <button
-              className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
+            <Button
+              variant="primary"
               disabled={!canCreate || saving}
               onClick={submitCreate}
             >
               Tạo phiếu
-            </button>
-            <button
-              className="rounded border px-4 py-2"
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => loadList()}
               disabled={loading}
             >
               Refresh
-            </button>
+            </Button>
             <input
               className="ml-auto rounded border px-3 py-2"
               placeholder="Tìm theo số phiếu / diễn giải"
@@ -559,37 +559,40 @@ export function CashflowVouchersPage() {
                       <td className="px-3 py-2">
                         <div className="flex flex-wrap gap-2">
                           {voucher.status === "DRAFT" && canUpdate && (
-                            <button
-                              className="rounded border px-2 py-1"
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handlePost(voucher);
                               }}
                             >
                               POST
-                            </button>
+                            </Button>
                           )}
                           {voucher.status === "POSTED" && canUpdate && (
-                            <button
-                              className="rounded border px-2 py-1"
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleCancel(voucher);
                               }}
                             >
                               CANCEL
-                            </button>
+                            </Button>
                           )}
-                          {voucher.status !== "POSTED" && canUpdate && (
-                            <button
-                              className="rounded border px-2 py-1 text-red-700"
+                          {voucher.status !== "POSTED" && canDelete && (
+                            <Button
+                              variant="danger"
+                              size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(voucher);
                               }}
                             >
                               DELETE
-                            </button>
+                            </Button>
                           )}
                         </div>
                       </td>
@@ -689,8 +692,10 @@ export function CashflowVouchersPage() {
                               {att.note ? ` · ${att.note}` : ""}
                             </div>
                           </div>
-                          <button
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             disabled={!fileId}
                             onClick={() =>
                               window.open(
@@ -699,18 +704,18 @@ export function CashflowVouchersPage() {
                                 "noopener,noreferrer",
                               )
                             }
-                            className="rounded border px-2 py-1 text-xs disabled:opacity-50"
                           >
                             Xem
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="danger"
+                            size="sm"
                             disabled={attachmentSaving}
                             onClick={() => handleDeleteAttachment(att)}
-                            className="rounded border px-2 py-1 text-xs text-red-700 disabled:opacity-50"
                           >
                             Xóa
-                          </button>
+                          </Button>
                         </div>
                       );
                     })}
@@ -750,14 +755,14 @@ export function CashflowVouchersPage() {
                       />
                     </div>
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
                     disabled={attachmentSaving || attachmentFiles.length === 0}
                     onClick={handleUploadAttachments}
-                    className="rounded bg-black px-4 py-2 text-xs text-white disabled:opacity-50"
                   >
                     {attachmentSaving ? "Đang upload..." : "Upload đính kèm"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </Panel>

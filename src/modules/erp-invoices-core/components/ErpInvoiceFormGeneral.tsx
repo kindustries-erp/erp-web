@@ -1,8 +1,4 @@
-import {
-  DrawerField,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
+import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,12 +7,18 @@ import {
   type ErpPurchaseOrder,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
+import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface Props {
   form: CreateErpInvoicePayload;
   editMode: boolean;
   fieldSet: (key: string, value: unknown) => void;
   fmtAmt: (val: string | null | undefined) => string;
+  /** ID of an existing invoice (null when creating new) */
+  invoiceId?: string | null;
+  /** Pending tag IDs for new-create Option B flow */
+  pendingTagIds?: string[];
+  onPendingTagsChange?: (ids: string[]) => void;
 }
 
 export function ErpInvoiceFormGeneral({
@@ -24,6 +26,9 @@ export function ErpInvoiceFormGeneral({
   editMode,
   fieldSet,
   fmtAmt,
+  invoiceId,
+  pendingTagIds = [],
+  onPendingTagsChange,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
@@ -56,8 +61,8 @@ export function ErpInvoiceFormGeneral({
   }, [editMode, form.invoiceNo, form.direction]);
 
   return (
-    <div className="w-full xl:w-[400px] shrink-0 order-1 xl:order-2 space-y-4">
-      <DrawerSection title={t("generalInfo", "Thông tin chung")}>
+    <>
+      <div className="space-y-4">
         <DrawerField label={t("invoiceNo", "Số HĐ")}>
           {editMode ? (
             <input
@@ -115,15 +120,14 @@ export function ErpInvoiceFormGeneral({
               </div>
             </DrawerField>
           )}
-      </DrawerSection>
+      </div>
 
-      <DrawerSection
-        title={
-          form.direction === "IN"
-            ? t("sellerInfo", "Bên bán")
-            : t("buyerInfo", "Bên mua")
-        }
-      >
+      <div className="text-sm font-semibold text-muted-foreground uppercase mt-6 mb-2 border-b pb-1">
+        {form.direction === "IN"
+          ? t("sellerInfo", "Bên bán")
+          : t("buyerInfo", "Bên mua")}
+      </div>
+      <div className="space-y-4">
         <DrawerField label="Tên Đơn vị">
           {editMode ? (
             <input
@@ -196,9 +200,12 @@ export function ErpInvoiceFormGeneral({
             </div>
           )}
         </DrawerField>
-      </DrawerSection>
+      </div>
 
-      <DrawerSection title={t("taxTotalInfo", "Thuế & Tổng tiền")}>
+      <div className="text-sm font-semibold text-muted-foreground uppercase mt-6 mb-2 border-b pb-1">
+        {t("taxTotalInfo", "Thuế & Tổng tiền")}
+      </div>
+      <div className="space-y-4">
         <DrawerField label={t("preVatAmount", "Trước VAT")}>
           {editMode ? (
             <input
@@ -237,9 +244,12 @@ export function ErpInvoiceFormGeneral({
             </div>
           )}
         </DrawerField>
-      </DrawerSection>
+      </div>
 
-      <DrawerSection title={t("relatedDocs", "Chứng từ liên quan")}>
+      <div className="text-sm font-semibold text-muted-foreground uppercase mt-6 mb-2 border-b pb-1">
+        {t("relatedDocs", "Chứng từ liên quan")}
+      </div>
+      <div className="space-y-4">
         <DrawerField label="Chứng từ thanh toán">
           {editMode ? (
             <div className="flex gap-2">
@@ -295,7 +305,30 @@ export function ErpInvoiceFormGeneral({
             </div>
           </div>
         )}
-      </DrawerSection>
-    </div>
+
+        {/* Tags */}
+        <div className="text-sm font-semibold text-muted-foreground uppercase mt-6 mb-2 border-b pb-1">
+          {t("tags", "Thẻ nhãn")}
+        </div>
+        <div className="space-y-4">
+          {invoiceId ? (
+            <EntityTagSelector
+              entityType="erp_invoice"
+              entityId={invoiceId}
+              readOnly={!editMode}
+            />
+          ) : editMode ? (
+            <EntityTagSelector
+              entityType="erp_invoice"
+              entityId="__pending__"
+              readOnly={false}
+              pendingMode
+              pendingTagIds={pendingTagIds}
+              onPendingChange={onPendingTagsChange}
+            />
+          ) : null}
+        </div>
+      </div>
+    </>
   );
 }

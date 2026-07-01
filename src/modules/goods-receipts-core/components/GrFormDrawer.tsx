@@ -24,6 +24,7 @@ import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { GoodsReceiptPrintTemplate } from "@/shared/components/print-templates/GoodsReceiptPrintTemplate";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 function fmtQty(value?: string | null) {
   if (!value) return "0";
@@ -68,6 +69,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     setGlobalLoading(saving);
   }, [saving, setGlobalLoading]);
 
+  const canUpdate = useHasPermission("goods_receipts", "update");
+  const isAdmin = useHasPermission("*", "*");
+
   const t = useT();
   const printRef = useRef<HTMLDivElement>(null);
   const handlePrint = useReactToPrint({
@@ -79,7 +83,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const actions =
     viewOnly || loading
       ? [
-          ...(editing && editing.status !== "DRAFT"
+          ...(editing && editing.status !== "DRAFT" && isAdmin
             ? [
                 {
                   label: t("common.print"),
@@ -128,6 +132,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
         onToggleEdit={
           viewOnly &&
           editing &&
+          canUpdate &&
           !["POSTED", "CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
             ? () => setViewOnly(false)
             : undefined

@@ -22,6 +22,7 @@ export interface OperationalListQueryParams {
   date_to?: string;
   item_type?: string;
   inventory_item_id?: string;
+  tag_id?: string;
   sort?: string[];
 }
 
@@ -60,6 +61,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       date_to: params.date_to || undefined,
       item_type: params.item_type || undefined,
       inventory_item_id: params.inventory_item_id || undefined,
+      tag_id: params.tag_id || undefined,
       sort: params.sort || undefined,
     }),
     [
@@ -76,6 +78,7 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       params.date_to,
       params.item_type,
       params.inventory_item_id,
+      params.tag_id,
       sortStr,
     ],
   );
@@ -97,7 +100,6 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
         >;
       }
       if (normalized.variant === "purchase")
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return operationalApi.listPurchases(normalized as any);
 
       throw new Error(`Unsupported variant: ${normalized.variant}`);

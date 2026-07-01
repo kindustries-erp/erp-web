@@ -46,6 +46,12 @@ export interface ErpInvoice {
   createdAt?: string;
   updatedAt?: string;
   items?: ErpInvoiceItem[];
+  voucherNetOffs?: {
+    id: string;
+    bankTransactionId: string;
+    netOffAmount: number;
+    bankTransaction?: any;
+  }[];
 }
 
 export interface CreateErpInvoicePayload {
@@ -87,6 +93,7 @@ export interface ErpInvoiceListParams {
   date_from?: string;
   date_to?: string;
   status?: string;
+  tag_id?: string;
   page?: number;
   pageSize?: number;
   sort_by?: string;
@@ -128,6 +135,7 @@ export interface PortalSyncResult {
   direction: "IN" | "OUT";
   errors?: string[];
   xmlDownloadQueued: number;
+  note?: string;
 }
 
 const BASE = "/api/v1/erp-invoices";
@@ -199,7 +207,40 @@ export const erpInvoicesCoreApi = {
     const { data } = await axiosInstance.post<PortalSyncResult>(
       `${BASE}/portal/sync`,
       payload,
+      { timeout: 300000 },
     );
+    return data;
+  },
+
+  linkVouchers: async (
+    id: string,
+    payload: { bankTransactionId: string; netOffAmount?: number }[],
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.post<{ message: string }>(
+      `${BASE}/${id}/net-off-vouchers`,
+      payload,
+    );
+    return data;
+  },
+
+  removeVoucherLink: async (
+    id: string,
+    voucherId: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.delete<{ message: string }>(
+      `${BASE}/${id}/net-off-vouchers/${voucherId}`,
+    );
+    return data;
+  },
+
+  bulkDownloadXml: async (payload: {
+    token: string;
+    direction: "IN" | "OUT";
+  }) => {
+    const { data } = await axiosInstance.post<{
+      message: string;
+      count: number;
+    }>(`${BASE}/portal/bulk-download-xml`, payload);
     return data;
   },
 

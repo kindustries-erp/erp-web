@@ -35,16 +35,29 @@ import { ErpUsersPage } from "@/pages/ErpUsersPage";
 import { ErpEmployeesPage } from "@/pages/ErpEmployeesPage";
 import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { ErpPermissionsCorePage } from "@/pages/ErpPermissionsCorePage";
-import { ErpInvoicePage } from "@/pages/ErpInvoicePage";
+import { ErpInvoicesInPage } from "@/pages/ErpInvoicesInPage";
+import { ErpInvoicesOutPage } from "@/pages/ErpInvoicesOutPage";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { SysTagsPage } from "@/pages/SysTagsPage";
+import { BankStatementPage } from "@/pages/BankStatementPage";
+import { GeneralJournalPage } from "@/pages/finance/GeneralJournalPage";
+import { ChartOfAccountsPage } from "@/pages/finance/ChartOfAccountsPage";
+import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
+import { ThietLapQuy } from "@/pages/SettingsCashFund";
+import { SettingsBranch } from "@/pages/SettingsBranch";
+import { CashflowDashboard } from "@/pages/CashflowDashboard";
+import { GarageDashboard } from "@/modules/garage/pages/GarageDashboard";
+import { GarageCases } from "@/modules/garage/pages/GarageCases";
+import { GarageReceivables } from "@/modules/garage/pages/GarageReceivables";
+import { GaragePayables } from "@/modules/garage/pages/GaragePayables";
 
 import { PageKey } from "@/shared/types";
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
@@ -64,8 +77,20 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
   "erp-permissions-core": ErpPermissionsCorePage,
-  "erp-invoices": ErpInvoicePage,
+  "erp-invoices-in": ErpInvoicesInPage,
+  "erp-invoices-out": ErpInvoicesOutPage,
   "sys-tags": SysTagsPage,
+  "bank-statement": () => <BankStatementPage type="bank" />,
+  "cash-statement": () => <BankStatementPage type="cash" />,
+  "journal-entry": GeneralJournalPage,
+  "settings-accounts": ChartOfAccountsPage,
+  "settings-bank": ThietLapNganHang,
+  "settings-cash-fund": ThietLapQuy,
+  "settings-branch": SettingsBranch,
+  "garage-dashboard": GarageDashboard,
+  "garage-cases": GarageCases,
+  "garage-receivables": GarageReceivables,
+  "garage-payables": GaragePayables,
 };
 
 export default function App() {
@@ -84,7 +109,7 @@ export default function App() {
         syncFromUrl(parsed.page);
       } else {
         history.replaceState(null, "", "/");
-        syncFromUrl("purchasing");
+        syncFromUrl("dashboard");
       }
     };
     sync();
