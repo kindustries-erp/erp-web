@@ -157,6 +157,9 @@ export function useFilterPanel(
       if (p) {
         setDateFromRaw(periodFirstDay(p));
         setDateToRaw(periodLastDay(p));
+      } else {
+        setDateFromRaw("");
+        setDateToRaw("");
       }
       notify();
     },

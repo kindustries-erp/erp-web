@@ -267,6 +267,7 @@ export function ErpWarehouseTab() {
   const filterConfig: FilterPanelConfig = {
     search: true,
     period: true,
+    noDefaultPeriod: true,
     status: {
       placeholder: t("Trạng thái"),
       options: STATUS_OPTIONS,
