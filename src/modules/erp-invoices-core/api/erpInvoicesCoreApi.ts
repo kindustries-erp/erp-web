@@ -31,6 +31,8 @@ export interface ErpInvoice {
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
+  licensePlate?: string | null;
+  settlementOrder?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -288,6 +290,14 @@ export const erpInvoicesCoreApi = {
       key: string;
       expiresAt: string;
     }>(`${BASE}/${id}/upload-url`, { fileType });
+    return data;
+  },
+
+  exportExcel: async (params: ErpInvoiceListParams): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
+      params,
+      responseType: "blob",
+    });
     return data;
   },
 };

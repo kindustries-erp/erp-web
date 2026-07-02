@@ -111,6 +111,48 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     }
   }
 
+  async function handleExportExcel() {
+    try {
+      showToast({
+        title: "Đang tạo file Excel...",
+        variant: "default",
+      });
+      const { search, dateFrom, dateTo, status, custom } =
+        listHook.filterPanel.state;
+      const blob = await erpInvoicesCoreApi.exportExcel({
+        direction,
+        search: search || undefined,
+        seller_name: custom?.seller_name || undefined,
+        buyer_name: custom?.buyer_name || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        status: status || undefined,
+        tag_id: (custom?.tag_id as string) || undefined,
+        sort_by: listHook.sortBy || undefined,
+        sort_order: listHook.sortOrder || undefined,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DanhSachHoaDon_${direction}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast({
+        title: "Xuất Excel thành công",
+        variant: "default",
+      });
+    } catch {
+      showToast({
+        title: "Không thể xuất Excel",
+        variant: "destructive",
+      });
+    }
+  }
+
   const handleReparseXml = async (inv: ErpInvoice) => {
     try {
       const token = localStorage.getItem("erp_portal_token") || "";
@@ -312,6 +354,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         className: "text-right font-semibold w-[120px]",
         cell: (inv) => fmtAmt(inv.totalAmount),
       },
+      ...(direction === "OUT"
+        ? [
+            {
+              key: "settlementOrder",
+              header: t("settlementOrder", "Lệnh quyết toán"),
+              headerClassName: "text-center w-[150px]",
+              className: "text-left w-[150px]",
+              cell: (inv: ErpInvoice) => inv.settlementOrder || "—",
+            },
+            {
+              key: "licensePlate",
+              header: t("licensePlate", "Biển số xe"),
+              headerClassName: "text-center w-[110px]",
+              className: "text-left w-[110px]",
+              cell: (inv: ErpInvoice) => inv.licensePlate || "—",
+            },
+          ]
+        : []),
       {
         key: "netOffAmount",
         header: t("invoice.columns.netOffAmount", "Đã cấn trừ"),
@@ -556,6 +616,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 );
               }
             },
+          },
+          {
+            label: t("exportExcel", "Xuất Excel"),
+            icon: <Download className="w-4 h-4 text-green-600" />,
+            onClick: handleExportExcel,
           },
         ]}
       />
