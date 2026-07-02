@@ -714,10 +714,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               fieldSet={(key, value) =>
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
-              fmtAmt={fmtAmt}
               invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
             />
           </div>
         }

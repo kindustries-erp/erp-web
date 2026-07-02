@@ -4,71 +4,24 @@ import {
   DrawerSection,
 } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  purchaseOrdersCoreApi,
-  type ErpPurchaseOrder,
-} from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
-import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 
 interface Props {
   form: CreateErpInvoicePayload;
   editMode: boolean;
   fieldSet: (key: string, value: unknown) => void;
-  fmtAmt: (val: string | null | undefined) => string;
   /** ID of an existing invoice (null when creating new) */
   invoiceId?: string | null;
-  /** Pending tag IDs for new-create Option B flow */
-  pendingTagIds?: string[];
-  onPendingTagsChange?: (ids: string[]) => void;
 }
 
 export function ErpInvoiceFormGeneral({
   form,
   editMode,
   fieldSet,
-  fmtAmt,
   invoiceId,
-  pendingTagIds = [],
-  onPendingTagsChange,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
-
-  const [relatedPos, setRelatedPos] = useState<ErpPurchaseOrder[]>([]);
-  const [loadingPos, setLoadingPos] = useState(false);
-  const [branchOptions, setBranchOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-
-  useEffect(() => {
-    getBranchOptionsApi().then(setBranchOptions).catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    if (!editMode && form.invoiceNo && form.direction === "IN") {
-      setLoadingPos(true);
-      purchaseOrdersCoreApi
-        .list({ search: form.invoiceNo })
-        .then((res) => {
-          const exactMatches = res.items.filter(
-            (po) =>
-              po.supplierInvoiceNo &&
-              po.supplierInvoiceNo
-                .split(",")
-                .map((s) => s.trim())
-                .includes(form.invoiceNo),
-          );
-          setRelatedPos(exactMatches);
-        })
-        .catch(() => setRelatedPos([]))
-        .finally(() => setLoadingPos(false));
-    } else {
-      setRelatedPos([]);
-    }
-  }, [editMode, form.invoiceNo, form.direction]);
 
   const canEditCore = editMode && !invoiceId;
 
