@@ -79,8 +79,17 @@ export function SidebarNav({
   const showSettings =
     showSettingsAccess || showSettingsGeneral || showSettingsInventory;
 
-  const sq = searchQuery.trim().toLowerCase();
-  const match = (text: string) => !sq || text.toLowerCase().includes(sq);
+  const normalize = (text: string) => {
+    return text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase();
+  };
+
+  const sq = normalize(searchQuery.trim());
+  const match = (text: string) => !sq || normalize(text).includes(sq);
   const hasMatch = (texts: string[]) => texts.some(match);
 
   return (
