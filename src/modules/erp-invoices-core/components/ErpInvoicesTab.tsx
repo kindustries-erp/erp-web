@@ -18,6 +18,7 @@ import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { getTags } from "@/modules/tags/api/tagsApi";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 
@@ -34,7 +35,7 @@ import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/Er
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { ErpInvoiceNetOffSection } from "@/modules/erp-invoices-core/components/ErpInvoiceNetOffSection";
+import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
@@ -59,6 +60,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
     queryFn: getTags,
+  });
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches-options"],
+    queryFn: getBranchOptionsApi,
   });
 
   useEffect(() => {
@@ -426,8 +432,20 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           );
         },
       },
+      {
+        key: "branchId",
+        header: t("branch", "Chi nhánh"),
+        size: 100,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv: any) => {
+          if (!inv.branchId) return "—";
+          const branch = branches.find((b) => b.value === inv.branchId);
+          return branch ? branch.label : inv.branchId;
+        },
+      },
     ],
-    [direction, t],
+    [direction, t, branches],
   );
 
   const activeSortKey = listHook.sortBy;
@@ -663,39 +681,45 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 {formHook.formError}
               </div>
             )}
+            <ErpInvoiceInternalInfo
+              form={formHook.form}
+              editMode={formHook.editMode}
+              fieldSet={(key, value) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+              direction={direction}
+              detailInvoice={formHook.detailInvoice}
+              onRefreshDetail={() =>
+                formHook.openDetail({
+                  id: formHook.detailInvoice!.id,
+                } as ErpInvoice)
+              }
+            />
             <ErpInvoiceFormItems
               form={formHook.form}
               editMode={formHook.editMode}
               setForm={formHook.setForm}
               fmtAmt={fmtAmt}
             />
-            {formHook.detailInvoice?.id && (
-              <ErpInvoiceNetOffSection
-                invoiceId={formHook.detailInvoice.id}
-                direction={direction}
-                voucherNetOffs={formHook.detailInvoice.voucherNetOffs || []}
-                editMode={formHook.editMode}
-                onRefresh={() =>
-                  formHook.openDetail({
-                    id: formHook.detailInvoice!.id,
-                  } as ErpInvoice)
-                }
-              />
-            )}
           </div>
         }
         rightPanel={
-          <ErpInvoiceFormGeneral
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key, value) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            fmtAmt={fmtAmt}
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pendingTagIds={formHook.pendingTagIds}
-            onPendingTagsChange={formHook.setPendingTagIds}
-          />
+          <div className="flex flex-col gap-5">
+            <ErpInvoiceFormGeneral
+              form={formHook.form}
+              editMode={formHook.editMode}
+              fieldSet={(key, value) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              fmtAmt={fmtAmt}
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+            />
+          </div>
         }
       />
 
