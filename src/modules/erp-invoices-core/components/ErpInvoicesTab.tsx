@@ -215,19 +215,50 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const columns: DataTableColumn<ErpInvoice>[] = useMemo(
     () => [
       {
+        key: "attachments",
+        header: t("attachments", "Chứng từ"),
+        size: 80,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv) => (
+          <div className="flex items-center justify-center gap-1.5">
+            {inv.xmlFileKey ? (
+              <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
+                <FileCode className="w-4 h-4 text-blue-500" />
+              </Tooltip>
+            ) : (
+              <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
+                <FileCode className="w-4 h-4 text-gray-300" />
+              </Tooltip>
+            )}
+            {inv.pdfFileKey ? (
+              <Tooltip content={t("hasPdf", "Đã có file PDF")}>
+                <FileText className="w-4 h-4 text-red-500" />
+              </Tooltip>
+            ) : (
+              <Tooltip content={t("noPdf", "Chưa có file PDF")}>
+                <FileText className="w-4 h-4 text-gray-300" />
+              </Tooltip>
+            )}
+          </div>
+        ),
+      },
+      {
         key: "invoiceDate",
         header: t("invoiceDate", "Ngày HĐ"),
         sortable: true,
         sortKey: "invoiceDate",
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 100,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => inv.invoiceDate,
       },
       {
         key: "serialNo",
         header: t("serialNo", "Ký hiệu"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-muted-foreground w-[100px] text-left",
+        size: 80,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-left",
         cell: (inv) => inv.serialNo || "—",
       },
       {
@@ -235,8 +266,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("invoiceNo", "Số HĐ"),
         sortable: true,
         sortKey: "invoiceNo",
-        headerClassName: "text-center w-[130px]",
-        className: "font-medium text-primary w-[130px] text-left",
+        size: 80,
+        headerClassName: "text-center",
+        className: "font-medium text-primary text-left",
         cell: (inv) => (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -255,26 +287,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
-              {inv.xmlFileKey ? (
-                <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
-                  <FileCode className="w-3.5 h-3.5 text-blue-500" />
-                </Tooltip>
-              ) : (
-                <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
-                  <FileCode className="w-3.5 h-3.5 text-gray-300" />
-                </Tooltip>
-              )}
-              {inv.pdfFileKey ? (
-                <Tooltip content={t("hasPdf", "Đã có file PDF")}>
-                  <FileText className="w-3.5 h-3.5 text-red-500" />
-                </Tooltip>
-              ) : (
-                <Tooltip content={t("noPdf", "Chưa có file PDF")}>
-                  <FileText className="w-3.5 h-3.5 text-gray-300" />
-                </Tooltip>
-              )}
-            </div>
           </div>
         ),
       },
@@ -284,14 +296,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           direction === "IN" ? t("seller", "Bên bán") : t("buyer", "Bên mua"),
         sortable: true,
         sortKey: direction === "IN" ? "sellerName" : "buyerName",
-        headerClassName: "text-center w-[320px]",
-        className: "w-[320px] text-left",
+        size: 250,
+        headerClassName: "text-center",
+        className: "text-left",
         cell: (inv) => {
           const text =
             direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
           return (
             <Tooltip content={text !== "—" ? text : ""}>
-              <div className="truncate w-full cursor-pointer">{text}</div>
+              <div className="whitespace-normal break-words w-full cursor-pointer">
+                {text}
+              </div>
             </Tooltip>
           );
         },
@@ -299,8 +314,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "taxCode",
         header: t("taxCode", "MST"),
-        headerClassName: "text-center w-[110px]",
-        className: "text-muted-foreground text-xs w-[110px] text-left",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-xs text-left",
         cell: (inv) =>
           direction === "IN"
             ? inv.sellerTaxCode || "—"
@@ -311,10 +327,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("description", "Diễn giải"),
         sortable: true,
         sortKey: "description",
+        size: 300,
         className: "text-left",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="max-w-[200px] truncate" title={row.description || ""}>
+          <div
+            className="whitespace-normal break-words w-full"
+            title={row.description || ""}
+          >
             {row.description || "—"}
           </div>
         ),
@@ -324,22 +344,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("preVatAmount", "Trước VAT"),
         sortable: true,
         sortKey: "preVatAmount",
-        headerClassName: "text-center w-[110px]",
-        className: "text-right w-[110px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (row) => fmtAmt(row.preVatAmount),
       },
       {
         key: "vatAmount",
         header: t("vatAmount", "Thuế VAT"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => fmtAmt(inv.vatAmount),
       },
       {
         key: "discountAmount",
         header: t("discountAmount", "Chiết khấu"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
@@ -347,8 +370,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("totalAmount", "Thành tiền"),
         sortable: true,
         sortKey: "totalAmount",
-        headerClassName: "text-center w-[120px]",
-        className: "text-right font-semibold w-[120px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right font-semibold",
         cell: (inv) => fmtAmt(inv.totalAmount),
       },
       ...(direction === "OUT"
@@ -372,8 +396,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "netOffAmount",
         header: t("invoice.columns.netOffAmount", "Đã cấn trừ"),
-        headerClassName: "text-center w-[120px]",
-        className: "text-right w-[120px]",
+        size: 120,
+        headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
+        className: "text-right bg-blue-50/50 border-l border-blue-200",
         cell: (inv: any) => {
           const netOff = parseFloat(inv.netOffAmount) || 0;
           if (netOff === 0) return "--";
@@ -385,8 +410,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "remainingAmount",
         header: t("invoice.columns.remainingAmount", "Còn lại"),
-        headerClassName: "text-center w-[120px]",
-        className: "text-right font-semibold w-[120px]",
+        size: 120,
+        headerClassName: "text-center bg-blue-50/50",
+        className: "text-right font-semibold bg-blue-50/50",
         cell: (inv: any) => {
           const total = parseFloat(inv.totalAmount) || 0;
           const netOff = parseFloat(inv.netOffAmount) || 0;
