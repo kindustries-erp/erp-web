@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   PlusCircle,
   Receipt,
-  FileUp,
   DownloadCloud,
   Eye,
   Download,
@@ -33,8 +32,7 @@ import {
 import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceDrawer";
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
-import { InvoiceXmlUploadDrawer } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadDrawer";
-import { PortalSyncDrawer } from "@/modules/erp-invoices-core/components/PortalSyncDrawer";
+import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { ErpInvoiceNetOffSection } from "@/modules/erp-invoices-core/components/ErpInvoiceNetOffSection";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -53,8 +51,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
   useInvoiceSyncProgress(listHook.loadInvoices);
 
-  const [xmlModalOpen, setXmlModalOpen] = useState(false);
-  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
@@ -583,14 +580,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onClick: () => formHook.openNew(direction),
           },
           {
-            label: t("importXml", "Import XML"),
-            icon: <FileUp className="w-4 h-4 text-blue-600" />,
-            onClick: () => setXmlModalOpen(true),
-          },
-          {
-            label: t("syncGdt", "Đồng bộ từ GDT"),
+            label: t("syncInvoices", "Đồng bộ hóa đơn"),
             icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-            onClick: () => setSyncModalOpen(true),
+            onClick: () => setImportModalOpen(true),
           },
           {
             label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
@@ -703,21 +695,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onConfirm={formHook.handleCancel}
       />
 
-      <InvoiceXmlUploadDrawer
-        open={xmlModalOpen}
-        onClose={() => setXmlModalOpen(false)}
-        onImported={(id: string, dir: "IN" | "OUT") => {
-          if (dir === direction) {
-            void listHook.loadInvoices();
-          }
-        }}
-      />
-
-      <PortalSyncDrawer
-        open={syncModalOpen}
-        onClose={() => setSyncModalOpen(false)}
+      <InvoiceImportSyncDrawer
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
         initialDirection={direction}
-        onSynced={(dir: "IN" | "OUT") => {
+        onImported={(dir: "IN" | "OUT") => {
           if (dir === direction) {
             void listHook.loadInvoices();
           }
