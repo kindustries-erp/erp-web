@@ -44,6 +44,7 @@ export interface ErpInvoice {
   paymentDocumentNos?: string | null;
   notes?: string | null;
   pdfFileKey?: string | null;
+  pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
   createdAt?: string;
@@ -290,6 +291,42 @@ export const erpInvoicesCoreApi = {
       key: string;
       expiresAt: string;
     }>(`${BASE}/${id}/upload-url`, { fileType });
+    return data;
+  },
+
+  uploadPdfs: async (
+    id: string,
+    files: File[],
+  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+    const { data } = await axiosInstance.post<{
+      success: boolean;
+      pdfFiles: any[];
+    }>(`${BASE}/${id}/pdfs`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
+
+  getPdfDownloadUrl: async (
+    id: string,
+    key: string,
+  ): Promise<{ url: string }> => {
+    const { data } = await axiosInstance.get<{ url: string }>(
+      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/download-url`,
+    );
+    return data;
+  },
+
+  deletePdf: async (
+    id: string,
+    key: string,
+  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+    const { data } = await axiosInstance.delete<{
+      success: boolean;
+      pdfFiles: any[];
+    }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
     return data;
   },
 

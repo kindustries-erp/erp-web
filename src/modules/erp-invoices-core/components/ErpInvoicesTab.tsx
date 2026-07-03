@@ -36,6 +36,7 @@ import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpI
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
+import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
@@ -230,16 +231,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           <div className="flex items-center justify-center gap-1.5">
             {inv.xmlFileKey ? (
               <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
-                <FileCode className="w-4 h-4 text-blue-500" />
+                <FileCode className="w-4 h-4 text-slate-700" />
               </Tooltip>
             ) : (
               <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
                 <FileCode className="w-4 h-4 text-gray-300" />
               </Tooltip>
             )}
-            {inv.pdfFileKey ? (
+            {inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0) ? (
               <Tooltip content={t("hasPdf", "Đã có file PDF")}>
-                <FileText className="w-4 h-4 text-red-500" />
+                <FileText className="w-4 h-4 text-slate-700" />
               </Tooltip>
             ) : (
               <Tooltip content={t("noPdf", "Chưa có file PDF")}>
@@ -715,6 +716,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
               invoiceId={formHook.detailInvoice?.id ?? null}
+            />
+            <ErpInvoicePdfUpload
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+              editMode={formHook.editMode}
             />
           </div>
         }
