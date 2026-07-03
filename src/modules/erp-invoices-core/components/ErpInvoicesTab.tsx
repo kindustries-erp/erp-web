@@ -569,33 +569,36 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         filterConfig={filterConfig}
         filter={listHook.filterPanel}
         rowActions={(inv) => {
-          const items = [];
-          items.push({
+          const traCuuItems = [];
+          const thaoTacItems = [];
+
+          traCuuItems.push({
             label: t("actionDetail", "Chi tiết"),
             icon: <Eye className="w-3.5 h-3.5" />,
             onClick: () => formHook.openDetail(inv),
           });
           if (inv.xmlFileKey) {
-            items.push({
+            traCuuItems.push({
               label: t("actionDownloadXml", "Tải XML"),
               icon: <Download className="w-3.5 h-3.5" />,
               onClick: () => handleDownload(inv.id, "xml"),
             });
           }
-          items.push({
-            label: t("actionReparseXml", "Đồng bộ lại từ XML"),
-            icon: <RefreshCw className="w-3.5 h-3.5" />,
-            onClick: () => handleReparseXml(inv),
-          });
           if (inv.pdfFileKey) {
-            items.push({
+            traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
               icon: <Download className="w-3.5 h-3.5" />,
               onClick: () => handleDownload(inv.id, "pdf"),
             });
           }
+
+          thaoTacItems.push({
+            label: t("actionReparseXml", "Đồng bộ lại từ XML"),
+            icon: <RefreshCw className="w-3.5 h-3.5" />,
+            onClick: () => handleReparseXml(inv),
+          });
           if (inv.status === "DRAFT") {
-            items.push({
+            thaoTacItems.push({
               label: t("actionDelete", "Xóa"),
               icon: <Trash className="w-3.5 h-3.5" />,
               variant: "danger" as const,
@@ -606,7 +609,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
           if (inv.status === "CONFIRMED") {
-            items.push({
+            thaoTacItems.push({
               label: t("actionCancel", "Hủy"),
               icon: <Ban className="w-3.5 h-3.5" />,
               variant: "danger" as const,
@@ -616,48 +619,69 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               },
             });
           }
-          return items;
+
+          return [
+            {
+              groupLabel: t("groupTraCuu", "Tra cứu"),
+              items: traCuuItems,
+            },
+            {
+              groupLabel: t("groupThaoTac", "Thao tác"),
+              items: thaoTacItems,
+            },
+          ];
         }}
         createActions={[
           {
-            label: t("createInvoice", "Tạo hóa đơn"),
-            icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
-            onClick: () => formHook.openNew(direction),
+            groupLabel: t("groupInvoice", "Hóa đơn"),
+            items: [
+              {
+                label: t("createInvoice", "Tạo hóa đơn"),
+                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                onClick: () => formHook.openNew(direction),
+              },
+            ],
           },
           {
-            label: t("syncInvoices", "Đồng bộ hóa đơn"),
-            icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-            onClick: () => setImportModalOpen(true),
-          },
-          {
-            label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
-            icon: <RefreshCw className="w-4 h-4 text-orange-600" />,
-            onClick: async () => {
-              const token = localStorage.getItem("erp_portal_token");
-              if (!token) {
-                toast.error(
-                  "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
-                );
-                return;
-              }
-              try {
-                const res = await erpInvoicesCoreApi.bulkDownloadXml({
-                  token,
-                  direction,
-                });
-                toast.success(res.message);
-                // Optionally reload after some time or let user refresh manually
-              } catch (e: any) {
-                toast.error(
-                  e.response?.data?.message || e.message || "Lỗi tải lại XML",
-                );
-              }
-            },
-          },
-          {
-            label: t("exportExcel", "Xuất Excel"),
-            icon: <Download className="w-4 h-4 text-green-600" />,
-            onClick: handleExportExcel,
+            groupLabel: t("groupData", "Đồng bộ & Tải"),
+            items: [
+              {
+                label: t("syncInvoices", "Đồng bộ hóa đơn"),
+                icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                onClick: () => setImportModalOpen(true),
+              },
+              {
+                label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
+                icon: <RefreshCw className="w-4 h-4 text-orange-600" />,
+                onClick: async () => {
+                  const token = localStorage.getItem("erp_portal_token");
+                  if (!token) {
+                    toast.error(
+                      "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
+                    );
+                    return;
+                  }
+                  try {
+                    const res = await erpInvoicesCoreApi.bulkDownloadXml({
+                      token,
+                      direction,
+                    });
+                    toast.success(res.message);
+                  } catch (e: any) {
+                    toast.error(
+                      e.response?.data?.message ||
+                        e.message ||
+                        "Lỗi tải lại XML",
+                    );
+                  }
+                },
+              },
+              {
+                label: t("exportExcel", "Xuất Excel"),
+                icon: <Download className="w-4 h-4 text-green-600" />,
+                onClick: handleExportExcel,
+              },
+            ],
           },
         ]}
       />

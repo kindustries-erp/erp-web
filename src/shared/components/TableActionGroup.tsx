@@ -95,13 +95,79 @@ export function TableActionGroup({
               className="z-[9999] min-w-[160px] rounded-lg bg-surface border border-border shadow-md p-1 popup-content"
             >
               {createActions.map((action, index) => {
-                if ("items" in action) return null;
+                if ("items" in action) {
+                  if (action.hidden) return null;
+                  const visibleItems = action.items.filter((i) => !i.hidden);
+                  if (visibleItems.length === 0) return null;
+                  return (
+                    <div key={index} className="flex flex-col">
+                      {index > 0 && <div className="h-px bg-border my-1" />}
+                      {action.groupLabel && (
+                        <div className="px-3 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          {action.groupLabel}
+                        </div>
+                      )}
+                      {visibleItems.map((item, idx) => (
+                        <Popover.Close key={idx} asChild>
+                          <button
+                            type="button"
+                            className={cn(
+                              "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left",
+                              item.disabled &&
+                                "opacity-50 cursor-not-allowed pointer-events-none",
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!item.disabled && !item.loading) {
+                                setTimeout(() => {
+                                  item.onClick();
+                                }, 0);
+                              }
+                            }}
+                            disabled={item.disabled}
+                          >
+                            {item.loading ? (
+                              <svg
+                                className="animate-spin w-4 h-4 flex-shrink-0 opacity-60 text-muted-foreground"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                              >
+                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                              </svg>
+                            ) : item.icon ? (
+                              item.icon
+                            ) : (
+                              <Plus className="h-4 w-4 text-emerald-600" />
+                            )}
+                            <span
+                              className={cn(
+                                "font-medium",
+                                item.variant === "danger"
+                                  ? "text-red-500"
+                                  : "text-foreground",
+                              )}
+                            >
+                              {item.label}
+                            </span>
+                          </button>
+                        </Popover.Close>
+                      ))}
+                    </div>
+                  );
+                }
+
                 if (action.hidden) return null;
                 return (
                   <Popover.Close key={index} asChild>
                     <button
                       type="button"
-                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left"
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none hover:bg-[color:var(--popup-bg-hover)] focus:bg-[color:var(--popup-bg-hover)] w-full text-left",
+                        action.disabled &&
+                          "opacity-50 cursor-not-allowed pointer-events-none",
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!action.disabled && !action.loading) {
@@ -111,12 +177,32 @@ export function TableActionGroup({
                         }
                       }}
                       disabled={action.disabled}
-                      hidden={action.hidden}
                     >
-                      {action.icon || (
+                      {action.loading ? (
+                        <svg
+                          className="animate-spin w-4 h-4 flex-shrink-0 opacity-60 text-muted-foreground"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                        >
+                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                        </svg>
+                      ) : action.icon ? (
+                        action.icon
+                      ) : (
                         <Plus className="h-4 w-4 text-emerald-600" />
                       )}
-                      <span className="font-medium">{action.label}</span>
+                      <span
+                        className={cn(
+                          "font-medium",
+                          action.variant === "danger"
+                            ? "text-red-500"
+                            : "text-foreground",
+                        )}
+                      >
+                        {action.label}
+                      </span>
                     </button>
                   </Popover.Close>
                 );

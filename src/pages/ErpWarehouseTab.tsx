@@ -524,67 +524,87 @@ export function ErpWarehouseTab() {
         filter={filterPanel}
         rowActions={(row) => [
           {
-            label: t("Chi tiết"),
-            icon: <Eye className="h-3.5 w-3.5" />,
-            onClick: () => {
-              if (row.type === "receipt") {
-                grDrawer.openDetail(row.id);
-              } else {
-                giDrawer.openDetail(row.id);
-              }
-            },
+            groupLabel: t("groupTraCuu", "Tra cứu"),
+            items: [
+              {
+                label: t("Chi tiết"),
+                icon: <Eye className="h-3.5 w-3.5" />,
+                onClick: () => {
+                  if (row.type === "receipt") {
+                    grDrawer.openDetail(row.id);
+                  } else {
+                    giDrawer.openDetail(row.id);
+                  }
+                },
+              },
+            ],
           },
           {
-            label: t("common.print"),
-            icon: <Printer className="h-3.5 w-3.5" />,
-            hidden: row.status === "DRAFT" || !isAdmin,
-            disabled: !!printTargetId,
-            onClick: () => handlePrintRow(row),
+            groupLabel: t("groupDuLieu", "Dữ liệu"),
+            items: [
+              {
+                label: t("common.print"),
+                icon: <Printer className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT" || !isAdmin,
+                disabled: !!printTargetId,
+                onClick: () => handlePrintRow(row),
+              },
+              {
+                label: t("Xuất XLSX"),
+                icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT",
+                disabled: xlsxExportingId === row.id,
+                onClick: () => handleExportXlsx(row),
+              },
+            ],
           },
           {
-            label: t("Xuất XLSX"),
-            icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
-            hidden: row.status === "DRAFT",
-            disabled: xlsxExportingId === row.id,
-            onClick: () => handleExportXlsx(row),
-          },
-          {
-            label: t("Xóa"),
-            icon: <Trash2 className="h-3.5 w-3.5" />,
-            variant: "danger",
-            hidden:
-              row.status !== "DRAFT" ||
-              (row.type === "receipt" && !canDeleteReceipt) ||
-              (row.type === "issue" && !canDeleteIssue),
-            onClick: () => {
-              setDeleteTarget(row);
-            },
-          },
-          {
-            label: t("Hủy phiếu"),
-            icon: <XCircle className="h-3.5 w-3.5" />,
-            variant: "danger",
-            hidden:
-              row.status !== "POSTED" ||
-              (row.type === "receipt" && !canUpdateReceipt) ||
-              (row.type === "issue" && !canUpdateIssue),
-            onClick: () => {
-              setCancelTarget(row);
-            },
+            groupLabel: t("groupThaoTac", "Thao tác"),
+            items: [
+              {
+                label: t("Xóa"),
+                icon: <Trash2 className="h-3.5 w-3.5" />,
+                variant: "danger",
+                hidden:
+                  row.status !== "DRAFT" ||
+                  (row.type === "receipt" && !canDeleteReceipt) ||
+                  (row.type === "issue" && !canDeleteIssue),
+                onClick: () => {
+                  setDeleteTarget(row);
+                },
+              },
+              {
+                label: t("Hủy phiếu"),
+                icon: <XCircle className="h-3.5 w-3.5" />,
+                variant: "danger",
+                hidden:
+                  row.status !== "POSTED" ||
+                  (row.type === "receipt" && !canUpdateReceipt) ||
+                  (row.type === "issue" && !canUpdateIssue),
+                onClick: () => {
+                  setCancelTarget(row);
+                },
+              },
+            ],
           },
         ]}
         createActions={[
           {
-            label: t("Nhập kho"),
-            icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
-            onClick: () => grDrawer.openCreate(),
-            hidden: !canCreateReceipt,
-          },
-          {
-            label: t("Xuất kho"),
-            icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
-            onClick: () => giDrawer.openCreate(),
-            hidden: !canCreateIssue,
+            groupLabel: t("groupThemMoi", "Thêm mới"),
+            items: [
+              {
+                label: t("Nhập kho"),
+                icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
+                onClick: () => grDrawer.openCreate(),
+                hidden: !canCreateReceipt,
+              },
+              {
+                label: t("Xuất kho"),
+                icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
+                onClick: () => giDrawer.openCreate(),
+                hidden: !canCreateIssue,
+              },
+            ],
           },
         ]}
       />

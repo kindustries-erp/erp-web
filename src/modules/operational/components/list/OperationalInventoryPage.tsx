@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, Network, Package } from "lucide-react";
+import { Eye, Network, Package, Plus } from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
@@ -221,7 +221,18 @@ export function OperationalInventoryPage({
         setPage(1);
       }}
       onRefresh={onRefetch}
-      onCreate={onOpenCreateItem}
+      createActions={[
+        {
+          groupLabel: t("groupThemMoi", "Thêm mới"),
+          items: [
+            {
+              label: t("common.create", "Tạo mới"),
+              icon: <Plus className="w-4 h-4 text-emerald-600" />,
+              onClick: onOpenCreateItem,
+            },
+          ],
+        },
+      ]}
       bulkActionsNode={bulkActionsNode}
       filterConfig={inventoryFilterConfig}
       filter={{
@@ -277,23 +288,28 @@ export function OperationalInventoryPage({
       onSort={(key: string) => toggleInventorySort(key)}
       rowActions={(row: InventoryStockRow) => [
         {
-          label: t("inventory.action.details"),
-          icon: <Eye size={14} />,
-          onClick: () => onViewItem(row.inventory_item_id),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
+          items: [
+            {
+              label: t("inventory.action.details"),
+              icon: <Eye size={14} />,
+              onClick: () => onViewItem(row.inventory_item_id),
+            },
+            ...(isGraphAdmin
+              ? [
+                  {
+                    label: t("Đồ thị liên kết"),
+                    icon: <Network size={14} />,
+                    onClick: () => {
+                      setGraphItemId(row.inventory_item_id);
+                      setGraphOpen(true);
+                      void inventoryGraph.loadGraph(row.inventory_item_id);
+                    },
+                  },
+                ]
+              : []),
+          ],
         },
-        ...(isGraphAdmin
-          ? [
-              {
-                label: t("Đồ thị liên kết"),
-                icon: <Network size={14} />,
-                onClick: () => {
-                  setGraphItemId(row.inventory_item_id);
-                  setGraphOpen(true);
-                  void inventoryGraph.loadGraph(row.inventory_item_id);
-                },
-              },
-            ]
-          : []),
       ]}
       summaryRow={summaryRow}
     >

@@ -10,6 +10,7 @@ import {
   CheckCircle,
   FileSpreadsheet,
   FileText,
+  Plus,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useUIStore } from "@/core/config/uiStore";
@@ -1135,7 +1136,18 @@ export function ErpBomPage() {
         setPageSize(value);
       }}
       onRefresh={() => void loadBoms()}
-      onCreate={openCreate}
+      createActions={[
+        {
+          groupLabel: t("groupThemMoi", "Thêm mới"),
+          items: [
+            {
+              label: t("common.create", "Tạo mới"),
+              icon: <Plus className="w-4 h-4 text-emerald-600" />,
+              onClick: openCreate,
+            },
+          ],
+        },
+      ]}
       filterConfig={filterConfig}
       filter={filter}
       renderSubRow={(item) => (

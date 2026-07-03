@@ -8,6 +8,7 @@ import {
   ArrowRight,
   CheckCircle2,
   FileSpreadsheet,
+  Plus,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -460,8 +461,22 @@ export function ProductionOrderListPage() {
       onPageSize={setPageSize}
       onRowClick={(item) => handleEdit(item.id, true)}
       onRefresh={loadData}
-      onCreate={canCreate ? handleCreate : undefined}
-      createLabel={t("Tạo mới")}
+      createActions={
+        canCreate
+          ? [
+              {
+                groupLabel: t("groupThemMoi", "Thêm mới"),
+                items: [
+                  {
+                    label: t("common.create", "Tạo mới"),
+                    icon: <Plus className="w-4 h-4 text-emerald-600" />,
+                    onClick: handleCreate,
+                  },
+                ],
+              },
+            ]
+          : undefined
+      }
       filterConfig={filterConfig}
       filter={filter}
       sortArray={

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Building2, Trash2, Users, Eye } from "lucide-react";
+import { Building2, Trash2, Users, Eye, Plus } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import {
@@ -377,20 +377,41 @@ export function ErpBusinessPartnersPage({
       onPage={() => {}}
       onPageSize={() => {}}
       onRefresh={() => void load()}
-      onCreate={openCreate}
+      createActions={[
+        {
+          groupLabel: "Thêm mới",
+          items: [
+            {
+              label: "Tạo mới",
+              icon: <Plus className="w-4 h-4 text-emerald-600" />,
+              onClick: openCreate,
+            },
+          ],
+        },
+      ]}
       filterConfig={filterConfig}
       filter={filter}
       rowActions={(item) => [
         {
-          label: "Chi tiết",
-          icon: <Eye className="h-3.5 w-3.5" />,
-          onClick: () => openView(item),
+          groupLabel: "Tra cứu",
+          items: [
+            {
+              label: "Chi tiết",
+              icon: <Eye className="h-3.5 w-3.5" />,
+              onClick: () => openView(item),
+            },
+          ],
         },
         {
-          label: "Xóa",
-          icon: <Trash2 className="h-3.5 w-3.5" />,
-          variant: "danger",
-          onClick: () => setDeleteTarget(item),
+          groupLabel: "Thao tác",
+          items: [
+            {
+              label: "Xóa",
+              icon: <Trash2 className="h-3.5 w-3.5" />,
+              variant: "danger",
+              onClick: () => setDeleteTarget(item),
+            },
+          ],
         },
       ]}
     >
