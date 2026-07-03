@@ -261,6 +261,28 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     data={poDetail.lines || []}
                     getRowKey={(line) => line.id || ""}
                     viewOnly={true}
+                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    footer={
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-3 py-3 text-right font-semibold"
+                        ></td>
+                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                          {viewOnly
+                            ? `+${fmtQty(form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0).toString())}`
+                            : fmtQty(
+                                form.lines
+                                  .reduce(
+                                    (sum, l) =>
+                                      sum + Number(l.qtyReceived || 0),
+                                    0,
+                                  )
+                                  .toString(),
+                              )}
+                        </td>
+                      </tr>
+                    }
                     columns={[
                       {
                         key: "index",
@@ -401,6 +423,28 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     data={[moDetail]}
                     getRowKey={(line) => line.id || ""}
                     viewOnly={true}
+                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    footer={
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-3 py-3 text-right font-semibold"
+                        ></td>
+                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                          {viewOnly
+                            ? `+${fmtQty(form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0).toString())}`
+                            : fmtQty(
+                                form.lines
+                                  .reduce(
+                                    (sum, l) =>
+                                      sum + Number(l.qtyReceived || 0),
+                                    0,
+                                  )
+                                  .toString(),
+                              )}
+                        </td>
+                      </tr>
+                    }
                     columns={[
                       {
                         key: "index",
@@ -521,6 +565,26 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     data={form.lines.filter((l) => Number(l.qtyReceived) > 0)}
                     getRowKey={(_, i) => i}
                     viewOnly={true}
+                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    footer={
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-3 py-3 text-right font-semibold"
+                        ></td>
+                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                          +
+                          {fmtQty(
+                            form.lines
+                              .reduce(
+                                (sum, l) => sum + Number(l.qtyReceived || 0),
+                                0,
+                              )
+                              .toString(),
+                          )}
+                        </td>
+                      </tr>
+                    }
                     columns={[
                       {
                         key: "index",

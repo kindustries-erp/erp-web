@@ -6,6 +6,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+import { Button } from "@/shared/components/ui/Button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { cn } from "@/shared/utils";
 import type { Department, Position } from "@/modules/hr/api/hrApi";
@@ -264,10 +265,11 @@ function PermissionsSection({
         />
       </DrawerField>
       <DrawerField label={t("nhansu.fields.customPolicy")}>
-        <button
+        <Button
           type="button"
           onClick={() => onOpenPolicyMatrix(editing)}
-          className="w-full flex items-center justify-between px-3 py-[7px] text-xs rounded-lg border border-[color:var(--border)] bg-[color:var(--muted)] text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground transition-colors"
+          variant="secondary"
+          className="w-full flex items-center justify-between"
         >
           <span>{t("nhansu.actions.editCustomPermissions")}</span>
           <svg
@@ -278,9 +280,9 @@ function PermissionsSection({
             stroke="currentColor"
             strokeWidth="2"
           >
-            <path d="M9 18l6-6-6-6" />
+            <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
-        </button>
+        </Button>
       </DrawerField>
     </DrawerSection>
   );

@@ -1,5 +1,6 @@
 import React from "react";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 export { extractApiError } from "@/shared/utils/apiError";
 
 // ── Shared UI ─────────────────────────────────────────────────────────────────
@@ -59,31 +60,36 @@ export function ActionCell({
   return (
     <div className="flex gap-[6px] items-center">
       {onDefault && !isDefault && (
-        <button
+        <Button
           title="Đặt mặc định"
           onClick={onDefault}
-          className="text-[10px] text-[color:var(--muted-fg)] hover:text-foreground cursor-pointer px-[6px] py-[3px] rounded border border-border bg-surface hover:bg-surface-hover"
+          variant="outline"
+          size="sm"
+          className="text-[10px] h-6 px-2"
         >
           Mặc định
-        </button>
+        </Button>
       )}
       {onToggle && (
-        <button
+        <Button
           title="Bật/Tắt"
           onClick={onToggle}
-          className="text-[color:var(--muted-fg)] hover:text-foreground cursor-pointer p-[4px] rounded hover:bg-surface-hover"
+          variant="ghost"
+          size="icon-sm"
         >
           <IconToggle />
-        </button>
+        </Button>
       )}
       {onDelete && (
-        <button
+        <Button
           title="Xóa"
           onClick={onDelete}
-          className="text-[color:var(--muted-fg)] hover:text-down-fg cursor-pointer p-[4px] rounded hover:bg-surface-hover"
+          variant="ghost"
+          size="icon-sm"
+          className="hover:text-down-fg"
         >
           <IconTrash />
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -116,13 +122,9 @@ export function Btn({
   onClick?: () => void;
 }) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      className="px-[14px] py-[7px] rounded-lg border border-border bg-surface text-xs font-medium cursor-pointer text-foreground hover:bg-surface-hover whitespace-nowrap"
-    >
+    <Button type={type} onClick={onClick} variant="secondary">
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -136,13 +138,9 @@ export function BtnPrimary({
   onClick?: () => void;
 }) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      className="px-[14px] py-[7px] rounded-lg border border-primary bg-primary text-primary-fg text-xs font-medium cursor-pointer flex items-center gap-[6px] hover:opacity-90 whitespace-nowrap"
-    >
+    <Button type={type} onClick={onClick} variant="primary">
       {children}
-    </button>
+    </Button>
   );
 }
 

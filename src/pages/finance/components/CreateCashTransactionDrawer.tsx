@@ -31,9 +31,9 @@ export const CreateCashTransactionDrawer = ({
   const [correspondentName, setCorrespondentName] = useState("");
 
   const { data: cashBooks } = useQuery({
-    queryKey: ["cash-books", currentBranchId],
-    queryFn: () => bankStatementApi.getCashBooks(currentBranchId!),
-    enabled: isOpen && !!currentBranchId,
+    queryKey: ["cash-books"],
+    queryFn: () => bankStatementApi.getCashBooks(),
+    enabled: isOpen,
   });
 
   const { mutate: createTransaction, isPending } = useMutation({

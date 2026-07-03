@@ -411,6 +411,28 @@ export function DataTable<T>({
     }
   };
 
+  React.useEffect(() => {
+    if (!tableId) return;
+    const handleResetSizing = () => {
+      setInternalColumnSizing({});
+      setTablePreferences(tableId, {
+        columnOrder: internalColumnOrder,
+        columnVisibility: internalVisibility,
+        columnSizing: undefined,
+      });
+    };
+    window.addEventListener(
+      `reset-column-sizing-${tableId}`,
+      handleResetSizing,
+    );
+    return () => {
+      window.removeEventListener(
+        `reset-column-sizing-${tableId}`,
+        handleResetSizing,
+      );
+    };
+  }, [tableId, internalColumnOrder, internalVisibility, setTablePreferences]);
+
   const showPagination =
     page != null &&
     pageSize != null &&

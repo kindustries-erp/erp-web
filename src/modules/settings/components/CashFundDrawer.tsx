@@ -82,10 +82,10 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["cash-books", currentBranchId],
+        queryKey: ["cash-books"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["cashBooks", currentBranchId],
+        queryKey: ["cashBooks"],
       });
       onSuccess();
       onClose();

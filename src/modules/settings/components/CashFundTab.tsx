@@ -71,7 +71,7 @@ export function QuyTab() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await bankStatementApi.getCashBooks(currentBranchId);
+      const res = await bankStatementApi.getCashBooks();
       setItems(res);
     } catch {
       setFetchError(t("settings.quy.fetchError"));

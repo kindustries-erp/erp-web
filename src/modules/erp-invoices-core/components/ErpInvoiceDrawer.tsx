@@ -17,7 +17,8 @@ interface Props {
   onDownload: (id: string, type: "pdf" | "xml") => void;
   loadingDetail?: boolean;
   onSyncDetail?: () => void;
-  children: React.ReactNode;
+  leftPanel: React.ReactNode;
+  rightPanel: React.ReactNode;
 }
 
 export function ErpInvoiceDrawer({
@@ -33,7 +34,8 @@ export function ErpInvoiceDrawer({
   onDownload,
   loadingDetail,
   onSyncDetail,
-  children,
+  leftPanel,
+  rightPanel,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
@@ -151,11 +153,12 @@ export function ErpInvoiceDrawer({
       title={drawerTitle}
       size="xl"
       layout="2-columns"
+      rightPanelTitle={t("generalInfo", "Thông tin chung")}
       actions={editMode ? editActions : viewActions}
       leftPanel={
-        <div className="relative w-full h-full min-h-[300px]">
+        <div className="relative w-full h-full">
           {loadingDetail && (
-            <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center rounded-md">
               <div className="flex flex-col items-center gap-3">
                 <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
                 <span className="text-sm text-gray-600 font-medium">
@@ -167,10 +170,11 @@ export function ErpInvoiceDrawer({
           <div
             className={loadingDetail ? "opacity-30 pointer-events-none" : ""}
           >
-            {children}
+            {leftPanel}
           </div>
         </div>
       }
+      rightPanel={rightPanel}
     />
   );
 }

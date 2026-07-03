@@ -1,5 +1,1 @@
-bun run format
 bunx lint-staged
-bunx vitest run --reporter=dot
-bun run lint:check
-# fallback debug nếu bunx có issue: ./node_modules/.bin/vitest run --reporter=dot; ./node_modules/.bin/lint-staged

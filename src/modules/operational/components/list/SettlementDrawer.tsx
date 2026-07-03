@@ -7,6 +7,7 @@ import {
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { getDocNo } from "@/modules/operational/utils/operationalHelpers";
@@ -195,14 +196,15 @@ export function SettlementDrawer({
                       </div>
                     ) : null}
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    className="btn-secondary shrink-0"
+                    variant="secondary"
+                    className="shrink-0"
                     onClick={() => onRemoveLink(link.id)}
                     disabled={settlementLoading}
                   >
                     {t("Gỡ liên kết")}
-                  </button>
+                  </Button>
                 </div>
               );
             })}

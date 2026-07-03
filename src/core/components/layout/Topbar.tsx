@@ -11,6 +11,7 @@ import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { useQuery } from "@tanstack/react-query";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
+import { SearchInput } from "@/shared/components/SearchInput";
 
 export function Topbar() {
   const {
@@ -36,6 +37,9 @@ export function Topbar() {
     queryKey: ["branches:list"],
     queryFn: getBranchesApi,
   });
+
+  const sidebarSearchQuery = useAppStore((s) => s.sidebarSearchQuery);
+  const setSidebarSearchQuery = useAppStore((s) => s.setSidebarSearchQuery);
 
   React.useEffect(() => {
     if (!currentBranchId && branches.length > 0) {
@@ -139,16 +143,34 @@ export function Topbar() {
         </div>
       )}
 
-      {/* Company Name & Branch Selector */}
+      {/* Search Input & Company Name */}
       <div className="ml-auto flex items-center gap-4">
+        {/* Search input for sidebar */}
+        <div className="hidden sm:block">
+          <SearchInput
+            value={sidebarSearchQuery}
+            onChange={setSidebarSearchQuery}
+            placeholder={t("nav.searchPlaceholder")}
+            className="w-56 text-xs h-8"
+          />
+        </div>
+
         {!impersonation?.active && companyProfile?.company_name && (
           <Tooltip content={companyProfile.company_name} side="bottom">
             <button
               onClick={() => setCompanyProfileOpen(true)}
-              className="flex items-center gap-2 text-[10px] font-medium text-[color:var(--muted-fg)] hover:text-foreground transition-colors max-w-[200px]"
+              className="flex items-center gap-2 text-[10px] font-medium text-[color:var(--muted-fg)] hover:text-foreground transition-colors"
             >
-              <Building2 className="w-[14px] h-[14px] flex-shrink-0" />
-              <span className="truncate hidden md:block">
+              {companyProfile.logo ? (
+                <img
+                  src={companyProfile.logo}
+                  alt="Company Logo"
+                  className="w-[22px] h-[22px] object-contain rounded-sm"
+                />
+              ) : (
+                <Building2 className="w-[18px] h-[18px] flex-shrink-0" />
+              )}
+              <span className="hidden md:block">
                 {companyProfile.company_name}
               </span>
             </button>

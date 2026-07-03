@@ -81,7 +81,7 @@ export function NHTab() {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await bankStatementApi.getBankAccounts(currentBranchId);
+      const res = await bankStatementApi.getBankAccounts();
       setItems(res);
     } catch {
       setFetchError(t("settings.nh.fetchError"));

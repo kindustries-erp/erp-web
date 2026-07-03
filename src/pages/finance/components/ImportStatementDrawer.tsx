@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { UploadCloud } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
@@ -30,20 +31,23 @@ export const ImportStatementDrawer = ({
   const [accountId, setAccountId] = useState<string>("");
 
   const { data: accounts } = useQuery({
-    queryKey: ["bank-accounts", type, currentBranchId],
+    queryKey: ["bank-accounts", type],
     queryFn: async () =>
       type === "bank"
-        ? await bankStatementApi.getBankAccounts(currentBranchId)
-        : await bankStatementApi.getCashBooks(currentBranchId),
-    enabled: isOpen && !!currentBranchId,
+        ? await bankStatementApi.getBankAccounts()
+        : await bankStatementApi.getCashBooks(),
+    enabled: isOpen,
   });
 
   const { mutate: submitImport, isPending } = useMutation({
     mutationFn: () => {
       if (files.length === 0) throw new Error("At least one file is required");
+      const selectedAccount = accounts?.find((a: any) => a.id === accountId);
+      const branchIdToUse = selectedAccount?.branchId || currentBranchId;
+
       return bankStatementApi.importFiles({
         files,
-        branchId: currentBranchId,
+        branchId: branchIdToUse,
         bankAccountId: type === "bank" ? accountId : undefined,
         cashBookId: type === "cash" ? accountId : undefined,
       });
@@ -59,11 +63,11 @@ export const ImportStatementDrawer = ({
           String(res.skippedCount),
         );
       }
-      alert(msg);
+      toast.success(msg);
       onSuccess();
     },
     onError: (err: any) => {
-      alert(err?.response?.data?.message || err.message);
+      toast.error(err?.response?.data?.message || err.message);
     },
   });
 
@@ -71,7 +75,7 @@ export const ImportStatementDrawer = ({
     if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files);
       if (files.length + selectedFiles.length > 5) {
-        alert("Cannot upload more than 5 files");
+        toast.error("Cannot upload more than 5 files");
         return;
       }
       setFiles((prev) => [...prev, ...selectedFiles]);

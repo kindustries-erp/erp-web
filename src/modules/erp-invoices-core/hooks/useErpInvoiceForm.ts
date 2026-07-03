@@ -62,6 +62,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   function mapInvoiceToForm(inv: ErpInvoice): CreateErpInvoicePayload {
     return {
+      branchId: inv.branchId ?? undefined,
       invoiceNo: inv.invoiceNo,
       serialNo: inv.serialNo ?? undefined,
       invoiceDate: inv.invoiceDate,

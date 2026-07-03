@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ExternalLink, FileText, Eye, Paperclip } from "lucide-react";
+import { Eye, ExternalLink, FileText, Paperclip } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -207,13 +208,14 @@ export function DinhKemChungTu() {
       header: "",
       cell: (a) => (
         <div className="flex justify-center w-full">
-          <button
+          <Button
             title="Xem chi tiết"
             onClick={() => selectAttachment(a)}
-            className="p-[4px] rounded text-[color:var(--muted-fg)] hover:text-foreground hover:bg-surface-hover cursor-pointer"
+            variant="ghost"
+            size="icon-sm"
           >
             <Eye className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       ),
       className: "text-center",
@@ -337,15 +339,16 @@ function AttachmentDetail({
               <div className="text-[11px] font-medium text-[color:var(--muted-fg)]">
                 Xem nội dung
               </div>
-              <button
+              <Button
                 type="button"
                 disabled={!fileId(item)}
                 onClick={onOpenFile}
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface px-2 py-1 text-xs text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="secondary"
+                size="sm"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Mở tab mới
-              </button>
+              </Button>
             </div>
             <div className="h-[360px] overflow-hidden rounded-lg border border-border bg-[color:var(--muted)]">
               {previewUrl && previewType.startsWith("image/") && (

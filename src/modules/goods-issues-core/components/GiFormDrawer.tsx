@@ -1,4 +1,5 @@
 import { cn } from "@/shared/utils";
+import { fmtQty } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Skeleton } from "@/shared/components/Skeleton";
@@ -219,6 +220,34 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   getRowKey={(_, idx) => idx}
                   viewOnly={viewOnly}
                   disabled={viewOnly}
+                  tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                  footer={
+                    <tr>
+                      <td
+                        colSpan={viewOnly ? 3 : 2}
+                        className="px-3 py-3 text-right font-semibold"
+                      ></td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 font-semibold",
+                          viewOnly ? "text-center text-red-600" : "text-right",
+                        )}
+                      >
+                        {viewOnly
+                          ? `-${fmtQty(form.lines.reduce((sum, line) => sum + Number(line.qtyIssued || 0), 0).toString())}`
+                          : fmtQty(
+                              form.lines
+                                .reduce(
+                                  (sum, line) =>
+                                    sum + Number(line.qtyIssued || 0),
+                                  0,
+                                )
+                                .toString(),
+                            )}
+                      </td>
+                      <td colSpan={vehicleOptions.length > 0 ? 2 : 1}></td>
+                    </tr>
+                  }
                   onAddLine={() =>
                     setForm((f) => ({
                       ...f,
@@ -242,78 +271,132 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                       ),
                     },
                     {
-                      key: "itemId",
-                      header: t("Hàng hóa"),
-                      minWidth: 200,
-                      cell: (line, idx) => (
-                        <Combobox
-                          options={itemOptions}
-                          value={line.itemId}
-                          disabled={viewOnly}
-                          placeholder={t("Chọn hàng hóa")}
-                          searchPlaceholder={t("Tìm SKU / tên")}
-                          onSearch={setItemSearch}
-                          onScrollBottom={fetchNextItems}
-                          loading={loadingItems}
-                          onChange={(v) => {
-                            const found = itemOptions.find(
-                              (o) => o.value === v,
-                            );
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = {
-                                ...lines[idx],
-                                itemId: v || "",
-                                itemName: found?.label ?? "",
-                              };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      ),
+                      key: "itemCode",
+                      header: t("Mã vật tư"),
+                      minWidth: viewOnly ? 140 : 200,
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          const code = line.itemName?.split(" — ")[0] || "—";
+                          return <span>{code}</span>;
+                        }
+                        return (
+                          <Combobox
+                            options={itemOptions}
+                            value={line.itemId}
+                            fallbackLabel={line.itemName}
+                            disabled={viewOnly}
+                            placeholder={t("Chọn hàng hóa")}
+                            searchPlaceholder={t("Tìm SKU / tên")}
+                            onSearch={setItemSearch}
+                            onScrollBottom={fetchNextItems}
+                            loading={loadingItems}
+                            onChange={(v) => {
+                              const found = itemOptions.find(
+                                (o) => o.value === v,
+                              );
+                              setForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = {
+                                  ...lines[idx],
+                                  itemId: v || "",
+                                  itemName: found?.label ?? "",
+                                };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: "itemName",
+                      header: t("Tên vật tư"),
+                      minWidth: 260,
+                      cell: (line) => {
+                        const nameParts = line.itemName?.split(" — ");
+                        const name =
+                          nameParts && nameParts.length > 1
+                            ? nameParts[1]
+                            : line.itemName || "—";
+                        return (
+                          <div
+                            className={cn(
+                              "font-medium truncate max-w-[260px]",
+                              viewOnly
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                            title={name}
+                          >
+                            {name}
+                          </div>
+                        );
+                      },
                     },
                     {
                       key: "qtyIssued",
                       header: t("Số lượng"),
                       width: 140,
-                      cell: (line, idx) => (
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-full")}
-                          value={line.qtyIssued}
-                          disabled={viewOnly}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], qtyIssued: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      ),
+                      align: viewOnly ? "center" : "left",
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          return Number(line.qtyIssued) > 0 ? (
+                            <div className="font-medium text-red-600">
+                              {fmtQty(line.qtyIssued)}
+                            </div>
+                          ) : null;
+                        }
+                        return (
+                          <input
+                            type="number"
+                            className={cn(inputCls, "w-full text-right")}
+                            value={line.qtyIssued}
+                            disabled={viewOnly}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], qtyIssued: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        );
+                      },
                     },
                     {
                       key: "unitCost",
                       header: t("Đơn giá"),
                       width: 140,
-                      cell: (line, idx) => (
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-full")}
-                          value={line.unitCost}
-                          disabled={viewOnly}
-                          placeholder={t("Tùy chọn")}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], unitCost: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      ),
+                      align: viewOnly ? "right" : "left",
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          return line.unitCost ? (
+                            <span className="text-muted-foreground">
+                              {fmtQty(line.unitCost)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          );
+                        }
+                        return (
+                          <input
+                            type="number"
+                            className={cn(inputCls, "w-full text-right")}
+                            value={line.unitCost}
+                            disabled={viewOnly}
+                            placeholder={t("Tùy chọn")}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], unitCost: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        );
+                      },
                     },
                     ...(vehicleOptions.length > 0
                       ? [
@@ -321,24 +404,36 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             key: "vehicle",
                             header: t("Xe") + " (" + t("tùy chọn") + ")",
                             minWidth: 160,
-                            cell: (line: GiLineForm, idx: number) => (
-                              <Combobox
-                                options={vehicleOptions}
-                                value={line.vehicleId}
-                                disabled={viewOnly}
-                                placeholder={t("Chọn xe...")}
-                                onChange={(v) => {
-                                  setForm((f) => {
-                                    const lines = [...f.lines];
-                                    lines[idx] = {
-                                      ...lines[idx],
-                                      vehicleId: v || "",
-                                    };
-                                    return { ...f, lines };
-                                  });
-                                }}
-                              />
-                            ),
+                            cell: (line: GiLineForm, idx: number) => {
+                              if (viewOnly) {
+                                const vName = vehicleOptions.find(
+                                  (v) => v.value === line.vehicleId,
+                                )?.label;
+                                return (
+                                  <span className="text-muted-foreground">
+                                    {vName || "—"}
+                                  </span>
+                                );
+                              }
+                              return (
+                                <Combobox
+                                  options={vehicleOptions}
+                                  value={line.vehicleId}
+                                  disabled={viewOnly}
+                                  placeholder={t("Chọn xe...")}
+                                  onChange={(v) => {
+                                    setForm((f) => {
+                                      const lines = [...f.lines];
+                                      lines[idx] = {
+                                        ...lines[idx],
+                                        vehicleId: v || "",
+                                      };
+                                      return { ...f, lines };
+                                    });
+                                  }}
+                                />
+                              );
+                            },
                           },
                         ]
                       : []),

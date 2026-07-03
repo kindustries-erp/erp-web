@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   PlusCircle,
   Receipt,
-  FileUp,
   DownloadCloud,
   Eye,
   Download,
@@ -19,6 +18,7 @@ import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { getTags } from "@/modules/tags/api/tagsApi";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 
@@ -33,8 +33,9 @@ import {
 import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceDrawer";
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
-import { InvoiceXmlUploadDrawer } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadDrawer";
-import { PortalSyncDrawer } from "@/modules/erp-invoices-core/components/PortalSyncDrawer";
+import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
+import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
@@ -51,12 +52,19 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
   useInvoiceSyncProgress(listHook.loadInvoices);
 
-  const [xmlModalOpen, setXmlModalOpen] = useState(false);
-  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
+    null,
+  );
 
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
     queryFn: getTags,
+  });
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches-options"],
+    queryFn: getBranchOptionsApi,
   });
 
   useEffect(() => {
@@ -75,6 +83,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       const detail = (e as CustomEvent).detail;
       if (detail && detail.type === "erp_invoice" && detail.id) {
         formHook.openDetail({ id: detail.id } as ErpInvoice);
+      } else if (detail && detail.type === "bank_transaction" && detail.id) {
+        setDetailTransactionId(detail.id);
       }
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
@@ -99,6 +109,48 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     } catch {
       showToast({
         title: `Không thể tải ${type.toUpperCase()}`,
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function handleExportExcel() {
+    try {
+      showToast({
+        title: "Đang tạo file Excel...",
+        variant: "default",
+      });
+      const { search, dateFrom, dateTo, status, custom } =
+        listHook.filterPanel.state;
+      const blob = await erpInvoicesCoreApi.exportExcel({
+        direction,
+        search: search || undefined,
+        seller_name: custom?.seller_name || undefined,
+        buyer_name: custom?.buyer_name || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        status: status || undefined,
+        tag_id: (custom?.tag_id as string) || undefined,
+        sort_by: listHook.sortBy || undefined,
+        sort_order: listHook.sortOrder || undefined,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DanhSachHoaDon_${direction}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast({
+        title: "Xuất Excel thành công",
+        variant: "default",
+      });
+    } catch {
+      showToast({
+        title: "Không thể xuất Excel",
         variant: "destructive",
       });
     }
@@ -169,19 +221,50 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const columns: DataTableColumn<ErpInvoice>[] = useMemo(
     () => [
       {
+        key: "attachments",
+        header: t("attachments", "Chứng từ"),
+        size: 80,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv) => (
+          <div className="flex items-center justify-center gap-1.5">
+            {inv.xmlFileKey ? (
+              <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
+                <FileCode className="w-4 h-4 text-blue-500" />
+              </Tooltip>
+            ) : (
+              <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
+                <FileCode className="w-4 h-4 text-gray-300" />
+              </Tooltip>
+            )}
+            {inv.pdfFileKey ? (
+              <Tooltip content={t("hasPdf", "Đã có file PDF")}>
+                <FileText className="w-4 h-4 text-red-500" />
+              </Tooltip>
+            ) : (
+              <Tooltip content={t("noPdf", "Chưa có file PDF")}>
+                <FileText className="w-4 h-4 text-gray-300" />
+              </Tooltip>
+            )}
+          </div>
+        ),
+      },
+      {
         key: "invoiceDate",
         header: t("invoiceDate", "Ngày HĐ"),
         sortable: true,
         sortKey: "invoiceDate",
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 100,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => inv.invoiceDate,
       },
       {
         key: "serialNo",
         header: t("serialNo", "Ký hiệu"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-muted-foreground w-[100px] text-left",
+        size: 80,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-left",
         cell: (inv) => inv.serialNo || "—",
       },
       {
@@ -189,8 +272,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("invoiceNo", "Số HĐ"),
         sortable: true,
         sortKey: "invoiceNo",
-        headerClassName: "text-center w-[130px]",
-        className: "font-medium text-primary w-[130px] text-left",
+        size: 80,
+        headerClassName: "text-center",
+        className: "font-medium text-primary text-left",
         cell: (inv) => (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -209,26 +293,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
-              {inv.xmlFileKey ? (
-                <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
-                  <FileCode className="w-3.5 h-3.5 text-blue-500" />
-                </Tooltip>
-              ) : (
-                <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
-                  <FileCode className="w-3.5 h-3.5 text-gray-300" />
-                </Tooltip>
-              )}
-              {inv.pdfFileKey ? (
-                <Tooltip content={t("hasPdf", "Đã có file PDF")}>
-                  <FileText className="w-3.5 h-3.5 text-red-500" />
-                </Tooltip>
-              ) : (
-                <Tooltip content={t("noPdf", "Chưa có file PDF")}>
-                  <FileText className="w-3.5 h-3.5 text-gray-300" />
-                </Tooltip>
-              )}
-            </div>
           </div>
         ),
       },
@@ -238,14 +302,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           direction === "IN" ? t("seller", "Bên bán") : t("buyer", "Bên mua"),
         sortable: true,
         sortKey: direction === "IN" ? "sellerName" : "buyerName",
-        headerClassName: "text-center w-[320px]",
-        className: "w-[320px] text-left",
+        size: 250,
+        headerClassName: "text-center",
+        className: "text-left",
         cell: (inv) => {
           const text =
             direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
           return (
             <Tooltip content={text !== "—" ? text : ""}>
-              <div className="truncate w-full cursor-pointer">{text}</div>
+              <div className="whitespace-normal break-words w-full cursor-pointer">
+                {text}
+              </div>
             </Tooltip>
           );
         },
@@ -253,8 +320,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "taxCode",
         header: t("taxCode", "MST"),
-        headerClassName: "text-center w-[110px]",
-        className: "text-muted-foreground text-xs w-[110px] text-left",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-xs text-left",
         cell: (inv) =>
           direction === "IN"
             ? inv.sellerTaxCode || "—"
@@ -265,10 +333,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("description", "Diễn giải"),
         sortable: true,
         sortKey: "description",
+        size: 300,
         className: "text-left",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="max-w-[200px] truncate" title={row.description || ""}>
+          <div
+            className="whitespace-normal break-words w-full"
+            title={row.description || ""}
+          >
             {row.description || "—"}
           </div>
         ),
@@ -278,22 +350,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("preVatAmount", "Trước VAT"),
         sortable: true,
         sortKey: "preVatAmount",
-        headerClassName: "text-center w-[110px]",
-        className: "text-right w-[110px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (row) => fmtAmt(row.preVatAmount),
       },
       {
         key: "vatAmount",
         header: t("vatAmount", "Thuế VAT"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => fmtAmt(inv.vatAmount),
       },
       {
         key: "discountAmount",
         header: t("discountAmount", "Chiết khấu"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
@@ -301,16 +376,163 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("totalAmount", "Thành tiền"),
         sortable: true,
         sortKey: "totalAmount",
-        headerClassName: "text-center w-[120px]",
-        className: "text-right font-semibold w-[120px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right font-semibold",
         cell: (inv) => fmtAmt(inv.totalAmount),
       },
+      ...(direction === "OUT"
+        ? [
+            {
+              key: "settlementOrder",
+              header: t("settlementOrder", "Lệnh quyết toán"),
+              headerClassName: "text-center w-[150px]",
+              className: "text-left w-[150px]",
+              cell: (inv: ErpInvoice) => inv.settlementOrder || "—",
+            },
+            {
+              key: "licensePlate",
+              header: t("licensePlate", "Biển số xe"),
+              headerClassName: "text-center w-[110px]",
+              className: "text-left w-[110px]",
+              cell: (inv: ErpInvoice) => inv.licensePlate || "—",
+            },
+          ]
+        : []),
+      {
+        key: "netOffAmount",
+        header: t("invoice.columns.netOffAmount", "Đã cấn trừ"),
+        size: 120,
+        headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
+        className: "text-right bg-blue-50/50 border-l border-blue-200",
+        cell: (inv: any) => {
+          const netOff = parseFloat(inv.netOffAmount) || 0;
+          if (netOff === 0) return "--";
+          return (
+            <span className="text-blue-600">{fmtAmt(inv.netOffAmount)}</span>
+          );
+        },
+      },
+      {
+        key: "remainingAmount",
+        header: t("invoice.columns.remainingAmount", "Còn lại"),
+        size: 120,
+        headerClassName: "text-center bg-blue-50/50",
+        className: "text-right font-semibold bg-blue-50/50",
+        cell: (inv: any) => {
+          const total = parseFloat(inv.totalAmount) || 0;
+          const netOff = parseFloat(inv.netOffAmount) || 0;
+          const remaining = total - netOff;
+          if (remaining === 0)
+            return <span className="text-emerald-600">0</span>;
+          return (
+            <span className="text-orange-600">
+              {fmtAmt(remaining.toString())}
+            </span>
+          );
+        },
+      },
+      {
+        key: "branchId",
+        header: t("branch", "Chi nhánh"),
+        size: 100,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv: any) => {
+          if (!inv.branchId) return "—";
+          const branch = branches.find((b) => b.value === inv.branchId);
+          return branch ? branch.label : inv.branchId;
+        },
+      },
     ],
-    [direction, t],
+    [direction, t, branches],
   );
 
   const activeSortKey = listHook.sortBy;
   const activeSortOrder = listHook.sortOrder;
+
+  const summaryRow = useMemo(() => {
+    if (!listHook.invoices || listHook.invoices.length === 0) return undefined;
+
+    const totalPreVatAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.preVatAmount) || 0),
+      0,
+    );
+    const totalVatAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.vatAmount) || 0),
+      0,
+    );
+    const totalDiscountAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.discountAmount) || 0),
+      0,
+    );
+    const totalTotalAmount = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.totalAmount) || 0),
+      0,
+    );
+    const totalNetOff = listHook.invoices.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
+      0,
+    );
+    const totalRemaining = listHook.invoices.reduce(
+      (acc: number, curr: any) =>
+        acc +
+        ((parseFloat(curr.totalAmount) || 0) -
+          (parseFloat(curr.netOffAmount) || 0)),
+      0,
+    );
+
+    return {
+      preVatAmount:
+        totalPreVatAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-medium">
+            {fmtAmt(totalPreVatAmount.toString())}
+          </span>
+        ),
+      vatAmount:
+        totalVatAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-medium">
+            {fmtAmt(totalVatAmount.toString())}
+          </span>
+        ),
+      discountAmount:
+        totalDiscountAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-medium">
+            {fmtAmt(totalDiscountAmount.toString())}
+          </span>
+        ),
+      totalAmount:
+        totalTotalAmount === 0 ? (
+          "--"
+        ) : (
+          <span className="font-semibold">
+            {fmtAmt(totalTotalAmount.toString())}
+          </span>
+        ),
+      netOffAmount:
+        totalNetOff === 0 ? (
+          "--"
+        ) : (
+          <span className="text-blue-600 font-medium">
+            {fmtAmt(totalNetOff.toString())}
+          </span>
+        ),
+      remainingAmount:
+        totalRemaining === 0 ? (
+          <span className="text-emerald-600 font-medium">0</span>
+        ) : (
+          <span className="text-orange-600 font-medium">
+            {fmtAmt(totalRemaining.toString())}
+          </span>
+        ),
+    };
+  }, [listHook.invoices]);
 
   return (
     <>
@@ -326,6 +548,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         items={listHook.invoices}
         columns={columns}
         getRowKey={(r) => r.id}
+        summaryRow={summaryRow}
         loading={listHook.loading}
         emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
         minWidth={1200}
@@ -401,14 +624,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onClick: () => formHook.openNew(direction),
           },
           {
-            label: t("importXml", "Import XML"),
-            icon: <FileUp className="w-4 h-4 text-blue-600" />,
-            onClick: () => setXmlModalOpen(true),
-          },
-          {
-            label: t("syncGdt", "Đồng bộ từ GDT"),
+            label: t("syncInvoices", "Đồng bộ hóa đơn"),
             icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-            onClick: () => setSyncModalOpen(true),
+            onClick: () => setImportModalOpen(true),
           },
           {
             label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
@@ -435,6 +653,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               }
             },
           },
+          {
+            label: t("exportExcel", "Xuất Excel"),
+            icon: <Download className="w-4 h-4 text-green-600" />,
+            onClick: handleExportExcel,
+          },
         ]}
       />
 
@@ -451,34 +674,51 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onDownload={handleDownload}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
-      >
-        <div className="flex flex-col gap-5">
-          {formHook.formError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-              {formHook.formError}
-            </div>
-          )}
-          <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full">
-            <ErpInvoiceFormItems
+        leftPanel={
+          <div className="flex flex-col gap-5">
+            {formHook.formError && (
+              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+                {formHook.formError}
+              </div>
+            )}
+            <ErpInvoiceInternalInfo
               form={formHook.form}
               editMode={formHook.editMode}
+              fieldSet={(key, value) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+              direction={direction}
+              detailInvoice={formHook.detailInvoice}
+              onRefreshDetail={() =>
+                formHook.openDetail({
+                  id: formHook.detailInvoice!.id,
+                } as ErpInvoice)
+              }
+            />
+            <ErpInvoiceFormItems
+              form={formHook.form}
+              editMode={formHook.editMode && !formHook.detailInvoice?.id}
               setForm={formHook.setForm}
               fmtAmt={fmtAmt}
             />
+          </div>
+        }
+        rightPanel={
+          <div className="flex flex-col gap-5">
             <ErpInvoiceFormGeneral
               form={formHook.form}
               editMode={formHook.editMode}
               fieldSet={(key, value) =>
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
-              fmtAmt={fmtAmt}
               invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
             />
           </div>
-        </div>
-      </ErpInvoiceDrawer>
+        }
+      />
 
       <ConfirmModal
         open={formHook.deleteConfirm}
@@ -502,25 +742,21 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onConfirm={formHook.handleCancel}
       />
 
-      <InvoiceXmlUploadDrawer
-        open={xmlModalOpen}
-        onClose={() => setXmlModalOpen(false)}
-        onImported={(id: string, dir: "IN" | "OUT") => {
+      <InvoiceImportSyncDrawer
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        initialDirection={direction}
+        onImported={(dir: "IN" | "OUT") => {
           if (dir === direction) {
             void listHook.loadInvoices();
           }
         }}
       />
 
-      <PortalSyncDrawer
-        open={syncModalOpen}
-        onClose={() => setSyncModalOpen(false)}
-        initialDirection={direction}
-        onSynced={(dir: "IN" | "OUT") => {
-          if (dir === direction) {
-            void listHook.loadInvoices();
-          }
-        }}
+      <BankTransactionDetailDrawer
+        isOpen={!!detailTransactionId}
+        onClose={() => setDetailTransactionId(null)}
+        transactionId={detailTransactionId}
       />
     </>
   );

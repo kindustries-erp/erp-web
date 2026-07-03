@@ -13,6 +13,7 @@ export type PageKey =
   | "payables"
   | "ledger"
   | "journal"
+  | "journal-entry"
   | "employees"
   | "departments"
   | "positions"
@@ -50,7 +51,11 @@ export type PageKey =
   | "erp-invoices-in"
   | "erp-invoices-out"
   | "bank-statement"
-  | "cash-statement";
+  | "cash-statement"
+  | "garage-dashboard"
+  | "garage-cases"
+  | "garage-receivables"
+  | "garage-payables";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

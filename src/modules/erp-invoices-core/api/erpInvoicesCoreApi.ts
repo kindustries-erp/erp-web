@@ -16,6 +16,7 @@ export interface ErpInvoiceItem {
 
 export interface ErpInvoice {
   id: string;
+  branchId?: string | null;
   invoiceNo: string;
   serialNo?: string | null;
   invoiceDate: string;
@@ -30,6 +31,8 @@ export interface ErpInvoice {
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
+  licensePlate?: string | null;
+  settlementOrder?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -46,9 +49,16 @@ export interface ErpInvoice {
   createdAt?: string;
   updatedAt?: string;
   items?: ErpInvoiceItem[];
+  voucherNetOffs?: {
+    id: string;
+    bankTransactionId: string;
+    netOffAmount: number;
+    bankTransaction?: any;
+  }[];
 }
 
 export interface CreateErpInvoicePayload {
+  branchId?: string;
   invoiceNo: string;
   serialNo?: string;
   invoiceDate: string;
@@ -206,6 +216,27 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  linkVouchers: async (
+    id: string,
+    payload: { bankTransactionId: string; netOffAmount?: number }[],
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.post<{ message: string }>(
+      `${BASE}/${id}/net-off-vouchers`,
+      payload,
+    );
+    return data;
+  },
+
+  removeVoucherLink: async (
+    id: string,
+    voucherId: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.delete<{ message: string }>(
+      `${BASE}/${id}/net-off-vouchers/${voucherId}`,
+    );
+    return data;
+  },
+
   bulkDownloadXml: async (payload: {
     token: string;
     direction: "IN" | "OUT";
@@ -259,6 +290,14 @@ export const erpInvoicesCoreApi = {
       key: string;
       expiresAt: string;
     }>(`${BASE}/${id}/upload-url`, { fileType });
+    return data;
+  },
+
+  exportExcel: async (params: ErpInvoiceListParams): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
+      params,
+      responseType: "blob",
+    });
     return data;
   },
 };

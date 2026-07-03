@@ -1,4 +1,8 @@
-import { DrawerSection, inputCls } from "@/shared/components/DrawerModal";
+import {
+  DrawerSection,
+  DrawerField,
+  inputCls,
+} from "@/shared/components/DrawerModal";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { useTranslation } from "react-i18next";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
@@ -23,15 +27,68 @@ export function ErpInvoiceFormItems({
   const displayItems = form.items || [];
 
   return (
-    <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
-      <DrawerSection title={t("itemsSection", "Chi tiết hóa đơn")}>
+    <DrawerSection title={t("itemsSection", "Chi tiết hóa đơn")}>
+      <div
+        className="flex flex-col lg:flex-row lg:items-end gap-6 p-4 bg-white border border-gray-200 rounded-xl mb-4"
+        style={{ boxShadow: "var(--panel-shadow)" }}
+      >
+        {/* Description Field */}
+        <div className="flex-1 w-full">
+          <DrawerField label={t("description", "Diễn giải")}>
+            {editMode ? (
+              <input
+                className={inputCls}
+                value={form.description || ""}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+              />
+            ) : (
+              <div className="text-sm font-medium text-[color:var(--foreground)]">
+                {form.description || "—"}
+              </div>
+            )}
+          </DrawerField>
+        </div>
+
+        {/* Compact VAT Summary */}
+        <div className="flex items-center gap-5 shrink-0 lg:pb-[1px]">
+          <div className="flex flex-col text-right">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+              {t("preVatAmount", "Trước VAT")}
+            </span>
+            <span className="text-[13px] font-semibold text-gray-900 leading-tight mt-0.5">
+              {fmtAmt(String(form.preVatAmount || 0))}
+            </span>
+          </div>
+          <div className="h-6 w-px bg-gray-200"></div>
+          <div className="flex flex-col text-right">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+              {t("vatAmount", "Thuế VAT")}
+            </span>
+            <span className="text-[13px] font-semibold text-gray-900 leading-tight mt-0.5">
+              {fmtAmt(String(form.vatAmount || 0))}
+            </span>
+          </div>
+          <div className="h-6 w-px bg-gray-200"></div>
+          <div className="flex flex-col text-right">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
+              {t("totalAmount", "Tổng tiền")}
+            </span>
+            <span className="text-base font-bold text-primary leading-tight mt-0.5">
+              {fmtAmt(String(form.totalAmount || 0))}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-md">
         <DocumentLineTable<InvoiceItem>
           getRowKey={(row, i) => String(i)}
           columns={[
             {
               key: "description",
               header: t("description", "Diễn giải"),
-              width: "200px",
+              minWidth: "250px",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
                   <input
@@ -47,13 +104,13 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div className="min-w-[120px]">{row.description || "—"}</div>
+                  <div>{row.description}</div>
                 ),
             },
             {
               key: "unit",
               header: t("unit", "ĐVT"),
-              width: "80px",
+              minWidth: "100px",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
                   <input
@@ -69,13 +126,13 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div>{row.unit || "—"}</div>
+                  <div>{row.unit}</div>
                 ),
             },
             {
               key: "quantity",
               header: t("quantity", "SL"),
-              width: "80px",
+              minWidth: "100px",
               align: "right",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
@@ -93,13 +150,13 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div>{row.quantity || "—"}</div>
+                  <div>{row.quantity}</div>
                 ),
             },
             {
               key: "unitPrice",
               header: t("unitPrice", "Đơn giá"),
-              width: "100px",
+              minWidth: "150px",
               align: "right",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
@@ -122,8 +179,8 @@ export function ErpInvoiceFormItems({
             },
             {
               key: "preVatAmount",
-              header: t("preVatAmount", "Trước VAT"),
-              width: "120px",
+              header: t("preVatAmountCol", "Thành tiền trước thuế"),
+              minWidth: "150px",
               align: "right",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
@@ -137,7 +194,6 @@ export function ErpInvoiceFormItems({
                         ...newItems[index],
                         preVatAmount: Number(e.target.value),
                       };
-
                       const preVatAmount = newItems.reduce(
                         (acc, curr) => acc + Number(curr.preVatAmount || 0),
                         0,
@@ -146,7 +202,7 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div className="font-medium">
+                  <div className="font-medium text-slate-800">
                     {fmtAmt(String(row.preVatAmount || 0))}
                   </div>
                 ),
@@ -154,7 +210,7 @@ export function ErpInvoiceFormItems({
             {
               key: "vatRate",
               header: t("vatRate", "Thuế suất"),
-              width: "100px",
+              minWidth: "120px",
               align: "right",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
@@ -182,8 +238,8 @@ export function ErpInvoiceFormItems({
             },
             {
               key: "vatAmount",
-              header: t("vatAmount", "Thuế VAT"),
-              width: "120px",
+              header: t("vatAmount", "Tiền thuế"),
+              minWidth: "150px",
               align: "right",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
@@ -210,8 +266,8 @@ export function ErpInvoiceFormItems({
             },
             {
               key: "totalAmount",
-              header: t("totalAmount", "Thành tiền"),
-              width: "120px",
+              header: t("totalAmount", "Tổng cộng"),
+              minWidth: "150px",
               align: "right",
               cell: (row: InvoiceItem, index: number) =>
                 editMode ? (
@@ -241,7 +297,7 @@ export function ErpInvoiceFormItems({
           ]}
           data={displayItems}
         />
-      </DrawerSection>
-    </div>
+      </div>
+    </DrawerSection>
   );
 }

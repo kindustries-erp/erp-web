@@ -9,19 +9,18 @@ import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { normalizeDateTime } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
+import { Button } from "@/shared/components/ui/Button";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import type {
   OperationalDocument,
   OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
 import { StatusBadge } from "@/shared/components/badges";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
   expandedRowIds: Record<string, boolean>;
   onToggleExpand: (key: string) => void;
-  isAdminEmail?: boolean;
 }
 
 /**
@@ -32,7 +31,6 @@ export function usePurchaseColumns({
   variant,
   expandedRowIds,
   onToggleExpand,
-  isAdminEmail,
 }: UsePurchaseColumnsOptions): DataTableColumn<OperationalDocument>[] {
   const t = useT();
   return useMemo<DataTableColumn<OperationalDocument>[]>(
@@ -49,13 +47,15 @@ export function usePurchaseColumns({
           const rowKey = `${row.document_type || variant}-${row.id}`;
           const isExpanded = !!expandedRowIds[rowKey];
           return (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleExpand(rowKey);
               }}
-              className="focus:outline-none flex items-center justify-center w-full"
+              className="w-full flex items-center justify-center"
             >
               <ChevronRight
                 className={cn(
@@ -63,7 +63,7 @@ export function usePurchaseColumns({
                   isExpanded && "rotate-90",
                 )}
               />
-            </button>
+            </Button>
           );
         },
       },
@@ -198,28 +198,7 @@ export function usePurchaseColumns({
           );
         },
       },
-      ...(isAdminEmail
-        ? [
-            {
-              key: "tags",
-              header: t("Thẻ nhãn"),
-              size: 160,
-              enableResizing: true,
-              className: "!py-2 align-middle text-left",
-              headerClassName: "text-center",
-              cell: (row: OperationalDocument) => (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <EntityTagSelector
-                    entityType="erp_purchase_order"
-                    entityId={row.id}
-                    readOnly
-                  />
-                </div>
-              ),
-            },
-          ]
-        : []),
     ],
-    [expandedRowIds, onToggleExpand, t, variant, isAdminEmail],
+    [expandedRowIds, onToggleExpand, t, variant],
   );
 }

@@ -7,11 +7,11 @@ import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
 import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -20,6 +20,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [sortArray, setSortArray] = useState<string[]>(["-transDate"]);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
+    null,
+  );
 
   const { data: branches = [] } = useQuery({
     queryKey: ["branches:list"],
@@ -96,7 +99,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const sortBy = sortArray[0]?.replace("-", "");
   const sortOrder = sortArray[0]?.startsWith("-") ? "DESC" : "ASC";
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isFetching, refetch } = useQuery({
     queryKey: [
       "bank-transactions",
       type,
@@ -139,6 +142,21 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const netAmount = totalCredit - totalDebit;
 
+    const totalNetOff = data.items.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
+      0,
+    );
+    const totalRemaining = data.items.reduce(
+      (acc: number, curr: any) =>
+        acc +
+        (Math.max(
+          parseFloat(curr.creditAmount) || 0,
+          parseFloat(curr.debitAmount) || 0,
+        ) -
+          (parseFloat(curr.netOffAmount) || 0)),
+      0,
+    );
+
     return {
       transDate: null,
       thu:
@@ -154,6 +172,22 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           <span className="text-red-600 font-medium">{money(totalDebit)}</span>
         ) : (
           money(0)
+        ),
+      netOffAmount:
+        totalNetOff === 0 ? (
+          "--"
+        ) : (
+          <span className="text-blue-600 font-medium">
+            {money(totalNetOff)}
+          </span>
+        ),
+      remainingAmount:
+        totalRemaining === 0 ? (
+          <span className="text-emerald-600 font-medium">0</span>
+        ) : (
+          <span className="text-orange-600 font-medium">
+            {money(totalRemaining)}
+          </span>
         ),
     };
   }, [data]);
@@ -230,6 +264,39 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       sortKey: "debitAmount",
     },
     {
+      key: "netOffAmount",
+      header: "Đã cấn trừ",
+      className: "text-right",
+      size: 150,
+      cell: (row: any) => {
+        const netOff = parseFloat(row.netOffAmount) || 0;
+        if (netOff === 0) return "--";
+        return (
+          <span className="text-blue-600 font-medium">{money(netOff)}</span>
+        );
+      },
+    },
+    {
+      key: "remainingAmount",
+      header: "Còn lại",
+      className: "text-right",
+      size: 150,
+      cell: (row: any) => {
+        const credit = parseFloat(row.creditAmount) || 0;
+        const debit = parseFloat(row.debitAmount) || 0;
+        const amount = credit > 0 ? credit : debit;
+        const netOff = parseFloat(row.netOffAmount) || 0;
+        const remaining = amount - netOff;
+        if (remaining === 0)
+          return <span className="text-emerald-600 font-medium">0</span>;
+        return (
+          <span className="text-orange-600 font-medium">
+            {money(remaining)}
+          </span>
+        );
+      },
+    },
+    {
       key: "balance",
       dataIndex: "balance",
       header: t("bankStatement.columns.balance"),
@@ -237,21 +304,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       className: "text-right font-medium",
       size: 150,
       sortable: false,
-    },
-    {
-      key: "tags",
-      header: "Danh mục",
-      cell: (row: any) => (
-        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
-          <div className="w-max">
-            <EntityTagSelector
-              entityType="bank_transaction"
-              entityId={row.id}
-            />
-          </div>
-        </div>
-      ),
-      size: 200,
     },
     {
       key: "correspondentName",
@@ -309,7 +361,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         columns={columns}
         getRowKey={(row: any) => row.id}
         summaryRow={summaryRow}
-        loading={isLoading}
+        loading={isFetching}
         page={page}
         pageSize={pageSize}
         total={data?.total || 0}
@@ -329,6 +381,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           });
           setPage(1);
         }}
+        rowActions={(row) => [
+          {
+            label: "Chi tiết",
+            onClick: () => setDetailTransactionId(row.id),
+          },
+        ]}
         createActions={[
           ...(type === "cash"
             ? [
@@ -368,6 +426,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           }}
         />
       )}
+
+      <BankTransactionDetailDrawer
+        isOpen={!!detailTransactionId}
+        onClose={() => setDetailTransactionId(null)}
+        transactionId={detailTransactionId}
+      />
     </>
   );
 };

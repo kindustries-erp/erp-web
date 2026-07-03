@@ -51,6 +51,7 @@ export function BranchFormDrawer({ open, onClose, branch, onSuccess }: Props) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches:list"] });
+      queryClient.invalidateQueries({ queryKey: ["branchOptions"] });
       onSuccess();
       onClose();
     },

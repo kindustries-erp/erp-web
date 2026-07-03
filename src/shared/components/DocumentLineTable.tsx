@@ -27,6 +27,7 @@ export interface DocumentLineTableProps<T> {
   onSort?: (key: string) => void;
   rowClassName?: (row: T, index: number) => string;
   tableContainerClassName?: string;
+  footer?: ReactNode;
 }
 
 export function DocumentLineTable<T>({
@@ -42,6 +43,7 @@ export function DocumentLineTable<T>({
   onSort,
   rowClassName,
   tableContainerClassName,
+  footer,
 }: DocumentLineTableProps<T>) {
   const t = useT();
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -242,6 +244,11 @@ export function DocumentLineTable<T>({
               ))
             )}
           </tbody>
+          {footer && (
+            <tfoot className="bg-muted border-t border-[color:var(--border)] font-medium sticky bottom-0 z-10 shadow-[0_-1px_0_0_var(--border)]">
+              {footer}
+            </tfoot>
+          )}
         </table>
         {showAddBtn && (
           <div className="p-3 border-t border-[color:var(--border)] bg-muted/10">

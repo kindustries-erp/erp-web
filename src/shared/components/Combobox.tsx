@@ -24,6 +24,7 @@ interface ComboboxProps {
   onScrollBottom?: () => void;
   loading?: boolean;
   onSearch?: (query: string) => void;
+  fallbackLabel?: string;
 }
 
 export function Combobox({
@@ -40,10 +41,14 @@ export function Combobox({
   onScrollBottom,
   loading,
   onSearch,
+  fallbackLabel,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
 
   const selected = options.find((o) => o.value === value);
 
@@ -69,21 +74,24 @@ export function Combobox({
       return () => cancelAnimationFrame(id);
     } else {
       setQuery("");
-      if (onSearch) onSearch("");
+      if (onSearchRef.current) onSearchRef.current("");
     }
-  }, [open, onSearch]);
+  }, [open]);
 
   useEffect(() => {
-    if (onSearch) {
-      const id = setTimeout(() => onSearch(query), 300);
+    if (onSearchRef.current) {
+      const id = setTimeout(
+        () => onSearchRef.current && onSearchRef.current(query),
+        300,
+      );
       return () => clearTimeout(id);
     }
-  }, [query, onSearch]);
+  }, [query]);
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
-        content={selected ? selected.label : ""}
+        content={selected ? selected.label : fallbackLabel || ""}
         side="top"
         disabled={!selected || open}
       >
@@ -106,7 +114,11 @@ export function Combobox({
             )}
           >
             <span className="truncate flex-1 text-left">
-              {selected ? selected.label : placeholder}
+              {selected
+                ? selected.label
+                : value && fallbackLabel
+                  ? fallbackLabel
+                  : placeholder}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>
