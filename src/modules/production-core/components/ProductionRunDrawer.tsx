@@ -1,5 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { PlayCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import {
+  PlayCircle,
+  CheckCircle2,
+  Loader2,
+  ArrowRight,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import {
@@ -48,6 +55,7 @@ interface ProductionIdentifier {
   serialNo: string;
   lotNo: string;
   notes: string;
+  attributes: Array<{ key: string; value: string }>;
 }
 
 type TrackingPolicy = "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
@@ -59,6 +67,7 @@ function emptyIdentifier(): ProductionIdentifier {
     serialNo: "",
     lotNo: "",
     notes: "",
+    attributes: [],
   };
 }
 
@@ -102,7 +111,7 @@ function findVehicleDuplicate(ids: ProductionIdentifier[]) {
   return null;
 }
 
-function parseVehicleBulkInput(input: string) {
+function parseVehicleBulkInput(input: string): ProductionIdentifier[] {
   return input
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -115,7 +124,8 @@ function parseVehicleBulkInput(input: string) {
         serialNo: "",
         lotNo: "",
         notes: "",
-      } satisfies ProductionIdentifier;
+        attributes: [],
+      };
     });
 }
 
@@ -133,6 +143,9 @@ function IdentifierTable({
   policy,
   identifiers,
   onChange,
+  onAttributeAdd,
+  onAttributeChange,
+  onAttributeRemove,
   saving,
   t,
 }: {
@@ -140,19 +153,28 @@ function IdentifierTable({
   identifiers: ProductionIdentifier[];
   onChange: (
     idx: number,
-    field: keyof ProductionIdentifier,
+    field: keyof Omit<ProductionIdentifier, "attributes">,
     value: string,
   ) => void;
+  onAttributeAdd: (idx: number) => void;
+  onAttributeChange: (
+    idx: number,
+    attrIdx: number,
+    field: "key" | "value",
+    value: string,
+  ) => void;
+  onAttributeRemove: (idx: number, attrIdx: number) => void;
   saving: boolean;
   t: (s: string) => string;
 }) {
   if (policy === "NONE") return null;
   return (
-    <div className="mt-3 space-y-2">
+    <div className="mt-3 space-y-3">
       <p className="text-xs font-semibold text-emerald-900">
         {policy === "VEHICLE" && t("Thông tin định danh xe (VIN / Số máy)")}
         {policy === "SERIAL" && t("Số serial từng đơn vị")}
         {policy === "LOT" && t("Số lô từng đơn vị")}
+        {policy === "CUSTOM" && t("Định danh tùy chỉnh")}
       </p>
       <div className="overflow-x-auto rounded-md border border-emerald-200">
         <table className="min-w-full text-xs">
@@ -179,18 +201,26 @@ function IdentifierTable({
                   {t("Số lô")} <span className="text-red-500">*</span>
                 </th>
               )}
+              {policy === "CUSTOM" && (
+                <th className="px-2 py-1 text-left font-semibold">
+                  {t("Định danh")} <span className="text-red-500">*</span>
+                </th>
+              )}
               <th className="px-2 py-1 text-left font-semibold">
                 {t("Ghi chú")}
+              </th>
+              <th className="px-2 py-1 text-left font-semibold min-w-[200px]">
+                {t("Thuộc tính mở rộng")}
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-emerald-100 bg-white">
             {identifiers.map((id, i) => (
-              <tr key={i}>
-                <td className="px-2 py-1 text-muted-foreground">{i + 1}</td>
+              <tr key={i} className="align-top">
+                <td className="px-2 py-2 text-muted-foreground">{i + 1}</td>
                 {policy === "VEHICLE" && (
                   <>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2">
                       <input
                         disabled={saving}
                         className={cn(inputCls, "w-28")}
@@ -199,7 +229,7 @@ function IdentifierTable({
                         onChange={(e) => onChange(i, "vinNo", e.target.value)}
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-2">
                       <input
                         disabled={saving}
                         className={cn(inputCls, "w-24")}
@@ -213,7 +243,7 @@ function IdentifierTable({
                   </>
                 )}
                 {policy === "SERIAL" && (
-                  <td className="px-1 py-1">
+                  <td className="px-1 py-2">
                     <input
                       disabled={saving}
                       className={cn(inputCls, "w-32")}
@@ -224,7 +254,7 @@ function IdentifierTable({
                   </td>
                 )}
                 {policy === "LOT" && (
-                  <td className="px-1 py-1">
+                  <td className="px-1 py-2">
                     <input
                       disabled={saving}
                       className={cn(inputCls, "w-32")}
@@ -234,7 +264,18 @@ function IdentifierTable({
                     />
                   </td>
                 )}
-                <td className="px-1 py-1">
+                {policy === "CUSTOM" && (
+                  <td className="px-1 py-2">
+                    <input
+                      disabled={saving}
+                      className={cn(inputCls, "w-32")}
+                      placeholder={t("Định danh")}
+                      value={id.serialNo}
+                      onChange={(e) => onChange(i, "serialNo", e.target.value)}
+                    />
+                  </td>
+                )}
+                <td className="px-1 py-2">
                   <input
                     disabled={saving}
                     className={cn(inputCls, "w-24")}
@@ -242,6 +283,53 @@ function IdentifierTable({
                     value={id.notes}
                     onChange={(e) => onChange(i, "notes", e.target.value)}
                   />
+                </td>
+                {/* Attributes column — inline key-value editor */}
+                <td className="px-1 py-2">
+                  <div className="space-y-1 min-w-[200px]">
+                    {id.attributes.map((attr, ai) => (
+                      <div key={ai} className="flex items-center gap-1">
+                        <input
+                          disabled={saving}
+                          className={cn(inputCls, "w-20 text-[11px]!")}
+                          placeholder={t("Tên")}
+                          value={attr.key}
+                          onChange={(e) =>
+                            onAttributeChange(i, ai, "key", e.target.value)
+                          }
+                        />
+                        <span className="text-muted-foreground text-[10px] shrink-0">
+                          :
+                        </span>
+                        <input
+                          disabled={saving}
+                          className={cn(inputCls, "w-20 text-[11px]!")}
+                          placeholder={t("Giá trị")}
+                          value={attr.value}
+                          onChange={(e) =>
+                            onAttributeChange(i, ai, "value", e.target.value)
+                          }
+                        />
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => onAttributeRemove(i, ai)}
+                          className="shrink-0 p-0.5 rounded text-red-400 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      disabled={saving}
+                      onClick={() => onAttributeAdd(i)}
+                      className="flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 hover:text-emerald-900 mt-0.5"
+                    >
+                      <Plus className="w-3 h-3" />
+                      {t("Thêm")}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -318,13 +406,58 @@ export function ProductionRunDrawer({
   }, [batchCompleteQty, needsIdentifiers]);
 
   const handleIdentifierChange = useCallback(
-    (idx: number, field: keyof ProductionIdentifier, value: string) => {
+    (
+      idx: number,
+      field: keyof Omit<ProductionIdentifier, "attributes">,
+      value: string,
+    ) => {
       setIdentifiers((prev) =>
         prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row)),
       );
     },
     [],
   );
+
+  const handleAttributeAdd = useCallback((idx: number) => {
+    setIdentifiers((prev) =>
+      prev.map((row, i) =>
+        i === idx
+          ? { ...row, attributes: [...row.attributes, { key: "", value: "" }] }
+          : row,
+      ),
+    );
+  }, []);
+
+  const handleAttributeChange = useCallback(
+    (idx: number, attrIdx: number, field: "key" | "value", value: string) => {
+      setIdentifiers((prev) =>
+        prev.map((row, i) =>
+          i === idx
+            ? {
+                ...row,
+                attributes: row.attributes.map((a, ai) =>
+                  ai === attrIdx ? { ...a, [field]: value } : a,
+                ),
+              }
+            : row,
+        ),
+      );
+    },
+    [],
+  );
+
+  const handleAttributeRemove = useCallback((idx: number, attrIdx: number) => {
+    setIdentifiers((prev) =>
+      prev.map((row, i) =>
+        i === idx
+          ? {
+              ...row,
+              attributes: row.attributes.filter((_, ai) => ai !== attrIdx),
+            }
+          : row,
+      ),
+    );
+  }, []);
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const refresh = useCallback(async () => {
@@ -405,9 +538,19 @@ export function ProductionRunDrawer({
     }
     setSaving(true);
     try {
+      const identifiersPayload = identifiers.slice(0, 1).map((id) => ({
+        ...id,
+        attributes: id.attributes.length
+          ? Object.fromEntries(
+              id.attributes
+                .filter((a) => a.key.trim())
+                .map((a) => [a.key, a.value]),
+            )
+          : undefined,
+      }));
       await productionCoreApi.complete(localOrder.id, {
         qtyFinished: 1,
-        ...(needsIdentifiers ? { identifiers: identifiers.slice(0, 1) } : {}),
+        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
       });
       showToast({ title: t("Đã hoàn thành 1 đơn vị"), variant: "success" });
       resetVehicleEntry();
@@ -454,10 +597,20 @@ export function ProductionRunDrawer({
     }
     setSaving(true);
     try {
+      const identifiersPayload = identifiers.map((id) => ({
+        ...id,
+        attributes: id.attributes.length
+          ? Object.fromEntries(
+              id.attributes
+                .filter((a) => a.key.trim())
+                .map((a) => [a.key, a.value]),
+            )
+          : undefined,
+      }));
       await productionCoreApi.complete(localOrder.id, {
         qtyFinished: qty,
         unitCost: 0,
-        ...(needsIdentifiers ? { identifiers } : {}),
+        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
       });
       showToast({
         title: t("Đã hoàn thành sản xuất hàng loạt"),
@@ -683,6 +836,9 @@ export function ProductionRunDrawer({
                         policy={trackingPolicy}
                         identifiers={identifiers}
                         onChange={handleIdentifierChange}
+                        onAttributeAdd={handleAttributeAdd}
+                        onAttributeChange={handleAttributeChange}
+                        onAttributeRemove={handleAttributeRemove}
                         saving={saving}
                         t={t}
                       />
@@ -789,6 +945,9 @@ export function ProductionRunDrawer({
                         policy={trackingPolicy}
                         identifiers={identifiers}
                         onChange={handleIdentifierChange}
+                        onAttributeAdd={handleAttributeAdd}
+                        onAttributeChange={handleAttributeChange}
+                        onAttributeRemove={handleAttributeRemove}
                         saving={saving}
                         t={t}
                       />
@@ -835,6 +994,9 @@ export function ProductionRunDrawer({
                     policy={trackingPolicy}
                     identifiers={identifiers.slice(0, 1)}
                     onChange={handleIdentifierChange}
+                    onAttributeAdd={handleAttributeAdd}
+                    onAttributeChange={handleAttributeChange}
+                    onAttributeRemove={handleAttributeRemove}
                     saving={saving}
                     t={t}
                   />

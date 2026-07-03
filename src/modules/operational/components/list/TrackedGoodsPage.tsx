@@ -9,7 +9,9 @@ import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryC
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { Barcode } from "lucide-react";
+import { Barcode, Eye } from "lucide-react";
+import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
+import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 
 export function TrackedGoodsPage() {
   const t = useT();
@@ -22,6 +24,10 @@ export function TrackedGoodsPage() {
   const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
   const [sortField, setSortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
+    null,
+  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -57,9 +63,29 @@ export function TrackedGoodsPage() {
   const columns: DataTableColumn<InventorySerialRow>[] = useMemo(
     () => [
       {
+        key: "createdAt",
+        header: t("Ngày"),
+        size: 100,
+        className: "align-middle text-right",
+        headerClassName: "text-center",
+        sortable: true,
+        sortKey: "created_at",
+        cell: (row) => (
+          <Tooltip
+            content={formatGMT7(row.createdAt, "datetime-sec")}
+            side="top"
+          >
+            <span className="cursor-help border-b border-dotted border-gray-400">
+              {formatGMT7(row.createdAt, "date")}
+            </span>
+          </Tooltip>
+        ),
+      },
+      {
         key: "itemCode",
         header: t("Mã vật tư"),
-        className: "align-middle min-w-[220px] text-left",
+        size: 100,
+        className: "align-middle text-left",
         headerClassName: "text-center",
         cell: (row) => row.item?.sku || "—",
       },
@@ -69,10 +95,7 @@ export function TrackedGoodsPage() {
         className: "align-middle min-w-[250px] text-left",
         headerClassName: "text-center",
         cell: (row) => (
-          <div>
-            <div className="font-medium">{row.item?.itemName || "—"}</div>
-            <div className="text-xs text-gray-500">{row.item?.itemType}</div>
-          </div>
+          <div className="font-medium">{row.item?.itemName || "—"}</div>
         ),
       },
       {
@@ -109,22 +132,36 @@ export function TrackedGoodsPage() {
         cell: (row) => row.item?.trackingPolicyName || "—",
       },
       {
-        key: "createdAt",
-        header: t("Ngày ghi nhận"),
-        className: "align-middle min-w-[160px] text-right",
+        key: "attributes",
+        header: t("Thuộc tính"),
+        className: "align-middle min-w-[200px] text-left",
         headerClassName: "text-center",
-        sortable: true,
-        sortKey: "created_at",
-        cell: (row) => (
-          <Tooltip
-            content={formatGMT7(row.createdAt, "datetime-sec")}
-            side="top"
-          >
-            <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.createdAt, "date")}
-            </span>
-          </Tooltip>
-        ),
+        cell: (row) => {
+          if (!row.attributes) return "—";
+
+          let entries: Array<{ key: string; value: string }> = [];
+          if (Array.isArray(row.attributes)) {
+            entries = row.attributes;
+          } else if (typeof row.attributes === "object") {
+            entries = Object.entries(row.attributes).map(([k, v]) => ({
+              key: k,
+              value: String(v),
+            }));
+          }
+
+          if (entries.length === 0) return "—";
+
+          return (
+            <ul className="list-disc list-inside text-xs text-muted-foreground whitespace-pre-wrap">
+              {entries.map((entry, i) => (
+                <li key={i}>
+                  <span className="font-medium">{entry.key}:</span>{" "}
+                  {entry.value}
+                </li>
+              ))}
+            </ul>
+          );
+        },
       },
     ],
     [t],
@@ -168,7 +205,24 @@ export function TrackedGoodsPage() {
     setPage(1);
   }, []);
 
-  // Actions are handled by SpreadsheetPageTemplate
+  const rowActions = useCallback(
+    (row: InventorySerialRow): ActionDropdownItem[] => [
+      {
+        groupLabel: t("TRA CỨU"),
+        items: [
+          {
+            label: t("Chi tiết"),
+            icon: <Eye className="w-4 h-4" />,
+            onClick: () => {
+              setSelectedItem(row);
+              setDrawerOpen(true);
+            },
+          },
+        ],
+      },
+    ],
+    [t],
+  );
 
   return (
     <>
@@ -185,6 +239,7 @@ export function TrackedGoodsPage() {
         items={items}
         columns={columns}
         getRowKey={(row) => row.id}
+        rowActions={rowActions}
         loading={loading}
         error={error}
         emptyLabel={t("Chưa có dữ liệu.")}
@@ -247,6 +302,15 @@ export function TrackedGoodsPage() {
           hasActiveFilter: activeFilterCount > 0,
           activeFilterCount,
           panelOpen: filterPanelOpen,
+        }}
+      />
+      <TrackedGoodsDrawer
+        open={drawerOpen}
+        item={selectedItem}
+        onClose={() => setDrawerOpen(false)}
+        onSaved={() => {
+          query.refetch();
+          setDrawerOpen(false);
         }}
       />
     </>

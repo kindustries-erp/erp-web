@@ -258,6 +258,7 @@ export const productionCoreApi = {
         serialNo?: string;
         lotNo?: string;
         notes?: string;
+        attributes?: Record<string, string>;
       }>;
     },
   ): Promise<{
