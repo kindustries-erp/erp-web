@@ -7,6 +7,32 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { useTranslation } from "react-i18next";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 
+function Linkify({ text }: { text: string }) {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.match(urlRegex)) {
+          return (
+            <a
+              key={i}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {part}
+            </a>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+}
+
 interface Props {
   form: CreateErpInvoicePayload;
   editMode: boolean;
@@ -75,6 +101,19 @@ export function ErpInvoiceFormGeneral({
                 </div>
               </DrawerField>
             )}
+          <DrawerField label={t("notes", "Ghi chú / Link tra cứu")}>
+            {canEditCore ? (
+              <textarea
+                className={`${inputCls} min-h-[80px] py-2`}
+                value={form.notes || ""}
+                onChange={(e) => fieldSet("notes", e.target.value)}
+              />
+            ) : (
+              <div className="text-sm whitespace-pre-wrap text-gray-700">
+                {form.notes ? <Linkify text={form.notes} /> : "—"}
+              </div>
+            )}
+          </DrawerField>
         </div>
       </DrawerSection>
 

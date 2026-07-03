@@ -700,7 +700,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             />
             <ErpInvoiceFormItems
               form={formHook.form}
-              editMode={formHook.editMode}
+              editMode={formHook.editMode && !formHook.detailInvoice?.id}
               setForm={formHook.setForm}
               fmtAmt={fmtAmt}
             />
