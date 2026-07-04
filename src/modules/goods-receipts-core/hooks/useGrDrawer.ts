@@ -3,7 +3,7 @@
  * Extracted from ErpWarehousePage so the same drawer can be used in
  * PurchaseOrderListPage and anywhere else that needs inline GR creation.
  */
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   goodsReceiptsCoreApi,
@@ -18,14 +18,11 @@ import {
   inventoryCoreApi,
   type ErpInventoryItem,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
-import {
-  productionCoreApi,
-  type ErpProductionOrder,
-} from "@/modules/production-core/api/productionCoreApi";
-import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useUIStore } from "@/core/config/uiStore";
 
 // ─── Form types ───────────────────────────────────────────────────────────────
+
+export type GrReceiptType = "PO" | "OTHER";
 
 export interface GrLineForm {
   purchaseOrderLineId: string;
@@ -37,10 +34,10 @@ export interface GrLineForm {
 }
 
 export interface GrForm {
+  receiptType: GrReceiptType;
   receiptNo: string;
   purchaseOrderId: string;
   productionOrderId: string;
-  supplierId: string;
   receiptDate: string;
   remarks: string;
   lines: GrLineForm[];
@@ -48,10 +45,10 @@ export interface GrForm {
 
 export function emptyGrForm(): GrForm {
   return {
+    receiptType: "OTHER",
     receiptNo: "",
     purchaseOrderId: "",
     productionOrderId: "",
-    supplierId: "",
     receiptDate: new Date().toISOString().slice(0, 10),
     remarks: "",
     lines: [],
@@ -60,10 +57,10 @@ export function emptyGrForm(): GrForm {
 
 export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
   return {
+    receiptType: gr.purchaseOrderId ? "PO" : "OTHER",
     receiptNo: gr.receiptNo ?? "",
     purchaseOrderId: gr.purchaseOrderId ?? "",
     productionOrderId: gr.productionOrderId ?? "",
-    supplierId: gr.supplierId ?? "",
     receiptDate: gr.receiptDate ? gr.receiptDate.slice(0, 10) : "",
     remarks: gr.remarks ?? "",
     lines:
@@ -81,9 +78,9 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
 export function buildGrPayload(form: GrForm): CreateGrPayload {
   return {
     receiptNo: form.receiptNo.trim(),
-    purchaseOrderId: form.purchaseOrderId || undefined,
-    productionOrderId: form.productionOrderId || undefined,
-    supplierId: form.supplierId || undefined,
+    purchaseOrderId:
+      form.receiptType === "PO" ? form.purchaseOrderId || undefined : undefined,
+    productionOrderId: undefined,
     receiptDate: form.receiptDate,
     remarks: form.remarks.trim() || undefined,
     lines: form.lines
@@ -127,41 +124,15 @@ export function useGrDrawer({
   const [saving, setSaving] = useState(false);
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [poDetail, setPoDetail] = useState<ErpPurchaseOrder | null>(null);
-  const [moDetail, setMoDetail] = useState<ErpProductionOrder | null>(null);
 
   // ── PO options (for the combobox when no purchaseOrderId is pre-set)
   const [poOptions, setPoOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
 
-  // ── MO options
-  const [moOptions, setMoOptions] = useState<
-    Array<{ value: string; label: string }>
-  >([]);
-
   // ── Items dict (id → item) for SKU display
   const [itemsDict, setItemsDict] = useState<Record<string, ErpInventoryItem>>(
     {},
-  );
-
-  // ── Supplier infinite lookup
-  const [supplierSearch, setSupplierSearch] = useState("");
-  const {
-    data: suppliersData,
-    fetchNextPage: fetchNextSuppliers,
-    isFetchingNextPage: loadingSuppliers,
-  } = useBasicMasterInfinite({
-    search: supplierSearch,
-    limit: 50,
-    entities: "suppliers",
-  });
-
-  const supplierOptions = useMemo(
-    () =>
-      suppliersData?.pages.flatMap((p) =>
-        (p.items.suppliers || []).map((s) => ({ value: s.id, label: s.name })),
-      ) ?? [],
-    [suppliersData],
   );
 
   // ── Fetch item SKUs
@@ -186,7 +157,7 @@ export function useGrDrawer({
   // ── Load PO detail when purchaseOrderId changes or drawer opens
   useEffect(() => {
     if (!open) return;
-    if (!form.purchaseOrderId) {
+    if (!form.purchaseOrderId || form.receiptType !== "PO") {
       setPoDetail(null);
       return;
     }
@@ -194,33 +165,12 @@ export function useGrDrawer({
       .get(form.purchaseOrderId)
       .then((po) => {
         setPoDetail(po);
-        if (po.supplierId) {
-          setForm((f) => ({ ...f, supplierId: po.supplierId || "" }));
-        }
         if (po.lines) {
           void fetchItemsDict(po.lines.map((l) => l.itemId || ""));
         }
       })
       .catch(() => setPoDetail(null));
-  }, [form.purchaseOrderId, fetchItemsDict, open]);
-
-  // ── Load MO detail when productionOrderId changes or drawer opens
-  useEffect(() => {
-    if (!open) return;
-    if (!form.productionOrderId) {
-      setMoDetail(null);
-      return;
-    }
-    productionCoreApi
-      .get(form.productionOrderId)
-      .then((mo) => {
-        setMoDetail(mo);
-        if (mo.lines) {
-          void fetchItemsDict(mo.lines.map((l) => l.itemId || ""));
-        }
-      })
-      .catch(() => setMoDetail(null));
-  }, [form.productionOrderId, fetchItemsDict, open]);
+  }, [form.purchaseOrderId, form.receiptType, fetchItemsDict, open]);
 
   // ── Load PO list for the combobox
   const loadPoOptions = useCallback(async () => {
@@ -229,30 +179,12 @@ export function useGrDrawer({
         page: 1,
         pageSize: 500,
         exclude_status: "DRAFT",
-      });
+        only_receivable: true,
+      } as any);
       setPoOptions(
         res.items.map((po) => ({
           value: po.id,
           label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
-        })),
-      );
-    } catch {
-      /* silent */
-    }
-  }, []);
-
-  // ── Load MO list for the combobox
-  const loadMoOptions = useCallback(async () => {
-    try {
-      const res = await productionCoreApi.list({
-        page: 1,
-        pageSize: 500,
-        exclude_status: "DRAFT",
-      });
-      setMoOptions(
-        res.items.map((mo) => ({
-          value: mo.id,
-          label: mo.referenceNo || mo.id,
         })),
       );
     } catch {
@@ -273,10 +205,9 @@ export function useGrDrawer({
         initial.productionOrderId = prefillProductionOrderId;
       setForm(initial);
       void loadPoOptions();
-      void loadMoOptions();
       setOpen(true);
     },
-    [loadPoOptions, loadMoOptions],
+    [loadPoOptions],
   );
 
   const openDetail = useCallback(
@@ -286,7 +217,6 @@ export function useGrDrawer({
       setLoading(true);
       setOpen(true);
       void loadPoOptions();
-      void loadMoOptions();
       try {
         const detail = await goodsReceiptsCoreApi.get(id);
         if (detail.lines) {
@@ -298,7 +228,7 @@ export function useGrDrawer({
         setLoading(false);
       }
     },
-    [loadPoOptions, loadMoOptions, fetchItemsDict],
+    [loadPoOptions, fetchItemsDict],
   );
 
   const close = useCallback(() => {
@@ -393,14 +323,7 @@ export function useGrDrawer({
     cancelId,
     poDetail,
     poOptions,
-    moDetail,
-    moOptions,
     itemsDict,
-    supplierOptions,
-    supplierSearch,
-    setSupplierSearch,
-    fetchNextSuppliers,
-    loadingSuppliers,
     // actions
     openCreate,
     openDetail,
