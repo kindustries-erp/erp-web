@@ -773,6 +773,7 @@ export const vi = {
         in: "Nhập",
         out: "Xuất",
         onHand: "Tồn",
+        reserved: "Giữ chỗ",
         unit: "Đơn vị",
         lastTx: "Giao dịch cuối",
         status: "Trạng thái",
@@ -1853,6 +1854,19 @@ export const vi = {
     revenue: "Doanh thu",
     expense: "Chi phí",
   },
+
+  // ── Đơn bán hàng (Sales Orders) ──────────────────────────────────────────
+  "Quản lý đơn bán hàng và reserve tồn kho.":
+    "Quản lý đơn bán hàng và reserve tồn kho.",
+  "Chưa có đơn bán hàng nào": "Chưa có đơn bán hàng nào",
+  // Columns
+  "Số SO": "Số SO",
+  "Khách hàng": "Khách hàng",
+  "Ngày đơn": "Ngày đơn",
+  // Actions
+  Reserve: "Reserve",
+  Unreserve: "Unreserve",
+  "Chỉnh sửa": "Chỉnh sửa",
 };
 
 export type Dict = typeof vi;

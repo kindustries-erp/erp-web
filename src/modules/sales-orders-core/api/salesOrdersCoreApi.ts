@@ -18,6 +18,7 @@ export interface ErpSalesOrder {
   customerId?: string | null;
   customerName?: string | null;
   orderDate: string;
+  expectedDeliveryDate?: string | null;
   status?: string | null;
   remarks?: string | null;
   createdAt?: string;
@@ -28,6 +29,7 @@ export interface CreateSoPayload {
   soNo: string;
   customerId?: string;
   orderDate: string;
+  expectedDeliveryDate?: string;
   status?: string;
   remarks?: string;
   lines?: Omit<ErpSoLine, "id" | "qtyReserved" | "qtyDelivered">[];
@@ -104,5 +106,12 @@ export const salesOrdersCoreApi = {
       `${BASE}/${id}/cancel`,
     );
     return data.data;
+  },
+  nextNo: async (date?: string): Promise<string> => {
+    const { data } = await axiosInstance.get<{ nextNo: string }>(
+      `${BASE}/next-no`,
+      { params: date ? { date } : {} },
+    );
+    return data.nextNo;
   },
 };
