@@ -352,8 +352,8 @@ export function TrackedGoodsDrawer({
       confirmOnClose={mode === "edit"}
       leftPanel={
         loading ? (
-          <div className="p-6">
-            <FormLoadingSkeleton />
+          <div className="py-2">
+            <FormLoadingSkeleton layout="1-column" />
           </div>
         ) : detailItem ? (
           leftPanel
