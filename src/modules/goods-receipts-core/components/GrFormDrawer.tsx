@@ -408,7 +408,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     footer={
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={3}
                           className="px-3 py-3 text-right font-semibold"
                         ></td>
                         <td className="px-3 py-3 text-center font-semibold text-emerald-600">
@@ -421,6 +421,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                               .toString(),
                           )}
                         </td>
+                        <td className="px-3 py-3"></td>
                       </tr>
                     }
                     columns={[
@@ -470,20 +471,6 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                             />
                           );
                         },
-                      },
-                      {
-                        key: "ordered",
-                        header: "",
-                        minWidth: 100,
-                        align: "center",
-                        cell: () => "",
-                      },
-                      {
-                        key: "remaining",
-                        header: "",
-                        minWidth: 100,
-                        align: "center",
-                        cell: () => "",
                       },
                       {
                         key: "qtyInput",
@@ -551,7 +538,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     footer={
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={form.receiptType === "PO" ? 5 : 3}
                           className="px-3 py-3 text-right font-semibold"
                         ></td>
                         <td className="px-3 py-3 text-center font-semibold text-emerald-600">
@@ -565,6 +552,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                               .toString(),
                           )}
                         </td>
+                        {!viewOnly && <td className="px-3 py-3"></td>}
                       </tr>
                     }
                     columns={[
@@ -605,20 +593,24 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                           );
                         },
                       },
-                      {
-                        key: "ordered",
-                        header: t("Đã đặt"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: () => "—",
-                      },
-                      {
-                        key: "remaining",
-                        header: t("Còn lại"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: () => "—",
-                      },
+                      ...(form.receiptType === "PO"
+                        ? [
+                            {
+                              key: "ordered",
+                              header: t("Đã đặt"),
+                              minWidth: 100,
+                              align: "center" as const,
+                              cell: () => "—",
+                            },
+                            {
+                              key: "remaining",
+                              header: t("Còn lại"),
+                              minWidth: 100,
+                              align: "center" as const,
+                              cell: () => "—",
+                            },
+                          ]
+                        : []),
                       {
                         key: "qtyReceived",
                         header: t("SL Nhập"),
@@ -694,41 +686,27 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 />
               </DrawerField>
               <DrawerField label={t("Loại nhập")}>
-                <div className="flex items-center gap-4 py-1">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="receiptType"
-                      value="PO"
-                      checked={form.receiptType === "PO"}
-                      disabled={viewOnly || editing !== null}
-                      onChange={() =>
-                        setForm((f) => ({ ...f, receiptType: "PO", lines: [] }))
-                      }
-                      className="cursor-pointer"
-                    />
-                    <span className="text-sm">{t("Đơn mua hàng")}</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="receiptType"
-                      value="OTHER"
-                      checked={form.receiptType === "OTHER"}
-                      disabled={viewOnly || editing !== null}
-                      onChange={() =>
-                        setForm((f) => ({
-                          ...f,
-                          receiptType: "OTHER",
-                          purchaseOrderId: "",
-                          lines: [],
-                        }))
-                      }
-                      className="cursor-pointer"
-                    />
-                    <span className="text-sm">{t("Nhập khác")}</span>
-                  </label>
-                </div>
+                <Combobox
+                  options={[
+                    { label: t("Đơn mua hàng"), value: "PO" },
+                    { label: t("Nhập khác"), value: "OTHER" },
+                  ]}
+                  value={form.receiptType}
+                  onChange={(val) => {
+                    if (val === "PO") {
+                      setForm((f) => ({ ...f, receiptType: "PO", lines: [] }));
+                    } else if (val === "OTHER") {
+                      setForm((f) => ({
+                        ...f,
+                        receiptType: "OTHER",
+                        purchaseOrderId: "",
+                        lines: [],
+                      }));
+                    }
+                  }}
+                  disabled={viewOnly || editing !== null}
+                  allowClear={false}
+                />
               </DrawerField>
 
               {form.receiptType === "PO" && (

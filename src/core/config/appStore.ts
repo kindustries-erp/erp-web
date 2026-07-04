@@ -171,7 +171,6 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-inventory-vouchers": [
     ["breadcrumb.inventory"],
-    ["breadcrumb.inventoryGroup"],
     ["breadcrumb.inventoryVouchers"],
   ],
   "mfg-items": [["breadcrumb.manufacturing"], ["breadcrumb.mfgItems"]],
