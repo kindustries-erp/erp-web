@@ -18,6 +18,7 @@ export interface BasicMasterInventoryItem {
   itemTypeId: string;
   itemType?: { id: string; code: string; name: string };
   status?: string | null;
+  attributes?: string[];
 }
 
 export interface BasicMasterOption {
@@ -68,12 +69,16 @@ export const basicMastersApi = {
     limit?: number;
     page?: number;
     entities?: string;
+    inventoryItemAttributes?: string;
   }) => {
     const requestParams = {
       ...(params?.search ? { search: params.search } : {}),
       ...(params?.limit ? { limit: params.limit } : {}),
       ...(params?.page ? { page: params.page } : {}),
       ...(params?.entities ? { entities: params.entities } : {}),
+      ...(params?.inventoryItemAttributes
+        ? { inventoryItemAttributes: params.inventoryItemAttributes }
+        : {}),
     };
     const key = `basic-masters:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {

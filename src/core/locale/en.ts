@@ -742,11 +742,17 @@ export const en: Dict = {
     confirm: {
       deleteTitle: "Confirm Delete",
       deleteConfigMessage:
-        'Delete "{0}" ({1})? This action will hide the item from the list.',
+        'Delete "{0}" ({1})? This will hide the item from the list.',
       deleteItemMessage:
-        'Delete "{0}" ({1})? This action will hide the inventory item from the list.',
+        'Delete "{0}" ({1})? This will hide the inventory item from the list.',
       deleteConfirm: "Delete",
       deleteCancel: "Cancel",
+    },
+    attributes: {
+      label: "Attributes",
+      CAN_BE_SOLD: "Can be sold",
+      CAN_BE_PURCHASED: "Can be purchased",
+      CAN_BE_MANUFACTURED: "Can be manufactured",
     },
   },
   inventory: {

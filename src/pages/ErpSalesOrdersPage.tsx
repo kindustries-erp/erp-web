@@ -110,6 +110,7 @@ export function ErpSalesOrdersPage() {
     search: itemSearch,
     limit: 50,
     entities: "inventoryItems",
+    inventoryItemAttributes: viewOnly ? "" : "CAN_BE_SOLD",
   });
 
   const customerOptions = useMemo(() => {

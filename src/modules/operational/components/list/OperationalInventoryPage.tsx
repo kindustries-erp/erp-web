@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Eye, Network, Package, Plus } from "lucide-react";
+import { Eye, Network, Package, Plus, Power, PowerOff } from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
@@ -28,6 +28,7 @@ import {
   type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useAppQuery } from "@/shared/hooks/useAppQuery";
+import { useUIStore } from "@/core/config/uiStore";
 import type { Updater } from "@tanstack/react-table";
 
 interface OperationalInventoryPageProps {
@@ -98,6 +99,8 @@ export function OperationalInventoryPage({
   const [graphOpen, setGraphOpen] = useState(false);
   const [graphItemId, setGraphItemId] = useState<string | null>(null);
   const inventoryGraph = useInventoryGraph();
+
+  const showToast = useUIStore((s) => s.showToast);
 
   const employee = useAuthStore((s) => s.employee);
   const isGraphAdmin = employee?.email === "admin@liouni.com";
@@ -310,6 +313,67 @@ export function OperationalInventoryPage({
               : []),
           ],
         },
+        {
+          groupLabel: t("Thao tác"),
+          items: [
+            ...(row.status === "ACTIVE"
+              ? [
+                  {
+                    label: t("Ngừng hoạt động"),
+                    icon: <PowerOff size={14} className="text-red-500" />,
+                    variant: "danger" as const,
+                    onClick: async () => {
+                      try {
+                        await inventoryCoreApi.update(row.inventory_item_id, {
+                          status: "INACTIVE",
+                        });
+                        showToast({
+                          title: `Đã ngừng hoạt động ${row.item_code}`,
+                          variant: "success",
+                        });
+                        onRefetch();
+                      } catch (e: any) {
+                        showToast({
+                          title:
+                            e?.response?.data?.message ||
+                            e?.message ||
+                            "Lỗi thao tác",
+                          variant: "destructive",
+                        });
+                      }
+                    },
+                  },
+                ]
+              : row.status === "INACTIVE"
+                ? [
+                    {
+                      label: t("Kích hoạt"),
+                      icon: <Power size={14} className="text-emerald-500" />,
+                      onClick: async () => {
+                        try {
+                          await inventoryCoreApi.update(row.inventory_item_id, {
+                            status: "ACTIVE",
+                          });
+                          showToast({
+                            title: `Đã kích hoạt ${row.item_code}`,
+                            variant: "success",
+                          });
+                          onRefetch();
+                        } catch (e: any) {
+                          showToast({
+                            title:
+                              e?.response?.data?.message ||
+                              e?.message ||
+                              "Lỗi thao tác",
+                            variant: "destructive",
+                          });
+                        }
+                      },
+                    },
+                  ]
+                : []),
+          ],
+        },
       ]}
       summaryRow={summaryRow}
     >
@@ -320,6 +384,7 @@ export function OperationalInventoryPage({
           onCloseCreateItem();
         }}
         itemId={viewingItemId}
+        viewOnly={!!viewingItemId}
         onSuccess={onRefetch}
       />
       <ConnectionGraphDrawer

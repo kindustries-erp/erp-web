@@ -740,6 +740,12 @@ export const vi = {
       deleteConfirm: "Xóa",
       deleteCancel: "Hủy",
     },
+    attributes: {
+      label: "Thuộc tính",
+      CAN_BE_SOLD: "Có thể bán",
+      CAN_BE_PURCHASED: "Có thể mua",
+      CAN_BE_MANUFACTURED: "Có thể sản xuất",
+    },
   },
   inventory: {
     pageTitle: "Kho",
