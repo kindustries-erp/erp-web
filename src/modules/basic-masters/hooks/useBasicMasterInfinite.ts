@@ -5,21 +5,27 @@ export const useBasicMasterInfinite = ({
   search = "",
   limit = 50,
   entities = "",
+  inventoryItemAttributes = "",
   enabled = true,
 }: {
   search?: string;
   limit?: number;
   entities?: string; // e.g., "customers,suppliers"
+  inventoryItemAttributes?: string;
   enabled?: boolean;
 }) => {
   return useInfiniteQuery({
-    queryKey: ["basic-masters-infinite", { search, limit, entities }],
+    queryKey: [
+      "basic-masters-infinite",
+      { search, limit, entities, inventoryItemAttributes },
+    ],
     queryFn: async ({ pageParam = 1 }) => {
       const data = await basicMastersApi.list({
         search,
         limit,
         page: pageParam,
         entities,
+        inventoryItemAttributes,
       });
       return data;
     },

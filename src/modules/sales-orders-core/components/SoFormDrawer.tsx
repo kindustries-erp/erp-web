@@ -8,6 +8,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { DatePicker } from "@/shared/components/DatePicker";
 import type {
   ErpSalesOrder,
   CreateSoPayload,
@@ -27,6 +28,7 @@ export interface SoForm {
   soNo: string;
   customerId: string;
   orderDate: string;
+  expectedDeliveryDate: string;
   status: string;
   remarks: string;
   lines: SoLineForm[];
@@ -44,6 +46,7 @@ export const emptyForm = (): SoForm => ({
   soNo: "",
   customerId: "",
   orderDate: new Date().toISOString().slice(0, 10),
+  expectedDeliveryDate: "",
   status: "DRAFT",
   remarks: "",
   lines: [emptyLine()],
@@ -54,6 +57,9 @@ export function buildForm(so: ErpSalesOrder): SoForm {
     soNo: so.soNo ?? "",
     customerId: so.customerId ?? "",
     orderDate: so.orderDate ? so.orderDate.slice(0, 10) : "",
+    expectedDeliveryDate: so.expectedDeliveryDate
+      ? so.expectedDeliveryDate.slice(0, 10)
+      : "",
     status: so.status ?? "DRAFT",
     remarks: so.remarks ?? "",
     lines: so.lines?.length
@@ -80,6 +86,7 @@ export function toPayload(form: SoForm): CreateSoPayload {
     soNo: form.soNo.trim(),
     customerId: form.customerId || undefined,
     orderDate: form.orderDate,
+    expectedDeliveryDate: form.expectedDeliveryDate || undefined,
     status: form.status || "DRAFT",
     remarks: form.remarks.trim() || undefined,
     lines: form.lines.map((line) => ({
@@ -122,7 +129,7 @@ export interface SoFormDrawerProps {
   drawerLoading: boolean;
   saving: boolean;
   saveError: string | null;
-  handleSave: () => void;
+  handleSave: (overrideStatus?: string) => void;
 
   customerOptions: Array<{ value: string; label: string }>;
   setCustomerSearch: (search: string) => void;
@@ -177,20 +184,50 @@ export function SoFormDrawer({
   const viewOnly = mode === "view";
   const isEditing = mode === "edit";
 
-  const drawerActions = [
-    {
-      label: t("Hủy"),
-      onClick: onClose,
-      variant: "outline" as const,
-      disabled: saving,
-    },
-    {
-      label: viewOnly ? t("Đóng") : isEditing ? t("Cập nhật") : t("Tạo mới"),
-      onClick: viewOnly ? onClose : handleSave,
-      primary: true,
-      disabled: saving || viewOnly,
-    },
-  ];
+  const drawerActions = viewOnly
+    ? [
+        {
+          label: t("Đóng"),
+          onClick: onClose,
+          variant: "outline" as const,
+          disabled: saving,
+        },
+      ]
+    : isEditing && form.status !== "DRAFT"
+      ? [
+          {
+            label: t("Hủy"),
+            onClick: onClose,
+            variant: "outline" as const,
+            disabled: saving,
+          },
+          {
+            label: t("Lưu thay đổi"),
+            primary: true,
+            onClick: () => handleSave(),
+            disabled: saving,
+          },
+        ]
+      : [
+          {
+            label: t("Hủy"),
+            onClick: onClose,
+            variant: "outline" as const,
+            disabled: saving,
+          },
+          {
+            label: isEditing ? t("Lưu Nháp") : t("Tạo Nháp"),
+            variant: "outline" as const,
+            onClick: () => handleSave("DRAFT"),
+            disabled: saving,
+          },
+          {
+            label: isEditing ? t("Xác nhận") : t("Tạo Mới"),
+            primary: true,
+            onClick: () => handleSave("CONFIRMED"),
+            disabled: saving,
+          },
+        ];
 
   return (
     <StandardFormDrawer
@@ -205,14 +242,29 @@ export function SoFormDrawer({
             ? t("Cập nhật đơn bán hàng")
             : t("Tạo đơn bán hàng")
       }
+      titleExtra={
+        form.status === "DRAFT" && (
+          <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200">
+            {t("Nháp")}
+          </span>
+        )
+      }
       subtitle={editing ? editing.soNo : t("Thông tin chung & dòng hàng")}
       actions={drawerActions}
-      panelClassName="min-[1024px]:min-w-[1100px] min-[1280px]:min-w-[1280px]"
+      rightPanelTitle={t("Thông tin chung")}
       error={saveError}
       loading={drawerLoading}
       leftPanel={
-        <div className="space-y-6">
-          <DrawerSection title={t("Dòng hàng")}>
+        <div className="space-y-4">
+          <DrawerSection
+            title={
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:justify-between pr-4 mt-2 sm:mt-0">
+                <span className="shrink-0 mb-2 sm:mb-0">
+                  {t("Chi tiết")} ({form.lines.length})
+                </span>
+              </div>
+            }
+          >
             <DocumentLineTable
               data={form.lines}
               getRowKey={(_, idx) => String(idx)}
@@ -244,6 +296,7 @@ export function SoFormDrawer({
                       onSearch={setItemSearch}
                       onScrollBottom={fetchNextItems}
                       loading={loadingItems}
+                      fallbackLabel={line.itemName}
                     />
                   ),
                 },
@@ -335,86 +388,81 @@ export function SoFormDrawer({
         </div>
       }
       rightPanel={
-        <DrawerSection title={t("Thông tin chung")}>
-          <div className="flex flex-col gap-3">
-            <DrawerField label="Mã đơn hàng" required>
-              <input
-                value={form.soNo}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, soNo: e.target.value }))
-                }
-                readOnly={viewOnly || !!editing}
-                className={inputCls}
-                placeholder={t("VD: SO-2410-001")}
-              />
-            </DrawerField>
-            <DrawerField label="Khách hàng">
-              <Combobox
-                value={form.customerId}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, customerId: value }))
-                }
-                options={customerOptions}
-                placeholder={t("Chọn khách hàng")}
+        <div className="flex flex-col gap-3">
+          <DrawerField label="Mã đơn hàng" required>
+            <input
+              value={form.soNo}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, soNo: e.target.value }))
+              }
+              readOnly={viewOnly || !!editing}
+              className={inputCls}
+              placeholder={t("VD: SO-2410-001")}
+            />
+          </DrawerField>
+          <DrawerField label="Khách hàng">
+            <Combobox
+              value={form.customerId}
+              onChange={(value) =>
+                setForm((prev) => ({ ...prev, customerId: value }))
+              }
+              options={customerOptions}
+              placeholder={t("Chọn khách hàng")}
+              readOnly={viewOnly}
+              onSearch={setCustomerSearch}
+              onScrollBottom={fetchNextCustomers}
+              loading={loadingCustomers}
+            />
+          </DrawerField>
+          <DrawerField label={t("Ngày đặt")} required>
+            <DatePicker
+              className={inputCls}
+              value={form.orderDate}
+              disabled={viewOnly}
+              onChange={(v) => setForm((prev) => ({ ...prev, orderDate: v }))}
+            />
+          </DrawerField>
+          <DrawerField label={t("Ngày giao")}>
+            <DatePicker
+              className={inputCls}
+              value={form.expectedDeliveryDate}
+              disabled={viewOnly}
+              placeholder={t("Chọn ngày giao")}
+              onChange={(v) =>
+                setForm((prev) => ({ ...prev, expectedDeliveryDate: v }))
+              }
+            />
+          </DrawerField>
+          <DrawerField label="Ghi chú">
+            <textarea
+              value={form.remarks}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, remarks: e.target.value }))
+              }
+              readOnly={viewOnly}
+              className={`${inputCls} min-h-[88px]`}
+              placeholder={t("Ghi chú đơn bán hàng")}
+            />
+          </DrawerField>
+          <DrawerField label={t("Thẻ nhãn")}>
+            {editing ? (
+              <EntityTagSelector
+                entityType="erp_sales_order"
+                entityId={editing.id}
                 readOnly={viewOnly}
-                onSearch={setCustomerSearch}
-                onScrollBottom={fetchNextCustomers}
-                loading={loadingCustomers}
               />
-            </DrawerField>
-            <DrawerField label="Ngày đơn" required>
-              <input
-                type="date"
-                value={form.orderDate}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, orderDate: e.target.value }))
-                }
-                readOnly={viewOnly}
-                className={inputCls}
+            ) : !viewOnly ? (
+              <EntityTagSelector
+                entityType="erp_sales_order"
+                entityId="__pending__"
+                readOnly={false}
+                pendingMode
+                pendingTagIds={pendingTagIds}
+                onPendingChange={onPendingTagsChange}
               />
-            </DrawerField>
-            <DrawerField label="Trạng thái">
-              <input
-                value={form.status}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, status: e.target.value }))
-                }
-                readOnly={viewOnly}
-                className={inputCls}
-                placeholder="DRAFT"
-              />
-            </DrawerField>
-            <DrawerField label="Ghi chú">
-              <textarea
-                value={form.remarks}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, remarks: e.target.value }))
-                }
-                readOnly={viewOnly}
-                className={`${inputCls} min-h-[88px]`}
-                placeholder={t("Ghi chú đơn bán hàng")}
-              />
-            </DrawerField>
-            <DrawerField label={t("Thẻ nhãn")}>
-              {editing ? (
-                <EntityTagSelector
-                  entityType="erp_sales_order"
-                  entityId={editing.id}
-                  readOnly={viewOnly}
-                />
-              ) : !viewOnly ? (
-                <EntityTagSelector
-                  entityType="erp_sales_order"
-                  entityId="__pending__"
-                  readOnly={false}
-                  pendingMode
-                  pendingTagIds={pendingTagIds}
-                  onPendingChange={onPendingTagsChange}
-                />
-              ) : null}
-            </DrawerField>
-          </div>
-        </DrawerSection>
+            ) : null}
+          </DrawerField>
+        </div>
       }
     />
   );

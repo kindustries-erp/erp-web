@@ -742,11 +742,17 @@ export const en: Dict = {
     confirm: {
       deleteTitle: "Confirm Delete",
       deleteConfigMessage:
-        'Delete "{0}" ({1})? This action will hide the item from the list.',
+        'Delete "{0}" ({1})? This will hide the item from the list.',
       deleteItemMessage:
-        'Delete "{0}" ({1})? This action will hide the inventory item from the list.',
+        'Delete "{0}" ({1})? This will hide the inventory item from the list.',
       deleteConfirm: "Delete",
       deleteCancel: "Cancel",
+    },
+    attributes: {
+      label: "Attributes",
+      CAN_BE_SOLD: "Can be sold",
+      CAN_BE_PURCHASED: "Can be purchased",
+      CAN_BE_MANUFACTURED: "Can be manufactured",
     },
   },
   inventory: {
@@ -775,6 +781,7 @@ export const en: Dict = {
         in: "In",
         out: "Out",
         onHand: "On Hand",
+        reserved: "Reserved",
         unit: "UOM",
         lastTx: "Last Transaction",
         status: "Status",
@@ -1857,4 +1864,17 @@ export const en: Dict = {
     revenue: "Revenue",
     expense: "Expense",
   },
+
+  // ── Sales Orders ────────────────────────────────────────────────────────
+  "Quản lý đơn bán hàng và reserve tồn kho.":
+    "Manage sales orders and reserve inventory.",
+  "Chưa có đơn bán hàng nào": "No sales orders yet",
+  // Columns
+  "Số SO": "SO No",
+  "Khách hàng": "Customer",
+  "Ngày đơn": "Order Date",
+  // Actions
+  Reserve: "Reserve",
+  Unreserve: "Unreserve",
+  "Chỉnh sửa": "Edit",
 };

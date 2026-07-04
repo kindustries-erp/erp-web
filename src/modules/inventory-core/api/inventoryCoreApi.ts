@@ -68,6 +68,7 @@ export interface ErpInventoryItem {
   /** FK → erp_tracking_categories */
   trackingCategoryId?: string | null;
   trackingCategory?: InventoryMasterOption | null;
+  attributes?: string[];
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
@@ -113,6 +114,7 @@ export interface CreateInventoryItemPayload {
   note?: string;
   trackingPolicyId?: string;
   trackingCategoryId?: string;
+  attributes?: string[];
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;

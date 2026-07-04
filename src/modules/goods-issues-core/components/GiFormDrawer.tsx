@@ -70,84 +70,63 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   const { data: companyProfile } = useCompanyProfile();
 
   const ISSUE_TYPE_OPTIONS = [
-    { value: "SALE", label: "SALE — " + t("Xuất bán") },
-    { value: "PRODUCTION", label: "PRODUCTION — " + t("Xuất sản xuất") },
-    { value: "OTHER", label: "OTHER — " + t("Xuất khác") },
+    { value: "SALE", label: t("Xuất bán") },
+    { value: "OTHER", label: t("Xuất khác") },
   ];
 
-  const STATUS_OPTIONS = [
-    { value: "DRAFT", label: t("Nháp") },
-    { value: "POSTED", label: t("Đã vào sổ") },
-    { value: "CANCELLED", label: t("Đã hủy") },
-  ];
   const moLinkedLocked = isMoLinkedGiLocked(editing);
   const isAdmin = useHasPermission("*", "*");
 
   // Derive actions
-  const actions = [];
-  if (viewOnly) {
-    if (editing && editing.status !== "DRAFT" && isAdmin) {
-      actions.push({
-        label: t("common.print"),
-        onClick: handlePrint,
-        variant: "secondary" as const,
-        disabled: loading,
-      });
-    }
-    actions.push({
-      label: t("Đóng"),
-      onClick: close,
-      variant: "outline" as const,
-    });
-  } else if (editing) {
-    if (editing.status === "DRAFT") {
-      actions.push({
-        label: t("Hủy"),
-        onClick: close,
-        variant: "ghost" as const,
-        disabled: saving,
-      });
-      actions.push({
-        label: saving ? t("Đang lưu...") : t("Lưu nháp"),
-        onClick: () => handleSave("DRAFT"),
-        variant: "secondary" as const,
-        loading: saving,
-        disabled: saving,
-      });
-      actions.push({
-        label: saving ? t("Đang cập nhật...") : t("Cập nhật"),
-        onClick: () => handleSave("POSTED"),
-        loading: saving,
-        disabled: saving || !form.lines.length,
-      });
-    } else {
-      actions.push({
-        label: t("Đóng"),
-        onClick: close,
-        variant: "outline" as const,
-      });
-    }
-  } else {
-    actions.push({
-      label: t("Hủy"),
-      onClick: close,
-      variant: "ghost" as const,
-      disabled: saving,
-    });
-    actions.push({
-      label: saving ? t("Đang lưu...") : t("Lưu nháp"),
-      onClick: () => handleSave("DRAFT"),
-      variant: "secondary" as const,
-      loading: saving,
-      disabled: saving,
-    });
-    actions.push({
-      label: saving ? t("Đang tạo...") : t("Tạo mới"),
-      onClick: () => handleSave("POSTED"),
-      loading: saving,
-      disabled: saving || !form.lines.length,
-    });
-  }
+  const actions =
+    viewOnly || loading
+      ? [
+          ...(editing && editing.status !== "DRAFT" && isAdmin
+            ? [
+                {
+                  label: t("common.print"),
+                  onClick: handlePrint,
+                  variant: "secondary" as const,
+                  disabled: loading,
+                },
+              ]
+            : []),
+          {
+            label: t("Đóng"),
+            onClick: close,
+            variant: "outline" as const,
+            disabled: loading,
+          },
+        ]
+      : [
+          {
+            label: t("Hủy"),
+            onClick: close,
+            variant: "outline" as const,
+            disabled: saving,
+          },
+          ...(editing?.status === "POSTED"
+            ? []
+            : [
+                {
+                  label: t("Lưu nháp"),
+                  onClick: () => void handleSave("DRAFT"),
+                  variant: "secondary" as const,
+                  loading: saving,
+                  disabled: saving,
+                },
+              ]),
+          {
+            label: editing ? t("Cập nhật") : t("Tạo mới"),
+            onClick: () =>
+              void handleSave(
+                editing?.status === "POSTED" ? undefined : "POSTED",
+              ),
+            primary: true,
+            loading: saving,
+            disabled: saving,
+          },
+        ];
 
   return (
     <>
@@ -160,7 +139,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           editing &&
           canUpdate &&
           !moLinkedLocked &&
-          !["POSTED", "CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
+          !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
             ? () => setViewOnly(false)
             : undefined
         }
@@ -219,18 +198,18 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   data={form.lines}
                   getRowKey={(_, idx) => idx}
                   viewOnly={viewOnly}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing?.status === "POSTED"}
                   tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
                   footer={
                     <tr>
                       <td
-                        colSpan={viewOnly ? 3 : 2}
+                        colSpan={3}
                         className="px-3 py-3 text-right font-semibold"
                       ></td>
                       <td
                         className={cn(
-                          "px-3 py-3 font-semibold",
-                          viewOnly ? "text-center text-red-600" : "text-right",
+                          "px-3 py-3 font-semibold text-center",
+                          viewOnly ? "text-red-600" : "",
                         )}
                       >
                         {viewOnly
@@ -245,7 +224,18 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                                 .toString(),
                             )}
                       </td>
-                      <td colSpan={vehicleOptions.length > 0 ? 2 : 1}></td>
+                      <td
+                        className="px-3 py-3"
+                        colSpan={
+                          vehicleOptions.length > 0
+                            ? viewOnly
+                              ? 2
+                              : 3
+                            : viewOnly
+                              ? 1
+                              : 2
+                        }
+                      ></td>
                     </tr>
                   }
                   onAddLine={() =>
@@ -336,7 +326,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "qtyIssued",
                       header: t("Số lượng"),
-                      width: 140,
+                      minWidth: 140,
                       align: viewOnly ? "center" : "left",
                       cell: (line, idx) => {
                         if (viewOnly) {
@@ -351,7 +341,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             type="number"
                             className={cn(inputCls, "w-full text-right")}
                             value={line.qtyIssued}
-                            disabled={viewOnly}
+                            disabled={viewOnly || editing?.status === "POSTED"}
                             onChange={(e) => {
                               const v = e.target.value;
                               setForm((f) => {
@@ -367,7 +357,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "unitCost",
                       header: t("Đơn giá"),
-                      width: 140,
+                      minWidth: 140,
                       align: viewOnly ? "right" : "left",
                       cell: (line, idx) => {
                         if (viewOnly) {
@@ -384,7 +374,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             type="number"
                             className={cn(inputCls, "w-full text-right")}
                             value={line.unitCost}
-                            disabled={viewOnly}
+                            disabled={viewOnly || editing?.status === "POSTED"}
                             placeholder={t("Tùy chọn")}
                             onChange={(e) => {
                               const v = e.target.value;
@@ -419,7 +409,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                                 <Combobox
                                   options={vehicleOptions}
                                   value={line.vehicleId}
-                                  disabled={viewOnly}
+                                  disabled={
+                                    viewOnly || editing?.status === "POSTED"
+                                  }
                                   placeholder={t("Chọn xe...")}
                                   onChange={(v) => {
                                     setForm((f) => {
@@ -469,7 +461,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               <DrawerField label={t("Ngày xuất")} required>
                 <DatePicker
                   value={form.issueDate ? form.issueDate.slice(0, 10) : ""}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing?.status === "POSTED"}
                   onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
                 />
               </DrawerField>
@@ -477,7 +469,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 <Combobox
                   options={ISSUE_TYPE_OPTIONS}
                   value={form.issueType}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing !== null}
                   allowClear={false}
                   onChange={(v) =>
                     setForm((f) => ({ ...f, issueType: v || "SALE" }))
@@ -489,7 +481,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   <Combobox
                     options={customerOptions}
                     value={form.customerId}
-                    disabled={viewOnly}
+                    disabled={viewOnly || editing?.status === "POSTED"}
                     placeholder={t("Chọn khách hàng")}
                     searchPlaceholder={t("Tìm khách hàng")}
                     onSearch={setCustomerSearch}
@@ -506,7 +498,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   <Combobox
                     options={moOptions}
                     value={form.productionOrderId}
-                    disabled={viewOnly}
+                    disabled={viewOnly || editing?.status === "POSTED"}
                     placeholder={t("Chọn lệnh sản xuất")}
                     searchPlaceholder={t("Tìm MO")}
                     onChange={(v) =>
@@ -515,17 +507,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   />
                 </DrawerField>
               )}
-              <DrawerField label={t("Trạng thái")}>
-                <Combobox
-                  options={STATUS_OPTIONS}
-                  value={form.status}
-                  disabled={viewOnly}
-                  allowClear={false}
-                  onChange={(v) =>
-                    setForm((f) => ({ ...f, status: v || "DRAFT" }))
-                  }
-                />
-              </DrawerField>
+
               <DrawerField label={t("Ghi chú")}>
                 <textarea
                   className={`${inputCls} min-h-[60px] resize-y`}

@@ -1,18 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Boxes,
   PackageCheck,
-  Pencil,
-  ReceiptText,
   RotateCcw,
   Trash2,
   XCircle,
+  PackagePlus,
+  Eye,
+  FileText,
 } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { StandardTable } from "@/shared/components/StandardTable";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   useFilterPanel,
@@ -26,6 +23,9 @@ import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMa
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
+import { useT } from "@/core/i18n";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { StatusBadge } from "@/shared/components/badges";
 
 import {
   SoFormDrawer,
@@ -44,6 +44,8 @@ function fmtDate(value?: string | null) {
 }
 
 export function ErpSalesOrdersPage() {
+  const t = useT();
+
   const canRead = useHasPermission("sales_orders", "read");
   const canCreate = useHasPermission("sales_orders", "create");
   const canUpdate = useHasPermission("sales_orders", "update");
@@ -77,11 +79,11 @@ export function ErpSalesOrdersPage() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<ErpSalesOrder | null>(null);
-  const [viewOnly, setViewOnly] = useState(false);
+  const [viewOnly, setViewOnly] = useState(true);
+
   const [form, setForm] = useState<SoForm>(emptyForm);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [actingId, setActingId] = useState<string | null>(null);
 
   const [deleteTarget, setDeleteTarget] = useState<ErpSalesOrder | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -110,6 +112,7 @@ export function ErpSalesOrdersPage() {
     search: itemSearch,
     limit: 50,
     entities: "inventoryItems",
+    inventoryItemAttributes: viewOnly ? "" : "CAN_BE_SOLD",
   });
 
   const customerOptions = useMemo(() => {
@@ -190,24 +193,15 @@ export function ErpSalesOrdersPage() {
     setPendingTagIds([]);
   }
 
-  function openCreate() {
+  async function openCreate() {
     resetForm();
-    setDrawerOpen(true);
-  }
-
-  async function openEdit(item: ErpSalesOrder) {
-    setViewOnly(false);
-    setSaveError(null);
     try {
-      const detail = await salesOrdersCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
-      setDrawerOpen(true);
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
-      );
+      const nextNo = await salesOrdersCoreApi.nextNo();
+      setForm((prev) => ({ ...prev, soNo: nextNo }));
+    } catch {
+      // ignore
     }
+    setDrawerOpen(true);
   }
 
   async function openView(item: ErpSalesOrder) {
@@ -253,7 +247,7 @@ export function ErpSalesOrdersPage() {
     }));
   }
 
-  async function handleSave() {
+  async function handleSave(overrideStatus?: string) {
     if (viewOnly) {
       closeDrawer();
       return;
@@ -275,7 +269,10 @@ export function ErpSalesOrdersPage() {
     setSaving(true);
     setSaveError(null);
     try {
-      const payload = toPayload(form);
+      const payload = {
+        ...toPayload(form),
+        status: overrideStatus || form.status,
+      };
       if (editing) {
         await salesOrdersCoreApi.update(editing.id, payload);
       } else {
@@ -306,7 +303,6 @@ export function ErpSalesOrdersPage() {
   }
 
   async function handleReserve(item: ErpSalesOrder) {
-    setActingId(item.id);
     setError(null);
     try {
       await salesOrdersCoreApi.reserve(item.id);
@@ -315,13 +311,10 @@ export function ErpSalesOrdersPage() {
       setError(
         e?.response?.data?.message || e?.message || "Không thể reserve SO",
       );
-    } finally {
-      setActingId(null);
     }
   }
 
   async function handleUnreserve(item: ErpSalesOrder) {
-    setActingId(item.id);
     setError(null);
     try {
       await salesOrdersCoreApi.unreserve(item.id);
@@ -330,8 +323,6 @@ export function ErpSalesOrdersPage() {
       setError(
         e?.response?.data?.message || e?.message || "Không thể unreserve SO",
       );
-    } finally {
-      setActingId(null);
     }
   }
 
@@ -365,115 +356,164 @@ export function ErpSalesOrdersPage() {
 
   const columns: DataTableColumn<ErpSalesOrder>[] = [
     {
+      key: "orderDate",
+      header: t("Ngày đặt"),
+      size: 100,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (item) => fmtDate(item.orderDate),
+      skeletonClassName: "w-20",
+    },
+    {
+      key: "expectedDeliveryDate",
+      header: t("Ngày giao"),
+      size: 100,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (item) => fmtDate(item.expectedDeliveryDate),
+      skeletonClassName: "w-20",
+    },
+    {
       key: "soNo",
-      header: "Số SO",
+      header: t("Số SO"),
+      size: 120,
       cell: (item) => <span className="font-medium">{item.soNo}</span>,
       skeletonClassName: "w-24",
     },
     {
       key: "customerName",
-      header: "Khách hàng",
-      cell: (item) => item.customerName || item.customerId || "—",
+      header: t("Khách hàng"),
+      size: 200,
+      className: "text-left",
+      cell: (item) => {
+        const text = item.customerName || item.customerId || "—";
+        return (
+          <Tooltip content={text !== "—" ? text : ""}>
+            <div className="whitespace-normal break-words w-full cursor-pointer">
+              {text}
+            </div>
+          </Tooltip>
+        );
+      },
       skeletonClassName: "w-36",
     },
     {
-      key: "orderDate",
-      header: "Ngày đơn",
-      cell: (item) => fmtDate(item.orderDate),
+      key: "status",
+      header: t("Trạng thái"),
+      size: 120,
+      cell: (item) => <StatusBadge status={item.status || ""} />,
       skeletonClassName: "w-20",
     },
     {
-      key: "status",
-      header: "Trạng thái",
-      cell: (item) => item.status || "—",
-      skeletonClassName: "w-20",
+      key: "remarks",
+      header: t("Ghi chú"),
+      size: 200,
+      className: "text-left",
+      cell: (item) => {
+        const text = item.remarks || "—";
+        return (
+          <Tooltip content={text !== "—" ? text : ""}>
+            <div className="whitespace-normal break-words w-full cursor-pointer line-clamp-2">
+              {text}
+            </div>
+          </Tooltip>
+        );
+      },
+      skeletonClassName: "w-36",
     },
   ];
 
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
-      title="Đơn bán hàng"
-      desc="Quản lý đơn bán hàng và reserve/unreserve tồn kho."
-      icon={<Boxes className="h-5 w-5" />}
-      actions={
-        <TableActionGroup
-          onRefresh={() => void loadOrders()}
-          loading={loading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={canCreate ? openCreate : undefined}
-          createLabel="Tạo mới"
-        />
+    <SpreadsheetPageTemplate<ErpSalesOrder>
+      title={t("Đơn bán hàng")}
+      desc={t("Quản lý đơn bán hàng và reserve tồn kho.")}
+      icon={<FileText className="h-4 w-4" />}
+      tableId="sales-orders-table"
+      loading={loading}
+      onRefresh={loadOrders}
+      createActions={
+        canCreate
+          ? [
+              {
+                groupLabel: t("groupThemMoi", "Thêm mới"),
+                items: [
+                  {
+                    label: t("Tạo mới"),
+                    icon: <PackagePlus className="w-4 h-4 text-emerald-600" />,
+                    onClick: openCreate,
+                  },
+                ],
+              },
+            ]
+          : undefined
       }
+      error={error}
+      items={items}
+      columns={columns}
+      getRowKey={(item) => item.id}
+      total={total}
+      totalPages={totalPages}
+      page={page}
+      pageSize={pageSize}
+      onPage={setPage}
+      onPageSize={(size) => {
+        setPageSize(size);
+        setPage(1);
+      }}
+      filterConfig={filterConfig}
+      filter={filter}
+      rowActions={(item) => [
+        {
+          groupLabel: t("groupTraCuu", "Tra cứu"),
+          items: [
+            {
+              label: t("Chi tiết"),
+              icon: <Eye className="h-[13px] w-[13px]" />,
+              onClick: () => void openView(item),
+            },
+          ],
+        },
+        {
+          groupLabel: t("groupThaoTac", "Thao tác"),
+          items: [
+            {
+              label: t("Reserve"),
+              icon: <PackageCheck className="h-[13px] w-[13px]" />,
+              onClick: () => void handleReserve(item),
+              hidden: !canUpdate || !["CONFIRMED"].includes(item.status || ""),
+            },
+            {
+              label: t("Unreserve"),
+              icon: <RotateCcw className="h-[13px] w-[13px]" />,
+              onClick: () => void handleUnreserve(item),
+              hidden:
+                !canUpdate ||
+                !["RESERVED", "PARTIAL_RESERVED"].includes(item.status || ""),
+            },
+            {
+              label: t("Xóa"),
+              icon: <Trash2 className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              onClick: () => setDeleteTarget(item),
+              hidden: !canDelete || item.status !== "DRAFT",
+            },
+            {
+              label: t("Hủy phiếu"),
+              icon: <XCircle className="h-[13px] w-[13px]" />,
+              variant: "danger",
+              onClick: () => setCancelTarget(item),
+              hidden:
+                !canUpdate ||
+                !["CONFIRMED", "PARTIAL_RESERVED", "RESERVED"].includes(
+                  item.status || "",
+                ),
+            },
+          ],
+        },
+      ]}
     >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          <StandardTable<ErpSalesOrder>
-            items={items}
-            columns={columns}
-            getRowKey={(item) => item.id}
-            loading={loading}
-            error={error}
-            emptyLabel="Chưa có sales order nào"
-            minWidth={980}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPage={setPage}
-            onPageSize={(size: number) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-            actions={(item) => [
-              {
-                label: "Xem chi tiết",
-                icon: <ReceiptText className="h-4 w-4" />,
-                onClick: () => void openView(item),
-              },
-              {
-                label: "Chỉnh sửa",
-                icon: <Pencil className="h-4 w-4" />,
-                onClick: () => void openEdit(item),
-                hidden: !canUpdate,
-              },
-              {
-                label: actingId === item.id ? "Đang reserve..." : "Reserve",
-                icon: <PackageCheck className="h-4 w-4" />,
-                onClick: () => void handleReserve(item),
-                hidden: !canUpdate,
-              },
-              {
-                label: actingId === item.id ? "Đang unreserve..." : "Unreserve",
-                icon: <RotateCcw className="h-4 w-4" />,
-                onClick: () => void handleUnreserve(item),
-                hidden: !canUpdate,
-              },
-              {
-                label: "Xóa",
-                onClick: () => setDeleteTarget(item),
-                icon: <Trash2 className="h-4 w-4" />,
-                variant: "danger",
-                hidden: !canDelete || item.status !== "DRAFT",
-              },
-              {
-                label: "Hủy phiếu",
-                onClick: () => setCancelTarget(item),
-                icon: <XCircle className="h-4 w-4" />,
-                variant: "danger",
-                hidden:
-                  !canUpdate ||
-                  item.status === "DRAFT" ||
-                  item.status === "CANCELLED",
-              },
-            ]}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
-
       <ConfirmModal
         open={!!deleteTarget}
         title="Xác nhận xóa"
@@ -535,6 +575,6 @@ export function ErpSalesOrdersPage() {
             : undefined
         }
       />
-    </PageLayout>
+    </SpreadsheetPageTemplate>
   );
 }
