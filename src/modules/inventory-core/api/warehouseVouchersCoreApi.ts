@@ -12,6 +12,7 @@ export interface WarehouseRow {
   poNo?: string | null;
   remarks: string | null;
   createdAt: string;
+  totalQty?: number | string;
 }
 
 export interface WarehouseVoucherListParams extends ListParams {

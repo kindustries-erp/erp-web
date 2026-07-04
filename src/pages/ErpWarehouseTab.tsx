@@ -400,9 +400,30 @@ export function ErpWarehouseTab() {
   const columns: DataTableColumn<WarehouseRow>[] = useMemo(
     () => [
       {
+        key: "date",
+        header: t("Ngày"),
+        size: 100,
+        className: "text-right",
+        headerClassName: "text-center",
+        sortable: true,
+        sortKey: "date",
+        cell: (row) => (
+          <Tooltip
+            content={formatGMT7(row.createdAt, "datetime-sec")}
+            side="top"
+          >
+            <span className="cursor-help border-b border-dotted border-gray-400">
+              {formatGMT7(row.createdAt, "date")}
+            </span>
+          </Tooltip>
+        ),
+      },
+      {
         key: "voucherNo",
         header: t("Số phiếu"),
-        className: "w-[200px] font-mono text-sm",
+        size: 150,
+        className: "font-mono text-sm text-left",
+        headerClassName: "text-center",
         sortable: true,
         sortKey: "voucherNo",
         cell: (row) => (
@@ -422,43 +443,63 @@ export function ErpWarehouseTab() {
         ),
       },
       {
-        key: "date",
-        header: t("Ngày"),
-        className: "w-[110px]",
-        sortable: true,
-        sortKey: "date",
-        cell: (row) => (
-          <Tooltip
-            content={formatGMT7(row.createdAt, "datetime-sec")}
-            side="top"
-          >
-            <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.createdAt, "date")}
-            </span>
-          </Tooltip>
-        ),
+        key: "totalQty",
+        header: t("Tổng SL"),
+        size: 120,
+        className: "text-right",
+        headerClassName: "text-center",
+        cell: (row) => {
+          const qty = Number(row.totalQty);
+          return isNaN(qty) ? "—" : qty.toLocaleString("vi-VN");
+        },
       },
       {
         key: "poNo",
         header: t("Số PO"),
-        className: "w-[160px] font-mono text-sm",
-        cell: (row) => row.poNo ?? "—",
+        size: 150,
+        className: "font-mono text-sm text-left",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <Tooltip content={row.poNo || ""}>
+            <div className="whitespace-normal break-words w-full">
+              {row.poNo ?? "—"}
+            </div>
+          </Tooltip>
+        ),
       },
       {
         key: "partnerName",
         header: t("Đối tác"),
-        cell: (row) => row.partnerName ?? "—",
+        size: 200,
+        className: "text-left",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <Tooltip content={row.partnerName || ""}>
+            <div className="whitespace-normal break-words w-full">
+              {row.partnerName ?? "—"}
+            </div>
+          </Tooltip>
+        ),
       },
       {
         key: "remarks",
         header: t("Ghi chú"),
-        className: "min-w-[300px]",
-        cell: (row) => row.remarks ?? "—",
+        size: 300,
+        className: "text-left",
+        headerClassName: "text-center",
+        cell: (row) => (
+          <Tooltip content={row.remarks || ""}>
+            <div className="whitespace-normal break-words w-full">
+              {row.remarks ?? "—"}
+            </div>
+          </Tooltip>
+        ),
       },
       {
         key: "status",
         header: t("Trạng thái"),
-        className: "w-[140px] text-center",
+        size: 150,
+        className: "text-center",
         headerClassName: "text-center",
         cell: (row) => (
           <div className="w-full flex justify-center">
@@ -467,7 +508,7 @@ export function ErpWarehouseTab() {
         ),
       },
     ],
-    [],
+    [t],
   );
 
   // Actions are now passed to SpreadsheetPageTemplate
@@ -524,67 +565,87 @@ export function ErpWarehouseTab() {
         filter={filterPanel}
         rowActions={(row) => [
           {
-            label: t("Chi tiết"),
-            icon: <Eye className="h-3.5 w-3.5" />,
-            onClick: () => {
-              if (row.type === "receipt") {
-                grDrawer.openDetail(row.id);
-              } else {
-                giDrawer.openDetail(row.id);
-              }
-            },
+            groupLabel: t("groupTraCuu", "Tra cứu"),
+            items: [
+              {
+                label: t("Chi tiết"),
+                icon: <Eye className="h-3.5 w-3.5" />,
+                onClick: () => {
+                  if (row.type === "receipt") {
+                    grDrawer.openDetail(row.id);
+                  } else {
+                    giDrawer.openDetail(row.id);
+                  }
+                },
+              },
+            ],
           },
           {
-            label: t("common.print"),
-            icon: <Printer className="h-3.5 w-3.5" />,
-            hidden: row.status === "DRAFT" || !isAdmin,
-            disabled: !!printTargetId,
-            onClick: () => handlePrintRow(row),
+            groupLabel: t("groupDuLieu", "Dữ liệu"),
+            items: [
+              {
+                label: t("common.print"),
+                icon: <Printer className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT" || !isAdmin,
+                disabled: !!printTargetId,
+                onClick: () => handlePrintRow(row),
+              },
+              {
+                label: t("Xuất XLSX"),
+                icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
+                hidden: row.status === "DRAFT",
+                disabled: xlsxExportingId === row.id,
+                onClick: () => handleExportXlsx(row),
+              },
+            ],
           },
           {
-            label: t("Xuất XLSX"),
-            icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
-            hidden: row.status === "DRAFT",
-            disabled: xlsxExportingId === row.id,
-            onClick: () => handleExportXlsx(row),
-          },
-          {
-            label: t("Xóa"),
-            icon: <Trash2 className="h-3.5 w-3.5" />,
-            variant: "danger",
-            hidden:
-              row.status !== "DRAFT" ||
-              (row.type === "receipt" && !canDeleteReceipt) ||
-              (row.type === "issue" && !canDeleteIssue),
-            onClick: () => {
-              setDeleteTarget(row);
-            },
-          },
-          {
-            label: t("Hủy phiếu"),
-            icon: <XCircle className="h-3.5 w-3.5" />,
-            variant: "danger",
-            hidden:
-              row.status !== "POSTED" ||
-              (row.type === "receipt" && !canUpdateReceipt) ||
-              (row.type === "issue" && !canUpdateIssue),
-            onClick: () => {
-              setCancelTarget(row);
-            },
+            groupLabel: t("groupThaoTac", "Thao tác"),
+            items: [
+              {
+                label: t("Xóa"),
+                icon: <Trash2 className="h-3.5 w-3.5" />,
+                variant: "danger",
+                hidden:
+                  row.status !== "DRAFT" ||
+                  (row.type === "receipt" && !canDeleteReceipt) ||
+                  (row.type === "issue" && !canDeleteIssue),
+                onClick: () => {
+                  setDeleteTarget(row);
+                },
+              },
+              {
+                label: t("Hủy phiếu"),
+                icon: <XCircle className="h-3.5 w-3.5" />,
+                variant: "danger",
+                hidden:
+                  row.status !== "POSTED" ||
+                  (row.type === "receipt" && !canUpdateReceipt) ||
+                  (row.type === "issue" && !canUpdateIssue),
+                onClick: () => {
+                  setCancelTarget(row);
+                },
+              },
+            ],
           },
         ]}
         createActions={[
           {
-            label: t("Nhập kho"),
-            icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
-            onClick: () => grDrawer.openCreate(),
-            hidden: !canCreateReceipt,
-          },
-          {
-            label: t("Xuất kho"),
-            icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
-            onClick: () => giDrawer.openCreate(),
-            hidden: !canCreateIssue,
+            groupLabel: t("groupThemMoi", "Thêm mới"),
+            items: [
+              {
+                label: t("Nhập kho"),
+                icon: <PackagePlus className="h-4 w-4 text-emerald-600" />,
+                onClick: () => grDrawer.openCreate(),
+                hidden: !canCreateReceipt,
+              },
+              {
+                label: t("Xuất kho"),
+                icon: <PackageMinus className="h-4 w-4 text-orange-600" />,
+                onClick: () => giDrawer.openCreate(),
+                hidden: !canCreateIssue,
+              },
+            ],
           },
         ]}
       />

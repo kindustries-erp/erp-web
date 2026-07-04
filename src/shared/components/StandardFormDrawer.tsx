@@ -69,6 +69,9 @@ export interface StandardFormDrawerProps {
 
   /** Default collapsed state for the right panel */
   rightPanelDefaultCollapsed?: boolean;
+
+  /** Whether the right panel should be sticky and have its own scrollbar. Default: true */
+  stickyRightPanel?: boolean;
 }
 
 export function StandardFormDrawer({
@@ -92,6 +95,7 @@ export function StandardFormDrawer({
   hideRightPanel = false,
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
+  stickyRightPanel = true,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -152,7 +156,8 @@ export function StandardFormDrawer({
             (rightPanelTitle ? (
               <div
                 className={cn(
-                  "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300 xl:sticky xl:top-0",
+                  "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300",
+                  stickyRightPanel && "xl:sticky xl:top-0",
                   rightPanelCollapsed
                     ? "w-full xl:w-[52px]"
                     : "w-full xl:w-[320px] 2xl:w-[360px]",
@@ -196,8 +201,17 @@ export function StandardFormDrawer({
                     }}
                   >
                     <div
-                      className="overflow-x-hidden overflow-y-auto w-full xl:max-h-[calc(100vh-190px)]"
-                      style={{ scrollbarWidth: "none" }}
+                      className={cn(
+                        "w-full",
+                        stickyRightPanel
+                          ? "overflow-x-hidden overflow-y-auto xl:max-h-[calc(100vh-190px)]"
+                          : "overflow-x-hidden overflow-y-visible",
+                      )}
+                      style={
+                        stickyRightPanel
+                          ? { scrollbarWidth: "none" }
+                          : undefined
+                      }
                     >
                       <div className="flex flex-col gap-3 pt-1 min-w-[280px]">
                         {rightPanel}
@@ -207,7 +221,12 @@ export function StandardFormDrawer({
                 </DrawerSection>
               </div>
             ) : (
-              <div className="shrink-0 order-1 xl:order-2 w-full xl:w-auto xl:sticky xl:top-0">
+              <div
+                className={cn(
+                  "shrink-0 order-1 xl:order-2 w-full xl:w-auto",
+                  stickyRightPanel && "xl:sticky xl:top-0",
+                )}
+              >
                 {rightPanel}
               </div>
             ))}

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "@/core/i18n";
-import { Boxes, Trash2, Eye } from "lucide-react";
+import { Boxes, Trash2, Eye, PlusCircle } from "lucide-react";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import {
   useFilterPanel,
@@ -325,23 +325,43 @@ export function InventoryUomPage() {
           setPageSize(value);
         }}
         onRefresh={() => void currentQuery.refetch()}
-        onCreate={openCreate}
-        createLabel={t("inventoryMasters.actions.createUom")}
+        createActions={[
+          {
+            groupLabel: "Đơn vị tính",
+            items: [
+              {
+                label: t("inventoryMasters.actions.createUom"),
+                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                onClick: openCreate,
+              },
+            ],
+          },
+        ]}
         filterConfig={filterConfig}
         filter={filterPanel}
         sortArray={sortArray}
         onSort={handleSort}
         rowActions={(row) => [
           {
-            label: t("inventoryMasters.table.actionDetail") || "Chi tiết",
-            icon: <Eye className="h-3.5 w-3.5" />,
-            onClick: () => openDetail(row),
+            groupLabel: "Tra cứu / Cấu hình",
+            items: [
+              {
+                label: t("inventoryMasters.table.actionDetail") || "Chi tiết",
+                icon: <Eye className="h-3.5 w-3.5" />,
+                onClick: () => openDetail(row),
+              },
+            ],
           },
           {
-            label: t("inventoryMasters.table.actionDelete"),
-            icon: <Trash2 className="h-3.5 w-3.5" />,
-            variant: "danger",
-            onClick: () => handleDelete(row),
+            groupLabel: "Thao tác",
+            items: [
+              {
+                label: t("inventoryMasters.table.actionDelete"),
+                icon: <Trash2 className="h-3.5 w-3.5" />,
+                variant: "danger",
+                onClick: () => handleDelete(row),
+              },
+            ],
           },
         ]}
       />

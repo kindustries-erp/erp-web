@@ -29,7 +29,7 @@ export function ErpInvoiceFormItems({
   return (
     <DrawerSection title={t("itemsSection", "Chi tiết hóa đơn")}>
       <div
-        className="flex flex-col lg:flex-row lg:items-end gap-6 p-4 bg-white border border-gray-200 rounded-xl mb-4"
+        className="flex flex-col lg:flex-row lg:items-start gap-6 p-4 bg-white border border-gray-200 rounded-xl mb-4"
         style={{ boxShadow: "var(--panel-shadow)" }}
       >
         {/* Description Field */}

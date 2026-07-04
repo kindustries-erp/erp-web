@@ -8,6 +8,7 @@ export interface ExecuteProductionPayload {
   referenceNo?: string;
   plannedStartDate?: string;
   plannedEndDate?: string;
+  notes?: string;
   outputMetadata?: Record<string, unknown>;
   status?: string;
   bomId?: string;
@@ -91,6 +92,7 @@ export interface ErpProductionOrder {
   qtyToProduce?: string | null;
   plannedStartDate?: string | null;
   plannedEndDate?: string | null;
+  notes?: string | null;
   warehouseCode?: string | null;
   createdAt?: string;
   lines?: ErpProductionOrderMaterial[];
@@ -258,6 +260,7 @@ export const productionCoreApi = {
         serialNo?: string;
         lotNo?: string;
         notes?: string;
+        attributes?: Record<string, string>;
       }>;
     },
   ): Promise<{

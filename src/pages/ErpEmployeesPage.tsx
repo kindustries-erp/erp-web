@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Users, Pencil, Ban, CheckCircle } from "lucide-react";
+import { Users, Pencil, Ban, CheckCircle, PlusCircle } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
@@ -287,10 +287,20 @@ export function ErpEmployeesPage() {
           onRefresh={loadEmployees}
           onFilterToggle={filter.togglePanel}
           activeFilterCount={filter.activeFilterCount}
-          onCreate={() => {
-            drawerStore.openDrawer("employee", "create");
-          }}
-          createLabel="Thêm mới"
+          createActions={[
+            {
+              groupLabel: "Nhân viên",
+              items: [
+                {
+                  label: "Thêm mới",
+                  icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                  onClick: () => {
+                    drawerStore.openDrawer("employee", "create");
+                  },
+                },
+              ],
+            },
+          ]}
         />
       }
     >
@@ -319,67 +329,81 @@ export function ErpEmployeesPage() {
                 <ActionDropdown
                   items={[
                     {
-                      label: "Chỉnh sửa",
-                      icon: <Pencil size={14} />,
-                      onClick: () => {
-                        drawerStore.openDrawer(
-                          "employee",
-                          "edit",
-                          item.id,
-                          item,
-                        );
-                      },
+                      groupLabel: "Tra cứu / Cấu hình",
+                      items: [
+                        {
+                          label: "Chỉnh sửa",
+                          icon: <Pencil size={14} />,
+                          onClick: () => {
+                            drawerStore.openDrawer(
+                              "employee",
+                              "edit",
+                              item.id,
+                              item,
+                            );
+                          },
+                        },
+                      ],
                     },
-                    ...(item.status === "ACTIVE"
-                      ? [
-                          {
-                            label: "Ngưng hoạt động",
-                            icon: (
-                              <Ban size={14} className="text-destructive" />
-                            ),
-                            variant: "danger" as const,
-                            onClick: async () => {
-                              try {
-                                await employeesCoreApi.update(item.id, {
-                                  status: "INACTIVE",
-                                });
-                                showToast({
-                                  title: "Đã ngưng hoạt động nhân viên",
-                                });
-                                void loadEmployees();
-                              } catch (e: any) {
-                                showToast({
-                                  variant: "destructive",
-                                  title: "Lỗi",
-                                  description: e.message,
-                                });
-                              }
-                            },
-                          },
-                        ]
-                      : [
-                          {
-                            label: "Kích hoạt lại",
-                            icon: (
-                              <CheckCircle size={14} className="text-success" />
-                            ),
-                            onClick: async () => {
-                              try {
-                                await employeesCoreApi.update(item.id, {
-                                  status: "ACTIVE",
-                                });
-                                showToast({ title: "Đã kích hoạt nhân viên" });
-                                void loadEmployees();
-                              } catch (e: any) {
-                                showToast({
-                                  variant: "destructive",
-                                  title: "Lỗi",
-                                  description: e.message,
-                                });
-                              }
-                            },
-                          },
-                        ]),
+                    {
+                      groupLabel: "Thao tác",
+                      items:
+                        item.status === "ACTIVE"
+                          ? [
+                              {
+                                label: "Ngưng hoạt động",
+                                icon: (
+                                  <Ban size={14} className="text-destructive" />
+                                ),
+                                variant: "danger" as const,
+                                onClick: async () => {
+                                  try {
+                                    await employeesCoreApi.update(item.id, {
+                                      status: "INACTIVE",
+                                    });
+                                    showToast({
+                                      title: "Đã ngưng hoạt động nhân viên",
+                                    });
+                                    void loadEmployees();
+                                  } catch (e: any) {
+                                    showToast({
+                                      variant: "destructive",
+                                      title: "Lỗi",
+                                      description: e.message,
+                                    });
+                                  }
+                                },
+                              },
+                            ]
+                          : [
+                              {
+                                label: "Kích hoạt lại",
+                                icon: (
+                                  <CheckCircle
+                                    size={14}
+                                    className="text-success"
+                                  />
+                                ),
+                                onClick: async () => {
+                                  try {
+                                    await employeesCoreApi.update(item.id, {
+                                      status: "ACTIVE",
+                                    });
+                                    showToast({
+                                      title: "Đã kích hoạt nhân viên",
+                                    });
+                                    void loadEmployees();
+                                  } catch (e: any) {
+                                    showToast({
+                                      variant: "destructive",
+                                      title: "Lỗi",
+                                      description: e.message,
+                                    });
+                                  }
+                                },
+                              },
+                            ],
+                    },
                   ]}
                 />
               ),

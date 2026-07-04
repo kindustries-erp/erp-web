@@ -135,8 +135,22 @@ export function PurchaseOrderListPage() {
       tableId="purchase-orders-table"
       loading={loading}
       onRefresh={listQuery.refetch}
-      onCreate={canCreatePo ? handleCreateNew : undefined}
-      createLabel={t("Tạo mới")}
+      createActions={
+        canCreatePo
+          ? [
+              {
+                groupLabel: t("groupThemMoi", "Thêm mới"),
+                items: [
+                  {
+                    label: t("common.create", "Tạo mới"),
+                    icon: <PackagePlus className="w-4 h-4 text-emerald-600" />,
+                    onClick: handleCreateNew,
+                  },
+                ],
+              },
+            ]
+          : undefined
+      }
       error={pageError}
       items={items}
       columns={columns}
@@ -159,7 +173,7 @@ export function PurchaseOrderListPage() {
       renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
       rowActions={(row) => [
         {
-          groupLabel: t("Tra cứu"),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
               label: t("Chi tiết"),
@@ -181,7 +195,7 @@ export function PurchaseOrderListPage() {
           ],
         },
         {
-          groupLabel: t("Thao tác"),
+          groupLabel: t("groupThaoTac", "Thao tác"),
           items: [
             {
               label: t("common.receiveInventory"),

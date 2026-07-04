@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
-import { Shield } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Shield, PlusCircle, Settings, Trash } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
-import { BtnPrimary } from "@/shared/components/BtnPrimary";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { SearchInput } from "@/shared/components/SearchInput";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
 import { useCoreRoles } from "@/modules/system/hooks/useCoreRoles";
 import { useCorePermissionsEditor } from "@/modules/system/hooks/useCorePermissionsEditor";
@@ -15,52 +12,15 @@ import { useCoreRoleUsers } from "@/modules/system/hooks/useCoreRoleUsers";
 import { CoreRoleDrawer } from "@/modules/system/components/CoreRoleDrawer";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import type {
   Role,
   CreateRoleDto,
   UpdateRoleDto,
 } from "@/modules/system/types/rbac";
-
-const IconPlus = () => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-  >
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-const IconTrash = () => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-  </svg>
-);
-
-const IconShield = () => (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-);
 
 export function ErpPermissionsCorePage() {
   const canRead = useHasPermission("admin_users", "read");
@@ -120,7 +80,19 @@ export function ErpPermissionsCorePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: true,
+    }),
+    [],
+  );
+
+  const filterPanel = useFilterPanel(filterConfig, () => handlePage(1));
+
+  useEffect(() => {
+    handleSearch(filterPanel.state.search || "");
+  }, [filterPanel.state.search]);
 
   useEffect(() => {
     load();
@@ -212,70 +184,63 @@ export function ErpPermissionsCorePage() {
     }
   }
 
-  function handleSearchChange(q: string) {
-    setSearchInput(q);
-    handleSearch(q);
-  }
-
-  const columns: DataTableColumn<Role>[] = [
-    {
-      key: "name",
-      header: t("rbac.headers.name"),
-      cell: (role) => role.name,
-      className: "font-medium text-foreground whitespace-nowrap text-left",
-      headerClassName: "text-center",
-    },
-    {
-      key: "description",
-      header: t("rbac.headers.description"),
-      cell: (role) => role.description || "—",
-      className:
-        "text-[color:var(--muted-fg)] max-w-[300px] truncate text-left",
-      headerClassName: "text-center",
-    },
-    {
-      key: "users",
-      header: t("rbac.headers.users"),
-      cell: (role) => {
-        const usersList = Array.isArray(role.users) ? role.users : [];
-        return usersList.length > 0 ? (
-          <div className="overflow-x-auto pb-1">
-            <div className="flex w-max max-w-none gap-1 whitespace-nowrap">
-              {}
-              {usersList.map((user: any) => (
-                <Badge
-                  key={user.id}
-                  variant="outline"
-                  className="min-h-[24px] border-[#d8e0ee] bg-[#f8fafc] px-2.5 py-1 text-[11px] font-semibold text-slate-700"
-                >
-                  {user.email || user.id}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <span className="text-[color:var(--faint)]">—</span>
-        );
+  const columns: DataTableColumn<Role>[] = useMemo(
+    () => [
+      {
+        key: "name",
+        header: t("rbac.headers.name"),
+        cell: (role) => role.name,
+        className: "font-medium text-foreground whitespace-nowrap text-left",
+        headerClassName: "text-center",
       },
-      headerClassName: "text-center",
-      className: "text-foreground max-w-[420px] text-left",
-    },
-  ];
+      {
+        key: "description",
+        header: t("rbac.headers.description"),
+        cell: (role) => role.description || "—",
+        className:
+          "text-[color:var(--muted-fg)] max-w-[300px] truncate text-left",
+        headerClassName: "text-center",
+      },
+      {
+        key: "users",
+        header: t("rbac.headers.users"),
+        size: 300,
+        cell: (role) => {
+          const usersList = Array.isArray(role.users) ? role.users : [];
+          return usersList.length > 0 ? (
+            <div className="overflow-x-auto pb-1">
+              <div className="flex w-max max-w-none gap-1 whitespace-nowrap">
+                {usersList.map((user: any) => (
+                  <Badge
+                    key={user.id}
+                    variant="outline"
+                    className="min-h-[24px] border-[#d8e0ee] bg-[#f8fafc] px-2.5 py-1 text-[11px] font-semibold text-slate-700"
+                  >
+                    {user.email || user.id}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <span className="text-[color:var(--faint)]">—</span>
+          );
+        },
+        headerClassName: "text-center",
+        className: "text-foreground text-left",
+      },
+    ],
+    [t],
+  );
 
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
-      title={t("nav.items.phanquyen")}
-      desc="Quản lý vai trò và phân quyền hệ thống sử dụng Core DB mới"
-      icon={<Shield className="h-4 w-4" />}
-      actions={
-        <BtnPrimary onClick={openNew}>
-          <IconPlus /> Tạo vai trò
-        </BtnPrimary>
-      }
-    >
-      <DataTable
+    <>
+      <SpreadsheetPageTemplate
+        title={t("nav.items.phanquyen")}
+        desc="Quản lý vai trò và phân quyền hệ thống sử dụng Core DB mới"
+        icon={<Shield className="h-5 w-5" />}
+        tableId="erp-permissions-core-table"
         items={roles}
         columns={columns}
         getRowKey={(role) => role.id}
@@ -283,40 +248,50 @@ export function ErpPermissionsCorePage() {
         error={error}
         emptyLabel={t("rbac.empty")}
         minWidth={760}
-        loadingRows={5}
-        actionsColumn={{
-          cell: (role) => (
-            <ActionDropdown
-              items={[
-                {
-                  label: "Cấu hình",
-                  icon: <IconShield />,
-                  onClick: () => openEdit(role),
-                },
-                {
-                  label: "Xóa",
-                  icon: <IconTrash />,
-                  onClick: () => setDeleteTarget(role),
-                  variant: "danger",
-                },
-              ]}
-            />
-          ),
-        }}
-        filters={
-          <SearchInput
-            value={searchInput}
-            onChange={handleSearchChange}
-            placeholder={t("rbac.searchPlaceholder")}
-            className="w-[220px]"
-          />
-        }
         page={page}
         pageSize={pageSize}
         total={total}
         totalPages={totalPages}
         onPage={handlePage}
         onPageSize={handlePageSize}
+        onRefresh={load}
+        filterConfig={filterConfig}
+        filter={filterPanel}
+        rowActions={(role) => [
+          {
+            groupLabel: "Tra cứu / Cấu hình",
+            items: [
+              {
+                label: "Cấu hình",
+                icon: <Settings className="w-3.5 h-3.5" />,
+                onClick: () => openEdit(role),
+              },
+            ],
+          },
+          {
+            groupLabel: "Thao tác",
+            items: [
+              {
+                label: "Xóa",
+                icon: <Trash className="w-3.5 h-3.5" />,
+                variant: "danger",
+                onClick: () => setDeleteTarget(role),
+              },
+            ],
+          },
+        ]}
+        createActions={[
+          {
+            groupLabel: "Vai trò",
+            items: [
+              {
+                label: "Tạo vai trò",
+                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                onClick: openNew,
+              },
+            ],
+          },
+        ]}
       />
 
       <CoreRoleDrawer
@@ -357,6 +332,6 @@ export function ErpPermissionsCorePage() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </PageLayout>
+    </>
   );
 }

@@ -1,5 +1,12 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { PlayCircle, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import {
+  PlayCircle,
+  CheckCircle2,
+  Loader2,
+  ArrowRight,
+  ListChecks,
+  Settings2,
+} from "lucide-react";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import {
@@ -8,6 +15,8 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { DatePicker } from "@/shared/components/DatePicker";
+import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 
 import {
   productionCoreApi,
@@ -48,6 +57,7 @@ interface ProductionIdentifier {
   serialNo: string;
   lotNo: string;
   notes: string;
+  attributes: Array<{ key: string; value: string }>;
 }
 
 type TrackingPolicy = "NONE" | "SERIAL" | "LOT" | "VEHICLE" | "CUSTOM";
@@ -59,6 +69,7 @@ function emptyIdentifier(): ProductionIdentifier {
     serialNo: "",
     lotNo: "",
     notes: "",
+    attributes: [],
   };
 }
 
@@ -102,20 +113,63 @@ function findVehicleDuplicate(ids: ProductionIdentifier[]) {
   return null;
 }
 
-function parseVehicleBulkInput(input: string) {
+function parseVehicleBulkInput(input: string): ProductionIdentifier[] {
   return input
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
       const parts = line.includes("\t") ? line.split("\t") : line.split(",");
+      const attributes = parts
+        .slice(2)
+        .map((attrStr) => {
+          let key = "",
+            value = "";
+          if (attrStr.includes("=")) {
+            const split = attrStr.split("=");
+            key = split[0];
+            value = split.slice(1).join("=");
+          } else if (attrStr.includes(":")) {
+            const split = attrStr.split(":");
+            key = split[0];
+            value = split.slice(1).join(":");
+          }
+          return { key: key.trim(), value: value.trim() };
+        })
+        .filter((a) => a.key !== "");
+
+      let notes = "";
+      let hasGhiChu = false;
+      let hasNotes = false;
+      const finalAttributes: { key: string; value: string }[] = [];
+
+      for (const attr of attributes) {
+        const lowerKey = attr.key.toLowerCase();
+        if (lowerKey === "ghi chú") {
+          hasGhiChu = true;
+          notes = attr.value;
+        } else if (lowerKey === "notes") {
+          hasNotes = true;
+          notes = attr.value;
+        } else {
+          finalAttributes.push(attr);
+        }
+      }
+
+      if (hasGhiChu && hasNotes) {
+        throw new Error(
+          `Dòng "${line}" chứa cả "Ghi chú" và "Notes". Vui lòng chỉ dùng 1 trong 2.`,
+        );
+      }
+
       return {
         vinNo: (parts[0] ?? "").trim(),
         engineNo: (parts[1] ?? "").trim(),
         serialNo: "",
         lotNo: "",
-        notes: "",
-      } satisfies ProductionIdentifier;
+        notes,
+        attributes: finalAttributes,
+      };
     });
 }
 
@@ -127,120 +181,152 @@ export interface ProductionRunDrawerProps {
   onRefresh: () => Promise<void> | void;
 }
 
-// ── Identifier input table ─────────────────────────────────────────────────
+function AttributeInput({
+  value,
+  onChange,
+}: {
+  value: Array<{ key: string; value: string }>;
+  onChange: (val: Array<{ key: string; value: string }>) => void;
+}) {
+  const [str, setStr] = useState(() =>
+    value.map((a) => `${a.key}=${a.value}`).join(", "),
+  );
+
+  return (
+    <input
+      className={cn(inputCls, "w-full text-xs h-7")}
+      placeholder="VD: Màu=Đen, Size=L"
+      value={str}
+      onChange={(e) => setStr(e.target.value)}
+      onBlur={() => {
+        const parsed = str
+          .split(",")
+          .map((part) => {
+            const [k, v] = part.split("=").map((s) => s.trim());
+            if (k && v) return { key: k, value: v };
+            return null;
+          })
+          .filter(Boolean) as { key: string; value: string }[];
+        onChange(parsed);
+      }}
+    />
+  );
+}
+
+// ── Shared Table cho danh sách định danh ───────────────────────────────────
 
 function IdentifierTable({
   policy,
   identifiers,
   onChange,
-  saving,
-  t,
 }: {
   policy: TrackingPolicy;
   identifiers: ProductionIdentifier[];
-  onChange: (
-    idx: number,
-    field: keyof ProductionIdentifier,
-    value: string,
-  ) => void;
-  saving: boolean;
-  t: (s: string) => string;
+  onChange: (index: number, val: ProductionIdentifier) => void;
 }) {
   if (policy === "NONE") return null;
   return (
-    <div className="mt-3 space-y-2">
-      <p className="text-xs font-semibold text-emerald-900">
-        {policy === "VEHICLE" && t("Thông tin định danh xe (VIN / Số máy)")}
-        {policy === "SERIAL" && t("Số serial từng đơn vị")}
-        {policy === "LOT" && t("Số lô từng đơn vị")}
-      </p>
-      <div className="overflow-x-auto rounded-md border border-emerald-200">
+    <div className="mt-4 space-y-3">
+      <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+        <ListChecks className="h-4 w-4 text-muted-foreground" />
+        {policy === "VEHICLE" && "Thông tin định danh xe (VIN / Số máy)"}
+        {policy === "SERIAL" && "Số serial từng đơn vị"}
+        {policy === "LOT" && "Số lô từng đơn vị"}
+        {policy === "CUSTOM" && "Định danh tùy chỉnh"}
+      </h4>
+      <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
         <table className="min-w-full text-xs">
-          <thead className="bg-emerald-100 text-emerald-800">
+          <thead className="bg-muted/50 text-muted-foreground border-b border-border">
             <tr>
               <th className="px-2 py-1 text-left font-semibold">#</th>
               {policy === "VEHICLE" && (
                 <>
                   <th className="px-2 py-1 text-left font-semibold">
-                    {t("Số VIN")} <span className="text-red-500">*</span>
+                    Số VIN <span className="text-red-500">*</span>
                   </th>
                   <th className="px-2 py-1 text-left font-semibold">
-                    {t("Số máy")} <span className="text-red-500">*</span>
+                    Số máy <span className="text-red-500">*</span>
                   </th>
                 </>
               )}
               {policy === "SERIAL" && (
                 <th className="px-2 py-1 text-left font-semibold">
-                  {t("Serial")} <span className="text-red-500">*</span>
+                  Số Serial <span className="text-red-500">*</span>
                 </th>
               )}
               {policy === "LOT" && (
                 <th className="px-2 py-1 text-left font-semibold">
-                  {t("Số lô")} <span className="text-red-500">*</span>
+                  Số Lô <span className="text-red-500">*</span>
                 </th>
               )}
+              <th className="px-2 py-1 text-left font-semibold">Ghi chú</th>
               <th className="px-2 py-1 text-left font-semibold">
-                {t("Ghi chú")}
+                Thuộc tính mở rộng
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-emerald-100 bg-white">
-            {identifiers.map((id, i) => (
-              <tr key={i}>
-                <td className="px-2 py-1 text-muted-foreground">{i + 1}</td>
+          <tbody className="divide-y divide-border">
+            {identifiers.map((item, idx) => (
+              <tr key={idx} className="hover:bg-muted/50">
+                <td className="px-2 py-1 text-muted-foreground">{idx + 1}</td>
                 {policy === "VEHICLE" && (
                   <>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-1 w-[80px]">
                       <input
-                        disabled={saving}
-                        className={cn(inputCls, "w-28")}
-                        placeholder={t("Số VIN")}
-                        value={id.vinNo}
-                        onChange={(e) => onChange(i, "vinNo", e.target.value)}
+                        value={item.vinNo}
+                        onChange={(e) =>
+                          onChange(idx, { ...item, vinNo: e.target.value })
+                        }
+                        className={cn(
+                          inputCls,
+                          "w-full min-w-[60px] text-xs h-7",
+                        )}
+                        placeholder="Số VIN"
                       />
                     </td>
-                    <td className="px-1 py-1">
+                    <td className="px-1 py-1 w-[80px]">
                       <input
-                        disabled={saving}
-                        className={cn(inputCls, "w-24")}
-                        placeholder={t("Số máy")}
-                        value={id.engineNo}
+                        value={item.engineNo}
                         onChange={(e) =>
-                          onChange(i, "engineNo", e.target.value)
+                          onChange(idx, { ...item, engineNo: e.target.value })
                         }
+                        className={cn(
+                          inputCls,
+                          "w-full min-w-[60px] text-xs h-7",
+                        )}
+                        placeholder="Số máy"
                       />
                     </td>
                   </>
                 )}
                 {policy === "SERIAL" && (
-                  <td className="px-1 py-1">
+                  <td className="px-1 py-1 w-[120px]">
                     <input
-                      disabled={saving}
-                      className={cn(inputCls, "w-32")}
-                      placeholder="SN"
-                      value={id.serialNo}
-                      onChange={(e) => onChange(i, "serialNo", e.target.value)}
-                    />
-                  </td>
-                )}
-                {policy === "LOT" && (
-                  <td className="px-1 py-1">
-                    <input
-                      disabled={saving}
-                      className={cn(inputCls, "w-32")}
-                      placeholder={t("Số lô")}
-                      value={id.lotNo}
-                      onChange={(e) => onChange(i, "lotNo", e.target.value)}
+                      value={item.serialNo}
+                      onChange={(e) =>
+                        onChange(idx, { ...item, serialNo: e.target.value })
+                      }
+                      className={cn(inputCls, "w-full text-xs h-7")}
+                      placeholder="Serial"
                     />
                   </td>
                 )}
                 <td className="px-1 py-1">
                   <input
-                    disabled={saving}
-                    className={cn(inputCls, "w-24")}
-                    placeholder={t("Ghi chú")}
-                    value={id.notes}
-                    onChange={(e) => onChange(i, "notes", e.target.value)}
+                    value={item.notes}
+                    onChange={(e) =>
+                      onChange(idx, { ...item, notes: e.target.value })
+                    }
+                    className={cn(inputCls, "w-full text-xs h-7")}
+                    placeholder="Ghi chú"
+                  />
+                </td>
+                <td className="px-1 py-1">
+                  <AttributeInput
+                    value={item.attributes}
+                    onChange={(newAttrs) =>
+                      onChange(idx, { ...item, attributes: newAttrs })
+                    }
                   />
                 </td>
               </tr>
@@ -264,10 +350,17 @@ export function ProductionRunDrawer({
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
 
+  const [mode, setMode] = useState<DrawerMode>("view");
   const [saving, setSaving] = useState(false);
   const [localOrder, setLocalOrder] = useState<ErpProductionOrder | null>(
     order,
   );
+
+  // Edit mode states
+  const [editNotes, setEditNotes] = useState("");
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+
   const [batchCompleteQty, setBatchCompleteQty] = useState("1");
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [vehicleBulkInput, setVehicleBulkInput] = useState("");
@@ -318,10 +411,8 @@ export function ProductionRunDrawer({
   }, [batchCompleteQty, needsIdentifiers]);
 
   const handleIdentifierChange = useCallback(
-    (idx: number, field: keyof ProductionIdentifier, value: string) => {
-      setIdentifiers((prev) =>
-        prev.map((row, i) => (i === idx ? { ...row, [field]: value } : row)),
-      );
+    (index: number, val: ProductionIdentifier) => {
+      setIdentifiers((prev) => prev.map((row, i) => (i === index ? val : row)));
     },
     [],
   );
@@ -367,6 +458,49 @@ export function ProductionRunDrawer({
     });
   }, [batchCompleteQty, showToast, t, vehicleBulkInput]);
 
+  const handleToggleEdit = useCallback(() => {
+    if (mode === "view") {
+      setEditNotes(localOrder?.notes || "");
+      setEditStartDate(localOrder?.plannedStartDate?.slice(0, 10) || "");
+      setEditEndDate(localOrder?.plannedEndDate?.slice(0, 10) || "");
+      setMode("edit");
+    } else {
+      setMode("view");
+    }
+  }, [mode, localOrder]);
+
+  const handleSaveOrder = useCallback(async () => {
+    if (!localOrder?.id) return;
+    setSaving(true);
+    try {
+      await productionCoreApi.update(localOrder.id, {
+        finishedGoodItemId: localOrder.finishedGoodItemId!,
+        qtyToProduce: localOrder.qtyToProduce!,
+        notes: editNotes,
+        plannedStartDate: editStartDate || undefined,
+        plannedEndDate: editEndDate || undefined,
+      });
+      showToast({ title: t("Lưu thành công"), variant: "success" });
+      setMode("view");
+      await refresh();
+    } catch (e) {
+      showToast({
+        title: getErrorMessage(e, t("Không thể lưu")),
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    localOrder,
+    editNotes,
+    editStartDate,
+    editEndDate,
+    refresh,
+    showToast,
+    t,
+  ]);
+
   const handleStartAll = useCallback(async () => {
     if (!localOrder?.id) return;
     setSaving(true);
@@ -405,9 +539,19 @@ export function ProductionRunDrawer({
     }
     setSaving(true);
     try {
+      const identifiersPayload = identifiers.slice(0, 1).map((id) => ({
+        ...id,
+        attributes: id.attributes.length
+          ? Object.fromEntries(
+              id.attributes
+                .filter((a) => a.key.trim())
+                .map((a) => [a.key, a.value]),
+            )
+          : undefined,
+      }));
       await productionCoreApi.complete(localOrder.id, {
         qtyFinished: 1,
-        ...(needsIdentifiers ? { identifiers: identifiers.slice(0, 1) } : {}),
+        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
       });
       showToast({ title: t("Đã hoàn thành 1 đơn vị"), variant: "success" });
       resetVehicleEntry();
@@ -454,10 +598,20 @@ export function ProductionRunDrawer({
     }
     setSaving(true);
     try {
+      const identifiersPayload = identifiers.map((id) => ({
+        ...id,
+        attributes: id.attributes.length
+          ? Object.fromEntries(
+              id.attributes
+                .filter((a) => a.key.trim())
+                .map((a) => [a.key, a.value]),
+            )
+          : undefined,
+      }));
       await productionCoreApi.complete(localOrder.id, {
         qtyFinished: qty,
         unitCost: 0,
-        ...(needsIdentifiers ? { identifiers } : {}),
+        ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
       });
       showToast({
         title: t("Đã hoàn thành sản xuất hàng loạt"),
@@ -490,7 +644,6 @@ export function ProductionRunDrawer({
   let statusBadge: React.ReactNode = null;
   let leftPanel: React.ReactNode = <div />;
   let rightPanel: React.ReactNode = <div />;
-  let subtitle = t("Đang tải chi tiết lệnh...");
 
   if (localOrder) {
     const qtyToProduce = Number(localOrder.qtyToProduce ?? 0);
@@ -515,45 +668,43 @@ export function ProductionRunDrawer({
         : [];
 
     statusBadge = (
-      <span
-        className={cn(
-          "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
-          isCompleted
-            ? "border-emerald-200 bg-emerald-100 text-emerald-800"
-            : isInProgress
-              ? "border-blue-200 bg-blue-100 text-blue-800"
-              : isConfirmed
-                ? "border-amber-200 bg-amber-100 text-amber-800"
-                : "border-border bg-muted text-muted-foreground",
-        )}
-      >
-        {localOrder.status}
-      </span>
+      <div className="flex items-center gap-3 ml-2">
+        <span
+          className={cn(
+            "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
+            isCompleted
+              ? "border-emerald-200 bg-emerald-100 text-emerald-800"
+              : isInProgress
+                ? "border-blue-200 bg-blue-100 text-blue-800"
+                : isConfirmed
+                  ? "border-amber-200 bg-amber-100 text-amber-800"
+                  : "border-border bg-muted text-muted-foreground",
+          )}
+        >
+          {localOrder.status}
+        </span>
+        <div className="flex items-center gap-2 text-[11px] bg-muted/50 px-2 py-1 rounded-md border border-border">
+          <span className="text-muted-foreground font-medium">
+            {t("Tiến độ")}:
+          </span>
+          <span className="font-semibold">
+            {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
+          </span>
+          <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden hidden sm:block">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all duration-500 ease-out",
+                isCompleted ? "bg-emerald-500" : "bg-blue-600",
+              )}
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+      </div>
     );
 
     leftPanel = (
       <div className="flex flex-col gap-4">
-        {/* Progress bar */}
-        <DrawerSection title={t("Tiến độ sản xuất")}>
-          <div className="space-y-3 pb-1">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{t("Đã sản xuất")}</span>
-              <span className="font-semibold">
-                {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
-              </span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  isCompleted ? "bg-emerald-500" : "bg-blue-500",
-                )}
-                style={{ width: `${progressPct}%` }}
-              />
-            </div>
-          </div>
-        </DrawerSection>
-
         {/* CONFIRMED → Start */}
         {isConfirmed && (
           <DrawerSection title={t("Hành động")}>
@@ -653,10 +804,11 @@ export function ProductionRunDrawer({
                       />
                     </div>
                     {trackingPolicy === "VEHICLE" && (
-                      <div className="space-y-2">
-                        <label className="text-xs text-muted-foreground">
+                      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm mt-4">
+                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Settings2 className="h-4 w-4 text-muted-foreground" />
                           {t(
-                            "Bulk Số VIN, Số máy — mỗi dòng 1 xe; hỗ trợ dấu phẩy hoặc tab",
+                            "Nhập nhanh Số VIN, Số máy, Thuộc tính (Màu=Đen) — mỗi dòng 1 xe",
                           )}
                         </label>
                         <textarea
@@ -664,16 +816,22 @@ export function ProductionRunDrawer({
                           onChange={(e) => setVehicleBulkInput(e.target.value)}
                           disabled={saving}
                           rows={6}
-                          className={cn(inputCls, "w-full font-mono text-xs")}
-                          placeholder={"VIN001,ENG001\nVIN002,ENG002"}
+                          className={cn(
+                            inputCls,
+                            "w-full font-mono text-xs bg-background",
+                          )}
+                          placeholder={
+                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ\nVIN002,ENG002,Option=Đủ"
+                          }
                         />
                         <button
                           type="button"
                           onClick={applyVehicleBulkInput}
                           disabled={saving}
-                          className="rounded-md border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+                          className="w-full flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
                         >
-                          {t("Áp dụng bulk VIN / số máy")}
+                          <ListChecks className="h-4 w-4" />
+                          {t("Áp dụng dữ liệu nhập nhanh")}
                         </button>
                       </div>
                     )}
@@ -683,8 +841,6 @@ export function ProductionRunDrawer({
                         policy={trackingPolicy}
                         identifiers={identifiers}
                         onChange={handleIdentifierChange}
-                        saving={saving}
-                        t={t}
                       />
                     )}
 
@@ -759,10 +915,11 @@ export function ProductionRunDrawer({
                       />
                     </div>
                     {trackingPolicy === "VEHICLE" && (
-                      <div className="space-y-2">
-                        <label className="text-xs text-muted-foreground">
+                      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm mt-4">
+                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                          <Settings2 className="h-4 w-4 text-muted-foreground" />
                           {t(
-                            "Bulk Số VIN, Số máy — mỗi dòng 1 xe; hỗ trợ dấu phẩy hoặc tab",
+                            "Nhập nhanh Số VIN, Số máy, Thuộc tính (Màu=Đen) — mỗi dòng 1 xe",
                           )}
                         </label>
                         <textarea
@@ -770,16 +927,22 @@ export function ProductionRunDrawer({
                           onChange={(e) => setVehicleBulkInput(e.target.value)}
                           disabled={saving}
                           rows={6}
-                          className={cn(inputCls, "w-full font-mono text-xs")}
-                          placeholder={"VIN001,ENG001\nVIN002,ENG002"}
+                          className={cn(
+                            inputCls,
+                            "w-full font-mono text-xs bg-background",
+                          )}
+                          placeholder={
+                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ\nVIN002,ENG002,Option=Đủ"
+                          }
                         />
                         <button
                           type="button"
                           onClick={applyVehicleBulkInput}
                           disabled={saving}
-                          className="rounded-md border border-blue-300 px-3 py-2 text-xs font-semibold text-blue-800 hover:bg-blue-100 disabled:opacity-50"
+                          className="w-full flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
                         >
-                          {t("Áp dụng bulk VIN / số máy")}
+                          <ListChecks className="h-4 w-4" />
+                          {t("Áp dụng dữ liệu nhập nhanh")}
                         </button>
                       </div>
                     )}
@@ -789,8 +952,6 @@ export function ProductionRunDrawer({
                         policy={trackingPolicy}
                         identifiers={identifiers}
                         onChange={handleIdentifierChange}
-                        saving={saving}
-                        t={t}
                       />
                     )}
 
@@ -835,8 +996,6 @@ export function ProductionRunDrawer({
                     policy={trackingPolicy}
                     identifiers={identifiers.slice(0, 1)}
                     onChange={handleIdentifierChange}
-                    saving={saving}
-                    t={t}
                   />
                 )}
 
@@ -911,22 +1070,49 @@ export function ProductionRunDrawer({
               </span>
             </div>
 
-            {/* Vehicle list */}
-            {(localOrder.producedVehicles ?? []).length > 0 && (
+            {/* Unified result list */}
+            {(
+              (trackingPolicy === "VEHICLE"
+                ? localOrder.producedVehicles
+                : localOrder.producedSerials) ?? []
+            ).length > 0 && (
               <div className="mt-2">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">
-                  {t("Danh sách xe đã sản xuất")}
+                  {trackingPolicy === "VEHICLE"
+                    ? t("Danh sách xe đã sản xuất")
+                    : trackingPolicy === "LOT"
+                      ? t("Danh sách lô đã sản xuất")
+                      : t("Danh sách định danh đã sản xuất")}
                 </p>
                 <div className="overflow-x-auto rounded-md border border-border">
                   <table className="min-w-full text-xs">
                     <thead className="bg-muted text-muted-foreground">
                       <tr>
-                        <th className="px-2 py-1 text-left font-semibold">#</th>
-                        <th className="px-2 py-1 text-left font-semibold">
-                          Số VIN
+                        <th className="px-2 py-1 text-left font-semibold w-10">
+                          #
                         </th>
+                        {trackingPolicy === "VEHICLE" && (
+                          <>
+                            <th className="px-2 py-1 text-left font-semibold">
+                              Số VIN
+                            </th>
+                            <th className="px-2 py-1 text-left font-semibold">
+                              {t("Số máy")}
+                            </th>
+                          </>
+                        )}
+                        {trackingPolicy === "SERIAL" && (
+                          <th className="px-2 py-1 text-left font-semibold">
+                            {t("Serial")}
+                          </th>
+                        )}
+                        {trackingPolicy === "LOT" && (
+                          <th className="px-2 py-1 text-left font-semibold">
+                            {t("Số lô")}
+                          </th>
+                        )}
                         <th className="px-2 py-1 text-left font-semibold">
-                          {t("Số máy")}
+                          {t("Thuộc tính mở rộng")}
                         </th>
                         <th className="px-2 py-1 text-left font-semibold">
                           {t("Ghi chú")}
@@ -934,63 +1120,78 @@ export function ProductionRunDrawer({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border bg-white">
-                      {(localOrder.producedVehicles ?? []).map((v, i) => (
-                        <tr key={v.id}>
-                          <td className="px-2 py-1 text-muted-foreground">
-                            {i + 1}
-                          </td>
-                          <td className="px-2 py-1 font-mono font-semibold">
-                            {v.vin || "—"}
-                          </td>
-                          <td className="px-2 py-1">{v.engineNo || "—"}</td>
-                          <td className="px-2 py-1 text-muted-foreground">
-                            {v.notes || "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+                      {(
+                        (trackingPolicy === "VEHICLE"
+                          ? localOrder.producedVehicles
+                          : localOrder.producedSerials) ?? []
+                      ).map((item: any, i: number) => {
+                        let entries: Array<{ key: string; value: string }> = [];
+                        if (item.attributes) {
+                          if (Array.isArray(item.attributes)) {
+                            entries = item.attributes;
+                          } else if (typeof item.attributes === "object") {
+                            entries = Object.entries(item.attributes).map(
+                              ([k, v]) => ({
+                                key: k,
+                                value: String(v),
+                              }),
+                            );
+                          }
+                        }
 
-            {/* Serial / Lot list */}
-            {(localOrder.producedSerials ?? []).length > 0 && (
-              <div className="mt-3">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
-                  {trackingPolicy === "LOT"
-                    ? t("Danh sách lô đã sản xuất")
-                    : t("Danh sách serial đã sản xuất")}
-                </p>
-                <div className="overflow-x-auto rounded-md border border-border">
-                  <table className="min-w-full text-xs">
-                    <thead className="bg-muted text-muted-foreground">
-                      <tr>
-                        <th className="px-2 py-1 text-left font-semibold">#</th>
-                        <th className="px-2 py-1 text-left font-semibold">
-                          {trackingPolicy === "LOT" ? t("Số lô") : t("Serial")}
-                        </th>
-                        <th className="px-2 py-1 text-left font-semibold">
-                          {t("Ghi chú")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-white">
-                      {(localOrder.producedSerials ?? []).map((s, i) => (
-                        <tr key={s.id}>
-                          <td className="px-2 py-1 text-muted-foreground">
-                            {i + 1}
-                          </td>
-                          <td className="px-2 py-1 font-mono font-semibold">
-                            {trackingPolicy === "LOT"
-                              ? s.lotNo || "—"
-                              : s.serialNo || "—"}
-                          </td>
-                          <td className="px-2 py-1 text-muted-foreground">
-                            {s.notes || "—"}
-                          </td>
-                        </tr>
-                      ))}
+                        return (
+                          <tr key={item.id} className="hover:bg-muted/30">
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {i + 1}
+                            </td>
+                            {trackingPolicy === "VEHICLE" && (
+                              <>
+                                <td className="px-2 py-2 font-medium text-blue-600">
+                                  {item.vinNo || "—"}
+                                </td>
+                                <td className="px-2 py-2 font-medium text-blue-600">
+                                  {item.engineNo || "—"}
+                                </td>
+                              </>
+                            )}
+                            {trackingPolicy === "SERIAL" && (
+                              <td className="px-2 py-2 font-medium text-blue-600">
+                                {item.serialNo || "—"}
+                              </td>
+                            )}
+                            {trackingPolicy === "LOT" && (
+                              <td className="px-2 py-2 font-medium text-blue-600">
+                                {item.lotNo || "—"}
+                              </td>
+                            )}
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {entries.length > 0 ? (
+                                <ul className="flex flex-col gap-1">
+                                  {entries.map((entry, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="flex gap-1.5 items-start"
+                                    >
+                                      <span className="w-1 h-1 rounded-full bg-slate-300 mt-1.5 shrink-0" />
+                                      <span>
+                                        <span className="font-medium text-slate-700">
+                                          {entry.key}:
+                                        </span>{" "}
+                                        {entry.value}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {item.notes || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1032,40 +1233,82 @@ export function ProductionRunDrawer({
           label={t("Kho sản xuất")}
           value={localOrder.warehouseCode || "—"}
         />
-        <DrawerRow
-          label={t("Ngày bắt đầu (kế hoạch)")}
-          value={localOrder.plannedStartDate?.slice(0, 10) || "—"}
-        />
-        <DrawerRow
-          label={t("Ngày hoàn thành (kế hoạch)")}
-          value={localOrder.plannedEndDate?.slice(0, 10) || "—"}
-        />
-        <DrawerRow
-          label={t("Tiến độ")}
-          value={
-            <span className="font-bold text-emerald-700">
-              {fmtQty(qtyProduced)}{" "}
-              <span className="font-normal text-muted-foreground">
-                / {fmtQty(qtyToProduce)}
-              </span>
-            </span>
-          }
-        />
+
+        {mode === "view" ? (
+          <>
+            <DrawerRow
+              label={t("Ngày bắt đầu (kế hoạch)")}
+              value={localOrder.plannedStartDate?.slice(0, 10) || "—"}
+            />
+            <DrawerRow
+              label={t("Ngày hoàn thành (kế hoạch)")}
+              value={localOrder.plannedEndDate?.slice(0, 10) || "—"}
+            />
+            <DrawerRow label={t("Ghi chú")} value={localOrder.notes || "—"} />
+          </>
+        ) : (
+          <div className="space-y-4 px-1 pb-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                {t("Ngày bắt đầu (kế hoạch)")}
+              </label>
+              <DatePicker
+                value={editStartDate}
+                onChange={setEditStartDate}
+                disabled={saving || isInProgress}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                {t("Ngày hoàn thành (kế hoạch)")}
+              </label>
+              <DatePicker
+                value={editEndDate}
+                onChange={setEditEndDate}
+                disabled={saving}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-muted-foreground">
+                {t("Ghi chú")}
+              </label>
+              <textarea
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                className={cn(inputCls, "w-full resize-none")}
+                rows={3}
+                placeholder={t("Nhập ghi chú chung...")}
+                disabled={saving}
+              />
+            </div>
+          </div>
+        )}
       </>
     );
-
-    subtitle = `${localOrder.referenceNo || localOrder.id.slice(0, 8)} · ${localOrder.finishedGoodItemName || "—"}`;
   }
 
   return (
     <StandardFormDrawer
       open={open}
-      mode="view"
+      mode={mode}
       onClose={onClose}
+      onToggleEdit={mode === "view" ? handleToggleEdit : undefined}
+      confirmOnClose={mode === "edit"}
       title={t("Tiến trình sản xuất")}
       titleExtra={statusBadge}
-      subtitle={subtitle}
-      actions={[{ label: t("Đóng"), onClick: onClose, variant: "outline" }]}
+      actions={
+        mode === "view"
+          ? [{ label: t("Đóng"), onClick: onClose, variant: "outline" }]
+          : [
+              {
+                label: t("Hủy"),
+                onClick: handleToggleEdit,
+                variant: "outline",
+                disabled: saving,
+              },
+              { label: t("Lưu"), onClick: handleSaveOrder, loading: saving },
+            ]
+      }
       loading={isLoading}
       leftPanel={leftPanel}
       rightPanel={rightPanel}

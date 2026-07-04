@@ -27,6 +27,9 @@ export interface InventorySerialRow {
   vinNo?: string | null;
   engineNo?: string | null;
   customId?: string | null;
+  lotNo?: string | null;
+  notes?: string | null;
+  attributes?: Record<string, string> | null;
   createdAt: string;
   updatedAt?: string | null;
   item: {
@@ -374,5 +377,21 @@ export const inventoryCoreApi = {
       >(TRACKING_POLICY_BASE, { params: requestParams });
       return data;
     });
+  },
+  getSerial: async (id: string): Promise<InventorySerialRow> => {
+    const { data } = await axiosInstance.get<InventorySerialRow>(
+      `/api/v1/inventory/serials/${id}`,
+    );
+    return data;
+  },
+  updateSerial: async (
+    id: string,
+    payload: { notes?: string; attributes?: Record<string, string> },
+  ): Promise<InventorySerialRow> => {
+    const { data } = await axiosInstance.patch<InventorySerialRow>(
+      `/api/v1/inventory/serials/${id}`,
+      payload,
+    );
+    return data;
   },
 };

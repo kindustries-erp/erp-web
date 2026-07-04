@@ -383,26 +383,35 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         }}
         rowActions={(row) => [
           {
-            label: "Chi tiết",
-            onClick: () => setDetailTransactionId(row.id),
+            groupLabel: t("groupTraCuu", "Tra cứu"),
+            items: [
+              {
+                label: "Chi tiết",
+                onClick: () => setDetailTransactionId(row.id),
+              },
+            ],
           },
         ]}
         createActions={[
-          ...(type === "cash"
-            ? [
-                {
-                  label: "Tạo mới",
-                  icon: <Plus className="w-4 h-4 text-emerald-600" />,
-                  onClick: () => setIsCreateOpen(true),
-                },
-              ]
-            : [
-                {
-                  label: t("bankStatement.importBtn"),
-                  icon: <Upload className="w-4 h-4 text-emerald-600" />,
-                  onClick: () => setIsImportOpen(true),
-                },
-              ]),
+          {
+            groupLabel: t("groupThemMoi", "Thêm mới"),
+            items:
+              type === "cash"
+                ? [
+                    {
+                      label: "Tạo mới",
+                      icon: <Plus className="w-4 h-4 text-emerald-600" />,
+                      onClick: () => setIsCreateOpen(true),
+                    },
+                  ]
+                : [
+                    {
+                      label: t("bankStatement.importBtn", "Nhập sao kê"),
+                      icon: <Upload className="w-4 h-4 text-emerald-600" />,
+                      onClick: () => setIsImportOpen(true),
+                    },
+                  ],
+          },
         ]}
       />
 
