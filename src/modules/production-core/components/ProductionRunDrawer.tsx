@@ -192,6 +192,10 @@ function AttributeInput({
     value.map((a) => `${a.key}=${a.value}`).join(", "),
   );
 
+  useEffect(() => {
+    setStr(value.map((a) => `${a.key}=${a.value}`).join(", "));
+  }, [value]);
+
   return (
     <input
       className={cn(inputCls, "w-full text-xs h-7")}
@@ -669,37 +673,39 @@ export function ProductionRunDrawer({
 
     statusBadge = (
       <div className="flex items-center gap-3 ml-2">
-        <span
-          className={cn(
-            "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
-            isCompleted
-              ? "border-emerald-200 bg-emerald-100 text-emerald-800"
-              : isInProgress
-                ? "border-blue-200 bg-blue-100 text-blue-800"
-                : isConfirmed
-                  ? "border-amber-200 bg-amber-100 text-amber-800"
-                  : "border-border bg-muted text-muted-foreground",
-          )}
-        >
-          {localOrder.status}
-        </span>
-        <div className="flex items-center gap-2 text-[11px] bg-muted/50 px-2 py-1 rounded-md border border-border">
-          <span className="text-muted-foreground font-medium">
-            {t("Tiến độ")}:
+        {isCompleted ? (
+          <span className="rounded-md border border-emerald-200 bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+            {localOrder.status}
           </span>
-          <span className="font-semibold">
-            {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
-          </span>
-          <div className="w-16 h-1.5 rounded-full bg-secondary overflow-hidden hidden sm:block">
+        ) : isInProgress ? (
+          <div
+            className="relative overflow-hidden rounded-md border border-blue-200 bg-blue-50 text-[11px] font-semibold text-blue-800"
+            title={`${t("Tiến độ")}: ${fmtQty(qtyProduced)} / ${fmtQty(qtyToProduce)}`}
+          >
             <div
-              className={cn(
-                "h-full rounded-full transition-all duration-500 ease-out",
-                isCompleted ? "bg-emerald-500" : "bg-blue-600",
-              )}
+              className="absolute inset-y-0 left-0 bg-blue-200/60 transition-all duration-500 ease-out"
               style={{ width: `${progressPct}%` }}
             />
+            <div className="relative px-2 py-0.5 whitespace-nowrap z-10 flex items-center gap-1.5">
+              <span>{localOrder.status}</span>
+              <span className="opacity-50">|</span>
+              <span>
+                {fmtQty(qtyProduced)} / {fmtQty(qtyToProduce)}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <span
+            className={cn(
+              "rounded-md border px-2 py-0.5 text-[11px] font-semibold",
+              isConfirmed
+                ? "border-amber-200 bg-amber-100 text-amber-800"
+                : "border-border bg-muted text-muted-foreground",
+            )}
+          >
+            {localOrder.status}
+          </span>
+        )}
       </div>
     );
 
@@ -785,53 +791,59 @@ export function ProductionRunDrawer({
 
                 {showBatchDialog && (
                   <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 space-y-3">
-                    <p className="text-sm font-semibold text-emerald-900">
-                      {t("Nhập số lượng thành phẩm hoàn thành")}
-                    </p>
-                    <div className="space-y-2">
-                      <label className="text-xs text-muted-foreground">
-                        {t("Số lượng hoàn thành")}
-                      </label>
+                    <div className="flex items-center justify-between gap-3 bg-white p-2 rounded border border-emerald-100">
+                      <span className="text-sm font-semibold text-emerald-900">
+                        {t("Số lượng hoàn thành")}:
+                      </span>
                       <input
                         type="number"
                         min="0.001"
                         step="any"
                         value={batchCompleteQty}
                         onChange={(e) => setBatchCompleteQty(e.target.value)}
-                        className={cn(inputCls, "w-full")}
+                        className={cn(inputCls, "w-24 text-right font-medium")}
                         placeholder="Số lượng"
                         disabled={saving}
                       />
                     </div>
                     {trackingPolicy === "VEHICLE" && (
-                      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm mt-4">
-                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <Settings2 className="h-4 w-4 text-muted-foreground" />
-                          {t(
-                            "Nhập nhanh Số VIN, Số máy, Thuộc tính (Màu=Đen) — mỗi dòng 1 xe",
-                          )}
-                        </label>
+                      <div className="space-y-2 pt-3 border-t border-border mt-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold flex items-center gap-1.5 text-slate-700">
+                            <Settings2 className="h-3.5 w-3.5 text-slate-500" />
+                            {t("Nhập dữ liệu hàng loạt")}
+                          </label>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground bg-slate-50 p-2 rounded-md border border-slate-100">
+                          <p className="font-medium mb-1">
+                            {t("Quy tắc nhập (mỗi dòng 1 xe):")}
+                          </p>
+                          <p className="font-mono text-[10px] text-slate-600">
+                            Số VIN, Số máy, Thuộc tính 1=..., Thuộc tính 2=...,
+                            Ghi chú=...
+                          </p>
+                        </div>
                         <textarea
                           value={vehicleBulkInput}
                           onChange={(e) => setVehicleBulkInput(e.target.value)}
                           disabled={saving}
-                          rows={6}
+                          rows={5}
                           className={cn(
                             inputCls,
-                            "w-full font-mono text-xs bg-background",
+                            "w-full font-mono text-xs bg-slate-50/50 focus:bg-white resize-none border-slate-200",
                           )}
                           placeholder={
-                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ\nVIN002,ENG002,Option=Đủ"
+                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ,Ghi chú=Giao khách VIP ngay\nVIN002,ENG002,Option=Đủ,Ghi chú=Chờ đăng kiểm"
                           }
                         />
                         <button
                           type="button"
                           onClick={applyVehicleBulkInput}
-                          disabled={saving}
-                          className="w-full flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                          disabled={saving || !vehicleBulkInput.trim()}
+                          className="w-full flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors disabled:opacity-50"
                         >
-                          <ListChecks className="h-4 w-4" />
-                          {t("Áp dụng dữ liệu nhập nhanh")}
+                          <ListChecks className="h-3.5 w-3.5" />
+                          {t("Trích xuất dữ liệu vào danh sách")}
                         </button>
                       </div>
                     )}
@@ -896,53 +908,59 @@ export function ProductionRunDrawer({
 
                 {showBatchDialog && (
                   <div className="rounded-lg border border-blue-300 bg-blue-50 p-4 space-y-3">
-                    <p className="text-sm font-semibold text-blue-900">
-                      {t("Nhập số lượng thành phẩm hoàn thành")}
-                    </p>
-                    <div className="space-y-2">
-                      <label className="text-xs text-muted-foreground">
-                        {t("Số lượng hoàn thành")}
-                      </label>
+                    <div className="flex items-center justify-between gap-3 bg-white p-2 rounded border border-blue-100">
+                      <span className="text-sm font-semibold text-blue-900">
+                        {t("Số lượng hoàn thành")}:
+                      </span>
                       <input
                         type="number"
                         min="0.001"
                         step="any"
                         value={batchCompleteQty}
                         onChange={(e) => setBatchCompleteQty(e.target.value)}
-                        className={cn(inputCls, "w-full")}
+                        className={cn(inputCls, "w-24 text-right font-medium")}
                         placeholder="Số lượng"
                         disabled={saving}
                       />
                     </div>
                     {trackingPolicy === "VEHICLE" && (
-                      <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm mt-4">
-                        <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                          <Settings2 className="h-4 w-4 text-muted-foreground" />
-                          {t(
-                            "Nhập nhanh Số VIN, Số máy, Thuộc tính (Màu=Đen) — mỗi dòng 1 xe",
-                          )}
-                        </label>
+                      <div className="space-y-2 pt-3 border-t border-border mt-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold flex items-center gap-1.5 text-slate-700">
+                            <Settings2 className="h-3.5 w-3.5 text-slate-500" />
+                            {t("Nhập dữ liệu hàng loạt")}
+                          </label>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground bg-slate-50 p-2 rounded-md border border-slate-100">
+                          <p className="font-medium mb-1">
+                            {t("Quy tắc nhập (mỗi dòng 1 xe):")}
+                          </p>
+                          <p className="font-mono text-[10px] text-slate-600">
+                            Số VIN, Số máy, Thuộc tính 1=..., Thuộc tính 2=...,
+                            Ghi chú=...
+                          </p>
+                        </div>
                         <textarea
                           value={vehicleBulkInput}
                           onChange={(e) => setVehicleBulkInput(e.target.value)}
                           disabled={saving}
-                          rows={6}
+                          rows={5}
                           className={cn(
                             inputCls,
-                            "w-full font-mono text-xs bg-background",
+                            "w-full font-mono text-xs bg-slate-50/50 focus:bg-white resize-none border-slate-200",
                           )}
                           placeholder={
-                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ\nVIN002,ENG002,Option=Đủ"
+                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ,Ghi chú=Giao khách VIP ngay\nVIN002,ENG002,Option=Đủ,Ghi chú=Chờ đăng kiểm"
                           }
                         />
                         <button
                           type="button"
                           onClick={applyVehicleBulkInput}
-                          disabled={saving}
-                          className="w-full flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
+                          disabled={saving || !vehicleBulkInput.trim()}
+                          className="w-full flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors disabled:opacity-50"
                         >
-                          <ListChecks className="h-4 w-4" />
-                          {t("Áp dụng dữ liệu nhập nhanh")}
+                          <ListChecks className="h-3.5 w-3.5" />
+                          {t("Trích xuất dữ liệu vào danh sách")}
                         </button>
                       </div>
                     )}
@@ -982,13 +1000,6 @@ export function ProductionRunDrawer({
                     </div>
                   </div>
                 )}
-
-                <p className="text-xs text-muted-foreground">
-                  {t("Hoàn thành từng đơn vị")} — {t("còn lại")}{" "}
-                  <span className="font-semibold text-foreground">
-                    {fmtQty(remaining)}
-                  </span>
-                </p>
 
                 {/* Identifier input for current unit (unit-by-unit mode) */}
                 {needsIdentifiers && (
