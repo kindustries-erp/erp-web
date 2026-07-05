@@ -367,7 +367,7 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "expectedDeliveryDate",
-      header: t("Ngày giao"),
+      header: t("Ngày giao DK"),
       size: 100,
       headerClassName: "text-center",
       className: "text-center",

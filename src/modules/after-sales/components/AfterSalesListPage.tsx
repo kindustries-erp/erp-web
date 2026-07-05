@@ -4,16 +4,38 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { SearchInput } from "@/shared/components/SearchInput";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useDrawerStore } from "@/shared/stores/useDrawerStore";
-import { useAppStore } from "@/core/config/appStore";
 import { AfterSalesDrawer } from "./AfterSalesDrawer";
 import { format } from "date-fns";
-import { Shield, Eye } from "lucide-react";
+import { Shield, Eye, Copy, Check } from "lucide-react";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 export function AfterSalesListPage() {
   const t = useT();
+
+  const CopyIconBtn = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="opacity-0 group-hover:opacity-100 hover:text-gray-900 transition-opacity p-1"
+        title={copied ? t("Đã copy") : t("Copy")}
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-green-600" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+    );
+  };
+
   const { openDrawer, closeDrawer, isOpen, type, mode, entityData } =
     useDrawerStore();
-  const { setCustomBreadcrumbs } = useAppStore();
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
@@ -42,11 +64,6 @@ export function AfterSalesListPage() {
     fetchList();
   }, [page, search]);
 
-  useEffect(() => {
-    setCustomBreadcrumbs([["nav.items.sales"], ["nav.items.afterSales"]]);
-    return () => setCustomBreadcrumbs(null);
-  }, [setCustomBreadcrumbs]);
-
   const handleRowClick = (row: any) => {
     openDrawer("after-sales", "edit", row.lifecycleId, row);
   };
@@ -68,13 +85,26 @@ export function AfterSalesListPage() {
     {
       key: "serialNo",
       header: t("Serial / Số máy"),
+      size: 250,
       cell: (row: any) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-blue-600">{row.serialNo}</span>
+        <div className="flex flex-col gap-1.5 text-[13px]">
           {row.vinNo && (
-            <span className="text-xs text-muted-foreground">
-              Khung: {row.vinNo}
-            </span>
+            <div className="flex items-center gap-1.5 group">
+              <span className="text-gray-500 whitespace-nowrap">Số khung:</span>
+              <span className="font-medium text-gray-800 flex-1 truncate">
+                {row.vinNo}
+              </span>
+              <CopyIconBtn text={row.vinNo} />
+            </div>
+          )}
+          {row.serialNo && (
+            <div className="flex items-center gap-1.5 group">
+              <span className="text-gray-500 whitespace-nowrap">Số máy:</span>
+              <span className="font-medium text-gray-800 flex-1 truncate">
+                {row.serialNo}
+              </span>
+              <CopyIconBtn text={row.serialNo} />
+            </div>
           )}
         </div>
       ),
@@ -108,6 +138,29 @@ export function AfterSalesListPage() {
           </span>
         </div>
       ),
+    },
+    {
+      key: "activationDate",
+      header: t("Ngày kích hoạt"),
+      cell: (row: any) => {
+        if (!row.warrantyActivatedAt) return "-";
+        const dateObj = new Date(row.warrantyActivatedAt);
+        return (
+          <Tooltip content={format(dateObj, "yyyy-MM-dd HH:mm:ss")}>
+            <span>{format(dateObj, "yyyy-MM-dd")}</span>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      key: "warrantyCode",
+      header: t("Mã bảo hành"),
+      cell: (row: any) => row.warrantyCode || "-",
+    },
+    {
+      key: "dealerName",
+      header: t("Đại lý"),
+      cell: (row: any) => row.dealerName || "-",
     },
     {
       key: "warrantyActivatedAt",

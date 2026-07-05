@@ -187,6 +187,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-sales-orders": [["breadcrumb.sales"], ["breadcrumb.erpSalesOrders"]],
   "erp-customers": [["breadcrumb.sales"], ["breadcrumb.customers"]],
+  "after-sales": [["nav.items.sales"], ["nav.items.afterSales"]],
   "erp-suppliers": [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
   "erp-goods-issues": [["breadcrumb.inventory"], ["breadcrumb.erpGoodsIssues"]],
   "erp-inventory-items": [
