@@ -529,6 +529,7 @@ export function SoFormDrawer({
                 onSearch={setCustomerSearch}
                 onScrollBottom={fetchNextCustomers}
                 loading={loadingCustomers}
+                fallbackLabel={editing?.customerName || ""}
               />
             </DrawerField>
             <DrawerField label={t("Ngày đặt")} required>

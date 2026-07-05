@@ -144,9 +144,9 @@ export function StandardFormDrawer({
         // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
         <div className="w-full pb-4">{leftPanel}</div>
       ) : (
-        <div className="flex flex-col xl:flex-row gap-6 items-start w-full max-w-full relative h-full">
+        <div className="flex flex-col lg:flex-row gap-6 items-start w-full max-w-full relative h-full">
           {/* Cột trái: Chi tiết / Main Content */}
-          <div className="flex-1 min-w-0 w-full order-2 xl:order-1 space-y-4">
+          <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4">
             {leftPanel}
           </div>
 
@@ -156,11 +156,11 @@ export function StandardFormDrawer({
             (rightPanelTitle ? (
               <div
                 className={cn(
-                  "shrink-0 order-1 xl:order-2 space-y-4 transition-all duration-300",
-                  stickyRightPanel && "xl:sticky xl:top-0",
+                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300",
+                  stickyRightPanel && "lg:sticky lg:top-0",
                   rightPanelCollapsed
-                    ? "w-full xl:w-[52px]"
-                    : "w-full xl:w-[320px] 2xl:w-[360px]",
+                    ? "w-full lg:w-[52px]"
+                    : "w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px]",
                 )}
               >
                 <DrawerSection
@@ -204,7 +204,7 @@ export function StandardFormDrawer({
                       className={cn(
                         "w-full",
                         stickyRightPanel
-                          ? "overflow-x-hidden overflow-y-auto xl:max-h-[calc(100vh-190px)]"
+                          ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)]"
                           : "overflow-x-hidden overflow-y-visible",
                       )}
                       style={
@@ -223,8 +223,8 @@ export function StandardFormDrawer({
             ) : (
               <div
                 className={cn(
-                  "shrink-0 order-1 xl:order-2 w-full xl:w-auto",
-                  stickyRightPanel && "xl:sticky xl:top-0",
+                  "shrink-0 order-1 lg:order-2 w-full lg:w-auto",
+                  stickyRightPanel && "lg:sticky lg:top-0",
                 )}
               >
                 {rightPanel}
