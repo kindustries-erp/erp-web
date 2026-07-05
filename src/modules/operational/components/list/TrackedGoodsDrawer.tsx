@@ -282,7 +282,47 @@ export function TrackedGoodsDrawer({
               : "—"
           }
         />
+        <DrawerRow
+          label={t("Trạng thái")}
+          value={detailItem?.status ?? "Tồn kho"}
+        />
+        {detailItem?.soNo && (
+          <DrawerRow
+            label={t("Đơn hàng")}
+            value={
+              <a
+                href={`/erp/sales-orders?search=${detailItem.soNo}`}
+                className="text-primary hover:underline"
+              >
+                {detailItem.soNo}
+              </a>
+            }
+          />
+        )}
       </DrawerSection>
+
+      {detailItem?.lifecycle && (
+        <DrawerSection title={t("Lý lịch & Bảo hành")}>
+          <DrawerRow
+            label={t("Trạng thái")}
+            value={
+              <span
+                className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${detailItem.lifecycle.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}
+              >
+                {detailItem.lifecycle.status}
+              </span>
+            }
+          />
+          <DrawerRow
+            label={t("Ngày giao hàng")}
+            value={
+              detailItem.lifecycle.deliveryDate
+                ? formatGMT7(detailItem.lifecycle.deliveryDate, "date")
+                : "—"
+            }
+          />
+        </DrawerSection>
+      )}
 
       {/* Notes */}
       {mode === "view" ? (

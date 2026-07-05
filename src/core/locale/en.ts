@@ -47,6 +47,7 @@ export const en: Dict = {
       hrDepts: "Departments",
       hrPositions: "Positions",
       sales: "Sales",
+      afterSales: "After-Sales & Warranty",
       customers: "Customers",
       purchasing: "Purchasing",
       operatingExpenses: "Operating Expenses",

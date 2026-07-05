@@ -10,6 +10,7 @@ export interface ErpSoLine {
   qtyDelivered?: string;
   unitPrice?: string;
   amount?: string;
+  selectedSerialIds?: string[];
 }
 
 export interface ErpSalesOrder {
@@ -23,6 +24,7 @@ export interface ErpSalesOrder {
   remarks?: string | null;
   createdAt?: string;
   lines?: ErpSoLine[];
+  goodsIssues?: any[];
 }
 
 export interface CreateSoPayload {
@@ -32,7 +34,9 @@ export interface CreateSoPayload {
   expectedDeliveryDate?: string;
   status?: string;
   remarks?: string;
-  lines?: Omit<ErpSoLine, "id" | "qtyReserved" | "qtyDelivered">[];
+  lines?: (Omit<ErpSoLine, "id" | "qtyReserved" | "qtyDelivered"> & {
+    serialIds?: string[];
+  })[];
 }
 
 export type UpdateSoPayload = Partial<CreateSoPayload>;
@@ -55,6 +59,9 @@ export const salesOrdersCoreApi = {
           page: params?.page ?? 1,
           pageSize: params?.pageSize ?? 20,
           ...(params?.search ? { search: params.search } : {}),
+          ...((params as any)?.notFullyIssued
+            ? { notFullyIssued: (params as any).notFullyIssued }
+            : {}),
         },
       },
     );

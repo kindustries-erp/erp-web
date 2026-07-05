@@ -40,10 +40,8 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     setForm,
     saveError,
     saving,
-    customerOptions,
-    setCustomerSearch,
-    fetchNextCustomers,
-    loadingCustomers,
+    soOptions,
+    handleSoChange,
     itemOptions,
     setItemSearch,
     fetchNextItems,
@@ -477,19 +475,17 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 />
               </DrawerField>
               {form.issueType !== "PRODUCTION" && (
-                <DrawerField label={t("Khách hàng")}>
+                <DrawerField label={t("Đơn bán hàng")}>
                   <Combobox
-                    options={customerOptions}
-                    value={form.customerId}
-                    disabled={viewOnly || editing?.status === "POSTED"}
-                    placeholder={t("Chọn khách hàng")}
-                    searchPlaceholder={t("Tìm khách hàng")}
-                    onSearch={setCustomerSearch}
-                    onScrollBottom={fetchNextCustomers}
-                    loading={loadingCustomers}
-                    onChange={(v) =>
-                      setForm((f) => ({ ...f, customerId: v || "" }))
+                    options={soOptions}
+                    value={form.salesOrderId}
+                    disabled={
+                      viewOnly || editing?.status === "POSTED" || !!editing
                     }
+                    placeholder={t("Chọn đơn bán hàng")}
+                    searchPlaceholder={t("Tìm Đơn bán hàng")}
+                    allowClear={true}
+                    onChange={(v) => handleSoChange(v || "")}
                   />
                 </DrawerField>
               )}
@@ -531,8 +527,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             issueDate:
               editing?.issueDate || form.issueDate || new Date().toISOString(),
             customerName:
-              customerOptions.find((o) => o.value === form.customerId)?.label ||
-              "",
+              form.issueType !== "PRODUCTION"
+                ? soOptions.find((o) => o.value === form.salesOrderId)?.label ||
+                  ""
+                : "",
             remarks: form.remarks,
             lines: form.lines.map((l) => {
               const foundOption = itemOptions.find((o) => o.value === l.itemId);

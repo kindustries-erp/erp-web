@@ -12,6 +12,7 @@ import {
   productionCoreApi,
   type ProductionOrderMasterOption,
 } from "@/modules/production-core/api/productionCoreApi";
+import { salesOrdersCoreApi } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useT } from "@/core/i18n";
 
@@ -32,7 +33,7 @@ export interface GiForm {
   issueNo: string;
   issueDate: string;
   issueType: string;
-  customerId: string;
+  salesOrderId: string;
   productionOrderId: string;
   status: string;
   remarks: string;
@@ -60,7 +61,7 @@ export const emptyGiForm = (): GiForm => ({
   issueNo: "",
   issueDate: new Date().toISOString().slice(0, 10),
   issueType: "SALE",
-  customerId: "",
+  salesOrderId: "",
   productionOrderId: "",
   status: "DRAFT",
   remarks: "",
@@ -72,7 +73,7 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
     issueNo: gi.issueNo ?? "",
     issueDate: gi.issueDate ? gi.issueDate.slice(0, 10) : "",
     issueType: gi.issueType ?? "SALE",
-    customerId: gi.customerId ?? "",
+    salesOrderId: gi.salesOrderId ?? "",
     productionOrderId: gi.productionOrderId ?? "",
     status: gi.status ?? "DRAFT",
     remarks: gi.remarks ?? "",
@@ -96,8 +97,8 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
     issueNo: form.issueNo.trim(),
     issueDate: form.issueDate,
     issueType: form.issueType || "SALE",
-    customerId:
-      form.issueType === "SALE" ? form.customerId || undefined : undefined,
+    salesOrderId:
+      form.issueType === "SALE" ? form.salesOrderId || undefined : undefined,
     productionOrderId:
       form.issueType === "PRODUCTION"
         ? form.productionOrderId || undefined
@@ -113,7 +114,6 @@ export function buildGiPayload(form: GiForm): CreateGiPayload {
         salesOrderLineId: line.salesOrderLineId || undefined,
         productionOrderMaterialId: line.productionOrderMaterialId || undefined,
         itemId: line.itemId || undefined,
-        itemName: line.itemName || undefined,
         serialId: line.serialId || undefined,
         vehicleId: line.vehicleId || undefined,
         qtyIssued: line.qtyIssued,
@@ -141,27 +141,10 @@ export function useGiDrawer({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Customer options
-  const [customerSearch, setCustomerSearch] = useState("");
-  const {
-    data: customersData,
-    fetchNextPage: fetchNextCustomers,
-    isFetchingNextPage: loadingCustomers,
-  } = useBasicMasterInfinite({
-    search: customerSearch,
-    limit: 50,
-    entities: "customers",
-  });
-  const customerOptions = useMemo(() => {
-    return (
-      customersData?.pages.flatMap((p) =>
-        (p.items.customers || []).map((c) => ({
-          value: c.id,
-          label: `${c.code} — ${c.displayName || c.name}`,
-        })),
-      ) || []
-    );
-  }, [customersData]);
+  // SO options
+  const [soOptions, setSoOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   // Item options
   const [itemSearch, setItemSearch] = useState("");
@@ -213,10 +196,79 @@ export function useGiDrawer({
         status: "CONFIRMED",
       });
       setMoOptions(moOptions);
+
+      const soRes = await salesOrdersCoreApi.list({
+        page: 1,
+        pageSize: LOOKUP_LIMIT,
+        notFullyIssued: true,
+      } as any);
+      const soList = soRes.items ?? [];
+      setSoOptions(
+        soList.map((so: any) => ({
+          value: so.id,
+          label: `${so.soNo}${so.customerName ? ` - ${so.customerName}` : ""}`,
+        })),
+      );
     } catch {
       /* silent */
     }
   }, []);
+
+  const handleSoChange = useCallback(
+    async (soId: string) => {
+      setForm((f) => ({ ...f, salesOrderId: soId }));
+      if (!soId) return;
+      try {
+        setLoading(true);
+        const so = await salesOrdersCoreApi.get(soId);
+        const newLines: GiLineForm[] = [];
+        for (const l of so.lines || []) {
+          const qtyToDeliver =
+            Number(l.qtyOrdered || 0) - Number(l.qtyDelivered || 0);
+          if (qtyToDeliver <= 0) continue;
+
+          const serials = Array.isArray(l.selectedSerialIds)
+            ? l.selectedSerialIds
+            : [];
+          if (serials.length > 0) {
+            for (const sid of serials) {
+              newLines.push({
+                ...emptyGiLine(),
+                salesOrderLineId: l.id || "",
+                itemId: l.itemId || "",
+                itemName: l.itemName || "",
+                qtyIssued: "1",
+                unitCost: l.unitPrice || "",
+                serialId: sid,
+              });
+            }
+          } else {
+            newLines.push({
+              ...emptyGiLine(),
+              salesOrderLineId: l.id || "",
+              itemId: l.itemId || "",
+              itemName: l.itemName || "",
+              qtyIssued: String(qtyToDeliver),
+              unitCost: l.unitPrice || "",
+            });
+          }
+        }
+        setForm((f) => ({
+          ...f,
+          lines: newLines.length > 0 ? newLines : [emptyGiLine()],
+        }));
+      } catch {
+        showToast({
+          title: "Lỗi",
+          description: "Lỗi tải thông tin Đơn bán",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [showToast],
+  );
 
   const openCreate = useCallback(
     (prefillProductionOrderId?: string) => {
@@ -311,11 +363,11 @@ export function useGiDrawer({
     setForm,
     saveError,
     saving,
-    customerOptions,
-    customerSearch,
-    setCustomerSearch,
-    fetchNextCustomers,
-    loadingCustomers,
+    soOptions,
+    customerSearch: "",
+    setCustomerSearch: () => {},
+    fetchNextCustomers: () => {},
+    handleSoChange,
     itemOptions,
     itemSearch,
     setItemSearch,

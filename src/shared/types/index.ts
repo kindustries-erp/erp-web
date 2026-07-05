@@ -55,7 +55,8 @@ export type PageKey =
   | "garage-dashboard"
   | "garage-cases"
   | "garage-receivables"
-  | "garage-payables";
+  | "garage-payables"
+  | "after-sales";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

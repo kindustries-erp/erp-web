@@ -45,6 +45,7 @@ export const vi = {
       hrDepts: "Phòng ban",
       hrPositions: "Chức danh",
       sales: "Bán hàng",
+      afterSales: "Hậu mãi & Bảo hành",
       customers: "Khách hàng",
       purchasing: "Đơn mua hàng",
       operatingExpenses: "Chi phí vận hành",

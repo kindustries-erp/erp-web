@@ -22,6 +22,7 @@ export function TrackedGoodsPage() {
   const [search, setSearch] = useState("");
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [sortField, setSortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
@@ -43,6 +44,7 @@ export function TrackedGoodsPage() {
     search: search || undefined,
     itemType: itemTypeFilter || undefined,
     trackingPolicy: trackingPolicyFilter || undefined,
+    status: statusFilter || undefined,
     sort: [sortField],
   });
 
@@ -58,6 +60,7 @@ export function TrackedGoodsPage() {
     !!search,
     !!itemTypeFilter,
     !!trackingPolicyFilter,
+    !!statusFilter,
   ].filter(Boolean).length;
 
   const columns: DataTableColumn<InventorySerialRow>[] = useMemo(
@@ -132,6 +135,77 @@ export function TrackedGoodsPage() {
         cell: (row) => row.item?.trackingPolicyName || "—",
       },
       {
+        key: "status",
+        header: t("Trạng thái"),
+        className: "align-middle min-w-[120px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          switch (row.status) {
+            case "IN_STOCK":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700 font-medium">
+                  Tồn kho
+                </span>
+              );
+            case "RESERVED":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700 font-medium">
+                  Giữ chỗ
+                </span>
+              );
+            case "SOLD":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 font-medium">
+                  Đã bán
+                </span>
+              );
+            case "RETURNED":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 font-medium">
+                  Đổi trả
+                </span>
+              );
+            default:
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-medium">
+                  {row.status || "Tồn kho"}
+                </span>
+              );
+          }
+        },
+      },
+      {
+        key: "soNo",
+        header: t("Đơn hàng"),
+        className: "align-middle min-w-[120px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          if (!row.soNo) return "—";
+          // Use link to SO page. Ensure routing is configured, assuming it is /erp/sales-orders
+          return (
+            <a
+              href={`/erp/sales-orders?search=${row.soNo}`}
+              className="text-primary hover:underline"
+            >
+              {row.soNo}
+            </a>
+          );
+        },
+      },
+
+      {
+        key: "delivery",
+        header: t("Ngày giao"),
+        className: "align-middle min-w-[100px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          return row.lifecycle?.deliveryDate
+            ? formatGMT7(row.lifecycle.deliveryDate, "date")
+            : "—";
+        },
+      },
+
+      {
         key: "attributes",
         header: t("Thuộc tính"),
         className: "align-middle min-w-[200px] text-left",
@@ -192,6 +266,17 @@ export function TrackedGoodsPage() {
             { value: "CUSTOM", label: "Tùy chỉnh" },
           ],
         },
+        {
+          key: "status",
+          label: t("Trạng thái"),
+          placeholder: t("Tất cả"),
+          options: [
+            { value: "IN_STOCK", label: "Tồn kho" },
+            { value: "RESERVED", label: "Đã giữ chỗ" },
+            { value: "SOLD", label: "Đã bán" },
+            { value: "RETURNED", label: "Đổi trả" },
+          ],
+        },
       ],
     }),
     [t],
@@ -202,6 +287,7 @@ export function TrackedGoodsPage() {
     setSearch("");
     setItemTypeFilter("");
     setTrackingPolicyFilter("");
+    setStatusFilter("");
     setPage(1);
   }, []);
 
@@ -275,6 +361,7 @@ export function TrackedGoodsPage() {
             custom: {
               itemType: itemTypeFilter,
               trackingPolicy: trackingPolicyFilter,
+              status: statusFilter,
             },
           },
           inputs: { search: searchInput, amountMin: "", amountMax: "" },
@@ -295,6 +382,8 @@ export function TrackedGoodsPage() {
               setItemTypeFilter(v);
             } else if (key === "trackingPolicy") {
               setTrackingPolicyFilter(v);
+            } else if (key === "status") {
+              setStatusFilter(v);
             }
             setPage(1);
           },

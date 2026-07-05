@@ -132,6 +132,7 @@ export function ErpSalesOrdersPage() {
         (p.items.inventoryItems || []).map((i) => ({
           value: i.id,
           label: `${i.sku} — ${i.itemName}`,
+          original: i,
         })),
       ) || []
     );
