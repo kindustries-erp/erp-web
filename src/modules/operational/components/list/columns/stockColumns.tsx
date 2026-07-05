@@ -119,6 +119,19 @@ export function useStockColumns({
         ),
       },
       {
+        key: "reserved_qty",
+        header: t("inventory.table.columns.reserved"),
+        className: "align-middle text-right",
+        headerClassName: "text-center",
+        size: 140,
+        enableResizing: true,
+        cell: (row) => (
+          <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-amber-600">
+            {Number(row.reserved_qty || 0).toLocaleString("vi-VN")}
+          </span>
+        ),
+      },
+      {
         key: "unit",
         header: t("inventory.table.columns.unit"),
         className: "align-middle text-left",

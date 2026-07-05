@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useT } from "@/core/i18n";
 import { normalizeDateTime } from "@/shared/utils/format";
 import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
-import { GoodsReceiptViewDrawer } from "@/modules/goods-receipts-core/components/GoodsReceiptViewDrawer";
+import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
+import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 
 export function PurchaseReceiptHistory({
   receipts,
@@ -12,12 +13,25 @@ export function PurchaseReceiptHistory({
   receipts: ErpPoReceipt[];
 }) {
   const t = useT();
+  const grDrawer = useGrDrawer();
   const [receiptSearch, setReceiptSearch] = useState("");
   const [receiptSortConfig, setReceiptSortConfig] = useState<{
     key: string;
     direction: "asc" | "desc";
   } | null>(null);
   const [viewingReceiptId, setViewingReceiptId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (viewingReceiptId) {
+      void grDrawer.openDetail(viewingReceiptId, true);
+    }
+  }, [viewingReceiptId]);
+
+  useEffect(() => {
+    if (!grDrawer.open) {
+      setViewingReceiptId(null);
+    }
+  }, [grDrawer.open]);
 
   const filteredReceipts = useMemo(() => {
     let result = [...receipts];
@@ -148,11 +162,7 @@ export function PurchaseReceiptHistory({
           />
         </div>
       )}
-      <GoodsReceiptViewDrawer
-        open={!!viewingReceiptId}
-        receiptId={viewingReceiptId}
-        onClose={() => setViewingReceiptId(null)}
-      />
+      <GrFormDrawer drawer={grDrawer} />
     </div>
   );
 }

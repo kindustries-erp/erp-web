@@ -52,13 +52,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     saving,
     poDetail,
     poOptions,
-    moDetail,
-    moOptions,
     itemsDict,
-    supplierOptions,
-    setSupplierSearch,
-    fetchNextSuppliers,
-    loadingSuppliers,
     close,
     handleSave,
     setViewOnly,
@@ -133,7 +127,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
           viewOnly &&
           editing &&
           canUpdate &&
-          !["POSTED", "CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
+          !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
             ? () => setViewOnly(false)
             : undefined
         }
@@ -178,7 +172,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               <DrawerSection
                 title={t("Chi tiết") + " (" + form.lines.length + ")"}
                 titleExtra={
-                  !viewOnly && (poDetail || moDetail) ? (
+                  !viewOnly && poDetail && editing?.status !== "POSTED" ? (
                     <div className="flex items-center gap-2">
                       <Button
                         variant="ghost"
@@ -230,21 +224,6 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                   unitCost: poLine.unitPrice ?? "",
                                 };
                               });
-                            } else if (moDetail && moDetail.lines) {
-                              // In a real scenario, this would be moDetail.finishedGoods or similar
-                              // Assuming moDetail has some output lines for finished goods
-                              // If the MO produces a single item, we construct a single line
-                              newLines = [
-                                {
-                                  purchaseOrderLineId: "",
-                                  productionOrderMaterialId: "",
-                                  itemId: moDetail.finishedGoodItemId ?? "",
-                                  itemName: moDetail.finishedGoodItemName ?? "",
-                                  qtyReceived:
-                                    moDetail.qtyToProduce?.toString() ?? "",
-                                  unitCost: "",
-                                },
-                              ];
                             }
                             return { ...f, lines: newLines };
                           });
@@ -261,6 +240,28 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     data={poDetail.lines || []}
                     getRowKey={(line) => line.id || ""}
                     viewOnly={true}
+                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    footer={
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-3 py-3 text-right font-semibold"
+                        ></td>
+                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                          {viewOnly
+                            ? `+${fmtQty(form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0).toString())}`
+                            : fmtQty(
+                                form.lines
+                                  .reduce(
+                                    (sum, l) =>
+                                      sum + Number(l.qtyReceived || 0),
+                                    0,
+                                  )
+                                  .toString(),
+                              )}
+                        </td>
+                      </tr>
+                    }
                     columns={[
                       {
                         key: "index",
@@ -361,6 +362,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                 )}
                                 placeholder={`Max ${remaining}`}
                                 value={currentLine?.qtyReceived ?? ""}
+                                disabled={
+                                  viewOnly || editing?.status === "POSTED"
+                                }
                                 onChange={(e) => {
                                   const qty = e.target.value;
                                   setForm((f) => {
@@ -396,122 +400,131 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                     ]}
                   />
-                ) : moDetail ? (
+                ) : form.receiptType === "OTHER" && !viewOnly ? (
                   <DocumentLineTable
-                    data={[moDetail]}
-                    getRowKey={(line) => line.id || ""}
-                    viewOnly={true}
+                    data={form.lines}
+                    getRowKey={(_, i) => i}
+                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    footer={
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="px-3 py-3 text-right font-semibold"
+                        ></td>
+                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                          {fmtQty(
+                            form.lines
+                              .reduce(
+                                (sum, l) => sum + Number(l.qtyReceived || 0),
+                                0,
+                              )
+                              .toString(),
+                          )}
+                        </td>
+                        <td className="px-3 py-3"></td>
+                      </tr>
+                    }
                     columns={[
                       {
                         key: "index",
                         header: "#",
                         width: 40,
                         align: "center",
-                        cell: (_, idx) => (
-                          <span className="text-muted-foreground">
-                            {idx + 1}
-                          </span>
+                        cell: (_, i) => (
+                          <span className="text-muted-foreground">{i + 1}</span>
                         ),
                       },
                       {
                         key: "itemCode",
-                        header: t("Mã TP"),
+                        header: t("Mã linh kiện"),
                         minWidth: 140,
-                        cell: (mo) => {
+                        cell: (line) => {
                           const itemCode =
-                            mo.finishedGoodItemId &&
-                            itemsDict[mo.finishedGoodItemId]
-                              ? itemsDict[mo.finishedGoodItemId].sku
+                            line.itemId && itemsDict[line.itemId]
+                              ? itemsDict[line.itemId].sku
                               : "—";
                           return <span>{itemCode}</span>;
                         },
                       },
                       {
                         key: "itemName",
-                        header: t("Tên thành phẩm"),
+                        header: t("Tên linh kiện"),
                         minWidth: 260,
-                        cell: (mo) => {
-                          const itemName =
-                            mo.finishedGoodItemName ||
-                            mo.finishedGoodItemId ||
-                            "—";
+                        cell: (line, i) => {
                           return (
-                            <div
-                              className="font-medium text-foreground truncate max-w-[260px]"
-                              title={itemName}
-                            >
-                              {itemName}
-                            </div>
+                            <input
+                              type="text"
+                              className={inputCls}
+                              placeholder={t("Nhập tên linh kiện")}
+                              value={line.itemName}
+                              disabled={
+                                viewOnly || editing?.status === "POSTED"
+                              }
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setForm((f) => {
+                                  const lines = [...f.lines];
+                                  lines[i] = { ...lines[i], itemName: val };
+                                  return { ...f, lines };
+                                });
+                              }}
+                            />
                           );
                         },
-                      },
-                      {
-                        key: "planned",
-                        header: t("Kế hoạch"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: (mo) => (
-                          <div className="font-medium text-foreground">
-                            {Number(mo.qtyToProduce ?? 0).toLocaleString(
-                              "vi-VN",
-                            )}
-                          </div>
-                        ),
                       },
                       {
                         key: "qtyInput",
                         header: t("SL Nhập"),
                         minWidth: 140,
                         align: "center",
-                        cell: (mo) => {
-                          const lineIdx = form.lines.findIndex(
-                            (l) => l.itemId === mo.finishedGoodItemId,
+                        cell: (line, i) => {
+                          return (
+                            <input
+                              type="number"
+                              min={0}
+                              className={cn(
+                                inputCls,
+                                "w-28 flex-shrink-0 text-right mx-auto",
+                              )}
+                              placeholder={`Nhập SL`}
+                              value={line.qtyReceived ?? ""}
+                              onChange={(e) => {
+                                const qty = e.target.value;
+                                setForm((f) => {
+                                  const lines = [...f.lines];
+                                  lines[i] = { ...lines[i], qtyReceived: qty };
+                                  return { ...f, lines };
+                                });
+                              }}
+                            />
                           );
-                          const currentLine =
-                            lineIdx >= 0 ? form.lines[lineIdx] : null;
-
-                          if (!viewOnly) {
-                            return (
-                              <input
-                                type="number"
-                                min={0}
-                                className={cn(
-                                  inputCls,
-                                  "w-28 flex-shrink-0 text-right mx-auto",
-                                )}
-                                placeholder={`Nhập SL`}
-                                value={currentLine?.qtyReceived ?? ""}
-                                onChange={(e) => {
-                                  const qty = e.target.value;
-                                  setForm((f) => {
-                                    const lines = [...f.lines];
-                                    if (lineIdx >= 0) {
-                                      lines[lineIdx] = {
-                                        ...lines[lineIdx],
-                                        qtyReceived: qty,
-                                      };
-                                    } else {
-                                      lines.push({
-                                        purchaseOrderLineId: "",
-                                        productionOrderMaterialId: "",
-                                        itemId: mo.finishedGoodItemId ?? "",
-                                        itemName: mo.finishedGoodItemName ?? "",
-                                        qtyReceived: qty,
-                                        unitCost: "",
-                                      });
-                                    }
-                                    return { ...f, lines };
-                                  });
-                                }}
-                              />
-                            );
-                          }
-                          return currentLine &&
-                            Number(currentLine.qtyReceived) > 0 ? (
-                            <div className="font-medium text-emerald-600">
-                              +{fmtQty(currentLine.qtyReceived)}
-                            </div>
-                          ) : null;
+                        },
+                      },
+                      {
+                        key: "actions",
+                        header: "",
+                        minWidth: 50,
+                        align: "center",
+                        cell: (_, i) => {
+                          return (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500"
+                              disabled={
+                                viewOnly || editing?.status === "POSTED"
+                              }
+                              onClick={() => {
+                                setForm((f) => {
+                                  const lines = [...f.lines];
+                                  lines.splice(i, 1);
+                                  return { ...f, lines };
+                                });
+                              }}
+                            >
+                              ✕
+                            </Button>
+                          );
                         },
                       },
                     ]}
@@ -521,6 +534,27 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     data={form.lines.filter((l) => Number(l.qtyReceived) > 0)}
                     getRowKey={(_, i) => i}
                     viewOnly={true}
+                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    footer={
+                      <tr>
+                        <td
+                          colSpan={form.receiptType === "PO" ? 5 : 3}
+                          className="px-3 py-3 text-right font-semibold"
+                        ></td>
+                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                          +
+                          {fmtQty(
+                            form.lines
+                              .reduce(
+                                (sum, l) => sum + Number(l.qtyReceived || 0),
+                                0,
+                              )
+                              .toString(),
+                          )}
+                        </td>
+                        {!viewOnly && <td className="px-3 py-3"></td>}
+                      </tr>
+                    }
                     columns={[
                       {
                         key: "index",
@@ -559,20 +593,24 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                           );
                         },
                       },
-                      {
-                        key: "ordered",
-                        header: t("Đã đặt"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: () => "—",
-                      },
-                      {
-                        key: "remaining",
-                        header: t("Còn lại"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: () => "—",
-                      },
+                      ...(form.receiptType === "PO"
+                        ? [
+                            {
+                              key: "ordered",
+                              header: t("Đã đặt"),
+                              minWidth: 100,
+                              align: "center" as const,
+                              cell: () => "—",
+                            },
+                            {
+                              key: "remaining",
+                              header: t("Còn lại"),
+                              minWidth: 100,
+                              align: "center" as const,
+                              cell: () => "—",
+                            },
+                          ]
+                        : []),
                       {
                         key: "qtyReceived",
                         header: t("SL Nhập"),
@@ -587,8 +625,31 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     ]}
                   />
                 ) : (
-                  <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-center text-muted-foreground">
-                    {t("Chọn PO/MO để hiện danh sách hàng cần nhận.")}
+                  <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-center text-muted-foreground space-y-4">
+                    <p>{t("Chọn PO để hiện danh sách hàng cần nhận.")}</p>
+                    {form.receiptType === "OTHER" && !viewOnly && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setForm((f) => ({
+                            ...f,
+                            lines: [
+                              ...f.lines,
+                              {
+                                purchaseOrderLineId: "",
+                                productionOrderMaterialId: "",
+                                itemId: "",
+                                itemName: "",
+                                qtyReceived: "",
+                                unitCost: "",
+                              },
+                            ],
+                          }));
+                        }}
+                      >
+                        + {t("Thêm dòng")}
+                      </Button>
+                    )}
                   </div>
                 )}
               </DrawerSection>
@@ -611,7 +672,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                   className={inputCls}
                   placeholder={t("Tự động nếu để trống")}
                   value={form.receiptNo}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing?.status === "POSTED"}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, receiptNo: e.target.value }))
                   }
@@ -620,45 +681,47 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               <DrawerField label={t("Ngày nhập")}>
                 <DatePicker
                   value={form.receiptDate ? form.receiptDate.slice(0, 10) : ""}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing?.status === "POSTED"}
                   onChange={(v) => setForm((f) => ({ ...f, receiptDate: v }))}
                 />
               </DrawerField>
-              <DrawerField label={t("Đơn mua hàng (PO)")}>
+              <DrawerField label={t("Loại nhập")}>
                 <Combobox
-                  options={poOptions}
-                  value={form.purchaseOrderId}
-                  disabled={viewOnly || !!form.productionOrderId}
-                  placeholder={t("Chọn PO...")}
-                  onChange={(v) =>
-                    setForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
-                  }
+                  options={[
+                    { label: t("Đơn mua hàng"), value: "PO" },
+                    { label: t("Nhập khác"), value: "OTHER" },
+                  ]}
+                  value={form.receiptType}
+                  onChange={(val) => {
+                    if (val === "PO") {
+                      setForm((f) => ({ ...f, receiptType: "PO", lines: [] }));
+                    } else if (val === "OTHER") {
+                      setForm((f) => ({
+                        ...f,
+                        receiptType: "OTHER",
+                        purchaseOrderId: "",
+                        lines: [],
+                      }));
+                    }
+                  }}
+                  disabled={viewOnly || editing !== null}
+                  allowClear={false}
                 />
               </DrawerField>
-              <DrawerField label={t("Lệnh sản xuất (MO)")}>
-                <Combobox
-                  options={moOptions}
-                  value={form.productionOrderId}
-                  disabled={viewOnly || !!form.purchaseOrderId}
-                  placeholder={t("Chọn MO...")}
-                  onChange={(v) =>
-                    setForm((f) => ({ ...f, productionOrderId: v, lines: [] }))
-                  }
-                />
-              </DrawerField>
-              <DrawerField label={t("Nhà cung cấp")}>
-                <Combobox
-                  options={supplierOptions}
-                  value={form.supplierId}
-                  disabled={viewOnly || !!form.purchaseOrderId}
-                  placeholder={t("Chọn NCC")}
-                  searchPlaceholder={t("Tìm kiếm...")}
-                  onSearch={setSupplierSearch}
-                  onScrollBottom={fetchNextSuppliers}
-                  loading={loadingSuppliers}
-                  onChange={(v) => setForm((f) => ({ ...f, supplierId: v }))}
-                />
-              </DrawerField>
+
+              {form.receiptType === "PO" && (
+                <DrawerField label={t("Đơn mua hàng (PO)")}>
+                  <Combobox
+                    options={poOptions}
+                    value={form.purchaseOrderId}
+                    disabled={viewOnly || editing !== null}
+                    placeholder={t("Chọn PO...")}
+                    onChange={(v) =>
+                      setForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
+                    }
+                  />
+                </DrawerField>
+              )}
               <DrawerField label={t("Ghi chú")}>
                 <textarea
                   className={`${inputCls} min-h-[60px] resize-y`}
@@ -683,9 +746,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               editing?.receiptDate ||
               form.receiptDate ||
               new Date().toISOString(),
-            supplierName:
-              supplierOptions.find((o) => o.value === form.supplierId)?.label ||
-              "",
+            supplierName: "",
             poNo:
               poOptions.find((o) => o.value === form.purchaseOrderId)?.label ||
               "",

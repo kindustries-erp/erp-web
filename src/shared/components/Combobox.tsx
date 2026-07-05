@@ -24,6 +24,7 @@ interface ComboboxProps {
   onScrollBottom?: () => void;
   loading?: boolean;
   onSearch?: (query: string) => void;
+  fallbackLabel?: string;
 }
 
 export function Combobox({
@@ -40,6 +41,7 @@ export function Combobox({
   onScrollBottom,
   loading,
   onSearch,
+  fallbackLabel,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -89,7 +91,7 @@ export function Combobox({
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Tooltip
-        content={selected ? selected.label : ""}
+        content={selected ? selected.label : fallbackLabel || ""}
         side="top"
         disabled={!selected || open}
       >
@@ -112,7 +114,11 @@ export function Combobox({
             )}
           >
             <span className="truncate flex-1 text-left">
-              {selected ? selected.label : placeholder}
+              {selected
+                ? selected.label
+                : value && fallbackLabel
+                  ? fallbackLabel
+                  : placeholder}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>

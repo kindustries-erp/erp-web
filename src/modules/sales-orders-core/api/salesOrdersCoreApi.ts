@@ -10,6 +10,7 @@ export interface ErpSoLine {
   qtyDelivered?: string;
   unitPrice?: string;
   amount?: string;
+  selectedSerialIds?: string[];
 }
 
 export interface ErpSalesOrder {
@@ -18,19 +19,24 @@ export interface ErpSalesOrder {
   customerId?: string | null;
   customerName?: string | null;
   orderDate: string;
+  expectedDeliveryDate?: string | null;
   status?: string | null;
   remarks?: string | null;
   createdAt?: string;
   lines?: ErpSoLine[];
+  goodsIssues?: any[];
 }
 
 export interface CreateSoPayload {
   soNo: string;
   customerId?: string;
   orderDate: string;
+  expectedDeliveryDate?: string;
   status?: string;
   remarks?: string;
-  lines?: Omit<ErpSoLine, "id" | "qtyReserved" | "qtyDelivered">[];
+  lines?: (Omit<ErpSoLine, "id" | "qtyReserved" | "qtyDelivered"> & {
+    serialIds?: string[];
+  })[];
 }
 
 export type UpdateSoPayload = Partial<CreateSoPayload>;
@@ -53,6 +59,9 @@ export const salesOrdersCoreApi = {
           page: params?.page ?? 1,
           pageSize: params?.pageSize ?? 20,
           ...(params?.search ? { search: params.search } : {}),
+          ...((params as any)?.notFullyIssued
+            ? { notFullyIssued: (params as any).notFullyIssued }
+            : {}),
         },
       },
     );
@@ -104,5 +113,12 @@ export const salesOrdersCoreApi = {
       `${BASE}/${id}/cancel`,
     );
     return data.data;
+  },
+  nextNo: async (date?: string): Promise<string> => {
+    const { data } = await axiosInstance.get<{ nextNo: string }>(
+      `${BASE}/next-no`,
+      { params: date ? { date } : {} },
+    );
+    return data.nextNo;
   },
 };

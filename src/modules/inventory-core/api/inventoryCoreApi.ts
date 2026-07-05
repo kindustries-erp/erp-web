@@ -17,6 +17,8 @@ export type InventorySerialListParams = BaseListParams & {
   itemTypeId?: string;
   trackingPolicy?: string;
   itemId?: string;
+  status?: string;
+  salesOrderLineId?: string;
 };
 
 export interface InventorySerialRow {
@@ -27,6 +29,13 @@ export interface InventorySerialRow {
   vinNo?: string | null;
   engineNo?: string | null;
   customId?: string | null;
+  lotNo?: string | null;
+  notes?: string | null;
+  attributes?: Record<string, string> | null;
+  status?: string;
+  salesOrderLineId?: string | null;
+  soId?: string | null;
+  soNo?: string | null;
   createdAt: string;
   updatedAt?: string | null;
   item: {
@@ -38,6 +47,7 @@ export interface InventorySerialRow {
     trackingCategoryId?: string | null;
     trackingPolicyName?: string | null;
   };
+  lifecycle?: any;
 }
 
 export interface ErpTrackingPolicy {
@@ -65,6 +75,7 @@ export interface ErpInventoryItem {
   /** FK → erp_tracking_categories */
   trackingCategoryId?: string | null;
   trackingCategory?: InventoryMasterOption | null;
+  attributes?: string[];
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
@@ -110,6 +121,7 @@ export interface CreateInventoryItemPayload {
   note?: string;
   trackingPolicyId?: string;
   trackingCategoryId?: string;
+  attributes?: string[];
 }
 
 export type UpdateInventoryItemPayload = Partial<CreateInventoryItemPayload>;
@@ -183,6 +195,10 @@ export const inventoryCoreApi = {
         ? { trackingPolicy: params.trackingPolicy }
         : {}),
       ...(params?.itemId ? { itemId: params.itemId } : {}),
+      ...(params?.status ? { status: params.status } : {}),
+      ...(params?.salesOrderLineId
+        ? { salesOrderLineId: params.salesOrderLineId }
+        : {}),
     };
     const key = `inventory-serials:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
@@ -374,5 +390,53 @@ export const inventoryCoreApi = {
       >(TRACKING_POLICY_BASE, { params: requestParams });
       return data;
     });
+  },
+  getSerial: async (id: string): Promise<InventorySerialRow> => {
+    const { data } = await axiosInstance.get<InventorySerialRow>(
+      `/api/v1/inventory/serials/${id}`,
+    );
+    return data;
+  },
+  updateSerial: async (
+    id: string,
+    payload: { notes?: string; attributes?: Record<string, string> },
+  ): Promise<InventorySerialRow> => {
+    const { data } = await axiosInstance.patch<InventorySerialRow>(
+      `/api/v1/inventory/serials/${id}`,
+      payload,
+    );
+    return data;
+  },
+  confirmDelivery: async (
+    id: string,
+    payload: { deliveryDate: string; notes?: string },
+  ): Promise<any> => {
+    const { data } = await axiosInstance.patch(
+      `/api/v1/inventory/serials/${id}/confirm-delivery`,
+      payload,
+    );
+    return data;
+  },
+  listSerialLifecycles: async (
+    params?: any,
+  ): Promise<PaginatedResponse<any>> => {
+    const requestParams = {
+      ...p(params),
+    };
+    const key = `inventory-serial-lifecycles:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<PaginatedResponse<any>>(
+        `/api/v1/inventory/serial-lifecycles`,
+        { params: requestParams },
+      );
+      return data;
+    });
+  },
+  updateSerialLifecycle: async (id: string, payload: any): Promise<any> => {
+    const { data } = await axiosInstance.patch(
+      `/api/v1/inventory/serial-lifecycles/${id}`,
+      payload,
+    );
+    return data;
   },
 };

@@ -70,7 +70,13 @@ export function ErpInvoiceNetOffSection({
 
   return (
     <div className="flex-1 min-w-0 w-full order-3 xl:order-3 space-y-4">
-      <DrawerSection title={t("netOffVouchers", "Phiếu cấn trừ VAT")}>
+      <DrawerSection
+        title={
+          direction === "IN"
+            ? t("paymentVouchers", "Chứng từ thanh toán")
+            : t("receiptVouchers", "Chứng từ thu tiền")
+        }
+      >
         <div className="flex flex-col gap-3">
           {editMode && (
             <div className="flex justify-start">
@@ -81,13 +87,17 @@ export function ErpInvoiceNetOffSection({
                 disabled={saving}
               >
                 <PlusCircle className="w-4 h-4 mr-2" />
-                {t("addNetOffVoucher", "Thêm phiếu cấn trừ")}
+                {direction === "IN"
+                  ? t("addPaymentVoucher", "Thêm chứng từ thanh toán")
+                  : t("addReceiptVoucher", "Thêm chứng từ thu tiền")}
               </Button>
             </div>
           )}
           {voucherNetOffs.length === 0 ? (
             <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
-              {t("noNetOffVouchers", "Chưa có phiếu cấn trừ nào.")}
+              {direction === "IN"
+                ? t("noPaymentVouchers", "Chưa có chứng từ thanh toán nào.")
+                : t("noReceiptVouchers", "Chưa có chứng từ thu tiền nào.")}
             </div>
           ) : (
             <div className="border rounded-md overflow-hidden">
@@ -118,14 +128,16 @@ export function ErpInvoiceNetOffSection({
                         </td>
                         <td className="px-3 py-2">
                           <span
-                            className="text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
+                            className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-fit"
                             onClick={() => openBankVoucher(txn.id)}
                           >
-                            {txn.description || "—"}
-                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <span className="group-hover/link:underline underline-offset-4">
+                              {txn.description || "—"}
+                            </span>
+                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all" />
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-right font-medium">
+                        <td className="px-3 py-2 text-right font-medium text-slate-800">
                           {money(Number(link.netOffAmount || 0))}
                         </td>
                         <td className="px-3 py-2 text-right">

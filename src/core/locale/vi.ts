@@ -45,6 +45,7 @@ export const vi = {
       hrDepts: "Phòng ban",
       hrPositions: "Chức danh",
       sales: "Bán hàng",
+      afterSales: "Hậu mãi & Bảo hành",
       customers: "Khách hàng",
       purchasing: "Đơn mua hàng",
       operatingExpenses: "Chi phí vận hành",
@@ -740,6 +741,12 @@ export const vi = {
       deleteConfirm: "Xóa",
       deleteCancel: "Hủy",
     },
+    attributes: {
+      label: "Thuộc tính",
+      CAN_BE_SOLD: "Có thể bán",
+      CAN_BE_PURCHASED: "Có thể mua",
+      CAN_BE_MANUFACTURED: "Có thể sản xuất",
+    },
   },
   inventory: {
     pageTitle: "Kho",
@@ -767,6 +774,7 @@ export const vi = {
         in: "Nhập",
         out: "Xuất",
         onHand: "Tồn",
+        reserved: "Giữ chỗ",
         unit: "Đơn vị",
         lastTx: "Giao dịch cuối",
         status: "Trạng thái",
@@ -1847,6 +1855,19 @@ export const vi = {
     revenue: "Doanh thu",
     expense: "Chi phí",
   },
+
+  // ── Đơn bán hàng (Sales Orders) ──────────────────────────────────────────
+  "Quản lý đơn bán hàng và reserve tồn kho.":
+    "Quản lý đơn bán hàng và reserve tồn kho.",
+  "Chưa có đơn bán hàng nào": "Chưa có đơn bán hàng nào",
+  // Columns
+  "Số SO": "Số SO",
+  "Khách hàng": "Khách hàng",
+  "Ngày đơn": "Ngày đơn",
+  // Actions
+  Reserve: "Reserve",
+  Unreserve: "Unreserve",
+  "Chỉnh sửa": "Chỉnh sửa",
 };
 
 export type Dict = typeof vi;

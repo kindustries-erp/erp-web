@@ -16,7 +16,7 @@ export function SidebarBottom({
   setSettingsOpen: (v: boolean) => void;
 }) {
   return (
-    <div className="sidebar-bottom flex flex-col flex-shrink-0 border-t border-border p-[10px]">
+    <div className="sidebar-bottom flex flex-col flex-shrink-0 border-t border-border px-[10px] py-[4px]">
       <div
         className={cn(
           "overflow-hidden",

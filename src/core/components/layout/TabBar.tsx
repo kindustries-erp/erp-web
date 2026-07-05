@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState, DragEvent } from "react";
+import { useRef, useState, DragEvent } from "react";
+import { useIsMobile } from "@/shared/hooks/useIsMobile";
 import {
   useAppStore,
   STATIC_TABS,
@@ -22,6 +23,7 @@ import {
   Package,
   Barcode,
   ReceiptText,
+  Shield,
 } from "lucide-react";
 
 const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
@@ -29,6 +31,7 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
 
   "erp-sales-orders": Boxes,
   "erp-customers": Users,
+  "after-sales": Shield,
   purchasing: FileText,
   "erp-suppliers": Building2,
   "erp-inventory-stock": Package,
@@ -45,8 +48,6 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-bom": Network,
   "erp-production": Factory,
 };
-
-const MOBILE_BREAKPOINT = 768;
 
 function TabItem({
   tabKey,
@@ -138,16 +139,8 @@ export function TabBar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [draggingTab, setDraggingTab] = useState<PageKey | null>(null);
   const [dragOverTab, setDragOverTab] = useState<PageKey | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const tabsRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
-  useEffect(() => {
-    const syncMobile = () =>
-      setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
-    syncMobile();
-    window.addEventListener("resize", syncMobile);
-    return () => window.removeEventListener("resize", syncMobile);
-  }, []);
 
   const handleDragStart = (tabKey: PageKey) => {
     setDraggingTab(tabKey);

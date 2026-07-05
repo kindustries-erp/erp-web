@@ -5,6 +5,8 @@ import { cn } from "@/shared/utils";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { usePageContextMenu } from "@/shared/components/ContextMenu";
 import { IconChevronRight } from "./sidebarIcons";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { useIsMobile } from "@/shared/hooks/useIsMobile";
 
 // ── Sub-nav row ──
 export function SubItem({
@@ -135,33 +137,63 @@ export function NavGroup({
   children: ReactNode;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Force expanded for all groups
   const isExpanded = true;
 
+  const triggerContent = (
+    <div
+      className={cn(
+        "flex items-center gap-2 px-[14px] py-[7px] whitespace-nowrap overflow-hidden min-h-[34px]",
+        "text-[color:var(--muted-fg)]",
+        active && "text-foreground font-medium",
+        !isMobile &&
+          "hover:bg-surface-hover hover:text-foreground cursor-pointer outline-none select-none",
+      )}
+    >
+      <span className="nav-icon flex-shrink-0">{icon}</span>
+      <span className="nav-label hide-on-collapse text-sm overflow-hidden whitespace-nowrap flex-1 transition-all duration-150">
+        {label}
+      </span>
+      <span
+        className={cn(
+          "nav-arrow-el ml-auto text-[10px] text-[color:var(--faint)] flex-shrink-0 transition-transform duration-200 hide-on-collapse",
+          isExpanded && isMobile && "rotate-90",
+        )}
+      >
+        <IconChevronRight />
+      </span>
+    </div>
+  );
+
+  if (!isMobile) {
+    return (
+      <DropdownMenu.Root modal={false}>
+        <Tooltip content={label} disabled={!collapsed}>
+          <DropdownMenu.Trigger asChild>{triggerContent}</DropdownMenu.Trigger>
+        </Tooltip>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            side="right"
+            align="start"
+            sideOffset={14}
+            className="z-[9999] min-w-[220px] rounded-lg p-1.5 popup-content sidebar-popup-content shadow-lg"
+          >
+            <DropdownMenu.Label className="px-3 pt-1 pb-2 text-[10px] font-bold text-[color:var(--faint)] uppercase tracking-[0.12em] mb-1 border-b border-black/5 dark:border-white/5">
+              {label}
+            </DropdownMenu.Label>
+            {children}
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+    );
+  }
+
   return (
     <div>
       <Tooltip content={label} disabled={!collapsed}>
-        <div
-          className={cn(
-            "flex items-center gap-2 px-[14px] py-[7px] whitespace-nowrap overflow-hidden min-h-[34px]",
-            "text-[color:var(--muted-fg)]",
-            active && "text-foreground font-medium",
-          )}
-        >
-          <span className="nav-icon flex-shrink-0">{icon}</span>
-          <span className="nav-label hide-on-collapse text-sm overflow-hidden whitespace-nowrap flex-1 transition-all duration-150">
-            {label}
-          </span>
-          <span
-            className={cn(
-              "nav-arrow-el ml-auto text-[10px] text-[color:var(--faint)] flex-shrink-0 transition-transform duration-200 hide-on-collapse",
-              isExpanded && "rotate-90",
-            )}
-          >
-            <IconChevronRight />
-          </span>
-        </div>
+        {triggerContent}
       </Tooltip>
       {!collapsed && (
         <div
@@ -195,6 +227,33 @@ export function NavGroupItem({
   contextPage?: PageKey;
 }) {
   const onContextMenu = usePageContextMenu(contextPage ?? "dashboard", label);
+  const isMobile = useIsMobile();
+
+  if (!isMobile) {
+    return (
+      <DropdownMenu.Item
+        className={cn(
+          "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm cursor-pointer outline-none select-none transition-colors",
+          "text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)] hover:text-foreground data-[highlighted]:text-foreground",
+          active &&
+            "!text-foreground font-medium bg-[color:var(--muted)] data-[highlighted]:bg-[color:var(--muted)]",
+        )}
+        onClick={onClick}
+        onContextMenu={contextPage ? onContextMenu : undefined}
+      >
+        <span
+          className={cn(
+            "w-[4px] h-[4px] rounded-full",
+            active
+              ? "bg-[color:var(--foreground)]"
+              : "bg-[color:var(--faint)] opacity-40",
+          )}
+        />
+        {label}
+      </DropdownMenu.Item>
+    );
+  }
+
   return (
     <div
       className={cn(

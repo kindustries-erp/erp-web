@@ -79,8 +79,17 @@ export function SidebarNav({
   const showSettings =
     showSettingsAccess || showSettingsGeneral || showSettingsInventory;
 
-  const sq = searchQuery.trim().toLowerCase();
-  const match = (text: string) => !sq || text.toLowerCase().includes(sq);
+  const normalize = (text: string) => {
+    return text
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toLowerCase();
+  };
+
+  const sq = normalize(searchQuery.trim());
+  const match = (text: string) => !sq || normalize(text).includes(sq);
   const hasMatch = (texts: string[]) => texts.some(match);
 
   return (
@@ -161,6 +170,7 @@ export function SidebarNav({
           t("nav.sections.sales"),
           canReadSalesOrders ? t("nav.items.erpSalesOrders") : "",
           canReadCustomers ? t("nav.items.customers") : "",
+          canReadSalesOrders ? t("nav.items.afterSales") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
@@ -184,6 +194,16 @@ export function SidebarNav({
                 active={currentPage === "erp-customers"}
                 onClick={() => navTo("erp-customers")}
                 contextPage="erp-customers"
+              />
+            )}
+            {canReadSalesOrders && (
+              <NavItem
+                collapsed={c}
+                icon={<Shield className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.afterSales")}
+                active={currentPage === "after-sales"}
+                onClick={() => navTo("after-sales")}
+                contextPage="after-sales"
               />
             )}
           </div>

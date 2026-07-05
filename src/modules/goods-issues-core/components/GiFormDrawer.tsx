@@ -1,4 +1,5 @@
 import { cn } from "@/shared/utils";
+import { fmtQty } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Skeleton } from "@/shared/components/Skeleton";
@@ -39,10 +40,8 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     setForm,
     saveError,
     saving,
-    customerOptions,
-    setCustomerSearch,
-    fetchNextCustomers,
-    loadingCustomers,
+    soOptions,
+    handleSoChange,
     itemOptions,
     setItemSearch,
     fetchNextItems,
@@ -69,84 +68,63 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   const { data: companyProfile } = useCompanyProfile();
 
   const ISSUE_TYPE_OPTIONS = [
-    { value: "SALE", label: "SALE — " + t("Xuất bán") },
-    { value: "PRODUCTION", label: "PRODUCTION — " + t("Xuất sản xuất") },
-    { value: "OTHER", label: "OTHER — " + t("Xuất khác") },
+    { value: "SALE", label: t("Xuất bán") },
+    { value: "OTHER", label: t("Xuất khác") },
   ];
 
-  const STATUS_OPTIONS = [
-    { value: "DRAFT", label: t("Nháp") },
-    { value: "POSTED", label: t("Đã vào sổ") },
-    { value: "CANCELLED", label: t("Đã hủy") },
-  ];
   const moLinkedLocked = isMoLinkedGiLocked(editing);
   const isAdmin = useHasPermission("*", "*");
 
   // Derive actions
-  const actions = [];
-  if (viewOnly) {
-    if (editing && editing.status !== "DRAFT" && isAdmin) {
-      actions.push({
-        label: t("common.print"),
-        onClick: handlePrint,
-        variant: "secondary" as const,
-        disabled: loading,
-      });
-    }
-    actions.push({
-      label: t("Đóng"),
-      onClick: close,
-      variant: "outline" as const,
-    });
-  } else if (editing) {
-    if (editing.status === "DRAFT") {
-      actions.push({
-        label: t("Hủy"),
-        onClick: close,
-        variant: "ghost" as const,
-        disabled: saving,
-      });
-      actions.push({
-        label: saving ? t("Đang lưu...") : t("Lưu nháp"),
-        onClick: () => handleSave("DRAFT"),
-        variant: "secondary" as const,
-        loading: saving,
-        disabled: saving,
-      });
-      actions.push({
-        label: saving ? t("Đang cập nhật...") : t("Cập nhật"),
-        onClick: () => handleSave("POSTED"),
-        loading: saving,
-        disabled: saving || !form.lines.length,
-      });
-    } else {
-      actions.push({
-        label: t("Đóng"),
-        onClick: close,
-        variant: "outline" as const,
-      });
-    }
-  } else {
-    actions.push({
-      label: t("Hủy"),
-      onClick: close,
-      variant: "ghost" as const,
-      disabled: saving,
-    });
-    actions.push({
-      label: saving ? t("Đang lưu...") : t("Lưu nháp"),
-      onClick: () => handleSave("DRAFT"),
-      variant: "secondary" as const,
-      loading: saving,
-      disabled: saving,
-    });
-    actions.push({
-      label: saving ? t("Đang tạo...") : t("Tạo mới"),
-      onClick: () => handleSave("POSTED"),
-      loading: saving,
-      disabled: saving || !form.lines.length,
-    });
-  }
+  const actions =
+    viewOnly || loading
+      ? [
+          ...(editing && editing.status !== "DRAFT" && isAdmin
+            ? [
+                {
+                  label: t("common.print"),
+                  onClick: handlePrint,
+                  variant: "secondary" as const,
+                  disabled: loading,
+                },
+              ]
+            : []),
+          {
+            label: t("Đóng"),
+            onClick: close,
+            variant: "outline" as const,
+            disabled: loading,
+          },
+        ]
+      : [
+          {
+            label: t("Hủy"),
+            onClick: close,
+            variant: "outline" as const,
+            disabled: saving,
+          },
+          ...(editing?.status === "POSTED"
+            ? []
+            : [
+                {
+                  label: t("Lưu nháp"),
+                  onClick: () => void handleSave("DRAFT"),
+                  variant: "secondary" as const,
+                  loading: saving,
+                  disabled: saving,
+                },
+              ]),
+          {
+            label: editing ? t("Cập nhật") : t("Tạo mới"),
+            onClick: () =>
+              void handleSave(
+                editing?.status === "POSTED" ? undefined : "POSTED",
+              ),
+            primary: true,
+            loading: saving,
+            disabled: saving,
+          },
+        ];
 
   return (
     <>
@@ -159,7 +137,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           editing &&
           canUpdate &&
           !moLinkedLocked &&
-          !["POSTED", "CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
+          !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
             ? () => setViewOnly(false)
             : undefined
         }
@@ -218,7 +196,46 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   data={form.lines}
                   getRowKey={(_, idx) => idx}
                   viewOnly={viewOnly}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing?.status === "POSTED"}
+                  tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                  footer={
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="px-3 py-3 text-right font-semibold"
+                      ></td>
+                      <td
+                        className={cn(
+                          "px-3 py-3 font-semibold text-center",
+                          viewOnly ? "text-red-600" : "",
+                        )}
+                      >
+                        {viewOnly
+                          ? `-${fmtQty(form.lines.reduce((sum, line) => sum + Number(line.qtyIssued || 0), 0).toString())}`
+                          : fmtQty(
+                              form.lines
+                                .reduce(
+                                  (sum, line) =>
+                                    sum + Number(line.qtyIssued || 0),
+                                  0,
+                                )
+                                .toString(),
+                            )}
+                      </td>
+                      <td
+                        className="px-3 py-3"
+                        colSpan={
+                          vehicleOptions.length > 0
+                            ? viewOnly
+                              ? 2
+                              : 3
+                            : viewOnly
+                              ? 1
+                              : 2
+                        }
+                      ></td>
+                    </tr>
+                  }
                   onAddLine={() =>
                     setForm((f) => ({
                       ...f,
@@ -242,78 +259,132 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                       ),
                     },
                     {
-                      key: "itemId",
-                      header: t("Hàng hóa"),
-                      minWidth: 200,
-                      cell: (line, idx) => (
-                        <Combobox
-                          options={itemOptions}
-                          value={line.itemId}
-                          disabled={viewOnly}
-                          placeholder={t("Chọn hàng hóa")}
-                          searchPlaceholder={t("Tìm SKU / tên")}
-                          onSearch={setItemSearch}
-                          onScrollBottom={fetchNextItems}
-                          loading={loadingItems}
-                          onChange={(v) => {
-                            const found = itemOptions.find(
-                              (o) => o.value === v,
-                            );
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = {
-                                ...lines[idx],
-                                itemId: v || "",
-                                itemName: found?.label ?? "",
-                              };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      ),
+                      key: "itemCode",
+                      header: t("Mã vật tư"),
+                      minWidth: viewOnly ? 140 : 200,
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          const code = line.itemName?.split(" — ")[0] || "—";
+                          return <span>{code}</span>;
+                        }
+                        return (
+                          <Combobox
+                            options={itemOptions}
+                            value={line.itemId}
+                            fallbackLabel={line.itemName}
+                            disabled={viewOnly}
+                            placeholder={t("Chọn hàng hóa")}
+                            searchPlaceholder={t("Tìm SKU / tên")}
+                            onSearch={setItemSearch}
+                            onScrollBottom={fetchNextItems}
+                            loading={loadingItems}
+                            onChange={(v) => {
+                              const found = itemOptions.find(
+                                (o) => o.value === v,
+                              );
+                              setForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = {
+                                  ...lines[idx],
+                                  itemId: v || "",
+                                  itemName: found?.label ?? "",
+                                };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: "itemName",
+                      header: t("Tên vật tư"),
+                      minWidth: 260,
+                      cell: (line) => {
+                        const nameParts = line.itemName?.split(" — ");
+                        const name =
+                          nameParts && nameParts.length > 1
+                            ? nameParts[1]
+                            : line.itemName || "—";
+                        return (
+                          <div
+                            className={cn(
+                              "font-medium truncate max-w-[260px]",
+                              viewOnly
+                                ? "text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                            title={name}
+                          >
+                            {name}
+                          </div>
+                        );
+                      },
                     },
                     {
                       key: "qtyIssued",
                       header: t("Số lượng"),
-                      width: 140,
-                      cell: (line, idx) => (
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-full")}
-                          value={line.qtyIssued}
-                          disabled={viewOnly}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], qtyIssued: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      ),
+                      minWidth: 140,
+                      align: viewOnly ? "center" : "left",
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          return Number(line.qtyIssued) > 0 ? (
+                            <div className="font-medium text-red-600">
+                              {fmtQty(line.qtyIssued)}
+                            </div>
+                          ) : null;
+                        }
+                        return (
+                          <input
+                            type="number"
+                            className={cn(inputCls, "w-full text-right")}
+                            value={line.qtyIssued}
+                            disabled={viewOnly || editing?.status === "POSTED"}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], qtyIssued: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        );
+                      },
                     },
                     {
                       key: "unitCost",
                       header: t("Đơn giá"),
-                      width: 140,
-                      cell: (line, idx) => (
-                        <input
-                          type="number"
-                          className={cn(inputCls, "w-full")}
-                          value={line.unitCost}
-                          disabled={viewOnly}
-                          placeholder={t("Tùy chọn")}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              lines[idx] = { ...lines[idx], unitCost: v };
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      ),
+                      minWidth: 140,
+                      align: viewOnly ? "right" : "left",
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          return line.unitCost ? (
+                            <span className="text-muted-foreground">
+                              {fmtQty(line.unitCost)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          );
+                        }
+                        return (
+                          <input
+                            type="number"
+                            className={cn(inputCls, "w-full text-right")}
+                            value={line.unitCost}
+                            disabled={viewOnly || editing?.status === "POSTED"}
+                            placeholder={t("Tùy chọn")}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setForm((f) => {
+                                const lines = [...f.lines];
+                                lines[idx] = { ...lines[idx], unitCost: v };
+                                return { ...f, lines };
+                              });
+                            }}
+                          />
+                        );
+                      },
                     },
                     ...(vehicleOptions.length > 0
                       ? [
@@ -321,24 +392,38 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             key: "vehicle",
                             header: t("Xe") + " (" + t("tùy chọn") + ")",
                             minWidth: 160,
-                            cell: (line: GiLineForm, idx: number) => (
-                              <Combobox
-                                options={vehicleOptions}
-                                value={line.vehicleId}
-                                disabled={viewOnly}
-                                placeholder={t("Chọn xe...")}
-                                onChange={(v) => {
-                                  setForm((f) => {
-                                    const lines = [...f.lines];
-                                    lines[idx] = {
-                                      ...lines[idx],
-                                      vehicleId: v || "",
-                                    };
-                                    return { ...f, lines };
-                                  });
-                                }}
-                              />
-                            ),
+                            cell: (line: GiLineForm, idx: number) => {
+                              if (viewOnly) {
+                                const vName = vehicleOptions.find(
+                                  (v) => v.value === line.vehicleId,
+                                )?.label;
+                                return (
+                                  <span className="text-muted-foreground">
+                                    {vName || "—"}
+                                  </span>
+                                );
+                              }
+                              return (
+                                <Combobox
+                                  options={vehicleOptions}
+                                  value={line.vehicleId}
+                                  disabled={
+                                    viewOnly || editing?.status === "POSTED"
+                                  }
+                                  placeholder={t("Chọn xe...")}
+                                  onChange={(v) => {
+                                    setForm((f) => {
+                                      const lines = [...f.lines];
+                                      lines[idx] = {
+                                        ...lines[idx],
+                                        vehicleId: v || "",
+                                      };
+                                      return { ...f, lines };
+                                    });
+                                  }}
+                                />
+                              );
+                            },
                           },
                         ]
                       : []),
@@ -374,7 +459,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               <DrawerField label={t("Ngày xuất")} required>
                 <DatePicker
                   value={form.issueDate ? form.issueDate.slice(0, 10) : ""}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing?.status === "POSTED"}
                   onChange={(v) => setForm((f) => ({ ...f, issueDate: v }))}
                 />
               </DrawerField>
@@ -382,7 +467,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 <Combobox
                   options={ISSUE_TYPE_OPTIONS}
                   value={form.issueType}
-                  disabled={viewOnly}
+                  disabled={viewOnly || editing !== null}
                   allowClear={false}
                   onChange={(v) =>
                     setForm((f) => ({ ...f, issueType: v || "SALE" }))
@@ -390,19 +475,17 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 />
               </DrawerField>
               {form.issueType !== "PRODUCTION" && (
-                <DrawerField label={t("Khách hàng")}>
+                <DrawerField label={t("Đơn bán hàng")}>
                   <Combobox
-                    options={customerOptions}
-                    value={form.customerId}
-                    disabled={viewOnly}
-                    placeholder={t("Chọn khách hàng")}
-                    searchPlaceholder={t("Tìm khách hàng")}
-                    onSearch={setCustomerSearch}
-                    onScrollBottom={fetchNextCustomers}
-                    loading={loadingCustomers}
-                    onChange={(v) =>
-                      setForm((f) => ({ ...f, customerId: v || "" }))
+                    options={soOptions}
+                    value={form.salesOrderId}
+                    disabled={
+                      viewOnly || editing?.status === "POSTED" || !!editing
                     }
+                    placeholder={t("Chọn đơn bán hàng")}
+                    searchPlaceholder={t("Tìm Đơn bán hàng")}
+                    allowClear={true}
+                    onChange={(v) => handleSoChange(v || "")}
                   />
                 </DrawerField>
               )}
@@ -411,7 +494,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   <Combobox
                     options={moOptions}
                     value={form.productionOrderId}
-                    disabled={viewOnly}
+                    disabled={viewOnly || editing?.status === "POSTED"}
                     placeholder={t("Chọn lệnh sản xuất")}
                     searchPlaceholder={t("Tìm MO")}
                     onChange={(v) =>
@@ -420,17 +503,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   />
                 </DrawerField>
               )}
-              <DrawerField label={t("Trạng thái")}>
-                <Combobox
-                  options={STATUS_OPTIONS}
-                  value={form.status}
-                  disabled={viewOnly}
-                  allowClear={false}
-                  onChange={(v) =>
-                    setForm((f) => ({ ...f, status: v || "DRAFT" }))
-                  }
-                />
-              </DrawerField>
+
               <DrawerField label={t("Ghi chú")}>
                 <textarea
                   className={`${inputCls} min-h-[60px] resize-y`}
@@ -454,8 +527,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             issueDate:
               editing?.issueDate || form.issueDate || new Date().toISOString(),
             customerName:
-              customerOptions.find((o) => o.value === form.customerId)?.label ||
-              "",
+              form.issueType !== "PRODUCTION"
+                ? soOptions.find((o) => o.value === form.salesOrderId)?.label ||
+                  ""
+                : "",
             remarks: form.remarks,
             lines: form.lines.map((l) => {
               const foundOption = itemOptions.find((o) => o.value === l.itemId);

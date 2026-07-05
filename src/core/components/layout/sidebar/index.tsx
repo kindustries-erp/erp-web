@@ -27,7 +27,6 @@ export function Sidebar() {
     setCompanyProfileOpen,
   } = useAppStore();
   const { employee } = useAuthStore();
-  const [hoverExpanded, setHoverExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -48,7 +47,7 @@ export function Sidebar() {
     navigate(p);
     setMobileSidebarOpen(false);
   };
-  const c = mobileSidebarOpen ? false : sidebarCollapsed && !hoverExpanded;
+  const c = mobileSidebarOpen ? false : sidebarCollapsed;
 
   useFaviconEffect(companyProfile, appName);
 
@@ -68,15 +67,11 @@ export function Sidebar() {
             c && "collapsed",
             mobileSidebarOpen && "mobile-open",
           )}
-          onMouseEnter={() => {
-            if (sidebarCollapsed) setHoverExpanded(true);
-          }}
-          onMouseLeave={() => setHoverExpanded(false)}
         >
           <SidebarHeader
             c={c}
             sidebarCollapsed={sidebarCollapsed}
-            hoverExpanded={hoverExpanded}
+            hoverExpanded={false}
             toggleSidebar={toggleSidebar}
             setCompanyProfileOpen={setCompanyProfileOpen}
             companyProfile={companyProfile}

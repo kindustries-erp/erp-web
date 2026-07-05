@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Shield } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { Shield, PlusCircle } from "lucide-react";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
   DrawerAction,
@@ -13,9 +12,6 @@ import {
 } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
-
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
 import {
   useFilterPanel,
   type FilterPanelConfig,
@@ -280,102 +276,108 @@ export function ErpUsersPage() {
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
-      title={t("Quản lý người dùng")}
-      desc={t("Tạo user production-grade và xem timeline audit theo từng user")}
-      icon={<Shield className="h-4 w-4" />}
-      actions={
-        <TableActionGroup
-          onRefresh={() => void loadUsers()}
-          loading={loading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-          onCreate={() => {
-            void loadEmployees();
-            setEditingUser(null);
-            setForm({ email: "", password: "", employeeId: "" });
-            setDrawerOpen(true);
-          }}
-          createLabel={t("Tạo user")}
-        />
-      }
-    >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          <DataTable
-            items={items}
-            columns={columns}
-            getRowKey={(item) => item.id}
-            loading={loading}
-            emptyLabel={t("Chưa có user")}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={Math.ceil(total / pageSize)}
-            onPage={setPage}
-            onPageSize={(value) => {
-              setPage(1);
-              setPageSize(value);
-            }}
-            actionsColumn={{
-              cell: (raw) => {
-                const item = raw as CoreUserAdmin;
-                return (
-                  <ActionDropdown
-                    items={[
-                      {
-                        label: t("Chỉnh sửa"),
-                        onClick: () => {
-                          void loadEmployees();
-                          setEditingUser(item);
-                          setForm({
-                            email: item.email,
-                            password: "",
-                            employeeId: item.employeeId || "",
-                          });
-                          setDrawerOpen(true);
-                        },
-                      },
-                      {
-                        label: t("Xem chi tiết"),
-                        onClick: () => void openDetail(item),
-                      },
-                      ...(canImpersonate &&
-                      item.email !== "admin@liouni.com" &&
-                      item.status === "ACTIVE"
-                        ? [
-                            {
-                              label: t("Login as user"),
-                              onClick: () => setImpersonateTarget(item),
-                            },
-                          ]
-                        : []),
-                      ...(item.status === "ACTIVE"
-                        ? [
-                            {
-                              label: t("Ngưng hoạt động"),
-                              onClick: () => void handleDeactivate(item),
-                            },
-                          ]
-                        : [
-                            {
-                              label: t("Kích hoạt"),
-                              onClick: () => void handleActivate(item),
-                            },
-                          ]),
-                      {
-                        label: t("Reset password"),
-                        onClick: () => void handleResetPassword(item),
-                      },
-                    ]}
-                  />
-                );
+    <>
+      <SpreadsheetPageTemplate
+        title={t("Quản lý người dùng")}
+        desc={t(
+          "Tạo user production-grade và xem timeline audit theo từng user",
+        )}
+        icon={<Shield className="h-4 w-4" />}
+        tableId="erp-users-table"
+        items={items}
+        columns={columns}
+        getRowKey={(item) => item.id}
+        loading={loading}
+        emptyLabel={t("Chưa có user")}
+        minWidth={760}
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={Math.ceil(total / pageSize)}
+        onPage={setPage}
+        onPageSize={(value) => {
+          setPage(1);
+          setPageSize(value);
+        }}
+        onRefresh={() => void loadUsers()}
+        filterConfig={filterConfig}
+        filter={filter}
+        createActions={[
+          {
+            groupLabel: t("Người dùng"),
+            items: [
+              {
+                label: t("Tạo user"),
+                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                onClick: () => {
+                  void loadEmployees();
+                  setEditingUser(null);
+                  setForm({ email: "", password: "", employeeId: "" });
+                  setDrawerOpen(true);
+                },
               },
-            }}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
+            ],
+          },
+        ]}
+        rowActions={(item) => [
+          {
+            groupLabel: t("Tra cứu / Cấu hình"),
+            items: [
+              {
+                label: t("Xem chi tiết"),
+                onClick: () => void openDetail(item),
+              },
+              {
+                label: t("Chỉnh sửa"),
+                onClick: () => {
+                  void loadEmployees();
+                  setEditingUser(item);
+                  setForm({
+                    email: item.email,
+                    password: "",
+                    employeeId: item.employeeId || "",
+                  });
+                  setDrawerOpen(true);
+                },
+              },
+              {
+                label: t("Reset password"),
+                onClick: () => void handleResetPassword(item),
+              },
+            ],
+          },
+          {
+            groupLabel: t("Thao tác"),
+            items: [
+              ...(canImpersonate &&
+              item.email !== "admin@liouni.com" &&
+              item.status === "ACTIVE"
+                ? [
+                    {
+                      label: t("Login as user"),
+                      onClick: () => setImpersonateTarget(item),
+                    },
+                  ]
+                : []),
+              ...(item.status === "ACTIVE"
+                ? [
+                    {
+                      label: t("Ngưng hoạt động"),
+                      icon: undefined,
+                      variant: "danger" as const,
+                      onClick: () => void handleDeactivate(item),
+                    },
+                  ]
+                : [
+                    {
+                      label: t("Kích hoạt"),
+                      onClick: () => void handleActivate(item),
+                    },
+                  ]),
+            ],
+          },
+        ]}
+      />
 
       <StandardFormDrawer
         open={drawerOpen}
@@ -519,6 +521,6 @@ export function ErpUsersPage() {
         }}
         onCancel={() => setImpersonateTarget(null)}
       />
-    </PageLayout>
+    </>
   );
 }

@@ -16,6 +16,7 @@ export interface ErpInvoiceItem {
 
 export interface ErpInvoice {
   id: string;
+  branchId?: string | null;
   invoiceNo: string;
   serialNo?: string | null;
   invoiceDate: string;
@@ -30,6 +31,8 @@ export interface ErpInvoice {
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
+  licensePlate?: string | null;
+  settlementOrder?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -41,6 +44,7 @@ export interface ErpInvoice {
   paymentDocumentNos?: string | null;
   notes?: string | null;
   pdfFileKey?: string | null;
+  pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
   createdAt?: string;
@@ -55,6 +59,7 @@ export interface ErpInvoice {
 }
 
 export interface CreateErpInvoicePayload {
+  branchId?: string;
   invoiceNo: string;
   serialNo?: string;
   invoiceDate: string;
@@ -286,6 +291,50 @@ export const erpInvoicesCoreApi = {
       key: string;
       expiresAt: string;
     }>(`${BASE}/${id}/upload-url`, { fileType });
+    return data;
+  },
+
+  uploadPdfs: async (
+    id: string,
+    files: File[],
+  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+    const formData = new FormData();
+    files.forEach((f) => formData.append("files", f));
+    const { data } = await axiosInstance.post<{
+      success: boolean;
+      pdfFiles: any[];
+    }>(`${BASE}/${id}/pdfs`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
+
+  getPdfDownloadUrl: async (
+    id: string,
+    key: string,
+  ): Promise<{ url: string }> => {
+    const { data } = await axiosInstance.get<{ url: string }>(
+      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/download-url`,
+    );
+    return data;
+  },
+
+  deletePdf: async (
+    id: string,
+    key: string,
+  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+    const { data } = await axiosInstance.delete<{
+      success: boolean;
+      pdfFiles: any[];
+    }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
+    return data;
+  },
+
+  exportExcel: async (params: ErpInvoiceListParams): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
+      params,
+      responseType: "blob",
+    });
     return data;
   },
 };

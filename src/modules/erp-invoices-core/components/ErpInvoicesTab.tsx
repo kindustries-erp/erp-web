@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   PlusCircle,
   Receipt,
-  FileUp,
   DownloadCloud,
   Eye,
   Download,
@@ -19,6 +18,7 @@ import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { getTags } from "@/modules/tags/api/tagsApi";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 
@@ -33,10 +33,10 @@ import {
 import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceDrawer";
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
-import { InvoiceXmlUploadDrawer } from "@/modules/erp-invoices-core/components/InvoiceXmlUploadDrawer";
-import { PortalSyncDrawer } from "@/modules/erp-invoices-core/components/PortalSyncDrawer";
+import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { ErpInvoiceNetOffSection } from "@/modules/erp-invoices-core/components/ErpInvoiceNetOffSection";
+import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
+import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
@@ -53,8 +53,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
   useInvoiceSyncProgress(listHook.loadInvoices);
 
-  const [xmlModalOpen, setXmlModalOpen] = useState(false);
-  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
@@ -62,6 +61,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
     queryFn: getTags,
+  });
+
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches-options"],
+    queryFn: getBranchOptionsApi,
   });
 
   useEffect(() => {
@@ -106,6 +110,48 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     } catch {
       showToast({
         title: `Không thể tải ${type.toUpperCase()}`,
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function handleExportExcel() {
+    try {
+      showToast({
+        title: "Đang tạo file Excel...",
+        variant: "default",
+      });
+      const { search, dateFrom, dateTo, status, custom } =
+        listHook.filterPanel.state;
+      const blob = await erpInvoicesCoreApi.exportExcel({
+        direction,
+        search: search || undefined,
+        seller_name: custom?.seller_name || undefined,
+        buyer_name: custom?.buyer_name || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        status: status || undefined,
+        tag_id: (custom?.tag_id as string) || undefined,
+        sort_by: listHook.sortBy || undefined,
+        sort_order: listHook.sortOrder || undefined,
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DanhSachHoaDon_${direction}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showToast({
+        title: "Xuất Excel thành công",
+        variant: "default",
+      });
+    } catch {
+      showToast({
+        title: "Không thể xuất Excel",
         variant: "destructive",
       });
     }
@@ -176,19 +222,50 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const columns: DataTableColumn<ErpInvoice>[] = useMemo(
     () => [
       {
+        key: "attachments",
+        header: t("attachments", "Chứng từ"),
+        size: 80,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv) => (
+          <div className="flex items-center justify-center gap-1.5">
+            {inv.xmlFileKey ? (
+              <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
+                <FileCode className="w-4 h-4 text-slate-700" />
+              </Tooltip>
+            ) : (
+              <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
+                <FileCode className="w-4 h-4 text-gray-300" />
+              </Tooltip>
+            )}
+            {inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0) ? (
+              <Tooltip content={t("hasPdf", "Đã có file PDF")}>
+                <FileText className="w-4 h-4 text-slate-700" />
+              </Tooltip>
+            ) : (
+              <Tooltip content={t("noPdf", "Chưa có file PDF")}>
+                <FileText className="w-4 h-4 text-gray-300" />
+              </Tooltip>
+            )}
+          </div>
+        ),
+      },
+      {
         key: "invoiceDate",
         header: t("invoiceDate", "Ngày HĐ"),
         sortable: true,
         sortKey: "invoiceDate",
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 100,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => inv.invoiceDate,
       },
       {
         key: "serialNo",
         header: t("serialNo", "Ký hiệu"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-muted-foreground w-[100px] text-left",
+        size: 80,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-left",
         cell: (inv) => inv.serialNo || "—",
       },
       {
@@ -196,8 +273,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("invoiceNo", "Số HĐ"),
         sortable: true,
         sortKey: "invoiceNo",
-        headerClassName: "text-center w-[130px]",
-        className: "font-medium text-primary w-[130px] text-left",
+        size: 80,
+        headerClassName: "text-center",
+        className: "font-medium text-primary text-left",
         cell: (inv) => (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -216,26 +294,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
-              {inv.xmlFileKey ? (
-                <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
-                  <FileCode className="w-3.5 h-3.5 text-blue-500" />
-                </Tooltip>
-              ) : (
-                <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
-                  <FileCode className="w-3.5 h-3.5 text-gray-300" />
-                </Tooltip>
-              )}
-              {inv.pdfFileKey ? (
-                <Tooltip content={t("hasPdf", "Đã có file PDF")}>
-                  <FileText className="w-3.5 h-3.5 text-red-500" />
-                </Tooltip>
-              ) : (
-                <Tooltip content={t("noPdf", "Chưa có file PDF")}>
-                  <FileText className="w-3.5 h-3.5 text-gray-300" />
-                </Tooltip>
-              )}
-            </div>
           </div>
         ),
       },
@@ -245,14 +303,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           direction === "IN" ? t("seller", "Bên bán") : t("buyer", "Bên mua"),
         sortable: true,
         sortKey: direction === "IN" ? "sellerName" : "buyerName",
-        headerClassName: "text-center w-[320px]",
-        className: "w-[320px] text-left",
+        size: 250,
+        headerClassName: "text-center",
+        className: "text-left",
         cell: (inv) => {
           const text =
             direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
           return (
             <Tooltip content={text !== "—" ? text : ""}>
-              <div className="truncate w-full cursor-pointer">{text}</div>
+              <div className="whitespace-normal break-words w-full cursor-pointer">
+                {text}
+              </div>
             </Tooltip>
           );
         },
@@ -260,8 +321,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "taxCode",
         header: t("taxCode", "MST"),
-        headerClassName: "text-center w-[110px]",
-        className: "text-muted-foreground text-xs w-[110px] text-left",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-xs text-left",
         cell: (inv) =>
           direction === "IN"
             ? inv.sellerTaxCode || "—"
@@ -272,10 +334,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("description", "Diễn giải"),
         sortable: true,
         sortKey: "description",
+        size: 300,
         className: "text-left",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="max-w-[200px] truncate" title={row.description || ""}>
+          <div
+            className="whitespace-normal break-words w-full"
+            title={row.description || ""}
+          >
             {row.description || "—"}
           </div>
         ),
@@ -285,22 +351,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("preVatAmount", "Trước VAT"),
         sortable: true,
         sortKey: "preVatAmount",
-        headerClassName: "text-center w-[110px]",
-        className: "text-right w-[110px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (row) => fmtAmt(row.preVatAmount),
       },
       {
         key: "vatAmount",
         header: t("vatAmount", "Thuế VAT"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => fmtAmt(inv.vatAmount),
       },
       {
         key: "discountAmount",
         header: t("discountAmount", "Chiết khấu"),
-        headerClassName: "text-center w-[100px]",
-        className: "text-right w-[100px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
         cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
@@ -308,15 +377,35 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         header: t("totalAmount", "Thành tiền"),
         sortable: true,
         sortKey: "totalAmount",
-        headerClassName: "text-center w-[120px]",
-        className: "text-right font-semibold w-[120px]",
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right font-semibold",
         cell: (inv) => fmtAmt(inv.totalAmount),
       },
+      ...(direction === "OUT"
+        ? [
+            {
+              key: "settlementOrder",
+              header: t("settlementOrder", "Lệnh quyết toán"),
+              headerClassName: "text-center w-[150px]",
+              className: "text-left w-[150px]",
+              cell: (inv: ErpInvoice) => inv.settlementOrder || "—",
+            },
+            {
+              key: "licensePlate",
+              header: t("licensePlate", "Biển số xe"),
+              headerClassName: "text-center w-[110px]",
+              className: "text-left w-[110px]",
+              cell: (inv: ErpInvoice) => inv.licensePlate || "—",
+            },
+          ]
+        : []),
       {
         key: "netOffAmount",
         header: t("invoice.columns.netOffAmount", "Đã cấn trừ"),
-        headerClassName: "text-center w-[120px]",
-        className: "text-right w-[120px]",
+        size: 120,
+        headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
+        className: "text-right bg-blue-50/50 border-l border-blue-200",
         cell: (inv: any) => {
           const netOff = parseFloat(inv.netOffAmount) || 0;
           if (netOff === 0) return "--";
@@ -328,8 +417,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "remainingAmount",
         header: t("invoice.columns.remainingAmount", "Còn lại"),
-        headerClassName: "text-center w-[120px]",
-        className: "text-right font-semibold w-[120px]",
+        size: 120,
+        headerClassName: "text-center bg-blue-50/50",
+        className: "text-right font-semibold bg-blue-50/50",
         cell: (inv: any) => {
           const total = parseFloat(inv.totalAmount) || 0;
           const netOff = parseFloat(inv.netOffAmount) || 0;
@@ -343,8 +433,20 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           );
         },
       },
+      {
+        key: "branchId",
+        header: t("branch", "Chi nhánh"),
+        size: 100,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv: any) => {
+          if (!inv.branchId) return "—";
+          const branch = branches.find((b) => b.value === inv.branchId);
+          return branch ? branch.label : inv.branchId;
+        },
+      },
     ],
-    [direction, t],
+    [direction, t, branches],
   );
 
   const activeSortKey = listHook.sortBy;
@@ -467,33 +569,36 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         filterConfig={filterConfig}
         filter={listHook.filterPanel}
         rowActions={(inv) => {
-          const items = [];
-          items.push({
+          const traCuuItems = [];
+          const thaoTacItems = [];
+
+          traCuuItems.push({
             label: t("actionDetail", "Chi tiết"),
             icon: <Eye className="w-3.5 h-3.5" />,
             onClick: () => formHook.openDetail(inv),
           });
           if (inv.xmlFileKey) {
-            items.push({
+            traCuuItems.push({
               label: t("actionDownloadXml", "Tải XML"),
               icon: <Download className="w-3.5 h-3.5" />,
               onClick: () => handleDownload(inv.id, "xml"),
             });
           }
-          items.push({
-            label: t("actionReparseXml", "Đồng bộ lại từ XML"),
-            icon: <RefreshCw className="w-3.5 h-3.5" />,
-            onClick: () => handleReparseXml(inv),
-          });
           if (inv.pdfFileKey) {
-            items.push({
+            traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
               icon: <Download className="w-3.5 h-3.5" />,
               onClick: () => handleDownload(inv.id, "pdf"),
             });
           }
+
+          thaoTacItems.push({
+            label: t("actionReparseXml", "Đồng bộ lại từ XML"),
+            icon: <RefreshCw className="w-3.5 h-3.5" />,
+            onClick: () => handleReparseXml(inv),
+          });
           if (inv.status === "DRAFT") {
-            items.push({
+            thaoTacItems.push({
               label: t("actionDelete", "Xóa"),
               icon: <Trash className="w-3.5 h-3.5" />,
               variant: "danger" as const,
@@ -504,7 +609,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
           if (inv.status === "CONFIRMED") {
-            items.push({
+            thaoTacItems.push({
               label: t("actionCancel", "Hủy"),
               icon: <Ban className="w-3.5 h-3.5" />,
               variant: "danger" as const,
@@ -514,48 +619,69 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               },
             });
           }
-          return items;
+
+          return [
+            {
+              groupLabel: t("groupTraCuu", "Tra cứu"),
+              items: traCuuItems,
+            },
+            {
+              groupLabel: t("groupThaoTac", "Thao tác"),
+              items: thaoTacItems,
+            },
+          ];
         }}
         createActions={[
           {
-            label: t("createInvoice", "Tạo hóa đơn"),
-            icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
-            onClick: () => formHook.openNew(direction),
+            groupLabel: t("groupInvoice", "Hóa đơn"),
+            items: [
+              {
+                label: t("createInvoice", "Tạo hóa đơn"),
+                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                onClick: () => formHook.openNew(direction),
+              },
+            ],
           },
           {
-            label: t("importXml", "Import XML"),
-            icon: <FileUp className="w-4 h-4 text-blue-600" />,
-            onClick: () => setXmlModalOpen(true),
-          },
-          {
-            label: t("syncGdt", "Đồng bộ từ GDT"),
-            icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-            onClick: () => setSyncModalOpen(true),
-          },
-          {
-            label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
-            icon: <RefreshCw className="w-4 h-4 text-orange-600" />,
-            onClick: async () => {
-              const token = localStorage.getItem("erp_portal_token");
-              if (!token) {
-                toast.error(
-                  "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
-                );
-                return;
-              }
-              try {
-                const res = await erpInvoicesCoreApi.bulkDownloadXml({
-                  token,
-                  direction,
-                });
-                toast.success(res.message);
-                // Optionally reload after some time or let user refresh manually
-              } catch (e: any) {
-                toast.error(
-                  e.response?.data?.message || e.message || "Lỗi tải lại XML",
-                );
-              }
-            },
+            groupLabel: t("groupData", "Đồng bộ & Tải"),
+            items: [
+              {
+                label: t("syncInvoices", "Đồng bộ hóa đơn"),
+                icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                onClick: () => setImportModalOpen(true),
+              },
+              {
+                label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
+                icon: <RefreshCw className="w-4 h-4 text-orange-600" />,
+                onClick: async () => {
+                  const token = localStorage.getItem("erp_portal_token");
+                  if (!token) {
+                    toast.error(
+                      "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
+                    );
+                    return;
+                  }
+                  try {
+                    const res = await erpInvoicesCoreApi.bulkDownloadXml({
+                      token,
+                      direction,
+                    });
+                    toast.success(res.message);
+                  } catch (e: any) {
+                    toast.error(
+                      e.response?.data?.message ||
+                        e.message ||
+                        "Lỗi tải lại XML",
+                    );
+                  }
+                },
+              },
+              {
+                label: t("exportExcel", "Xuất Excel"),
+                icon: <Download className="w-4 h-4 text-green-600" />,
+                onClick: handleExportExcel,
+              },
+            ],
           },
         ]}
       />
@@ -580,39 +706,47 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 {formHook.formError}
               </div>
             )}
-            <ErpInvoiceFormItems
+            <ErpInvoiceInternalInfo
               form={formHook.form}
               editMode={formHook.editMode}
+              fieldSet={(key, value) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+              direction={direction}
+              detailInvoice={formHook.detailInvoice}
+              onRefreshDetail={() =>
+                formHook.openDetail({
+                  id: formHook.detailInvoice!.id,
+                } as ErpInvoice)
+              }
+            />
+            <ErpInvoiceFormItems
+              form={formHook.form}
+              editMode={formHook.editMode && !formHook.detailInvoice?.id}
               setForm={formHook.setForm}
               fmtAmt={fmtAmt}
             />
-            {formHook.detailInvoice?.id && (
-              <ErpInvoiceNetOffSection
-                invoiceId={formHook.detailInvoice.id}
-                direction={direction}
-                voucherNetOffs={formHook.detailInvoice.voucherNetOffs || []}
-                editMode={formHook.editMode}
-                onRefresh={() =>
-                  formHook.openDetail({
-                    id: formHook.detailInvoice!.id,
-                  } as ErpInvoice)
-                }
-              />
-            )}
           </div>
         }
         rightPanel={
-          <ErpInvoiceFormGeneral
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key, value) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            fmtAmt={fmtAmt}
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pendingTagIds={formHook.pendingTagIds}
-            onPendingTagsChange={formHook.setPendingTagIds}
-          />
+          <div className="flex flex-col gap-5">
+            <ErpInvoiceFormGeneral
+              form={formHook.form}
+              editMode={formHook.editMode}
+              fieldSet={(key, value) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+            />
+            <ErpInvoicePdfUpload
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+              editMode={formHook.editMode}
+            />
+          </div>
         }
       />
 
@@ -638,21 +772,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onConfirm={formHook.handleCancel}
       />
 
-      <InvoiceXmlUploadDrawer
-        open={xmlModalOpen}
-        onClose={() => setXmlModalOpen(false)}
-        onImported={(id: string, dir: "IN" | "OUT") => {
-          if (dir === direction) {
-            void listHook.loadInvoices();
-          }
-        }}
-      />
-
-      <PortalSyncDrawer
-        open={syncModalOpen}
-        onClose={() => setSyncModalOpen(false)}
+      <InvoiceImportSyncDrawer
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
         initialDirection={direction}
-        onSynced={(dir: "IN" | "OUT") => {
+        onImported={(dir: "IN" | "OUT") => {
           if (dir === direction) {
             void listHook.loadInvoices();
           }

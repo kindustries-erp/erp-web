@@ -89,7 +89,7 @@ export function ErpInvoiceDrawer({
     },
   ];
 
-  const drawerTitle = editMode
+  let drawerTitle = editMode
     ? detailInvoice
       ? t("drawerTitleEdit", {
           invoiceNo: detailInvoice.invoiceNo,
@@ -102,6 +102,16 @@ export function ErpInvoiceDrawer({
           defaultValue: `Chi tiết: ${detailInvoice.invoiceNo}`,
         })
       : t("invoice", "Hóa đơn");
+
+  if (detailInvoice) {
+    const targetName =
+      detailInvoice.direction === "IN"
+        ? detailInvoice.sellerName
+        : detailInvoice.buyerName;
+    if (targetName) {
+      drawerTitle += ` - ${targetName}`;
+    }
+  }
 
   // Extra action buttons in header (Sync, Download) — shown in view mode
   const titleExtra =
@@ -153,27 +163,11 @@ export function ErpInvoiceDrawer({
       title={drawerTitle}
       size="xl"
       layout="2-columns"
+      loading={loadingDetail}
       rightPanelTitle={t("generalInfo", "Thông tin chung")}
+      stickyRightPanel={false}
       actions={editMode ? editActions : viewActions}
-      leftPanel={
-        <div className="relative w-full h-full">
-          {loadingDetail && (
-            <div className="absolute inset-0 bg-white/70 z-50 flex items-center justify-center rounded-md">
-              <div className="flex flex-col items-center gap-3">
-                <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="text-sm text-gray-600 font-medium">
-                  {t("loadingDetail", "Đang tải dữ liệu...")}
-                </span>
-              </div>
-            </div>
-          )}
-          <div
-            className={loadingDetail ? "opacity-30 pointer-events-none" : ""}
-          >
-            {leftPanel}
-          </div>
-        </div>
-      }
+      leftPanel={leftPanel}
       rightPanel={rightPanel}
     />
   );

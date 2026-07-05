@@ -81,7 +81,7 @@
 
 /* ── Popup / Dropdown Content (portal elements) ── */
 .popup-content {
-  background: rgba(255, 255, 255, 1);
+  background: var(--popup-bg, var(--surface));
   border: 1px solid var(--popup-border);
   box-shadow: var(--popup-shadow);
   color: var(--foreground);
@@ -93,6 +93,59 @@
 }
 .popup-content-hover:hover {
   background: var(--popup-bg-hover);
+}
+
+/* Sidebar specific dropdowns rendered in portal (so they don't inherit .sidebar scoped vars) */
+.sidebar-popup-content {
+  background: #1e1e1e;
+  border: 1px solid #2f2f2f;
+  color: #e8eeff;
+}
+.sidebar-popup-content .hover\:bg-surface-hover:hover,
+.sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--popup-bg-hover\)\][data-highlighted],
+.sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--muted\)\][data-highlighted] {
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+}
+.sidebar-popup-content .text-\[color\:var\(--muted-fg\)\] {
+  color: #aab8d6;
+}
+
+.theme-orcaq .sidebar-popup-content {
+  background: #1e1e2e;
+  border: 1px solid #27272a;
+  color: #e8eeff;
+}
+.theme-orcaq .sidebar-popup-content .hover\:bg-surface-hover:hover,
+.theme-orcaq
+  .sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--popup-bg-hover\)\][data-highlighted],
+.theme-orcaq
+  .sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--muted\)\][data-highlighted] {
+  background: #2d2d3d !important;
+  color: #ffffff !important;
+}
+
+.theme-classic .sidebar-popup-content {
+  background: var(--popup-bg);
+  border: 1px solid var(--popup-border);
+  color: var(--foreground);
+}
+.theme-classic .sidebar-popup-content .hover\:bg-surface-hover:hover,
+.theme-classic
+  .sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--popup-bg-hover\)\][data-highlighted],
+.theme-classic
+  .sidebar-popup-content
+  .data-\[highlighted\]\:bg-\[color\:var\(--muted\)\][data-highlighted] {
+  background: var(--popup-bg-hover) !important;
+  color: var(--foreground) !important;
+}
+.theme-classic .sidebar-popup-content .text-\[color\:var\(--muted-fg\)\] {
+  color: var(--muted-fg);
 }
 
 /* ── Context Menu ── */

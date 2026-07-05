@@ -4,6 +4,7 @@ import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi
 import { Combobox } from "@/shared/components/Combobox";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { ExternalLink, Save } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -34,12 +35,18 @@ export function BankTransactionDetailDrawer({
   });
 
   const [selectedAccount, setSelectedAccount] = useState<string>("");
+  const [accountingDescription, setAccountingDescription] =
+    useState<string>("");
 
   useEffect(() => {
     if (transaction) {
       setSelectedAccount(transaction.correspondentAccountingAccountId || "");
+      setAccountingDescription(
+        transaction.accountingDescription || transaction.description || "",
+      );
     } else {
       setSelectedAccount("");
+      setAccountingDescription("");
     }
   }, [transaction, isOpen]);
 
@@ -47,9 +54,11 @@ export function BankTransactionDetailDrawer({
     mutationFn: (data: {
       id: string;
       correspondentAccountingAccountId: string | null;
+      accountingDescription: string;
     }) =>
       bankStatementApi.updateTransaction(data.id, {
         correspondentAccountingAccountId: data.correspondentAccountingAccountId,
+        accountingDescription: data.accountingDescription,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -67,6 +76,7 @@ export function BankTransactionDetailDrawer({
     updateMutation.mutate({
       id: transactionId,
       correspondentAccountingAccountId: selectedAccount || null,
+      accountingDescription,
     });
   };
 
@@ -190,36 +200,56 @@ export function BankTransactionDetailDrawer({
         )}
         {transaction && (
           <DrawerSection title="Hạch toán (Tài khoản đối ứng)">
-            <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">
-                  Tài khoản đối ứng
-                </label>
-                <Combobox
-                  options={
-                    chartOfAccounts?.map((acc: any) => ({
-                      value: acc.id,
-                      label: `${acc.accountCode} - ${acc.accountName}`,
-                    })) || []
-                  }
-                  value={selectedAccount}
-                  onChange={setSelectedAccount}
-                  placeholder="-- Chọn tài khoản đối ứng --"
-                  className="w-full"
-                />
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Tài khoản đối ứng
+                  </label>
+                  <Combobox
+                    options={
+                      chartOfAccounts?.map((acc: any) => ({
+                        value: acc.id,
+                        label: `${acc.accountCode} - ${acc.accountName}`,
+                      })) || []
+                    }
+                    value={selectedAccount}
+                    onChange={setSelectedAccount}
+                    placeholder="-- Chọn tài khoản đối ứng --"
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Diễn giải hạch toán
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                    placeholder="Nhập diễn giải hạch toán..."
+                    value={accountingDescription}
+                    onChange={(e) => setAccountingDescription(e.target.value)}
+                  />
+                </div>
               </div>
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium flex items-center gap-1"
-                onClick={handleSaveAccount}
-                disabled={
-                  updateMutation.isPending ||
-                  selectedAccount ===
-                    (transaction.correspondentAccountingAccountId || "")
-                }
-              >
-                <Save className="w-4 h-4" />
-                {updateMutation.isPending ? "Đang lưu..." : "Lưu & Hạch toán"}
-              </button>
+              <div className="flex justify-end">
+                <Button
+                  variant="primary"
+                  onClick={handleSaveAccount}
+                  disabled={
+                    updateMutation.isPending ||
+                    (selectedAccount ===
+                      (transaction.correspondentAccountingAccountId || "") &&
+                      accountingDescription ===
+                        (transaction.accountingDescription ||
+                          transaction.description ||
+                          ""))
+                  }
+                >
+                  <Save className="w-4 h-4" />
+                  {updateMutation.isPending ? "Đang lưu..." : "Lưu & Hạch toán"}
+                </Button>
+              </div>
             </div>
             <p className="text-xs text-gray-400 mt-2 italic">
               * Lưu ý: Khi lưu, hệ thống sẽ tự động cập nhật hoặc phát sinh bút

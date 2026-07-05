@@ -106,6 +106,7 @@ export const GeneralJournalPage = () => {
             _branch: entry.branch?.name,
             _sourceId: entry.sourceId,
             _sourceType: entry.sourceType,
+            _subjectName: entry.subjectName,
             _entryDebitAccounts: debitAccounts,
             _entryCreditAccounts: creditAccounts,
             isFirstLine: index === 0,
@@ -124,6 +125,7 @@ export const GeneralJournalPage = () => {
           _branch: entry.branch?.name,
           _sourceId: entry.sourceId,
           _sourceType: entry.sourceType,
+          _subjectName: entry.subjectName,
           isFirstLine: true,
           rowSpan: 1,
         });
@@ -217,6 +219,16 @@ export const GeneralJournalPage = () => {
           <div className="text-gray-600 dark:text-gray-300 whitespace-normal break-words w-full">
             {row.description || row._description}
           </div>
+        ),
+      },
+      {
+        key: "_subjectName",
+        header: "Đối tượng",
+        size: 150,
+        cell: (row: any) => (
+          <span className="text-gray-600 dark:text-gray-400">
+            {row._subjectName || "-"}
+          </span>
         ),
       },
       {
