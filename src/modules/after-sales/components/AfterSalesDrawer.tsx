@@ -35,6 +35,7 @@ export function AfterSalesDrawer({
         customerPhone: data.customerPhone || "",
         customerAddress: data.customerAddress || "",
         customerIdNumber: data.customerIdNumber || "",
+        dealerName: data.dealerName || "",
         warrantyActivatedAt: data.warrantyActivatedAt
           ? data.warrantyActivatedAt.slice(0, 10)
           : "",
@@ -55,6 +56,7 @@ export function AfterSalesDrawer({
         customerPhone: form.customerPhone,
         customerAddress: form.customerAddress,
         customerIdNumber: form.customerIdNumber,
+        dealerName: form.dealerName,
         warrantyActivatedAt: form.warrantyActivatedAt || undefined,
         warrantyMonths: Number(form.warrantyMonths),
         notes: form.notes,
@@ -148,7 +150,7 @@ export function AfterSalesDrawer({
           </DrawerSection>
 
           {/* Customer Info */}
-          <DrawerSection title={t("Thông tin khách hàng")}>
+          <DrawerSection title={t("Thông tin khách hàng & Đại lý")}>
             <div className="grid grid-cols-2 gap-4">
               <DrawerField label={t("Tên khách hàng")}>
                 <input
@@ -178,6 +180,17 @@ export function AfterSalesDrawer({
                   value={form.customerIdNumber || ""}
                   onChange={(e) =>
                     setForm({ ...form, customerIdNumber: e.target.value })
+                  }
+                  readOnly={!isEditing}
+                  disabled={saving}
+                />
+              </DrawerField>
+              <DrawerField label={t("Đại lý")}>
+                <input
+                  className={inputCls}
+                  value={form.dealerName || ""}
+                  onChange={(e) =>
+                    setForm({ ...form, dealerName: e.target.value })
                   }
                   readOnly={!isEditing}
                   disabled={saving}
