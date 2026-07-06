@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   PackageCheck,
   RotateCcw,
@@ -7,8 +7,10 @@ import {
   PackagePlus,
   Eye,
   FileText,
+  CheckCircle,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { useSalesOrdersQuery } from "@/modules/sales-orders-core/hooks/useSalesOrdersQuery";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
@@ -26,6 +28,7 @@ import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
+import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
 
 import {
   SoFormDrawer,
@@ -51,13 +54,8 @@ export function ErpSalesOrdersPage() {
   const canUpdate = useHasPermission("sales_orders", "update");
   const canDelete = useHasPermission("sales_orders", "delete");
 
-  const [items, setItems] = useState<ErpSalesOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -90,6 +88,10 @@ export function ErpSalesOrdersPage() {
   const [cancelTarget, setCancelTarget] = useState<ErpSalesOrder | null>(null);
   const [canceling, setCanceling] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [deliveryConfirmItem, setDeliveryConfirmItem] = useState<{
+    id: string;
+    serialIds: string[];
+  } | null>(null);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
@@ -132,28 +134,33 @@ export function ErpSalesOrdersPage() {
         (p.items.inventoryItems || []).map((i) => ({
           value: i.id,
           label: `${i.sku} — ${i.itemName}`,
+          original: i,
         })),
       ) || []
     );
   }, [itemsData]);
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await salesOrdersCoreApi.list({ page, pageSize, search });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải sales orders");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, search]);
+  const {
+    data: resData,
+    isLoading: loading,
+    refetch: loadOrders,
+  } = useSalesOrdersQuery({
+    page,
+    pageSize,
+    search,
+  });
+
+  const items = resData?.items || [];
+  const total = resData?.total || 0;
+  const totalPages = resData?.totalPages || 0;
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadOrders();
+    const handleRefresh = () => {
+      loadOrders();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+    return () => window.removeEventListener("refresh_erp_data", handleRefresh);
   }, [loadOrders]);
 
   useEffect(() => {
@@ -177,8 +184,17 @@ export function ErpSalesOrdersPage() {
       }
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
-    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
-  }, []);
+
+    const handleRefresh = () => {
+      loadOrders();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+
+    return () => {
+      window.removeEventListener("open_erp_document", handleOpenDoc);
+      window.removeEventListener("refresh_erp_data", handleRefresh);
+    };
+  }, [loadOrders]);
 
   function resetForm() {
     setForm(emptyForm());
@@ -209,9 +225,38 @@ export function ErpSalesOrdersPage() {
     setSaveError(null);
     try {
       const detail = await salesOrdersCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
+      // Detail API might not return customerName, fallback to list item's customerName
+      const customerName = detail.customerName || item.customerName;
+
+      const mergedDetail = { ...detail, customerName };
+      setEditing(mergedDetail);
+      setForm(buildForm(mergedDetail));
       setDrawerOpen(true);
+
+      if (!customerName && detail.customerId) {
+        import("@/modules/basic-masters/api/basicMastersApi").then(
+          ({ basicMastersApi }) => {
+            basicMastersApi
+              .list({
+                search: detail.customerId || undefined,
+                entities: "customers",
+              })
+              .then((res) => {
+                const c = res.items.customers?.find(
+                  (x: any) => x.id === detail.customerId,
+                );
+                if (c) {
+                  const name = `${c.code} — ${c.displayName || c.name}`;
+                  setEditing((prev) =>
+                    prev?.id === detail.id
+                      ? { ...prev, customerName: name }
+                      : prev,
+                  );
+                }
+              });
+          },
+        );
+      }
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
@@ -258,6 +303,11 @@ export function ErpSalesOrdersPage() {
       return;
     }
 
+    if (!form.customerId) {
+      setSaveError("Khách hàng là bắt buộc");
+      return;
+    }
+
     if (
       !form.lines.length ||
       form.lines.some((line) => !line.qtyOrdered.trim())
@@ -273,6 +323,14 @@ export function ErpSalesOrdersPage() {
         ...toPayload(form),
         status: overrideStatus || form.status,
       };
+
+      if (payload.status === "DRAFT") {
+        payload.lines = payload.lines?.map((l) => ({
+          ...l,
+          serialIds: undefined,
+        }));
+      }
+
       if (editing) {
         await salesOrdersCoreApi.update(editing.id, payload);
       } else {
@@ -326,6 +384,46 @@ export function ErpSalesOrdersPage() {
     }
   }
 
+  async function handleConfirmAllDelivery(item: ErpSalesOrder) {
+    setError(null);
+    try {
+      await salesOrdersCoreApi.confirmAllDelivery(item.id);
+      await loadOrders();
+      window.dispatchEvent(new CustomEvent("refresh_erp_data"));
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+          e?.message ||
+          "Không thể xác nhận giao hàng",
+      );
+    }
+  }
+
+  async function handleRowConfirmDelivery(item: ErpSalesOrder) {
+    try {
+      const detail = await salesOrdersCoreApi.get(item.id);
+      const serialIds =
+        detail?.lines?.flatMap(
+          (l: any) => l.selectedSerialIds || l.serialIds || [],
+        ) || [];
+      if (serialIds.length > 0) {
+        setDeliveryConfirmItem({ id: item.id, serialIds });
+      } else {
+        if (
+          window.confirm(
+            t(
+              "Bạn có chắc chắn muốn xác nhận giao hàng cho toàn bộ đơn hàng này?",
+            ),
+          )
+        ) {
+          void handleConfirmAllDelivery(item);
+        }
+      }
+    } catch (e: any) {
+      setError(e?.message || "Không thể tải chi tiết SO");
+    }
+  }
+
   async function handleConfirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -366,7 +464,7 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "expectedDeliveryDate",
-      header: t("Ngày giao"),
+      header: t("Ngày giao DK"),
       size: 100,
       headerClassName: "text-center",
       className: "text-center",
@@ -493,6 +591,18 @@ export function ErpSalesOrdersPage() {
                 !["RESERVED", "PARTIAL_RESERVED"].includes(item.status || ""),
             },
             {
+              label: t("Xác nhận giao hàng"),
+              icon: <CheckCircle className="h-[13px] w-[13px]" />,
+              onClick: () => {
+                void handleRowConfirmDelivery(item);
+              },
+              hidden:
+                !canUpdate ||
+                !["DELIVERING", "PARTIAL_DELIVERING"].includes(
+                  item.status || "",
+                ),
+            },
+            {
               label: t("Xóa"),
               icon: <Trash2 className="h-[13px] w-[13px]" />,
               variant: "danger",
@@ -553,6 +663,7 @@ export function ErpSalesOrdersPage() {
         saving={saving}
         saveError={saveError}
         handleSave={handleSave}
+        onRefresh={loadOrders}
         customerOptions={customerOptions}
         setCustomerSearch={setCustomerSearch}
         fetchNextCustomers={fetchNextCustomers}
@@ -574,6 +685,17 @@ export function ErpSalesOrdersPage() {
             ? () => setViewOnly(false)
             : undefined
         }
+      />
+
+      <DeliveryConfirmModal
+        open={!!deliveryConfirmItem}
+        onClose={() => setDeliveryConfirmItem(null)}
+        serialIds={deliveryConfirmItem?.serialIds || []}
+        onConfirmSuccess={() => {
+          setDeliveryConfirmItem(null);
+          loadOrders();
+          window.dispatchEvent(new CustomEvent("refresh_erp_data"));
+        }}
       />
     </SpreadsheetPageTemplate>
   );

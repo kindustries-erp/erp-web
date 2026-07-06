@@ -40,6 +40,22 @@ export function Topbar() {
 
   const sidebarSearchQuery = useAppStore((s) => s.sidebarSearchQuery);
   const setSidebarSearchQuery = useAppStore((s) => s.setSidebarSearchQuery);
+  const [localSearch, setLocalSearch] = React.useState(sidebarSearchQuery);
+
+  React.useEffect(() => {
+    if (sidebarSearchQuery !== localSearch) {
+      setLocalSearch(sidebarSearchQuery);
+    }
+  }, [sidebarSearchQuery]);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== sidebarSearchQuery) {
+        setSidebarSearchQuery(localSearch);
+      }
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [localSearch, setSidebarSearchQuery, sidebarSearchQuery]);
 
   React.useEffect(() => {
     if (!currentBranchId && branches.length > 0) {
@@ -110,6 +126,17 @@ export function Topbar() {
         })}
       </div>
 
+      {/* Search input for sidebar */}
+      <div className="hidden md:block">
+        <SearchInput
+          value={localSearch}
+          onChange={setLocalSearch}
+          placeholder={t("nav.searchPlaceholder")}
+          className="w-[125px]"
+          inputClassName="!h-[26px] !text-[11px] !py-0.5"
+        />
+      </div>
+
       {/* Impersonation banner */}
       {impersonation?.active && (
         <div className="ml-auto flex items-center gap-2 px-3 py-[5px] rounded-lg bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/40 text-[color:var(--warn-fg)] text-xs flex-shrink-0 max-[768px]:hidden">
@@ -143,18 +170,8 @@ export function Topbar() {
         </div>
       )}
 
-      {/* Search Input & Company Name */}
+      {/* Company Name */}
       <div className="ml-auto flex items-center gap-4">
-        {/* Search input for sidebar */}
-        <div className="hidden sm:block">
-          <SearchInput
-            value={sidebarSearchQuery}
-            onChange={setSidebarSearchQuery}
-            placeholder={t("nav.searchPlaceholder")}
-            className="w-56 text-xs h-8"
-          />
-        </div>
-
         {!impersonation?.active && companyProfile?.company_name && (
           <Tooltip content={companyProfile.company_name} side="bottom">
             <button

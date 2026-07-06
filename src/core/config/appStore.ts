@@ -73,6 +73,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.customers",
     group: "sales",
   },
+  "after-sales": {
+    labelKey: "nav.items.afterSales",
+    group: "sales",
+  },
   "erp-suppliers": {
     labelKey: "nav.items.suppliers",
     group: "purchasing",
@@ -161,12 +165,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
   "erp-inventory-stock": [
     ["breadcrumb.inventory"],
-    ["breadcrumb.inventoryGroup"],
     ["breadcrumb.inventoryStock"],
   ],
   "erp-inventory-tracking": [
     ["breadcrumb.inventory"],
-    ["breadcrumb.inventoryGroup"],
     ["breadcrumb.inventoryTracking"],
   ],
   "erp-inventory-vouchers": [
@@ -183,6 +185,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-sales-orders": [["breadcrumb.sales"], ["breadcrumb.erpSalesOrders"]],
   "erp-customers": [["breadcrumb.sales"], ["breadcrumb.customers"]],
+  "after-sales": [["nav.items.sales"], ["nav.items.afterSales"]],
   "erp-suppliers": [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
   "erp-goods-issues": [["breadcrumb.inventory"], ["breadcrumb.erpGoodsIssues"]],
   "erp-inventory-items": [

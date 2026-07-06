@@ -17,6 +17,9 @@ export type InventorySerialListParams = BaseListParams & {
   itemTypeId?: string;
   trackingPolicy?: string;
   itemId?: string;
+  status?: string;
+  salesOrderLineId?: string;
+  ids?: string;
 };
 
 export interface InventorySerialRow {
@@ -30,6 +33,10 @@ export interface InventorySerialRow {
   lotNo?: string | null;
   notes?: string | null;
   attributes?: Record<string, string> | null;
+  status?: string;
+  salesOrderLineId?: string | null;
+  soId?: string | null;
+  soNo?: string | null;
   createdAt: string;
   updatedAt?: string | null;
   item: {
@@ -41,6 +48,7 @@ export interface InventorySerialRow {
     trackingCategoryId?: string | null;
     trackingPolicyName?: string | null;
   };
+  lifecycle?: any;
 }
 
 export interface ErpTrackingPolicy {
@@ -188,6 +196,11 @@ export const inventoryCoreApi = {
         ? { trackingPolicy: params.trackingPolicy }
         : {}),
       ...(params?.itemId ? { itemId: params.itemId } : {}),
+      ...(params?.status ? { status: params.status } : {}),
+      ...(params?.salesOrderLineId
+        ? { salesOrderLineId: params.salesOrderLineId }
+        : {}),
+      ...(params?.ids ? { ids: params.ids } : {}),
     };
     const key = `inventory-serials:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
@@ -392,6 +405,38 @@ export const inventoryCoreApi = {
   ): Promise<InventorySerialRow> => {
     const { data } = await axiosInstance.patch<InventorySerialRow>(
       `/api/v1/inventory/serials/${id}`,
+      payload,
+    );
+    return data;
+  },
+  confirmDelivery: async (
+    id: string,
+    payload: { deliveryDate: string; notes?: string },
+  ): Promise<any> => {
+    const { data } = await axiosInstance.patch(
+      `/api/v1/inventory/serials/${id}/confirm-delivery`,
+      payload,
+    );
+    return data;
+  },
+  listSerialLifecycles: async (
+    params?: any,
+  ): Promise<PaginatedResponse<any>> => {
+    const requestParams = {
+      ...p(params),
+    };
+    const key = `inventory-serial-lifecycles:list:${JSON.stringify(requestParams)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get<PaginatedResponse<any>>(
+        `/api/v1/inventory/serial-lifecycles`,
+        { params: requestParams },
+      );
+      return data;
+    });
+  },
+  updateSerialLifecycle: async (id: string, payload: any): Promise<any> => {
+    const { data } = await axiosInstance.patch(
+      `/api/v1/inventory/serial-lifecycles/${id}`,
       payload,
     );
     return data;

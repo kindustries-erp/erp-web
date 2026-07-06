@@ -12,6 +12,8 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { Barcode, Eye } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
+import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
+import { Button } from "@/shared/components/ui/Button";
 
 export function TrackedGoodsPage() {
   const t = useT();
@@ -22,12 +24,14 @@ export function TrackedGoodsPage() {
   const [search, setSearch] = useState("");
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [sortField, setSortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
     null,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -43,8 +47,17 @@ export function TrackedGoodsPage() {
     search: search || undefined,
     itemType: itemTypeFilter || undefined,
     trackingPolicy: trackingPolicyFilter || undefined,
+    status: statusFilter || undefined,
     sort: [sortField],
   });
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      query.refetch();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+    return () => window.removeEventListener("refresh_erp_data", handleRefresh);
+  }, [query]);
 
   const loading = query.isLoading || query.isFetching;
   const error = query.error
@@ -58,6 +71,7 @@ export function TrackedGoodsPage() {
     !!search,
     !!itemTypeFilter,
     !!trackingPolicyFilter,
+    !!statusFilter,
   ].filter(Boolean).length;
 
   const columns: DataTableColumn<InventorySerialRow>[] = useMemo(
@@ -132,6 +146,83 @@ export function TrackedGoodsPage() {
         cell: (row) => row.item?.trackingPolicyName || "—",
       },
       {
+        key: "status",
+        header: t("Trạng thái"),
+        className: "align-middle min-w-[120px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          switch (row.status) {
+            case "IN_STOCK":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700 font-medium">
+                  Tồn kho
+                </span>
+              );
+            case "RESERVED":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700 font-medium">
+                  Giữ chỗ
+                </span>
+              );
+            case "SOLD":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 font-medium">
+                  Đã bán
+                </span>
+              );
+            case "RETURNED":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700 font-medium">
+                  Đổi trả
+                </span>
+              );
+            case "DELIVERING":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-medium">
+                  {t("status.DELIVERING")}
+                </span>
+              );
+            default:
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-medium">
+                  {row.status || "Tồn kho"}
+                </span>
+              );
+          }
+        },
+      },
+      {
+        key: "soNo",
+        header: t("Đơn hàng"),
+        className: "align-middle min-w-[120px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          if (!row.soNo) return "—";
+          return (
+            <Button
+              variant="link"
+              onClick={() => setPreviewSoNo(row.soNo || null)}
+              className="text-primary hover:underline p-0 h-auto"
+            >
+              {row.soNo}
+            </Button>
+          );
+        },
+      },
+
+      {
+        key: "delivery",
+        header: t("Ngày giao"),
+        className: "align-middle min-w-[100px] text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          return row.lifecycle?.deliveryDate
+            ? formatGMT7(row.lifecycle.deliveryDate, "date")
+            : "—";
+        },
+      },
+
+      {
         key: "attributes",
         header: t("Thuộc tính"),
         className: "align-middle min-w-[200px] text-left",
@@ -192,6 +283,18 @@ export function TrackedGoodsPage() {
             { value: "CUSTOM", label: "Tùy chỉnh" },
           ],
         },
+        {
+          key: "status",
+          label: t("Trạng thái"),
+          placeholder: t("Tất cả"),
+          options: [
+            { value: "IN_STOCK", label: "Tồn kho" },
+            { value: "RESERVED", label: "Đã giữ chỗ" },
+            { value: "DELIVERING", label: "Đang giao" },
+            { value: "SOLD", label: "Đã bán" },
+            { value: "RETURNED", label: "Đổi trả" },
+          ],
+        },
       ],
     }),
     [t],
@@ -202,6 +305,7 @@ export function TrackedGoodsPage() {
     setSearch("");
     setItemTypeFilter("");
     setTrackingPolicyFilter("");
+    setStatusFilter("");
     setPage(1);
   }, []);
 
@@ -275,6 +379,7 @@ export function TrackedGoodsPage() {
             custom: {
               itemType: itemTypeFilter,
               trackingPolicy: trackingPolicyFilter,
+              status: statusFilter,
             },
           },
           inputs: { search: searchInput, amountMin: "", amountMax: "" },
@@ -295,6 +400,8 @@ export function TrackedGoodsPage() {
               setItemTypeFilter(v);
             } else if (key === "trackingPolicy") {
               setTrackingPolicyFilter(v);
+            } else if (key === "status") {
+              setStatusFilter(v);
             }
             setPage(1);
           },
@@ -312,6 +419,11 @@ export function TrackedGoodsPage() {
           query.refetch();
           setDrawerOpen(false);
         }}
+      />
+      <SoPreviewDrawer
+        open={!!previewSoNo}
+        soNo={previewSoNo}
+        onClose={() => setPreviewSoNo(null)}
       />
     </>
   );

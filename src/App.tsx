@@ -52,6 +52,7 @@ import { GarageDashboard } from "@/modules/garage/pages/GarageDashboard";
 import { GarageCases } from "@/modules/garage/pages/GarageCases";
 import { GarageReceivables } from "@/modules/garage/pages/GarageReceivables";
 import { GaragePayables } from "@/modules/garage/pages/GaragePayables";
+import { AfterSalesPage } from "@/modules/after-sales/components/AfterSalesPage";
 
 import { PageKey } from "@/shared/types";
 
@@ -91,6 +92,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-cases": GarageCases,
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
+  "after-sales": AfterSalesPage,
 };
 
 export default function App() {

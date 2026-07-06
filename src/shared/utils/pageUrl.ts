@@ -34,6 +34,7 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "sys-tags",
   "garage-dashboard",
   "garage-cases",
+  "after-sales",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {

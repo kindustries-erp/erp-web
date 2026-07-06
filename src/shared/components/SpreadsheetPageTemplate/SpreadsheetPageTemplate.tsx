@@ -3,6 +3,7 @@ import { PageLayout } from "@/shared/components/PageLayout";
 import { TableActionGroup } from "@/shared/components/TableActionGroup";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { FilterPanel } from "@/shared/components/FilterPanel";
+import { SearchInput } from "@/shared/components/SearchInput";
 import { useT } from "@/core/i18n";
 import type { SpreadsheetPageTemplateProps } from "./types";
 
@@ -84,6 +85,22 @@ export function SpreadsheetPageTemplate<T>({
     });
   }, [columns]);
 
+  const searchConfig = filterConfig?.search;
+  const searchPlaceholder =
+    typeof searchConfig === "object"
+      ? searchConfig.placeholder
+      : t("Tìm kiếm...");
+
+  const searchNode =
+    searchConfig && filter ? (
+      <SearchInput
+        value={filter.inputs.search}
+        onChange={filter.setSearchInput}
+        placeholder={searchPlaceholder}
+        className="w-[150px] max-w-full"
+      />
+    ) : null;
+
   return (
     <PageLayout
       title={title}
@@ -98,7 +115,12 @@ export function SpreadsheetPageTemplate<T>({
           onCreate={onCreate}
           createLabel={finalCreateLabel}
           createActions={createActions}
-          extraActions={extraActions}
+          extraActions={
+            <div className="flex items-center gap-2">
+              {searchNode}
+              {extraActions}
+            </div>
+          }
           portalId={tableId}
         >
           {bulkActionsNode}

@@ -25,6 +25,7 @@ export interface ErpGoodsIssue {
   issueType: string;
   customerId?: string | null;
   customerName?: string | null;
+  salesOrderId?: string | null;
   productionOrderId?: string | null;
   status?: string | null;
   remarks?: string | null;
@@ -54,6 +55,7 @@ export interface CreateGiPayload {
   issueDate: string;
   issueType: string;
   customerId?: string;
+  salesOrderId?: string;
   productionOrderId?: string;
   status?: string;
   remarks?: string;

@@ -23,6 +23,7 @@ import {
   Package,
   Barcode,
   ReceiptText,
+  Shield,
 } from "lucide-react";
 
 const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
@@ -30,6 +31,7 @@ const TAB_ICONS: Partial<Record<PageKey, React.ElementType>> = {
 
   "erp-sales-orders": Boxes,
   "erp-customers": Users,
+  "after-sales": Shield,
   purchasing: FileText,
   "erp-suppliers": Building2,
   "erp-inventory-stock": Package,
