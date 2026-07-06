@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useT } from "@/core/i18n";
+import toast from "react-hot-toast";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { Combobox } from "@/shared/components/Combobox";
@@ -13,10 +14,14 @@ import type {
   ErpSalesOrder,
   CreateSoPayload,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
+import { salesOrdersCoreApi } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { SerialPicker } from "./SerialPicker";
 import { DeliveryConfirmModal } from "./DeliveryConfirmModal";
+import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { Button } from "@/shared/components/ui/Button";
 
 export interface SoLineForm {
   itemId: string;
@@ -73,7 +78,7 @@ export function buildForm(so: ErpSalesOrder): SoForm {
           qtyOrdered: line.qtyOrdered ?? "1",
           unitPrice: line.unitPrice ?? "0",
           amount: line.amount ?? "0",
-          selectedSerialIds: line.serialIds || [],
+          selectedSerialIds: line.selectedSerialIds || line.serialIds || [],
         }))
       : [emptyLine()],
   };
@@ -189,16 +194,45 @@ export function SoFormDrawer({
   onPendingTagsChange,
 }: SoFormDrawerProps) {
   const t = useT();
+  const giDrawer = useGiDrawer();
   const viewOnly = mode === "view";
   const isEditing = mode === "edit";
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
+  const [isConfirmingBulk, setIsConfirmingBulk] = useState(false);
 
   const canConfirmDelivery =
     viewOnly &&
     editing &&
-    (editing.status === "DELIVERED" || editing.status === "PARTIAL_DELIVERED");
+    (editing.status === "DELIVERING" ||
+      editing.status === "PARTIAL_DELIVERING");
   const serialIdsToConfirm =
-    editing?.lines?.flatMap((l: any) => l.serialIds || []) || [];
+    editing?.lines?.flatMap(
+      (l: any) => l.selectedSerialIds || l.serialIds || [],
+    ) || [];
+
+  const handleBulkConfirmDelivery = async () => {
+    if (!editing?.id) return;
+    if (
+      !window.confirm(
+        t("Bạn có chắc chắn muốn xác nhận giao hàng cho toàn bộ đơn hàng này?"),
+      )
+    )
+      return;
+    setIsConfirmingBulk(true);
+    try {
+      await salesOrdersCoreApi.confirmAllDelivery(editing.id);
+      toast.success(t("Đã xác nhận giao hàng thành công"));
+      onClose();
+      // Giả lập lưu thành công để kích hoạt refresh grid ở page ngoài
+      handleSave();
+    } catch (e: any) {
+      toast.error(
+        e.response?.data?.message || t("Xác nhận giao hàng thất bại"),
+      );
+    } finally {
+      setIsConfirmingBulk(false);
+    }
+  };
 
   const drawerActions = viewOnly
     ? [
@@ -208,13 +242,20 @@ export function SoFormDrawer({
           variant: "outline" as const,
           disabled: saving,
         },
-        ...(canConfirmDelivery && serialIdsToConfirm.length > 0
+        ...(canConfirmDelivery
           ? [
               {
                 label: t("Xác nhận giao hàng"),
-                primary: true,
-                onClick: () => setDeliveryModalOpen(true),
-                disabled: saving,
+                variant: "secondary" as const,
+                align: "left" as const,
+                onClick: () => {
+                  if (serialIdsToConfirm.length > 0) {
+                    setDeliveryModalOpen(true);
+                  } else {
+                    handleBulkConfirmDelivery();
+                  }
+                },
+                disabled: saving || isConfirmingBulk,
               },
             ]
           : []),
@@ -476,12 +517,16 @@ export function SoFormDrawer({
                       {editing.goodsIssues.map((gi: any) => (
                         <tr key={gi.id} className="border-t border-border">
                           <td className="px-3 py-2 text-primary font-medium">
-                            <a
-                              href={`/app/inventory/goods-issues`}
-                              className="hover:underline"
+                            <Button
+                              variant="link"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                giDrawer.openDetail(gi.id);
+                              }}
+                              className="text-primary hover:underline"
                             >
-                              {gi.giNo}
-                            </a>
+                              {gi.issueNo}
+                            </Button>
                           </td>
                           <td className="px-3 py-2">
                             {gi.issueDate
@@ -517,7 +562,7 @@ export function SoFormDrawer({
                 placeholder={t("VD: SO-2410-001")}
               />
             </DrawerField>
-            <DrawerField label="Khách hàng">
+            <DrawerField label="Khách hàng" required>
               <Combobox
                 value={form.customerId}
                 onChange={(value) =>
@@ -529,6 +574,7 @@ export function SoFormDrawer({
                 onSearch={setCustomerSearch}
                 onScrollBottom={fetchNextCustomers}
                 loading={loadingCustomers}
+                fallbackLabel={editing?.customerName || ""}
               />
             </DrawerField>
             <DrawerField label={t("Ngày đặt")} required>
@@ -591,6 +637,7 @@ export function SoFormDrawer({
           window.location.reload();
         }}
       />
+      <GiFormDrawer drawer={giDrawer} />
     </>
   );
 }

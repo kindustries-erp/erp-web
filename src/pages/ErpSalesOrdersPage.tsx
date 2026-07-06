@@ -259,6 +259,11 @@ export function ErpSalesOrdersPage() {
       return;
     }
 
+    if (!form.customerId) {
+      setSaveError("Khách hàng là bắt buộc");
+      return;
+    }
+
     if (
       !form.lines.length ||
       form.lines.some((line) => !line.qtyOrdered.trim())

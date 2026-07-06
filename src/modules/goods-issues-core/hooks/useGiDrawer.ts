@@ -293,11 +293,29 @@ export function useGiDrawer({
       setSaveError(null);
       setLoading(true);
       setOpen(true);
-      void loadGiLookups();
+      await loadGiLookups();
       try {
         const detail = await goodsIssuesCoreApi.get(id);
         setEditing(detail);
         setForm(buildGiForm(detail));
+
+        if (detail.salesOrderId) {
+          salesOrdersCoreApi
+            .get(detail.salesOrderId)
+            .then((so) => {
+              setSoOptions((prev) => {
+                if (prev.some((o) => o.value === so.id)) return prev;
+                return [
+                  ...prev,
+                  {
+                    value: so.id,
+                    label: `${so.soNo}${so.customerName ? ` - ${so.customerName}` : ""}`,
+                  },
+                ];
+              });
+            })
+            .catch(() => {});
+        }
       } finally {
         setLoading(false);
       }

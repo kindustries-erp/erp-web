@@ -12,6 +12,8 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { Barcode, Eye } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
+import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
+import { Button } from "@/shared/components/ui/Button";
 
 export function TrackedGoodsPage() {
   const t = useT();
@@ -29,6 +31,7 @@ export function TrackedGoodsPage() {
     null,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -165,6 +168,12 @@ export function TrackedGoodsPage() {
                   Đổi trả
                 </span>
               );
+            case "DELIVERING":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-medium">
+                  {t("status.DELIVERING")}
+                </span>
+              );
             default:
               return (
                 <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-medium">
@@ -181,14 +190,14 @@ export function TrackedGoodsPage() {
         headerClassName: "text-center",
         cell: (row) => {
           if (!row.soNo) return "—";
-          // Use link to SO page. Ensure routing is configured, assuming it is /erp/sales-orders
           return (
-            <a
-              href={`/erp/sales-orders?search=${row.soNo}`}
-              className="text-primary hover:underline"
+            <Button
+              variant="link"
+              onClick={() => setPreviewSoNo(row.soNo || null)}
+              className="text-primary hover:underline p-0 h-auto"
             >
               {row.soNo}
-            </a>
+            </Button>
           );
         },
       },
@@ -273,6 +282,7 @@ export function TrackedGoodsPage() {
           options: [
             { value: "IN_STOCK", label: "Tồn kho" },
             { value: "RESERVED", label: "Đã giữ chỗ" },
+            { value: "DELIVERING", label: "Đang giao" },
             { value: "SOLD", label: "Đã bán" },
             { value: "RETURNED", label: "Đổi trả" },
           ],
@@ -401,6 +411,11 @@ export function TrackedGoodsPage() {
           query.refetch();
           setDrawerOpen(false);
         }}
+      />
+      <SoPreviewDrawer
+        open={!!previewSoNo}
+        soNo={previewSoNo}
+        onClose={() => setPreviewSoNo(null)}
       />
     </>
   );

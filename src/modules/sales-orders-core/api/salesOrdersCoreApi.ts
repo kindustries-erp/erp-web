@@ -105,6 +105,12 @@ export const salesOrdersCoreApi = {
     );
     return data.data;
   },
+  confirmAllDelivery: async (id: string): Promise<ErpSalesOrder> => {
+    const { data } = await axiosInstance.post<SoDetailResponse>(
+      `${BASE}/${id}/confirm-all-delivery`,
+    );
+    return data.data;
+  },
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },

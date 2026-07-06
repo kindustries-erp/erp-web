@@ -15,6 +15,7 @@ import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { formatGMT7 } from "@/shared/utils/format";
+import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,7 @@ export function TrackedGoodsDrawer({
 
   const [mode, setMode] = useState<DrawerMode>("view");
   const [saving, setSaving] = useState(false);
+  const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
   // Detail state
   const [loading, setLoading] = useState(false);
@@ -290,12 +292,12 @@ export function TrackedGoodsDrawer({
           <DrawerRow
             label={t("Đơn hàng")}
             value={
-              <a
-                href={`/erp/sales-orders?search=${detailItem.soNo}`}
+              <button
+                onClick={() => setPreviewSoNo(detailItem.soNo || null)}
                 className="text-primary hover:underline"
               >
                 {detailItem.soNo}
-              </a>
+              </button>
             }
           />
         )}
@@ -379,27 +381,34 @@ export function TrackedGoodsDrawer({
       : undefined;
 
   return (
-    <StandardFormDrawer
-      open={open}
-      mode={mode}
-      onClose={handleClose}
-      onToggleEdit={canUpdate ? handleToggleEdit : undefined}
-      icon={<Barcode className="h-5 w-5" />}
-      title={detailItem?.serialNo ?? t("Chi tiết tracking")}
-      subtitle={detailItem?.item?.itemName}
-      layout="1-column"
-      size="md"
-      confirmOnClose={mode === "edit"}
-      leftPanel={
-        loading ? (
-          <div className="py-2">
-            <FormLoadingSkeleton layout="1-column" />
-          </div>
-        ) : detailItem ? (
-          leftPanel
-        ) : null
-      }
-      actions={drawerActions}
-    />
+    <>
+      <StandardFormDrawer
+        open={open}
+        mode={mode}
+        onClose={handleClose}
+        onToggleEdit={canUpdate ? handleToggleEdit : undefined}
+        icon={<Barcode className="h-5 w-5" />}
+        title={detailItem?.serialNo ?? t("Chi tiết tracking")}
+        subtitle={detailItem?.item?.itemName}
+        layout="1-column"
+        size="md"
+        confirmOnClose={mode === "edit"}
+        leftPanel={
+          loading ? (
+            <div className="py-2">
+              <FormLoadingSkeleton layout="1-column" />
+            </div>
+          ) : detailItem ? (
+            leftPanel
+          ) : null
+        }
+        actions={drawerActions}
+      />
+      <SoPreviewDrawer
+        open={!!previewSoNo}
+        soNo={previewSoNo}
+        onClose={() => setPreviewSoNo(null)}
+      />
+    </>
   );
 }

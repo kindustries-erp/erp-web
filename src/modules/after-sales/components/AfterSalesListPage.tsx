@@ -191,6 +191,7 @@ export function AfterSalesListPage() {
     <>
       <SpreadsheetPageTemplate<any>
         title={t("Hậu mãi & Bảo hành")}
+        desc={t("Quản lý thông tin bảo hành và vòng đời sản phẩm.")}
         icon={<Shield className="w-5 h-5" />}
         tableId="after-sales-table"
         items={data}
