@@ -17,6 +17,9 @@ import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { SerialPicker } from "./SerialPicker";
 import { DeliveryConfirmModal } from "./DeliveryConfirmModal";
+import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { Button } from "@/shared/components/ui/Button";
 
 export interface SoLineForm {
   itemId: string;
@@ -189,6 +192,7 @@ export function SoFormDrawer({
   onPendingTagsChange,
 }: SoFormDrawerProps) {
   const t = useT();
+  const giDrawer = useGiDrawer();
   const viewOnly = mode === "view";
   const isEditing = mode === "edit";
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
@@ -476,12 +480,16 @@ export function SoFormDrawer({
                       {editing.goodsIssues.map((gi: any) => (
                         <tr key={gi.id} className="border-t border-border">
                           <td className="px-3 py-2 text-primary font-medium">
-                            <a
-                              href={`/app/inventory/goods-issues`}
-                              className="hover:underline"
+                            <Button
+                              variant="link"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                giDrawer.openDetail(gi.id);
+                              }}
+                              className="text-primary hover:underline"
                             >
-                              {gi.giNo}
-                            </a>
+                              {gi.issueNo}
+                            </Button>
                           </td>
                           <td className="px-3 py-2">
                             {gi.issueDate
@@ -517,7 +525,7 @@ export function SoFormDrawer({
                 placeholder={t("VD: SO-2410-001")}
               />
             </DrawerField>
-            <DrawerField label="Khách hàng">
+            <DrawerField label="Khách hàng" required>
               <Combobox
                 value={form.customerId}
                 onChange={(value) =>
@@ -592,6 +600,7 @@ export function SoFormDrawer({
           window.location.reload();
         }}
       />
+      <GiFormDrawer drawer={giDrawer} />
     </>
   );
 }

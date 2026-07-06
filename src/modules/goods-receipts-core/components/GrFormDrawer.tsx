@@ -293,6 +293,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         cell: (poLine) => {
                           const itemName =
                             poLine.itemName ||
+                            (poLine.itemId && itemsDict[poLine.itemId]
+                              ? itemsDict[poLine.itemId].itemName
+                              : "") ||
                             poLine.description ||
                             poLine.itemId ||
                             "—";
@@ -582,7 +585,13 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         header: t("Tên linh kiện"),
                         minWidth: 260,
                         cell: (line) => {
-                          const itemName = line.itemName || line.itemId || "—";
+                          const itemName =
+                            line.itemName ||
+                            (line.itemId && itemsDict[line.itemId]
+                              ? itemsDict[line.itemId].itemName
+                              : "") ||
+                            line.itemId ||
+                            "—";
                           return (
                             <div
                               className="font-medium text-foreground truncate max-w-[260px]"

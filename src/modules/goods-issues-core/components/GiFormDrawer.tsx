@@ -14,7 +14,6 @@ import {
   emptyGiLine,
   isMoLinkedGiLocked,
   type UseGiDrawerReturn,
-  type GiLineForm,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { useRef, useEffect } from "react";
 import { useReactToPrint } from "react-to-print";
@@ -210,17 +209,16 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                           viewOnly ? "text-red-600" : "",
                         )}
                       >
-                        {viewOnly
-                          ? `-${fmtQty(form.lines.reduce((sum, line) => sum + Number(line.qtyIssued || 0), 0).toString())}`
-                          : fmtQty(
-                              form.lines
-                                .reduce(
-                                  (sum, line) =>
-                                    sum + Number(line.qtyIssued || 0),
-                                  0,
-                                )
-                                .toString(),
-                            )}
+                        {fmtQty(
+                          form.lines
+                            .reduce(
+                              (sum, line) =>
+                                sum +
+                                (line.itemId ? Number(line.qtyIssued || 0) : 0),
+                              0,
+                            )
+                            .toString(),
+                        )}
                       </td>
                       <td
                         className="px-3 py-3"
@@ -327,19 +325,32 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                       minWidth: 140,
                       align: viewOnly ? "center" : "left",
                       cell: (line, idx) => {
+                        const qty = line.itemId ? line.qtyIssued : "0";
                         if (viewOnly) {
-                          return Number(line.qtyIssued) > 0 ? (
+                          return Number(qty) > 0 ? (
                             <div className="font-medium text-red-600">
-                              {fmtQty(line.qtyIssued)}
+                              {fmtQty(qty)}
                             </div>
-                          ) : null;
+                          ) : (
+                            <div className="text-center font-medium text-muted-foreground">
+                              0
+                            </div>
+                          );
                         }
                         return (
                           <input
                             type="number"
-                            className={cn(inputCls, "w-full text-right")}
-                            value={line.qtyIssued}
-                            disabled={viewOnly || editing?.status === "POSTED"}
+                            className={cn(
+                              inputCls,
+                              "w-full text-right",
+                              !line.itemId && "bg-muted text-muted-foreground",
+                            )}
+                            value={qty}
+                            disabled={
+                              viewOnly ||
+                              editing?.status === "POSTED" ||
+                              !line.itemId
+                            }
                             onChange={(e) => {
                               const v = e.target.value;
                               setForm((f) => {
@@ -386,6 +397,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                         );
                       },
                     },
+                    /*
                     ...(vehicleOptions.length > 0
                       ? [
                           {
@@ -427,6 +439,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                           },
                         ]
                       : []),
+                    */
                   ]}
                 />
               </DrawerSection>
