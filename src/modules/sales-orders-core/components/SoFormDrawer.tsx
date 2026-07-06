@@ -159,6 +159,7 @@ export interface SoFormDrawerProps {
   updateLine: (index: number, patch: Partial<SoLineForm>) => void;
 
   onToggleEdit?: () => void;
+  onRefresh?: () => void;
   /** Pending tag IDs for Option B create flow */
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
@@ -190,6 +191,7 @@ export function SoFormDrawer({
   removeLine,
   updateLine,
   onToggleEdit,
+  onRefresh,
   pendingTagIds = [],
   onPendingTagsChange,
 }: SoFormDrawerProps) {
@@ -223,8 +225,8 @@ export function SoFormDrawer({
       await salesOrdersCoreApi.confirmAllDelivery(editing.id);
       toast.success(t("Đã xác nhận giao hàng thành công"));
       onClose();
-      // Giả lập lưu thành công để kích hoạt refresh grid ở page ngoài
-      handleSave();
+      // Call onRefresh to trigger grid update
+      onRefresh?.();
     } catch (e: any) {
       toast.error(
         e.response?.data?.message || t("Xác nhận giao hàng thất bại"),
@@ -633,8 +635,9 @@ export function SoFormDrawer({
         onClose={() => setDeliveryModalOpen(false)}
         serialIds={serialIdsToConfirm}
         onConfirmSuccess={() => {
-          // Just reload the page or trigger a refresh
-          window.location.reload();
+          setDeliveryModalOpen(false);
+          onClose();
+          onRefresh?.();
         }}
       />
       <GiFormDrawer drawer={giDrawer} />

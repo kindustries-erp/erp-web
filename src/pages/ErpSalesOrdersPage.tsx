@@ -7,6 +7,7 @@ import {
   PackagePlus,
   Eye,
   FileText,
+  CheckCircle,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -26,6 +27,7 @@ import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
+import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
 
 import {
   SoFormDrawer,
@@ -90,6 +92,10 @@ export function ErpSalesOrdersPage() {
   const [cancelTarget, setCancelTarget] = useState<ErpSalesOrder | null>(null);
   const [canceling, setCanceling] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [deliveryConfirmItem, setDeliveryConfirmItem] = useState<{
+    id: string;
+    serialIds: string[];
+  } | null>(null);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
@@ -178,8 +184,17 @@ export function ErpSalesOrdersPage() {
       }
     };
     window.addEventListener("open_erp_document", handleOpenDoc);
-    return () => window.removeEventListener("open_erp_document", handleOpenDoc);
-  }, []);
+
+    const handleRefresh = () => {
+      loadOrders();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+
+    return () => {
+      window.removeEventListener("open_erp_document", handleOpenDoc);
+      window.removeEventListener("refresh_erp_data", handleRefresh);
+    };
+  }, [loadOrders]);
 
   function resetForm() {
     setForm(emptyForm());
@@ -210,9 +225,38 @@ export function ErpSalesOrdersPage() {
     setSaveError(null);
     try {
       const detail = await salesOrdersCoreApi.get(item.id);
-      setEditing(detail);
-      setForm(buildForm(detail));
+      // Detail API might not return customerName, fallback to list item's customerName
+      const customerName = detail.customerName || item.customerName;
+
+      const mergedDetail = { ...detail, customerName };
+      setEditing(mergedDetail);
+      setForm(buildForm(mergedDetail));
       setDrawerOpen(true);
+
+      if (!customerName && detail.customerId) {
+        import("@/modules/basic-masters/api/basicMastersApi").then(
+          ({ basicMastersApi }) => {
+            basicMastersApi
+              .list({
+                search: detail.customerId || undefined,
+                entities: "customers",
+              })
+              .then((res) => {
+                const c = res.items.customers?.find(
+                  (x: any) => x.id === detail.customerId,
+                );
+                if (c) {
+                  const name = `${c.code} — ${c.displayName || c.name}`;
+                  setEditing((prev) =>
+                    prev?.id === detail.id
+                      ? { ...prev, customerName: name }
+                      : prev,
+                  );
+                }
+              });
+          },
+        );
+      }
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
@@ -329,6 +373,46 @@ export function ErpSalesOrdersPage() {
       setError(
         e?.response?.data?.message || e?.message || "Không thể unreserve SO",
       );
+    }
+  }
+
+  async function handleConfirmAllDelivery(item: ErpSalesOrder) {
+    setError(null);
+    try {
+      await salesOrdersCoreApi.confirmAllDelivery(item.id);
+      await loadOrders();
+      window.dispatchEvent(new CustomEvent("refresh_erp_data"));
+    } catch (e: any) {
+      setError(
+        e?.response?.data?.message ||
+          e?.message ||
+          "Không thể xác nhận giao hàng",
+      );
+    }
+  }
+
+  async function handleRowConfirmDelivery(item: ErpSalesOrder) {
+    try {
+      const detail = await salesOrdersCoreApi.get(item.id);
+      const serialIds =
+        detail?.lines?.flatMap(
+          (l: any) => l.selectedSerialIds || l.serialIds || [],
+        ) || [];
+      if (serialIds.length > 0) {
+        setDeliveryConfirmItem({ id: item.id, serialIds });
+      } else {
+        if (
+          window.confirm(
+            t(
+              "Bạn có chắc chắn muốn xác nhận giao hàng cho toàn bộ đơn hàng này?",
+            ),
+          )
+        ) {
+          void handleConfirmAllDelivery(item);
+        }
+      }
+    } catch (e: any) {
+      setError(e?.message || "Không thể tải chi tiết SO");
     }
   }
 
@@ -499,6 +583,18 @@ export function ErpSalesOrdersPage() {
                 !["RESERVED", "PARTIAL_RESERVED"].includes(item.status || ""),
             },
             {
+              label: t("Xác nhận giao hàng"),
+              icon: <CheckCircle className="h-[13px] w-[13px]" />,
+              onClick: () => {
+                void handleRowConfirmDelivery(item);
+              },
+              hidden:
+                !canUpdate ||
+                !["DELIVERING", "PARTIAL_DELIVERING"].includes(
+                  item.status || "",
+                ),
+            },
+            {
               label: t("Xóa"),
               icon: <Trash2 className="h-[13px] w-[13px]" />,
               variant: "danger",
@@ -559,6 +655,7 @@ export function ErpSalesOrdersPage() {
         saving={saving}
         saveError={saveError}
         handleSave={handleSave}
+        onRefresh={loadOrders}
         customerOptions={customerOptions}
         setCustomerSearch={setCustomerSearch}
         fetchNextCustomers={fetchNextCustomers}
@@ -580,6 +677,17 @@ export function ErpSalesOrdersPage() {
             ? () => setViewOnly(false)
             : undefined
         }
+      />
+
+      <DeliveryConfirmModal
+        open={!!deliveryConfirmItem}
+        onClose={() => setDeliveryConfirmItem(null)}
+        serialIds={deliveryConfirmItem?.serialIds || []}
+        onConfirmSuccess={() => {
+          setDeliveryConfirmItem(null);
+          loadOrders();
+          window.dispatchEvent(new CustomEvent("refresh_erp_data"));
+        }}
       />
     </SpreadsheetPageTemplate>
   );
