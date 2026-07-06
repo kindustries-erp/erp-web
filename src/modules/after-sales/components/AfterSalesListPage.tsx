@@ -120,6 +120,14 @@ export function AfterSalesListPage() {
       ),
     },
     {
+      key: "expectedDeliveryDate",
+      header: t("Ngày giao dự kiến"),
+      cell: (row: any) =>
+        row.expectedDeliveryDate
+          ? format(new Date(row.expectedDeliveryDate), "dd/MM/yyyy")
+          : "-",
+    },
+    {
       key: "deliveryDate",
       header: t("Ngày giao"),
       cell: (row: any) =>

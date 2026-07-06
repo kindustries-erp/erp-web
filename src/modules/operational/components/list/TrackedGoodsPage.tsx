@@ -51,6 +51,14 @@ export function TrackedGoodsPage() {
     sort: [sortField],
   });
 
+  useEffect(() => {
+    const handleRefresh = () => {
+      query.refetch();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+    return () => window.removeEventListener("refresh_erp_data", handleRefresh);
+  }, [query]);
+
   const loading = query.isLoading || query.isFetching;
   const error = query.error
     ? extractApiError(query.error, "Lỗi tải dữ liệu")

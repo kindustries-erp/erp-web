@@ -361,6 +361,7 @@ export function useGiDrawer({
             queryKey: ["warehouse-vouchers", "unified"],
           });
         }
+        window.dispatchEvent(new CustomEvent("refresh_erp_data"));
       } catch (e) {
         setSaveError(
           e instanceof Error ? e.message : t("Lỗi lưu phiếu xuất kho"),
