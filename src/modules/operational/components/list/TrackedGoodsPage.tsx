@@ -168,6 +168,12 @@ export function TrackedGoodsPage() {
                   Đổi trả
                 </span>
               );
+            case "DELIVERING":
+              return (
+                <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-medium">
+                  {t("status.DELIVERING")}
+                </span>
+              );
             default:
               return (
                 <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 font-medium">
@@ -276,6 +282,7 @@ export function TrackedGoodsPage() {
           options: [
             { value: "IN_STOCK", label: "Tồn kho" },
             { value: "RESERVED", label: "Đã giữ chỗ" },
+            { value: "DELIVERING", label: "Đang giao" },
             { value: "SOLD", label: "Đã bán" },
             { value: "RETURNED", label: "Đổi trả" },
           ],

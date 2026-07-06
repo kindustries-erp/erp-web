@@ -15,8 +15,10 @@ import {
   isMoLinkedGiLocked,
   type UseGiDrawerReturn,
 } from "@/modules/goods-issues-core/hooks/useGiDrawer";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useReactToPrint } from "react-to-print";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { GoodsIssuePrintTemplate } from "@/shared/components/print-templates/GoodsIssuePrintTemplate";
@@ -56,6 +58,35 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   useEffect(() => {
     setGlobalLoading(saving);
   }, [saving, setGlobalLoading]);
+
+  const isLineViewOnly = viewOnly || form.issueType === "SALE";
+
+  const [serialDetails, setSerialDetails] = useState<
+    Record<string, InventorySerialRow>
+  >({});
+  useEffect(() => {
+    let active = true;
+    const sIds = form.lines.map((l) => l.serialId).filter(Boolean);
+    if (sIds.length > 0) {
+      inventoryCoreApi
+        .listSerials({ ids: sIds.join(","), pageSize: 1000 })
+        .then((res) => {
+          if (active) {
+            const map: Record<string, InventorySerialRow> = {};
+            res.items.forEach((s) => {
+              map[s.id] = s;
+            });
+            setSerialDetails(map);
+          }
+        })
+        .catch(console.error);
+    } else {
+      setSerialDetails({});
+    }
+    return () => {
+      active = false;
+    };
+  }, [form.lines]);
 
   const canUpdate = useHasPermission("goods_issues", "update");
 
@@ -187,6 +218,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   <Skeleton className="h-24 w-full" />
                 </div>
               </DrawerSection>
+            ) : form.issueType === "SALE" && !form.salesOrderId ? (
+              <DrawerSection title={t("Dòng xuất kho")}>
+                <div className="flex h-32 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500">
+                  {t("Vui lòng chọn Đơn bán hàng để xem chi tiết xuất kho.")}
+                </div>
+              </DrawerSection>
             ) : (
               <DrawerSection
                 title={t("Dòng xuất kho") + " (" + form.lines.length + ")"}
@@ -194,13 +231,17 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                 <DocumentLineTable
                   data={form.lines}
                   getRowKey={(_, idx) => idx}
-                  viewOnly={viewOnly}
-                  disabled={viewOnly || editing?.status === "POSTED"}
+                  viewOnly={viewOnly || form.issueType === "SALE"}
+                  disabled={
+                    viewOnly ||
+                    form.issueType === "SALE" ||
+                    editing?.status === "POSTED"
+                  }
                   tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
                   footer={
                     <tr>
                       <td
-                        colSpan={3}
+                        colSpan={4}
                         className="px-3 py-3 text-right font-semibold"
                       ></td>
                       <td
@@ -224,10 +265,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                         className="px-3 py-3"
                         colSpan={
                           vehicleOptions.length > 0
-                            ? viewOnly
+                            ? viewOnly || form.issueType === "SALE"
                               ? 2
                               : 3
-                            : viewOnly
+                            : viewOnly || form.issueType === "SALE"
                               ? 1
                               : 2
                         }
@@ -259,9 +300,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "itemCode",
                       header: t("Mã vật tư"),
-                      minWidth: viewOnly ? 140 : 200,
+                      minWidth: isLineViewOnly ? 140 : 200,
                       cell: (line, idx) => {
-                        if (viewOnly) {
+                        if (isLineViewOnly) {
                           const code = line.itemName?.split(" — ")[0] || "—";
                           return <span>{code}</span>;
                         }
@@ -270,7 +311,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             options={itemOptions}
                             value={line.itemId}
                             fallbackLabel={line.itemName}
-                            disabled={viewOnly}
+                            disabled={isLineViewOnly}
                             placeholder={t("Chọn hàng hóa")}
                             searchPlaceholder={t("Tìm SKU / tên")}
                             onSearch={setItemSearch}
@@ -297,7 +338,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "itemName",
                       header: t("Tên vật tư"),
-                      minWidth: 260,
+                      minWidth: 200,
                       cell: (line) => {
                         const nameParts = line.itemName?.split(" — ");
                         const name =
@@ -307,8 +348,8 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                         return (
                           <div
                             className={cn(
-                              "font-medium truncate max-w-[260px]",
-                              viewOnly
+                              "font-medium truncate max-w-[200px]",
+                              isLineViewOnly
                                 ? "text-foreground"
                                 : "text-muted-foreground",
                             )}
@@ -320,13 +361,47 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                       },
                     },
                     {
+                      key: "tracking",
+                      header: t("Serials / Số khung"),
+                      minWidth: 250,
+                      cell: (line) => {
+                        if (!line.serialId) {
+                          return (
+                            <span className="text-[11px] text-muted-foreground">
+                              —
+                            </span>
+                          );
+                        }
+                        const s = serialDetails[line.serialId];
+                        if (!s) {
+                          return (
+                            <span className="text-[11px] text-muted-foreground">
+                              ...
+                            </span>
+                          );
+                        }
+                        return (
+                          <div className="flex flex-col text-[13px] py-1">
+                            <span className="font-mono text-gray-900">
+                              {s.vinNo || s.serialNo || s.id.substring(0, 8)}
+                            </span>
+                            {s.engineNo && (
+                              <span className="text-gray-500 text-[11px]">
+                                Số máy: {s.engineNo}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      },
+                    },
+                    {
                       key: "qtyIssued",
                       header: t("Số lượng"),
                       minWidth: 140,
-                      align: viewOnly ? "center" : "left",
+                      align: isLineViewOnly ? "center" : "left",
                       cell: (line, idx) => {
                         const qty = line.itemId ? line.qtyIssued : "0";
-                        if (viewOnly) {
+                        if (isLineViewOnly) {
                           return Number(qty) > 0 ? (
                             <div className="font-medium text-red-600">
                               {fmtQty(qty)}
@@ -347,7 +422,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             )}
                             value={qty}
                             disabled={
-                              viewOnly ||
+                              isLineViewOnly ||
                               editing?.status === "POSTED" ||
                               !line.itemId
                             }
@@ -367,9 +442,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                       key: "unitCost",
                       header: t("Đơn giá"),
                       minWidth: 140,
-                      align: viewOnly ? "right" : "left",
+                      align: isLineViewOnly ? "right" : "left",
                       cell: (line, idx) => {
-                        if (viewOnly) {
+                        if (isLineViewOnly) {
                           return line.unitCost ? (
                             <span className="text-muted-foreground">
                               {fmtQty(line.unitCost)}
@@ -383,7 +458,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             type="number"
                             className={cn(inputCls, "w-full text-right")}
                             value={line.unitCost}
-                            disabled={viewOnly || editing?.status === "POSTED"}
+                            disabled={
+                              isLineViewOnly || editing?.status === "POSTED"
+                            }
                             placeholder={t("Tùy chọn")}
                             onChange={(e) => {
                               const v = e.target.value;

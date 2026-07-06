@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useT } from "@/core/i18n";
+import toast from "react-hot-toast";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { Combobox } from "@/shared/components/Combobox";
@@ -13,6 +14,7 @@ import type {
   ErpSalesOrder,
   CreateSoPayload,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
+import { salesOrdersCoreApi } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { SerialPicker } from "./SerialPicker";
@@ -76,7 +78,7 @@ export function buildForm(so: ErpSalesOrder): SoForm {
           qtyOrdered: line.qtyOrdered ?? "1",
           unitPrice: line.unitPrice ?? "0",
           amount: line.amount ?? "0",
-          selectedSerialIds: line.serialIds || [],
+          selectedSerialIds: line.selectedSerialIds || line.serialIds || [],
         }))
       : [emptyLine()],
   };
@@ -196,13 +198,41 @@ export function SoFormDrawer({
   const viewOnly = mode === "view";
   const isEditing = mode === "edit";
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
+  const [isConfirmingBulk, setIsConfirmingBulk] = useState(false);
 
   const canConfirmDelivery =
     viewOnly &&
     editing &&
-    (editing.status === "DELIVERED" || editing.status === "PARTIAL_DELIVERED");
+    (editing.status === "DELIVERING" ||
+      editing.status === "PARTIAL_DELIVERING");
   const serialIdsToConfirm =
-    editing?.lines?.flatMap((l: any) => l.serialIds || []) || [];
+    editing?.lines?.flatMap(
+      (l: any) => l.selectedSerialIds || l.serialIds || [],
+    ) || [];
+
+  const handleBulkConfirmDelivery = async () => {
+    if (!editing?.id) return;
+    if (
+      !window.confirm(
+        t("Bạn có chắc chắn muốn xác nhận giao hàng cho toàn bộ đơn hàng này?"),
+      )
+    )
+      return;
+    setIsConfirmingBulk(true);
+    try {
+      await salesOrdersCoreApi.confirmAllDelivery(editing.id);
+      toast.success(t("Đã xác nhận giao hàng thành công"));
+      onClose();
+      // Giả lập lưu thành công để kích hoạt refresh grid ở page ngoài
+      handleSave();
+    } catch (e: any) {
+      toast.error(
+        e.response?.data?.message || t("Xác nhận giao hàng thất bại"),
+      );
+    } finally {
+      setIsConfirmingBulk(false);
+    }
+  };
 
   const drawerActions = viewOnly
     ? [
@@ -212,13 +242,20 @@ export function SoFormDrawer({
           variant: "outline" as const,
           disabled: saving,
         },
-        ...(canConfirmDelivery && serialIdsToConfirm.length > 0
+        ...(canConfirmDelivery
           ? [
               {
                 label: t("Xác nhận giao hàng"),
-                primary: true,
-                onClick: () => setDeliveryModalOpen(true),
-                disabled: saving,
+                variant: "secondary" as const,
+                align: "left" as const,
+                onClick: () => {
+                  if (serialIdsToConfirm.length > 0) {
+                    setDeliveryModalOpen(true);
+                  } else {
+                    handleBulkConfirmDelivery();
+                  }
+                },
+                disabled: saving || isConfirmingBulk,
               },
             ]
           : []),
