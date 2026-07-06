@@ -3,7 +3,6 @@ import { cn } from "@/shared/utils";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { MultiSelect } from "@/shared/components/MultiSelect";
-import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import { PERIOD_OPTS } from "@/modules/finance/utils/financeHelpers";
 import { useT } from "@/core/i18n";
@@ -59,17 +58,6 @@ export function FilterPanel({ config, filter, className }: FilterPanelProps) {
 
   const content = (
     <div className="space-y-5">
-      {config.search && (
-        <FilterSection label={t("voucher.filter.search") || "Tìm kiếm"}>
-          <SearchInput
-            value={filter.inputs.search}
-            onChange={filter.setSearchInput}
-            placeholder={t("Tìm số CT, đối tượng...")}
-            className="w-full"
-          />
-        </FilterSection>
-      )}
-
       {config.period && (
         <FilterSection label={t("voucher.filter.period") || "Kỳ"}>
           <Combobox

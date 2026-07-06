@@ -7,22 +7,26 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Input } from "@/shared/components/ui/input";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import toast from "react-hot-toast";
 
 interface AfterSalesDrawerProps {
   open: boolean;
   onClose: () => void;
-  mode: "view" | "edit";
   data: any;
+  mode: "view" | "edit";
   onSaved: () => void;
+  onToggleEdit?: () => void;
 }
 
 export function AfterSalesDrawer({
   open,
   onClose,
-  mode,
   data,
+  mode,
   onSaved,
+  onToggleEdit,
 }: AfterSalesDrawerProps) {
   const t = useT();
   const [saving, setSaving] = useState(false);
@@ -31,60 +35,57 @@ export function AfterSalesDrawer({
   useEffect(() => {
     if (open && data) {
       setForm({
-        customerName: data.customerName || "",
         customerPhone: data.customerPhone || "",
         customerAddress: data.customerAddress || "",
-        customerIdNumber: data.customerIdNumber || "",
-        dealerName: data.dealerName || "",
-        warrantyActivatedAt: data.warrantyActivatedAt
-          ? data.warrantyActivatedAt.slice(0, 10)
-          : "",
-        warrantyMonths: data.warrantyMonths || 12,
-        notes: data.notes || "",
       });
     } else {
       setForm({});
     }
   }, [open, data]);
 
+  const isEditing = mode === "edit";
+
   const handleSave = async () => {
     if (!data?.serialId) return;
     setSaving(true);
     try {
+      // Send the updated phone and address, while keeping others unchanged
       await inventoryCoreApi.updateSerialLifecycle(data.serialId, {
-        customerName: form.customerName,
+        customerName: data.customerName,
         customerPhone: form.customerPhone,
         customerAddress: form.customerAddress,
-        customerIdNumber: form.customerIdNumber,
-        dealerName: form.dealerName,
-        warrantyActivatedAt: form.warrantyActivatedAt || undefined,
-        warrantyMonths: Number(form.warrantyMonths),
-        notes: form.notes,
+        customerIdNumber: data.customerIdNumber,
+        dealerName: data.dealerName,
+        warrantyActivatedAt: data.warrantyActivatedAt
+          ? data.warrantyActivatedAt.slice(0, 10)
+          : undefined,
+        warrantyMonths: data.warrantyMonths || undefined,
+        notes: data.notes,
       });
+      toast.success(t("Lưu thông tin thành công"));
       onSaved();
-      onClose();
+      if (onToggleEdit) onToggleEdit(); // switch back to view mode after save
     } catch (error) {
       console.error(error);
-      alert(t("Lỗi khi lưu dữ liệu"));
+      toast.error(t("Lỗi khi lưu dữ liệu"));
     } finally {
       setSaving(false);
     }
   };
-
-  const isEditing = mode === "edit";
 
   return (
     <StandardFormDrawer
       open={open}
       mode={mode}
       onClose={onClose}
+      onToggleEdit={onToggleEdit}
       title={
         data?.serialNo ? `${t("Hậu mãi")} - ${data.serialNo}` : t("Hậu mãi")
       }
       actions={[
         {
-          label: t("Hủy"),
-          onClick: onClose,
+          label: isEditing ? t("Hủy") : t("Đóng"),
+          onClick: isEditing && onToggleEdit ? onToggleEdit : onClose,
           variant: "outline",
           disabled: saving,
         },
@@ -99,13 +100,14 @@ export function AfterSalesDrawer({
             ]
           : []),
       ]}
+      rightPanelTitle={t("Thông tin khách hàng & Đại lý")}
       leftPanel={
-        <div className="flex flex-col gap-6 pt-4">
+        <div className="flex flex-col gap-6">
           {/* Product Info */}
           <DrawerSection title={t("Thông tin sản phẩm")}>
             <div className="grid grid-cols-2 gap-4">
               <DrawerField label={t("Sản phẩm")}>
-                <input
+                <Input
                   className={inputCls}
                   value={data?.itemName || ""}
                   readOnly
@@ -113,7 +115,7 @@ export function AfterSalesDrawer({
                 />
               </DrawerField>
               <DrawerField label={t("Mã SP")}>
-                <input
+                <Input
                   className={inputCls}
                   value={data?.sku || ""}
                   readOnly
@@ -121,7 +123,7 @@ export function AfterSalesDrawer({
                 />
               </DrawerField>
               <DrawerField label={t("Serial / Số máy")}>
-                <input
+                <Input
                   className={inputCls}
                   value={data?.serialNo || ""}
                   readOnly
@@ -129,7 +131,7 @@ export function AfterSalesDrawer({
                 />
               </DrawerField>
               <DrawerField label={t("Số khung (VIN)")}>
-                <input
+                <Input
                   className={inputCls}
                   value={data?.vinNo || ""}
                   readOnly
@@ -137,7 +139,7 @@ export function AfterSalesDrawer({
                 />
               </DrawerField>
               <DrawerField label={t("Ngày giao hàng")}>
-                <input
+                <Input
                   className={inputCls}
                   value={
                     data?.deliveryDate ? data.deliveryDate.slice(0, 10) : ""
@@ -149,95 +151,82 @@ export function AfterSalesDrawer({
             </div>
           </DrawerSection>
 
-          {/* Customer Info */}
-          <DrawerSection title={t("Thông tin khách hàng & Đại lý")}>
-            <div className="grid grid-cols-2 gap-4">
-              <DrawerField label={t("Tên khách hàng")}>
-                <input
-                  className={inputCls}
-                  value={form.customerName || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, customerName: e.target.value })
-                  }
-                  readOnly={!isEditing}
-                  disabled={saving}
-                />
-              </DrawerField>
-              <DrawerField label={t("Số điện thoại")}>
-                <input
-                  className={inputCls}
-                  value={form.customerPhone || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, customerPhone: e.target.value })
-                  }
-                  readOnly={!isEditing}
-                  disabled={saving}
-                />
-              </DrawerField>
-              <DrawerField label={t("CCCD / CMND")}>
-                <input
-                  className={inputCls}
-                  value={form.customerIdNumber || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, customerIdNumber: e.target.value })
-                  }
-                  readOnly={!isEditing}
-                  disabled={saving}
-                />
-              </DrawerField>
-              <DrawerField label={t("Đại lý")}>
-                <input
-                  className={inputCls}
-                  value={form.dealerName || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, dealerName: e.target.value })
-                  }
-                  readOnly={!isEditing}
-                  disabled={saving}
-                />
-              </DrawerField>
-              <div className="col-span-2">
-                <DrawerField label={t("Địa chỉ")}>
-                  <input
-                    className={inputCls}
-                    value={form.customerAddress || ""}
-                    onChange={(e) =>
-                      setForm({ ...form, customerAddress: e.target.value })
-                    }
-                    readOnly={!isEditing}
-                    disabled={saving}
-                  />
-                </DrawerField>
-              </div>
-            </div>
-          </DrawerSection>
-
           {/* Warranty Info */}
           <DrawerSection title={t("Bảo hành")}>
             <div className="grid grid-cols-2 gap-4">
               <DrawerField label={t("Ngày kích hoạt")}>
                 <DatePicker
                   className={inputCls}
-                  value={form.warrantyActivatedAt || ""}
-                  onChange={(v) => setForm({ ...form, warrantyActivatedAt: v })}
-                  disabled={saving || !isEditing}
+                  value={
+                    data?.warrantyActivatedAt
+                      ? data.warrantyActivatedAt.slice(0, 10)
+                      : ""
+                  }
+                  onChange={() => {}}
+                  disabled
                 />
               </DrawerField>
               <DrawerField label={t("Thời hạn (tháng)")}>
-                <input
+                <Input
                   type="number"
                   className={inputCls}
-                  value={form.warrantyMonths || ""}
-                  onChange={(e) =>
-                    setForm({ ...form, warrantyMonths: e.target.value })
-                  }
-                  readOnly={!isEditing}
-                  disabled={saving}
-                  min={1}
+                  value={data?.warrantyMonths || 12}
+                  readOnly
+                  disabled
                 />
               </DrawerField>
             </div>
           </DrawerSection>
+        </div>
+      }
+      rightPanel={
+        <div className="flex flex-col gap-3">
+          <DrawerField label={t("Tên khách hàng")}>
+            <Input
+              className={inputCls}
+              value={data?.customerName || ""}
+              readOnly
+              disabled={isEditing}
+            />
+          </DrawerField>
+          <DrawerField label={t("Số điện thoại")}>
+            <Input
+              className={inputCls}
+              value={isEditing ? form.customerPhone : data?.customerPhone || ""}
+              onChange={(e) =>
+                setForm({ ...form, customerPhone: e.target.value })
+              }
+              readOnly={!isEditing}
+            />
+          </DrawerField>
+          <DrawerField label={t("CCCD / CMND")}>
+            <Input
+              className={inputCls}
+              value={data?.customerIdNumber || ""}
+              readOnly
+              disabled={isEditing}
+            />
+          </DrawerField>
+          <DrawerField label={t("Đại lý")}>
+            <Input
+              className={inputCls}
+              value={data?.dealerName || ""}
+              readOnly
+              disabled={isEditing}
+            />
+          </DrawerField>
+          <DrawerField label={t("Địa chỉ")}>
+            <Input
+              className={inputCls}
+              value={
+                isEditing ? form.customerAddress : data?.customerAddress || ""
+              }
+              onChange={(e) =>
+                setForm({ ...form, customerAddress: e.target.value })
+              }
+              readOnly={!isEditing}
+            />
+          </DrawerField>
         </div>
       }
     />

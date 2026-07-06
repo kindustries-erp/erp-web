@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useT } from "@/core/i18n";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { SearchInput } from "@/shared/components/SearchInput";
-import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { AfterSalesDrawer } from "./AfterSalesDrawer";
 import { format } from "date-fns";
 import { Shield, Eye, Copy, Check } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { useAfterSalesQuery } from "../hooks/useAfterSalesQuery";
 
 export function AfterSalesListPage() {
   const t = useT();
@@ -36,36 +39,44 @@ export function AfterSalesListPage() {
 
   const { openDrawer, closeDrawer, isOpen, type, mode, entityData } =
     useDrawerStore();
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const pageSize = 50;
 
-  const fetchList = async () => {
-    setLoading(true);
-    try {
-      const res = await inventoryCoreApi.listSerialLifecycles({
-        page,
-        pageSize,
-        search,
-      });
-      setData(res.items);
-      setTotal(res.total);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: { placeholder: t("Tìm theo serial, khách hàng...") },
+      period: true,
+      noDefaultPeriod: true,
+    }),
+    [t],
+  );
+  const filter = useFilterPanel(filterConfig, () => setPage(1));
+
+  const {
+    data: resData,
+    isLoading: loading,
+    refetch: fetchList,
+  } = useAfterSalesQuery({
+    page,
+    pageSize,
+    search: filter.state.search,
+    dateFrom: filter.state.dateFrom,
+    dateTo: filter.state.dateTo,
+  });
+
+  const data = resData?.items || [];
+  const total = resData?.total || 0;
 
   useEffect(() => {
-    fetchList();
-  }, [page, search]);
+    const handleRefresh = () => {
+      fetchList();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+    return () => window.removeEventListener("refresh_erp_data", handleRefresh);
+  }, [fetchList]);
 
   const handleRowClick = (row: any) => {
-    openDrawer("after-sales", "edit", row.lifecycleId, row);
+    openDrawer("after-sales", "view", row.lifecycleId, row);
   };
 
   const rowActions = (row: any) => [
@@ -215,16 +226,9 @@ export function AfterSalesListPage() {
         onPage={setPage}
         onPageSize={() => {}}
         onRefresh={fetchList}
-        filter={null as any}
+        filterConfig={filterConfig}
+        filter={filter}
         rowActions={rowActions}
-        extraActions={
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder={t("Tìm theo serial, khách hàng...")}
-            className="w-64"
-          />
-        }
       />
 
       <AfterSalesDrawer
@@ -233,6 +237,14 @@ export function AfterSalesListPage() {
         mode={mode as "view" | "edit"}
         data={entityData}
         onSaved={fetchList}
+        onToggleEdit={() => {
+          openDrawer(
+            "after-sales",
+            mode === "view" ? "edit" : "view",
+            entityData.lifecycleId,
+            entityData,
+          );
+        }}
       />
     </>
   );

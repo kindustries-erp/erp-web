@@ -30,6 +30,29 @@ export function createWarehouseIssuesKey(filters: WarehouseVoucherListFilters) {
   return ["warehouse-vouchers", "issues", normalizeFilters(filters)] as const;
 }
 
+export interface SalesOrderListFilters extends ListParams {
+  search?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  customerId?: string;
+  notFullyIssued?: boolean;
+}
+
+export function createSalesOrdersKey(filters: SalesOrderListFilters) {
+  return ["sales-orders", "list", normalizeFilters(filters)] as const;
+}
+
+export interface AfterSalesListFilters extends ListParams {
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export function createAfterSalesKey(filters: AfterSalesListFilters) {
+  return ["after-sales", "list", normalizeFilters(filters)] as const;
+}
+
 function normalizeFilters<T extends Record<string, unknown>>(filters: T): T {
   return Object.fromEntries(
     Object.entries(filters)

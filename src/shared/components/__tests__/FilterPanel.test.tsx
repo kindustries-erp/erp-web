@@ -41,25 +41,6 @@ vi.mock("@/shared/components/Combobox", () => ({
   ),
 }));
 
-vi.mock("@/shared/components/SearchInput", () => ({
-  SearchInput: ({
-    value,
-    onChange,
-    placeholder,
-  }: {
-    value: string;
-    onChange: (v: string) => void;
-    placeholder?: string;
-  }) => (
-    <input
-      data-testid="search-input"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-    />
-  ),
-}));
-
 function makeFilter(
   overrides: Partial<FilterPanelReturn> = {},
 ): FilterPanelReturn {
@@ -142,45 +123,24 @@ describe("FilterPanel", () => {
   });
 
   it("renders filter sections when panelOpen is true and config enables them", () => {
-    const config: FilterPanelConfig = { search: true, period: true };
+    const config: FilterPanelConfig = { period: true };
     const filter = makeFilter({ panelOpen: true });
 
     render(<FilterPanel config={config} filter={filter} />);
-
-    // Search input should be rendered
-    const searchInputs = screen.getAllByTestId("search-input");
-    expect(searchInputs.length).toBeGreaterThan(0);
 
     // Period combobox should be rendered
     const comboboxes = screen.getAllByTestId("combobox");
     expect(comboboxes.length).toBeGreaterThan(0);
   });
 
-  it("only renders enabled filters (search: true shows search, period: false hides period)", () => {
-    const config: FilterPanelConfig = { search: true, period: false };
+  it("only renders enabled filters (period: false hides period)", () => {
+    const config: FilterPanelConfig = { period: false };
     const filter = makeFilter({ panelOpen: true });
 
     render(<FilterPanel config={config} filter={filter} />);
 
-    // Search should be present
-    const searchInputs = screen.getAllByTestId("search-input");
-    expect(searchInputs.length).toBeGreaterThan(0);
-
     // Period combobox should NOT be present (no combobox rendered)
     expect(screen.queryAllByTestId("combobox")).toHaveLength(0);
-  });
-
-  it("calls setSearchInput when typing in search", () => {
-    const config: FilterPanelConfig = { search: true };
-    const setSearchInput = vi.fn();
-    const filter = makeFilter({ panelOpen: true, setSearchInput });
-
-    render(<FilterPanel config={config} filter={filter} />);
-
-    const searchInputs = screen.getAllByTestId("search-input");
-    fireEvent.change(searchInputs[0], { target: { value: "test" } });
-
-    expect(setSearchInput).toHaveBeenCalledWith("test");
   });
 
   it("calls closePanel when X button clicked", () => {

@@ -1,17 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { History, Eye } from "lucide-react";
-import { PageLayout } from "@/shared/components/PageLayout";
-import {
-  DataTable,
-  type DataTableColumn,
-  type ActionsColumnConfig,
-} from "@/shared/components/DataTable";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { TableActionGroup } from "@/shared/components/TableActionGroup";
-import { FilterPanel } from "@/shared/components/FilterPanel";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Forbidden } from "@/pages/Forbidden";
 import {
   useFilterPanel,
@@ -47,6 +40,7 @@ export function ErpActivityLogsPage() {
     () => ({
       search: true,
       period: true,
+      noDefaultPeriod: true,
       status: {
         options: [
           { value: "SUCCESS", label: "Thành công (SUCCESS)" },
@@ -212,58 +206,45 @@ export function ErpActivityLogsPage() {
     [t],
   );
 
-  const actionsColumn: ActionsColumnConfig<AuditLogEntry> = {
-    cell: (item) => (
-      <ActionDropdown
-        items={[
-          {
-            label: "Xem chi tiết",
-            icon: <Eye className="h-3.5 w-3.5" />,
-            onClick: () => setSelected(item),
-          },
-        ]}
-      />
-    ),
-  };
-
   if (!canRead) return <Forbidden />;
 
   return (
-    <PageLayout
-      title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
-      desc="Audit logs live từ ERP CORE backend"
-      icon={<History className="h-4 w-4" />}
-      actions={
-        <TableActionGroup
-          onRefresh={() => void load()}
-          loading={loading}
-          onFilterToggle={filter.togglePanel}
-          activeFilterCount={filter.activeFilterCount}
-        />
-      }
-    >
-      <div className="flex items-start">
-        <div className="min-w-0 flex-1 space-y-4">
-          <DataTable
-            items={items}
-            columns={columns}
-            getRowKey={(item) => item.id}
-            loading={loading}
-            emptyLabel="Chưa có audit logs"
-            actionsColumn={actionsColumn}
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={Math.ceil(total / pageSize)}
-            onPage={setPage}
-            onPageSize={(value) => {
-              setPage(1);
-              setPageSize(value);
-            }}
-          />
-        </div>
-        <FilterPanel config={filterConfig} filter={filter} />
-      </div>
+    <>
+      <SpreadsheetPageTemplate<AuditLogEntry>
+        title={t("nav.items.activitylog") || "Nhật ký hoạt động"}
+        desc="Audit logs live từ ERP CORE backend"
+        icon={<History className="h-4 w-4" />}
+        tableId="activity-logs-table"
+        items={items}
+        columns={columns}
+        getRowKey={(item) => item.id}
+        loading={loading}
+        emptyLabel="Chưa có audit logs"
+        page={page}
+        pageSize={pageSize}
+        total={total}
+        totalPages={Math.ceil(total / pageSize)}
+        onPage={setPage}
+        onPageSize={(value) => {
+          setPage(1);
+          setPageSize(value);
+        }}
+        onRefresh={() => void load()}
+        filterConfig={filterConfig}
+        filter={filter}
+        rowActions={(row) => [
+          {
+            groupLabel: "Tra cứu / Cấu hình",
+            items: [
+              {
+                label: "Xem chi tiết",
+                icon: <Eye className="h-3.5 w-3.5" />,
+                onClick: () => setSelected(row),
+              },
+            ],
+          },
+        ]}
+      />
 
       <StandardFormDrawer
         open={Boolean(selected)}
@@ -334,6 +315,6 @@ export function ErpActivityLogsPage() {
           ) : null
         }
       />
-    </PageLayout>
+    </>
   );
 }

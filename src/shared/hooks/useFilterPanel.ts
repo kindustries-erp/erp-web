@@ -27,7 +27,7 @@ export interface FilterPanelConfig {
     options: FilterOption[];
   };
   /** Enable search filter */
-  search?: boolean;
+  search?: boolean | { placeholder?: string };
   /** Enable amount range filter */
   amountRange?: boolean;
   /** Enable status filter */
