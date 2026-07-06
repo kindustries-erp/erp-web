@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useT } from "@/core/i18n";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { SearchInput } from "@/shared/components/SearchInput";
+import {
+  useFilterPanel,
+  type FilterPanelConfig,
+} from "@/shared/hooks/useFilterPanel";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { AfterSalesDrawer } from "./AfterSalesDrawer";
@@ -40,8 +43,17 @@ export function AfterSalesListPage() {
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const pageSize = 50;
+
+  const filterConfig: FilterPanelConfig = useMemo(
+    () => ({
+      search: { placeholder: t("Tìm theo serial, khách hàng...") },
+      period: true,
+      noDefaultPeriod: true,
+    }),
+    [t],
+  );
+  const filter = useFilterPanel(filterConfig, () => setPage(1));
 
   const fetchList = async () => {
     setLoading(true);
@@ -49,7 +61,9 @@ export function AfterSalesListPage() {
       const res = await inventoryCoreApi.listSerialLifecycles({
         page,
         pageSize,
-        search,
+        search: filter.state.search,
+        dateFrom: filter.state.dateFrom,
+        dateTo: filter.state.dateTo,
       });
       setData(res.items);
       setTotal(res.total);
@@ -62,7 +76,7 @@ export function AfterSalesListPage() {
 
   useEffect(() => {
     fetchList();
-  }, [page, search]);
+  }, [page, filter.state.search, filter.state.dateFrom, filter.state.dateTo]);
 
   const handleRowClick = (row: any) => {
     openDrawer("after-sales", "edit", row.lifecycleId, row);
@@ -215,16 +229,9 @@ export function AfterSalesListPage() {
         onPage={setPage}
         onPageSize={() => {}}
         onRefresh={fetchList}
-        filter={null as any}
+        filterConfig={filterConfig}
+        filter={filter}
         rowActions={rowActions}
-        extraActions={
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder={t("Tìm theo serial, khách hàng...")}
-            className="w-64"
-          />
-        }
       />
 
       <AfterSalesDrawer

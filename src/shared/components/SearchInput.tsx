@@ -6,6 +6,7 @@ interface SearchInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  inputClassName?: string;
 }
 
 export function SearchInput({
@@ -13,6 +14,7 @@ export function SearchInput({
   onChange,
   placeholder,
   className,
+  inputClassName,
 }: SearchInputProps) {
   return (
     <div className={cn("relative inline-flex", className)}>
@@ -21,7 +23,7 @@ export function SearchInput({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="form-input w-full pr-7"
+        className={cn("form-input w-full pr-7", inputClassName)}
       />
       {value && (
         <button
