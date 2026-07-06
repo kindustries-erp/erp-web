@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   PackageCheck,
   RotateCcw,
@@ -10,6 +10,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { useSalesOrdersQuery } from "@/modules/sales-orders-core/hooks/useSalesOrdersQuery";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import {
@@ -53,13 +54,8 @@ export function ErpSalesOrdersPage() {
   const canUpdate = useHasPermission("sales_orders", "update");
   const canDelete = useHasPermission("sales_orders", "delete");
 
-  const [items, setItems] = useState<ErpSalesOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [search, setSearch] = useState("");
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -144,23 +140,27 @@ export function ErpSalesOrdersPage() {
     );
   }, [itemsData]);
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await salesOrdersCoreApi.list({ page, pageSize, search });
-      setItems(res.items);
-      setTotal(res.total);
-      setTotalPages(res.totalPages);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Không thể tải sales orders");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, search]);
+  const {
+    data: resData,
+    isLoading: loading,
+    refetch: loadOrders,
+  } = useSalesOrdersQuery({
+    page,
+    pageSize,
+    search,
+  });
+
+  const items = resData?.items || [];
+  const total = resData?.total || 0;
+  const totalPages = resData?.totalPages || 0;
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void loadOrders();
+    const handleRefresh = () => {
+      loadOrders();
+    };
+    window.addEventListener("refresh_erp_data", handleRefresh);
+    return () => window.removeEventListener("refresh_erp_data", handleRefresh);
   }, [loadOrders]);
 
   useEffect(() => {
@@ -323,6 +323,14 @@ export function ErpSalesOrdersPage() {
         ...toPayload(form),
         status: overrideStatus || form.status,
       };
+
+      if (payload.status === "DRAFT") {
+        payload.lines = payload.lines?.map((l) => ({
+          ...l,
+          serialIds: undefined,
+        }));
+      }
+
       if (editing) {
         await salesOrdersCoreApi.update(editing.id, payload);
       } else {
