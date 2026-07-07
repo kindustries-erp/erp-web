@@ -163,7 +163,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       transDate: null,
       thu:
         totalCredit > 0 ? (
-          <span className="text-green-600 font-medium">
+          <span className="text-[#0284c7] font-medium">
             +{money(totalCredit)}
           </span>
         ) : (
@@ -171,7 +171,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         ),
       chi:
         totalDebit > 0 ? (
-          <span className="text-red-600 font-medium">{money(totalDebit)}</span>
+          <span className="text-[#ea580c] font-medium">
+            {money(totalDebit)}
+          </span>
         ) : (
           money(0)
         ),
@@ -206,8 +208,10 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               : ""
             : row.cashBook?.name || "";
         return (
-          <Tooltip content={text}>
-            <div className="truncate w-full">{text}</div>
+          <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
+            <div className="w-full line-clamp-2 break-words whitespace-normal">
+              {text}
+            </div>
           </Tooltip>
         );
       },
@@ -228,9 +232,13 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       header: t("bankStatement.columns.description"),
       size: 400,
       cell: (row: any) => (
-        <div className="whitespace-normal break-words w-full">
-          {row.description}
-        </div>
+        <Tooltip
+          content={<div className="whitespace-pre-wrap">{row.description}</div>}
+        >
+          <div className="w-full line-clamp-2 break-words whitespace-normal">
+            {row.description}
+          </div>
+        </Tooltip>
       ),
     },
     {
@@ -240,7 +248,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
-            <span className="text-green-600 font-medium">+{money(credit)}</span>
+            <span className="text-[#0284c7] font-medium">+{money(credit)}</span>
           );
         return null;
       },
@@ -256,7 +264,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
           return (
-            <span className="text-red-600 font-medium">{money(debit)}</span>
+            <span className="text-[#ea580c] font-medium">{money(debit)}</span>
           );
         return null;
       },
@@ -309,38 +317,84 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     },
     {
       key: "correspondentName",
-      dataIndex: "correspondentName",
       header: t("bankStatement.columns.correspondentName"),
       size: 200,
-      valueType: "text",
+      cell: (row: any) => (
+        <Tooltip
+          content={
+            <div className="whitespace-pre-wrap">{row.correspondentName}</div>
+          }
+        >
+          <div className="w-full line-clamp-2 break-words whitespace-normal">
+            {row.correspondentName}
+          </div>
+        </Tooltip>
+      ),
     },
     {
       key: "correspondentAccount",
-      dataIndex: "correspondentAccount",
       header: t("bankStatement.columns.correspondentAccount"),
       size: 150,
-      valueType: "text",
+      cell: (row: any) => (
+        <Tooltip
+          content={
+            <div className="whitespace-pre-wrap">
+              {row.correspondentAccount}
+            </div>
+          }
+        >
+          <div className="w-full line-clamp-2 break-words whitespace-normal">
+            {row.correspondentAccount}
+          </div>
+        </Tooltip>
+      ),
     },
     {
       key: "correspondentBank",
-      dataIndex: "correspondentBank",
       header: t("bankStatement.columns.correspondentBank"),
       size: 150,
-      valueType: "text",
+      cell: (row: any) => (
+        <Tooltip
+          content={
+            <div className="whitespace-pre-wrap">{row.correspondentBank}</div>
+          }
+        >
+          <div className="w-full line-clamp-2 break-words whitespace-normal">
+            {row.correspondentBank}
+          </div>
+        </Tooltip>
+      ),
     },
     {
       key: "branch",
-      dataIndex: "branch.name",
       header: "Chi nhánh",
       size: 150,
-      valueType: "text",
+      cell: (row: any) => {
+        const text = row.branch?.name || "";
+        return (
+          <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
+            <div className="w-full line-clamp-2 break-words whitespace-normal">
+              {text}
+            </div>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "referenceNumber",
-      dataIndex: "referenceNumber",
       header: t("bankStatement.columns.referenceNumber"),
       size: 150,
-      valueType: "text",
+      cell: (row: any) => (
+        <Tooltip
+          content={
+            <div className="whitespace-pre-wrap">{row.referenceNumber}</div>
+          }
+        >
+          <div className="w-full line-clamp-2 break-words whitespace-normal">
+            {row.referenceNumber}
+          </div>
+        </Tooltip>
+      ),
     },
   ];
 
@@ -409,6 +463,11 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
                       label: "Tạo mới",
                       icon: <Plus className="w-4 h-4 text-emerald-600" />,
                       onClick: () => setIsCreateOpen(true),
+                    },
+                    {
+                      label: t("bankStatement.importBtn", "Nhập sao kê"),
+                      icon: <Upload className="w-4 h-4 text-emerald-600" />,
+                      onClick: () => setIsImportOpen(true),
                     },
                   ]
                 : [

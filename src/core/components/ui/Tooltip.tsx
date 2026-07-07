@@ -15,7 +15,7 @@ export function Tooltip({
   disabled,
 }: {
   children: React.ReactNode;
-  content: string;
+  content: React.ReactNode;
   side?: "right" | "left" | "top" | "bottom";
   disabled?: boolean;
 }) {

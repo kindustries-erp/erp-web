@@ -9,6 +9,9 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 import { Attachment } from "@/shared/components/ui/Attachment";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
+import * as XLSX from "xlsx";
+import { Download } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 
 interface ImportStatementDrawerProps {
   isOpen: boolean;
@@ -28,6 +31,23 @@ export const ImportStatementDrawer = ({
   const [files, setFiles] = useState<File[]>([]);
   const [accountId, setAccountId] = useState<string>("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
+
+  const handleDownloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      [
+        "Ngày giao dịch (YYYY-MM-DD)",
+        "Giờ (HH:mm)",
+        "Số tiền",
+        "Loại (IN/OUT)",
+        "Diễn giải",
+        "Số dư (Tuỳ chọn)",
+      ],
+      ["2023-10-25", "14:30", "500000", "IN", "Nhận thanh toán KH A", ""],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, `Template_Import_${type}.xlsx`);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -83,6 +103,13 @@ export const ImportStatementDrawer = ({
       label: acc.accountName || acc.name,
     })) || [];
 
+  const selectedAccount = accounts?.find((a: any) => a.id === accountId);
+  const isAutoSyncBank =
+    type === "bank" &&
+    selectedAccount &&
+    ((selectedAccount as any).bankCode === "BIDV" ||
+      (selectedAccount as any).bankCode === "TCB");
+
   return (
     <>
       <StandardFormDrawer
@@ -104,7 +131,8 @@ export const ImportStatementDrawer = ({
               : t("bankStatement.import.confirmImport"),
             onClick: () => submitImport(),
             primary: true,
-            disabled: files.length === 0 || !accountId || isPending,
+            disabled:
+              files.length === 0 || !accountId || isPending || isAutoSyncBank,
             loading: isPending,
           },
         ]}
@@ -127,16 +155,33 @@ export const ImportStatementDrawer = ({
                 />
               </DrawerField>
 
-              <DrawerField label="File" required>
-                <Attachment
-                  files={files}
-                  onFilesChange={setFiles}
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  maxFiles={5}
-                  maxSizeMb={10}
-                  onPreview={setPreviewFile}
-                />
-              </DrawerField>
+              {isAutoSyncBank ? (
+                <div className="text-orange-600 bg-orange-50 p-3 rounded-md text-sm mt-4">
+                  Ngân hàng này đã hỗ trợ tự động đồng bộ nên không thể tải lên
+                  thủ công.
+                </div>
+              ) : (
+                <DrawerField label="File" required>
+                  <Attachment
+                    files={files}
+                    onFilesChange={setFiles}
+                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                    maxFiles={5}
+                    maxSizeMb={10}
+                    onPreview={setPreviewFile}
+                  />
+                  <div className="mt-2 text-right">
+                    <Button
+                      variant="link"
+                      onClick={handleDownloadTemplate}
+                      className="text-[#0284c7] px-0 h-auto gap-1"
+                    >
+                      <Download className="w-3 h-3" />
+                      Tải Template mẫu
+                    </Button>
+                  </div>
+                </DrawerField>
+              )}
             </DrawerSection>
           </div>
         }
