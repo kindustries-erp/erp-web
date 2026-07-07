@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { Wallet } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel } from "@/shared/components/Panel";
-import { FileUploadBox } from "@/shared/components/FileUploadBox";
+import { Attachment } from "@/shared/components/ui/Attachment";
 import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
@@ -722,10 +722,10 @@ export function CashflowVouchersPage() {
                   </div>
                 )}
                 <div className="space-y-2 border-t pt-3">
-                  <FileUploadBox
-                    multiple
+                  <Attachment
                     files={attachmentFiles}
                     onFilesChange={setAttachmentFiles}
+                    maxSizeMb={10}
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <div>

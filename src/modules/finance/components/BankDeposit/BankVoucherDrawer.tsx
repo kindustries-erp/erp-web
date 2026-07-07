@@ -8,9 +8,10 @@ import {
   DEFAULT_STACK_OFFSET,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { FileUploadBox } from "@/shared/components/FileUploadBox";
+import { Attachment } from "@/shared/components/ui/Attachment";
 import { PartnerDrawer } from "@/modules/partners/components/PartnerDrawer";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
+import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import {
   ATTACHMENT_TYPE_OPTS,
   COUNTERPARTY_SOURCE_OPTS,
@@ -93,6 +94,11 @@ export function BankVoucherDrawer(props: any) {
   const showToast = props.showToast || (() => {});
   const [isPartnerOpen, setIsPartnerOpen] = useState(false);
   const [isPartnerEditing, setIsPartnerEditing] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<{
+    url: string;
+    fileName: string;
+  } | null>(null);
 
   const [partnerForm, setPartnerForm] = useState<any>({ ...emptyPartnerForm });
 
@@ -343,6 +349,9 @@ export function BankVoucherDrawer(props: any) {
                       onDelete={
                         canDeleteAttachment ? handleDeleteAttachment : undefined
                       }
+                      onPreview={(url, name) =>
+                        setPreviewUrl({ url, fileName: name })
+                      }
                     />
                   ))}
                 </div>
@@ -375,10 +384,10 @@ export function BankVoucherDrawer(props: any) {
                     </DrawerField>
                   </div>
                   <DrawerField label={t("voucher.drawer.newFile")}>
-                    <FileUploadBox
-                      multiple
+                    <Attachment
                       files={attachmentFiles}
                       onFilesChange={setAttachmentFiles}
+                      onPreview={setPreviewFile}
                       maxSizeMb={10}
                     />
                   </DrawerField>
@@ -488,6 +497,17 @@ export function BankVoucherDrawer(props: any) {
         saveError={null}
         stackOffset={DEFAULT_STACK_OFFSET}
         zIndex={600}
+      />
+
+      <FilePreviewDrawer
+        open={!!previewFile || !!previewUrl}
+        onClose={() => {
+          setPreviewFile(null);
+          setPreviewUrl(null);
+        }}
+        file={previewFile}
+        previewUrl={previewUrl?.url}
+        fileName={previewFile?.name || previewUrl?.fileName}
       />
     </>
   );

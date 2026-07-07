@@ -24,12 +24,17 @@ export function attachmentFileName(a: PaymentVoucherAttachment): string {
 interface AttachmentRowProps {
   item: PaymentVoucherAttachment;
   onDelete?: (item: PaymentVoucherAttachment) => void;
+  onPreview?: (url: string, fileName: string) => void;
 }
 
 /**
  * Một dòng đính kèm trong Drawer — hiển thị tên file, loại, ghi chú và nút Xem/Xóa.
  */
-export function AttachmentRow({ item, onDelete }: AttachmentRowProps) {
+export function AttachmentRow({
+  item,
+  onDelete,
+  onPreview,
+}: AttachmentRowProps) {
   const fileId = attachmentFileId(item);
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-[color:var(--border-light)] last:border-b-0 bg-[color:var(--muted)]/35">
@@ -45,9 +50,14 @@ export function AttachmentRow({ item, onDelete }: AttachmentRowProps) {
       <button
         type="button"
         disabled={!fileId}
-        onClick={() =>
-          window.open(getFileViewUrl(fileId), "_blank", "noopener,noreferrer")
-        }
+        onClick={() => {
+          const url = getFileViewUrl(fileId);
+          if (onPreview) {
+            onPreview(url, attachmentFileName(item));
+          } else {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        }}
         className="px-2 py-1 rounded-lg border border-border bg-surface text-xs text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Xem
