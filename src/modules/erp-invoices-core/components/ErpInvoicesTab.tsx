@@ -427,7 +427,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           if (remaining === 0)
             return <span className="text-emerald-600">0</span>;
           return (
-            <span className="text-orange-600">
+            <span className="text-slate-700">
               {fmtAmt(remaining.toString())}
             </span>
           );

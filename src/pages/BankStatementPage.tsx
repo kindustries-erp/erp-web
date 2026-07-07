@@ -190,7 +190,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         totalRemaining === 0 ? (
           <span className="text-emerald-600 font-medium">0</span>
         ) : (
-          <span className="text-orange-600 font-medium">
+          <span className="text-slate-700 font-medium">
             {money(totalRemaining)}
           </span>
         ),
@@ -309,9 +309,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         if (remaining === 0)
           return <span className="text-emerald-600 font-medium">0</span>;
         return (
-          <span className="text-orange-600 font-medium">
-            {money(remaining)}
-          </span>
+          <span className="text-slate-700 font-medium">{money(remaining)}</span>
         );
       },
     },
