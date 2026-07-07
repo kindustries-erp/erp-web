@@ -12,6 +12,7 @@ import { money, formatGMT7 } from "@/shared/utils/format";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import toast from "react-hot-toast";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -189,12 +190,30 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         totalRemaining === 0 ? (
           <span className="text-emerald-600 font-medium">0</span>
         ) : (
-          <span className="text-orange-600 font-medium">
+          <span className="text-[#4f46e5] font-medium">
             {money(totalRemaining)}
           </span>
         ),
     };
   }, [data]);
+
+  const renderCopyableText = (text: string) => {
+    if (!text) return null;
+    return (
+      <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
+        <div
+          className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer hover:opacity-80 active:opacity-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(text);
+            toast.success("Đã copy text");
+          }}
+        >
+          {text}
+        </div>
+      </Tooltip>
+    );
+  };
 
   const columns: any[] = [
     {
@@ -207,13 +226,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
               : ""
             : row.cashBook?.name || "";
-        return (
-          <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
-            <div className="w-full line-clamp-2 break-words whitespace-normal">
-              {text}
-            </div>
-          </Tooltip>
-        );
+        return renderCopyableText(text);
       },
       size: 150,
     },
@@ -231,15 +244,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       dataIndex: "description",
       header: t("bankStatement.columns.description"),
       size: 400,
-      cell: (row: any) => (
-        <Tooltip
-          content={<div className="whitespace-pre-wrap">{row.description}</div>}
-        >
-          <div className="w-full line-clamp-2 break-words whitespace-normal">
-            {row.description}
-          </div>
-        </Tooltip>
-      ),
+      cell: (row: any) => renderCopyableText(row.description),
     },
     {
       key: "thu",
@@ -276,7 +281,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     {
       key: "netOffAmount",
       header: "Đã cấn trừ",
-      className: "text-right",
+      className: "text-right bg-blue-50/50 border-l border-blue-200",
+      headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
       size: 150,
       cell: (row: any) => {
         const netOff = parseFloat(row.netOffAmount) || 0;
@@ -289,7 +295,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     {
       key: "remainingAmount",
       header: "Còn lại",
-      className: "text-right",
+      className: "text-right font-semibold bg-blue-50/50",
+      headerClassName: "text-center bg-blue-50/50",
       size: 150,
       cell: (row: any) => {
         const credit = parseFloat(row.creditAmount) || 0;
@@ -300,9 +307,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         if (remaining === 0)
           return <span className="text-emerald-600 font-medium">0</span>;
         return (
-          <span className="text-orange-600 font-medium">
-            {money(remaining)}
-          </span>
+          <span className="text-[#4f46e5] font-medium">{money(remaining)}</span>
         );
       },
     },
@@ -319,51 +324,19 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       key: "correspondentName",
       header: t("bankStatement.columns.correspondentName"),
       size: 200,
-      cell: (row: any) => (
-        <Tooltip
-          content={
-            <div className="whitespace-pre-wrap">{row.correspondentName}</div>
-          }
-        >
-          <div className="w-full line-clamp-2 break-words whitespace-normal">
-            {row.correspondentName}
-          </div>
-        </Tooltip>
-      ),
+      cell: (row: any) => renderCopyableText(row.correspondentName),
     },
     {
       key: "correspondentAccount",
       header: t("bankStatement.columns.correspondentAccount"),
       size: 150,
-      cell: (row: any) => (
-        <Tooltip
-          content={
-            <div className="whitespace-pre-wrap">
-              {row.correspondentAccount}
-            </div>
-          }
-        >
-          <div className="w-full line-clamp-2 break-words whitespace-normal">
-            {row.correspondentAccount}
-          </div>
-        </Tooltip>
-      ),
+      cell: (row: any) => renderCopyableText(row.correspondentAccount),
     },
     {
       key: "correspondentBank",
       header: t("bankStatement.columns.correspondentBank"),
       size: 150,
-      cell: (row: any) => (
-        <Tooltip
-          content={
-            <div className="whitespace-pre-wrap">{row.correspondentBank}</div>
-          }
-        >
-          <div className="w-full line-clamp-2 break-words whitespace-normal">
-            {row.correspondentBank}
-          </div>
-        </Tooltip>
-      ),
+      cell: (row: any) => renderCopyableText(row.correspondentBank),
     },
     {
       key: "branch",
@@ -371,30 +344,14 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       size: 150,
       cell: (row: any) => {
         const text = row.branch?.name || "";
-        return (
-          <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
-            <div className="w-full line-clamp-2 break-words whitespace-normal">
-              {text}
-            </div>
-          </Tooltip>
-        );
+        return renderCopyableText(text);
       },
     },
     {
       key: "referenceNumber",
       header: t("bankStatement.columns.referenceNumber"),
       size: 150,
-      cell: (row: any) => (
-        <Tooltip
-          content={
-            <div className="whitespace-pre-wrap">{row.referenceNumber}</div>
-          }
-        >
-          <div className="w-full line-clamp-2 break-words whitespace-normal">
-            {row.referenceNumber}
-          </div>
-        </Tooltip>
-      ),
+      cell: (row: any) => renderCopyableText(row.referenceNumber),
     },
   ];
 
