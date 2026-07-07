@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Wallet, Plus, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useT } from "@/core/i18n";
@@ -23,6 +23,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
+
+  const queryClient = useQueryClient();
 
   const { data: branches = [] } = useQuery({
     queryKey: ["branches:list"],
@@ -368,7 +370,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         totalPages={data?.totalPages || 0}
         onPage={setPage}
         onPageSize={setPageSize}
-        onRefresh={refetch}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({
+            queryKey: [type === "bank" ? "bank-accounts" : "cash-books"],
+          });
+        }}
         filterConfig={filterConfig}
         filter={filter}
         sortArray={sortArray}
