@@ -312,10 +312,19 @@ export const erpInvoicesCoreApi = {
   getPdfDownloadUrl: async (
     id: string,
     key: string,
+    inline?: boolean,
   ): Promise<{ url: string }> => {
     const { data } = await axiosInstance.get<{ url: string }>(
       `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/download-url`,
+      { params: { inline } },
     );
+    return data;
+  },
+
+  downloadPdfsZip: async (id: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
+      responseType: "blob",
+    });
     return data;
   },
 
