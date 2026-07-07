@@ -9,6 +9,9 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 import { Attachment } from "@/shared/components/ui/Attachment";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
+import * as XLSX from "xlsx";
+import { Download } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 
 interface ImportStatementDrawerProps {
   isOpen: boolean;
@@ -28,6 +31,34 @@ export const ImportStatementDrawer = ({
   const [files, setFiles] = useState<File[]>([]);
   const [accountId, setAccountId] = useState<string>("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
+
+  const handleDownloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      [
+        "Ngày giao dịch (YYYY-MM-DD)",
+        "Giờ (HH:mm)",
+        "Số tiền",
+        "Loại (IN/OUT)",
+        "Diễn giải",
+        "Số dư (Tuỳ chọn)",
+        "Tên đối ứng",
+        "Số tham chiếu",
+      ],
+      [
+        "2023-10-25",
+        "14:30",
+        "500000",
+        "IN",
+        "Nhận thanh toán KH A",
+        "",
+        "CONG TY TNHH A",
+        "REF123456",
+      ],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, `Template_Import_${type}.xlsx`);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -83,6 +114,13 @@ export const ImportStatementDrawer = ({
       label: acc.accountName || acc.name,
     })) || [];
 
+  const selectedAccount = accounts?.find((a: any) => a.id === accountId);
+  const isAutoSyncBank =
+    type === "bank" &&
+    selectedAccount &&
+    ((selectedAccount as any).bankCode === "BIDV" ||
+      (selectedAccount as any).bankCode === "TCB");
+
   return (
     <>
       <StandardFormDrawer
@@ -136,6 +174,18 @@ export const ImportStatementDrawer = ({
                   maxSizeMb={10}
                   onPreview={setPreviewFile}
                 />
+                {!isAutoSyncBank && (
+                  <div className="mt-2 text-right">
+                    <Button
+                      variant="link"
+                      onClick={handleDownloadTemplate}
+                      className="text-[#0284c7] px-0 h-auto gap-1"
+                    >
+                      <Download className="w-3 h-3" />
+                      Tải Template mẫu
+                    </Button>
+                  </div>
+                )}
               </DrawerField>
             </DrawerSection>
           </div>
