@@ -41,8 +41,19 @@ export const ImportStatementDrawer = ({
         "Loại (IN/OUT)",
         "Diễn giải",
         "Số dư (Tuỳ chọn)",
+        "Tên đối ứng",
+        "Số tham chiếu",
       ],
-      ["2023-10-25", "14:30", "500000", "IN", "Nhận thanh toán KH A", ""],
+      [
+        "2023-10-25",
+        "14:30",
+        "500000",
+        "IN",
+        "Nhận thanh toán KH A",
+        "",
+        "CONG TY TNHH A",
+        "REF123456",
+      ],
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -131,8 +142,7 @@ export const ImportStatementDrawer = ({
               : t("bankStatement.import.confirmImport"),
             onClick: () => submitImport(),
             primary: true,
-            disabled:
-              files.length === 0 || !accountId || isPending || isAutoSyncBank,
+            disabled: files.length === 0 || !accountId || isPending,
             loading: isPending,
           },
         ]}
@@ -155,21 +165,16 @@ export const ImportStatementDrawer = ({
                 />
               </DrawerField>
 
-              {isAutoSyncBank ? (
-                <div className="text-orange-600 bg-orange-50 p-3 rounded-md text-sm mt-4">
-                  Ngân hàng này đã hỗ trợ tự động đồng bộ nên không thể tải lên
-                  thủ công.
-                </div>
-              ) : (
-                <DrawerField label="File" required>
-                  <Attachment
-                    files={files}
-                    onFilesChange={setFiles}
-                    accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                    maxFiles={5}
-                    maxSizeMb={10}
-                    onPreview={setPreviewFile}
-                  />
+              <DrawerField label="File" required>
+                <Attachment
+                  files={files}
+                  onFilesChange={setFiles}
+                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                  maxFiles={5}
+                  maxSizeMb={10}
+                  onPreview={setPreviewFile}
+                />
+                {!isAutoSyncBank && (
                   <div className="mt-2 text-right">
                     <Button
                       variant="link"
@@ -180,8 +185,8 @@ export const ImportStatementDrawer = ({
                       Tải Template mẫu
                     </Button>
                   </div>
-                </DrawerField>
-              )}
+                )}
+              </DrawerField>
             </DrawerSection>
           </div>
         }
