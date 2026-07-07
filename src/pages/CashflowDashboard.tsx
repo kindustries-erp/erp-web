@@ -128,7 +128,7 @@ export function CashflowDashboard() {
       }),
   });
 
-  const barIn = "#0284c7"; // Sky 600
+  const barIn = "#059669"; // Emerald 600
   const barOut = "#ea580c"; // Orange 600
 
   const cashTrendLabels = data?.cashTrend?.map((t: any) => t.label) || [];
@@ -209,7 +209,9 @@ export function CashflowDashboard() {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
-            <span className="text-[#0284c7] font-medium">+{money(credit)}</span>
+            <span className="text-emerald-600 font-medium">
+              +{money(credit)}
+            </span>
           );
         return null;
       },
@@ -457,7 +459,7 @@ export function CashflowDashboard() {
                 <span className="font-semibold text-right block"></span>
               ),
               thu: (
-                <span className="text-[#0284c7] font-semibold">
+                <span className="text-emerald-600 font-semibold">
                   +{money(topTransactionsInTotal)}
                 </span>
               ),
@@ -532,7 +534,7 @@ function AccountBalanceCard({
 
           <div className="flex justify-between items-center text-[12px] mb-1">
             <span className="text-[color:var(--muted-fg)]">Thu trong kỳ:</span>
-            <span className="font-medium text-[#0284c7]">
+            <span className="font-medium text-emerald-600">
               +{money(totalCredit)}
             </span>
           </div>

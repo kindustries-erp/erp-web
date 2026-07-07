@@ -164,7 +164,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       transDate: null,
       thu:
         totalCredit > 0 ? (
-          <span className="text-[#0284c7] font-medium">
+          <span className="text-emerald-600 font-medium">
             +{money(totalCredit)}
           </span>
         ) : (
@@ -190,7 +190,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         totalRemaining === 0 ? (
           <span className="text-emerald-600 font-medium">0</span>
         ) : (
-          <span className="text-[#4f46e5] font-medium">
+          <span className="text-orange-600 font-medium">
             {money(totalRemaining)}
           </span>
         ),
@@ -253,7 +253,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
-            <span className="text-[#0284c7] font-medium">+{money(credit)}</span>
+            <span className="text-emerald-600 font-medium">
+              +{money(credit)}
+            </span>
           );
         return null;
       },
@@ -307,7 +309,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         if (remaining === 0)
           return <span className="text-emerald-600 font-medium">0</span>;
         return (
-          <span className="text-[#4f46e5] font-medium">{money(remaining)}</span>
+          <span className="text-orange-600 font-medium">
+            {money(remaining)}
+          </span>
         );
       },
     },
