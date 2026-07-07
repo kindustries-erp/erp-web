@@ -131,10 +131,10 @@ export async function deleteCompanyBankAccountApi(id: string): Promise<void> {
 export async function getChartOfAccountsApi(): Promise<ChartOfAccount[]> {
   return dedupeRequest("chart-of-accounts:list", async () => {
     const { data } = await axiosInstance.get<PaginatedResponse<ChartOfAccount>>(
-      "/api/v1/chart-of-accounts",
+      "/api/v1/accounting-core/chart-of-accounts",
       { params: { page: 1, pageSize: 500, sort: "account_code" } },
     );
-    return data.items;
+    return data.items || data;
   });
 }
 
@@ -146,7 +146,7 @@ export async function getChartOfAccountsPagedApi(
   const pageSize = params.pageSize ?? DEFAULT_PAGE_SIZE;
   const sort = params.sort ?? ["account_code"]; // sort by code, not created_at
   const { data } = await axiosInstance.get<PaginatedResponse<ChartOfAccount>>(
-    "/api/v1/chart-of-accounts",
+    "/api/v1/accounting-core/chart-of-accounts",
     {
       params: {
         page,
@@ -165,7 +165,7 @@ export async function createChartOfAccountApi(
   const { data } = await axiosInstance.post<{
     message: string;
     data: ChartOfAccount;
-  }>("/api/v1/chart-of-accounts", dto);
+  }>("/api/v1/accounting-core/chart-of-accounts", dto);
   return data.data;
 }
 
@@ -176,12 +176,12 @@ export async function updateChartOfAccountApi(
   const { data } = await axiosInstance.patch<{
     message: string;
     data: ChartOfAccount;
-  }>(`/api/v1/chart-of-accounts/${id}`, dto);
+  }>(`/api/v1/accounting-core/chart-of-accounts/${id}`, dto);
   return data.data;
 }
 
 export async function deleteChartOfAccountApi(id: string): Promise<void> {
-  await axiosInstance.delete(`/api/v1/chart-of-accounts/${id}`);
+  await axiosInstance.delete(`/api/v1/accounting-core/chart-of-accounts/${id}`);
 }
 
 // ── Business Partner Roles ─────────────────────────────────────────────────

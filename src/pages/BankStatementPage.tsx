@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Wallet, Plus, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useT } from "@/core/i18n";
@@ -12,6 +12,7 @@ import { money, formatGMT7 } from "@/shared/utils/format";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import toast from "react-hot-toast";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -23,6 +24,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
+
+  const queryClient = useQueryClient();
 
   const { data: branches = [] } = useQuery({
     queryKey: ["branches:list"],
@@ -161,7 +164,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       transDate: null,
       thu:
         totalCredit > 0 ? (
-          <span className="text-green-600 font-medium">
+          <span className="text-emerald-600 font-medium">
             +{money(totalCredit)}
           </span>
         ) : (
@@ -169,7 +172,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         ),
       chi:
         totalDebit > 0 ? (
-          <span className="text-red-600 font-medium">{money(totalDebit)}</span>
+          <span className="text-[#ea580c] font-medium">
+            {money(totalDebit)}
+          </span>
         ) : (
           money(0)
         ),
@@ -185,12 +190,30 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         totalRemaining === 0 ? (
           <span className="text-emerald-600 font-medium">0</span>
         ) : (
-          <span className="text-orange-600 font-medium">
+          <span className="text-slate-700 font-medium">
             {money(totalRemaining)}
           </span>
         ),
     };
   }, [data]);
+
+  const renderCopyableText = (text: string) => {
+    if (!text) return null;
+    return (
+      <Tooltip content={<div className="whitespace-pre-wrap">{text}</div>}>
+        <div
+          className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer hover:opacity-80 active:opacity-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(text);
+            toast.success("Đã copy text");
+          }}
+        >
+          {text}
+        </div>
+      </Tooltip>
+    );
+  };
 
   const columns: any[] = [
     {
@@ -203,11 +226,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
               ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
               : ""
             : row.cashBook?.name || "";
-        return (
-          <Tooltip content={text}>
-            <div className="truncate w-full">{text}</div>
-          </Tooltip>
-        );
+        return renderCopyableText(text);
       },
       size: 150,
     },
@@ -225,11 +244,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       dataIndex: "description",
       header: t("bankStatement.columns.description"),
       size: 400,
-      cell: (row: any) => (
-        <div className="whitespace-normal break-words w-full">
-          {row.description}
-        </div>
-      ),
+      cell: (row: any) => renderCopyableText(row.description),
     },
     {
       key: "thu",
@@ -238,7 +253,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
-            <span className="text-green-600 font-medium">+{money(credit)}</span>
+            <span className="text-emerald-600 font-medium">
+              +{money(credit)}
+            </span>
           );
         return null;
       },
@@ -254,7 +271,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
           return (
-            <span className="text-red-600 font-medium">{money(debit)}</span>
+            <span className="text-[#ea580c] font-medium">{money(debit)}</span>
           );
         return null;
       },
@@ -266,7 +283,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     {
       key: "netOffAmount",
       header: "Đã cấn trừ",
-      className: "text-right",
+      className: "text-right bg-blue-50/50 border-l border-blue-200",
+      headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
       size: 150,
       cell: (row: any) => {
         const netOff = parseFloat(row.netOffAmount) || 0;
@@ -279,7 +297,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     {
       key: "remainingAmount",
       header: "Còn lại",
-      className: "text-right",
+      className: "text-right font-semibold bg-blue-50/50",
+      headerClassName: "text-center bg-blue-50/50",
       size: 150,
       cell: (row: any) => {
         const credit = parseFloat(row.creditAmount) || 0;
@@ -290,9 +309,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         if (remaining === 0)
           return <span className="text-emerald-600 font-medium">0</span>;
         return (
-          <span className="text-orange-600 font-medium">
-            {money(remaining)}
-          </span>
+          <span className="text-slate-700 font-medium">{money(remaining)}</span>
         );
       },
     },
@@ -307,38 +324,36 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     },
     {
       key: "correspondentName",
-      dataIndex: "correspondentName",
       header: t("bankStatement.columns.correspondentName"),
       size: 200,
-      valueType: "text",
+      cell: (row: any) => renderCopyableText(row.correspondentName),
     },
     {
       key: "correspondentAccount",
-      dataIndex: "correspondentAccount",
       header: t("bankStatement.columns.correspondentAccount"),
       size: 150,
-      valueType: "text",
+      cell: (row: any) => renderCopyableText(row.correspondentAccount),
     },
     {
       key: "correspondentBank",
-      dataIndex: "correspondentBank",
       header: t("bankStatement.columns.correspondentBank"),
       size: 150,
-      valueType: "text",
+      cell: (row: any) => renderCopyableText(row.correspondentBank),
     },
     {
       key: "branch",
-      dataIndex: "branch.name",
       header: "Chi nhánh",
       size: 150,
-      valueType: "text",
+      cell: (row: any) => {
+        const text = row.branch?.name || "";
+        return renderCopyableText(text);
+      },
     },
     {
       key: "referenceNumber",
-      dataIndex: "referenceNumber",
       header: t("bankStatement.columns.referenceNumber"),
       size: 150,
-      valueType: "text",
+      cell: (row: any) => renderCopyableText(row.referenceNumber),
     },
   ];
 
@@ -368,7 +383,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         totalPages={data?.totalPages || 0}
         onPage={setPage}
         onPageSize={setPageSize}
-        onRefresh={refetch}
+        onRefresh={() => {
+          refetch();
+          queryClient.invalidateQueries({
+            queryKey: [type === "bank" ? "bank-accounts" : "cash-books"],
+          });
+        }}
         filterConfig={filterConfig}
         filter={filter}
         sortArray={sortArray}
@@ -402,6 +422,11 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
                       label: "Tạo mới",
                       icon: <Plus className="w-4 h-4 text-emerald-600" />,
                       onClick: () => setIsCreateOpen(true),
+                    },
+                    {
+                      label: t("bankStatement.importBtn", "Nhập sao kê"),
+                      icon: <Upload className="w-4 h-4 text-emerald-600" />,
+                      onClick: () => setIsImportOpen(true),
                     },
                   ]
                 : [

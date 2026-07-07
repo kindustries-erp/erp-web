@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
-import { Upload, Trash2, Download, FileText, Loader2 } from "lucide-react";
+import { Upload, Download, Loader2 } from "lucide-react";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
+import { Attachment } from "@/shared/components/ui/Attachment";
+import { AttachmentRow } from "@/shared/components/AttachmentComponents";
+import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Props {
@@ -15,6 +18,13 @@ interface Props {
 export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<{
+    url: string;
+    fileName: string;
+    fileKey: string;
+  } | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: (key: string) => erpInvoicesCoreApi.deletePdf(invoiceId!, key),
@@ -25,39 +35,59 @@ export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
     onError: () => toast.error("Lỗi xóa file PDF"),
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!invoiceId) return;
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
+  const handleUpload = async () => {
+    if (!invoiceId || files.length === 0) return;
 
     setUploading(true);
     try {
       await erpInvoicesCoreApi.uploadPdfs(invoiceId, files);
       toast.success("Đã tải lên file PDF thành công");
       queryClient.invalidateQueries({ queryKey: ["erpInvoices"] });
+      setFiles([]);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Lỗi tải lên file PDF");
     } finally {
       setUploading(false);
-      e.target.value = "";
-    }
-  };
-
-  const handleDownload = async (key: string) => {
-    if (!invoiceId) return;
-    try {
-      const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-        invoiceId,
-        key,
-      );
-      window.open(url, "_blank");
-    } catch {
-      toast.error("Không thể tải file PDF");
     }
   };
 
   return (
-    <DrawerSection title="Tài liệu đính kèm (PDF)">
+    <DrawerSection
+      title="Tài liệu đính kèm (PDF)"
+      titleExtra={
+        pdfFiles && pdfFiles.length > 1 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs px-2"
+            onClick={async () => {
+              try {
+                toast.loading("Đang nén file PDF...", { id: "zip-download" });
+                const blob = await erpInvoicesCoreApi.downloadPdfsZip(
+                  invoiceId!,
+                );
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `hoadon_${invoiceId}_pdfs.zip`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                toast.success("Tải xuống hoàn tất", { id: "zip-download" });
+              } catch {
+                toast.error("Lỗi khi tải xuống file zip", {
+                  id: "zip-download",
+                });
+              }
+            }}
+          >
+            <Download className="w-3.5 h-3.5 mr-1" />
+            Tải tất cả (ZIP)
+          </Button>
+        ) : null
+      }
+    >
       <div className="flex flex-col gap-3">
         {(!pdfFiles || pdfFiles.length === 0) && (
           <div className="text-sm text-gray-500 italic">
@@ -65,83 +95,103 @@ export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
           </div>
         )}
         {pdfFiles && pdfFiles.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="rounded-lg border border-border overflow-hidden">
             {pdfFiles.map((file, i) => (
-              <div
+              <AttachmentRow
                 key={file.key || i}
-                className="flex items-center justify-between border rounded-md p-2 bg-gray-50 text-sm"
-              >
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <FileText className="w-4 h-4 text-slate-600 shrink-0" />
-                  <span
-                    className="truncate text-gray-700"
-                    title={file.filename}
-                  >
-                    {file.filename}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => handleDownload(file.key)}
-                  >
-                    <Download className="w-4 h-4 text-slate-600" />
-                  </Button>
-                  {editMode && invoiceId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                      disabled={deleteMutation.isPending}
-                      onClick={() => deleteMutation.mutate(file.key)}
-                    >
-                      {deleteMutation.isPending &&
-                      deleteMutation.variables === file.key ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                      ) : (
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
+                item={
+                  {
+                    file: {
+                      id: file.key,
+                      filename_download: file.filename,
+                    },
+                  } as any
+                }
+                onDelete={
+                  editMode && invoiceId
+                    ? () => deleteMutation.mutate(file.key)
+                    : undefined
+                }
+                onPreview={async () => {
+                  try {
+                    const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+                      invoiceId!,
+                      file.key,
+                      true,
+                    );
+                    setPreviewUrl({
+                      url,
+                      fileName: file.filename,
+                      fileKey: file.key,
+                    });
+                  } catch {
+                    toast.error("Không thể tải bản xem trước file PDF");
+                  }
+                }}
+              />
             ))}
           </div>
         )}
         {editMode && invoiceId && (
-          <div className="mt-2">
-            <input
-              type="file"
-              multiple
+          <div className="mt-2 space-y-3">
+            <Attachment
+              files={files}
+              onFilesChange={setFiles}
               accept="application/pdf"
-              className="hidden"
-              id={`upload-pdfs-${invoiceId}`}
-              onChange={handleFileChange}
-              disabled={uploading}
+              maxFiles={10}
+              maxSizeMb={20}
+              onPreview={setPreviewFile}
             />
-            <label htmlFor={`upload-pdfs-${invoiceId}`}>
+            {files.length > 0 && (
               <Button
-                variant="outline"
-                size="sm"
-                className="w-full border-dashed cursor-pointer"
-                asChild
+                onClick={handleUpload}
                 disabled={uploading}
+                className="w-full"
               >
-                <span>
-                  {uploading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Upload className="w-4 h-4 mr-2" />
-                  )}
-                  {uploading ? "Đang tải lên..." : "Tải lên file PDF"}
-                </span>
+                {uploading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                {uploading
+                  ? "Đang tải lên..."
+                  : `Lưu ${files.length} file đính kèm`}
               </Button>
-            </label>
+            )}
           </div>
         )}
       </div>
+      <FilePreviewDrawer
+        open={!!previewFile || !!previewUrl}
+        onClose={() => {
+          setPreviewFile(null);
+          setPreviewUrl(null);
+        }}
+        file={previewFile}
+        previewUrl={previewUrl?.url}
+        fileName={previewFile?.name || previewUrl?.fileName}
+        onDownload={
+          previewUrl
+            ? async () => {
+                try {
+                  const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+                    invoiceId!,
+                    previewUrl.fileKey,
+                    false,
+                  );
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = previewUrl.fileName || "document.pdf";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                } catch {
+                  toast.error("Lỗi tải xuống file");
+                }
+              }
+            : undefined
+        }
+      />
     </DrawerSection>
   );
 }
