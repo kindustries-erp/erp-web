@@ -145,10 +145,14 @@ export const bankStatementApi = {
     return res.data;
   },
 
-  getBankAccounts: async (branchId?: string): Promise<ErpBankAccount[]> => {
+  getBankAccounts: async (
+    branchId?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<ErpBankAccount[]> => {
     const res = await axiosInstance.get(
       "/api/v1/bank-transactions-core/bank-accounts",
-      { params: { branchId } },
+      { params: { branchId, startDate, endDate } },
     );
     return res.data;
   },
@@ -176,10 +180,14 @@ export const bankStatementApi = {
     return res.data;
   },
 
-  getCashBooks: async (branchId?: string): Promise<ErpCashBook[]> => {
+  getCashBooks: async (
+    branchId?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<ErpCashBook[]> => {
     const res = await axiosInstance.get(
       "/api/v1/bank-transactions-core/cash-books",
-      { params: { branchId } },
+      { params: { branchId, startDate, endDate } },
     );
     return res.data;
   },

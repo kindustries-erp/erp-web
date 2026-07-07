@@ -1,10 +1,10 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LayoutDashboard } from "lucide-react";
-import { KpiCard } from "@/shared/components/KpiCard";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -39,16 +39,6 @@ export function CashflowDashboard() {
   const { data: tags = [] } = useQuery({
     queryKey: ["sys-tags"],
     queryFn: getTags,
-  });
-
-  const { data: bankAccounts = [] } = useQuery({
-    queryKey: ["bankAccounts"],
-    queryFn: () => bankStatementApi.getBankAccounts(),
-  });
-
-  const { data: cashBooks = [] } = useQuery({
-    queryKey: ["cashBooks"],
-    queryFn: () => bankStatementApi.getCashBooks(),
   });
 
   const filterConfig = React.useMemo(() => {
@@ -86,6 +76,38 @@ export function CashflowDashboard() {
 
   const filter = useFilterPanel(filterConfig, () => {});
 
+  const queryClient = useQueryClient();
+
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: [
+      "bankAccounts",
+      filter.state.custom.branchId,
+      filter.state.dateFrom,
+      filter.state.dateTo,
+    ],
+    queryFn: () =>
+      bankStatementApi.getBankAccounts(
+        filter.state.custom.branchId as string,
+        filter.state.dateFrom,
+        filter.state.dateTo,
+      ),
+  });
+
+  const { data: cashBooks = [] } = useQuery({
+    queryKey: [
+      "cashBooks",
+      filter.state.custom.branchId,
+      filter.state.dateFrom,
+      filter.state.dateTo,
+    ],
+    queryFn: () =>
+      bankStatementApi.getCashBooks(
+        filter.state.custom.branchId as string,
+        filter.state.dateFrom,
+        filter.state.dateTo,
+      ),
+  });
+
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
       "dashboard-stats",
@@ -106,8 +128,8 @@ export function CashflowDashboard() {
       }),
   });
 
-  const barIn = "#10b981"; // Emerald 500
-  const barOut = "#ef4444"; // Red 500
+  const barIn = "#059669"; // Emerald 600
+  const barOut = "#ea580c"; // Orange 600
 
   const cashTrendLabels = data?.cashTrend?.map((t: any) => t.label) || [];
   const cashTrendIn = data?.cashTrend?.map((t: any) => t.cashIn) || [];
@@ -171,8 +193,12 @@ export function CashflowDashboard() {
       header: t("bankStatement.columns.description"),
       size: 400,
       cell: (row: any) => (
-        <div className="whitespace-normal break-words w-full">
-          {row.description}
+        <div className="w-full">
+          <Tooltip content={row.description || ""} side="top">
+            <div className="whitespace-normal break-words w-full line-clamp-2 max-w-[400px]">
+              {row.description}
+            </div>
+          </Tooltip>
         </div>
       ),
     },
@@ -183,7 +209,9 @@ export function CashflowDashboard() {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
           return (
-            <span className="text-green-600 font-medium">+{money(credit)}</span>
+            <span className="text-emerald-600 font-medium">
+              +{money(credit)}
+            </span>
           );
         return null;
       },
@@ -196,7 +224,7 @@ export function CashflowDashboard() {
         const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
           return (
-            <span className="text-red-600 font-medium">{money(debit)}</span>
+            <span className="text-[#ea580c] font-medium">{money(debit)}</span>
           );
         return null;
       },
@@ -266,26 +294,34 @@ export function CashflowDashboard() {
       filterConfig={filterConfig}
       filter={filter}
       loading={isFetching}
-      onRefresh={() => refetch()}
+      onRefresh={() => {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
+        queryClient.invalidateQueries({ queryKey: ["cashBooks"] });
+      }}
     >
       {/* Account Balances */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         {bankAccounts.map((acc: any) => (
-          <KpiCard
-            compact
-            loading={isFetching}
+          <AccountBalanceCard
             key={acc.id}
+            loading={isFetching}
             label={`${acc.bankName || acc.bankCode} - ${acc.accountNumber}`}
-            value={money(acc.currentBalance || 0)}
+            openingBalance={acc.openingBalance}
+            totalCredit={acc.totalCredit}
+            totalDebit={acc.totalDebit}
+            currentBalance={acc.currentBalance}
           />
         ))}
         {cashBooks.map((book: any) => (
-          <KpiCard
-            compact
-            loading={isFetching}
+          <AccountBalanceCard
             key={book.id}
+            loading={isFetching}
             label={book.name}
-            value={money(book.currentBalance || 0)}
+            openingBalance={book.openingBalance}
+            totalCredit={book.totalCredit}
+            totalDebit={book.totalDebit}
+            currentBalance={book.currentBalance}
           />
         ))}
       </div>
@@ -417,18 +453,18 @@ export function CashflowDashboard() {
             variant="spreadsheet"
             minWidth={1500}
             enableColumnResizing={true}
-            containerClassName="max-h-[500px] overflow-auto"
+            containerClassName=""
             summaryRow={{
               description: (
                 <span className="font-semibold text-right block"></span>
               ),
               thu: (
-                <span className="text-green-600 font-semibold">
+                <span className="text-emerald-600 font-semibold">
                   +{money(topTransactionsInTotal)}
                 </span>
               ),
               chi: (
-                <span className="text-red-600 font-semibold">
+                <span className="text-[#ea580c] font-semibold">
                   {money(topTransactionsOutTotal)}
                 </span>
               ),
@@ -450,12 +486,76 @@ export function CashflowDashboard() {
 // ── Helpers ──
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
-    <div className="flex items-center gap-[6px] text-xs text-[color:var(--muted-fg)]">
+    <div className="flex items-center text-xs">
       <div
-        className="w-[10px] h-[10px] rounded-sm border border-[color:var(--border)]"
-        style={{ background: color }}
+        className="w-3 h-3 rounded-[3px] mr-2"
+        style={{ backgroundColor: color }}
       />
-      {label}
+      <span className="text-[color:var(--muted-fg)]">{label}</span>
+    </div>
+  );
+}
+
+function AccountBalanceCard({
+  label,
+  openingBalance = 0,
+  totalCredit = 0,
+  totalDebit = 0,
+  currentBalance = 0,
+  loading,
+}: {
+  label: string;
+  openingBalance: number;
+  totalCredit: number;
+  totalDebit: number;
+  currentBalance: number;
+  loading?: boolean;
+}) {
+  return (
+    <div className="bg-surface border border-border rounded-xl card-shadow p-3 max-[480px]:p-2 flex flex-col justify-between">
+      <div className="text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-2 text-[10px] truncate">
+        {label}
+      </div>
+
+      {loading ? (
+        <div className="space-y-2 mb-1">
+          <Skeleton className="h-4 w-3/4 rounded" />
+          <Skeleton className="h-4 w-2/3 rounded" />
+          <Skeleton className="h-5 w-full rounded mt-2" />
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center text-[12px] mb-1">
+            <span className="text-[color:var(--muted-fg)]">Đầu kỳ:</span>
+            <span className="font-medium text-foreground">
+              {money(openingBalance)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-[12px] mb-1">
+            <span className="text-[color:var(--muted-fg)]">Thu trong kỳ:</span>
+            <span className="font-medium text-emerald-600">
+              +{money(totalCredit)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-[12px] mb-2">
+            <span className="text-[color:var(--muted-fg)]">Chi trong kỳ:</span>
+            <span className="font-medium text-[#ea580c]">
+              -{money(totalDebit)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center border-t border-border pt-2 mt-auto">
+            <span className="text-[10px] font-semibold text-[color:var(--muted-fg)] uppercase">
+              Cuối kỳ:
+            </span>
+            <span className="font-bold text-[16px] text-foreground">
+              {money(currentBalance)}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
