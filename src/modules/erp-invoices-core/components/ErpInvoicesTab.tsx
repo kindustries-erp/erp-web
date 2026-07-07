@@ -584,11 +584,60 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               onClick: () => handleDownload(inv.id, "xml"),
             });
           }
-          if (inv.pdfFileKey) {
+          const hasPdf =
+            inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0);
+          if (hasPdf) {
             traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
               icon: <Download className="w-3.5 h-3.5" />,
-              onClick: () => handleDownload(inv.id, "pdf"),
+              onClick: async () => {
+                if (inv.pdfFiles && inv.pdfFiles.length > 1) {
+                  try {
+                    showToast({
+                      title: "Đang nén file PDF...",
+                      variant: "default",
+                    });
+                    const blob = await erpInvoicesCoreApi.downloadPdfsZip(
+                      inv.id,
+                    );
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `hoadon_${inv.id}_pdfs.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                  } catch {
+                    showToast({
+                      title: "Không thể tải file PDF",
+                      variant: "destructive",
+                    });
+                  }
+                } else if (inv.pdfFiles && inv.pdfFiles.length === 1) {
+                  const f = inv.pdfFiles[0];
+                  try {
+                    const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+                      inv.id,
+                      f.key,
+                      false,
+                    );
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = f.filename || "document.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  } catch {
+                    showToast({
+                      title: "Không thể tải file PDF",
+                      variant: "destructive",
+                    });
+                  }
+                } else if (inv.pdfFileKey) {
+                  handleDownload(inv.id, "pdf");
+                }
+              },
             });
           }
 
