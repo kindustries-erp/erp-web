@@ -99,6 +99,7 @@ export interface InventoryMovement {
   transactionType: string;
   documentType?: string | null;
   documentId?: string | null;
+  documentNo?: string | null;
   qtyIn: number;
   qtyOut: number;
   unitCost?: number | null;
