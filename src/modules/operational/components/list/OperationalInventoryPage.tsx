@@ -316,6 +316,13 @@ export function OperationalInventoryPage({
           loadingId={movLoadingId}
           error={movError}
           data={movMap[row.inventory_item_id]}
+          onOpenDocument={(docId, docType) => {
+            if (docType === "GOODS_RECEIPT") {
+              void grDrawer.openDetail(docId, true);
+            } else if (docType === "GOODS_ISSUE") {
+              void giDrawer.openDetail(docId, true);
+            }
+          }}
         />
       )}
       sortArray={inventorySort ? [inventorySort] : undefined}

@@ -208,7 +208,10 @@ export function BankTransactionDetailDrawer({
                   </label>
                   <Combobox
                     options={
-                      chartOfAccounts?.map((acc: any) => ({
+                      (Array.isArray(chartOfAccounts)
+                        ? chartOfAccounts
+                        : chartOfAccounts?.items || []
+                      )?.map((acc: any) => ({
                         value: acc.id,
                         label: `${acc.accountCode} - ${acc.accountName}`,
                       })) || []
