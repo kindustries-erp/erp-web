@@ -183,7 +183,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const setCustom = listHook.filterPanel.setCustom;
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
+      search: {
+        placeholder: t(
+          "searchPlaceholder",
+          "Tìm số HĐ, tên, MST, diễn giải, số tiền...",
+        ),
+      },
       period: true,
       noDefaultPeriod: true,
       status: {
