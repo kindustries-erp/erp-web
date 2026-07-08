@@ -91,7 +91,12 @@ export function useErpInvoicesList(initialDirection: Direction = "IN") {
 
   const handleSort = (key: string) => {
     if (sortBy === key) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      if (sortOrder === "desc") {
+        setSortOrder("asc");
+      } else {
+        setSortBy("");
+        setSortOrder("desc");
+      }
     } else {
       setSortBy(key);
       setSortOrder("desc");
