@@ -21,6 +21,7 @@ interface InventoryTimelineBlockProps {
   loadingId: string | null;
   error: string | null;
   data?: InventoryMovementsPayload;
+  onOpenDocument?: (docId: string, docType: string) => void;
 }
 
 /**
@@ -32,6 +33,7 @@ export function InventoryTimelineBlock({
   loadingId,
   error,
   data,
+  onOpenDocument,
 }: InventoryTimelineBlockProps) {
   const t = useT();
   const isLoading = loadingId === itemId;
@@ -53,7 +55,7 @@ export function InventoryTimelineBlock({
         header: t("inventory.history.time"),
         headerClassName: "text-center",
         className: "text-right",
-        size: 150,
+        size: 120,
         cell: (m) => {
           if (!m.createdAt) return "—";
           return (
@@ -75,7 +77,7 @@ export function InventoryTimelineBlock({
         header: t("Loại"),
         headerClassName: "text-center",
         className: "text-center",
-        size: 150,
+        size: 120,
         cell: (m) => {
           const isIn = Number(m.qtyIn || 0) > 0;
           return (
@@ -95,39 +97,27 @@ export function InventoryTimelineBlock({
         },
       },
       {
-        key: "transactionType",
-        header: t("Loại giao dịch"),
+        key: "documentNo",
+        header: t("Số phiếu"),
         headerClassName: "text-center",
-        className: "text-left",
+        className: "text-center",
         size: 150,
         cell: (m) => {
-          const rawType = m.documentType || m.transactionType;
-          if (!rawType) return "—";
-
-          let displayDoc = rawType;
-          if (rawType === "GOODS_RECEIPT") displayDoc = t("Nhập kho");
-          else if (rawType === "GOODS_ISSUE") displayDoc = t("Xuất kho");
-          else {
-            const txType = t(`inventory.txTypes.${rawType}`);
-            if (txType !== `inventory.txTypes.${rawType}`) {
-              displayDoc = txType;
-            } else {
-              const docTypeLower = rawType.toLowerCase();
-              const translatedDoc = t(`inventory.docTypes.${docTypeLower}`);
-              if (translatedDoc !== `inventory.docTypes.${docTypeLower}`) {
-                displayDoc = translatedDoc;
-              } else {
-                const translatedDocS = t(`inventory.docTypes.${docTypeLower}s`);
-                if (translatedDocS !== `inventory.docTypes.${docTypeLower}s`) {
-                  displayDoc = translatedDocS;
-                }
-              }
-            }
-          }
-
+          if (!m.documentNo) return "—";
           return (
-            <span className="truncate font-medium text-foreground text-xs sm:text-sm">
-              {displayDoc}
+            <span
+              className={`truncate text-xs font-mono ${
+                m.documentId && m.documentType
+                  ? "text-blue-600 hover:underline cursor-pointer"
+                  : "text-muted-foreground"
+              }`}
+              onClick={() => {
+                if (m.documentId && m.documentType && onOpenDocument) {
+                  onOpenDocument(m.documentId, m.documentType);
+                }
+              }}
+            >
+              {m.documentNo}
             </span>
           );
         },
@@ -137,13 +127,15 @@ export function InventoryTimelineBlock({
         header: t("Ghi chú"),
         headerClassName: "text-center",
         className: "text-left",
-        size: 150,
+        size: 250,
         cell: (m) => {
           if (!m.notes) return null;
           return (
-            <span className="truncate text-xs text-muted-foreground">
-              {m.notes}
-            </span>
+            <Tooltip content={m.notes} side="top">
+              <span className="inline-block max-w-[250px] truncate text-xs text-muted-foreground cursor-help">
+                {m.notes}
+              </span>
+            </Tooltip>
           );
         },
       },
@@ -152,7 +144,7 @@ export function InventoryTimelineBlock({
         header: t("inventory.history.change"),
         headerClassName: "text-center",
         className: "text-right",
-        size: 150,
+        size: 120,
         cell: (m) => {
           const isIn = Number(m.qtyIn || 0) > 0;
           const qty = isIn ? m.qtyIn : m.qtyOut;
@@ -175,7 +167,7 @@ export function InventoryTimelineBlock({
         header: t("inventory.history.balance"),
         headerClassName: "text-center",
         className: "text-right",
-        size: 150,
+        size: 120,
         cell: (m) => (
           <div className="font-medium text-foreground text-xs sm:text-sm w-full text-right">
             {fmtQty(m.balanceAfter)}
