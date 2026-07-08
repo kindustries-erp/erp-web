@@ -11,16 +11,73 @@ import { normalizeDateTime } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { Button } from "@/shared/components/ui/Button";
 import type { DataTableColumn } from "@/shared/components/DataTable";
-import type {
-  OperationalDocument,
-  OperationalVariant,
+import {
+  operationalApi,
+  type OperationalDocument,
+  type OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { useQuery } from "@tanstack/react-query";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
   expandedRowIds: Record<string, boolean>;
   onToggleExpand: (key: string) => void;
+}
+
+function PoTooltipContent({ row }: { row: OperationalDocument }) {
+  const t = useT();
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "operational-document",
+      row.document_type || "purchase_orders",
+      row.id,
+    ],
+    queryFn: () =>
+      operationalApi.getDocument(
+        (row.document_type || "purchase_orders") as any,
+        row.id,
+      ),
+    enabled: !row.lines || row.lines.length === 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const lines = row.lines?.length ? row.lines : data?.lines;
+
+  if (isLoading && (!row.lines || row.lines.length === 0)) {
+    return (
+      <div className="text-xs text-muted-foreground">
+        {t("Đang tải chi tiết...")}
+      </div>
+    );
+  }
+
+  if (!lines || lines.length === 0) {
+    return <div className="text-xs">{t("Không có chi tiết dòng")}</div>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1 min-w-[200px] max-w-[350px] text-xs">
+      <div className="font-semibold border-b border-border pb-1 mb-1 shrink-0">
+        Chi tiết PO ({lines.length} dòng)
+      </div>
+      <div className="flex flex-col gap-1 max-h-[300px] overflow-y-auto pr-1">
+        {lines.map((l: any, idx: number) => (
+          <div key={l.id || idx} className="flex justify-between gap-3">
+            <span
+              className="truncate flex-1"
+              title={l.item_name || l.description}
+            >
+              - {l.item_name || l.description || t("Không có tên")}
+            </span>
+            <span className="font-medium whitespace-nowrap shrink-0">
+              SL: {Number(l.qty || 0).toLocaleString("vi-VN")}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -68,49 +125,11 @@ export function usePurchaseColumns({
         },
       },
       {
-        key: "po_no",
-        header: t("Số PO"),
-        sortable: true,
-        sortKey: "purchase_no",
-        size: 140,
-        enableResizing: true,
-        className: "!py-2 align-middle font-medium text-left",
-        headerClassName: "text-center",
-        cell: (row) => {
-          return (
-            <div className="flex items-center gap-1.5 text-left text-sm max-w-[120px]">
-              <Tooltip content={row.notes || t("Không có ghi chú")}>
-                <span className="font-semibold text-primary truncate">
-                  {row.purchase_no || "—"}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        },
-      },
-      {
-        key: "supplier",
-        header: t("Nhà cung cấp"),
-        sortable: true,
-        sortKey: "supplier_id",
-        size: 140,
-        enableResizing: true,
-        className: "!py-2 align-middle text-left w-full",
-        headerClassName: "text-center w-full",
-        cell: (row) => (
-          <Tooltip content={row.supplier_name_snapshot || "—"}>
-            <div className="w-full text-left truncate">
-              {row.supplier_name_snapshot || "—"}
-            </div>
-          </Tooltip>
-        ),
-      },
-      {
         key: "order_date",
         header: t("Ngày đặt"),
         sortable: true,
         sortKey: "order_date",
-        size: 140,
+        size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -120,7 +139,7 @@ export function usePurchaseColumns({
           const [d] = dt.split(" ");
           return (
             <Tooltip content={dt}>
-              <span className="font-semibold cursor-default block w-full text-right">
+              <span className="cursor-default block w-full text-right">
                 {d}
               </span>
             </Tooltip>
@@ -132,7 +151,7 @@ export function usePurchaseColumns({
         header: t("Ngày nhập DK"),
         sortable: true,
         sortKey: "expected_date",
-        size: 140,
+        size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -142,7 +161,7 @@ export function usePurchaseColumns({
           const [d] = dt.split(" ");
           return (
             <Tooltip content={dt}>
-              <span className="font-semibold cursor-default block w-full text-right">
+              <span className="cursor-default block w-full text-right">
                 {d}
               </span>
             </Tooltip>
@@ -150,9 +169,47 @@ export function usePurchaseColumns({
         },
       },
       {
+        key: "po_no",
+        header: t("Số PO"),
+        sortable: true,
+        sortKey: "purchase_no",
+        size: 150,
+        enableResizing: true,
+        className: "!py-2 align-middle font-medium text-left",
+        headerClassName: "text-center",
+        cell: (row) => {
+          return (
+            <div className="flex items-center gap-1.5 text-left text-sm w-full">
+              <Tooltip content={<PoTooltipContent row={row} />}>
+                <div className="font-semibold text-primary whitespace-normal break-words w-full cursor-pointer line-clamp-2">
+                  {row.purchase_no || "—"}
+                </div>
+              </Tooltip>
+            </div>
+          );
+        },
+      },
+      {
+        key: "supplier",
+        header: t("Nhà cung cấp"),
+        sortable: true,
+        sortKey: "supplier_id",
+        size: 250,
+        enableResizing: true,
+        className: "!py-2 align-middle text-left w-full",
+        headerClassName: "text-center w-full",
+        cell: (row) => (
+          <Tooltip content={row.supplier_name_snapshot || "—"}>
+            <div className="w-full text-left whitespace-normal break-words cursor-pointer line-clamp-2">
+              {row.supplier_name_snapshot || "—"}
+            </div>
+          </Tooltip>
+        ),
+      },
+      {
         key: "inventory_status",
         header: t("common.inventoryStatus"),
-        size: 140,
+        size: 100,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
         headerClassName: "text-center",
@@ -197,6 +254,21 @@ export function usePurchaseColumns({
             </div>
           );
         },
+      },
+      {
+        key: "notes",
+        header: t("Ghi chú"),
+        size: 250,
+        enableResizing: true,
+        className: "!py-2 align-middle text-left w-full",
+        headerClassName: "text-center w-full",
+        cell: (row) => (
+          <Tooltip content={row.notes || "—"}>
+            <div className="w-full text-left whitespace-normal break-words cursor-pointer line-clamp-2">
+              {row.notes || "—"}
+            </div>
+          </Tooltip>
+        ),
       },
     ],
     [expandedRowIds, onToggleExpand, t, variant],
