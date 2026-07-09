@@ -100,6 +100,7 @@ export interface ErpProductionOrder {
   outputMetadata?: Record<string, unknown> | null;
   producedVehicles?: ErpProducedVehicle[];
   producedSerials?: ErpProducedSerial[];
+  bomVersion?: string | null;
   [key: string]: unknown;
 }
 
