@@ -19,7 +19,8 @@ export type InventorySerialListParams = BaseListParams & {
   itemId?: string;
   status?: string;
   salesOrderLineId?: string;
-  ids?: string;
+  ids?: string[];
+  missingSerial?: boolean;
 };
 
 export interface InventorySerialRow {
@@ -202,6 +203,9 @@ export const inventoryCoreApi = {
         ? { salesOrderLineId: params.salesOrderLineId }
         : {}),
       ...(params?.ids ? { ids: params.ids } : {}),
+      ...(params?.missingSerial !== undefined
+        ? { missingSerial: params.missingSerial }
+        : {}),
     };
     const key = `inventory-serials:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {

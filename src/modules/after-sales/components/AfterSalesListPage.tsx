@@ -43,7 +43,7 @@ export function AfterSalesListPage() {
   const { openDrawer, closeDrawer, isOpen, type, mode, entityData } =
     useDrawerStore();
   const [page, setPage] = useState(1);
-  const pageSize = 50;
+  const [pageSize, setPageSize] = useState(50);
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
   const [sortField, setSortField] = useState<string | undefined>();
@@ -346,7 +346,10 @@ export function AfterSalesListPage() {
         total={total}
         totalPages={Math.ceil(total / pageSize)}
         onPage={setPage}
-        onPageSize={() => {}}
+        onPageSize={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
         onRefresh={fetchList}
         filterConfig={filterConfig}
         filter={filter}

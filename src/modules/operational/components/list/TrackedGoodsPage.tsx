@@ -25,6 +25,7 @@ export function TrackedGoodsPage() {
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [missingSerialFilter, setMissingSerialFilter] = useState(false);
   const [sortField, setSortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
@@ -48,6 +49,7 @@ export function TrackedGoodsPage() {
     itemType: itemTypeFilter || undefined,
     trackingPolicy: trackingPolicyFilter || undefined,
     status: statusFilter || undefined,
+    missingSerial: missingSerialFilter || undefined,
     sort: [sortField],
   });
 
@@ -72,6 +74,7 @@ export function TrackedGoodsPage() {
     !!itemTypeFilter,
     !!trackingPolicyFilter,
     !!statusFilter,
+    missingSerialFilter,
   ].filter(Boolean).length;
 
   const CopyIconBtn = ({ text }: { text: string }) => {
@@ -349,6 +352,12 @@ export function TrackedGoodsPage() {
             { value: "RETURNED", label: "Đổi trả" },
           ],
         },
+        {
+          key: "missingSerial",
+          label: "Tình trạng Serial",
+          placeholder: "Tất cả",
+          options: [{ value: "true", label: "Chưa có Serial (Trống)" }],
+        },
       ],
     }),
     [t],
@@ -360,6 +369,7 @@ export function TrackedGoodsPage() {
     setItemTypeFilter("");
     setTrackingPolicyFilter("");
     setStatusFilter("");
+    setMissingSerialFilter(false);
     setPage(1);
   }, []);
 
@@ -434,6 +444,7 @@ export function TrackedGoodsPage() {
               itemType: itemTypeFilter,
               trackingPolicy: trackingPolicyFilter,
               status: statusFilter,
+              missingSerial: missingSerialFilter ? "true" : "",
             },
           },
           inputs: { search: searchInput, amountMin: "", amountMax: "" },
@@ -456,6 +467,8 @@ export function TrackedGoodsPage() {
               setTrackingPolicyFilter(v);
             } else if (key === "status") {
               setStatusFilter(v);
+            } else if (key === "missingSerial") {
+              setMissingSerialFilter(v === "true");
             }
             setPage(1);
           },

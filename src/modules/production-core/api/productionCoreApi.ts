@@ -63,6 +63,8 @@ export interface ErpProducedVehicle {
   id: string;
   vin: string;
   engineNo?: string | null;
+  serialNo?: string | null;
+  attributes?: Record<string, unknown> | null;
   notes?: string | null;
   createdAt?: string;
 }
