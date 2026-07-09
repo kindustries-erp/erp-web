@@ -21,9 +21,12 @@ import { SerialPicker } from "./SerialPicker";
 import { DeliveryConfirmModal } from "./DeliveryConfirmModal";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { SoVehicleListDrawer } from "./SoVehicleListDrawer";
+import { List } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 
 export interface SoLineForm {
+  id?: string;
   itemId: string;
   itemName: string;
   qtyOrdered: string;
@@ -73,6 +76,7 @@ export function buildForm(so: ErpSalesOrder): SoForm {
     remarks: so.remarks ?? "",
     lines: so.lines?.length
       ? so.lines.map((line: any) => ({
+          id: line.id,
           itemId: line.itemId ?? "",
           itemName: line.itemName ?? "",
           qtyOrdered: line.qtyOrdered ?? "1",
@@ -201,6 +205,9 @@ export function SoFormDrawer({
   const isEditing = mode === "edit";
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const [isConfirmingBulk, setIsConfirmingBulk] = useState(false);
+  const [vehicleListLineId, setVehicleListLineId] = useState<string | null>(
+    null,
+  );
 
   const canConfirmDelivery =
     viewOnly &&
@@ -346,31 +353,42 @@ export function SoFormDrawer({
                     key: "item",
                     header: t("Item"),
                     minWidth: 240,
-                    cell: (line, idx) => (
-                      <Combobox
-                        value={line.itemId}
-                        readOnly={viewOnly || !!editing}
-                        onChange={(value) => {
-                          const matched = itemOptions.find(
-                            (opt) => opt.value === value,
-                          );
-                          updateLine(idx, {
-                            itemId: value,
-                            itemName:
-                              matched?.label
-                                .split(" — ")
-                                .slice(1)
-                                .join(" — ") || "",
-                          });
-                        }}
-                        options={itemOptions}
-                        placeholder={t("Chọn inventory item")}
-                        onSearch={setItemSearch}
-                        onScrollBottom={fetchNextItems}
-                        loading={loadingItems}
-                        fallbackLabel={line.itemName}
-                      />
-                    ),
+                    cell: (line, idx) => {
+                      if (viewOnly) {
+                        const matched = itemOptions.find(
+                          (opt) => opt.value === line.itemId,
+                        );
+                        const displayItemName = matched
+                          ? matched.label.split(" — ").slice(1).join(" — ")
+                          : line.itemName || line.itemId || "—";
+                        return <span>{displayItemName}</span>;
+                      }
+                      return (
+                        <Combobox
+                          value={line.itemId}
+                          readOnly={!!editing}
+                          onChange={(value) => {
+                            const matched = itemOptions.find(
+                              (opt) => opt.value === value,
+                            );
+                            updateLine(idx, {
+                              itemId: value,
+                              itemName:
+                                matched?.label
+                                  .split(" — ")
+                                  .slice(1)
+                                  .join(" — ") || "",
+                            });
+                          }}
+                          options={itemOptions}
+                          placeholder={t("Chọn inventory item")}
+                          onSearch={setItemSearch}
+                          onScrollBottom={fetchNextItems}
+                          loading={loadingItems}
+                          fallbackLabel={line.itemName}
+                        />
+                      );
+                    },
                   },
                   {
                     key: "tracking",
@@ -397,6 +415,29 @@ export function SoFormDrawer({
                           </span>
                         );
                       }
+                      if (viewOnly) {
+                        return (
+                          <div className="flex items-center gap-2 min-h-[36px] py-1">
+                            <span className="text-[13px] font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                              {line.selectedSerialIds?.length || 0}{" "}
+                              {t("xe đã chọn")}
+                            </span>
+                            {(line.selectedSerialIds?.length || 0) > 0 &&
+                              line.id && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setVehicleListLineId(line.id as string)
+                                  }
+                                  className="p-1 hover:bg-gray-100 rounded text-blue-600 transition-colors"
+                                  title={t("Xem chi tiết xe")}
+                                >
+                                  <List className="w-4 h-4" />
+                                </button>
+                              )}
+                          </div>
+                        );
+                      }
                       return (
                         <div className="flex items-center min-h-[36px] py-1">
                           <SerialPicker
@@ -411,8 +452,8 @@ export function SoFormDrawer({
                                 qtyOrdered: String(ids.length || 1), // auto update qty
                               });
                             }}
-                            disabled={viewOnly || !!editing}
-                            readOnly={viewOnly || !!editing}
+                            disabled={!!editing}
+                            readOnly={!!editing}
                           />
                         </div>
                       );
@@ -641,6 +682,11 @@ export function SoFormDrawer({
         }}
       />
       <GiFormDrawer drawer={giDrawer} />
+      <SoVehicleListDrawer
+        open={!!vehicleListLineId}
+        onClose={() => setVehicleListLineId(null)}
+        lineId={vehicleListLineId || ""}
+      />
     </>
   );
 }

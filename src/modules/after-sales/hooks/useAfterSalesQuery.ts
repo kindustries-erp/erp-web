@@ -17,6 +17,9 @@ export function useAfterSalesQuery(
       search: params.search?.trim() || undefined,
       dateFrom: params.dateFrom,
       dateTo: params.dateTo,
+      sortField: params.sortField,
+      sortOrder: params.sortOrder,
+      dealerId: params.dealerId,
     }),
     [
       params.page,
@@ -24,6 +27,9 @@ export function useAfterSalesQuery(
       params.search,
       params.dateFrom,
       params.dateTo,
+      params.sortField,
+      params.sortOrder,
+      params.dealerId,
     ],
   );
 
