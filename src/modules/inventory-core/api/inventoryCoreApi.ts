@@ -425,6 +425,11 @@ export const inventoryCoreApi = {
   ): Promise<PaginatedResponse<any>> => {
     const requestParams = {
       ...p(params),
+      ...(params?.dealerId ? { dealerId: params.dealerId } : {}),
+      ...(params?.dateFrom ? { deliveryDateFrom: params.dateFrom } : {}),
+      ...(params?.dateTo ? { deliveryDateTo: params.dateTo } : {}),
+      ...(params?.sortField ? { sortField: params.sortField } : {}),
+      ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
     };
     const key = `inventory-serial-lifecycles:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
