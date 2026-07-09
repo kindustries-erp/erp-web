@@ -44,6 +44,7 @@ import { SysTagsPage } from "@/pages/SysTagsPage";
 import { BankStatementPage } from "@/pages/BankStatementPage";
 import { GeneralJournalPage } from "@/pages/finance/GeneralJournalPage";
 import { ChartOfAccountsPage } from "@/pages/finance/ChartOfAccountsPage";
+import { VinfastPartsTrackingPage } from "@/pages/VinfastPartsTrackingPage";
 import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
 import { ThietLapQuy } from "@/pages/SettingsCashFund";
 import { SettingsBranch } from "@/pages/SettingsBranch";
@@ -93,6 +94,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
   "after-sales": AfterSalesPage,
+  "vinfast-parts": VinfastPartsTrackingPage,
 };
 
 export default function App() {

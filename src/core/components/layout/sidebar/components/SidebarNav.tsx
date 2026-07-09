@@ -417,6 +417,16 @@ export function SidebarNav({
                   onClick={() => navTo("settings-accounts" as PageKey)}
                   contextPage={"settings-accounts" as PageKey}
                 />
+                <NavItem
+                  collapsed={c}
+                  icon={
+                    <FileText className="w-4 h-4 opacity-65 flex-shrink-0" />
+                  }
+                  label="Báo cáo PT VINFAST"
+                  active={currentPage === "vinfast-parts"}
+                  onClick={() => navTo("vinfast-parts" as PageKey)}
+                  contextPage={"vinfast-parts" as PageKey}
+                />
               </>
             )}
           </div>
