@@ -157,7 +157,9 @@ function PageSizeSelect({
             <button
               key={v}
               type="button"
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 onChange(v);
                 setOpen(false);
               }}
