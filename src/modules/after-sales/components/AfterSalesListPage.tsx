@@ -149,25 +149,25 @@ export function AfterSalesListPage() {
 
   const columns = [
     {
+      key: "expectedDeliveryDate",
+      sortKey: "expectedDeliveryDate",
+      sortable: true,
+      size: 100,
+      header: t("Ngày DK"),
+      cell: (row: any) =>
+        row.expectedDeliveryDate
+          ? format(new Date(row.expectedDeliveryDate), "dd/MM/yyyy")
+          : "-",
+    },
+    {
       key: "deliveryDate",
       sortKey: "deliveryDate",
       sortable: true,
-      minWidth: 120,
+      size: 100,
       header: t("Ngày giao"),
       cell: (row: any) =>
         row.deliveryDate
           ? format(new Date(row.deliveryDate), "dd/MM/yyyy")
-          : "-",
-    },
-    {
-      key: "expectedDeliveryDate",
-      sortKey: "expectedDeliveryDate",
-      sortable: true,
-      minWidth: 120,
-      header: t("Ngày giao DK"),
-      cell: (row: any) =>
-        row.expectedDeliveryDate
-          ? format(new Date(row.expectedDeliveryDate), "dd/MM/yyyy")
           : "-",
     },
     {
@@ -183,8 +183,9 @@ export function AfterSalesListPage() {
     {
       key: "serialNo",
       header: t("Số Seri"),
+      size: 170,
       cell: (row: any) => (
-        <div className="flex items-center gap-1.5 group min-w-[120px]">
+        <div className="flex items-center gap-1.5 group">
           <span className="font-medium text-gray-800 flex-1 truncate">
             {row.serialNo || "-"}
           </span>
@@ -195,7 +196,7 @@ export function AfterSalesListPage() {
     {
       key: "vinNo",
       header: t("Số Khung"),
-      minWidth: 200,
+      size: 170,
       cell: (row: any) => (
         <div className="flex items-center gap-1.5 group">
           <span className="font-medium text-gray-800 flex-1 truncate">
@@ -208,7 +209,7 @@ export function AfterSalesListPage() {
     {
       key: "engineNo",
       header: t("Số Máy"),
-      minWidth: 200,
+      size: 170,
       cell: (row: any) => (
         <div className="flex items-center gap-1.5 group">
           <span className="font-medium text-gray-800 flex-1 truncate">
@@ -237,7 +238,7 @@ export function AfterSalesListPage() {
     {
       key: "trackingAttributes",
       header: t("Thuộc tính xe"),
-      minWidth: 200,
+      size: 250,
       cell: (row: any) => {
         if (
           !row.trackingAttributes ||
