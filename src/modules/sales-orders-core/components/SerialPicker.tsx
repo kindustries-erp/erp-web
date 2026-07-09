@@ -68,7 +68,7 @@ export function SerialPicker({
         if (value.length > 0 && page === 1 && !search) {
           const selectedRes = await inventoryCoreApi.listSerials({
             itemId,
-            ids: value.join(","),
+            ids: value,
             pageSize: 1000,
           });
 

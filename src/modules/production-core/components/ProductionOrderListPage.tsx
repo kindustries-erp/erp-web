@@ -141,8 +141,10 @@ export function ProductionOrderListPage() {
   const filterDateTo = filter.state.dateTo;
   const filterFinishedGood = filter.state.custom.finishedGoodItemId;
 
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<string | undefined>(
+    "planned_start_date",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -336,6 +338,24 @@ export function ProductionOrderListPage() {
   const columns = useMemo(
     () => [
       {
+        key: "plannedStartDate",
+        header: t("Ngày bắt đầu"),
+        sortable: true,
+        sortKey: "planned_start_date",
+        cell: (item: ErpProductionOrder) => (
+          <div className="w-full">{fmtDate(item.plannedStartDate)}</div>
+        ),
+      },
+      {
+        key: "plannedEndDate",
+        header: t("Ngày kết thúc"),
+        sortable: true,
+        sortKey: "planned_end_date",
+        cell: (item: ErpProductionOrder) => (
+          <div className="w-full">{fmtDate(item.plannedEndDate)}</div>
+        ),
+      },
+      {
         key: "referenceNo",
         header: t("Mã lệnh"),
         sortable: true,
@@ -363,21 +383,12 @@ export function ProductionOrderListPage() {
         ),
       },
       {
-        key: "plannedStartDate",
-        header: t("Ngày bắt đầu"),
-        sortable: true,
-        sortKey: "planned_start_date",
+        key: "bomVersion",
+        header: t("Phiên bản BOM"),
+        sortable: false,
+        size: 200,
         cell: (item: ErpProductionOrder) => (
-          <div className="w-full">{fmtDate(item.plannedStartDate)}</div>
-        ),
-      },
-      {
-        key: "plannedEndDate",
-        header: t("Ngày kết thúc"),
-        sortable: true,
-        sortKey: "planned_end_date",
-        cell: (item: ErpProductionOrder) => (
-          <div className="w-full">{fmtDate(item.plannedEndDate)}</div>
+          <div className="w-full">{item.bomVersion || "—"}</div>
         ),
       },
       {

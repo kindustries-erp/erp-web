@@ -19,7 +19,8 @@ export type InventorySerialListParams = BaseListParams & {
   itemId?: string;
   status?: string;
   salesOrderLineId?: string;
-  ids?: string;
+  ids?: string[];
+  missingSerial?: boolean;
 };
 
 export interface InventorySerialRow {
@@ -202,6 +203,9 @@ export const inventoryCoreApi = {
         ? { salesOrderLineId: params.salesOrderLineId }
         : {}),
       ...(params?.ids ? { ids: params.ids } : {}),
+      ...(params?.missingSerial !== undefined
+        ? { missingSerial: params.missingSerial }
+        : {}),
     };
     const key = `inventory-serials:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
@@ -425,6 +429,11 @@ export const inventoryCoreApi = {
   ): Promise<PaginatedResponse<any>> => {
     const requestParams = {
       ...p(params),
+      ...(params?.dealerId ? { dealerId: params.dealerId } : {}),
+      ...(params?.dateFrom ? { deliveryDateFrom: params.dateFrom } : {}),
+      ...(params?.dateTo ? { deliveryDateTo: params.dateTo } : {}),
+      ...(params?.sortField ? { sortField: params.sortField } : {}),
+      ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
     };
     const key = `inventory-serial-lifecycles:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
