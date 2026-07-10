@@ -422,7 +422,7 @@ export function SidebarNav({
                   icon={
                     <FileText className="w-4 h-4 opacity-65 flex-shrink-0" />
                   }
-                  label="Báo cáo PT VINFAST"
+                  label={t("nav.items.vinfastParts")}
                   active={currentPage === "vinfast-parts"}
                   onClick={() => navTo("vinfast-parts" as PageKey)}
                   contextPage={"vinfast-parts" as PageKey}

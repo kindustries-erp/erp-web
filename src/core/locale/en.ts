@@ -80,6 +80,7 @@ export const en: Dict = {
       erpInvoicesOut: "Outbound Invoices",
       inbound: "Inbound",
       outbound: "Outbound",
+      vinfastParts: "VINFAST Parts Report",
       catalogRoles: "Partner Roles",
       catalogOpeningBalance: "Opening Balances",
       catalogVoucherNumbering: "Voucher Numbering",

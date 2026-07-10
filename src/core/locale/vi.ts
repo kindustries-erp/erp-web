@@ -78,6 +78,7 @@ export const vi = {
       erpInvoicesOut: "Hóa đơn đầu ra",
       inbound: "Đầu vào",
       outbound: "Đầu ra",
+      vinfastParts: "Báo cáo PT VINFAST",
       catalogRoles: "Vai trò đối tác",
       catalogOpeningBalance: "Số dư đầu kỳ",
       catalogVoucherNumbering: "Số thứ tự CT",
