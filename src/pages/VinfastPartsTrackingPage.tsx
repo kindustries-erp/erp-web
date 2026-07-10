@@ -15,7 +15,7 @@ import { FileText, Eye, Download, Info, Loader2 } from "lucide-react";
 import { Popover } from "@/core/components/ui/Popover";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
+// import { Button } from "@/shared/components/ui/Button";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
@@ -79,7 +79,11 @@ function VinfastPartDetailDrawer({
       header: "Số lượng",
       size: 100,
       className: "text-right font-medium",
-      cell: (row) => parseFloat(row.qty),
+      cell: (row) =>
+        Number(row.qty).toLocaleString("vi-VN", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }),
     },
     {
       key: "unitPrice",
@@ -223,7 +227,12 @@ function PriceWithInvoicePopover({
                   >
                     <td className="py-1.5">{row.invoiceDate}</td>
                     <td className="py-1.5">{row.invoiceNo}</td>
-                    <td className="py-1.5 text-right font-medium">{row.qty}</td>
+                    <td className="py-1.5 text-right font-medium">
+                      {Number(row.qty).toLocaleString("vi-VN", {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      })}
+                    </td>
                     <td className="py-1.5 text-right font-medium">
                       {money(row.totalAmount)}
                     </td>
@@ -239,10 +248,15 @@ function PriceWithInvoicePopover({
                     Tổng cộng:
                   </td>
                   <td className="py-2 text-right font-bold text-slate-700">
-                    {filteredData.reduce(
-                      (acc: number, cur: any) => acc + (Number(cur.qty) || 0),
-                      0,
-                    )}
+                    {filteredData
+                      .reduce(
+                        (acc: number, cur: any) => acc + (Number(cur.qty) || 0),
+                        0,
+                      )
+                      .toLocaleString("vi-VN", {
+                        minimumFractionDigits: 1,
+                        maximumFractionDigits: 1,
+                      })}
                   </td>
                   <td className="py-2 text-right font-bold text-slate-700">
                     {money(
@@ -352,10 +366,20 @@ export function VinfastPartsTrackingPage() {
 
     return {
       qtyBought: (
-        <span className="font-semibold text-slate-700">{totalQtyBought}</span>
+        <span className="font-semibold text-slate-700">
+          {totalQtyBought.toLocaleString("vi-VN", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
+        </span>
       ),
       qtySold: (
-        <span className="font-semibold text-slate-700">{totalQtySold}</span>
+        <span className="font-semibold text-slate-700">
+          {totalQtySold.toLocaleString("vi-VN", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
+        </span>
       ),
       avgBuyPrice: (
         <span className="font-semibold text-slate-700">
@@ -434,7 +458,12 @@ export function VinfastPartsTrackingPage() {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) => (
-        <span className="font-semibold text-slate-700">{row.qtyBought}</span>
+        <span className="font-semibold text-slate-700">
+          {Number(row.qtyBought).toLocaleString("vi-VN", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
+        </span>
       ),
     },
     {
@@ -462,7 +491,12 @@ export function VinfastPartsTrackingPage() {
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) => (
-        <span className="font-semibold text-slate-700">{row.qtySold}</span>
+        <span className="font-semibold text-slate-700">
+          {Number(row.qtySold).toLocaleString("vi-VN", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          })}
+        </span>
       ),
     },
     {
@@ -484,19 +518,25 @@ export function VinfastPartsTrackingPage() {
     },
     {
       key: "margin",
-      header: "Biên lợi nhuận",
+      header: "Biên LN",
       sortable: true,
       sortKey: "margin",
       headerClassName: "text-right",
       className: "text-right",
       cell: (row) => (
-        <div className="flex flex-col items-end">
-          <span className="font-semibold text-slate-700">
-            {money(row.margin)}
-          </span>
-          <span className="text-xs text-gray-500">{row.marginPct}</span>
-        </div>
+        <span className="font-semibold text-slate-700">
+          {money(row.margin)}
+        </span>
       ),
+    },
+    {
+      key: "marginPct",
+      header: "Biên LN (%)",
+      sortable: true,
+      sortKey: "marginPct",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (row) => <span className="text-gray-600">{row.marginPct}</span>,
     },
   ];
 
@@ -507,39 +547,41 @@ export function VinfastPartsTrackingPage() {
         desc="Tổng hợp và đối chiếu phụ tùng mua vào từ VINFAST và bán ra theo tháng"
         icon={<FileText className="w-4 h-4 opacity-75" />}
         tableId="vinfast-parts"
-        customActionsNode={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const params = new URLSearchParams();
-              if (filterState.dateFrom)
-                params.append("dateFrom", filterState.dateFrom);
-              if (filterState.dateTo)
-                params.append("dateTo", filterState.dateTo);
-              if (filterState.search)
-                params.append("search", filterState.search);
-              if (sortBy) params.append("sortBy", sortBy);
-              if (sortOrder) params.append("sortDir", sortOrder);
+        createActions={[
+          {
+            groupLabel: "Dữ liệu",
+            items: [
+              {
+                label: "Tải bảng kê",
+                icon: <Download className="w-4 h-4 text-green-600" />,
+                onClick: () => {
+                  const params = new URLSearchParams();
+                  if (filterState.dateFrom)
+                    params.append("dateFrom", filterState.dateFrom);
+                  if (filterState.dateTo)
+                    params.append("dateTo", filterState.dateTo);
+                  if (filterState.search)
+                    params.append("search", filterState.search);
+                  if (sortBy) params.append("sortBy", sortBy);
+                  if (sortOrder) params.append("sortDir", sortOrder);
 
-              // Logic to trigger download
-              const url = `/api/v1/reports/vinfast-parts/export/excel?${params.toString()}`;
-              api.get(url, { responseType: "blob" }).then((res) => {
-                const fileUrl = window.URL.createObjectURL(res.data);
-                const a = document.createElement("a");
-                a.href = fileUrl;
-                a.download = `bang-ke-phu-tung-vinfast.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(fileUrl);
-                document.body.removeChild(a);
-              });
-            }}
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Tải bảng kê
-          </Button>
-        }
+                  // Logic to trigger download
+                  const url = `/api/v1/reports/vinfast-parts/export/excel?${params.toString()}`;
+                  api.get(url, { responseType: "blob" }).then((res) => {
+                    const fileUrl = window.URL.createObjectURL(res.data);
+                    const a = document.createElement("a");
+                    a.href = fileUrl;
+                    a.download = `bang-ke-phu-tung-vinfast.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(fileUrl);
+                    document.body.removeChild(a);
+                  });
+                },
+              },
+            ],
+          },
+        ]}
         items={data?.data || []}
         columns={columns as any}
         summaryRow={summaryRow}
