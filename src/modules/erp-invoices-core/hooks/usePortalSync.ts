@@ -44,15 +44,19 @@ export function usePortalSync() {
       setLoading(true);
       setResult(null);
       try {
-        const payload = {
+        const res = await erpInvoicesCoreApi.portalSync({
           token: "",
-          direction: type === "purchase" ? "IN" : ("OUT" as "IN" | "OUT"),
-          from: dateFrom,
-          to: dateTo,
-        };
-        const res = await erpInvoicesCoreApi.portalSync(payload);
+          dateFrom,
+          dateTo,
+          type,
+        });
         setResult(res);
-        toast.success(`Đã đồng bộ ${res.count} hóa đơn thành công!`);
+        toast.success(
+          res.note ||
+            `Đã đồng bộ ${res.imported} HĐ mới, bỏ qua ${res.skipped} trùng. Đang tải ${res.xmlDownloadQueued} file XML...`,
+          { duration: 6000 },
+        );
+        return res;
       } catch {
         toast.error("Có lỗi xảy ra khi đồng bộ từ TCT");
       } finally {
