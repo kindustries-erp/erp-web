@@ -63,7 +63,7 @@ export function DeliveryConfirmModal({
     let active = true;
     if (open && serialIds.length > 0) {
       inventoryCoreApi
-        .listSerials({ ids: serialIds.join(","), pageSize: 100 })
+        .listSerials({ ids: serialIds, pageSize: 100 })
         .then((res) => {
           if (active) {
             const deliverable = res.items.filter(

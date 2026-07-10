@@ -47,6 +47,9 @@ export interface AfterSalesListFilters extends ListParams {
   search?: string;
   dateFrom?: string;
   dateTo?: string;
+  sortField?: string;
+  sortOrder?: string;
+  dealerId?: string;
 }
 
 export function createAfterSalesKey(filters: AfterSalesListFilters) {

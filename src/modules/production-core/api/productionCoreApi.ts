@@ -63,6 +63,8 @@ export interface ErpProducedVehicle {
   id: string;
   vin: string;
   engineNo?: string | null;
+  serialNo?: string | null;
+  attributes?: Record<string, unknown> | null;
   notes?: string | null;
   createdAt?: string;
 }
@@ -100,6 +102,7 @@ export interface ErpProductionOrder {
   outputMetadata?: Record<string, unknown> | null;
   producedVehicles?: ErpProducedVehicle[];
   producedSerials?: ErpProducedSerial[];
+  bomVersion?: string | null;
   [key: string]: unknown;
 }
 

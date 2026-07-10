@@ -9,7 +9,7 @@ import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryC
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { Barcode, Eye } from "lucide-react";
+import { Barcode, Eye, Copy, Check } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
@@ -25,6 +25,7 @@ export function TrackedGoodsPage() {
   const [itemTypeFilter, setItemTypeFilter] = useState("");
   const [trackingPolicyFilter, setTrackingPolicyFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [missingSerialFilter, setMissingSerialFilter] = useState(false);
   const [sortField, setSortField] = useState("-created_at");
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventorySerialRow | null>(
@@ -48,6 +49,7 @@ export function TrackedGoodsPage() {
     itemType: itemTypeFilter || undefined,
     trackingPolicy: trackingPolicyFilter || undefined,
     status: statusFilter || undefined,
+    missingSerial: missingSerialFilter || undefined,
     sort: [sortField],
   });
 
@@ -72,7 +74,30 @@ export function TrackedGoodsPage() {
     !!itemTypeFilter,
     !!trackingPolicyFilter,
     !!statusFilter,
+    missingSerialFilter,
   ].filter(Boolean).length;
+
+  const CopyIconBtn = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="opacity-0 group-hover:opacity-100 hover:text-gray-900 transition-opacity p-1"
+        title="Copy"
+      >
+        {copied ? (
+          <Check className="w-4 h-4 text-green-600" />
+        ) : (
+          <Copy className="w-4 h-4 text-gray-400" />
+        )}
+      </button>
+    );
+  };
 
   const columns: DataTableColumn<InventorySerialRow>[] = useMemo(
     () => [
@@ -106,7 +131,8 @@ export function TrackedGoodsPage() {
       {
         key: "itemName",
         header: t("Tên vật tư"),
-        className: "align-middle min-w-[250px] text-left",
+        size: 250,
+        className: "align-middle text-left",
         headerClassName: "text-center",
         cell: (row) => (
           <div className="font-medium">{row.item?.itemName || "—"}</div>
@@ -115,40 +141,57 @@ export function TrackedGoodsPage() {
       {
         key: "serialNo",
         header: t("SerialNo"),
-        className:
-          "align-middle min-w-[150px] text-left font-medium text-blue-600",
+        size: 170,
+        className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         sortable: true,
         sortKey: "serial_no",
-        cell: (row) => row.serialNo || "—",
+        cell: (row) => (
+          <div className="flex items-center gap-1.5 group font-medium">
+            <span className="flex-1 truncate">{row.serialNo || "—"}</span>
+            {row.serialNo && <CopyIconBtn text={row.serialNo} />}
+          </div>
+        ),
       },
       {
         key: "vinNo",
         header: t("Số VIN"),
-        className:
-          "align-middle min-w-[150px] text-left font-medium text-blue-600",
+        size: 170,
+        className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
-        cell: (row) => row.vinNo || "—",
+        cell: (row) => (
+          <div className="flex items-center gap-1.5 group font-medium">
+            <span className="flex-1 truncate">{row.vinNo || "—"}</span>
+            {row.vinNo && <CopyIconBtn text={row.vinNo} />}
+          </div>
+        ),
       },
       {
         key: "engineNo",
         header: t("Số máy"),
-        className:
-          "align-middle min-w-[150px] text-left font-medium text-blue-600",
+        size: 170,
+        className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
-        cell: (row) => row.engineNo || "—",
+        cell: (row) => (
+          <div className="flex items-center gap-1.5 group font-medium">
+            <span className="flex-1 truncate">{row.engineNo || "—"}</span>
+            {row.engineNo && <CopyIconBtn text={row.engineNo} />}
+          </div>
+        ),
       },
       {
         key: "trackingPolicyName",
         header: t("Chính sách Tracking"),
-        className: "align-middle min-w-[180px] text-left",
+        size: 180,
+        className: "align-middle text-left",
         headerClassName: "text-center",
         cell: (row) => row.item?.trackingPolicyName || "—",
       },
       {
         key: "status",
         header: t("Trạng thái"),
-        className: "align-middle min-w-[120px] text-center",
+        size: 120,
+        className: "align-middle text-center",
         headerClassName: "text-center",
         cell: (row) => {
           switch (row.status) {
@@ -194,7 +237,8 @@ export function TrackedGoodsPage() {
       {
         key: "soNo",
         header: t("Đơn hàng"),
-        className: "align-middle min-w-[120px] text-center",
+        size: 120,
+        className: "align-middle text-center",
         headerClassName: "text-center",
         cell: (row) => {
           if (!row.soNo) return "—";
@@ -213,7 +257,8 @@ export function TrackedGoodsPage() {
       {
         key: "delivery",
         header: t("Ngày giao"),
-        className: "align-middle min-w-[100px] text-center",
+        size: 100,
+        className: "align-middle text-center",
         headerClassName: "text-center",
         cell: (row) => {
           return row.lifecycle?.deliveryDate
@@ -225,7 +270,8 @@ export function TrackedGoodsPage() {
       {
         key: "attributes",
         header: t("Thuộc tính"),
-        className: "align-middle min-w-[200px] text-left",
+        size: 200,
+        className: "align-middle text-left",
         headerClassName: "text-center",
         cell: (row) => {
           if (!row.attributes) return "—";
@@ -242,15 +288,26 @@ export function TrackedGoodsPage() {
 
           if (entries.length === 0) return "—";
 
+          const attrNames: Record<string, string> = {
+            color: "Màu sắc",
+            dealer_code: "Mã đại lý",
+            dealer_name: "Tên đại lý",
+          };
+
           return (
-            <ul className="list-disc list-inside text-xs text-muted-foreground whitespace-pre-wrap">
+            <div className="flex flex-wrap gap-1">
               {entries.map((entry, i) => (
-                <li key={i}>
-                  <span className="font-medium">{entry.key}:</span>{" "}
+                <span
+                  key={i}
+                  className="inline-flex text-[11px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 border border-gray-200"
+                >
+                  <span className="font-medium mr-1">
+                    {attrNames[entry.key] || t(entry.key)}:
+                  </span>
                   {entry.value}
-                </li>
+                </span>
               ))}
-            </ul>
+            </div>
           );
         },
       },
@@ -295,6 +352,12 @@ export function TrackedGoodsPage() {
             { value: "RETURNED", label: "Đổi trả" },
           ],
         },
+        {
+          key: "missingSerial",
+          label: "Tình trạng Serial",
+          placeholder: "Tất cả",
+          options: [{ value: "true", label: "Chưa có Serial (Trống)" }],
+        },
       ],
     }),
     [t],
@@ -306,6 +369,7 @@ export function TrackedGoodsPage() {
     setItemTypeFilter("");
     setTrackingPolicyFilter("");
     setStatusFilter("");
+    setMissingSerialFilter(false);
     setPage(1);
   }, []);
 
@@ -380,6 +444,7 @@ export function TrackedGoodsPage() {
               itemType: itemTypeFilter,
               trackingPolicy: trackingPolicyFilter,
               status: statusFilter,
+              missingSerial: missingSerialFilter ? "true" : "",
             },
           },
           inputs: { search: searchInput, amountMin: "", amountMax: "" },
@@ -402,6 +467,8 @@ export function TrackedGoodsPage() {
               setTrackingPolicyFilter(v);
             } else if (key === "status") {
               setStatusFilter(v);
+            } else if (key === "missingSerial") {
+              setMissingSerialFilter(v === "true");
             }
             setPage(1);
           },

@@ -474,7 +474,7 @@ export function ErpSalesOrdersPage() {
     {
       key: "soNo",
       header: t("Số SO"),
-      size: 120,
+      size: 150,
       cell: (item) => <span className="font-medium">{item.soNo}</span>,
       skeletonClassName: "w-24",
     },

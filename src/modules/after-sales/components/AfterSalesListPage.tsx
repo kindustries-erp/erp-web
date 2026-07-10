@@ -11,6 +11,9 @@ import { format } from "date-fns";
 import { Shield, Eye, Copy, Check } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useAfterSalesQuery } from "../hooks/useAfterSalesQuery";
+import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
+import { Button } from "@/shared/components/ui/Button";
+import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 
 export function AfterSalesListPage() {
   const t = useT();
@@ -40,15 +43,53 @@ export function AfterSalesListPage() {
   const { openDrawer, closeDrawer, isOpen, type, mode, entityData } =
     useDrawerStore();
   const [page, setPage] = useState(1);
-  const pageSize = 50;
+  const [pageSize, setPageSize] = useState(50);
+  const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
+
+  const [sortField, setSortField] = useState<string | undefined>();
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>();
+  const [dealerSearch, setDealerSearch] = useState("");
+
+  const {
+    data: dealersData,
+    fetchNextPage: fetchNextDealers,
+    isFetchingNextPage: loadingDealers,
+  } = useBasicMasterInfinite({
+    search: dealerSearch,
+    limit: 50,
+    entities: "customers",
+  });
+
+  const dealerOptions = useMemo(() => {
+    return (
+      dealersData?.pages.flatMap((p) =>
+        (p.items.customers || []).map((c) => ({
+          value: c.id,
+          label: `${c.code} — ${c.displayName || c.name}`,
+        })),
+      ) || []
+    );
+  }, [dealersData]);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
       search: { placeholder: t("Tìm theo serial, khách hàng...") },
       period: true,
       noDefaultPeriod: true,
+      custom: [
+        {
+          key: "dealerId",
+          label: t("Đại lý"),
+          placeholder: t("Chọn đại lý"),
+          type: "combobox",
+          options: dealerOptions,
+          onSearch: setDealerSearch,
+          onLoadMore: fetchNextDealers,
+          loading: loadingDealers,
+        },
+      ],
     }),
-    [t],
+    [t, dealerOptions, fetchNextDealers, loadingDealers],
   );
   const filter = useFilterPanel(filterConfig, () => setPage(1));
 
@@ -62,7 +103,21 @@ export function AfterSalesListPage() {
     search: filter.state.search,
     dateFrom: filter.state.dateFrom,
     dateTo: filter.state.dateTo,
+    sortField,
+    sortOrder,
+    dealerId: filter.state.custom?.dealerId,
   });
+
+  const handleSort = (key: string) => {
+    let direction: "asc" | "desc" | undefined = "asc";
+    if (sortField === key) {
+      if (sortOrder === "asc") direction = "desc";
+      else direction = undefined;
+    }
+    setSortOrder(direction);
+    setSortField(direction ? key : undefined);
+    setPage(1);
+  };
 
   const data = resData?.items || [];
   const total = resData?.total || 0;
@@ -94,31 +149,26 @@ export function AfterSalesListPage() {
 
   const columns = [
     {
-      key: "serialNo",
-      header: t("Serial / Số máy"),
-      size: 250,
-      cell: (row: any) => (
-        <div className="flex flex-col gap-1.5 text-[13px]">
-          {row.vinNo && (
-            <div className="flex items-center gap-1.5 group">
-              <span className="text-gray-500 whitespace-nowrap">Số khung:</span>
-              <span className="font-medium text-gray-800 flex-1 truncate">
-                {row.vinNo}
-              </span>
-              <CopyIconBtn text={row.vinNo} />
-            </div>
-          )}
-          {row.serialNo && (
-            <div className="flex items-center gap-1.5 group">
-              <span className="text-gray-500 whitespace-nowrap">Số máy:</span>
-              <span className="font-medium text-gray-800 flex-1 truncate">
-                {row.serialNo}
-              </span>
-              <CopyIconBtn text={row.serialNo} />
-            </div>
-          )}
-        </div>
-      ),
+      key: "expectedDeliveryDate",
+      sortKey: "expectedDeliveryDate",
+      sortable: true,
+      size: 100,
+      header: t("Ngày DK"),
+      cell: (row: any) =>
+        row.expectedDeliveryDate
+          ? format(new Date(row.expectedDeliveryDate), "dd/MM/yyyy")
+          : "-",
+    },
+    {
+      key: "deliveryDate",
+      sortKey: "deliveryDate",
+      sortable: true,
+      size: 100,
+      header: t("Ngày giao"),
+      cell: (row: any) =>
+        row.deliveryDate
+          ? format(new Date(row.deliveryDate), "dd/MM/yyyy")
+          : "-",
     },
     {
       key: "itemName",
@@ -131,20 +181,91 @@ export function AfterSalesListPage() {
       ),
     },
     {
-      key: "expectedDeliveryDate",
-      header: t("Ngày giao dự kiến"),
-      cell: (row: any) =>
-        row.expectedDeliveryDate
-          ? format(new Date(row.expectedDeliveryDate), "dd/MM/yyyy")
-          : "-",
+      key: "serialNo",
+      header: t("Số Seri"),
+      size: 170,
+      cell: (row: any) => (
+        <div className="flex items-center gap-1.5 group">
+          <span className="font-medium text-gray-800 flex-1 truncate">
+            {row.serialNo || "-"}
+          </span>
+          {row.serialNo && <CopyIconBtn text={row.serialNo} />}
+        </div>
+      ),
     },
     {
-      key: "deliveryDate",
-      header: t("Ngày giao"),
-      cell: (row: any) =>
-        row.deliveryDate
-          ? format(new Date(row.deliveryDate), "dd/MM/yyyy")
-          : "-",
+      key: "vinNo",
+      header: t("Số Khung"),
+      size: 170,
+      cell: (row: any) => (
+        <div className="flex items-center gap-1.5 group">
+          <span className="font-medium text-gray-800 flex-1 truncate">
+            {row.vinNo || "-"}
+          </span>
+          {row.vinNo && <CopyIconBtn text={row.vinNo} />}
+        </div>
+      ),
+    },
+    {
+      key: "engineNo",
+      header: t("Số Máy"),
+      size: 170,
+      cell: (row: any) => (
+        <div className="flex items-center gap-1.5 group">
+          <span className="font-medium text-gray-800 flex-1 truncate">
+            {row.engineNo || "-"}
+          </span>
+          {row.engineNo && <CopyIconBtn text={row.engineNo} />}
+        </div>
+      ),
+    },
+    {
+      key: "soNo",
+      header: t("Đơn hàng (SO)"),
+      cell: (row: any) => {
+        if (!row.soNo) return "—";
+        return (
+          <Button
+            variant="link"
+            onClick={() => setPreviewSoNo(row.soNo || null)}
+            className="text-primary hover:underline p-0 h-auto"
+          >
+            {row.soNo}
+          </Button>
+        );
+      },
+    },
+    {
+      key: "trackingAttributes",
+      header: t("Thuộc tính xe"),
+      size: 250,
+      cell: (row: any) => {
+        if (
+          !row.trackingAttributes ||
+          typeof row.trackingAttributes !== "object"
+        )
+          return "—";
+        const attrNames: Record<string, string> = {
+          color: "Màu sắc",
+          dealer_code: "Mã đại lý",
+          dealer_name: "Tên đại lý",
+        };
+        return (
+          <div className="flex flex-wrap gap-1">
+            {Object.entries(row.trackingAttributes).map(([k, v]) => (
+              <span
+                key={k}
+                className="inline-flex text-[11px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-600 border border-gray-200"
+              >
+                <span className="font-medium mr-1">
+                  {attrNames[k] || t(k)}:
+                </span>
+                {String(v)}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     {
       key: "customerName",
@@ -160,6 +281,8 @@ export function AfterSalesListPage() {
     },
     {
       key: "activationDate",
+      sortKey: "activationDate",
+      sortable: true,
       header: t("Ngày kích hoạt"),
       cell: (row: any) => {
         if (!row.warrantyActivatedAt) return "-";
@@ -170,16 +293,6 @@ export function AfterSalesListPage() {
           </Tooltip>
         );
       },
-    },
-    {
-      key: "warrantyCode",
-      header: t("Mã bảo hành"),
-      cell: (row: any) => row.warrantyCode || "-",
-    },
-    {
-      key: "dealerName",
-      header: t("Đại lý"),
-      cell: (row: any) => row.dealerName || "-",
     },
     {
       key: "warrantyActivatedAt",
@@ -204,6 +317,11 @@ export function AfterSalesListPage() {
         );
       },
     },
+    {
+      key: "dealerName",
+      header: t("Đại lý"),
+      cell: (row: any) => row.dealerName || "-",
+    },
   ];
 
   return (
@@ -217,14 +335,21 @@ export function AfterSalesListPage() {
         columns={columns}
         getRowKey={(row: any) => row.lifecycleId}
         loading={loading}
-        emptyLabel={t("Không có dữ liệu")}
+        onRowClick={handleRowClick}
+        sortArray={
+          sortField ? [(sortOrder === "desc" ? "-" : "") + sortField] : []
+        }
+        onSort={handleSort}
         minWidth={1000}
         page={page}
         pageSize={pageSize}
         total={total}
         totalPages={Math.ceil(total / pageSize)}
         onPage={setPage}
-        onPageSize={() => {}}
+        onPageSize={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
         onRefresh={fetchList}
         filterConfig={filterConfig}
         filter={filter}
@@ -245,6 +370,12 @@ export function AfterSalesListPage() {
             entityData,
           );
         }}
+      />
+
+      <SoPreviewDrawer
+        open={!!previewSoNo}
+        onClose={() => setPreviewSoNo(null)}
+        soNo={previewSoNo || ""}
       />
     </>
   );

@@ -69,7 +69,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     const sIds = form.lines.map((l) => l.serialId).filter(Boolean);
     if (sIds.length > 0) {
       inventoryCoreApi
-        .listSerials({ ids: sIds.join(","), pageSize: 1000 })
+        .listSerials({ ids: sIds, pageSize: 1000 })
         .then((res) => {
           if (active) {
             const map: Record<string, InventorySerialRow> = {};

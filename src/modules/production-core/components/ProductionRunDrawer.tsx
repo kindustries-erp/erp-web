@@ -1110,6 +1110,9 @@ export function ProductionRunDrawer({
                             <th className="px-2 py-1 text-left font-semibold">
                               {t("Số máy")}
                             </th>
+                            <th className="px-2 py-1 text-left font-semibold">
+                              {t("Số Serial")}
+                            </th>
                           </>
                         )}
                         {trackingPolicy === "SERIAL" && (
@@ -1157,11 +1160,14 @@ export function ProductionRunDrawer({
                             </td>
                             {trackingPolicy === "VEHICLE" && (
                               <>
-                                <td className="px-2 py-2 font-medium text-blue-600">
+                                <td className="px-2 py-1 font-medium text-emerald-700">
                                   {item.vinNo || "—"}
                                 </td>
-                                <td className="px-2 py-2 font-medium text-blue-600">
+                                <td className="px-2 py-1 font-medium text-blue-700">
                                   {item.engineNo || "—"}
+                                </td>
+                                <td className="px-2 py-1 font-medium">
+                                  {item.serialNo || "—"}
                                 </td>
                               </>
                             )}
