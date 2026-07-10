@@ -103,6 +103,7 @@ export interface ErpInvoiceListParams {
   pageSize?: number;
   sort_by?: string;
   sort_order?: "asc" | "desc";
+  export_type?: "summary" | "detailed";
 }
 
 export interface ErpInvoiceListResponse {
