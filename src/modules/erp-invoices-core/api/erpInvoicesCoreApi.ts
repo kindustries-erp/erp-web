@@ -250,6 +250,21 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getPortalToken: async (): Promise<{ token: string }> => {
+    const { data } = await axiosInstance.get<{ token: string }>(
+      `${BASE}/portal/token`,
+    );
+    return data;
+  },
+
+  savePortalToken: async (token: string): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.post<{ message: string }>(
+      `${BASE}/portal/token`,
+      { token },
+    );
+    return data;
+  },
+
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));

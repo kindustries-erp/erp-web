@@ -10,10 +10,13 @@ import {
   XCircle,
   ArrowDownToLine,
   ArrowUpFromLine,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 
 import {
   useInvoiceXmlUpload,
@@ -38,54 +41,108 @@ function TokenConfigDrawer({
   onSave: (t: string) => void;
 }) {
   const [draft, setDraft] = useState(token);
+  const [showToken, setShowToken] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    if (open) setDraft(token);
+  }, [open, token]);
+
+  const handleClose = () => {
+    if (draft !== token) {
+      setShowConfirm(true);
+    } else {
+      onClose();
+    }
+  };
 
   return (
-    <DrawerModal
-      open={open}
-      onClose={onClose}
-      title="Cấu hình Portal GDT"
-      panelClassName="min-[1024px]:w-[480px]"
-      actions={[
-        {
-          label: "Đóng",
-          onClick: onClose,
-          variant: "outline" as const,
-        },
-        {
-          label: "Lưu token",
-          primary: true,
-          onClick: () => {
-            onSave(draft);
-            onClose();
+    <>
+      <DrawerModal
+        open={open}
+        onClose={handleClose}
+        title="Cấu hình Portal GDT"
+        panelClassName="min-[1024px]:w-[480px]"
+        actions={[
+          {
+            label: "Đóng",
+            onClick: handleClose,
+            variant: "outline" as const,
           },
-        },
-      ]}
-    >
-      <div className="space-y-4 p-1">
-        <p className="text-sm text-muted-foreground">
-          Nhập Bearer token đã đăng nhập vào hệ thống{" "}
-          <span className="font-medium">hoadondientu.gdt.gov.vn</span>. Token
-          được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
-        </p>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Bearer Token
-          </label>
-          <textarea
-            className="w-full h-32 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-            placeholder="eyJhbGciOiJ..."
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-          />
-        </div>
-        {draft && (
-          <p className="text-xs text-emerald-600 flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Token đã nhập ({draft.length} ký tự)
+          {
+            label: "Lưu token",
+            primary: true,
+            onClick: () => {
+              onSave(draft);
+              onClose();
+            },
+          },
+        ]}
+      >
+        <div className="space-y-4 p-1">
+          <p className="text-sm text-muted-foreground">
+            Nhập Bearer token đã đăng nhập vào hệ thống{" "}
+            <span className="font-medium">hoadondientu.gdt.gov.vn</span>. Token
+            được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
           </p>
-        )}
-      </div>
-    </DrawerModal>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Bearer Token
+            </label>
+            <div className="relative">
+              {showToken ? (
+                <textarea
+                  className="w-full h-32 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none pr-10"
+                  placeholder="eyJhbGciOiJ..."
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                />
+              ) : (
+                <input
+                  type="password"
+                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 pr-10"
+                  placeholder="eyJhbGciOiJ..."
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                />
+              )}
+              <button
+                type="button"
+                className="absolute right-2 top-2 p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowToken(!showToken)}
+              >
+                {showToken ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+          {draft && (
+            <p className="text-xs text-emerald-600 flex items-center gap-1">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Token đã nhập ({draft.length} ký tự)
+            </p>
+          )}
+        </div>
+      </DrawerModal>
+
+      <ConfirmModal
+        open={showConfirm}
+        title="Đóng mà không lưu?"
+        message="Thay đổi của bạn sẽ không được lưu."
+        confirmLabel="Đóng"
+        cancelLabel="Tiếp tục chỉnh sửa"
+        danger={true}
+        zIndex={1000}
+        onConfirm={() => {
+          setShowConfirm(false);
+          onClose();
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
+    </>
   );
 }
 
@@ -131,7 +188,17 @@ export function InvoiceImportSyncDrawer({
     setMethod(m);
   }
 
+  const [showDrawerConfirm, setShowDrawerConfirm] = useState(false);
+
   function handleClose() {
+    if (method === "XML" && xml.step === "select" && xml.files.length > 0) {
+      setShowDrawerConfirm(true);
+      return;
+    }
+    doClose();
+  }
+
+  function doClose() {
     xml.handleReset();
     portal.clearResult();
     onClose();
@@ -403,6 +470,20 @@ export function InvoiceImportSyncDrawer({
         onClose={() => setConfigOpen(false)}
         token={portal.token}
         onSave={portal.setToken}
+      />
+      <ConfirmModal
+        open={showDrawerConfirm}
+        title="Đóng mà không lưu?"
+        message="Thay đổi của bạn sẽ không được lưu."
+        confirmLabel="Đóng"
+        cancelLabel="Tiếp tục chỉnh sửa"
+        danger={true}
+        zIndex={1000}
+        onConfirm={() => {
+          setShowDrawerConfirm(false);
+          doClose();
+        }}
+        onCancel={() => setShowDrawerConfirm(false)}
       />
     </DrawerModal>
   );

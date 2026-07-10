@@ -1,74 +1,65 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   erpInvoicesCoreApi,
   type PortalSyncResult,
 } from "../api/erpInvoicesCoreApi";
 
-const TOKEN_KEY = "erp_portal_token";
-
-function loadToken(): string {
-  try {
-    return localStorage.getItem(TOKEN_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-function saveToken(token: string) {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch {
-    /* ignore */
-  }
-}
-
 export function usePortalSync() {
-  const [token, setTokenState] = useState<string>(loadToken);
+  const [token, setTokenState] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PortalSyncResult | null>(null);
+  const [isTokenLoaded, setIsTokenLoaded] = useState(false);
 
-  const setToken = useCallback((t: string) => {
+  useEffect(() => {
+    erpInvoicesCoreApi
+      .getPortalToken()
+      .then((res) => {
+        setTokenState(res.token);
+        setIsTokenLoaded(true);
+      })
+      .catch(() => {
+        setIsTokenLoaded(true);
+      });
+  }, []);
+
+  const setToken = useCallback(async (t: string) => {
     setTokenState(t);
-    saveToken(t);
+    try {
+      await erpInvoicesCoreApi.savePortalToken(t);
+      toast.success("Đã lưu cấu hình token thành công!");
+    } catch {
+      toast.error("Lưu cấu hình token thất bại");
+    }
   }, []);
 
   const sync = useCallback(
     async (type: "purchase" | "sold") => {
-      if (!token.trim()) {
-        toast.error("Vui lòng nhập Bearer token trong cấu hình");
-        return null;
-      }
       if (!dateFrom || !dateTo) {
-        toast.error("Vui lòng chọn khoảng thời gian");
-        return null;
+        toast.error("Vui lòng chọn từ ngày và đến ngày");
+        return;
       }
       setLoading(true);
       setResult(null);
       try {
-        const res = await erpInvoicesCoreApi.portalSync({
-          token: token.trim(),
-          dateFrom,
-          dateTo,
-          type,
-        });
+        const payload = {
+          token: "",
+          direction: type === "purchase" ? "IN" : ("OUT" as "IN" | "OUT"),
+          from: dateFrom,
+          to: dateTo,
+        };
+        const res = await erpInvoicesCoreApi.portalSync(payload);
         setResult(res);
-        toast.success(
-          res.note ||
-            `Đã đồng bộ ${res.imported} HĐ mới, bỏ qua ${res.skipped} trùng. Đang tải ${res.xmlDownloadQueued} file XML...`,
-          { duration: 6000 },
-        );
-        return res;
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Đồng bộ thất bại");
-        return null;
+        toast.success(`Đã đồng bộ ${res.count} hóa đơn thành công!`);
+      } catch {
+        toast.error("Có lỗi xảy ra khi đồng bộ từ TCT");
       } finally {
         setLoading(false);
       }
     },
-    [token, dateFrom, dateTo],
+    [dateFrom, dateTo],
   );
 
   return {
@@ -81,6 +72,7 @@ export function usePortalSync() {
     loading,
     result,
     sync,
+    isTokenLoaded,
     clearResult: () => setResult(null),
   };
 }
