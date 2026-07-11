@@ -7,16 +7,16 @@
 3. `.agents/tasks/current-lane.md`
 4. `.agents/AGENTS.md`
 5. `AGENTS.md`
-6. `docs/ai/technical-instructions.md`
-7. `docs/app-structure.md`
-8. Relevant task file in `docs/tasks/`
+6. `.agents/rules/ai-instructions/technical-instructions.md`
+7. `.agents/context/system/app-structure.md`
+8. Relevant task file in `.agents/tasks/`
 
 ## Working rules
 
 - Reuse existing skills, hooks, and UI patterns before creating new artifacts.
 - Follow gate order: DB -> API -> UI -> QC.
 - Use Bun/Bunx only.
-- No code without a task file in `docs/tasks/`.
+- No code without a task file in `.agents/tasks/`.
 - Respect pre-commit and pre-push hooks.
 - Before push, run this sequence explicitly: `bun run check:ci` -> `bun run test` (Vitest) -> `bun run build` -> `git push`.
 
