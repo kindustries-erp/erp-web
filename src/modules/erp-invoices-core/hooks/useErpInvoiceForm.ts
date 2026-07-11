@@ -101,7 +101,23 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     };
   }
 
-  async function openDetail(inv: ErpInvoice) {
+  async function openDetail(inv: ErpInvoice | string) {
+    if (typeof inv === "string") {
+      setDrawerOpen(true);
+      setLoadingDetail(true);
+      try {
+        const fullInv = await erpInvoicesCoreApi.get(inv);
+        setDetailInvoice(fullInv);
+        setForm(mapInvoiceToForm(fullInv));
+        setEditMode(false);
+      } catch (err) {
+        console.error("Failed to fetch invoice by ID", err);
+      } finally {
+        setLoadingDetail(false);
+      }
+      return;
+    }
+
     // Show partial data first
     setDetailInvoice(inv);
     setForm(mapInvoiceToForm(inv));

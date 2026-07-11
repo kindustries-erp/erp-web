@@ -117,6 +117,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInvoicesOut",
     group: "accounting",
   },
+  "vinfast-parts": {
+    labelKey: "nav.items.vinfastParts",
+    group: "accounting",
+  },
   "settings-branch": {
     labelKey: "thietlap.tabs.chi-nhanh",
     group: "settings",
@@ -214,6 +218,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "sys-tags": [["breadcrumb.settings"], ["nav.items.sysTags"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [
     ["breadcrumb.accounting"],

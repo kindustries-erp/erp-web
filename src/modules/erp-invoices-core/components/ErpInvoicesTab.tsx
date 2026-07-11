@@ -115,7 +115,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     }
   }
 
-  async function handleExportExcel() {
+  async function handleExportExcel(type: "summary" | "detailed" = "summary") {
     try {
       showToast({
         title: "Đang tạo file Excel...",
@@ -134,6 +134,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         tag_id: (custom?.tag_id as string) || undefined,
         sort_by: listHook.sortBy || undefined,
         sort_order: listHook.sortOrder || undefined,
+        export_type: type,
       });
 
       const url = window.URL.createObjectURL(blob);
@@ -731,9 +732,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 },
               },
               {
-                label: t("exportExcel", "Xuất Excel"),
+                label: t("exportExcelSummary", "Xuất Excel Bảng kê (Tổng hợp)"),
                 icon: <Download className="w-4 h-4 text-green-600" />,
-                onClick: handleExportExcel,
+                onClick: () => handleExportExcel("summary"),
+              },
+              {
+                label: t(
+                  "exportExcelDetailed",
+                  "Xuất Excel Hàng hóa (Chi tiết)",
+                ),
+                icon: <Download className="w-4 h-4 text-emerald-600" />,
+                onClick: () => handleExportExcel("detailed"),
               },
             ],
           },
