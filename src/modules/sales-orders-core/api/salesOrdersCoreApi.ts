@@ -127,4 +127,10 @@ export const salesOrdersCoreApi = {
     );
     return data.nextNo;
   },
+  exportXlsx: async (id: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get(`${BASE}/${id}/export/xlsx`, {
+      responseType: "blob",
+    });
+    return data;
+  },
 };
