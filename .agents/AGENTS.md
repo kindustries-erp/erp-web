@@ -1,44 +1,18 @@
-# ERP Web Agent Bootstrap
+# Liouni ERP Web Agent Bootstrap
 
-Entry point for this repo.
+Source of truth for this repo (`./erp-web`).
 
 ## Read order
 
-1. `.agents/README.md`
-2. `.agents/context/current-truth.md`
-3. `.agents/context/working-contract.md`
-4. `.agents/tasks/current-lane.md`
-5. `docs/ai/technical-instructions.md`
-6. `docs/app-structure.md`
-7. Relevant `docs/tasks/*`
+1. `.agents/context/current-truth.md`
+2. `.agents/context/working-contract.md`
+3. `.agents/tasks/current-lane.md`
+4. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+5. `.agents/rules/liouni-erp-web.md`
+6. `docs/ai/technical-instructions.md`
+7. `docs/app-structure.md`
 
-## Execution contract
-
-- no code without a task file
-- update checklists in real time
-- record lessons learned for blockers
-- use `bun` / `bunx` unless Bun incompatibility is proven
-- before commit/push, `cd` vào root của repo hiện tại (`./erp-web` từ workspace root)
-- push with `github-industries`
-- reuse existing components/hooks/utils/helpers/functions/page patterns first
-- extend/adapt before duplicating
-
-## References
-
-- `docs/ai/technical-instructions.md`
-- `docs/tasks/_template.md`
-
-## Tests
-
-- pre-commit runs `bunx vitest run`
-- fix source, not tests
-- tests live in `__tests__/*.test.ts(x)`
-- run all: `bunx vitest run`
-- run one file: `bunx vitest run src/path/to/file.test.ts`
-
----
-
-## Web Specific Agent Rules
+## Web Specific Agent Mandates
 
 ### 1. UI Reusability Enforcer (Anti-Reinvention)
 
@@ -72,3 +46,8 @@ Entry point for this repo.
 
 - You **MUST** use the project's i18n translation system (e.g., `useTranslation`, `t('key')`) for **all user-facing text** including titles, labels, placeholders, buttons, and validation messages.
 - **NEVER** hardcode raw strings like `title="Xác nhận"`. Always use translation keys.
+
+### 7. Rebase First Conflict Resolution
+
+- When pushing code and encountering a conflict, your **first priority** is to use `git pull --rebase github-industries erp-master`.
+- Only if the rebase presents overly complex conflicts, you may `git rebase --abort` and resolve using a standard merge (`git pull origin erp-master`).
