@@ -42,8 +42,12 @@ export function InventoryTimelineBlock({
   const sortedMovements = useMemo(() => {
     if (!movements) return [];
     return [...movements].sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      const timeA = a.transactionDate
+        ? new Date(a.transactionDate).getTime()
+        : 0;
+      const timeB = b.transactionDate
+        ? new Date(b.transactionDate).getTime()
+        : 0;
       return timeB - timeA;
     });
   }, [movements]);
@@ -57,15 +61,15 @@ export function InventoryTimelineBlock({
         className: "text-right",
         size: 120,
         cell: (m) => {
-          if (!m.createdAt) return "—";
+          if (!m.transactionDate) return "—";
           return (
             <div className="w-full text-right">
               <Tooltip
-                content={formatGMT7(m.createdAt, "datetime-sec")}
+                content={formatGMT7(m.transactionDate, "datetime-sec")}
                 side="top"
               >
                 <span className="cursor-help inline-block border-b border-dotted border-gray-400 text-xs">
-                  {formatGMT7(m.createdAt, "date")}
+                  {formatGMT7(m.transactionDate, "date")}
                 </span>
               </Tooltip>
             </div>

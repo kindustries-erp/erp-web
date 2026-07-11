@@ -8,6 +8,7 @@ import {
   Eye,
   FileText,
   CheckCircle,
+  FileSpreadsheet,
 } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useSalesOrdersQuery } from "@/modules/sales-orders-core/hooks/useSalesOrdersQuery";
@@ -26,6 +27,7 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { useT } from "@/core/i18n";
+import { useUIStore } from "@/core/config/uiStore";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
@@ -48,6 +50,7 @@ function fmtDate(value?: string | null) {
 
 export function ErpSalesOrdersPage() {
   const t = useT();
+  const showToast = useUIStore((s) => s.showToast);
 
   const canRead = useHasPermission("sales_orders", "read");
   const canCreate = useHasPermission("sales_orders", "create");
@@ -92,6 +95,8 @@ export function ErpSalesOrdersPage() {
     id: string;
     serialIds: string[];
   } | null>(null);
+
+  const [xlsxExportingId, setXlsxExportingId] = useState<string | null>(null);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
@@ -452,6 +457,34 @@ export function ErpSalesOrdersPage() {
     }
   }
 
+  const handleExportXlsx = async (id: string, refNo?: string) => {
+    try {
+      setXlsxExportingId(id);
+      const blob = await salesOrdersCoreApi.exportXlsx(id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `DonBanHang_${refNo || id.split("-")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      showToast({
+        title: t("Lỗi xuất file"),
+        description:
+          err.response?.data?.message || t("Đã xảy ra lỗi khi xuất Excel."),
+        variant: "destructive",
+      });
+    } finally {
+      setXlsxExportingId(null);
+    }
+  };
+
   const columns: DataTableColumn<ErpSalesOrder>[] = [
     {
       key: "orderDate",
@@ -570,6 +603,13 @@ export function ErpSalesOrdersPage() {
               label: t("Chi tiết"),
               icon: <Eye className="h-[13px] w-[13px]" />,
               onClick: () => void openView(item),
+            },
+            {
+              label: t("Xuất XLSX"),
+              onClick: () => void handleExportXlsx(item.id, item.soNo),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+              disabled: xlsxExportingId === item.id,
+              hidden: item.status === "DRAFT",
             },
           ],
         },
