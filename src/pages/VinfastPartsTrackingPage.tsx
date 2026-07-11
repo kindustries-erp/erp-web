@@ -72,8 +72,24 @@ function VinfastPartDetailDrawer({
   });
 
   const columns: DataTableColumn<any>[] = [
-    { key: "invoiceNo", header: "Số HĐ", size: 120 },
-    { key: "invoiceDate", header: "Ngày HĐ", size: 120 },
+    { key: "invoiceDate", header: "Ngày HĐ", size: 100 },
+    { key: "invoiceNo", header: "Số HĐ", size: 100 },
+    {
+      key: "partnerName",
+      header: "Đối tác",
+      size: 200,
+      cell: (row) => (
+        <Tooltip content={row.partnerName || ""}>
+          <div
+            className="whitespace-normal break-words w-full truncate max-w-[200px]"
+            title={row.partnerName || ""}
+          >
+            {row.partnerName || "—"}
+          </div>
+        </Tooltip>
+      ),
+    },
+    { key: "unit", header: "ĐVT", size: 80 },
     {
       key: "qty",
       header: "Số lượng",
@@ -93,10 +109,17 @@ function VinfastPartDetailDrawer({
       cell: (row) => money(row.unitPrice),
     },
     {
+      key: "vatAmount",
+      header: "Thuế VAT",
+      size: 120,
+      className: "text-right",
+      cell: (row) => money(row.vatAmount),
+    },
+    {
       key: "totalAmount",
       header: "Thành tiền",
       size: 140,
-      className: "text-right font-medium",
+      className: "text-right font-medium text-emerald-700",
       cell: (row) => money(row.totalAmount),
     },
   ];
@@ -192,7 +215,7 @@ function PriceWithInvoicePopover({
       align="center"
       glass
       content={
-        <div className="p-3 w-96 max-h-80 overflow-auto text-sm text-gray-800">
+        <div className="p-3 w-[500px] max-h-[400px] overflow-auto text-sm text-gray-800">
           {isLoading ? (
             <div className="flex justify-center items-center h-20 text-gray-500">
               <Loader2 className="w-5 h-5 animate-spin mr-2" /> Đang tải...
@@ -207,6 +230,7 @@ function PriceWithInvoicePopover({
                 <tr className="border-b border-gray-200">
                   <th className="py-1.5 font-semibold">Ngày HĐ</th>
                   <th className="py-1.5 font-semibold">Số HĐ</th>
+                  <th className="py-1.5 font-semibold">Đối tác</th>
                   <th className="py-1.5 font-semibold text-right">Số lượng</th>
                   <th className="py-1.5 font-semibold text-right">
                     Thành tiền
@@ -225,15 +249,25 @@ function PriceWithInvoicePopover({
                       }
                     }}
                   >
-                    <td className="py-1.5">{row.invoiceDate}</td>
-                    <td className="py-1.5">{row.invoiceNo}</td>
+                    <td className="py-1.5 whitespace-nowrap">
+                      {row.invoiceDate}
+                    </td>
+                    <td className="py-1.5 whitespace-nowrap">
+                      {row.invoiceNo}
+                    </td>
+                    <td
+                      className="py-1.5 truncate max-w-[150px]"
+                      title={row.partnerName}
+                    >
+                      {row.partnerName || "—"}
+                    </td>
                     <td className="py-1.5 text-right font-medium">
                       {Number(row.qty).toLocaleString("vi-VN", {
                         minimumFractionDigits: 1,
                         maximumFractionDigits: 1,
                       })}
                     </td>
-                    <td className="py-1.5 text-right font-medium">
+                    <td className="py-1.5 text-right font-medium text-emerald-700">
                       {money(row.totalAmount)}
                     </td>
                   </tr>
@@ -242,7 +276,7 @@ function PriceWithInvoicePopover({
               <tfoot>
                 <tr className="border-t border-gray-300 bg-gray-50">
                   <td
-                    colSpan={2}
+                    colSpan={3}
                     className="py-2 text-right font-semibold text-slate-700"
                   >
                     Tổng cộng:
@@ -432,7 +466,14 @@ export function VinfastPartsTrackingPage() {
       key: "itemCode",
       header: "Mã phụ tùng",
       sortKey: "itemCode",
-      cell: (row) => <span className="font-semibold">{row.itemCode}</span>,
+      cell: (row) => (
+        <span
+          className="font-semibold cursor-pointer border-b border-dotted border-gray-400 hover:border-gray-600 transition-colors"
+          onClick={() => setDetailRow(row)}
+        >
+          {row.itemCode}
+        </span>
+      ),
     },
     {
       key: "itemName",
