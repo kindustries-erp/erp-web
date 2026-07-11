@@ -28,8 +28,8 @@ File này là entrypoint nhanh cho agent/developer khi vào repo `liouni-erp-web
 ## Canonical lane meaning
 
 - `/opt/repos/liouni-erp-core/liouni-erp-web` = active ERP CORE Web source root
-- `/opt/repos/liouni-erp` = legacy/Directus lane source root
-- Một số docs có reference sang legacy Directus/ERP cũ để giữ traceability; không mặc định xem là drift runtime
+- `/opt/repos/liouni-erp` = legacy/hệ thống lane source root
+- Một số docs có reference sang legacy hệ thống/ERP cũ để giữ traceability; không mặc định xem là drift runtime
 
 ## Recommended active ERP CORE docs
 

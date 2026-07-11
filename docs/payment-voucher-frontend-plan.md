@@ -2,14 +2,14 @@
 
 ## 1) Muc tieu tai lieu
 
-- Tong hop hien trang da hoan thanh o Directus va Backend.
+- Tong hop hien trang da hoan thanh o hệ thống va Backend.
 - Chot pham vi Frontend can implement tiep theo.
 - Dua ra plan theo phase de chia viec cho team.
 - Dua checklist TODO va checklist test/UAT de nghiem thu.
 
 ## 2) Hien trang he thong
 
-### 2.1 Directus da xong
+### 2.1 hệ thống da xong
 
 Data model `gw_payment_vouchers` da co:
 
