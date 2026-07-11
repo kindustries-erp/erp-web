@@ -1,6 +1,6 @@
 # Liouni ERP Web Agent Pack
 
-Source of truth for this repo.
+Source of truth for this repo (`./erp-web`).
 
 ## Read order
 
