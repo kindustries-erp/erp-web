@@ -103,6 +103,7 @@ export interface ErpInvoiceListParams {
   pageSize?: number;
   sort_by?: string;
   sort_order?: "asc" | "desc";
+  export_type?: "summary" | "detailed";
 }
 
 export interface ErpInvoiceListResponse {
@@ -246,6 +247,21 @@ export const erpInvoicesCoreApi = {
       message: string;
       count: number;
     }>(`${BASE}/portal/bulk-download-xml`, payload);
+    return data;
+  },
+
+  getPortalToken: async (): Promise<{ token: string }> => {
+    const { data } = await axiosInstance.get<{ token: string }>(
+      `${BASE}/portal/token`,
+    );
+    return data;
+  },
+
+  savePortalToken: async (token: string): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.post<{ message: string }>(
+      `${BASE}/portal/token`,
+      { token },
+    );
     return data;
   },
 
