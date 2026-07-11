@@ -39,7 +39,7 @@ Tài liệu mô tả cách hệ thống ERP tải thông tin user (profile, role
       "role": {
         "id": "role-uuid",
         "name": "Approver",
-        "users": ["directus-user-id-1", "directus-user-id-2"]
+        "users": ["hệ thống-user-id-1", "hệ thống-user-id-2"]
       }
     }
   },
@@ -242,7 +242,7 @@ No dedicated API call to fetch user roles separately; using nested data from Emp
 
 ### Related APIs (not currently used)
 
-- **GET** `/api/v1/rbac/users/{directusUserId}/roles` — Returns role IDs for a Directus user
+- **GET** `/api/v1/rbac/users/{directusUserId}/roles` — Returns role IDs for a hệ thống user
 - **PATCH** `/api/v1/rbac/users/{directusUserId}/roles` — Update user's roles
 
 Code prepared but not invoked:

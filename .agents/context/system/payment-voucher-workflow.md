@@ -49,7 +49,7 @@ interface PaymentVoucher {
 }
 ```
 
-> **Lưu ý**: `employee_id` là union type vì Directus/backend có thể populate object thay vì chỉ ID string. Khi đọc, luôn dùng `typeof v.employee_id === "object" ? v.employee_id.id : v.employee_id`.
+> **Lưu ý**: `employee_id` là union type vì hệ thống/backend có thể populate object thay vì chỉ ID string. Khi đọc, luôn dùng `typeof v.employee_id === "object" ? v.employee_id.id : v.employee_id`.
 
 ### 2.3 `VoucherStatus` — State Machine
 

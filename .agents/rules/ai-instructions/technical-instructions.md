@@ -60,7 +60,7 @@ Không được nhảy gate.
 ### 3.4 Task closing rule
 
 - Hoàn tất task phải commit + push code repo web/api liên quan.
-- Riêng phần DB/directus staging: không bắt buộc commit/push code DB repo; bắt buộc có evidence apply + verify + documentation.
+- Riêng phần DB/hệ thống staging: không bắt buộc commit/push code DB repo; bắt buộc có evidence apply + verify + documentation.
 - Nếu task artifact bị stale so với code thật, phải verify bằng code state + build/test + git state trước khi chỉnh status/checklist.
 
 ## 4) Frontend architecture rules
@@ -221,7 +221,7 @@ Single instance tại `src/core/api/axiosInstance.ts`. Interceptor pipeline (the
 
 - Khi viết API call mới, KHÔNG cần gọi `showToast` thủ công — interceptor tự xử lý.
 - Chỉ dùng `_silentSuccess` / `_silentError` khi component có UI feedback riêng (inline error, custom success message).
-- Error message từ API (Directus/NestJS) được giữ nguyên, không translate lại ở frontend.
+- Error message từ API (hệ thống/NestJS) được giữ nguyên, không translate lại ở frontend.
 - i18n keys: `apiErrors.*` (lỗi hệ thống), `apiToast.*` (toast titles).
 
 ## 5) i18n và UI consistency

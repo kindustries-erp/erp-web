@@ -440,12 +440,12 @@ Result: on mobile, new panels fully overlay older panels at full width (no peeki
 | `saveRolePermissionsApi`     | `PATCH /api/v1/rbac/roles/:id/permissions` | Save role permissions                             |
 | `getEmployeePermissionsApi`  | `GET /api/v1/employees/:id/permissions`    | Employee custom policy permissions (graceful 404) |
 | `saveEmployeePermissionsApi` | `PATCH /api/v1/employees/:id/permissions`  | Save employee custom policy permissions           |
-| `getUserRolesApi`            | `GET /api/v1/rbac/users/:id/roles`         | Current roles for a Directus user (graceful 404)  |
+| `getUserRolesApi`            | `GET /api/v1/rbac/users/:id/roles`         | Current roles for a hệ thống user (graceful 404)  |
 | `updateUserRolesApi`         | `PATCH /api/v1/rbac/users/:id/roles`       | Replace user role set                             |
 
 ### RBAC collections (`RBAC_COLLECTIONS` in `modules/system/types/rbac.ts`)
 
-The permission matrix covers these Directus collections, grouped by domain:
+The permission matrix covers these hệ thống collections, grouped by domain:
 
 | Group     | Collections                                                                                                                                                                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -460,7 +460,7 @@ The permission matrix covers these Directus collections, grouped by domain:
 
 ```ts
 {
-  role_id?:   string | null   // Base Directus role (single)
+  role_id?:   string | null   // Base hệ thống role (single)
   policy_id?: string | null   // Custom policy (single; BE manages directus_access)
 }
 ```
