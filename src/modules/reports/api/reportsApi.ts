@@ -7,21 +7,27 @@ export interface ReportStatusItem {
 
 export interface ReportTrendItem {
   month: string;
-  amount: number;
+  qty: number;
 }
 
 export interface SalesTopCustomerItem {
   customerId: string | null;
   customerName: string;
   orders: number;
-  amount: number;
+  qty: number;
 }
 
 export interface PurchasingTopSupplierItem {
   supplierId: string | null;
   supplierName: string;
   orders: number;
-  amount: number;
+  qty: number;
+}
+
+export interface ReportColorItem {
+  color: string;
+  qty: number;
+  customers: string;
 }
 
 export interface SalesDashboardResponse {
@@ -29,12 +35,13 @@ export interface SalesDashboardResponse {
   dateTo: string | null;
   kpi: {
     totalOrders: number;
-    totalRevenue: number;
+    totalQty: number;
     completionRate: number;
   };
   statusBreakdown: ReportStatusItem[];
   trend: ReportTrendItem[];
   topCustomers: SalesTopCustomerItem[];
+  colorBreakdown: ReportColorItem[];
 }
 
 export interface PurchasingDashboardResponse {
@@ -42,7 +49,7 @@ export interface PurchasingDashboardResponse {
   dateTo: string | null;
   kpi: {
     totalOrders: number;
-    totalPurchaseAmount: number;
+    totalQty: number;
     completionRate: number;
   };
   statusBreakdown: ReportStatusItem[];
