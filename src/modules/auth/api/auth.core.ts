@@ -5,6 +5,8 @@ import axiosInstance from "@/core/api/axiosInstance";
 
 export interface CoreLoginResponse {
   accessToken: string;
+  refreshToken: string;
+  expiresIn: number; // seconds
   tokenType: string;
   user: {
     id: string;
@@ -61,4 +63,12 @@ export async function impersonateApi(
     { targetUserId },
   );
   return data;
+}
+
+export async function logoutApi(refreshToken: string): Promise<void> {
+  await axiosInstance.post(
+    "/api/v1/auth/logout",
+    { refresh_token: refreshToken },
+    { _silentSuccess: true, _silentError: true },
+  );
 }
