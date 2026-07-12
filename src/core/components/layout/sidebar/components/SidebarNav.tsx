@@ -37,11 +37,18 @@ export function SidebarNav({
 
   const canReadSalesOrders = useHasPermission("sales_orders", "read");
   const canReadCustomers = useHasPermission("business_partners", "read");
-  const showSales = canReadSalesOrders || canReadCustomers;
+  const canReadSalesReports = useHasPermission("sales_reports", "read");
+  const showSales =
+    canReadSalesOrders || canReadCustomers || canReadSalesReports;
 
   const canReadPurchasing = useHasPermission("purchase_orders", "read");
   const canReadSuppliers = useHasPermission("business_partners", "read");
-  const showPurchasing = canReadPurchasing || canReadSuppliers;
+  const canReadPurchasingReports = useHasPermission(
+    "purchasing_reports",
+    "read",
+  );
+  const showPurchasing =
+    canReadPurchasing || canReadSuppliers || canReadPurchasingReports;
 
   const canReadInventoryItems = useHasPermission("inventory_items", "read");
   const canReadInventoryVouchers = useHasPermission(
@@ -171,11 +178,24 @@ export function SidebarNav({
           canReadSalesOrders ? t("nav.items.erpSalesOrders") : "",
           canReadCustomers ? t("nav.items.customers") : "",
           canReadSalesOrders ? t("nav.items.afterSales") : "",
+          canReadSalesReports ? t("nav.items.salesReportDashboard") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.sales")}
             </div>
+            {canReadSalesReports && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.salesReportDashboard")}
+                active={currentPage === "sales-report-dashboard"}
+                onClick={() => navTo("sales-report-dashboard")}
+                contextPage="sales-report-dashboard"
+              />
+            )}
             {canReadSalesOrders && (
               <NavItem
                 collapsed={c}
@@ -215,11 +235,26 @@ export function SidebarNav({
           t("nav.sections.purchasing"),
           canReadPurchasing ? t("nav.items.purchasing") : "",
           canReadSuppliers ? t("nav.items.suppliers") : "",
+          canReadPurchasingReports
+            ? t("nav.items.purchasingReportDashboard")
+            : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.purchasing")}
             </div>
+            {canReadPurchasingReports && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.purchasingReportDashboard")}
+                active={currentPage === "purchasing-report-dashboard"}
+                onClick={() => navTo("purchasing-report-dashboard")}
+                contextPage="purchasing-report-dashboard"
+              />
+            )}
             {canReadPurchasing && (
               <NavItem
                 collapsed={c}

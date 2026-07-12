@@ -290,14 +290,44 @@ export const operationalApi = {
   listReceivables: (input?: ListParams) =>
     list("operational-receivables", input),
   listPayables: (input?: ListParams) => list("operational-payables", input),
-  listInventoryStock: async (input?: ListParams & { item_type?: string }) => {
+  listInventoryStock: async (
+    input?: ListParams & {
+      item_type?: string;
+      column_search?: Record<string, string>;
+      column_filters?: Record<string, string[]>;
+    },
+  ) => {
     const { data } = await axiosInstance.get<
       PaginatedResponse<InventoryStockRow>
     >("/api/v1/inventory/stock", {
       params: {
         ...params(input),
         ...(input?.item_type ? { item_type: input.item_type } : {}),
+        ...(input?.column_search && Object.keys(input.column_search).length > 0
+          ? { searches: JSON.stringify(input.column_search) }
+          : {}),
+        ...(input?.column_filters &&
+        Object.keys(input.column_filters).length > 0
+          ? { filters: JSON.stringify(input.column_filters) }
+          : {}),
       },
+    });
+    return data;
+  },
+  getInventoryStockColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+  ) => {
+    const { data } = await axiosInstance.get<{
+      items: string[];
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>("/api/v1/inventory/stock/column-options", {
+      params: { column, search, page, pageSize },
     });
     return data;
   },

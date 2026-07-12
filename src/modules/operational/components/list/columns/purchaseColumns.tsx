@@ -23,6 +23,7 @@ interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
   expandedRowIds: Record<string, boolean>;
   onToggleExpand: (key: string) => void;
+  onOpenDetail?: (row: OperationalDocument) => void;
 }
 
 function PoTooltipContent({ row }: { row: OperationalDocument }) {
@@ -88,6 +89,7 @@ export function usePurchaseColumns({
   variant,
   expandedRowIds,
   onToggleExpand,
+  onOpenDetail,
 }: UsePurchaseColumnsOptions): DataTableColumn<OperationalDocument>[] {
   const t = useT();
   return useMemo<DataTableColumn<OperationalDocument>[]>(
@@ -181,9 +183,13 @@ export function usePurchaseColumns({
           return (
             <div className="flex items-center gap-1.5 text-left text-sm w-full">
               <Tooltip content={<PoTooltipContent row={row} />}>
-                <div className="font-semibold text-primary whitespace-normal break-words w-full cursor-pointer line-clamp-2">
+                <Button
+                  variant="link"
+                  onClick={() => onOpenDetail?.(row)}
+                  className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
+                >
                   {row.purchase_no || "—"}
-                </div>
+                </Button>
               </Tooltip>
             </div>
           );
@@ -205,6 +211,23 @@ export function usePurchaseColumns({
             </div>
           </Tooltip>
         ),
+      },
+      {
+        key: "total_qty",
+        header: t("Số lượng"),
+        size: 100,
+        enableResizing: true,
+        className: "!py-2 align-middle text-right",
+        headerClassName: "text-center",
+        cell: (row) => {
+          const qty =
+            row.lines?.reduce(
+              (sum, line: any) =>
+                sum + Number(line.qty || line.qtyOrdered || 0),
+              0,
+            ) || 0;
+          return qty.toLocaleString("vi-VN");
+        },
       },
       {
         key: "inventory_status",
@@ -271,6 +294,6 @@ export function usePurchaseColumns({
         ),
       },
     ],
-    [expandedRowIds, onToggleExpand, t, variant],
+    [expandedRowIds, onToggleExpand, onOpenDetail, t, variant],
   );
 }

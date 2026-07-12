@@ -47,7 +47,9 @@ export const vi = {
       sales: "Bán hàng",
       afterSales: "Hậu mãi & Bảo hành",
       customers: "Khách hàng",
+      salesReportDashboard: "Tổng quan bán hàng",
       purchasing: "Đơn mua hàng",
+      purchasingReportDashboard: "Tổng quan mua hàng",
       operatingExpenses: "Chi phí vận hành",
       erpInventoryStock: "Tồn kho",
       inventoryGroup: "Kho",
@@ -138,9 +140,11 @@ export const vi = {
     hrPositions: "Chức danh",
     sales: "Bán hàng",
     salesOrders: "Đơn bán hàng",
+    salesReportDashboard: "Tổng quan bán hàng",
     customers: "Khách hàng",
     purchasing: "Đơn mua hàng",
     purchasingOrders: "Đơn mua hàng",
+    purchasingReportDashboard: "Tổng quan mua hàng",
     operatingExpenses: "Chi phí vận hành",
     inventory: "Kho",
     inventoryGroup: "Kho",
@@ -1606,6 +1610,22 @@ export const vi = {
   phaittra: {
     title: "Phải Trả",
     desc: "Quản lý công nợ phải trả cho nhà cung cấp và đối tác.",
+  },
+  reports: {
+    sales: {
+      totalOrders: "Tổng số đơn bán",
+      totalRevenue: "Doanh số bán",
+      completionRate: "Tỷ lệ hoàn thành giao",
+      statusBreakdown: "Đơn bán theo trạng thái",
+      topCustomers: "Top khách hàng",
+    },
+    purchasing: {
+      totalOrders: "Tổng số đơn mua",
+      totalAmount: "Giá trị mua hàng",
+      completionRate: "Tỷ lệ hoàn thành nhập",
+      statusBreakdown: "Đơn mua theo trạng thái",
+      topSuppliers: "Top nhà cung cấp",
+    },
   },
   ledger: {
     kpi: {

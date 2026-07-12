@@ -8,6 +8,7 @@ import {
   loginApi,
   getProfileApi,
   impersonateApi,
+  logoutApi,
   type CoreLoginResponse,
   type CoreProfileResponse,
 } from "@/modules/auth/api/auth.core";
@@ -155,6 +156,10 @@ export const useAuthStore = create<AuthState>()(
           };
           set({
             accessToken: data.accessToken,
+            refreshToken: data.refreshToken ?? null,
+            expiresAt: data.expiresIn
+              ? Date.now() + data.expiresIn * 1000
+              : null,
             _raw: data,
             profile,
             loading: false,
@@ -187,8 +192,18 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logoutAction: async () => {
+        const { refreshToken } = get();
+        if (refreshToken) {
+          try {
+            await logoutApi(refreshToken);
+          } catch {
+            // best-effort: revoke trên BE, không block local clear
+          }
+        }
         set({
           accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
           _raw: null,
           employee: null,
           profile: null,
@@ -322,6 +337,10 @@ export const useAuthStore = create<AuthState>()(
 
           set({
             accessToken: data.accessToken,
+            refreshToken: data.refreshToken ?? null,
+            expiresAt: data.expiresIn
+              ? Date.now() + data.expiresIn * 1000
+              : null,
             actorAccessToken: accessToken,
             actorRefreshToken: refreshToken,
             actorExpiresAt: expiresAt,
@@ -353,6 +372,8 @@ export const useAuthStore = create<AuthState>()(
       name: "erp-auth",
       partialize: (s) => ({
         accessToken: s.accessToken,
+        refreshToken: s.refreshToken,
+        expiresAt: s.expiresAt,
         profile: s.profile,
         employee: s.employee,
         effectivePermissions: s.effectivePermissions,

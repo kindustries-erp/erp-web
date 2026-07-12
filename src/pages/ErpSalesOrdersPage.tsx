@@ -31,6 +31,7 @@ import { useUIStore } from "@/core/config/uiStore";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
+import { Button } from "@/shared/components/ui/Button";
 
 import {
   SoFormDrawer,
@@ -508,7 +509,15 @@ export function ErpSalesOrdersPage() {
       key: "soNo",
       header: t("Số SO"),
       size: 150,
-      cell: (item) => <span className="font-medium">{item.soNo}</span>,
+      cell: (item) => (
+        <Button
+          variant="link"
+          onClick={() => void openView(item)}
+          className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
+        >
+          {item.soNo}
+        </Button>
+      ),
       skeletonClassName: "w-24",
     },
     {
@@ -527,6 +536,21 @@ export function ErpSalesOrdersPage() {
         );
       },
       skeletonClassName: "w-36",
+    },
+    {
+      key: "totalQty",
+      header: t("Số lượng"),
+      size: 100,
+      className: "text-right",
+      headerClassName: "text-center",
+      cell: (item) => {
+        const qty =
+          item.lines?.reduce(
+            (sum, line) => sum + Number(line.qtyOrdered || 0),
+            0,
+          ) || 0;
+        return qty.toLocaleString("vi-VN");
+      },
     },
     {
       key: "status",
@@ -554,6 +578,22 @@ export function ErpSalesOrdersPage() {
     },
   ];
 
+  const summaryRow = useMemo(() => {
+    const totalQty = items.reduce(
+      (acc, curr) =>
+        acc +
+        (curr.lines?.reduce(
+          (sum, line) => sum + Number(line.qtyOrdered || 0),
+          0,
+        ) || 0),
+      0,
+    );
+    return {
+      customerName: null,
+      totalQty: totalQty.toLocaleString("vi-VN"),
+    };
+  }, [items]);
+
   if (!canRead) return <Forbidden />;
 
   return (
@@ -563,6 +603,7 @@ export function ErpSalesOrdersPage() {
       icon={<FileText className="h-4 w-4" />}
       tableId="sales-orders-table"
       loading={loading}
+      summaryRow={summaryRow}
       onRefresh={loadOrders}
       createActions={
         canCreate

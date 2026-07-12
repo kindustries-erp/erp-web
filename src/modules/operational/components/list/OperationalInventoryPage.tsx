@@ -20,6 +20,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
@@ -91,10 +92,10 @@ export function OperationalInventoryPage({
     itemTypeFilter,
     setItemTypeFilter,
     expandedStockItemIds,
-    inventorySort,
-    toggleInventorySort,
     resetAllFilters,
   } = useOperationalListStore();
+
+  const tableState = useTableColumnState("inventory-stock-table");
 
   const [graphOpen, setGraphOpen] = useState(false);
   const [graphItemId, setGraphItemId] = useState<string | null>(null);
@@ -153,6 +154,7 @@ export function OperationalInventoryPage({
   const stockColumns = useStockColumns({
     expandedStockItemIds,
     onToggleExpand: onToggleInventoryExpand,
+    stockItems,
   });
 
   const expandedStockRowKeys = useMemo(
@@ -187,7 +189,7 @@ export function OperationalInventoryPage({
 
   const inventoryFilterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
+      search: false,
       custom: [
         {
           key: "itemType",
@@ -301,7 +303,7 @@ export function OperationalInventoryPage({
         resetAll: resetAllFilters,
         openPanel: () => setFilterPanelOpen(true),
         closePanel: () => setFilterPanelOpen(false),
-        togglePanel: () => setFilterPanelOpen((v) => !v),
+        togglePanel: () => setFilterPanelOpen((v: boolean) => !v),
         hasActiveFilter: activeFilterCount > 0,
         activeFilterCount,
         panelOpen: filterPanelOpen,
@@ -325,8 +327,11 @@ export function OperationalInventoryPage({
           }}
         />
       )}
-      sortArray={inventorySort ? [inventorySort] : undefined}
-      onSort={(key: string) => toggleInventorySort(key)}
+      sortArray={tableState.sorts.length > 0 ? tableState.sorts : undefined}
+      onSort={(key: string) => {
+        tableState.toggleSort(key);
+        useOperationalListStore.getState().setPage(1);
+      }}
       rowActions={(row: InventoryStockRow) => [
         {
           groupLabel: t("groupTraCuu", "Tra cứu"),

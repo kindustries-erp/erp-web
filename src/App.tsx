@@ -49,6 +49,8 @@ import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
 import { ThietLapQuy } from "@/pages/SettingsCashFund";
 import { SettingsBranch } from "@/pages/SettingsBranch";
 import { CashflowDashboard } from "@/pages/CashflowDashboard";
+import { SalesReportDashboardPage } from "@/pages/SalesReportDashboardPage";
+import { PurchasingReportDashboardPage } from "@/pages/PurchasingReportDashboardPage";
 import { GarageDashboard } from "@/modules/garage/pages/GarageDashboard";
 import { GarageCases } from "@/modules/garage/pages/GarageCases";
 import { GarageReceivables } from "@/modules/garage/pages/GarageReceivables";
@@ -69,6 +71,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-bom": ErpBomPage,
   "erp-production": ErpProductionPage,
   "erp-sales-orders": ErpSalesOrdersPage,
+  "sales-report-dashboard": SalesReportDashboardPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
   "erp-inventory-uom": InventoryUomPage,
   "erp-inventory-item-types": InventoryItemTypesPage,
@@ -95,6 +98,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-payables": GaragePayables,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
+  "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
 
 export default function App() {
