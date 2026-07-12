@@ -49,7 +49,9 @@ export const en: Dict = {
       sales: "Sales",
       afterSales: "After-Sales & Warranty",
       customers: "Customers",
+      salesReportDashboard: "Sales Report Dashboard",
       purchasing: "Purchasing",
+      purchasingReportDashboard: "Purchasing Report Dashboard",
       operatingExpenses: "Operating Expenses",
       erpInventoryStock: "Stock",
       inventoryGroup: "Inventory",
@@ -140,9 +142,11 @@ export const en: Dict = {
     hrPositions: "Positions",
     sales: "Sales",
     salesOrders: "Sales Orders",
+    salesReportDashboard: "Sales Report Dashboard",
     customers: "Customers",
     purchasing: "Purchasing",
     purchasingOrders: "Purchase Orders",
+    purchasingReportDashboard: "Purchasing Report Dashboard",
     operatingExpenses: "Operating Expenses",
     inventory: "Warehouse",
     inventoryGroup: "Inventory",
@@ -1616,6 +1620,22 @@ export const en: Dict = {
   phaittra: {
     title: "Accounts Payable",
     desc: "Manage payables to suppliers and partners.",
+  },
+  reports: {
+    sales: {
+      totalOrders: "Total Sales Orders",
+      totalRevenue: "Sales Revenue",
+      completionRate: "Delivery Completion Rate",
+      statusBreakdown: "Sales Orders by Status",
+      topCustomers: "Top Customers",
+    },
+    purchasing: {
+      totalOrders: "Total Purchase Orders",
+      totalAmount: "Purchase Amount",
+      completionRate: "Receiving Completion Rate",
+      statusBreakdown: "Purchase Orders by Status",
+      topSuppliers: "Top Suppliers",
+    },
   },
   ledger: {
     kpi: {

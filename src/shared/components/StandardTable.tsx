@@ -94,6 +94,7 @@ export function StandardTable<T>({
         sortArray?.[0]?.startsWith("-") ? sortArray[0].slice(1) : sortArray?.[0]
       }
       sortOrder={sortArray?.[0]?.startsWith("-") ? "desc" : "asc"}
+      sortArray={sortArray}
       onSort={onSort}
       getRowKey={getRowKey}
       emptyLabel={emptyLabel}

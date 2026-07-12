@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { extractApiError } from "@/shared/utils/apiError";
 import { type InventoryStockRow } from "@/modules/operational/api/operationalApi";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useOperationalListQuery } from "@/modules/operational/hooks/useOperationalListQuery";
 import { OperationalInventoryPage } from "@/modules/operational/components/list/OperationalInventoryPage";
 import {
@@ -26,8 +27,9 @@ export function InventoryListPage() {
     expandedStockItemIds,
     toggleExpandStockItem,
     itemTypeFilter,
-    inventorySort,
   } = listStore;
+
+  const tableState = useTableColumnState("inventory-stock-table");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,9 @@ export function InventoryListPage() {
     pageSize,
     search: search || undefined,
     item_type: itemTypeFilter || undefined,
-    sort: inventorySort ? [inventorySort] : undefined,
+    sort: tableState.sorts.length > 0 ? tableState.sorts : undefined,
+    column_search: tableState.columnSearch,
+    column_filters: tableState.columnFilters,
   });
 
   useEffect(() => {
