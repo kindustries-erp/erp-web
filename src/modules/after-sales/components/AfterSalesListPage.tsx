@@ -186,9 +186,13 @@ export function AfterSalesListPage() {
       size: 170,
       cell: (row: any) => (
         <div className="flex items-center gap-1.5 group">
-          <span className="font-medium text-gray-800 flex-1 truncate">
+          <Button
+            variant="link"
+            onClick={() => handleRowClick(row)}
+            className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
+          >
             {row.serialNo || "-"}
-          </span>
+          </Button>
           {row.serialNo && <CopyIconBtn text={row.serialNo} />}
         </div>
       ),
@@ -335,7 +339,6 @@ export function AfterSalesListPage() {
         columns={columns}
         getRowKey={(row: any) => row.lifecycleId}
         loading={loading}
-        onRowClick={handleRowClick}
         sortArray={
           sortField ? [(sortOrder === "desc" ? "-" : "") + sortField] : []
         }
@@ -370,6 +373,10 @@ export function AfterSalesListPage() {
             entityData,
           );
         }}
+        dealerOptions={dealerOptions}
+        setDealerSearch={setDealerSearch}
+        fetchNextDealers={fetchNextDealers}
+        loadingDealers={loadingDealers}
       />
 
       <SoPreviewDrawer

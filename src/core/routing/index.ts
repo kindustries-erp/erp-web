@@ -31,7 +31,17 @@ export const ROUTES: RouteConfig[] = [
   { key: "employees", label: "Nhân sự", group: "hr" },
 
   { key: "customers", label: "Khách hàng", group: "sales" },
+  {
+    key: "sales-report-dashboard",
+    label: "Báo cáo tổng quan bán hàng",
+    group: "sales",
+  },
   { key: "purchasing", label: "Đơn mua hàng", group: "purchasing" },
+  {
+    key: "purchasing-report-dashboard",
+    label: "Báo cáo tổng quan mua hàng",
+    group: "purchasing",
+  },
   { key: "suppliers", label: "Nhà cung cấp", group: "purchasing" },
   { key: "permissions", label: "Phân quyền & Vai trò", group: "system" },
   {

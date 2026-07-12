@@ -7,6 +7,7 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Combobox } from "@/shared/components/Combobox";
 import { Input } from "@/shared/components/ui/input";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import toast from "react-hot-toast";
@@ -18,6 +19,10 @@ interface AfterSalesDrawerProps {
   mode: "view" | "edit";
   onSaved: () => void;
   onToggleEdit?: () => void;
+  dealerOptions: Array<{ value: string; label: string }>;
+  setDealerSearch: (search: string) => void;
+  fetchNextDealers: () => void;
+  loadingDealers: boolean;
 }
 
 export function AfterSalesDrawer({
@@ -27,6 +32,10 @@ export function AfterSalesDrawer({
   mode,
   onSaved,
   onToggleEdit,
+  dealerOptions,
+  setDealerSearch,
+  fetchNextDealers,
+  loadingDealers,
 }: AfterSalesDrawerProps) {
   const t = useT();
   const [saving, setSaving] = useState(false);
@@ -35,13 +44,21 @@ export function AfterSalesDrawer({
   useEffect(() => {
     if (open && data) {
       setForm({
+        customerName: data.customerName || "",
         customerPhone: data.customerPhone || "",
         customerAddress: data.customerAddress || "",
+        customerIdNumber: data.customerIdNumber || "",
+        dealerId: mode === "edit" ? "" : data.dealerId || "",
+        dealerName: mode === "edit" ? "" : data.dealerName || "",
+        warrantyActivatedAt: data.warrantyActivatedAt
+          ? data.warrantyActivatedAt.slice(0, 10)
+          : "",
+        warrantyMonths: data.warrantyMonths || 36,
       });
     } else {
       setForm({});
     }
-  }, [open, data]);
+  }, [open, data, mode]);
 
   const isEditing = mode === "edit";
 
@@ -51,15 +68,14 @@ export function AfterSalesDrawer({
     try {
       // Send the updated phone and address, while keeping others unchanged
       await inventoryCoreApi.updateSerialLifecycle(data.serialId, {
-        customerName: data.customerName,
+        customerName: form.customerName,
         customerPhone: form.customerPhone,
         customerAddress: form.customerAddress,
-        customerIdNumber: data.customerIdNumber,
-        dealerName: data.dealerName,
-        warrantyActivatedAt: data.warrantyActivatedAt
-          ? data.warrantyActivatedAt.slice(0, 10)
-          : undefined,
-        warrantyMonths: data.warrantyMonths || undefined,
+        customerIdNumber: form.customerIdNumber,
+        dealerId: form.dealerId,
+        dealerName: form.dealerName,
+        warrantyActivatedAt: form.warrantyActivatedAt || undefined,
+        warrantyMonths: form.warrantyMonths || undefined,
         notes: data.notes,
       });
       toast.success(t("Lưu thông tin thành công"));
@@ -122,10 +138,18 @@ export function AfterSalesDrawer({
                   disabled
                 />
               </DrawerField>
-              <DrawerField label={t("Serial / Số máy")}>
+              <DrawerField label={t("Số Seri")}>
                 <Input
                   className={inputCls}
                   value={data?.serialNo || ""}
+                  readOnly
+                  disabled
+                />
+              </DrawerField>
+              <DrawerField label={t("Số máy")}>
+                <Input
+                  className={inputCls}
+                  value={data?.engineNo || ""}
                   readOnly
                   disabled
                 />
@@ -158,21 +182,30 @@ export function AfterSalesDrawer({
                 <DatePicker
                   className={inputCls}
                   value={
-                    data?.warrantyActivatedAt
-                      ? data.warrantyActivatedAt.slice(0, 10)
-                      : ""
+                    isEditing
+                      ? form.warrantyActivatedAt
+                      : data?.warrantyActivatedAt
+                        ? data.warrantyActivatedAt.slice(0, 10)
+                        : ""
                   }
-                  onChange={() => {}}
-                  disabled
+                  onChange={(val) =>
+                    setForm({ ...form, warrantyActivatedAt: val })
+                  }
+                  disabled={!isEditing}
                 />
               </DrawerField>
               <DrawerField label={t("Thời hạn (tháng)")}>
                 <Input
                   type="number"
                   className={inputCls}
-                  value={data?.warrantyMonths || 12}
-                  readOnly
-                  disabled
+                  value={
+                    isEditing ? form.warrantyMonths : data?.warrantyMonths || 36
+                  }
+                  onChange={(e) =>
+                    setForm({ ...form, warrantyMonths: Number(e.target.value) })
+                  }
+                  readOnly={!isEditing}
+                  disabled={!isEditing}
                 />
               </DrawerField>
             </div>
@@ -184,9 +217,12 @@ export function AfterSalesDrawer({
           <DrawerField label={t("Tên khách hàng")}>
             <Input
               className={inputCls}
-              value={data?.customerName || ""}
-              readOnly
-              disabled={isEditing}
+              value={isEditing ? form.customerName : data?.customerName || ""}
+              onChange={(e) =>
+                setForm({ ...form, customerName: e.target.value })
+              }
+              readOnly={!isEditing}
+              disabled={!isEditing}
             />
           </DrawerField>
           <DrawerField label={t("Số điện thoại")}>
@@ -197,23 +233,53 @@ export function AfterSalesDrawer({
                 setForm({ ...form, customerPhone: e.target.value })
               }
               readOnly={!isEditing}
+              disabled={!isEditing}
             />
           </DrawerField>
           <DrawerField label={t("CCCD / CMND")}>
             <Input
               className={inputCls}
-              value={data?.customerIdNumber || ""}
-              readOnly
-              disabled={isEditing}
+              value={
+                isEditing ? form.customerIdNumber : data?.customerIdNumber || ""
+              }
+              onChange={(e) =>
+                setForm({ ...form, customerIdNumber: e.target.value })
+              }
+              readOnly={!isEditing}
+              disabled={!isEditing}
             />
           </DrawerField>
           <DrawerField label={t("Đại lý")}>
-            <Input
-              className={inputCls}
-              value={data?.dealerName || ""}
-              readOnly
-              disabled={isEditing}
-            />
+            {isEditing ? (
+              <Combobox
+                value={form.dealerId}
+                onChange={(value) => {
+                  const matched = dealerOptions.find(
+                    (opt) => opt.value === value,
+                  );
+                  setForm({
+                    ...form,
+                    dealerId: value,
+                    dealerName: matched
+                      ? matched.label.split(" — ").slice(1).join(" — ")
+                      : "",
+                  });
+                }}
+                options={dealerOptions}
+                placeholder={t("Chọn đại lý")}
+                onSearch={setDealerSearch}
+                onScrollBottom={fetchNextDealers}
+                loading={loadingDealers}
+                fallbackLabel={form.dealerName}
+              />
+            ) : (
+              <Input
+                className={inputCls}
+                value={data?.dealerName || ""}
+                readOnly
+                disabled
+              />
+            )}
           </DrawerField>
           <DrawerField label={t("Địa chỉ")}>
             <Input

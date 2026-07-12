@@ -21,7 +21,6 @@ interface OperationalListState {
   supplierFilter: string;
   itemFilter: string;
   purchaseSort: string;
-  inventorySort: string;
 
   // UI state
   filterPanelOpen: boolean;
@@ -54,9 +53,6 @@ interface OperationalListActions {
   togglePurchaseSort: (field: string) => void;
   setPurchaseSort: (v: string) => void;
 
-  toggleInventorySort: (field: string) => void;
-  setInventorySort: (v: string) => void;
-
   setFilterPanelOpen: (v: boolean | ((prev: boolean) => boolean)) => void;
   toggleExpandRow: (key: string) => void;
   toggleExpandStockItem: (id: string) => void;
@@ -86,7 +82,6 @@ const defaultState = (): OperationalListState => ({
   supplierFilter: "",
   itemFilter: "",
   purchaseSort: "",
-  inventorySort: "",
   filterPanelOpen: false,
   expandedRowIds: {},
   expandedStockItemIds: {},
@@ -129,17 +124,6 @@ export const useOperationalListStore = create<
 
   setPurchaseSort: (v) => set({ purchaseSort: v }),
 
-  toggleInventorySort: (field) => {
-    const prev = get().inventorySort;
-    let next: string;
-    if (prev === field) next = `-${field}`;
-    else if (prev === `-${field}`) next = "";
-    else next = field;
-    set({ inventorySort: next, page: 1 });
-  },
-
-  setInventorySort: (v) => set({ inventorySort: v }),
-
   setFilterPanelOpen: (v) => {
     if (typeof v === "function") {
       set((state) => ({ filterPanelOpen: v(state.filterPanelOpen) }));
@@ -180,7 +164,6 @@ export const useOperationalListStore = create<
       itemTypeFilter: "",
       supplierFilter: "",
       purchaseSort: "",
-      inventorySort: "",
       period: "",
       dateFrom: "",
       dateTo: "",

@@ -5,6 +5,7 @@ interface EnvState {
   env: string;
   isProduction: boolean;
   isDevelopment: boolean;
+  isLocal: boolean;
   isLocalProdData: boolean;
   isKlotus: boolean;
   isGreenway: boolean;
@@ -30,6 +31,7 @@ export const useEnvStore = create<EnvState>(() => ({
     envLower.endsWith(AppEnvironment.PRODUCTION),
   isDevelopment:
     envLower === AppEnvironment.DEVELOPMENT || envLower === "local",
+  isLocal: envLower.includes("local"),
   isLocalProdData:
     envLower.endsWith("production-development") ||
     envLower.endsWith("prod-dev"),
