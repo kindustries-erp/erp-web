@@ -184,6 +184,18 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.sales")}
             </div>
+            {canReadSalesReports && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.salesReportDashboard")}
+                active={currentPage === "sales-report-dashboard"}
+                onClick={() => navTo("sales-report-dashboard")}
+                contextPage="sales-report-dashboard"
+              />
+            )}
             {canReadSalesOrders && (
               <NavItem
                 collapsed={c}
@@ -214,18 +226,6 @@ export function SidebarNav({
                 contextPage="after-sales"
               />
             )}
-            {canReadSalesReports && (
-              <NavItem
-                collapsed={c}
-                icon={
-                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label={t("nav.items.salesReportDashboard")}
-                active={currentPage === "sales-report-dashboard"}
-                onClick={() => navTo("sales-report-dashboard")}
-                contextPage="sales-report-dashboard"
-              />
-            )}
           </div>
         )}
 
@@ -243,6 +243,18 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.purchasing")}
             </div>
+            {canReadPurchasingReports && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.purchasingReportDashboard")}
+                active={currentPage === "purchasing-report-dashboard"}
+                onClick={() => navTo("purchasing-report-dashboard")}
+                contextPage="purchasing-report-dashboard"
+              />
+            )}
             {canReadPurchasing && (
               <NavItem
                 collapsed={c}
@@ -263,18 +275,6 @@ export function SidebarNav({
                 active={currentPage === "erp-suppliers"}
                 onClick={() => navTo("erp-suppliers")}
                 contextPage="erp-suppliers"
-              />
-            )}
-            {canReadPurchasingReports && (
-              <NavItem
-                collapsed={c}
-                icon={
-                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-                }
-                label={t("nav.items.purchasingReportDashboard")}
-                active={currentPage === "purchasing-report-dashboard"}
-                onClick={() => navTo("purchasing-report-dashboard")}
-                contextPage="purchasing-report-dashboard"
               />
             )}
           </div>
