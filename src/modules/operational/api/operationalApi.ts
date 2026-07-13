@@ -319,6 +319,7 @@ export const operationalApi = {
     search?: string,
     page: number = 1,
     pageSize: number = 20,
+    filters?: string,
   ) => {
     const { data } = await axiosInstance.get<{
       items: string[];
@@ -327,7 +328,7 @@ export const operationalApi = {
       pageSize: number;
       totalPages: number;
     }>("/api/v1/inventory/stock/column-options", {
-      params: { column, search, page, pageSize },
+      params: { column, search, page, pageSize, filters },
     });
     return data;
   },
