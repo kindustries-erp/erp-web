@@ -17,7 +17,7 @@ import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperatio
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
@@ -97,6 +97,22 @@ export function PurchaseOrderListPage() {
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
 
+  const summaryRow = useMemo(() => {
+    const totalQty = items.reduce(
+      (acc, curr) =>
+        acc +
+        (curr.lines?.reduce(
+          (sum, line: any) => sum + Number(line.qty || line.qtyOrdered || 0),
+          0,
+        ) || 0),
+      0,
+    );
+    return {
+      supplier: null,
+      total_qty: totalQty.toLocaleString("vi-VN"),
+    };
+  }, [items]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const viewId = params.get("viewId");
@@ -125,6 +141,7 @@ export function PurchaseOrderListPage() {
     variant: "purchase",
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
+    onOpenDetail: openDetail,
   });
 
   return (
@@ -134,6 +151,7 @@ export function PurchaseOrderListPage() {
       icon={<FileText className="h-4 w-4" />}
       tableId="purchase-orders-table"
       loading={loading}
+      summaryRow={summaryRow}
       onRefresh={listQuery.refetch}
       createActions={
         canCreatePo

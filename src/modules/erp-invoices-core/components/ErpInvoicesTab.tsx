@@ -17,6 +17,8 @@ import {
 import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { Popover } from "@/core/components/ui/Popover";
+import { Button } from "@/shared/components/ui/Button";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
@@ -285,7 +287,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         cell: (inv) => (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <span>{inv.invoiceNo}</span>
+              <Button
+                variant="link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  formHook.openDetail(inv);
+                }}
+                className="font-medium text-primary hover:underline p-0 h-auto"
+              >
+                {inv.invoiceNo}
+              </Button>
               {inv.status !== "CONFIRMED" && (
                 <span
                   className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
@@ -344,12 +355,111 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         className: "text-left",
         headerClassName: "text-center",
         cell: (row) => (
-          <div
-            className="whitespace-normal break-words w-full"
-            title={row.description || ""}
+          <Popover
+            content={
+              <div className="p-3 max-h-[300px] max-w-[500px] overflow-auto">
+                <h4 className="font-semibold text-sm mb-2 text-slate-800">
+                  Chi tiết mặt hàng
+                </h4>
+                {row.items && row.items.length > 0 ? (
+                  <table className="w-full text-sm text-left border-collapse min-w-[500px]">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium">
+                          Tên mặt hàng
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          SL
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
+                          ĐVT
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Đơn giá
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thành tiền trước thuế
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {row.items.map((item: any, idx: number) => (
+                        <tr
+                          key={item.id || idx}
+                          className="border-b last:border-0 hover:bg-slate-50"
+                        >
+                          <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
+                            {item.description || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {item.quantity != null
+                              ? Number(item.quantity).toLocaleString(
+                                  undefined,
+                                  {
+                                    maximumFractionDigits: 1,
+                                  },
+                                )
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-1 text-left whitespace-nowrap">
+                            {item.unit || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {fmtAmt(item.unitPrice?.toString())}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
+                            {fmtAmt(item.preVatAmount?.toString())}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                      <tr>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          Tổng cộng
+                        </td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          {row.items
+                            .reduce(
+                              (acc: number, item: any) =>
+                                acc + (Number(item.quantity) || 0),
+                              0,
+                            )
+                            .toLocaleString(undefined, {
+                              maximumFractionDigits: 1,
+                            })}
+                        </td>
+                        <td className="px-2 py-2"></td>
+                        <td className="px-2 py-2"></td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          {fmtAmt(
+                            row.items
+                              .reduce(
+                                (acc: number, item: any) =>
+                                  acc + (Number(item.preVatAmount) || 0),
+                                0,
+                              )
+                              .toString(),
+                          )}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                ) : (
+                  <div className="text-slate-500 text-sm italic">
+                    Không có chi tiết mặt hàng.
+                  </div>
+                )}
+              </div>
+            }
           >
-            {row.description || "—"}
-          </div>
+            <div
+              className="whitespace-normal break-words w-full cursor-pointer hover:text-primary text-slate-700 underline decoration-dashed underline-offset-4 decoration-slate-300"
+              title={row.description || ""}
+            >
+              {row.description || "—"}
+            </div>
+          </Popover>
         ),
       },
       {

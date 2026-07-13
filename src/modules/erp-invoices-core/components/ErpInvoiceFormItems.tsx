@@ -150,7 +150,13 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div>{row.quantity}</div>
+                  <div>
+                    {row.quantity != null
+                      ? Number(row.quantity).toLocaleString(undefined, {
+                          maximumFractionDigits: 1,
+                        })
+                      : ""}
+                  </div>
                 ),
             },
             {
