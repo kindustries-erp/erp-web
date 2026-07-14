@@ -41,6 +41,9 @@ import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/E
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
+import { DrawerModal } from "@/shared/components/DrawerModal";
+import { Combobox } from "@/shared/components/Combobox";
+import { Checkbox } from "@/shared/components/ui/checkbox";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
 interface ErpInvoicesTabProps {
@@ -67,6 +70,75 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     fileKey: string;
     invoiceId: string;
   } | null>(null);
+
+  const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false);
+  const [bulkMonth, setBulkMonth] = useState("");
+  const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+
+  const monthOptions = useMemo(() => {
+    const opts = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      opts.push({
+        label: `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`,
+        value: val,
+      });
+    }
+    return opts;
+  }, []);
+
+  useEffect(() => {
+    if (!bulkMonth && monthOptions.length > 0) {
+      setBulkMonth(monthOptions[0].value);
+    }
+  }, [bulkMonth, monthOptions]);
+
+  const handleBulkDownloadFiles = async () => {
+    if (bulkTypes.length === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 loại file (PDF hoặc XML)");
+      return;
+    }
+    if (!bulkMonth) {
+      toast.error("Vui lòng chọn kỳ tải hóa đơn");
+      return;
+    }
+    try {
+      setBulkDownloading(true);
+      const [year, month] = bulkMonth.split("-");
+      const dateFrom = `${year}-${month}-01`;
+      const dateTo = new Date(Number(year), Number(month), 0)
+        .toISOString()
+        .slice(0, 10);
+
+      const blob = await erpInvoicesCoreApi.bulkDownloadFiles({
+        query: {
+          date_from: dateFrom,
+          date_to: dateTo,
+          direction,
+        },
+        types: bulkTypes,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `HoaDon_${bulkMonth}_${direction}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBulkDrawerOpen(false);
+      toast.success("Tải hàng loạt thành công!");
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Tải hàng loạt thất bại: " + error.message);
+    } finally {
+      setBulkDownloading(false);
+    }
+  };
 
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
@@ -1323,6 +1395,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 },
               },
               {
+                label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
+                icon: <Download className="w-4 h-4 text-blue-600" />,
+                onClick: () => setBulkDrawerOpen(true),
+              },
+              {
                 label: t("exportExcelSummary", "Xuất Excel Bảng kê (Tổng hợp)"),
                 icon: <Download className="w-4 h-4 text-green-600" />,
                 onClick: () => handleExportExcel("summary"),
@@ -1483,6 +1560,78 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
       />
+
+      <DrawerModal
+        open={bulkDrawerOpen}
+        onClose={() => setBulkDrawerOpen(false)}
+        title="Tải hàng loạt hóa đơn"
+      >
+        <div className="p-4 space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Kỳ tải hóa đơn *</label>
+            <Combobox
+              options={monthOptions}
+              value={bulkMonth}
+              onChange={(v) => setBulkMonth(v ?? "")}
+              placeholder="Chọn kỳ..."
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Hệ thống sẽ tải toàn bộ hóa đơn trong tháng đã chọn để tránh quá
+              tải.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Định dạng file tải về *
+            </label>
+            <div className="flex flex-col gap-3 mt-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkTypes.includes("pdf")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkTypes((prev) => [...prev, "pdf"]);
+                    } else {
+                      setBulkTypes((prev) => prev.filter((t) => t !== "pdf"));
+                    }
+                  }}
+                />
+                <span className="text-sm">File PDF</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkTypes.includes("xml")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkTypes((prev) => [...prev, "xml"]);
+                    } else {
+                      setBulkTypes((prev) => prev.filter((t) => t !== "xml"));
+                    }
+                  }}
+                />
+                <span className="text-sm">File XML</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end space-x-2 border-t border-border">
+            <Button
+              onClick={() => setBulkDrawerOpen(false)}
+              variant="outline"
+              disabled={bulkDownloading}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleBulkDownloadFiles}
+              disabled={bulkDownloading}
+            >
+              {bulkDownloading ? "Đang nén file..." : "Xác nhận tải"}
+            </Button>
+          </div>
+        </div>
+      </DrawerModal>
     </>
   );
 }

@@ -6,6 +6,7 @@ import {
   Settings,
   Trash2,
   FileCode,
+  Download,
 } from "lucide-react";
 import { BtnPrimary } from "@/shared/components/BtnPrimary";
 import { KpiCard } from "@/shared/components/KpiCard";
@@ -171,6 +172,30 @@ const HoaDonDienTu: React.FC = () => {
   });
   const [draftModalOpen, setDraftModalOpen] = useState(false);
   const [issuedDetail, setIssuedDetail] = useState<Einvoice | null>(null);
+  const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false);
+  const [bulkMonth, setBulkMonth] = useState("");
+  const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const monthOptions = useMemo(() => {
+    const opts = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      opts.push({
+        label: `Tháng ${d.getMonth() + 1}/${d.getFullYear()}`,
+        value: val,
+      });
+    }
+    return opts;
+  }, []);
+
+  useEffect(() => {
+    if (!bulkMonth && monthOptions.length > 0) {
+      setBulkMonth(monthOptions[0].value);
+    }
+  }, [bulkMonth, monthOptions]);
+
   const [sinvoiceForm, setSinvoiceForm] = useState({
     username: "",
     password: "",
@@ -371,6 +396,54 @@ const HoaDonDienTu: React.FC = () => {
     loadOutputData,
     loadInputData,
   ]);
+
+  const handleBulkDownloadFiles = async () => {
+    if (bulkTypes.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 loại file (PDF hoặc XML)");
+      return;
+    }
+    if (!bulkMonth) {
+      alert("Vui lòng chọn kỳ tải hóa đơn");
+      return;
+    }
+    try {
+      setBulkDownloading(true);
+      const [year, month] = bulkMonth.split("-");
+      const dateFrom = `${year}-${month}-01`;
+      const dateTo = new Date(Number(year), Number(month), 0)
+        .toISOString()
+        .slice(0, 10);
+
+      let direction = "OUT";
+      if (activeTab === "hoa-don-nhap" || activeTab === "hoa-don-mua-vao") {
+        direction = "IN";
+      }
+
+      const blob = await erpInvoicesCoreApi.bulkDownloadFiles({
+        query: {
+          date_from: dateFrom,
+          date_to: dateTo,
+          direction,
+        },
+        types: bulkTypes,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `HoaDon_${bulkMonth}_${direction}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBulkDrawerOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      alert("Tải hàng loạt thất bại: " + error.message);
+    } finally {
+      setBulkDownloading(false);
+    }
+  };
 
   useEffect(() => {
     const tabFromUrl = new URLSearchParams(window.location.search).get(
@@ -927,6 +1000,13 @@ const HoaDonDienTu: React.FC = () => {
             >
               <RefreshCw className="mr-2 h-4 w-4" /> Làm mới
             </button>
+            <button
+              className="flex items-center px-3 py-1.5 border border-border rounded-md text-sm font-medium bg-surface hover:bg-surface-hover disabled:opacity-60"
+              onClick={() => setBulkDrawerOpen(true)}
+              disabled={loading}
+            >
+              <Download className="mr-2 h-4 w-4" /> Tải hàng loạt
+            </button>
             <BtnPrimary
               onClick={() => setActiveTab("cau-hinh")}
               disabled={loading}
@@ -1292,6 +1372,90 @@ const HoaDonDienTu: React.FC = () => {
         onClose={() => setDraftModalOpen(false)}
         onSaved={handleDraftSaved}
       />
+
+      <DrawerModal
+        open={bulkDrawerOpen}
+        onClose={() => setBulkDrawerOpen(false)}
+        title="Tải hàng loạt hóa đơn"
+      >
+        <div className="p-4 space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Kỳ tải hóa đơn *</label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              value={bulkMonth}
+              onChange={(e) => setBulkMonth(e.target.value)}
+            >
+              <option value="" disabled>
+                Chọn kỳ...
+              </option>
+              {monthOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Hệ thống sẽ tải toàn bộ hóa đơn trong tháng đã chọn để tránh quá
+              tải.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Định dạng file tải về *
+            </label>
+            <div className="flex flex-col gap-2 mt-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  checked={bulkTypes.includes("pdf")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setBulkTypes((prev) => [...prev, "pdf"]);
+                    } else {
+                      setBulkTypes((prev) => prev.filter((t) => t !== "pdf"));
+                    }
+                  }}
+                />
+                <span className="text-sm">File PDF</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                  checked={bulkTypes.includes("xml")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setBulkTypes((prev) => [...prev, "xml"]);
+                    } else {
+                      setBulkTypes((prev) => prev.filter((t) => t !== "xml"));
+                    }
+                  }}
+                />
+                <span className="text-sm">File XML</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end space-x-2 border-t border-border">
+            <button
+              onClick={() => setBulkDrawerOpen(false)}
+              className="px-4 py-2 text-sm font-medium border border-border rounded bg-surface hover:bg-surface-hover"
+              disabled={bulkDownloading}
+            >
+              Hủy
+            </button>
+            <BtnPrimary
+              onClick={handleBulkDownloadFiles}
+              disabled={bulkDownloading}
+            >
+              {bulkDownloading ? "Đang nén file..." : "Xác nhận tải"}
+            </BtnPrimary>
+          </div>
+        </div>
+      </DrawerModal>
     </>
   );
 };
