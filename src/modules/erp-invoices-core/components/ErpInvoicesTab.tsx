@@ -15,7 +15,6 @@ import {
   FileCode,
   FileText,
 } from "lucide-react";
-import { money } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Popover } from "@/core/components/ui/Popover";
@@ -199,7 +198,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     });
   };
 
-  const setCustom = listHook.filterPanel.setCustom;
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
       period: true,
