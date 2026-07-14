@@ -321,6 +321,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               const options = [
                 { value: "has_pdf", label: "Có file PDF" },
                 { value: "has_xml", label: "Có file XML" },
+                { value: "no_pdf", label: "Không có file PDF" },
+                { value: "no_xml", label: "Không có file XML" },
               ];
               const filtered = options.filter((o) =>
                 o.label.toLowerCase().includes(search.toLowerCase()),
@@ -333,7 +335,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             }}
           />
         ),
-        size: 80,
+        size: 120,
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv) => (
@@ -493,7 +495,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 80,
+        size: 120,
         headerClassName: "text-center",
         className: "text-muted-foreground text-left",
         cell: (inv) => inv.serialNo || "—",
