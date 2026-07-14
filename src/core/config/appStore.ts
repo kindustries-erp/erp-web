@@ -227,7 +227,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryTrackingCategories"],
   ],
-  "erp-activity-logs": [["breadcrumb.settings"], ["breadcrumb.activitylog"]],
+  "erp-activity-logs": [
+    ["breadcrumb.settings"],
+    ["nav.items.accessControl"],
+    ["breadcrumb.activitylog"],
+  ],
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
