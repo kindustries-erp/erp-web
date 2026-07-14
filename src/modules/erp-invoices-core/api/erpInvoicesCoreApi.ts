@@ -104,6 +104,8 @@ export interface ErpInvoiceListParams {
   sort_by?: string;
   sort_order?: "asc" | "desc";
   export_type?: "summary" | "detailed";
+  column_search?: string;
+  column_filters?: string;
 }
 
 export interface ErpInvoiceListResponse {
@@ -154,6 +156,32 @@ export const erpInvoicesCoreApi = {
       params,
     });
     return data;
+  },
+
+  getInvoiceColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    direction?: "IN" | "OUT",
+  ) => {
+    const res = await axiosInstance.get(`${BASE}/column-options`, {
+      params: {
+        column,
+        search,
+        page,
+        pageSize,
+        column_filters: filtersStr,
+        direction,
+      },
+    });
+    return res.data as {
+      items: string[];
+      total: number;
+      page: number;
+      totalPages: number;
+    };
   },
 
   get: async (id: string): Promise<ErpInvoice> => {
