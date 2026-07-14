@@ -5,6 +5,7 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
+    get: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     remove: vi.fn(),
