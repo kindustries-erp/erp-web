@@ -8,6 +8,15 @@ vi.mock("@/core/i18n", () => ({
   useT: () => (key: string) => key,
 }));
 
+// Mock react-pdf
+vi.mock("react-pdf", () => ({
+  pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
+  Document: ({ children }: any) => (
+    <div data-testid="pdf-document">{children}</div>
+  ),
+  Page: () => <div data-testid="pdf-page" />,
+}));
+
 // Mock SheetJS because we don't want to actually parse complex buffers in tests
 vi.mock("xlsx", () => {
   return {
@@ -40,18 +49,14 @@ describe("FilePreviewDrawer", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders a PDF in an iframe", async () => {
-    const pdfFile = new File(["dummy content"], "test.pdf", {
+  it("renders a PDF in react-pdf", () => {
+    const file = new File(["dummy pdf content"], "test.pdf", {
       type: "application/pdf",
     });
-    const { baseElement } = render(
-      <FilePreviewDrawer open={true} onClose={() => {}} file={pdfFile} />,
-    );
+    render(<FilePreviewDrawer open={true} onClose={vi.fn()} file={file} />);
 
-    const iframe = baseElement.querySelector("iframe");
-    expect(iframe).toBeInTheDocument();
-    expect(iframe).toHaveAttribute("src", "blob:mock-url");
-    expect(iframe).toHaveAttribute("title", "test.pdf");
+    const pdfDoc = screen.getByTestId("pdf-document");
+    expect(pdfDoc).toBeInTheDocument();
   });
 
   it("renders an image in an img tag", async () => {
