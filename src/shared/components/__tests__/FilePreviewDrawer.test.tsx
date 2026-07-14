@@ -8,15 +8,6 @@ vi.mock("@/core/i18n", () => ({
   useT: () => (key: string) => key,
 }));
 
-// Mock react-pdf
-vi.mock("react-pdf", () => ({
-  pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
-  Document: ({ children }: any) => (
-    <div data-testid="pdf-document">{children}</div>
-  ),
-  Page: () => <div data-testid="pdf-page" />,
-}));
-
 // Mock SheetJS because we don't want to actually parse complex buffers in tests
 vi.mock("xlsx", () => {
   return {
