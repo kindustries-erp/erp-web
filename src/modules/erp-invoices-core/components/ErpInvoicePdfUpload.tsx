@@ -191,6 +191,12 @@ export function ErpInvoicePdfUpload({
         file={previewFile}
         previewUrl={previewUrl?.url}
         fileName={previewFile?.name || previewUrl?.fileName}
+        fetchBlobFn={
+          previewUrl
+            ? () =>
+                erpInvoicesCoreApi.getPdfBlob(invoiceId!, previewUrl.fileKey)
+            : undefined
+        }
         onDownload={
           previewUrl
             ? async () => {

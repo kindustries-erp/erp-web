@@ -353,6 +353,14 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getPdfBlob: async (id: string, key: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(
+      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
+      { responseType: "blob" },
+    );
+    return data;
+  },
+
   getPdfDownloadUrl: async (
     id: string,
     key: string,

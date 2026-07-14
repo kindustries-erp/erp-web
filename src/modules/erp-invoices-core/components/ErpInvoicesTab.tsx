@@ -40,6 +40,7 @@ import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTran
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
 
 interface ErpInvoicesTabProps {
@@ -59,6 +60,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+  const [previewPdf, setPreviewPdf] = useState<{
+    url: string;
+    filename: string;
+    fileKey: string;
+    invoiceId: string;
+  } | null>(null);
 
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
@@ -114,6 +122,21 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         title: `Không thể tải ${type.toUpperCase()}`,
         variant: "destructive",
       });
+    }
+  }
+
+  async function handlePreviewPdf(id: string, key: string, filename: string) {
+    try {
+      showToast({ title: "Đang mở PDF...", variant: "default" });
+      const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(id, key, true);
+      setPreviewPdf({
+        url,
+        filename,
+        fileKey: key,
+        invoiceId: id,
+      });
+    } catch {
+      showToast({ title: "Không thể mở PDF", variant: "destructive" });
     }
   }
 
@@ -279,15 +302,53 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     return [
       {
         key: "attachments",
-        header: t("attachments", "Chứng từ"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("attachments", "Chứng từ")}
+            sortState="none"
+            onSortChange={() => {}}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["attachments"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("attachments", vals)}
+            align="center"
+            columnKey="attachments"
+            requireSearchToFetchOptions={false}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={async ({ search }) => {
+              const options = [
+                { value: "has_pdf", label: "Có file PDF" },
+                { value: "has_xml", label: "Có file XML" },
+              ];
+              const filtered = options.filter((o) =>
+                o.label.toLowerCase().includes(search.toLowerCase()),
+              );
+              return {
+                items: filtered,
+                total: filtered.length,
+                next: null,
+              };
+            }}
+          />
+        ),
         size: 80,
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv) => (
           <div className="flex items-center justify-center gap-1.5">
             {inv.xmlFileKey ? (
-              <Tooltip content={t("hasXml", "Đã có file XML/ZIP")}>
-                <FileCode className="w-4 h-4 text-slate-700" />
+              <Tooltip content={t("downloadXml", "Tải file XML")}>
+                <div
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownload(inv.id, "xml");
+                  }}
+                >
+                  <FileCode className="w-4 h-4 text-slate-700 hover:text-primary transition-colors" />
+                </div>
               </Tooltip>
             ) : (
               <Tooltip content={t("noXml", "Chưa có file XML/ZIP")}>
@@ -295,9 +356,90 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               </Tooltip>
             )}
             {inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0) ? (
-              <Tooltip content={t("hasPdf", "Đã có file PDF")}>
-                <FileText className="w-4 h-4 text-slate-700" />
-              </Tooltip>
+              <Popover
+                align="start"
+                open={openPopoverId === inv.id}
+                onOpenChange={(open) => setOpenPopoverId(open ? inv.id : null)}
+                content={
+                  <div className="p-3 w-[350px]">
+                    <div className="text-sm font-semibold mb-3 text-slate-800">
+                      Danh sách file PDF
+                    </div>
+                    <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto">
+                      {inv.pdfFileKey && (
+                        <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg">
+                          <div className="flex flex-col min-w-0 flex-1 mr-2">
+                            <span
+                              className="truncate font-medium text-slate-700"
+                              title="Hóa đơn PDF"
+                            >
+                              {inv.pdfFileKey.split("/").pop() || "Hóa đơn PDF"}
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5">
+                              Hóa đơn PDF (Gốc)
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="whitespace-nowrap h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPopoverId(null);
+                              handlePreviewPdf(
+                                inv.id,
+                                inv.pdfFileKey as string,
+                                (inv.pdfFileKey as string).split("/").pop() ||
+                                  "Hóa đơn PDF",
+                              );
+                            }}
+                          >
+                            Xem
+                          </Button>
+                        </div>
+                      )}
+                      {inv.pdfFiles?.map((pdf: any) => (
+                        <div
+                          key={pdf.key}
+                          className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg"
+                        >
+                          <div className="flex flex-col min-w-0 flex-1 mr-2">
+                            <span
+                              className="truncate font-medium text-slate-700"
+                              title={pdf.filename}
+                            >
+                              {pdf.filename}
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5">
+                              Hóa đơn PDF
+                            </span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="whitespace-nowrap h-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenPopoverId(null);
+                              handlePreviewPdf(inv.id, pdf.key, pdf.filename);
+                            }}
+                          >
+                            Xem
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
+                <div onClick={(e) => e.stopPropagation()}>
+                  <Tooltip content={t("pdfList", "Danh sách file PDF")}>
+                    <div className="cursor-pointer">
+                      <FileText className="w-4 h-4 text-slate-700 hover:text-primary transition-colors" />
+                    </div>
+                  </Tooltip>
+                </div>
+              </Popover>
             ) : (
               <Tooltip content={t("noPdf", "Chưa có file PDF")}>
                 <FileText className="w-4 h-4 text-gray-300" />
@@ -849,6 +991,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     listHook.tableState.columnSearch,
     listHook.tableState.sorts,
     fetchInvoiceOptions,
+    openPopoverId,
   ]);
 
   const activeSortKey = listHook.sortBy;
@@ -1241,6 +1384,46 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             void listHook.loadInvoices();
           }
         }}
+      />
+
+      <FilePreviewDrawer
+        open={!!previewPdf}
+        onClose={() => setPreviewPdf(null)}
+        previewUrl={previewPdf?.url}
+        fileName={previewPdf?.filename}
+        fetchBlobFn={
+          previewPdf
+            ? () =>
+                erpInvoicesCoreApi.getPdfBlob(
+                  previewPdf.invoiceId,
+                  previewPdf.fileKey,
+                )
+            : undefined
+        }
+        onDownload={
+          previewPdf
+            ? async () => {
+                try {
+                  const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
+                    previewPdf.invoiceId,
+                    previewPdf.fileKey,
+                    false,
+                  );
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = previewPdf.filename || "document.pdf";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                } catch {
+                  showToast({
+                    title: "Lỗi tải xuống file",
+                    variant: "destructive",
+                  });
+                }
+              }
+            : undefined
+        }
       />
 
       <BankTransactionDetailDrawer
