@@ -211,4 +211,38 @@ export const bankStatementApi = {
     );
     return res.data;
   },
+
+  // --- Statement Files ---
+  getStatementFiles: async (params: {
+    page?: number;
+    pageSize?: number;
+    branchId?: string;
+    bankAccountId?: string;
+    cashBookId?: string;
+  }) => {
+    const cleanParams = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
+    );
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/statement-files",
+      {
+        params: cleanParams,
+      },
+    );
+    return res.data;
+  },
+  createStatementFile: async (data: any) => {
+    const res = await axiosInstance.post(
+      "/api/v1/bank-transactions-core/statement-files",
+      data,
+    );
+    return res.data;
+  },
+  deleteStatementFile: async (id: string) => {
+    const res = await axiosInstance.delete(
+      `/api/v1/bank-transactions-core/statement-files/${id}`,
+    );
+    return res.data;
+  },
 };
