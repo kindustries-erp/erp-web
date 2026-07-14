@@ -76,12 +76,9 @@ export function SidebarNav({
     "read",
   );
 
-  const showSettingsAccess = canReadAdminUsers;
+  const showSettingsAccess = canReadAdminUsers || canReadActivityLogs;
   const showSettingsGeneral =
-    canReadAdminUsers ||
-    canReadActivityLogs ||
-    canReadSysTags ||
-    canReadBankStatements;
+    canReadAdminUsers || canReadSysTags || canReadBankStatements;
   const showSettingsInventory = canReadInventoryItems;
   const showSettings =
     showSettingsAccess || showSettingsGeneral || showSettingsInventory;
@@ -492,8 +489,9 @@ export function SidebarNav({
         hasMatch([
           t("nav.sections.settings"),
           showSettingsAccess ? t("nav.items.accessControl") : "",
-          showSettingsAccess ? t("nav.items.users") : "",
-          showSettingsAccess ? t("nav.items.phanquyen") : "",
+          canReadAdminUsers ? t("nav.items.users") : "",
+          canReadAdminUsers ? t("nav.items.phanquyen") : "",
+          canReadActivityLogs ? t("nav.items.activitylog") : "",
           showSettingsGeneral ? t("nav.items.catalog") : "",
           showSettingsGeneral && canReadAdminUsers
             ? t("thietlap.tabs.chi-nhanh")
@@ -505,9 +503,6 @@ export function SidebarNav({
             ? t("thietlap.tabs.quy")
             : "",
           showSettingsGeneral && canReadSysTags ? t("nav.items.sysTags") : "",
-          showSettingsGeneral && canReadActivityLogs
-            ? t("nav.items.activitylog")
-            : "",
           showSettingsInventory ? t("nav.items.erpInventoryMasters") : "",
           showSettingsInventory ? t("nav.items.erpInventoryUom") : "",
           showSettingsInventory ? t("nav.items.erpInventoryItemTypes") : "",
@@ -527,21 +522,34 @@ export function SidebarNav({
                 label={t("nav.items.accessControl")}
                 active={
                   currentPage === "erp-users" ||
-                  currentPage === "erp-permissions-core"
+                  currentPage === "erp-permissions-core" ||
+                  currentPage === "erp-activity-logs"
                 }
               >
-                <NavGroupItem
-                  label={t("nav.items.users")}
-                  active={currentPage === "erp-users"}
-                  onClick={() => navTo("erp-users")}
-                  contextPage="erp-users"
-                />
-                <NavGroupItem
-                  label={t("nav.items.phanquyen")}
-                  active={currentPage === "erp-permissions-core"}
-                  onClick={() => navTo("erp-permissions-core")}
-                  contextPage="erp-permissions-core"
-                />
+                {canReadAdminUsers && (
+                  <>
+                    <NavGroupItem
+                      label={t("nav.items.users")}
+                      active={currentPage === "erp-users"}
+                      onClick={() => navTo("erp-users")}
+                      contextPage="erp-users"
+                    />
+                    <NavGroupItem
+                      label={t("nav.items.phanquyen")}
+                      active={currentPage === "erp-permissions-core"}
+                      onClick={() => navTo("erp-permissions-core")}
+                      contextPage="erp-permissions-core"
+                    />
+                  </>
+                )}
+                {canReadActivityLogs && (
+                  <NavGroupItem
+                    label={t("nav.items.activitylog")}
+                    active={currentPage === "erp-activity-logs"}
+                    onClick={() => navTo("erp-activity-logs")}
+                    contextPage="erp-activity-logs"
+                  />
+                )}
               </NavGroup>
             )}
 
@@ -554,8 +562,7 @@ export function SidebarNav({
                   currentPage === "settings-branch" ||
                   currentPage === "settings-bank" ||
                   currentPage === "settings-cash-fund" ||
-                  currentPage === "sys-tags" ||
-                  currentPage === "erp-activity-logs"
+                  currentPage === "sys-tags"
                 }
               >
                 {canReadAdminUsers && (
@@ -588,14 +595,6 @@ export function SidebarNav({
                     active={currentPage === "sys-tags"}
                     onClick={() => navTo("sys-tags")}
                     contextPage="sys-tags"
-                  />
-                )}
-                {canReadActivityLogs && (
-                  <NavGroupItem
-                    label={t("nav.items.activitylog")}
-                    active={currentPage === "erp-activity-logs"}
-                    onClick={() => navTo("erp-activity-logs")}
-                    contextPage="erp-activity-logs"
                   />
                 )}
               </NavGroup>

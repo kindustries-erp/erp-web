@@ -1203,6 +1203,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             <ErpInvoicePdfUpload
               invoiceId={formHook.detailInvoice?.id ?? null}
               pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+              pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
               editMode={formHook.editMode}
             />
           </div>

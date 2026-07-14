@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { Upload, Download, Loader2 } from "lucide-react";
@@ -12,10 +12,16 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 interface Props {
   invoiceId: string | null;
   pdfFiles: any[] | null;
+  pdfFileKey?: string | null;
   editMode: boolean;
 }
 
-export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
+export function ErpInvoicePdfUpload({
+  invoiceId,
+  pdfFiles,
+  pdfFileKey,
+  editMode,
+}: Props) {
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
@@ -34,6 +40,20 @@ export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
     },
     onError: () => toast.error("Lỗi xóa file PDF"),
   });
+
+  const displayFiles = useMemo(() => {
+    const list = [];
+    if (pdfFileKey) {
+      list.push({
+        key: pdfFileKey,
+        filename: pdfFileKey.split("/").pop() || "Document.pdf",
+      });
+    }
+    if (pdfFiles && pdfFiles.length > 0) {
+      list.push(...pdfFiles);
+    }
+    return list;
+  }, [pdfFileKey, pdfFiles]);
 
   const handleUpload = async () => {
     if (!invoiceId || files.length === 0) return;
@@ -55,7 +75,7 @@ export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
     <DrawerSection
       title="Tài liệu đính kèm (PDF)"
       titleExtra={
-        pdfFiles && pdfFiles.length > 1 ? (
+        displayFiles.length > 1 ? (
           <Button
             variant="ghost"
             size="sm"
@@ -89,14 +109,14 @@ export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
       }
     >
       <div className="flex flex-col gap-3">
-        {(!pdfFiles || pdfFiles.length === 0) && (
+        {displayFiles.length === 0 && (
           <div className="text-sm text-gray-500 italic">
             Chưa có tài liệu đính kèm.
           </div>
         )}
-        {pdfFiles && pdfFiles.length > 0 && (
+        {displayFiles.length > 0 && (
           <div className="rounded-lg border border-border overflow-hidden">
-            {pdfFiles.map((file, i) => (
+            {displayFiles.map((file, i) => (
               <AttachmentRow
                 key={file.key || i}
                 item={
@@ -105,6 +125,7 @@ export function ErpInvoicePdfUpload({ invoiceId, pdfFiles, editMode }: Props) {
                       id: file.key,
                       filename_download: file.filename,
                     },
+                    attachment_type: "Hóa đơn PDF",
                   } as any
                 }
                 onDelete={
