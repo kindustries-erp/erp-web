@@ -38,6 +38,16 @@ export interface TableColumnHeaderFilterProps {
   requireSearchToFetchOptions?: boolean;
   allFilters?: Record<string, string[]>;
   formatOptionLabel?: (label: string) => string;
+  fetchOptions?: (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => Promise<{
+    items: { label: string; value: string }[];
+    total: number;
+    next: number | null;
+  }>;
 }
 
 const dropdownSearchState = new Map<string, string>();
@@ -56,6 +66,7 @@ export function TableColumnHeaderFilter({
   columnKey,
   allFilters,
   formatOptionLabel,
+  fetchOptions,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -101,6 +112,14 @@ export function TableColumnHeaderFilter({
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       if (!columnKey) return { items: [], total: 0, next: null };
+      if (fetchOptions) {
+        return fetchOptions({
+          columnKey,
+          search: debouncedLocalSearch,
+          pageParam: pageParam as number,
+          filtersStr,
+        });
+      }
       const res = await operationalApi.getInventoryStockColumnOptions(
         columnKey,
         debouncedLocalSearch,
