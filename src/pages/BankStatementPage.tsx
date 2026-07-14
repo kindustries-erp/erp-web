@@ -4,8 +4,10 @@ import { Building2, Wallet, Plus, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useT } from "@/core/i18n";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { FolderArchive } from "lucide-react";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatementDrawer";
+import { OriginalStatementFilesDrawer } from "@/pages/finance/components/OriginalStatementFilesDrawer";
 import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { money, formatGMT7 } from "@/shared/utils/format";
@@ -20,6 +22,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [pageSize, setPageSize] = useState(50);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isOriginalFilesOpen, setIsOriginalFilesOpen] = useState(false);
   const [sortArray, setSortArray] = useState<string[]>(["-transDate"]);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
@@ -428,6 +431,13 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
                       icon: <Upload className="w-4 h-4 text-emerald-600" />,
                       onClick: () => setIsImportOpen(true),
                     },
+                    {
+                      label: "Quản lý file gốc",
+                      icon: (
+                        <FolderArchive className="w-4 h-4 text-emerald-600" />
+                      ),
+                      onClick: () => setIsOriginalFilesOpen(true),
+                    },
                   ]
                 : [
                     {
@@ -435,9 +445,22 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
                       icon: <Upload className="w-4 h-4 text-emerald-600" />,
                       onClick: () => setIsImportOpen(true),
                     },
+                    {
+                      label: "Quản lý file gốc",
+                      icon: (
+                        <FolderArchive className="w-4 h-4 text-emerald-600" />
+                      ),
+                      onClick: () => setIsOriginalFilesOpen(true),
+                    },
                   ],
           },
         ]}
+      />
+
+      <OriginalStatementFilesDrawer
+        isOpen={isOriginalFilesOpen}
+        onClose={() => setIsOriginalFilesOpen(false)}
+        type={type}
       />
 
       <ImportStatementDrawer
