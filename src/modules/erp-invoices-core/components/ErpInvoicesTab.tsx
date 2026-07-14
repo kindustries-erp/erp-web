@@ -153,8 +153,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         search: search || undefined,
         seller_name: custom?.seller_name || undefined,
         buyer_name: custom?.buyer_name || undefined,
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
+        date_from: dateFrom ? `${dateFrom}T00:00:00` : undefined,
+        date_to: dateTo ? `${dateTo}T23:59:59` : undefined,
         status: status || undefined,
         tag_id: (custom?.tag_id as string) || undefined,
         sort_by: listHook.sortBy || undefined,
@@ -663,6 +663,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                         <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
                           Thành tiền trước thuế
                         </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thuế suất
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thuế VAT
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thành tiền
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -690,6 +699,22 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                           </td>
                           <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
                             {fmtAmt(item.preVatAmount?.toString())}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {item.vatRate != null
+                              ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {fmtAmt(item.vatAmount?.toString())}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
+                            {fmtAmt(
+                              (
+                                (Number(item.preVatAmount) || 0) +
+                                (Number(item.vatAmount) || 0)
+                              ).toString()
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -719,6 +744,31 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                               .reduce(
                                 (acc: number, item: any) =>
                                   acc + (Number(item.preVatAmount) || 0),
+                                0,
+                              )
+                              .toString(),
+                          )}
+                        </td>
+                        <td className="px-2 py-2"></td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          {fmtAmt(
+                            row.items
+                              .reduce(
+                                (acc: number, item: any) =>
+                                  acc + (Number(item.vatAmount) || 0),
+                                0,
+                              )
+                              .toString(),
+                          )}
+                        </td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-800">
+                          {fmtAmt(
+                            row.items
+                              .reduce(
+                                (acc: number, item: any) =>
+                                  acc +
+                                  (Number(item.preVatAmount) || 0) +
+                                  (Number(item.vatAmount) || 0),
                                 0,
                               )
                               .toString(),

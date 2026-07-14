@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { periodFirstDay, periodLastDay } from "@/modules/finance/utils/financeHelpers";
 
 export type Direction = "IN" | "OUT";
 
@@ -87,9 +88,25 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
     setPage: (dir, v) => get().updateState(dir, { page: v }),
     setPageSize: (dir, v) => get().updateState(dir, { pageSize: v, page: 1 }),
 
-    setPeriod: (dir, v) => get().updateState(dir, { period: v, page: 1 }),
-    setDateFrom: (dir, v) => get().updateState(dir, { dateFrom: v, page: 1 }),
-    setDateTo: (dir, v) => get().updateState(dir, { dateTo: v, page: 1 }),
+    setPeriod: (dir, v) => {
+      if (v) {
+        get().updateState(dir, {
+          period: v,
+          dateFrom: periodFirstDay(v),
+          dateTo: periodLastDay(v),
+          page: 1,
+        });
+      } else {
+        get().updateState(dir, {
+          period: v,
+          dateFrom: "",
+          dateTo: "",
+          page: 1,
+        });
+      }
+    },
+    setDateFrom: (dir, v) => get().updateState(dir, { dateFrom: v, period: "", page: 1 }),
+    setDateTo: (dir, v) => get().updateState(dir, { dateTo: v, period: "", page: 1 }),
     setStatus: (dir, v) => get().updateState(dir, { status: v, page: 1 }),
     setSellerName: (dir, v) =>
       get().updateState(dir, { seller_name: v, page: 1 }),
