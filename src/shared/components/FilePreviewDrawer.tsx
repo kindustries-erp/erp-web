@@ -6,11 +6,8 @@ import { AlertCircle, FileType, Loader2 } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-// Import worker as a URL asset — Vite will resolve this from node_modules/pdfjs-dist
-// matching exactly the pdfjs-dist version bundled with react-pdf (5.4.296)
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// Using unpkg CDN to avoid MIME type issues with .mjs on production servers
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export interface FilePreviewDrawerProps {
   open: boolean;
