@@ -713,7 +713,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                               (
                                 (Number(item.preVatAmount) || 0) +
                                 (Number(item.vatAmount) || 0)
-                              ).toString()
+                              ).toString(),
                             )}
                           </td>
                         </tr>

@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { periodFirstDay, periodLastDay } from "@/modules/finance/utils/financeHelpers";
+import {
+  periodFirstDay,
+  periodLastDay,
+} from "@/modules/finance/utils/financeHelpers";
 
 export type Direction = "IN" | "OUT";
 
@@ -105,8 +108,10 @@ export const useErpInvoiceListStore = create<ErpInvoiceListStore>(
         });
       }
     },
-    setDateFrom: (dir, v) => get().updateState(dir, { dateFrom: v, period: "", page: 1 }),
-    setDateTo: (dir, v) => get().updateState(dir, { dateTo: v, period: "", page: 1 }),
+    setDateFrom: (dir, v) =>
+      get().updateState(dir, { dateFrom: v, period: "", page: 1 }),
+    setDateTo: (dir, v) =>
+      get().updateState(dir, { dateTo: v, period: "", page: 1 }),
     setStatus: (dir, v) => get().updateState(dir, { status: v, page: 1 }),
     setSellerName: (dir, v) =>
       get().updateState(dir, { seller_name: v, page: 1 }),
