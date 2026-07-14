@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -180,41 +181,30 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   function fmtAmt(val: string | null | undefined) {
     if (val == null) return "—";
     const n = Number(val);
-    return isNaN(n) ? "—" : money(n);
+    if (isNaN(n)) return "—";
+    return (
+      n.toLocaleString("vi-VN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + " đ"
+    );
   }
+
+  const formatAmtOption = (val: string | number) => {
+    const n = Number(val || 0);
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString("vi-VN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
   const setCustom = listHook.filterPanel.setCustom;
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: {
-        placeholder: t(
-          "searchPlaceholder",
-          "Tìm số HĐ, tên, MST, diễn giải, số tiền...",
-        ),
-      },
       period: true,
       noDefaultPeriod: true,
-      status: {
-        options: listHook.STATUS_OPTIONS,
-        placeholder: t("filters", "Tất cả trạng thái"),
-      },
       custom: [
-        {
-          key: "seller_name",
-          label: t("seller", "Nhà cung cấp / Bên bán"),
-          placeholder: t("searchSeller", "Tìm tên nhà cung cấp..."),
-          options: [],
-          type: "combobox" as const,
-          onSearch: (v: string) => setCustom("seller_name", v),
-        },
-        {
-          key: "buyer_name",
-          label: t("buyer", "Bên mua"),
-          placeholder: t("searchBuyer", "Tìm tên người mua..."),
-          options: [],
-          type: "combobox" as const,
-          onSearch: (v: string) => setCustom("buyer_name", v),
-        },
         {
           key: "tag_id",
           label: t("tag", "Thẻ nhãn"),
@@ -224,11 +214,71 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         },
       ],
     }),
-    [t, listHook.STATUS_OPTIONS, setCustom, allTags],
+    [t, allTags],
   );
 
-  const columns: DataTableColumn<ErpInvoice>[] = useMemo(
-    () => [
+  const getSortState = (key: string) => {
+    if (listHook.tableState.sorts.includes(key)) return "asc";
+    if (listHook.tableState.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
+    listHook.tableState.setSort(key, state);
+    listHook.setPage(1);
+  };
+  const handleSearchChange = (key: string, val: string) => {
+    listHook.tableState.setColumnSearch(key, val);
+    listHook.setPage(1);
+  };
+
+  const fetchInvoiceOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      const res = await erpInvoicesCoreApi.getInvoiceColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        filtersStr,
+        direction,
+      );
+      return {
+        items: res.items.map((i: any) => {
+          const valStr =
+            typeof i === "object" ? String(i.value || i.id || i) : String(i);
+          let labelStr =
+            typeof i === "object"
+              ? String(i.label || i.name || valStr)
+              : String(i);
+          if (columnKey === "branchId") {
+            const branch = branches.find((b) => b.value === valStr);
+            if (branch) labelStr = branch.label;
+          }
+          return { label: labelStr, value: valStr };
+        }),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [direction],
+  );
+
+  const handleFilterChange = (key: string, vals: string[]) => {
+    listHook.tableState.setColumnFilter(key, vals);
+    listHook.setPage(1);
+  };
+
+  const columns: DataTableColumn<ErpInvoice>[] = useMemo(() => {
+    return [
       {
         key: "attachments",
         header: t("attachments", "Chứng từ"),
@@ -260,9 +310,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "invoiceDate",
-        header: t("invoiceDate", "Ngày HĐ"),
-        sortable: true,
-        sortKey: "invoiceDate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoiceDate", "Ngày HĐ")}
+            sortState={getSortState("invoiceDate")}
+            onSortChange={(state) => handleSortChange("invoiceDate", state)}
+            searchValue={listHook.tableState.columnSearch["invoiceDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("invoiceDate", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["invoiceDate"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
+            align="center"
+            columnKey="invoiceDate"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 100,
         headerClassName: "text-center",
         className: "text-right",
@@ -270,7 +335,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "serialNo",
-        header: t("serialNo", "Ký hiệu"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("serialNo", "Ký hiệu")}
+            sortState={getSortState("serialNo")}
+            onSortChange={(state) => handleSortChange("serialNo", state)}
+            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("serialNo", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["serialNo"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
+            align="center"
+            columnKey="serialNo"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 80,
         headerClassName: "text-center",
         className: "text-muted-foreground text-left",
@@ -278,9 +360,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "invoiceNo",
-        header: t("invoiceNo", "Số HĐ"),
-        sortable: true,
-        sortKey: "invoiceNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoiceNo", "Số HĐ")}
+            sortState={getSortState("invoiceNo")}
+            onSortChange={(state) => handleSortChange("invoiceNo", state)}
+            searchValue={listHook.tableState.columnSearch["invoiceNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("invoiceNo", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["invoiceNo"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
+            align="center"
+            columnKey="invoiceNo"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 80,
         headerClassName: "text-center",
         className: "font-medium text-primary text-left",
@@ -316,10 +413,26 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "partner",
-        header:
-          direction === "IN" ? t("seller", "Bên bán") : t("buyer", "Bên mua"),
-        sortable: true,
-        sortKey: direction === "IN" ? "sellerName" : "buyerName",
+        header: (
+          <TableColumnHeaderFilter
+            title={
+              direction === "IN"
+                ? t("seller", "Bên bán")
+                : t("buyer", "Bên mua")
+            }
+            sortState={getSortState("partner")}
+            onSortChange={(state) => handleSortChange("partner", state)}
+            searchValue={listHook.tableState.columnSearch["partner"] || ""}
+            onSearchChange={(val) => handleSearchChange("partner", val)}
+            selectedFilters={listHook.tableState.columnFilters["partner"] || []}
+            onFilterChange={(vals) => handleFilterChange("partner", vals)}
+            align="center"
+            columnKey="partner"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 250,
         headerClassName: "text-center",
         className: "text-left",
@@ -337,7 +450,22 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "taxCode",
-        header: t("taxCode", "MST"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("taxCode", "MST")}
+            sortState={getSortState("taxCode")}
+            onSortChange={(state) => handleSortChange("taxCode", state)}
+            searchValue={listHook.tableState.columnSearch["taxCode"] || ""}
+            onSearchChange={(val) => handleSearchChange("taxCode", val)}
+            selectedFilters={listHook.tableState.columnFilters["taxCode"] || []}
+            onFilterChange={(vals) => handleFilterChange("taxCode", vals)}
+            align="center"
+            columnKey="taxCode"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 120,
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
@@ -348,21 +476,36 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "description",
-        header: t("description", "Diễn giải"),
-        sortable: true,
-        sortKey: "description",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("description", "Diễn giải")}
+            sortState={getSortState("description")}
+            onSortChange={(state) => handleSortChange("description", state)}
+            searchValue={listHook.tableState.columnSearch["description"] || ""}
+            onSearchChange={(val) => handleSearchChange("description", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["description"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("description", vals)}
+            align="center"
+            columnKey="description"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 300,
         className: "text-left",
         headerClassName: "text-center",
         cell: (row) => (
           <Popover
             content={
-              <div className="p-3 max-h-[300px] max-w-[500px] overflow-auto">
+              <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
                 <h4 className="font-semibold text-sm mb-2 text-slate-800">
                   Chi tiết mặt hàng
                 </h4>
                 {row.items && row.items.length > 0 ? (
-                  <table className="w-full text-sm text-left border-collapse min-w-[500px]">
+                  <table className="w-full text-sm text-left border-collapse min-w-[700px]">
                     <thead className="bg-slate-50 sticky top-0">
                       <tr>
                         <th className="px-2 py-1 border-b text-slate-600 font-medium">
@@ -393,12 +536,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                           </td>
                           <td className="px-2 py-1 text-right whitespace-nowrap">
                             {item.quantity != null
-                              ? Number(item.quantity).toLocaleString(
-                                  undefined,
-                                  {
-                                    maximumFractionDigits: 1,
-                                  },
-                                )
+                              ? Number(item.quantity).toLocaleString("vi-VN", {
+                                  minimumFractionDigits: 1,
+                                  maximumFractionDigits: 1,
+                                })
                               : "—"}
                           </td>
                           <td className="px-2 py-1 text-left whitespace-nowrap">
@@ -425,7 +566,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                                 acc + (Number(item.quantity) || 0),
                               0,
                             )
-                            .toLocaleString(undefined, {
+                            .toLocaleString("vi-VN", {
+                              minimumFractionDigits: 1,
                               maximumFractionDigits: 1,
                             })}
                         </td>
@@ -464,9 +606,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "preVatAmount",
-        header: t("preVatAmount", "Trước VAT"),
-        sortable: true,
-        sortKey: "preVatAmount",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("preVatAmount", "Trước VAT")}
+            sortState={getSortState("preVatAmount")}
+            onSortChange={(state) => handleSortChange("preVatAmount", state)}
+            searchValue={listHook.tableState.columnSearch["preVatAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("preVatAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["preVatAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
+            align="center"
+            columnKey="preVatAmount"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
+          />
+        ),
         size: 120,
         headerClassName: "text-center",
         className: "text-right",
@@ -474,7 +632,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "vatAmount",
-        header: t("vatAmount", "Thuế VAT"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("vatAmount", "Thuế VAT")}
+            sortState={getSortState("vatAmount")}
+            onSortChange={(state) => handleSortChange("vatAmount", state)}
+            searchValue={listHook.tableState.columnSearch["vatAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("vatAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["vatAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
+            align="center"
+            columnKey="vatAmount"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
+          />
+        ),
         size: 120,
         headerClassName: "text-center",
         className: "text-right",
@@ -482,7 +658,29 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "discountAmount",
-        header: t("discountAmount", "Chiết khấu"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("discountAmount", "Chiết khấu")}
+            sortState={getSortState("discountAmount")}
+            onSortChange={(state) => handleSortChange("discountAmount", state)}
+            searchValue={
+              listHook.tableState.columnSearch["discountAmount"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("discountAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["discountAmount"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("discountAmount", vals)
+            }
+            align="center"
+            columnKey="discountAmount"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
+          />
+        ),
         size: 120,
         headerClassName: "text-center",
         className: "text-right",
@@ -490,9 +688,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "totalAmount",
-        header: t("totalAmount", "Thành tiền"),
-        sortable: true,
-        sortKey: "totalAmount",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("totalAmount", "Thành tiền")}
+            sortState={getSortState("totalAmount")}
+            onSortChange={(state) => handleSortChange("totalAmount", state)}
+            searchValue={listHook.tableState.columnSearch["totalAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("totalAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["totalAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
+            align="center"
+            columnKey="totalAmount"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
+          />
+        ),
         size: 120,
         headerClassName: "text-center",
         className: "text-right font-semibold",
@@ -502,14 +716,64 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         ? [
             {
               key: "settlementOrder",
-              header: t("settlementOrder", "Lệnh quyết toán"),
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("settlementOrder", "Lệnh quyết toán")}
+                  sortState={getSortState("settlementOrder")}
+                  onSortChange={(state) =>
+                    handleSortChange("settlementOrder", state)
+                  }
+                  searchValue={
+                    listHook.tableState.columnSearch["settlementOrder"] || ""
+                  }
+                  onSearchChange={(val) =>
+                    handleSearchChange("settlementOrder", val)
+                  }
+                  selectedFilters={
+                    listHook.tableState.columnFilters["settlementOrder"] || []
+                  }
+                  onFilterChange={(vals) =>
+                    handleFilterChange("settlementOrder", vals)
+                  }
+                  align="center"
+                  columnKey="settlementOrder"
+                  requireSearchToFetchOptions={true}
+                  allFilters={listHook.tableState.columnFilters}
+                  fetchOptions={fetchInvoiceOptions}
+                />
+              ),
               headerClassName: "text-center w-[150px]",
               className: "text-left w-[150px]",
               cell: (inv: ErpInvoice) => inv.settlementOrder || "—",
             },
             {
               key: "licensePlate",
-              header: t("licensePlate", "Biển số xe"),
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("licensePlate", "Biển số xe")}
+                  sortState={getSortState("licensePlate")}
+                  onSortChange={(state) =>
+                    handleSortChange("licensePlate", state)
+                  }
+                  searchValue={
+                    listHook.tableState.columnSearch["licensePlate"] || ""
+                  }
+                  onSearchChange={(val) =>
+                    handleSearchChange("licensePlate", val)
+                  }
+                  selectedFilters={
+                    listHook.tableState.columnFilters["licensePlate"] || []
+                  }
+                  onFilterChange={(vals) =>
+                    handleFilterChange("licensePlate", vals)
+                  }
+                  align="center"
+                  columnKey="licensePlate"
+                  requireSearchToFetchOptions={true}
+                  allFilters={listHook.tableState.columnFilters}
+                  fetchOptions={fetchInvoiceOptions}
+                />
+              ),
               headerClassName: "text-center w-[110px]",
               className: "text-left w-[110px]",
               cell: (inv: ErpInvoice) => inv.licensePlate || "—",
@@ -518,9 +782,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         : []),
       {
         key: "netOffAmount",
-        header: t("invoice.columns.netOffAmount", "Đã cấn trừ"),
-        size: 120,
-        headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
+        header: t("netOffAmount", "Đã cấn trừ"),
+        size: 150,
+        headerClassName: "text-right bg-blue-50/50 border-l border-blue-200",
         className: "text-right bg-blue-50/50 border-l border-blue-200",
         cell: (inv: any) => {
           const netOff = parseFloat(inv.netOffAmount) || 0;
@@ -551,7 +815,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "branchId",
-        header: t("branch", "Chi nhánh"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("branch", "Chi nhánh")}
+            sortState={getSortState("branchId")}
+            onSortChange={(state) => handleSortChange("branchId", state)}
+            searchValue={listHook.tableState.columnSearch["branchId"] || ""}
+            onSearchChange={(val) => handleSearchChange("branchId", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["branchId"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("branchId", vals)}
+            align="center"
+            columnKey="branchId"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 100,
         headerClassName: "text-center",
         className: "text-center",
@@ -561,9 +842,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           return branch ? branch.label : inv.branchId;
         },
       },
-    ],
-    [direction, t, branches],
-  );
+    ];
+  }, [
+    direction,
+    t,
+    branches,
+    listHook.tableState.columnFilters,
+    listHook.tableState.columnSearch,
+    listHook.tableState.sorts,
+    fetchInvoiceOptions,
+  ]);
 
   const activeSortKey = listHook.sortBy;
   const activeSortOrder = listHook.sortOrder;

@@ -152,7 +152,8 @@ export function ErpInvoiceFormItems({
                 ) : (
                   <div>
                     {row.quantity != null
-                      ? Number(row.quantity).toLocaleString(undefined, {
+                      ? Number(row.quantity).toLocaleString("vi-VN", {
+                          minimumFractionDigits: 1,
                           maximumFractionDigits: 1,
                         })
                       : ""}
