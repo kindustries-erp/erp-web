@@ -380,6 +380,18 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  bulkDownloadFiles: async (payload: {
+    query: { date_from?: string; date_to?: string; direction?: string };
+    types: string[];
+  }): Promise<Blob> => {
+    const { data } = await axiosInstance.post<Blob>(
+      `${BASE}/bulk-download-files`,
+      payload,
+      { responseType: "blob", timeout: 600000 },
+    );
+    return data;
+  },
+
   deletePdf: async (
     id: string,
     key: string,

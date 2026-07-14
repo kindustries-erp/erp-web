@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
-import { DataTable } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { formatGMT7 } from "@/shared/utils/format";
@@ -36,27 +36,23 @@ export function OriginalStatementFilesDrawer({
   const [note, setNote] = useState<string>("");
 
   const { data: accountsData = [] } = useQuery<any[]>({
-    queryKey: [
-      type === "bank" ? "bank-accounts" : "cash-books",
-      currentBranchId,
-    ],
+    queryKey: [type === "bank" ? "bank-accounts" : "cash-books"],
     queryFn: async () => {
       const data =
         type === "bank"
-          ? await bankStatementApi.getBankAccounts(currentBranchId)
-          : await bankStatementApi.getCashBooks(currentBranchId);
+          ? await bankStatementApi.getBankAccounts()
+          : await bankStatementApi.getCashBooks();
       return data as any[];
     },
     enabled: isOpen,
   });
 
   const { data, isFetching, refetch } = useQuery({
-    queryKey: ["statement-files", type, currentBranchId, page, pageSize],
+    queryKey: ["statement-files", type, page, pageSize],
     queryFn: () =>
       bankStatementApi.getStatementFiles({
         page,
         pageSize,
-        branchId: currentBranchId,
       }),
     enabled: isOpen,
   });
@@ -87,9 +83,12 @@ export function OriginalStatementFilesDrawer({
       const uploadRes = await uploadFileApi(files[0]);
       const fileId = uploadRes.id;
 
+      const selectedAccount = accountsData.find((a: any) => a.id === accountId);
+      const branchIdToUse = selectedAccount?.branchId || currentBranchId;
+
       // Create record
       await bankStatementApi.createStatementFile({
-        branchId: currentBranchId,
+        branchId: branchIdToUse,
         bankAccountId: type === "bank" ? accountId : undefined,
         cashBookId: type === "cash" ? accountId : undefined,
         periodDate,
@@ -124,12 +123,16 @@ export function OriginalStatementFilesDrawer({
     {
       key: "periodDate",
       header: "Kỳ sao kê",
+      headerClassName: "text-center",
+      className: "align-middle text-left",
       cell: (row: any) => row.periodDate || "--",
       size: 100,
     },
     {
       key: "account",
       header: type === "bank" ? "Ngân hàng" : "Sổ quỹ",
+      headerClassName: "text-center",
+      className: "align-middle text-left",
       cell: (row: any) => {
         if (type === "bank")
           return row.bankAccount
@@ -142,9 +145,11 @@ export function OriginalStatementFilesDrawer({
     {
       key: "fileName",
       header: "Tên file",
+      headerClassName: "text-center",
+      className: "align-middle text-left",
       cell: (row: any) => (
         <span
-          className="text-blue-600 hover:underline cursor-pointer"
+          className="text-slate-800 font-medium hover:underline cursor-pointer"
           onClick={() => window.open(getFileViewUrl(row.fileId), "_blank")}
         >
           {row.fileName}
@@ -155,27 +160,33 @@ export function OriginalStatementFilesDrawer({
     {
       key: "note",
       header: "Ghi chú",
+      headerClassName: "text-center",
+      className: "align-middle text-left",
       cell: (row: any) => row.note || "--",
       size: 150,
     },
     {
       key: "createdAt",
       header: "Ngày tải lên",
+      headerClassName: "text-center",
+      className: "align-middle text-left",
       cell: (row: any) => formatGMT7(row.createdAt, "datetime"),
       size: 150,
     },
     {
       key: "actions",
       header: "",
+      headerClassName: "text-center",
+      className: "align-middle text-center",
       cell: (row: any) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-center">
           <Button
             variant="ghost"
             size="icon-sm"
             title="Tải về"
             onClick={() => window.open(getFileViewUrl(row.fileId), "_blank")}
           >
-            <Download className="w-4 h-4 text-blue-600" />
+            <Download className="w-4 h-4 text-slate-700 hover:text-slate-900" />
           </Button>
           <Button
             variant="ghost"
@@ -187,7 +198,7 @@ export function OriginalStatementFilesDrawer({
               }
             }}
           >
-            <Trash2 className="w-4 h-4 text-red-600" />
+            <Trash2 className="w-4 h-4 text-slate-700 hover:text-red-600" />
           </Button>
         </div>
       ),
@@ -289,8 +300,10 @@ export function OriginalStatementFilesDrawer({
           </div>
         )}
 
-        <div className="flex-1 overflow-hidden">
-          <DataTable
+        <div className="flex-1 overflow-hidden flex flex-col h-full">
+          <StandardTable
+            tableId={`original-statement-files-${type}`}
+            variant="spreadsheet"
             items={items}
             columns={columns}
             getRowKey={(r: any) => r.id}

@@ -11,6 +11,7 @@ import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
@@ -282,7 +283,21 @@ export function CashflowDashboard() {
       .slice(0, 20);
   }, [data?.topTransactionsIn, data?.topTransactionsOut]);
 
-  if (!isAdminEmail) {
+  const hasCashflowPerm = useHasAnyPermission(
+    [
+      "bank_statements",
+      "cash_statements",
+      "payment_vouchers",
+      "erp_cashflow_vouchers",
+      "bank_accounts",
+      "cash_books",
+    ],
+    "read",
+  );
+
+  const canView = hasCashflowPerm || isAdminEmail;
+
+  if (!canView) {
     return <ComingSoon />;
   }
 
