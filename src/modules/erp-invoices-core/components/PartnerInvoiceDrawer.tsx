@@ -172,7 +172,7 @@ export function PartnerInvoiceDrawer({
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [],
+    [taxCode],
   );
 
   const columns = useMemo(() => {

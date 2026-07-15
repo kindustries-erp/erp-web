@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
@@ -79,7 +79,11 @@ export function PartnerTransactionsDrawer({
     enabled: open && !!correspondentAccount,
   });
 
-  const { data: tableData, isFetching: isTableFetching, refetch } = useQuery({
+  const {
+    data: tableData,
+    isFetching: isTableFetching,
+    refetch,
+  } = useQuery({
     queryKey: [
       "partner-transactions",
       correspondentAccount,
@@ -114,25 +118,41 @@ export function PartnerTransactionsDrawer({
     enabled: open && !!correspondentAccount,
   });
 
-  const fetchColumnOptions = async ({
-    columnKey,
-    search,
-    pageParam,
-    filtersStr,
-  }: {
-    columnKey: string;
-    search: string;
-    pageParam: number;
-    filtersStr?: string;
-  }) => {
-    return bankStatementApi.getColumnOptions(
+  const fetchColumnOptions = useCallback(
+    async ({
       columnKey,
       search,
       pageParam,
-      20,
       filtersStr,
-    );
-  };
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      let currentFilters: Record<string, string[]> = {};
+      if (filtersStr) {
+        try {
+          currentFilters = JSON.parse(filtersStr);
+        } catch {
+          // ignore parse error
+        }
+      }
+      if (correspondentAccount) {
+        currentFilters["correspondentAccount"] = [correspondentAccount];
+      }
+      const newFiltersStr = JSON.stringify(currentFilters);
+
+      return bankStatementApi.getColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        newFiltersStr,
+      );
+    },
+    [correspondentAccount],
+  );
 
   const getSortState = (columnKey: string) => {
     const current = tableState.sorts[0];
@@ -291,21 +311,20 @@ export function PartnerTransactionsDrawer({
       (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
       0,
     );
-    const totalRemaining = tableData.items.reduce(
-      (acc: number, curr: any) => {
-        const c = parseFloat(curr.creditAmount) || 0;
-        const d = parseFloat(curr.debitAmount) || 0;
-        const amt = c > 0 ? c : d;
-        const netOff = parseFloat(curr.netOffAmount) || 0;
-        return acc + (amt - netOff);
-      },
-      0,
-    );
+    const totalRemaining = tableData.items.reduce((acc: number, curr: any) => {
+      const c = parseFloat(curr.creditAmount) || 0;
+      const d = parseFloat(curr.debitAmount) || 0;
+      const amt = c > 0 ? c : d;
+      const netOff = parseFloat(curr.netOffAmount) || 0;
+      return acc + (amt - netOff);
+    }, 0);
 
     return {
       description: <span className="font-semibold text-right block">Tổng</span>,
       chi: (
-        <span className="text-[#ea580c] font-semibold">{money(totalDebit)}</span>
+        <span className="text-[#ea580c] font-semibold">
+          {money(totalDebit)}
+        </span>
       ),
       thu: (
         <span className="text-emerald-600 font-semibold">
@@ -348,22 +367,22 @@ export function PartnerTransactionsDrawer({
                   datasets={[
                     {
                       label: "Tổng thu",
-                    data: cashTrendIn,
-                    color: "#059669",
-                  },
-                  {
-                    label: "Tổng chi",
-                    data: cashTrendOut,
-                    color: "#ea580c",
-                  },
-                ]}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-slate-400">
-                Không có dữ liệu
-              </div>
-            )}
-          </div>
+                      data: cashTrendIn,
+                      color: "#059669",
+                    },
+                    {
+                      label: "Tổng chi",
+                      data: cashTrendOut,
+                      color: "#ea580c",
+                    },
+                  ]}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-sm text-slate-400">
+                  Không có dữ liệu
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -374,17 +393,17 @@ export function PartnerTransactionsDrawer({
           <div className="flex-1 min-h-0 flex flex-col">
             <StandardTable
               tableId="partner-transactions-table-v1"
-            items={tableData?.items || []}
-            columns={columns}
-            getRowKey={(row: any) => row.id}
-            loading={isTableFetching}
-            variant="spreadsheet"
-            minWidth={1000}
-            enableColumnResizing={true}
-            containerClassName="max-h-[600px] overflow-auto"
-            page={page}
-            pageSize={pageSize}
-            total={tableData?.total || 0}
+              items={tableData?.items || []}
+              columns={columns}
+              getRowKey={(row: any) => row.id}
+              loading={isTableFetching}
+              variant="spreadsheet"
+              minWidth={1000}
+              enableColumnResizing={true}
+              containerClassName="max-h-[600px] overflow-auto"
+              page={page}
+              pageSize={pageSize}
+              total={tableData?.total || 0}
               totalPages={tableData?.totalPages || 0}
               onPage={setPage}
               onPageSize={setPageSize}
