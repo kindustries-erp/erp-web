@@ -16,26 +16,95 @@ export function ImportResultTables({ result }: Props) {
   const { t } = useTranslation("erpInvoices");
 
   const skippedColumns: DataTableColumn<BulkImportSkippedItem>[] = [
-    { key: "filename", header: t("importFile", "File"), cell: (r) => r.filename, size: 120 },
-    { key: "invoiceNo", header: t("invoiceNo", "Số HĐ"), cell: (r) => <span className="text-primary font-medium">{r.invoiceNo}</span>, size: 100 },
-    { key: "sellerName", header: t("seller", "Tên NCC"), cell: (r) => <div className="max-w-[140px] truncate" title={r.sellerName || undefined}>{r.sellerName || "—"}</div>, size: 140 },
-    { key: "sellerTaxCode", header: t("taxCode", "MST"), cell: (r) => r.sellerTaxCode || "—", size: 100 },
-    { key: "reason", header: t("importReason", "Lý do"), cell: () => <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium whitespace-nowrap">{t("importReasonDuplicated", "Trùng lặp")}</span>, size: 100 },
+    {
+      key: "filename",
+      header: t("importFile", "File"),
+      cell: (r) => r.filename,
+      size: 120,
+    },
+    {
+      key: "invoiceNo",
+      header: t("invoiceNo", "Số HĐ"),
+      cell: (r) => (
+        <span className="text-primary font-medium">{r.invoiceNo}</span>
+      ),
+      size: 100,
+    },
+    {
+      key: "sellerName",
+      header: t("seller", "Tên NCC"),
+      cell: (r) => (
+        <div
+          className="max-w-[140px] truncate"
+          title={r.sellerName || undefined}
+        >
+          {r.sellerName || "—"}
+        </div>
+      ),
+      size: 140,
+    },
+    {
+      key: "sellerTaxCode",
+      header: t("taxCode", "MST"),
+      cell: (r) => r.sellerTaxCode || "—",
+      size: 100,
+    },
+    {
+      key: "reason",
+      header: t("importReason", "Lý do"),
+      cell: () => (
+        <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium whitespace-nowrap">
+          {t("importReasonDuplicated", "Trùng lặp")}
+        </span>
+      ),
+      size: 100,
+    },
   ];
 
   const errorColumns: DataTableColumn<BulkImportErrorItem>[] = [
-    { key: "filename", header: t("importFile", "File"), cell: (r) => r.filename, size: 160 },
-    { key: "reason", header: t("importErrorReason", "Lý do lỗi"), cell: (r) => <span className="text-red-700">{r.reason}</span>, size: 320 },
+    {
+      key: "filename",
+      header: t("importFile", "File"),
+      cell: (r) => r.filename,
+      size: 160,
+    },
+    {
+      key: "reason",
+      header: t("importErrorReason", "Lý do lỗi"),
+      cell: (r) => <span className="text-red-700">{r.reason}</span>,
+      size: 320,
+    },
   ];
 
   const pdfAttachedColumns: DataTableColumn<any>[] = [
-    { key: "filename", header: "Tên file PDF", cell: (r) => r.filename, size: 200 },
-    { key: "invoiceNo", header: "Số hóa đơn", cell: (r) => <span className="text-emerald-600 font-semibold">{r.invoiceNo}</span>, size: 120 },
+    {
+      key: "filename",
+      header: "Tên file PDF",
+      cell: (r) => r.filename,
+      size: 200,
+    },
+    {
+      key: "invoiceNo",
+      header: "Số hóa đơn",
+      cell: (r) => (
+        <span className="text-emerald-600 font-semibold">{r.invoiceNo}</span>
+      ),
+      size: 120,
+    },
   ];
 
   const pdfOrphansColumns: DataTableColumn<any>[] = [
-    { key: "filename", header: "Tên file PDF", cell: (r) => r.filename, size: 200 },
-    { key: "reason", header: "Lý do", cell: (r) => <span className="text-amber-600">{r.reason}</span> },
+    {
+      key: "filename",
+      header: "Tên file PDF",
+      cell: (r) => r.filename,
+      size: 200,
+    },
+    {
+      key: "reason",
+      header: "Lý do",
+      cell: (r) => <span className="text-amber-600">{r.reason}</span>,
+    },
   ];
 
   return (
@@ -73,7 +142,7 @@ export function ImportResultTables({ result }: Props) {
           />
         </div>
       )}
-      
+
       {/* PDF Attached table */}
       {result.pdfAttached && result.pdfAttached.length > 0 && (
         <div>

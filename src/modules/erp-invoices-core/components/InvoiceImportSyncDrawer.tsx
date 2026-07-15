@@ -8,8 +8,6 @@ import {
   Settings,
   CheckCircle2,
   XCircle,
-  ArrowDownToLine,
-  ArrowUpFromLine,
   Eye,
   EyeOff,
 } from "lucide-react";
@@ -231,9 +229,7 @@ export function InvoiceImportSyncDrawer({
       });
       toast.success(res.message);
     } catch (e: any) {
-      toast.error(
-        e.response?.data?.message || e.message || "Lỗi tải lại XML",
-      );
+      toast.error(e.response?.data?.message || e.message || "Lỗi tải lại XML");
     } finally {
       setBulkXmlLoading(false);
     }
@@ -299,7 +295,7 @@ export function InvoiceImportSyncDrawer({
             <Combobox
               options={[
                 { value: "IN", label: t("inbound", "Hóa đơn mua vào") },
-                { value: "OUT", label: t("outbound", "Hóa đơn bán ra") }
+                { value: "OUT", label: t("outbound", "Hóa đơn bán ra") },
               ]}
               value={direction}
               onChange={(v) => handleDirectionChange(v as Direction)}
@@ -310,7 +306,7 @@ export function InvoiceImportSyncDrawer({
             <Combobox
               options={[
                 { value: "GDT", label: "Từ hệ thống GDT" },
-                { value: "XML", label: "Tải file từ máy tính" }
+                { value: "XML", label: "Tải file từ máy tính" },
               ]}
               value={method}
               onChange={(v) => handleMethodChange(v as "GDT" | "XML")}
@@ -357,7 +353,9 @@ export function InvoiceImportSyncDrawer({
                       disabled={bulkXmlLoading || portal.loading}
                       className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700"
                     >
-                      <RefreshCw className={`h-4 w-4 ${bulkXmlLoading ? "animate-spin" : ""}`} />
+                      <RefreshCw
+                        className={`h-4 w-4 ${bulkXmlLoading ? "animate-spin" : ""}`}
+                      />
                       {bulkXmlLoading ? "Đang xử lý..." : "Tải lại XML"}
                     </Button>
                   </div>

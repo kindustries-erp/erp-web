@@ -28,7 +28,11 @@ export interface ActionDropdownProps {
   align?: "start" | "center" | "end";
 }
 
-export function ActionDropdown({ items, customTrigger, align = "start" }: ActionDropdownProps) {
+export function ActionDropdown({
+  items,
+  customTrigger,
+  align = "start",
+}: ActionDropdownProps) {
   const [open, setOpen] = useState(false);
 
   // Normalize items to easily handle separators

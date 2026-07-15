@@ -32,38 +32,44 @@ export function useInvoiceXmlUpload(
     const arr = Array.from(incoming);
     const supported = arr.filter((f) => {
       const ext = f.name.toLowerCase();
-      return ext.endsWith(".xml") || ext.endsWith(".pdf") || ext.endsWith(".zip");
+      return (
+        ext.endsWith(".xml") || ext.endsWith(".pdf") || ext.endsWith(".zip")
+      );
     });
-    
+
     if (supported.length === 0) return;
-    
+
     setFiles((prev) => {
       const existingNames = new Set(prev.map((e) => e.file.name));
       const newEntries = supported
         .filter((f) => !existingNames.has(f.name))
         .map((f) => {
-          const ext = f.name.toLowerCase().split('.').pop() || '';
-          return { 
-            file: f, 
+          const ext = f.name.toLowerCase().split(".").pop() || "";
+          return {
+            file: f,
             id: crypto.randomUUID(),
-            type: ext as "xml" | "pdf" | "zip"
+            type: ext as "xml" | "pdf" | "zip",
           };
         });
-        
+
       const allEntries = [...prev, ...newEntries];
-      
+
       // Auto-pairing logic
       const pdfMap = new Map<string, string>(); // basename -> fullName
-      allEntries.forEach(e => {
+      allEntries.forEach((e) => {
         if (e.type === "pdf") {
-          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
           pdfMap.set(basename, e.file.name);
         }
       });
-      
-      return allEntries.map(e => {
+
+      return allEntries.map((e) => {
         if (e.type === "xml") {
-          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
           if (pdfMap.has(basename)) {
             return { ...e, pairedPdf: pdfMap.get(basename) };
           }
@@ -78,15 +84,19 @@ export function useInvoiceXmlUpload(
       const filtered = prev.filter((e) => e.id !== id);
       // Re-run pairing in case a PDF was removed
       const pdfMap = new Map<string, string>();
-      filtered.forEach(e => {
+      filtered.forEach((e) => {
         if (e.type === "pdf") {
-          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
           pdfMap.set(basename, e.file.name);
         }
       });
-      return filtered.map(e => {
+      return filtered.map((e) => {
         if (e.type === "xml") {
-          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
           return { ...e, pairedPdf: pdfMap.get(basename) };
         }
         return e;

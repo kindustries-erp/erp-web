@@ -459,37 +459,38 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                         !inv.pdfFiles?.some(
                           (p: any) => p.key === inv.pdfFileKey,
                         ) && (
-                        <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg mb-2">
-                          <div className="flex flex-col min-w-0 flex-1 mr-2">
-                            <span
-                              className="truncate font-medium text-slate-700"
-                              title="Hóa đơn PDF"
+                          <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg mb-2">
+                            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                              <span
+                                className="truncate font-medium text-slate-700"
+                                title="Hóa đơn PDF"
+                              >
+                                {(inv.pdfFileKey as string).split("/").pop() ||
+                                  "Hóa đơn PDF"}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-0.5">
+                                Hóa đơn PDF (Gốc)
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPopoverId(null);
+                                handlePreviewPdf(
+                                  inv.id,
+                                  inv.pdfFileKey as string,
+                                  (inv.pdfFileKey as string).split("/").pop() ||
+                                    "Hóa đơn PDF",
+                                );
+                              }}
                             >
-                              {(inv.pdfFileKey as string).split("/").pop() || "Hóa đơn PDF"}
-                            </span>
-                            <span className="text-xs text-gray-500 mt-0.5">
-                              Hóa đơn PDF (Gốc)
-                            </span>
+                              <Eye className="w-4 h-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              handlePreviewPdf(
-                                inv.id,
-                                inv.pdfFileKey as string,
-                                (inv.pdfFileKey as string).split("/").pop() ||
-                                  "Hóa đơn PDF",
-                              );
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
+                        )}
                       {inv.pdfFiles?.map((pdf: any) => (
                         <div
                           key={pdf.key}

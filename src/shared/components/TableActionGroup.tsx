@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { RefreshCcw, Plus, MoreHorizontal } from "lucide-react";
-import * as Popover from "@radix-ui/react-popover";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { cn } from "@/shared/utils";
