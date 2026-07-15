@@ -95,6 +95,7 @@ export interface ErpInvoiceListParams {
   search?: string;
   seller_name?: string;
   buyer_name?: string;
+  partner_tax_code?: string;
   date_from?: string;
   date_to?: string;
   status?: string;

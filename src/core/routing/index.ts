@@ -29,6 +29,7 @@ export const ROUTES: RouteConfig[] = [
   { key: "journal", label: "Nhật ký chung", group: "reports" },
   { key: "partners", label: "Đối tác", group: "partners" },
   { key: "employees", label: "Nhân sự", group: "hr" },
+  { key: "invoice-dashboard", label: "Tổng quan hóa đơn", group: "dashboard" },
 
   { key: "customers", label: "Khách hàng", group: "sales" },
   {
