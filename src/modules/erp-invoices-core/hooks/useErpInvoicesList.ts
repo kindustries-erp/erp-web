@@ -82,6 +82,7 @@ export function useErpInvoicesList(
     }
   }, [
     direction,
+    partnerTaxCode,
     state.search,
     state.seller_name,
     state.buyer_name,

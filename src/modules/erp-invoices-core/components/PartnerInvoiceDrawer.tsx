@@ -81,9 +81,10 @@ export function PartnerInvoiceDrawer({
 
   React.useEffect(() => {
     if (open && taxCode) {
+      listHook.setPage(1);
       void listHook.loadInvoices();
     }
-  }, [open, taxCode, listHook.loadInvoices]);
+  }, [open, taxCode]);
 
   const barIn = "#059669"; // Emerald 600
   const barOut = "#ea580c"; // Orange 600
@@ -265,7 +266,7 @@ export function PartnerInvoiceDrawer({
           <h3 className="text-sm font-semibold mb-3 text-slate-800">
             Danh sách Hóa đơn
           </h3>
-          <div className="border rounded-xl bg-white flex-1 min-h-0 overflow-hidden shadow-sm flex flex-col">
+          <div className="flex-1 min-h-0 flex flex-col">
             <StandardTable
               items={listHook.invoices}
               columns={columns}

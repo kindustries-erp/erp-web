@@ -245,7 +245,7 @@ export function InvoiceDashboard() {
           <h3 className="text-lg font-semibold mb-3">
             Tình hình công nợ theo đối tác
           </h3>
-          <div className="border rounded-xl bg-white overflow-hidden shadow-sm">
+          <div>
             <StandardTable
               items={partnersData?.items || []}
               columns={partnerColumns}
@@ -254,7 +254,6 @@ export function InvoiceDashboard() {
               variant="spreadsheet"
               minWidth={900}
               enableColumnResizing={true}
-              onRowClick={handleRowClick}
               page={page}
               pageSize={pageSize}
               total={partnersData?.total || 0}
