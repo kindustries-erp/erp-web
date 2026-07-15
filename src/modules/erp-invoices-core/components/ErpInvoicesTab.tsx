@@ -455,14 +455,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                       Danh sách file PDF
                     </div>
                     <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto">
-                      {inv.pdfFileKey && (
-                        <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg">
+                      {inv.pdfFileKey &&
+                        !inv.pdfFiles?.some(
+                          (p: any) => p.key === inv.pdfFileKey,
+                        ) && (
+                        <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg mb-2">
                           <div className="flex flex-col min-w-0 flex-1 mr-2">
                             <span
                               className="truncate font-medium text-slate-700"
                               title="Hóa đơn PDF"
                             >
-                              {inv.pdfFileKey.split("/").pop() || "Hóa đơn PDF"}
+                              {(inv.pdfFileKey as string).split("/").pop() || "Hóa đơn PDF"}
                             </span>
                             <span className="text-xs text-gray-500 mt-0.5">
                               Hóa đơn PDF (Gốc)

@@ -5,6 +5,8 @@ import {
   type BulkImportSkippedItem,
   type BulkImportErrorItem,
 } from "../../api/erpInvoicesCoreApi";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 
 interface Props {
   result: BulkImportResult;
@@ -13,8 +15,31 @@ interface Props {
 export function ImportResultTables({ result }: Props) {
   const { t } = useTranslation("erpInvoices");
 
+  const skippedColumns: DataTableColumn<BulkImportSkippedItem>[] = [
+    { key: "filename", title: t("importFile", "File"), render: (r) => r.filename, width: 120 },
+    { key: "invoiceNo", title: t("invoiceNo", "Số HĐ"), render: (r) => <span className="text-primary font-medium">{r.invoiceNo}</span>, width: 100 },
+    { key: "sellerName", title: t("seller", "Tên NCC"), render: (r) => <div className="max-w-[140px] truncate" title={r.sellerName}>{r.sellerName || "—"}</div>, width: 140 },
+    { key: "sellerTaxCode", title: t("taxCode", "MST"), render: (r) => r.sellerTaxCode || "—", width: 100 },
+    { key: "reason", title: t("importReason", "Lý do"), render: () => <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium whitespace-nowrap">{t("importReasonDuplicated", "Trùng lặp")}</span>, width: 100 },
+  ];
+
+  const errorColumns: DataTableColumn<BulkImportErrorItem>[] = [
+    { key: "filename", title: t("importFile", "File"), render: (r) => r.filename, width: 160 },
+    { key: "reason", title: t("importErrorReason", "Lý do lỗi"), render: (r) => <span className="text-red-700">{r.reason}</span>, width: 320 },
+  ];
+
+  const pdfAttachedColumns: DataTableColumn<any>[] = [
+    { key: "filename", title: "Tên file PDF", render: (r) => r.filename, width: 200 },
+    { key: "invoiceNo", title: "Số hóa đơn", render: (r) => <span className="text-emerald-600 font-semibold">{r.invoiceNo}</span>, width: 120 },
+  ];
+
+  const pdfOrphansColumns: DataTableColumn<any>[] = [
+    { key: "filename", title: "Tên file PDF", render: (r) => r.filename, width: 200 },
+    { key: "reason", title: "Lý do", render: (r) => <span className="text-amber-600">{r.reason}</span> },
+  ];
+
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {/* Skipped table */}
       {result.skipped.length > 0 && (
         <div>
@@ -22,55 +47,12 @@ export function ImportResultTables({ result }: Props) {
             <SkipForward className="w-4 h-4 text-amber-600" />
             {t("importSkippedTitle", "Hóa đơn bị bỏ qua (trùng lặp)")}
           </h3>
-          <div className="border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border bg-muted/30 text-muted-foreground">
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("importFile", "File")}
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("invoiceNo", "Số HĐ")}
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("seller", "Tên NCC")}
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("taxCode", "MST")}
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("importReason", "Lý do")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.skipped.map((s: BulkImportSkippedItem, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/20"
-                  >
-                    <td className="px-3 py-2 text-muted-foreground max-w-[120px] truncate">
-                      {s.filename}
-                    </td>
-                    <td className="px-3 py-2 font-medium text-primary">
-                      {s.invoiceNo}
-                    </td>
-                    <td className="px-3 py-2 max-w-[140px] truncate">
-                      {s.sellerName || "—"}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground">
-                      {s.sellerTaxCode || "—"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">
-                        {t("importReasonDuplicated", "Trùng lặp")}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <StandardTable
+            items={result.skipped}
+            columns={skippedColumns}
+            getRowKey={(r: any, i) => r.filename + r.invoiceNo + i}
+            minWidth={600}
+          />
         </div>
       )}
 
@@ -81,93 +63,46 @@ export function ImportResultTables({ result }: Props) {
             <AlertCircle className="w-4 h-4 text-red-600" />
             {t("importErrorTitle", "Lỗi xử lý")}
           </h3>
-          <div className="border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border bg-muted/30 text-muted-foreground">
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("importFile", "File")}
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium">
-                    {t("importErrorReason", "Lý do lỗi")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.errors.map((e: BulkImportErrorItem, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/20"
-                  >
-                    <td className="px-3 py-2 text-muted-foreground max-w-[160px] truncate">
-                      {e.filename}
-                    </td>
-                    <td className="px-3 py-2 text-red-700 max-w-[320px]">
-                      {e.reason}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <StandardTable
+            items={result.errors}
+            columns={errorColumns}
+            getRowKey={(r: any, i) => r.filename + i}
+            minWidth={500}
+          />
         </div>
       )}
       
       {/* PDF Attached table */}
       {result.pdfAttached && result.pdfAttached.length > 0 && (
-        <div className="mt-4">
+        <div>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             PDF đã được ghép vào hóa đơn
           </h3>
-          <div className="border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border bg-emerald-50/50 text-muted-foreground">
-                  <th className="text-left px-3 py-2 font-medium">Tên file PDF</th>
-                  <th className="text-left px-3 py-2 font-medium">Số hóa đơn</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.pdfAttached.map((s, i) => (
-                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                    <td className="px-3 py-2 text-muted-foreground font-medium truncate">{s.filename}</td>
-                    <td className="px-3 py-2 text-emerald-600 font-semibold">{s.invoiceNo}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <StandardTable
+            items={result.pdfAttached}
+            columns={pdfAttachedColumns}
+            getRowKey={(r: any, i) => r.filename + i}
+            minWidth={320}
+          />
         </div>
       )}
 
       {/* PDF Orphans table */}
       {result.pdfOrphans && result.pdfOrphans.length > 0 && (
-        <div className="mt-4">
+        <div>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
             <AlertCircle className="w-4 h-4 text-amber-600" />
             PDF không ghép được (Orphans)
           </h3>
-          <div className="border border-border rounded-lg overflow-hidden">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border bg-amber-50/50 text-muted-foreground">
-                  <th className="text-left px-3 py-2 font-medium">Tên file PDF</th>
-                  <th className="text-left px-3 py-2 font-medium">Lý do</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.pdfOrphans.map((s, i) => (
-                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
-                    <td className="px-3 py-2 text-muted-foreground font-medium truncate">{s.filename}</td>
-                    <td className="px-3 py-2 text-amber-600">{s.reason}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <StandardTable
+            items={result.pdfOrphans}
+            columns={pdfOrphansColumns}
+            getRowKey={(r: any, i) => r.filename + i}
+            minWidth={320}
+          />
         </div>
       )}
-    </>
+    </div>
   );
 }

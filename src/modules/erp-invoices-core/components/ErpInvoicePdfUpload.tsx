@@ -43,7 +43,7 @@ export function ErpInvoicePdfUpload({
 
   const displayFiles = useMemo(() => {
     const list = [];
-    if (pdfFileKey) {
+    if (pdfFileKey && !pdfFiles?.some((p: any) => p.key === pdfFileKey)) {
       list.push({
         key: pdfFileKey,
         filename: pdfFileKey.split("/").pop() || "Document.pdf",
