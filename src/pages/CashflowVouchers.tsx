@@ -138,7 +138,7 @@ export function CashflowVouchersPage() {
   const renderHeaderFilter = (key: string, title: string) => (
     <TableColumnHeaderFilter
       title={title}
-      align="left"
+      align="center"
       sortState={getSortState(key)}
       onSortChange={(state) => handleSortChange(key, state)}
       searchValue={tableState.columnSearch[key] || ""}
