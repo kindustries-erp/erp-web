@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { DataTableColumn } from "@/shared/components/DataTable";
@@ -15,7 +16,7 @@ import { FileText, Eye, Download, Info, Loader2 } from "lucide-react";
 import { Popover } from "@/core/components/ui/Popover";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-// import { Button } from "@/shared/components/ui/Button";
+import { Button } from "@/shared/components/ui/Button";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
@@ -43,12 +44,14 @@ function VinfastPartDetailDrawer({
   itemCode,
   itemName,
   month,
+  onOpenInvoice,
 }: {
   open: boolean;
   onClose: () => void;
   itemCode: string;
   itemName: string;
   month: string;
+  onOpenInvoice?: (id: string) => void;
 }) {
   const { data, isLoading } = useQuery({
     queryKey: ["vinfast-parts-details", itemCode, month],
@@ -72,8 +75,58 @@ function VinfastPartDetailDrawer({
   });
 
   const columns: DataTableColumn<any>[] = [
-    { key: "invoiceDate", header: "Ngày HĐ", size: 100 },
-    { key: "invoiceNo", header: "Số HĐ", size: 100 },
+    {
+      key: "invoiceDate",
+      header: "Ngày HĐ",
+      size: 100,
+      cell: (row) =>
+        row.invoiceDate ? format(new Date(row.invoiceDate), "dd-MM-yyyy") : "—",
+    },
+    {
+      key: "serialNo",
+      header: "Ký hiệu",
+      size: 120,
+      className: "text-muted-foreground text-left",
+      cell: (row) => row.serialNo || "—",
+    },
+    {
+      key: "invoiceNo",
+      header: "Số HĐ",
+      size: 100,
+      cell: (row) => (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            {onOpenInvoice && row.invoiceId ? (
+              <Button
+                variant="link"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenInvoice(row.invoiceId);
+                }}
+                className="font-medium text-primary hover:underline p-0 h-auto"
+              >
+                {row.invoiceNo || "—"}
+              </Button>
+            ) : (
+              <span className="font-medium text-primary">
+                {row.invoiceNo || "—"}
+              </span>
+            )}
+            {row.status && row.status !== "CONFIRMED" && (
+              <span
+                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
+                  row.status === "CANCELLED"
+                    ? "bg-red-100 text-red-800"
+                    : "bg-amber-100 text-amber-800"
+                }`}
+              >
+                {row.status === "CANCELLED" ? "Đã hủy" : "Nháp"}
+              </span>
+            )}
+          </div>
+        </div>
+      ),
+    },
     {
       key: "partnerName",
       header: "Đối tác",
@@ -88,6 +141,13 @@ function VinfastPartDetailDrawer({
           </div>
         </Tooltip>
       ),
+    },
+    {
+      key: "taxCode",
+      header: "MST",
+      size: 120,
+      className: "text-muted-foreground text-xs text-left",
+      cell: (row) => row.taxCode || "—",
     },
     { key: "unit", header: "ĐVT", size: 80 },
     {
@@ -107,6 +167,13 @@ function VinfastPartDetailDrawer({
       size: 120,
       className: "text-right",
       cell: (row) => money(row.unitPrice),
+    },
+    {
+      key: "preVatAmount",
+      header: "Trước VAT",
+      size: 120,
+      className: "text-right",
+      cell: (row) => money(row.preVatAmount),
     },
     {
       key: "vatAmount",
@@ -145,6 +212,11 @@ function VinfastPartDetailDrawer({
             </span>
           </h3>
           <StandardTable
+            tableId="vinfast-parts-detail-in"
+            variant="spreadsheet"
+            minWidth={1000}
+            enableColumnResizing={true}
+            enableColumnVisibility={true}
             columns={columns as any}
             items={buyData}
             loadingRows={isLoading ? 3 : 0}
@@ -160,6 +232,11 @@ function VinfastPartDetailDrawer({
             </span>
           </h3>
           <StandardTable
+            tableId="vinfast-parts-detail-out"
+            variant="spreadsheet"
+            minWidth={1000}
+            enableColumnResizing={true}
+            enableColumnVisibility={true}
             columns={columns as any}
             items={sellData}
             loadingRows={isLoading ? 3 : 0}
@@ -467,12 +544,16 @@ export function VinfastPartsTrackingPage() {
       header: "Mã phụ tùng",
       sortKey: "itemCode",
       cell: (row) => (
-        <span
-          className="font-semibold cursor-pointer border-b border-dotted border-gray-400 hover:border-gray-600 transition-colors"
-          onClick={() => setDetailRow(row)}
+        <Button
+          variant="link"
+          className="font-medium text-primary hover:underline p-0 h-auto"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDetailRow(row);
+          }}
         >
           {row.itemCode}
-        </span>
+        </Button>
       ),
     },
     {
@@ -719,6 +800,7 @@ export function VinfastPartsTrackingPage() {
         itemCode={detailRow?.itemCode || ""}
         itemName={detailRow?.itemName || ""}
         month={detailRow?.month || ""}
+        onOpenInvoice={(id) => formHook.openDetail({ id } as any)}
       />
     </>
   );
