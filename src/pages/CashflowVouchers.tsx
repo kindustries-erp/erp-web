@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Wallet } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel } from "@/shared/components/Panel";
 import { Attachment } from "@/shared/components/ui/Attachment";
 import { Button } from "@/shared/components/ui/Button";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 import {
@@ -79,10 +83,8 @@ export function CashflowVouchersPage() {
   const canCreate = useHasPermission("erp_cashflow_vouchers", "create");
   const canUpdate = useHasPermission("erp_cashflow_vouchers", "update");
   const canDelete = useHasPermission("erp_cashflow_vouchers", "delete");
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [vouchers, setVouchers] = useState<CashflowVoucher[]>([]);
   const [selected, setSelected] = useState<CashflowVoucher | null>(null);
   const [timeline, setTimeline] = useState<unknown[]>([]);
   const [relatedDocs, setRelatedDocs] = useState<unknown[]>([]);
@@ -102,6 +104,146 @@ export function CashflowVouchersPage() {
   const [parties, setParties] = useState<CashflowPartyItem[]>([]);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const queryClient = useQueryClient();
+
+  const tableState = useTableColumnState("cashflow-vouchers-table");
+
+  const getSortState = (columnKey: string) => {
+    const current = tableState.sorts[0];
+    if (!current) return "none";
+    if (current === columnKey) return "asc";
+    if (current === `-${columnKey}`) return "desc";
+    return "none";
+  };
+
+  const handleSortChange = (
+    columnKey: string,
+    state: "asc" | "desc" | "none",
+  ) => {
+    tableState.setSort(columnKey, state);
+  };
+
+  const handleSearchChange = (columnKey: string, value: string) => {
+    tableState.setColumnSearch(columnKey, value);
+    setPage(1);
+  };
+
+  const handleFilterChange = (columnKey: string, values: string[]) => {
+    tableState.setColumnFilter(columnKey, values);
+    setPage(1);
+  };
+
+  const renderHeaderFilter = (key: string, title: string) => (
+    <TableColumnHeaderFilter
+      title={title}
+      align="left"
+      sortState={getSortState(key)}
+      onSortChange={(state) => handleSortChange(key, state)}
+      searchValue={tableState.columnSearch[key] || ""}
+      onSearchChange={(val) => handleSearchChange(key, val)}
+      selectedFilters={tableState.columnFilters[key] || []}
+      onFilterChange={(vals) => handleFilterChange(key, vals)}
+      columnKey={key}
+      allFilters={tableState.columnFilters}
+      fetchOptions={async () => ({ items: [], total: 0, next: null })}
+    />
+  );
+
+  const columns = [
+    {
+      key: "voucher_no",
+      header: renderHeaderFilter("voucher_no", "Số phiếu"),
+      cell: (row: any) => <span className="font-medium">{row.voucher_no}</span>,
+      size: 150,
+    },
+    {
+      key: "voucher_date",
+      header: renderHeaderFilter("voucher_date", "Ngày"),
+      cell: (row: any) => row.voucher_date,
+      size: 120,
+    },
+    {
+      key: "channel_type",
+      header: renderHeaderFilter("channel_type", "Kênh"),
+      cell: (row: any) => row.channel_type,
+      size: 100,
+    },
+    {
+      key: "business_type",
+      header: renderHeaderFilter("business_type", "Loại"),
+      cell: (row: any) => row.business_type,
+      size: 150,
+    },
+    {
+      key: "party_name",
+      header: renderHeaderFilter("party_name", "Đối tượng"),
+      cell: (row: any) => 
+        row.party_scope === "INTERNAL" ? row.employee_name_snapshot : row.counterparty_name_snapshot,
+      size: 200,
+    },
+    {
+      key: "amount",
+      header: renderHeaderFilter("amount", "Số tiền"),
+      cell: (row: any) => row.amount.toLocaleString("vi-VN"),
+      size: 150,
+      className: "text-right",
+      headerClassName: "text-right",
+    },
+    {
+      key: "status",
+      header: renderHeaderFilter("status", "Trạng thái"),
+      cell: (row: any) => row.status,
+      size: 120,
+    },
+    {
+      key: "action",
+      header: "Action",
+      cell: (row: any) => (
+        <div className="flex flex-wrap gap-2">
+          {row.status === "DRAFT" && canUpdate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePost(row);
+              }}
+            >
+              POST
+            </Button>
+          )}
+          {row.status === "POSTED" && canUpdate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCancel(row);
+              }}
+            >
+              CANCEL
+            </Button>
+          )}
+          {row.status !== "POSTED" && canDelete && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(row);
+              }}
+            >
+              DELETE
+            </Button>
+          )}
+        </div>
+      ),
+      size: 200,
+    }
+  ];
+
   useEffect(() => {
     setCustomBreadcrumbs([
       ["breadcrumb.accounting"],
@@ -110,31 +252,51 @@ export function CashflowVouchersPage() {
     ]);
   }, [setCustomBreadcrumbs]);
 
-  const loadList = async () => {
-    if (!canRead) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getCashflowVouchersApi({
-        page: 1,
-        pageSize: 50,
-        status: statusFilter,
-        search: search || undefined,
-      });
-      setVouchers(res.items ?? []);
-      if (!selected && res.items?.length) {
-        setSelected(res.items[0]);
+  const { data: listData, isFetching: loading, refetch: loadList } = useQuery({
+    queryKey: [
+      "cashflow-vouchers",
+      page,
+      pageSize,
+      statusFilter,
+      search,
+      tableState.sorts,
+      tableState.columnFilters,
+      tableState.columnSearch,
+    ],
+    queryFn: async () => {
+      if (!canRead) return { items: [], total: 0, totalPages: 0 };
+      setError(null);
+      try {
+        const res = await getCashflowVouchersApi({
+          page,
+          pageSize,
+          status: statusFilter || undefined,
+          search: search || undefined,
+          column_filters: tableState.columnFilters
+            ? JSON.stringify(tableState.columnFilters)
+            : undefined,
+          column_search: tableState.columnSearch
+            ? JSON.stringify(tableState.columnSearch)
+            : undefined,
+          sort: tableState.sorts,
+        });
+        if (!selected && res.items?.length) {
+          setSelected(res.items[0]);
+        }
+        return res;
+      } catch (e: any) {
+        setError(
+          e?.response?.data?.message ||
+            e?.message ||
+            "Không tải được danh sách phiếu thu chi",
+        );
+        return { items: [], total: 0, totalPages: 0 };
       }
-    } catch (e: any) {
-      setError(
-        e?.response?.data?.message ||
-          e?.message ||
-          "Không tải được danh sách phiếu thu chi",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    enabled: canRead,
+  });
+
+  const vouchers = listData?.items || [];
 
   const loadAux = async () => {
     try {
@@ -506,102 +668,19 @@ export function CashflowVouchersPage() {
           </div>
         </Panel>
 
-        <Panel title="Danh sách phiếu thu chi">
-          <div className="overflow-auto">
-            <table className="w-full min-w-[920px] text-sm">
-              <thead>
-                <tr className="border-b bg-[color:var(--surface-muted)] text-left">
-                  <th className="px-3 py-2">Số phiếu</th>
-                  <th className="px-3 py-2">Ngày</th>
-                  <th className="px-3 py-2">Kênh</th>
-                  <th className="px-3 py-2">Loại</th>
-                  <th className="px-3 py-2">Đối tượng</th>
-                  <th className="px-3 py-2">Số tiền</th>
-                  <th className="px-3 py-2">Trạng thái</th>
-                  <th className="px-3 py-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td className="px-3 py-6 text-center" colSpan={8}>
-                      Đang tải...
-                    </td>
-                  </tr>
-                ) : vouchers.length === 0 ? (
-                  <tr>
-                    <td className="px-3 py-6 text-center" colSpan={8}>
-                      Chưa có dữ liệu
-                    </td>
-                  </tr>
-                ) : (
-                  vouchers.map((voucher) => (
-                    <tr
-                      key={voucher.id}
-                      className={`border-b hover:bg-[color:var(--surface-hover)] ${selected?.id === voucher.id ? "bg-[color:var(--surface-hover)]" : ""}`}
-                      onClick={() => setSelected(voucher)}
-                    >
-                      <td className="px-3 py-2 font-medium">
-                        {voucher.voucher_no}
-                      </td>
-                      <td className="px-3 py-2">{voucher.voucher_date}</td>
-                      <td className="px-3 py-2">{voucher.channel_type}</td>
-                      <td className="px-3 py-2">{voucher.business_type}</td>
-                      <td className="px-3 py-2">
-                        {voucher.party_scope === "INTERNAL"
-                          ? voucher.employee_name_snapshot
-                          : voucher.counterparty_name_snapshot}
-                      </td>
-                      <td className="px-3 py-2">
-                        {voucher.amount.toLocaleString("vi-VN")}
-                      </td>
-                      <td className="px-3 py-2">{voucher.status}</td>
-                      <td className="px-3 py-2">
-                        <div className="flex flex-wrap gap-2">
-                          {voucher.status === "DRAFT" && canUpdate && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePost(voucher);
-                              }}
-                            >
-                              POST
-                            </Button>
-                          )}
-                          {voucher.status === "POSTED" && canUpdate && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCancel(voucher);
-                              }}
-                            >
-                              CANCEL
-                            </Button>
-                          )}
-                          {voucher.status !== "POSTED" && canDelete && (
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(voucher);
-                              }}
-                            >
-                              DELETE
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        <Panel title="Danh sách phiếu thu chi" className="flex flex-col flex-1 min-h-0 min-w-0 h-[600px] overflow-hidden p-0">
+          <StandardTable
+            columns={columns}
+            items={vouchers}
+            loading={loading}
+            getRowKey={(row: any) => row.id}
+            onRowClick={(row: any) => setSelected(row as CashflowVoucher)}
+            page={page}
+            pageSize={pageSize}
+            total={listData?.total || 0}
+            onPage={(p) => setPage(p)}
+            onPageSize={(s) => setPageSize(s)}
+          />
         </Panel>
       </div>
 
