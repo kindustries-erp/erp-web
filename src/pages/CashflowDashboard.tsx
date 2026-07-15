@@ -4,7 +4,7 @@ import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
-import { Tooltip } from "@/core/components/ui/Tooltip";
+// import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
@@ -16,9 +16,9 @@ import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import { money, formatGMT7 } from "@/shared/utils/format";
+import { money } from "@/shared/utils/format";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+// import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 
@@ -85,12 +85,12 @@ export function CashflowDashboard() {
     };
   }, [branches, tags]);
 
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(20);
+
   const filter = useFilterPanel(filterConfig, () => {
     setPage(1);
   });
-
-  const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(20);
 
   const queryClient = useQueryClient();
 
@@ -139,10 +139,10 @@ export function CashflowDashboard() {
         pageParam,
         50,
         filtersStr,
-        (filter.state.custom.sourceType as any) || undefined
+        (filter.state.custom.sourceType as any) || undefined,
       );
     },
-    [filter.state.custom.sourceType]
+    [filter.state.custom.sourceType],
   );
 
   const { data: bankAccounts = [] } = useQuery({
@@ -195,7 +195,12 @@ export function CashflowDashboard() {
       }),
   });
 
-  const { data: partnerStats, isLoading: isPartnerLoading, isFetching: isPartnerFetching, refetch: refetchPartner } = useQuery({
+  const {
+    data: partnerStats,
+    // isLoading: isPartnerLoading,
+    isFetching: isPartnerFetching,
+    refetch: refetchPartner,
+  } = useQuery({
     queryKey: [
       "partner-stats",
       page,
@@ -217,15 +222,22 @@ export function CashflowDashboard() {
         endDate: filter.state.dateTo || undefined,
         branchId: filter.state.custom.branchId || undefined,
         sourceType: (filter.state.custom.sourceType as any) || undefined,
-        tagIds: (filter.state.custom.tagIds as unknown as string[]) || undefined,
+        tagIds:
+          (filter.state.custom.tagIds as unknown as string[]) || undefined,
         column_filters: tableState.columnFilters
           ? JSON.stringify(tableState.columnFilters)
           : undefined,
         column_search: tableState.columnSearch
           ? JSON.stringify(tableState.columnSearch)
           : undefined,
-        sortBy: tableState.sorts?.[0] ? tableState.sorts[0].replace(/^-/, "") : undefined,
-        sortOrder: tableState.sorts?.[0] ? (tableState.sorts[0].startsWith("-") ? "DESC" : "ASC") : undefined,
+        sortBy: tableState.sorts?.[0]
+          ? tableState.sorts[0].replace(/^-/, "")
+          : undefined,
+        sortOrder: tableState.sorts?.[0]
+          ? tableState.sorts[0].startsWith("-")
+            ? "DESC"
+            : "ASC"
+          : undefined,
       }),
   });
 
@@ -321,7 +333,11 @@ export function CashflowDashboard() {
       header: renderHeaderFilter("totalCredit", "Tổng thu"),
       cell: (row: any) => {
         if (row.totalCredit > 0)
-          return <span className="text-emerald-600 font-medium">+{money(row.totalCredit)}</span>;
+          return (
+            <span className="text-emerald-600 font-medium">
+              +{money(row.totalCredit)}
+            </span>
+          );
         return null;
       },
       size: 150,
@@ -333,7 +349,11 @@ export function CashflowDashboard() {
       header: renderHeaderFilter("totalDebit", "Tổng chi"),
       cell: (row: any) => {
         if (row.totalDebit > 0)
-          return <span className="text-[#ea580c] font-medium">{money(row.totalDebit)}</span>;
+          return (
+            <span className="text-[#ea580c] font-medium">
+              {money(row.totalDebit)}
+            </span>
+          );
         return null;
       },
       size: 150,

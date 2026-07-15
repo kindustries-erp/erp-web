@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Wallet } from "lucide-react";
 import { PageLayout } from "@/shared/components/PageLayout";
 import { Panel } from "@/shared/components/Panel";
@@ -106,7 +106,7 @@ export function CashflowVouchersPage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
   const tableState = useTableColumnState("cashflow-vouchers-table");
 
@@ -180,8 +180,10 @@ export function CashflowVouchersPage() {
     {
       key: "party_name",
       header: renderHeaderFilter("party_name", "Đối tượng"),
-      cell: (row: any) => 
-        row.party_scope === "INTERNAL" ? row.employee_name_snapshot : row.counterparty_name_snapshot,
+      cell: (row: any) =>
+        row.party_scope === "INTERNAL"
+          ? row.employee_name_snapshot
+          : row.counterparty_name_snapshot,
       size: 200,
     },
     {
@@ -242,7 +244,7 @@ export function CashflowVouchersPage() {
         </div>
       ),
       size: 200,
-    }
+    },
   ];
 
   useEffect(() => {
@@ -253,7 +255,11 @@ export function CashflowVouchersPage() {
     ]);
   }, [setCustomBreadcrumbs]);
 
-  const { data: listData, isFetching: loading, refetch: loadList } = useQuery({
+  const {
+    data: listData,
+    isFetching: loading,
+    refetch: loadList,
+  } = useQuery({
     queryKey: [
       "cashflow-vouchers",
       page,
@@ -669,7 +675,10 @@ export function CashflowVouchersPage() {
           </div>
         </Panel>
 
-        <Panel title="Danh sách phiếu thu chi" className="flex flex-col flex-1 min-h-0 min-w-0 h-[600px] overflow-hidden p-0">
+        <Panel
+          title="Danh sách phiếu thu chi"
+          className="flex flex-col flex-1 min-h-0 min-w-0 h-[600px] overflow-hidden p-0"
+        >
           <StandardTable
             columns={columns}
             items={vouchers}

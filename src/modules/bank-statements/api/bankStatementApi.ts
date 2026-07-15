@@ -141,7 +141,7 @@ export const bankStatementApi = {
     sortOrder?: "ASC" | "DESC";
   }) => {
     const cleanParams = Object.fromEntries(
-      Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
     );
     const res = await axiosInstance.get(
       "/api/v1/bank-transactions-core/partner-stats",

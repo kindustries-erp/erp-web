@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { BarChart } from "@/shared/components/charts/BarChart";
@@ -51,7 +51,7 @@ export function PartnerTransactionsDrawer({
   globalBranchId,
 }: PartnerTransactionsDrawerProps) {
   const t = useT();
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -82,7 +82,7 @@ export function PartnerTransactionsDrawer({
   const {
     data: tableData,
     isFetching: isTableFetching,
-    refetch,
+    // refetch,
   } = useQuery({
     queryKey: [
       "partner-transactions",
@@ -337,7 +337,7 @@ export function PartnerTransactionsDrawer({
         </span>
       ),
     };
-  }, [tableData?.items]);
+  }, [tableData]);
 
   const cashTrendLabels = chartData?.cashTrend?.map((t: any) => t.label) || [];
   const cashTrendIn = chartData?.cashTrend?.map((t: any) => t.cashIn) || [];

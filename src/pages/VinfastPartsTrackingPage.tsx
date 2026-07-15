@@ -510,7 +510,6 @@ export function VinfastPartsTrackingPage() {
     () => ({
       period: true,
       noDefaultPeriod: true,
-      search: { placeholder: "Tìm mã phụ tùng..." },
     }),
     [],
   );
@@ -738,6 +737,15 @@ export function VinfastPartsTrackingPage() {
           queryKeyPrefix="vinfast-parts-options"
           allFilters={tableState.columnFilters}
           fetchOptions={fetchColumnOptions}
+          formatOptionLabel={(label) => {
+            const num = Number(label);
+            return isNaN(num)
+              ? label
+              : num.toLocaleString("vi-VN", {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                });
+          }}
         />
       ),
       headerClassName: "text-center",
@@ -768,6 +776,10 @@ export function VinfastPartsTrackingPage() {
           queryKeyPrefix="vinfast-parts-options"
           allFilters={tableState.columnFilters}
           fetchOptions={fetchColumnOptions}
+          formatOptionLabel={(label) => {
+            const num = Number(label);
+            return isNaN(num) ? label : money(num);
+          }}
         />
       ),
       headerClassName: "text-center",
@@ -799,6 +811,15 @@ export function VinfastPartsTrackingPage() {
           queryKeyPrefix="vinfast-parts-options"
           allFilters={tableState.columnFilters}
           fetchOptions={fetchColumnOptions}
+          formatOptionLabel={(label) => {
+            const num = Number(label);
+            return isNaN(num)
+              ? label
+              : num.toLocaleString("vi-VN", {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1,
+                });
+          }}
         />
       ),
       headerClassName: "text-center",
@@ -829,6 +850,10 @@ export function VinfastPartsTrackingPage() {
           queryKeyPrefix="vinfast-parts-options"
           allFilters={tableState.columnFilters}
           fetchOptions={fetchColumnOptions}
+          formatOptionLabel={(label) => {
+            const num = Number(label);
+            return isNaN(num) ? label : money(num);
+          }}
         />
       ),
       headerClassName: "text-center",
@@ -860,6 +885,10 @@ export function VinfastPartsTrackingPage() {
           queryKeyPrefix="vinfast-parts-options"
           allFilters={tableState.columnFilters}
           fetchOptions={fetchColumnOptions}
+          formatOptionLabel={(label) => {
+            const num = Number(label);
+            return isNaN(num) ? label : money(num);
+          }}
         />
       ),
       headerClassName: "text-center",

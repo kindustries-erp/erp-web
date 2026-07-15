@@ -1307,8 +1307,12 @@ export async function getCashflowVouchersApi(
         ...(params.date_from ? { date_from: params.date_from } : {}),
         ...(params.date_to ? { date_to: params.date_to } : {}),
         ...(params.search ? { search: params.search } : {}),
-        ...(params.column_filters ? { column_filters: params.column_filters } : {}),
-        ...(params.column_search ? { column_search: params.column_search } : {}),
+        ...(params.column_filters
+          ? { column_filters: params.column_filters }
+          : {}),
+        ...(params.column_search
+          ? { column_search: params.column_search }
+          : {}),
       },
     },
   );
