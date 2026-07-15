@@ -148,6 +148,7 @@ export function CashflowVouchersPage() {
       columnKey={key}
       allFilters={tableState.columnFilters}
       fetchOptions={async () => ({ items: [], total: 0, next: null })}
+      queryKeyPrefix="cashflow-vouchers-column-options"
     />
   );
 

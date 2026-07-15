@@ -225,6 +225,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         allFilters={tableState.columnFilters}
         fetchOptions={fetchColumnOptions}
         formatOptionLabel={formatOptionLabel}
+        queryKeyPrefix={`bank-statement-${type}-column-options`}
       />
     );
   };

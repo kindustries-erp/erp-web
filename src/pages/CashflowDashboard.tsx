@@ -281,6 +281,7 @@ export function CashflowDashboard() {
       columnKey={key}
       allFilters={tableState.columnFilters}
       fetchOptions={fetchColumnOptions}
+      queryKeyPrefix="cashflow-dashboard-partner-options"
     />
   );
 
