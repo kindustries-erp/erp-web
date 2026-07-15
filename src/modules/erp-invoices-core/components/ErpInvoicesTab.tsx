@@ -469,9 +469,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             </span>
                           </div>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            className="whitespace-nowrap h-8"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenPopoverId(null);
@@ -504,9 +504,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             </span>
                           </div>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            className="whitespace-nowrap h-8"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenPopoverId(null);

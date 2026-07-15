@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { FileText, FileCode, Archive, X, CheckCircle2, AlertCircle, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { type FileEntry } from "../../hooks/useInvoiceXmlUpload";
+import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 
 interface Props {
   files: FileEntry[];
@@ -9,6 +11,7 @@ interface Props {
 
 export function UploadFileList({ files, onRemove }: Props) {
   const { t } = useTranslation("erpInvoices");
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   if (files.length === 0) return null;
 
@@ -55,7 +58,7 @@ export function UploadFileList({ files, onRemove }: Props) {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.open(URL.createObjectURL(entry.file), "_blank");
+                    setPreviewFile(entry.file);
                   }}
                   className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
                   title="Xem PDF"
@@ -78,6 +81,13 @@ export function UploadFileList({ files, onRemove }: Props) {
           </li>
         ))}
       </ul>
+      
+      <FilePreviewDrawer
+        open={!!previewFile}
+        onClose={() => setPreviewFile(null)}
+        file={previewFile}
+        fileName={previewFile?.name}
+      />
     </div>
   );
 }

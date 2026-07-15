@@ -60,7 +60,7 @@ export function AttachmentRow({
           }
         }}
         title="Xem tài liệu"
-        className="p-1.5 rounded-lg border border-border bg-surface text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         <Eye className="w-4 h-4" />
       </button>
