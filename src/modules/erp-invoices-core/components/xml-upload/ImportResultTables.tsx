@@ -16,26 +16,26 @@ export function ImportResultTables({ result }: Props) {
   const { t } = useTranslation("erpInvoices");
 
   const skippedColumns: DataTableColumn<BulkImportSkippedItem>[] = [
-    { key: "filename", title: t("importFile", "File"), render: (r) => r.filename, width: 120 },
-    { key: "invoiceNo", title: t("invoiceNo", "Số HĐ"), render: (r) => <span className="text-primary font-medium">{r.invoiceNo}</span>, width: 100 },
-    { key: "sellerName", title: t("seller", "Tên NCC"), render: (r) => <div className="max-w-[140px] truncate" title={r.sellerName}>{r.sellerName || "—"}</div>, width: 140 },
-    { key: "sellerTaxCode", title: t("taxCode", "MST"), render: (r) => r.sellerTaxCode || "—", width: 100 },
-    { key: "reason", title: t("importReason", "Lý do"), render: () => <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium whitespace-nowrap">{t("importReasonDuplicated", "Trùng lặp")}</span>, width: 100 },
+    { key: "filename", header: t("importFile", "File"), cell: (r) => r.filename, size: 120 },
+    { key: "invoiceNo", header: t("invoiceNo", "Số HĐ"), cell: (r) => <span className="text-primary font-medium">{r.invoiceNo}</span>, size: 100 },
+    { key: "sellerName", header: t("seller", "Tên NCC"), cell: (r) => <div className="max-w-[140px] truncate" title={r.sellerName || undefined}>{r.sellerName || "—"}</div>, size: 140 },
+    { key: "sellerTaxCode", header: t("taxCode", "MST"), cell: (r) => r.sellerTaxCode || "—", size: 100 },
+    { key: "reason", header: t("importReason", "Lý do"), cell: () => <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-medium whitespace-nowrap">{t("importReasonDuplicated", "Trùng lặp")}</span>, size: 100 },
   ];
 
   const errorColumns: DataTableColumn<BulkImportErrorItem>[] = [
-    { key: "filename", title: t("importFile", "File"), render: (r) => r.filename, width: 160 },
-    { key: "reason", title: t("importErrorReason", "Lý do lỗi"), render: (r) => <span className="text-red-700">{r.reason}</span>, width: 320 },
+    { key: "filename", header: t("importFile", "File"), cell: (r) => r.filename, size: 160 },
+    { key: "reason", header: t("importErrorReason", "Lý do lỗi"), cell: (r) => <span className="text-red-700">{r.reason}</span>, size: 320 },
   ];
 
   const pdfAttachedColumns: DataTableColumn<any>[] = [
-    { key: "filename", title: "Tên file PDF", render: (r) => r.filename, width: 200 },
-    { key: "invoiceNo", title: "Số hóa đơn", render: (r) => <span className="text-emerald-600 font-semibold">{r.invoiceNo}</span>, width: 120 },
+    { key: "filename", header: "Tên file PDF", cell: (r) => r.filename, size: 200 },
+    { key: "invoiceNo", header: "Số hóa đơn", cell: (r) => <span className="text-emerald-600 font-semibold">{r.invoiceNo}</span>, size: 120 },
   ];
 
   const pdfOrphansColumns: DataTableColumn<any>[] = [
-    { key: "filename", title: "Tên file PDF", render: (r) => r.filename, width: 200 },
-    { key: "reason", title: "Lý do", render: (r) => <span className="text-amber-600">{r.reason}</span> },
+    { key: "filename", header: "Tên file PDF", cell: (r) => r.filename, size: 200 },
+    { key: "reason", header: "Lý do", cell: (r) => <span className="text-amber-600">{r.reason}</span> },
   ];
 
   return (
@@ -50,7 +50,7 @@ export function ImportResultTables({ result }: Props) {
           <StandardTable
             items={result.skipped}
             columns={skippedColumns}
-            getRowKey={(r: any, i) => r.filename + r.invoiceNo + i}
+            getRowKey={(r: any) => r.filename + r.invoiceNo}
             minWidth={600}
           />
         </div>
@@ -66,7 +66,7 @@ export function ImportResultTables({ result }: Props) {
           <StandardTable
             items={result.errors}
             columns={errorColumns}
-            getRowKey={(r: any, i) => r.filename + i}
+            getRowKey={(r: any) => r.filename}
             minWidth={500}
           />
         </div>
@@ -82,7 +82,7 @@ export function ImportResultTables({ result }: Props) {
           <StandardTable
             items={result.pdfAttached}
             columns={pdfAttachedColumns}
-            getRowKey={(r: any, i) => r.filename + i}
+            getRowKey={(r: any) => r.filename}
             minWidth={320}
           />
         </div>
@@ -98,7 +98,7 @@ export function ImportResultTables({ result }: Props) {
           <StandardTable
             items={result.pdfOrphans}
             columns={pdfOrphansColumns}
-            getRowKey={(r: any, i) => r.filename + i}
+            getRowKey={(r: any) => r.filename}
             minWidth={320}
           />
         </div>

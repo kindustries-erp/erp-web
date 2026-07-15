@@ -266,7 +266,7 @@ export function InvoiceImportSyncDrawer({
     >
       <div className="flex flex-col h-full">
         {/* Selection Dropdowns */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-border shrink-0 mt-[-1rem]">
+        <div className="flex items-center gap-3 px-4 py-4 border-b border-border shrink-0 mt-[-1rem]">
           <div className="flex-1">
             <Combobox
               options={[
@@ -282,7 +282,7 @@ export function InvoiceImportSyncDrawer({
             <Combobox
               options={[
                 { value: "GDT", label: "Từ hệ thống GDT" },
-                { value: "XML", label: "Tải file XML" }
+                { value: "XML", label: "Tải file từ máy tính" }
               ]}
               value={method}
               onChange={(v) => handleMethodChange(v as "GDT" | "XML")}
@@ -292,7 +292,7 @@ export function InvoiceImportSyncDrawer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4">
           {method === "GDT" && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
