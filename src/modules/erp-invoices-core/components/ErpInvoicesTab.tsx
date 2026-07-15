@@ -21,6 +21,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
@@ -116,29 +117,33 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const bulkActionsNode =
     selectedIds.length > 0 ? (
       <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-        <span className="text-xs text-muted-foreground font-medium bg-slate-100 px-2 py-1.5 rounded border border-slate-200">
-          Đã chọn {selectedIds.length} hóa đơn
-        </span>
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={() => {
-            setBulkBranchId(null);
-            setBulkBranchModalOpen(true);
-          }}
-          className="h-8 shadow-sm"
-        >
-          <Building2 className="w-3.5 h-3.5 mr-1" />
-          Gán chi nhánh
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setRowSelection({})}
-          className="h-8"
-        >
-          Bỏ chọn
-        </Button>
+        <ActionDropdown
+          align="start"
+          customTrigger={
+            <Button size="sm" className="h-8 shadow-sm">
+              Thao tác ({selectedIds.length})
+            </Button>
+          }
+          items={[
+            {
+              label: "Gán chi nhánh",
+              icon: (
+                <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+              ),
+              onClick: () => {
+                setBulkBranchId(null);
+                setBulkBranchModalOpen(true);
+              },
+            },
+            {
+              label: "Bỏ chọn",
+              icon: (
+                <RefreshCw className="w-4 h-4 mr-2 text-muted-foreground" />
+              ),
+              onClick: () => setRowSelection({}),
+            },
+          ]}
+        />
       </div>
     ) : null;
 
@@ -1195,13 +1200,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 100,
+        size: 120,
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv: any) => {
           if (!inv.branchId) return "—";
           const branch = branches.find((b) => b.value === inv.branchId);
-          return branch ? branch.label : inv.branchId;
+          if (!branch) return inv.branchId;
+          const parts = branch.label.split(" — ");
+          return parts.length > 1 ? parts[1] : branch.label;
         },
       },
     ];
@@ -1305,6 +1312,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   return (
     <>
       <SpreadsheetPageTemplate
+        defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
           direction === "IN"
             ? t("inbound", "Hóa đơn mua vào")
