@@ -24,9 +24,10 @@ export type ActionDropdownItem = ActionItem | ActionGroup;
 
 export interface ActionDropdownProps {
   items: ActionDropdownItem[];
+  customTrigger?: React.ReactNode;
 }
 
-export function ActionDropdown({ items }: ActionDropdownProps) {
+export function ActionDropdown({ items, customTrigger }: ActionDropdownProps) {
   const [open, setOpen] = useState(false);
 
   // Normalize items to easily handle separators
@@ -104,17 +105,21 @@ export function ActionDropdown({ items }: ActionDropdownProps) {
   return (
     <DropdownMenu.Root modal={false} open={open} onOpenChange={setOpen}>
       <DropdownMenu.Trigger asChild>
-        <button
-          type="button"
-          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none pointer-events-auto"
-          onClick={(e) => {
-            e.stopPropagation();
-            setOpen(true);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          <MoreHorizontal size={16} />
-        </button>
+        {customTrigger ? (
+          customTrigger
+        ) : (
+          <button
+            type="button"
+            className="inline-flex items-center justify-center w-7 h-7 rounded-md text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <MoreHorizontal size={16} />
+          </button>
+        )}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content

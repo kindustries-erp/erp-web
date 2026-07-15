@@ -48,6 +48,7 @@ export function ImportResultTables({ result }: Props) {
             {t("importSkippedTitle", "Hóa đơn bị bỏ qua (trùng lặp)")}
           </h3>
           <StandardTable
+            variant="spreadsheet"
             items={result.skipped}
             columns={skippedColumns}
             getRowKey={(r: any) => r.filename + r.invoiceNo}
@@ -64,6 +65,7 @@ export function ImportResultTables({ result }: Props) {
             {t("importErrorTitle", "Lỗi xử lý")}
           </h3>
           <StandardTable
+            variant="spreadsheet"
             items={result.errors}
             columns={errorColumns}
             getRowKey={(r: any) => r.filename}
@@ -80,6 +82,7 @@ export function ImportResultTables({ result }: Props) {
             PDF đã được ghép vào hóa đơn
           </h3>
           <StandardTable
+            variant="spreadsheet"
             items={result.pdfAttached}
             columns={pdfAttachedColumns}
             getRowKey={(r: any) => r.filename}
@@ -96,6 +99,7 @@ export function ImportResultTables({ result }: Props) {
             PDF không ghép được (Orphans)
           </h3>
           <StandardTable
+            variant="spreadsheet"
             items={result.pdfOrphans}
             columns={pdfOrphansColumns}
             getRowKey={(r: any) => r.filename}
