@@ -15,6 +15,7 @@ import {
   Ban,
   FileCode,
   FileText,
+  Building2,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -76,6 +77,70 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkMonth, setBulkMonth] = useState("");
   const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
+  const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
+
+  const selectedIds = useMemo(
+    () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
+    [rowSelection],
+  );
+
+  async function handleBulkSetBranch() {
+    if (!selectedIds.length) return;
+    setBulkBranchSaving(true);
+    try {
+      const result = await erpInvoicesCoreApi.bulkSetBranch(
+        selectedIds,
+        bulkBranchId,
+      );
+      showToast({
+        title: `Đã cập nhật ${result.updated} hóa đơn`,
+        variant: "default",
+      });
+      setRowSelection({});
+      setBulkBranchModalOpen(false);
+      void listHook.loadInvoices();
+    } catch {
+      showToast({
+        title: "Không thể cập nhật chi nhánh",
+        variant: "destructive",
+      });
+    } finally {
+      setBulkBranchSaving(false);
+    }
+  }
+
+  const bulkActionsNode =
+    selectedIds.length > 0 ? (
+      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+        <span className="text-xs text-muted-foreground font-medium bg-slate-100 px-2 py-1.5 rounded border border-slate-200">
+          Đã chọn {selectedIds.length} hóa đơn
+        </span>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            setBulkBranchId(null);
+            setBulkBranchModalOpen(true);
+          }}
+          className="h-8 shadow-sm"
+        >
+          <Building2 className="w-3.5 h-3.5 mr-1" />
+          Gán chi nhánh
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setRowSelection({})}
+          className="h-8"
+        >
+          Bỏ chọn
+        </Button>
+      </div>
+    ) : null;
 
   const monthOptions = useMemo(() => {
     const opts = [];
@@ -1268,6 +1333,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onPage={listHook.setPage}
         onPageSize={listHook.setPageSize}
         onRefresh={() => void listHook.loadInvoices()}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={(updater) =>
+          setRowSelection((prev) =>
+            typeof updater === "function" ? updater(prev) : updater,
+          )
+        }
+        bulkActionsNode={bulkActionsNode}
         filterConfig={filterConfig}
         filter={listHook.filterPanel}
         rowActions={(inv) => {
@@ -1635,6 +1708,36 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               disabled={bulkDownloading}
             >
               {bulkDownloading ? "Đang nén file..." : "Xác nhận tải"}
+            </Button>
+          </div>
+        </div>
+      </DrawerModal>
+
+      <DrawerModal
+        open={bulkBranchModalOpen}
+        onClose={() => setBulkBranchModalOpen(false)}
+        title={`Gán chi nhánh cho ${selectedIds.length} hóa đơn`}
+      >
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Chi nhánh *</label>
+            <Combobox
+              options={branches}
+              value={bulkBranchId ?? ""}
+              onChange={(v) => setBulkBranchId(v ?? null)}
+              placeholder="Chọn chi nhánh..."
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => setBulkBranchModalOpen(false)}
+              disabled={bulkBranchSaving}
+            >
+              Hủy
+            </Button>
+            <Button onClick={handleBulkSetBranch} disabled={bulkBranchSaving}>
+              {bulkBranchSaving ? "Đang lưu..." : "Xác nhận"}
             </Button>
           </div>
         </div>
