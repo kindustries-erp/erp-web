@@ -1383,18 +1383,31 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         }}
         createActions={[
           {
-            groupLabel: t("groupInvoice", "Hóa đơn"),
+            groupLabel: t("groupTraCuu", "Tra cứu"),
+            items: [
+              {
+                label: t("exportExcelSummary", "Xuất Excel Bảng kê (Tổng hợp)"),
+                icon: <Download className="w-4 h-4 text-green-600" />,
+                onClick: () => handleExportExcel("summary"),
+              },
+              {
+                label: t(
+                  "exportExcelDetailed",
+                  "Xuất Excel Hàng hóa (Chi tiết)",
+                ),
+                icon: <Download className="w-4 h-4 text-emerald-600" />,
+                onClick: () => handleExportExcel("detailed"),
+              },
+            ],
+          },
+          {
+            groupLabel: t("groupThaoTac", "Thao tác"),
             items: [
               {
                 label: t("createInvoice", "Tạo hóa đơn"),
                 icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
                 onClick: () => formHook.openNew(direction),
               },
-            ],
-          },
-          {
-            groupLabel: t("groupData", "Đồng bộ & Tải"),
-            items: [
               {
                 label: t("syncInvoices", "Đồng bộ hóa đơn"),
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
@@ -1430,19 +1443,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
                 icon: <Download className="w-4 h-4 text-blue-600" />,
                 onClick: () => setBulkDrawerOpen(true),
-              },
-              {
-                label: t("exportExcelSummary", "Xuất Excel Bảng kê (Tổng hợp)"),
-                icon: <Download className="w-4 h-4 text-green-600" />,
-                onClick: () => handleExportExcel("summary"),
-              },
-              {
-                label: t(
-                  "exportExcelDetailed",
-                  "Xuất Excel Hàng hóa (Chi tiết)",
-                ),
-                icon: <Download className="w-4 h-4 text-emerald-600" />,
-                onClick: () => handleExportExcel("detailed"),
               },
             ],
           },
