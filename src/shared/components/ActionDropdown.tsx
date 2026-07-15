@@ -124,7 +124,7 @@ export function ActionDropdown({ items, customTrigger, align = "start" }: Action
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
-          sideOffset={2}
+          sideOffset={6}
           align={align}
           className="z-[9999] min-w-[140px] rounded-lg p-1 popup-content"
         >
