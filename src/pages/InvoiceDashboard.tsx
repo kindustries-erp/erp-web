@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { LayoutDashboard } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
@@ -77,12 +79,81 @@ export function InvoiceDashboard() {
     enabled: canView,
   });
 
+  const tableState = useTableColumnState("dashboard-partners");
+
+  const getSortState = (key: string) => {
+    if (tableState.sorts.includes(key)) return "asc";
+    if (tableState.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
+    tableState.setSort(key, state);
+    setPage(1);
+  };
+  const handleSearchChange = (key: string, val: string) => {
+    tableState.setColumnSearch(key, val);
+    setPage(1);
+  };
+  const handleFilterChange = (key: string, vals: string[]) => {
+    tableState.setColumnFilter(key, vals);
+    setPage(1);
+  };
+
+  const fetchPartnerOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+    }) => {
+      if (columnKey !== "taxCode" && columnKey !== "partnerName") {
+        return { items: [], total: 0, next: null };
+      }
+      const res = await erpInvoiceDashboardApi.getPartners({
+        page: pageParam,
+        pageSize: 20,
+        search: search || undefined,
+        date_from: filter.state.dateFrom || undefined,
+        date_to: filter.state.dateTo || undefined,
+        branch_id: (filter.state.custom.branchId as string) || undefined,
+      });
+      const items = res.items.map((p: any) => {
+        const valStr = columnKey === "taxCode" ? p.taxCode : p.partnerName;
+        return { label: valStr || "—", value: valStr || "" };
+      });
+      const uniqueItems = Array.from(
+        new Map(items.map((item) => [item.value, item])).values(),
+      );
+      return {
+        items: uniqueItems.filter((i) => i.value !== ""),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [filter.state],
+  );
+
+  const combinedSearch =
+    tableState.columnSearch["taxCode"] ||
+    tableState.columnSearch["partnerName"] ||
+    (tableState.columnFilters["taxCode"]?.length
+      ? tableState.columnFilters["taxCode"][0]
+      : undefined) ||
+    (tableState.columnFilters["partnerName"]?.length
+      ? tableState.columnFilters["partnerName"][0]
+      : undefined) ||
+    filter.inputs.search ||
+    undefined;
+
   const { data: partnersData, isLoading: isLoadingPartners } = useQuery({
     queryKey: [
       "invoice-dashboard-partners",
       page,
       pageSize,
-      filter.inputs.search,
+      combinedSearch,
       filter.state.dateFrom,
       filter.state.dateTo,
       filter.state.custom.branchId,
@@ -91,7 +162,7 @@ export function InvoiceDashboard() {
       erpInvoiceDashboardApi.getPartners({
         page,
         pageSize,
-        search: filter.inputs.search || undefined,
+        search: combinedSearch,
         date_from: filter.state.dateFrom || undefined,
         date_to: filter.state.dateTo || undefined,
         branch_id: (filter.state.custom.branchId as string) || undefined,
@@ -119,7 +190,23 @@ export function InvoiceDashboard() {
   const partnerColumns = [
     {
       key: "taxCode",
-      header: "Mã số thuế",
+      header: (
+        <TableColumnHeaderFilter
+          title="Mã số thuế"
+          sortState={getSortState("taxCode")}
+          onSortChange={(state) => handleSortChange("taxCode", state)}
+          searchValue={tableState.columnSearch["taxCode"] || ""}
+          onSearchChange={(val) => handleSearchChange("taxCode", val)}
+          selectedFilters={tableState.columnFilters["taxCode"] || []}
+          onFilterChange={(vals) => handleFilterChange("taxCode", vals)}
+          align="center"
+          columnKey="taxCode"
+          requireSearchToFetchOptions={false}
+          queryKeyPrefix="dashboard-invoice-options"
+          allFilters={tableState.columnFilters}
+          fetchOptions={fetchPartnerOptions}
+        />
+      ),
       size: 120,
       className: "font-medium text-left",
       cell: (row: any) => (
@@ -137,7 +224,23 @@ export function InvoiceDashboard() {
     },
     {
       key: "partnerName",
-      header: "Tên đối tác",
+      header: (
+        <TableColumnHeaderFilter
+          title="Tên đối tác"
+          sortState={getSortState("partnerName")}
+          onSortChange={(state) => handleSortChange("partnerName", state)}
+          searchValue={tableState.columnSearch["partnerName"] || ""}
+          onSearchChange={(val) => handleSearchChange("partnerName", val)}
+          selectedFilters={tableState.columnFilters["partnerName"] || []}
+          onFilterChange={(vals) => handleFilterChange("partnerName", vals)}
+          align="center"
+          columnKey="partnerName"
+          requireSearchToFetchOptions={false}
+          queryKeyPrefix="dashboard-invoice-options"
+          allFilters={tableState.columnFilters}
+          fetchOptions={fetchPartnerOptions}
+        />
+      ),
       size: 250,
       className: "text-left",
       cell: (row: any) => (
@@ -148,7 +251,18 @@ export function InvoiceDashboard() {
     },
     {
       key: "totalInAmount",
-      header: "HĐ Đầu vào",
+      header: (
+        <TableColumnHeaderFilter
+          title="HĐ Đầu vào"
+          sortState={getSortState("totalInAmount")}
+          onSortChange={(state) => handleSortChange("totalInAmount", state)}
+          searchValue={tableState.columnSearch["totalInAmount"] || ""}
+          onSearchChange={(val) => handleSearchChange("totalInAmount", val)}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          align="center"
+        />
+      ),
       size: 150,
       className: "text-right",
       cell: (row: any) => (
@@ -163,7 +277,18 @@ export function InvoiceDashboard() {
     },
     {
       key: "totalOutAmount",
-      header: "HĐ Đầu ra",
+      header: (
+        <TableColumnHeaderFilter
+          title="HĐ Đầu ra"
+          sortState={getSortState("totalOutAmount")}
+          onSortChange={(state) => handleSortChange("totalOutAmount", state)}
+          searchValue={tableState.columnSearch["totalOutAmount"] || ""}
+          onSearchChange={(val) => handleSearchChange("totalOutAmount", val)}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          align="center"
+        />
+      ),
       size: 150,
       className: "text-right",
       cell: (row: any) => (
@@ -178,14 +303,36 @@ export function InvoiceDashboard() {
     },
     {
       key: "payableAmount",
-      header: "Còn phải trả",
+      header: (
+        <TableColumnHeaderFilter
+          title="Còn phải trả"
+          sortState={getSortState("payableAmount")}
+          onSortChange={(state) => handleSortChange("payableAmount", state)}
+          searchValue={tableState.columnSearch["payableAmount"] || ""}
+          onSearchChange={(val) => handleSearchChange("payableAmount", val)}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          align="center"
+        />
+      ),
       size: 150,
       className: "text-right font-semibold text-emerald-700",
       cell: (row: any) => money(row.payableAmount),
     },
     {
       key: "receivableAmount",
-      header: "Còn phải thu",
+      header: (
+        <TableColumnHeaderFilter
+          title="Còn phải thu"
+          sortState={getSortState("receivableAmount")}
+          onSortChange={(state) => handleSortChange("receivableAmount", state)}
+          searchValue={tableState.columnSearch["receivableAmount"] || ""}
+          onSearchChange={(val) => handleSearchChange("receivableAmount", val)}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          align="center"
+        />
+      ),
       size: 150,
       className: "text-right font-semibold text-orange-700",
       cell: (row: any) => money(row.receivableAmount),

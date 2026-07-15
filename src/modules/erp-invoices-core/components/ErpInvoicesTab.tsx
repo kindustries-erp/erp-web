@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
@@ -356,6 +357,19 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             const branch = branches.find((b) => b.value === valStr);
             if (branch) labelStr = branch.label;
           }
+          if (columnKey === "invoiceDate" && valStr) {
+            // Backend now returns YYYY-MM-DD via TO_CHAR — use as value directly
+            const dateVal = valStr.substring(0, 10); // ensure YYYY-MM-DD
+            try {
+              const parsed = new Date(dateVal);
+              const label = isValid(parsed)
+                ? format(parsed, "dd-MM-yyyy")
+                : dateVal;
+              return { label, value: dateVal };
+            } catch {
+              return { label: valStr, value: valStr };
+            }
+          }
           return { label: labelStr, value: valStr };
         }),
         total: res.total,
@@ -388,6 +402,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="attachments"
             requireSearchToFetchOptions={false}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async ({ search }) => {
               const options = [
@@ -538,6 +553,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="invoiceDate"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -545,7 +561,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         size: 100,
         headerClassName: "text-center",
         className: "text-right",
-        cell: (inv) => inv.invoiceDate,
+        cell: (inv) =>
+          inv.invoiceDate
+            ? format(new Date(inv.invoiceDate), "dd-MM-yyyy")
+            : "",
       },
       {
         key: "serialNo",
@@ -563,6 +582,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="serialNo"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -588,6 +608,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="invoiceNo"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -643,6 +664,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="partner"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -676,6 +698,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="taxCode"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -704,6 +727,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="description"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -884,6 +908,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="preVatAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -910,6 +935,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="vatAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -940,6 +966,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="discountAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -966,6 +993,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="totalAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -1093,6 +1121,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="branchId"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />

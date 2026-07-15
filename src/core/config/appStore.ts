@@ -117,6 +117,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
+  "invoice-dashboard": {
+    labelKey: "nav.items.invoiceDashboard",
+    group: "accounting",
+  },
   "erp-invoices-in": {
     labelKey: "nav.items.erpInvoicesIn",
     group: "accounting",

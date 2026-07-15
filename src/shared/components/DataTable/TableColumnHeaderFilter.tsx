@@ -35,6 +35,7 @@ export interface TableColumnHeaderFilterProps {
   align?: "left" | "center" | "right";
   className?: string;
   columnKey?: string;
+  queryKeyPrefix?: string;
   requireSearchToFetchOptions?: boolean;
   allFilters?: Record<string, string[]>;
   formatOptionLabel?: (label: string) => string;
@@ -64,6 +65,7 @@ export function TableColumnHeaderFilter({
   align = "left",
   className,
   columnKey,
+  queryKeyPrefix,
   allFilters,
   formatOptionLabel,
   fetchOptions,
@@ -104,7 +106,7 @@ export function TableColumnHeaderFilter({
     isLoading: isOptionsLoading,
   } = useInfiniteQuery({
     queryKey: [
-      "inventory-stock-column-options",
+      queryKeyPrefix || "inventory-stock-column-options",
       columnKey,
       debouncedLocalSearch,
       filtersStr,

@@ -1,4 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
+import { format, isValid } from "date-fns";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { erpInvoiceDashboardApi } from "../api/erpInvoiceDashboardApi";
@@ -93,6 +95,86 @@ export function PartnerInvoiceDrawer({
   const cashTrendIn = statsData?.cashTrend?.map((t) => t.cashIn) || [];
   const cashTrendOut = statsData?.cashTrend?.map((t) => t.cashOut) || [];
 
+  const getSortState = (key: string) => {
+    if (listHook.tableState.sorts.includes(key)) return "asc";
+    if (listHook.tableState.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
+    listHook.tableState.setSort(key, state);
+    listHook.setPage(1);
+  };
+  const handleSearchChange = (key: string, val: string) => {
+    listHook.tableState.setColumnSearch(key, val);
+    listHook.setPage(1);
+  };
+  const handleFilterChange = (key: string, vals: string[]) => {
+    listHook.tableState.setColumnFilter(key, vals);
+    listHook.setPage(1);
+  };
+
+  const fetchInvoiceOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      let currentFilters: Record<string, string[]> = {};
+      if (filtersStr) {
+        try {
+          currentFilters = JSON.parse(filtersStr);
+        } catch {
+          // ignore parse error
+        }
+      }
+      if (taxCode) {
+        currentFilters["taxCode"] = [taxCode];
+      }
+      const newFiltersStr = JSON.stringify(currentFilters);
+
+      const res = await erpInvoicesCoreApi.getInvoiceColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        newFiltersStr,
+        undefined, // direction undefined to search both IN and OUT
+      );
+      return {
+        items: res.items.map((i: any) => {
+          const valStr =
+            typeof i === "object" ? String(i.value || i.id || i) : String(i);
+          const labelStr =
+            typeof i === "object"
+              ? String(i.label || i.name || valStr)
+              : String(i);
+          if (columnKey === "invoiceDate" && valStr) {
+            const dateVal = valStr.substring(0, 10); // ensure YYYY-MM-DD
+            try {
+              const parsed = new Date(dateVal);
+              const label = isValid(parsed)
+                ? format(parsed, "dd-MM-yyyy")
+                : dateVal;
+              return { label, value: dateVal };
+            } catch {
+              return { label: valStr, value: valStr };
+            }
+          }
+          return { label: labelStr, value: valStr };
+        }),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [],
+  );
+
   const columns = useMemo(() => {
     return [
       {
@@ -114,21 +196,78 @@ export function PartnerInvoiceDrawer({
       },
       {
         key: "invoiceDate",
-        header: "Ngày HĐ",
+        header: (
+          <TableColumnHeaderFilter
+            title="Ngày HĐ"
+            sortState={getSortState("invoiceDate")}
+            onSortChange={(state) => handleSortChange("invoiceDate", state)}
+            searchValue={listHook.tableState.columnSearch["invoiceDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("invoiceDate", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["invoiceDate"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
+            align="center"
+            columnKey="invoiceDate"
+            queryKeyPrefix="partner-invoice-options"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 100,
         className: "text-right",
-        cell: (inv: any) => inv.invoiceDate,
+        cell: (inv: any) =>
+          inv.invoiceDate
+            ? format(new Date(inv.invoiceDate), "dd-MM-yyyy")
+            : "",
       },
       {
         key: "serialNo",
-        header: "Ký hiệu",
+        header: (
+          <TableColumnHeaderFilter
+            title="Ký hiệu"
+            sortState={getSortState("serialNo")}
+            onSortChange={(state) => handleSortChange("serialNo", state)}
+            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("serialNo", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["serialNo"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
+            align="center"
+            columnKey="serialNo"
+            queryKeyPrefix="partner-invoice-options"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 100,
         className: "text-left text-muted-foreground",
         cell: (inv: any) => inv.serialNo || "—",
       },
       {
         key: "invoiceNo",
-        header: "Số HĐ",
+        header: (
+          <TableColumnHeaderFilter
+            title="Số HĐ"
+            sortState={getSortState("invoiceNo")}
+            onSortChange={(state) => handleSortChange("invoiceNo", state)}
+            searchValue={listHook.tableState.columnSearch["invoiceNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("invoiceNo", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["invoiceNo"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
+            align="center"
+            columnKey="invoiceNo"
+            queryKeyPrefix="partner-invoice-options"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 100,
         className: "font-medium text-primary text-left",
         cell: (inv: any) => (
@@ -146,28 +285,85 @@ export function PartnerInvoiceDrawer({
       },
       {
         key: "preVatAmount",
-        header: "Trước thuế",
+        header: (
+          <TableColumnHeaderFilter
+            title="Trước thuế"
+            sortState={getSortState("preVatAmount")}
+            onSortChange={(state) => handleSortChange("preVatAmount", state)}
+            searchValue={listHook.tableState.columnSearch["preVatAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("preVatAmount", val)}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            align="center"
+          />
+        ),
         size: 120,
         className: "text-right font-medium",
         cell: (inv: any) => money(inv.preVatAmount || 0),
       },
       {
         key: "vatAmount",
-        header: "Tiền thuế",
+        header: (
+          <TableColumnHeaderFilter
+            title="Tiền thuế"
+            sortState={getSortState("vatAmount")}
+            onSortChange={(state) => handleSortChange("vatAmount", state)}
+            searchValue={listHook.tableState.columnSearch["vatAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("vatAmount", val)}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            align="center"
+          />
+        ),
         size: 120,
         className: "text-right font-medium",
         cell: (inv: any) => money(inv.vatAmount || 0),
       },
       {
         key: "totalAmount",
-        header: "Tổng tiền",
+        header: (
+          <TableColumnHeaderFilter
+            title="Tổng tiền"
+            sortState={getSortState("totalAmount")}
+            onSortChange={(state) => handleSortChange("totalAmount", state)}
+            searchValue={listHook.tableState.columnSearch["totalAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("totalAmount", val)}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            align="center"
+          />
+        ),
         size: 120,
         className: "text-right font-medium",
         cell: (inv: any) => money(inv.totalAmount || 0),
       },
       {
         key: "status",
-        header: "Trạng thái",
+        header: (
+          <TableColumnHeaderFilter
+            title="Trạng thái"
+            sortState={getSortState("status")}
+            onSortChange={(state) => handleSortChange("status", state)}
+            searchValue={listHook.tableState.columnSearch["status"] || ""}
+            onSearchChange={(val) => handleSearchChange("status", val)}
+            selectedFilters={listHook.tableState.columnFilters["status"] || []}
+            onFilterChange={(vals) => handleFilterChange("status", vals)}
+            align="center"
+            columnKey="status"
+            queryKeyPrefix="partner-invoice-options"
+            requireSearchToFetchOptions={false}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={async () => ({
+              items: [
+                { value: "DRAFT", label: "Nháp" },
+                { value: "CONFIRMED", label: "Đã xác nhận" },
+                { value: "CANCELLED", label: "Đã hủy" },
+              ],
+              total: 3,
+              next: null,
+            })}
+          />
+        ),
         size: 100,
         className: "text-center",
         cell: (inv: any) => (
@@ -190,7 +386,25 @@ export function PartnerInvoiceDrawer({
       },
       {
         key: "description",
-        header: "Diễn giải",
+        header: (
+          <TableColumnHeaderFilter
+            title="Diễn giải"
+            sortState={getSortState("description")}
+            onSortChange={(state) => handleSortChange("description", state)}
+            searchValue={listHook.tableState.columnSearch["description"] || ""}
+            onSearchChange={(val) => handleSearchChange("description", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["description"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("description", vals)}
+            align="center"
+            columnKey="description"
+            queryKeyPrefix="partner-invoice-options"
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
         size: 250,
         cell: (inv: any) => (
           <Tooltip content={inv.description || ""}>
@@ -207,7 +421,7 @@ export function PartnerInvoiceDrawer({
     <DrawerModal
       open={open}
       onClose={onClose}
-      title={`Chi tiết đối tác: ${partnerName || taxCode}`}
+      title={`Chi tiết đối tác: ${taxCode}${partnerName ? ` - ${partnerName}` : ""}`}
       panelClassName="min-[1024px]:w-[calc(100vw-280px)] w-full max-w-[90vw]"
       bodyClassName="flex flex-col p-4"
     >
