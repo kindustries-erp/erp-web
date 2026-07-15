@@ -40,6 +40,8 @@ export const bankStatementApi = {
     sortOrder?: "ASC" | "DESC";
     transactionType?: string;
     tagIds?: string[];
+    column_search?: string;
+    column_filters?: string;
   }) => {
     const cleanParams = Object.fromEntries(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -50,6 +52,30 @@ export const bankStatementApi = {
       {
         params: cleanParams,
         paramsSerializer: { indexes: null },
+      },
+    );
+    return res.data;
+  },
+
+  getColumnOptions: async (
+    column: string,
+    search: string,
+    page: number,
+    pageSize: number,
+    filtersStr?: string,
+    sourceType?: "BANK" | "CASH",
+  ) => {
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/transactions/column-options",
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          column_filters: filtersStr,
+          sourceType,
+        },
       },
     );
     return res.data;
