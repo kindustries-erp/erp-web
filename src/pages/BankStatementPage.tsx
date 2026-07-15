@@ -95,7 +95,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     });
 
     return {
-      search: true,
+      search: false,
       period: true,
       noDefaultPeriod: true,
       custom,
@@ -215,6 +215,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       <TableColumnHeaderFilter
         title={label}
         align="center"
+        className="w-full justify-center"
         sortState={getSortState(key)}
         onSortChange={(state) => handleSortChange(key, state)}
         searchValue={tableState.columnSearch[key] || ""}
@@ -330,7 +331,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
             : row.cashBook?.name || "";
         return renderCopyableText(text);
       },
-      size: 150,
+      size: 120,
     },
     {
       key: "transDate",
@@ -340,8 +341,30 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         t("bankStatement.columns.transDate"),
       ),
       cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 150,
+      size: 120,
       sortable: false,
+    },
+    {
+      key: "referenceNumber",
+      header: renderHeaderFilter(
+        "referenceNumber",
+        t("bankStatement.columns.referenceNumber"),
+      ),
+      size: 150,
+      cell: (row: any) => {
+        if (!row.referenceNumber) return "—";
+        return (
+          <div
+            className="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDetailTransactionId(row.id);
+            }}
+          >
+            {row.referenceNumber}
+          </div>
+        );
+      },
     },
 
     {
@@ -387,6 +410,15 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       sortable: false,
     },
     {
+      key: "balance",
+      dataIndex: "balance",
+      header: renderHeaderFilter("balance", t("bankStatement.columns.balance")),
+      cell: (row: any) => money(row.balance),
+      className: "text-right font-medium",
+      size: 150,
+      sortable: false,
+    },
+    {
       key: "netOffAmount",
       header: renderHeaderFilter("netOffAmount", "Đã cấn trừ"),
       className: "text-right bg-blue-50/50 border-l border-blue-200",
@@ -418,15 +450,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           <span className="text-slate-700 font-medium">{money(remaining)}</span>
         );
       },
-    },
-    {
-      key: "balance",
-      dataIndex: "balance",
-      header: renderHeaderFilter("balance", t("bankStatement.columns.balance")),
-      cell: (row: any) => money(row.balance),
-      className: "text-right font-medium",
-      size: 150,
-      sortable: false,
     },
     {
       key: "correspondentName",
@@ -463,15 +486,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const text = row.branch?.name || "";
         return renderCopyableText(text);
       },
-    },
-    {
-      key: "referenceNumber",
-      header: renderHeaderFilter(
-        "referenceNumber",
-        t("bankStatement.columns.referenceNumber"),
-      ),
-      size: 150,
-      cell: (row: any) => renderCopyableText(row.referenceNumber),
     },
   ];
 
