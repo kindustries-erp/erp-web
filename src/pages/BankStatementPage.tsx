@@ -16,6 +16,9 @@ import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import toast from "react-hot-toast";
 
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
   const [page, setPage] = useState(1);
@@ -23,7 +26,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isOriginalFilesOpen, setIsOriginalFilesOpen] = useState(false);
-  const [sortArray, setSortArray] = useState<string[]>(["-transDate"]);
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
@@ -102,8 +104,10 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
 
   const filter = useFilterPanel(filterConfig, () => setPage(1));
 
-  const sortBy = sortArray[0]?.replace("-", "");
-  const sortOrder = sortArray[0]?.startsWith("-") ? "DESC" : "ASC";
+  const tableState = useTableColumnState(`bank-statement-${type}-table-v3`);
+
+  const sortBy = tableState.sorts[0]?.replace("-", "") || "transDate";
+  const sortOrder = tableState.sorts[0]?.startsWith("-") ? "DESC" : "ASC";
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: [
@@ -112,7 +116,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       page,
       pageSize,
       filter.state,
-      sortArray,
+      tableState.sorts,
+      tableState.columnFilters,
+      tableState.columnSearch,
     ],
     queryFn: () =>
       bankStatementApi.getTransactions({
@@ -131,8 +137,96 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           | string
           | undefined,
         tagIds: filter.state.custom.tagIds as unknown as string[] | undefined,
+        column_search:
+          Object.keys(tableState.columnSearch).length > 0
+            ? JSON.stringify(tableState.columnSearch)
+            : undefined,
+        column_filters:
+          Object.keys(tableState.columnFilters).length > 0
+            ? JSON.stringify(tableState.columnFilters)
+            : undefined,
       }),
   });
+
+  const fetchColumnOptions = async ({
+    columnKey,
+    search,
+    pageParam,
+    filtersStr,
+  }: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    return bankStatementApi.getColumnOptions(
+      columnKey,
+      search,
+      pageParam,
+      20,
+      filtersStr,
+      type === "bank" ? "BANK" : "CASH",
+    );
+  };
+
+  const getSortState = (columnKey: string) => {
+    const current = tableState.sorts[0];
+    if (!current) return "none";
+    if (current === columnKey) return "asc";
+    if (current === `-${columnKey}`) return "desc";
+    return "none";
+  };
+
+  const handleSortChange = (
+    columnKey: string,
+    state: "asc" | "desc" | "none",
+  ) => {
+    tableState.setSort(columnKey, state);
+  };
+
+  const handleSearchChange = (columnKey: string, value: string) => {
+    tableState.setColumnSearch(columnKey, value);
+    setPage(1);
+  };
+
+  const handleFilterChange = (columnKey: string, values: string[]) => {
+    tableState.setColumnFilter(columnKey, values);
+    setPage(1);
+  };
+
+  const formatAmtOption = (val: string | number) => {
+    const n = Number(val || 0);
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString("vi-VN", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const renderHeaderFilter = (key: string, label: string) => {
+    let formatOptionLabel: ((val: string) => string) | undefined;
+    if (
+      ["thu", "chi", "balance", "netOffAmount", "remainingAmount"].includes(key)
+    ) {
+      formatOptionLabel = formatAmtOption as any;
+    }
+
+    return (
+      <TableColumnHeaderFilter
+        title={label}
+        sortState={getSortState(key)}
+        onSortChange={(state) => handleSortChange(key, state)}
+        searchValue={tableState.columnSearch[key] || ""}
+        onSearchChange={(val) => handleSearchChange(key, val)}
+        selectedFilters={tableState.columnFilters[key] || []}
+        onFilterChange={(vals) => handleFilterChange(key, vals)}
+        columnKey={key}
+        allFilters={tableState.columnFilters}
+        fetchOptions={fetchColumnOptions}
+        formatOptionLabel={formatOptionLabel}
+      />
+    );
+  };
 
   const summaryRow = useMemo(() => {
     if (!data?.items || data.items.length === 0) return undefined;
@@ -221,7 +315,10 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const columns: any[] = [
     {
       key: "account",
-      header: type === "bank" ? "Ngân hàng" : "Sổ quỹ",
+      header: renderHeaderFilter(
+        "account",
+        type === "bank" ? "Ngân hàng" : "Sổ quỹ",
+      ),
       cell: (row: any) => {
         const text =
           type === "bank"
@@ -236,22 +333,28 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     {
       key: "transDate",
       dataIndex: "transDate",
-      header: t("bankStatement.columns.transDate"),
+      header: renderHeaderFilter(
+        "transDate",
+        t("bankStatement.columns.transDate"),
+      ),
       cell: (row: any) => formatGMT7(row.transDate, "date"),
       size: 150,
-      sortable: true,
+      sortable: false,
     },
 
     {
       key: "description",
       dataIndex: "description",
-      header: t("bankStatement.columns.description"),
+      header: renderHeaderFilter(
+        "description",
+        t("bankStatement.columns.description"),
+      ),
       size: 400,
       cell: (row: any) => renderCopyableText(row.description),
     },
     {
       key: "thu",
-      header: t("bankStatement.columns.thu"),
+      header: renderHeaderFilter("thu", t("bankStatement.columns.thu")),
       cell: (row: any) => {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
@@ -264,12 +367,11 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       },
       className: "text-right",
       size: 150,
-      sortable: true,
-      sortKey: "creditAmount",
+      sortable: false,
     },
     {
       key: "chi",
-      header: t("bankStatement.columns.chi"),
+      header: renderHeaderFilter("chi", t("bankStatement.columns.chi")),
       cell: (row: any) => {
         const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
@@ -280,8 +382,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       },
       className: "text-right",
       size: 150,
-      sortable: true,
-      sortKey: "debitAmount",
+      sortable: false,
     },
     {
       key: "netOffAmount",
@@ -319,7 +420,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     {
       key: "balance",
       dataIndex: "balance",
-      header: t("bankStatement.columns.balance"),
+      header: renderHeaderFilter("balance", t("bankStatement.columns.balance")),
       cell: (row: any) => money(row.balance),
       className: "text-right font-medium",
       size: 150,
@@ -327,25 +428,34 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     },
     {
       key: "correspondentName",
-      header: t("bankStatement.columns.correspondentName"),
+      header: renderHeaderFilter(
+        "correspondentName",
+        t("bankStatement.columns.correspondentName"),
+      ),
       size: 200,
       cell: (row: any) => renderCopyableText(row.correspondentName),
     },
     {
       key: "correspondentAccount",
-      header: t("bankStatement.columns.correspondentAccount"),
+      header: renderHeaderFilter(
+        "correspondentAccount",
+        t("bankStatement.columns.correspondentAccount"),
+      ),
       size: 150,
       cell: (row: any) => renderCopyableText(row.correspondentAccount),
     },
     {
       key: "correspondentBank",
-      header: t("bankStatement.columns.correspondentBank"),
+      header: renderHeaderFilter(
+        "correspondentBank",
+        t("bankStatement.columns.correspondentBank"),
+      ),
       size: 150,
       cell: (row: any) => renderCopyableText(row.correspondentBank),
     },
     {
       key: "branch",
-      header: "Chi nhánh",
+      header: renderHeaderFilter("branch", "Chi nhánh"),
       size: 150,
       cell: (row: any) => {
         const text = row.branch?.name || "";
@@ -354,7 +464,10 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     },
     {
       key: "referenceNumber",
-      header: t("bankStatement.columns.referenceNumber"),
+      header: renderHeaderFilter(
+        "referenceNumber",
+        t("bankStatement.columns.referenceNumber"),
+      ),
       size: 150,
       cell: (row: any) => renderCopyableText(row.referenceNumber),
     },
@@ -394,14 +507,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         }}
         filterConfig={filterConfig}
         filter={filter}
-        sortArray={sortArray}
+        sortArray={tableState.sorts}
         onSort={(colKey) => {
-          setSortArray((prev) => {
-            const current = prev[0];
-            if (current === colKey) return [`-${colKey}`];
-            if (current === `-${colKey}`) return [];
-            return [colKey];
-          });
+          handleSortChange(
+            colKey,
+            getSortState(colKey) === "asc" ? "desc" : "asc",
+          );
           setPage(1);
         }}
         rowActions={(row) => [
