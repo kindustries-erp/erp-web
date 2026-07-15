@@ -16,6 +16,7 @@ import {
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Combobox } from "@/shared/components/Combobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 
 import {
@@ -264,57 +265,29 @@ export function InvoiceImportSyncDrawer({
       panelClassName="min-[1024px]:w-[520px]"
     >
       <div className="flex flex-col h-full">
-        {/* Tab Direction */}
-        <div className="flex border-b border-border shrink-0 px-6 mt-[-1rem]">
-          {(["IN", "OUT"] as Direction[]).map((d) => (
-            <button
-              key={d}
-              disabled={xml.step !== "select" && xml.step !== "result"}
-              onClick={() => handleDirectionChange(d)}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 text-sm font-medium border-b-2 transition-colors ${
-                direction === d
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground disabled:cursor-not-allowed"
-              }`}
-            >
-              {d === "IN" ? (
-                <>
-                  <ArrowDownToLine className="w-4 h-4" />
-                  {t("inbound", "Hóa đơn mua vào")}
-                </>
-              ) : (
-                <>
-                  <ArrowUpFromLine className="w-4 h-4" />
-                  {t("outbound", "Hóa đơn bán ra")}
-                </>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Method */}
-        <div className="px-6 py-3 border-b border-border/50">
-          <div className="flex p-1 bg-surface-hover rounded-md mx-auto w-fit">
-            <button
-              onClick={() => handleMethodChange("GDT")}
-              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${
-                method === "GDT"
-                  ? "bg-primary text-primary-fg shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Từ hệ thống GDT
-            </button>
-            <button
-              onClick={() => handleMethodChange("XML")}
-              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${
-                method === "XML"
-                  ? "bg-primary text-primary-fg shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Tải file XML
-            </button>
+        {/* Selection Dropdowns */}
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-border shrink-0 mt-[-1rem]">
+          <div className="flex-1">
+            <Combobox
+              options={[
+                { value: "IN", label: t("inbound", "Hóa đơn mua vào") },
+                { value: "OUT", label: t("outbound", "Hóa đơn bán ra") }
+              ]}
+              value={direction}
+              onChange={(v) => handleDirectionChange(v as Direction)}
+              className="w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <Combobox
+              options={[
+                { value: "GDT", label: "Từ hệ thống GDT" },
+                { value: "XML", label: "Tải file XML" }
+              ]}
+              value={method}
+              onChange={(v) => handleMethodChange(v as "GDT" | "XML")}
+              className="w-full"
+            />
           </div>
         </div>
 

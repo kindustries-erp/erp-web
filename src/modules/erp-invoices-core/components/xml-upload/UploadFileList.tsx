@@ -1,4 +1,4 @@
-import { FileText, FileCode, Archive, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileText, FileCode, Archive, X, CheckCircle2, AlertCircle, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { type FileEntry } from "../../hooks/useInvoiceXmlUpload";
 
@@ -49,15 +49,32 @@ export function UploadFileList({ files, onRemove }: Props) {
                 </span>
               )}
             </div>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove(entry.id);
-              }}
-              className="ml-2 p-0.5 hover:text-destructive transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            <div className="ml-2 flex items-center gap-1 shrink-0">
+              {entry.type === "pdf" && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(URL.createObjectURL(entry.file), "_blank");
+                  }}
+                  className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                  title="Xem PDF"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(entry.id);
+                }}
+                className="p-1.5 hover:text-destructive transition-colors rounded hover:bg-destructive/10"
+                title="Xóa"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </li>
         ))}
       </ul>

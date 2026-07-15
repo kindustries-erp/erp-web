@@ -483,7 +483,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                               );
                             }}
                           >
-                            Xem
+                            <Eye className="w-4 h-4" />
                           </Button>
                         </div>
                       )}
@@ -513,7 +513,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                               handlePreviewPdf(inv.id, pdf.key, pdf.filename);
                             }}
                           >
-                            Xem
+                            <Eye className="w-4 h-4" />
                           </Button>
                         </div>
                       ))}
