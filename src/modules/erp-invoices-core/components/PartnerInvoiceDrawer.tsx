@@ -209,7 +209,7 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
             align="center"
             columnKey="invoiceDate"
-            queryKeyPrefix="partner-invoice-options"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
             requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -237,7 +237,7 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
             align="center"
             columnKey="serialNo"
-            queryKeyPrefix="partner-invoice-options"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
             requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -262,7 +262,7 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
             align="center"
             columnKey="invoiceNo"
-            queryKeyPrefix="partner-invoice-options"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
             requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -350,7 +350,7 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("status", vals)}
             align="center"
             columnKey="status"
-            queryKeyPrefix="partner-invoice-options"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
             requireSearchToFetchOptions={false}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async () => ({
@@ -399,7 +399,7 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("description", vals)}
             align="center"
             columnKey="description"
-            queryKeyPrefix="partner-invoice-options"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
             requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
