@@ -5,6 +5,7 @@ import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Button } from "@/shared/components/ui/Button";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -20,6 +21,7 @@ import { StandardTable } from "@/shared/components/StandardTable";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 import { CategoryTransactionsDrawer } from "./components/CategoryTransactionsDrawer";
+import { PartnerTransactionsDrawer } from "./components/PartnerTransactionsDrawer";
 
 export function CashflowDashboard() {
   const t = useT();
@@ -30,6 +32,12 @@ export function CashflowDashboard() {
   const [selectedTag, setSelectedTag] = React.useState<{
     id: string;
     label: string;
+  } | null>(null);
+
+  const [partnerDrawerOpen, setPartnerDrawerOpen] = React.useState(false);
+  const [selectedPartner, setSelectedPartner] = React.useState<{
+    account?: string;
+    name?: string;
   } | null>(null);
 
   const { data: branches = [] } = useQuery({
@@ -75,7 +83,12 @@ export function CashflowDashboard() {
     };
   }, [branches, tags]);
 
-  const filter = useFilterPanel(filterConfig, () => {});
+  const filter = useFilterPanel(filterConfig, () => {
+    setPage(1);
+  });
+
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(20);
 
   const queryClient = useQueryClient();
 
@@ -129,6 +142,29 @@ export function CashflowDashboard() {
       }),
   });
 
+  const { data: partnerStats, isLoading: isPartnerLoading, isFetching: isPartnerFetching, refetch: refetchPartner } = useQuery({
+    queryKey: [
+      "partner-stats",
+      page,
+      pageSize,
+      filter.state.dateFrom,
+      filter.state.dateTo,
+      filter.state.custom.branchId,
+      filter.state.custom.sourceType,
+      filter.state.custom.tagIds,
+    ],
+    queryFn: () =>
+      bankStatementApi.getPartnerStats({
+        page,
+        pageSize,
+        startDate: filter.state.dateFrom || undefined,
+        endDate: filter.state.dateTo || undefined,
+        branchId: filter.state.custom.branchId || undefined,
+        sourceType: (filter.state.custom.sourceType as any) || undefined,
+        tagIds: (filter.state.custom.tagIds as unknown as string[]) || undefined,
+      }),
+  });
+
   const barIn = "#059669"; // Emerald 600
   const barOut = "#ea580c"; // Orange 600
 
@@ -168,120 +204,76 @@ export function CashflowDashboard() {
     }),
   );
 
-  const topTransactionsCols = [
+  const partnerCols = [
     {
-      key: "source",
-      header: t("bankStatement.columns.sourceName"),
+      key: "correspondentAccount",
+      header: "Tài khoản đối ứng",
       cell: (row: any) => {
-        if (row.sourceType === "BANK")
-          return row.bankAccount?.bankName
-            ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
-            : "Bank";
-        return row.cashBook?.name || "Cash";
+        if (!row.correspondentAccount) return "Khác";
+        return (
+          <Button
+            variant="link"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              setSelectedPartner({
+                account: row.correspondentAccount,
+                name: row.correspondentName,
+              });
+              setPartnerDrawerOpen(true);
+            }}
+            className="font-medium text-primary hover:underline p-0 h-auto"
+          >
+            {row.correspondentAccount}
+          </Button>
+        );
       },
-      size: 150,
-    },
-    {
-      key: "transDate",
-      dataIndex: "transDate",
-      header: t("bankStatement.columns.transDate"),
-      cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 150,
-    },
-    {
-      key: "description",
-      dataIndex: "description",
-      header: t("bankStatement.columns.description"),
-      size: 400,
-      cell: (row: any) => (
-        <div className="w-full">
-          <Tooltip content={row.description || ""} side="top">
-            <div className="whitespace-normal break-words w-full line-clamp-2 max-w-[400px]">
-              {row.description}
-            </div>
-          </Tooltip>
-        </div>
-      ),
-    },
-    {
-      key: "thu",
-      header: t("bankStatement.columns.thu"),
-      cell: (row: any) => {
-        const credit = parseFloat(row.creditAmount) || 0;
-        if (credit > 0)
-          return (
-            <span className="text-emerald-600 font-medium">
-              +{money(credit)}
-            </span>
-          );
-        return null;
-      },
-      size: 150,
-    },
-    {
-      key: "chi",
-      header: t("bankStatement.columns.chi"),
-      cell: (row: any) => {
-        const debit = parseFloat(row.debitAmount) || 0;
-        if (debit > 0)
-          return (
-            <span className="text-[#ea580c] font-medium">{money(debit)}</span>
-          );
-        return null;
-      },
-      size: 150,
-    },
-    {
-      key: "tags",
-      header: "Danh mục",
-      cell: (row: any) => (
-        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
-          <div className="w-max">
-            <EntityTagSelector
-              entityType="bank_transaction"
-              entityId={row.id}
-            />
-          </div>
-        </div>
-      ),
       size: 200,
     },
     {
-      key: "referenceNumber",
-      dataIndex: "referenceNumber",
-      header: t("bankStatement.columns.referenceNumber"),
+      key: "correspondentName",
+      header: "Tên đối ứng",
+      cell: (row: any) => row.correspondentName || "Khác",
+      size: 300,
+    },
+    {
+      key: "totalCredit",
+      header: "Tổng thu",
+      cell: (row: any) => {
+        if (row.totalCredit > 0)
+          return <span className="text-emerald-600 font-medium">+{money(row.totalCredit)}</span>;
+        return null;
+      },
       size: 150,
-      valueType: "text" as const,
+      className: "text-right",
+      headerClassName: "text-center",
+    },
+    {
+      key: "totalDebit",
+      header: "Tổng chi",
+      cell: (row: any) => {
+        if (row.totalDebit > 0)
+          return <span className="text-[#ea580c] font-medium">{money(row.totalDebit)}</span>;
+        return null;
+      },
+      size: 150,
+      className: "text-right",
+      headerClassName: "text-center",
     },
   ];
 
   const topTransactionsInTotal = React.useMemo(() => {
-    return (data?.topTransactionsIn || []).reduce(
-      (acc: number, row: any) => acc + (parseFloat(row.creditAmount) || 0),
+    return (partnerStats?.items || []).reduce(
+      (acc: number, row: any) => acc + (parseFloat(row.totalCredit) || 0),
       0,
     );
-  }, [data?.topTransactionsIn]);
+  }, [partnerStats?.items]);
 
   const topTransactionsOutTotal = React.useMemo(() => {
-    return (data?.topTransactionsOut || []).reduce(
-      (acc: number, row: any) => acc + (parseFloat(row.debitAmount) || 0),
+    return (partnerStats?.items || []).reduce(
+      (acc: number, row: any) => acc + (parseFloat(row.totalDebit) || 0),
       0,
     );
-  }, [data?.topTransactionsOut]);
-
-  const top20Transactions = React.useMemo(() => {
-    const combined = [
-      ...(data?.topTransactionsIn || []),
-      ...(data?.topTransactionsOut || []),
-    ];
-    return combined
-      .sort((a, b) => {
-        const dateA = new Date(a.transDate || 0).getTime();
-        const dateB = new Date(b.transDate || 0).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 20);
-  }, [data?.topTransactionsIn, data?.topTransactionsOut]);
+  }, [partnerStats?.items]);
 
   const hasCashflowPerm = useHasAnyPermission(
     [
@@ -311,6 +303,7 @@ export function CashflowDashboard() {
       loading={isFetching}
       onRefresh={() => {
         refetch();
+        refetchPartner();
         queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
         queryClient.invalidateQueries({ queryKey: ["cashBooks"] });
       }}
@@ -458,27 +451,33 @@ export function CashflowDashboard() {
       <div className="grid grid-cols-1 gap-6 mt-8 mb-4">
         <div>
           <h3 className="text-lg font-semibold mb-3">
-            Top 20 Giao dịch Nổi Bật
+            Tình hình giao dịch theo đối tác
           </h3>
           <StandardTable
-            items={top20Transactions}
-            columns={topTransactionsCols}
+            items={partnerStats?.items || []}
+            columns={partnerCols}
             getRowKey={(row: any) => row.id}
-            loading={isLoading}
+            loading={isPartnerFetching}
             variant="spreadsheet"
-            minWidth={1500}
+            minWidth={800}
             enableColumnResizing={true}
             containerClassName=""
+            page={page}
+            pageSize={pageSize}
+            total={partnerStats?.total || 0}
+            totalPages={partnerStats?.totalPages || 0}
+            onPage={setPage}
+            onPageSize={setPageSize}
             summaryRow={{
-              description: (
+              correspondentName: (
                 <span className="font-semibold text-right block"></span>
               ),
-              thu: (
+              totalCredit: (
                 <span className="text-emerald-600 font-semibold">
                   +{money(topTransactionsInTotal)}
                 </span>
               ),
-              chi: (
+              totalDebit: (
                 <span className="text-[#ea580c] font-semibold">
                   {money(topTransactionsOutTotal)}
                 </span>
@@ -493,6 +492,15 @@ export function CashflowDashboard() {
         tagId={selectedTag?.id}
         tagLabel={selectedTag?.label}
         filterState={filter.state}
+      />
+      <PartnerTransactionsDrawer
+        open={partnerDrawerOpen}
+        onClose={() => setPartnerDrawerOpen(false)}
+        correspondentAccount={selectedPartner?.account}
+        correspondentName={selectedPartner?.name}
+        globalStartDate={filter.state.dateFrom || undefined}
+        globalEndDate={filter.state.dateTo || undefined}
+        globalBranchId={filter.state.custom.branchId as string | undefined}
       />
     </DashboardTemplate>
   );

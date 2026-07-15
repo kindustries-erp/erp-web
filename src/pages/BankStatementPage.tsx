@@ -214,6 +214,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     return (
       <TableColumnHeaderFilter
         title={label}
+        align="center"
         sortState={getSortState(key)}
         onSortChange={(state) => handleSortChange(key, state)}
         searchValue={tableState.columnSearch[key] || ""}
@@ -489,7 +490,12 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         icon={type === "bank" ? <Building2 /> : <Wallet />}
         tableId={`bank-statement-${type}-table-v3`}
         items={data?.items || []}
-        columns={columns}
+        columns={columns.map((c) => ({
+          ...c,
+          headerClassName: c.headerClassName
+            ? `${c.headerClassName} text-center`
+            : "text-center",
+        }))}
         getRowKey={(row: any) => row.id}
         summaryRow={summaryRow}
         loading={isFetching}
