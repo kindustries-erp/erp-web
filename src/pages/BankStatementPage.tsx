@@ -387,7 +387,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     },
     {
       key: "netOffAmount",
-      header: "Đã cấn trừ",
+      header: renderHeaderFilter("netOffAmount", "Đã cấn trừ"),
       className: "text-right bg-blue-50/50 border-l border-blue-200",
       headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
       size: 150,
@@ -401,7 +401,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     },
     {
       key: "remainingAmount",
-      header: "Còn lại",
+      header: renderHeaderFilter("remainingAmount", "Còn lại"),
       className: "text-right font-semibold bg-blue-50/50",
       headerClassName: "text-center bg-blue-50/50",
       size: 150,
