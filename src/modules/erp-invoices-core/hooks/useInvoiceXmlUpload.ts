@@ -12,6 +12,8 @@ export type Direction = "IN" | "OUT";
 export interface FileEntry {
   file: File;
   id: string;
+  type: "xml" | "pdf" | "zip";
+  pairedPdf?: string; // Tên của file PDF (nếu đã ghép được)
 }
 
 export function useInvoiceXmlUpload(
@@ -28,19 +30,68 @@ export function useInvoiceXmlUpload(
 
   function addFiles(incoming: FileList | File[]) {
     const arr = Array.from(incoming);
-    const xmlOnly = arr.filter((f) => f.name.toLowerCase().endsWith(".xml"));
-    if (xmlOnly.length === 0) return;
+    const supported = arr.filter((f) => {
+      const ext = f.name.toLowerCase();
+      return ext.endsWith(".xml") || ext.endsWith(".pdf") || ext.endsWith(".zip");
+    });
+    
+    if (supported.length === 0) return;
+    
     setFiles((prev) => {
       const existingNames = new Set(prev.map((e) => e.file.name));
-      const newEntries = xmlOnly
+      const newEntries = supported
         .filter((f) => !existingNames.has(f.name))
-        .map((f) => ({ file: f, id: crypto.randomUUID() }));
-      return [...prev, ...newEntries];
+        .map((f) => {
+          const ext = f.name.toLowerCase().split('.').pop() || '';
+          return { 
+            file: f, 
+            id: crypto.randomUUID(),
+            type: ext as "xml" | "pdf" | "zip"
+          };
+        });
+        
+      const allEntries = [...prev, ...newEntries];
+      
+      // Auto-pairing logic
+      const pdfMap = new Map<string, string>(); // basename -> fullName
+      allEntries.forEach(e => {
+        if (e.type === "pdf") {
+          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          pdfMap.set(basename, e.file.name);
+        }
+      });
+      
+      return allEntries.map(e => {
+        if (e.type === "xml") {
+          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          if (pdfMap.has(basename)) {
+            return { ...e, pairedPdf: pdfMap.get(basename) };
+          }
+        }
+        return e;
+      });
     });
   }
 
   function removeFile(id: string) {
-    setFiles((prev) => prev.filter((e) => e.id !== id));
+    setFiles((prev) => {
+      const filtered = prev.filter((e) => e.id !== id);
+      // Re-run pairing in case a PDF was removed
+      const pdfMap = new Map<string, string>();
+      filtered.forEach(e => {
+        if (e.type === "pdf") {
+          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          pdfMap.set(basename, e.file.name);
+        }
+      });
+      return filtered.map(e => {
+        if (e.type === "xml") {
+          const basename = e.file.name.substring(0, e.file.name.lastIndexOf('.')).toLowerCase();
+          return { ...e, pairedPdf: pdfMap.get(basename) };
+        }
+        return e;
+      });
+    });
   }
 
   const onDragOver = useCallback((e: React.DragEvent) => {

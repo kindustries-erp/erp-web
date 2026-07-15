@@ -433,4 +433,6 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
+  pdfAttached?: { filename: string; invoiceNo: string }[];
+  pdfOrphans?: { filename: string; reason: string }[];
 }

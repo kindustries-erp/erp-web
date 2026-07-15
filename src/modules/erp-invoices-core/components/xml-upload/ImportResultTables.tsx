@@ -1,4 +1,4 @@
-import { SkipForward, AlertCircle } from "lucide-react";
+import { SkipForward, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   type BulkImportResult,
@@ -105,6 +105,62 @@ export function ImportResultTables({ result }: Props) {
                     <td className="px-3 py-2 text-red-700 max-w-[320px]">
                       {e.reason}
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      
+      {/* PDF Attached table */}
+      {result.pdfAttached && result.pdfAttached.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            PDF đã được ghép vào hóa đơn
+          </h3>
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border bg-emerald-50/50 text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Tên file PDF</th>
+                  <th className="text-left px-3 py-2 font-medium">Số hóa đơn</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.pdfAttached.map((s, i) => (
+                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
+                    <td className="px-3 py-2 text-muted-foreground font-medium truncate">{s.filename}</td>
+                    <td className="px-3 py-2 text-emerald-600 font-semibold">{s.invoiceNo}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Orphans table */}
+      {result.pdfOrphans && result.pdfOrphans.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
+            <AlertCircle className="w-4 h-4 text-amber-600" />
+            PDF không ghép được (Orphans)
+          </h3>
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border bg-amber-50/50 text-muted-foreground">
+                  <th className="text-left px-3 py-2 font-medium">Tên file PDF</th>
+                  <th className="text-left px-3 py-2 font-medium">Lý do</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.pdfOrphans.map((s, i) => (
+                  <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-muted/20">
+                    <td className="px-3 py-2 text-muted-foreground font-medium truncate">{s.filename}</td>
+                    <td className="px-3 py-2 text-amber-600">{s.reason}</td>
                   </tr>
                 ))}
               </tbody>

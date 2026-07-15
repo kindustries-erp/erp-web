@@ -37,7 +37,7 @@ export function UploadDropzone({
         <Trans
           i18nKey="importDropzoneText"
           ns="erpInvoices"
-          defaults="Kéo thả file <1>.xml</1> vào đây"
+          defaults="Kéo thả file <1>.xml, .pdf, .zip</1> vào đây"
           components={{ 1: <span className="text-primary" /> }}
         />
       </p>
@@ -50,7 +50,7 @@ export function UploadDropzone({
       <input
         ref={inputRef}
         type="file"
-        accept=".xml,application/xml,text/xml"
+        accept=".xml,application/xml,text/xml,.pdf,application/pdf,.zip,application/zip,application/x-zip-compressed"
         multiple
         className="hidden"
         onChange={(e) => e.target.files && onFilesSelected(e.target.files)}
