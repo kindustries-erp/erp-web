@@ -19,6 +19,8 @@ import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 
 import { CategoryTransactionsDrawer } from "./components/CategoryTransactionsDrawer";
 import { PartnerTransactionsDrawer } from "./components/PartnerTransactionsDrawer";
@@ -92,6 +94,57 @@ export function CashflowDashboard() {
 
   const queryClient = useQueryClient();
 
+  const tableState = useTableColumnState("cashflow-dashboard-partners");
+
+  const getSortState = (columnKey: string) => {
+    const current = tableState.sorts[0];
+    if (!current) return "none";
+    if (current === columnKey) return "asc";
+    if (current === `-${columnKey}`) return "desc";
+    return "none";
+  };
+
+  const handleSortChange = (
+    columnKey: string,
+    state: "asc" | "desc" | "none",
+  ) => {
+    tableState.setSort(columnKey, state);
+  };
+
+  const handleSearchChange = (columnKey: string, value: string) => {
+    tableState.setColumnSearch(columnKey, value);
+    setPage(1);
+  };
+
+  const handleFilterChange = (columnKey: string, values: string[]) => {
+    tableState.setColumnFilter(columnKey, values);
+    setPage(1);
+  };
+
+  const fetchColumnOptions = React.useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      return bankStatementApi.getColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        50,
+        filtersStr,
+        (filter.state.custom.sourceType as any) || undefined
+      );
+    },
+    [filter.state.custom.sourceType]
+  );
+
   const { data: bankAccounts = [] } = useQuery({
     queryKey: [
       "bankAccounts",
@@ -152,6 +205,9 @@ export function CashflowDashboard() {
       filter.state.custom.branchId,
       filter.state.custom.sourceType,
       filter.state.custom.tagIds,
+      tableState.sorts,
+      tableState.columnFilters,
+      tableState.columnSearch,
     ],
     queryFn: () =>
       bankStatementApi.getPartnerStats({
@@ -162,6 +218,14 @@ export function CashflowDashboard() {
         branchId: filter.state.custom.branchId || undefined,
         sourceType: (filter.state.custom.sourceType as any) || undefined,
         tagIds: (filter.state.custom.tagIds as unknown as string[]) || undefined,
+        column_filters: tableState.columnFilters
+          ? JSON.stringify(tableState.columnFilters)
+          : undefined,
+        column_search: tableState.columnSearch
+          ? JSON.stringify(tableState.columnSearch)
+          : undefined,
+        sortBy: tableState.sorts?.[0] ? tableState.sorts[0].replace(/^-/, "") : undefined,
+        sortOrder: tableState.sorts?.[0] ? (tableState.sorts[0].startsWith("-") ? "DESC" : "ASC") : undefined,
       }),
   });
 
@@ -204,10 +268,26 @@ export function CashflowDashboard() {
     }),
   );
 
+  const renderHeaderFilter = (key: string, title: string) => (
+    <TableColumnHeaderFilter
+      title={title}
+      align="center"
+      sortState={getSortState(key)}
+      onSortChange={(state) => handleSortChange(key, state)}
+      searchValue={tableState.columnSearch[key] || ""}
+      onSearchChange={(val) => handleSearchChange(key, val)}
+      selectedFilters={tableState.columnFilters[key] || []}
+      onFilterChange={(vals) => handleFilterChange(key, vals)}
+      columnKey={key}
+      allFilters={tableState.columnFilters}
+      fetchOptions={fetchColumnOptions}
+    />
+  );
+
   const partnerCols = [
     {
       key: "correspondentAccount",
-      header: "Tài khoản đối ứng",
+      header: renderHeaderFilter("correspondentAccount", "Tài khoản đối ứng"),
       cell: (row: any) => {
         if (!row.correspondentAccount) return "Khác";
         return (
@@ -231,13 +311,13 @@ export function CashflowDashboard() {
     },
     {
       key: "correspondentName",
-      header: "Tên đối ứng",
+      header: renderHeaderFilter("correspondentName", "Tên đối ứng"),
       cell: (row: any) => row.correspondentName || "Khác",
       size: 300,
     },
     {
       key: "totalCredit",
-      header: "Tổng thu",
+      header: renderHeaderFilter("totalCredit", "Tổng thu"),
       cell: (row: any) => {
         if (row.totalCredit > 0)
           return <span className="text-emerald-600 font-medium">+{money(row.totalCredit)}</span>;
@@ -249,7 +329,7 @@ export function CashflowDashboard() {
     },
     {
       key: "totalDebit",
-      header: "Tổng chi",
+      header: renderHeaderFilter("totalDebit", "Tổng chi"),
       cell: (row: any) => {
         if (row.totalDebit > 0)
           return <span className="text-[#ea580c] font-medium">{money(row.totalDebit)}</span>;

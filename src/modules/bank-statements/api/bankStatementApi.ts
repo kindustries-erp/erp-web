@@ -135,6 +135,10 @@ export const bankStatementApi = {
     sourceType?: "BANK" | "CASH";
     branchId?: string;
     tagIds?: string[];
+    column_search?: string;
+    column_filters?: string;
+    sortBy?: string;
+    sortOrder?: "ASC" | "DESC";
   }) => {
     const cleanParams = Object.fromEntries(
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
