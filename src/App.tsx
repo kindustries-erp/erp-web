@@ -37,6 +37,7 @@ import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { ErpPermissionsCorePage } from "@/pages/ErpPermissionsCorePage";
 import { ErpInvoicesInPage } from "@/pages/ErpInvoicesInPage";
 import { ErpInvoicesOutPage } from "@/pages/ErpInvoicesOutPage";
+import { InvoiceDashboard } from "@/pages/InvoiceDashboard";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -84,6 +85,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
+  "invoice-dashboard": InvoiceDashboard,
   "sys-tags": SysTagsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,

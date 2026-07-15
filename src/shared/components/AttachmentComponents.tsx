@@ -3,6 +3,7 @@ import {
   type PaymentVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { IconPaperclip } from "@/shared/components/icons";
+import { Eye, X } from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,18 +59,19 @@ export function AttachmentRow({
             window.open(url, "_blank", "noopener,noreferrer");
           }
         }}
-        className="px-2 py-1 rounded-lg border border-border bg-surface text-xs text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Xem tài liệu"
+        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        Xem
+        <Eye className="w-4 h-4" />
       </button>
       {onDelete && (
         <button
           type="button"
           title="Xóa đính kèm"
           onClick={() => onDelete(item)}
-          className="px-2 py-1 rounded-lg border border-border bg-surface text-xs text-[color:var(--warn-fg)] hover:bg-surface-hover"
+          className="p-1.5 rounded-lg border border-border bg-surface text-[color:var(--warn-fg)] hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
-          Xóa
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>

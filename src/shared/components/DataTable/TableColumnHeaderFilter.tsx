@@ -35,6 +35,7 @@ export interface TableColumnHeaderFilterProps {
   align?: "left" | "center" | "right";
   className?: string;
   columnKey?: string;
+  queryKeyPrefix?: string;
   requireSearchToFetchOptions?: boolean;
   allFilters?: Record<string, string[]>;
   formatOptionLabel?: (label: string) => string;
@@ -48,6 +49,7 @@ export interface TableColumnHeaderFilterProps {
     total: number;
     next: number | null;
   }>;
+  hideFilter?: boolean;
 }
 
 const dropdownSearchState = new Map<string, string>();
@@ -64,9 +66,11 @@ export function TableColumnHeaderFilter({
   align = "left",
   className,
   columnKey,
+  queryKeyPrefix,
   allFilters,
   formatOptionLabel,
   fetchOptions,
+  hideFilter,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -104,7 +108,7 @@ export function TableColumnHeaderFilter({
     isLoading: isOptionsLoading,
   } = useInfiniteQuery({
     queryKey: [
-      "inventory-stock-column-options",
+      queryKeyPrefix || "inventory-stock-column-options",
       columnKey,
       debouncedLocalSearch,
       filtersStr,
@@ -283,88 +287,92 @@ export function TableColumnHeaderFilter({
             </Button>
           </div>
 
-          {/* Search */}
-          <div className="p-2 border-b border-border">
-            <div className="relative flex items-center">
-              <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Tìm trong bảng..."
-                className="pl-8 pr-8 h-8 text-xs"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
-              {localSearch && (
-                <button
-                  className="absolute right-2 text-muted-foreground hover:text-foreground"
-                  onClick={() => {
-                    setLocalSearch("");
-                  }}
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Multi-select Filters */}
-          <div
-            className="p-2 max-h-48 overflow-y-auto flex flex-col"
-            ref={scrollRef}
-            onScroll={handleScroll}
-          >
-            {isOptionsLoading && finalOptions.length === 0 ? (
-              <div className="p-4 flex justify-center text-muted-foreground">
-                <Loader2 size={16} className="animate-spin" />
-              </div>
-            ) : finalOptions.length > 0 ? (
-              <>
-                <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
-                  <Checkbox
-                    checked={
-                      pendingFilters.length === finalOptions.length &&
-                      finalOptions.length > 0
-                    }
-                    onCheckedChange={handleSelectAll}
+          {!hideFilter && (
+            <>
+              {/* Search */}
+              <div className="p-2 border-b border-border">
+                <div className="relative flex items-center">
+                  <Search className="absolute left-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Tìm trong bảng..."
+                    className="pl-8 pr-8 h-8 text-xs"
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                   />
-                  <span className="text-xs font-medium">
-                    (Chọn tất cả đang hiển thị)
-                  </span>
-                </label>
-                {finalOptions.map((opt) => (
-                  <label
-                    key={opt.value}
-                    className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
-                  >
-                    <Checkbox
-                      checked={pendingFilters.includes(opt.value)}
-                      onCheckedChange={() => handleToggleFilter(opt.value)}
-                    />
-                    <span
-                      className="text-xs truncate"
-                      title={
-                        formatOptionLabel
-                          ? formatOptionLabel(opt.label)
-                          : opt.label
-                      }
+                  {localSearch && (
+                    <button
+                      className="absolute right-2 text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setLocalSearch("");
+                      }}
                     >
-                      {formatOptionLabel
-                        ? formatOptionLabel(opt.label)
-                        : opt.label || "(Trống)"}
-                    </span>
-                  </label>
-                ))}
-                {isFetchingNextPage && (
-                  <div className="p-2 flex justify-center text-muted-foreground">
-                    <Loader2 size={14} className="animate-spin" />
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Multi-select Filters */}
+              <div
+                className="p-2 max-h-48 overflow-y-auto flex flex-col"
+                ref={scrollRef}
+                onScroll={handleScroll}
+              >
+                {isOptionsLoading && finalOptions.length === 0 ? (
+                  <div className="p-4 flex justify-center text-muted-foreground">
+                    <Loader2 size={16} className="animate-spin" />
+                  </div>
+                ) : finalOptions.length > 0 ? (
+                  <>
+                    <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
+                      <Checkbox
+                        checked={
+                          pendingFilters.length === finalOptions.length &&
+                          finalOptions.length > 0
+                        }
+                        onCheckedChange={handleSelectAll}
+                      />
+                      <span className="text-xs font-medium">
+                        (Chọn tất cả đang hiển thị)
+                      </span>
+                    </label>
+                    {finalOptions.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={pendingFilters.includes(opt.value)}
+                          onCheckedChange={() => handleToggleFilter(opt.value)}
+                        />
+                        <span
+                          className="text-xs truncate"
+                          title={
+                            formatOptionLabel
+                              ? formatOptionLabel(opt.label)
+                              : opt.label
+                          }
+                        >
+                          {formatOptionLabel
+                            ? formatOptionLabel(opt.label)
+                            : opt.label || "(Trống)"}
+                        </span>
+                      </label>
+                    ))}
+                    {isFetchingNextPage && (
+                      <div className="p-2 flex justify-center text-muted-foreground">
+                        <Loader2 size={14} className="animate-spin" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-2 text-center text-xs text-muted-foreground">
+                    Không có dữ liệu
                   </div>
                 )}
-              </>
-            ) : (
-              <div className="p-2 text-center text-xs text-muted-foreground">
-                Không có dữ liệu
               </div>
-            )}
-          </div>
+            </>
+          )}
 
           {/* Footer Actions */}
           <div className="p-2 border-t border-border flex justify-between items-center bg-muted/50 rounded-b-xl">

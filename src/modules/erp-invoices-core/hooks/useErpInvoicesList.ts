@@ -6,15 +6,20 @@ import {
 } from "./useErpInvoiceListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
-export function useErpInvoicesList(initialDirection: Direction = "IN") {
-  const [direction, setDirection] = useState<Direction>(initialDirection);
+export function useErpInvoicesList(
+  initialDirection: Direction | "ALL" = "IN",
+  partnerTaxCode?: string,
+) {
+  const [direction, setDirection] = useState<Direction | "ALL">(
+    initialDirection,
+  );
   const [invoices, setInvoices] = useState<ErpInvoice[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const store = useErpInvoiceListStore();
-  const state = store.states[direction];
+  const state = store.states[direction === "ALL" ? "IN" : direction]; // Use IN state for ALL
 
   const tableState = useTableColumnState(`erp-invoices-table-${direction}`);
 
@@ -51,7 +56,8 @@ export function useErpInvoicesList(initialDirection: Direction = "IN") {
     setLoading(true);
     try {
       const res = await erpInvoicesCoreApi.list({
-        direction,
+        direction: direction === "ALL" ? undefined : direction,
+        partner_tax_code: partnerTaxCode,
         search: state.search || undefined,
         seller_name: state.seller_name || undefined,
         buyer_name: state.buyer_name || undefined,
@@ -76,6 +82,7 @@ export function useErpInvoicesList(initialDirection: Direction = "IN") {
     }
   }, [
     direction,
+    partnerTaxCode,
     state.search,
     state.seller_name,
     state.buyer_name,
@@ -104,6 +111,8 @@ export function useErpInvoicesList(initialDirection: Direction = "IN") {
     !!state.tag_id,
   ].filter(Boolean).length;
 
+  const safeDir = direction === "ALL" ? "IN" : direction;
+
   const filterPanel = useMemo(
     () => ({
       state: {
@@ -128,49 +137,49 @@ export function useErpInvoicesList(initialDirection: Direction = "IN") {
         amountMax: "",
       },
       panelOpen: state.filterPanelOpen,
-      openPanel: () => store.setFilterPanelOpen(direction, true),
-      closePanel: () => store.setFilterPanelOpen(direction, false),
-      togglePanel: () => store.setFilterPanelOpen(direction, (prev) => !prev),
-      setPeriod: (v: string) => store.setPeriod(direction, v),
-      setDateFrom: (v: string) => store.setDateFrom(direction, v),
-      setDateTo: (v: string) => store.setDateTo(direction, v),
+      openPanel: () => store.setFilterPanelOpen(safeDir, true),
+      closePanel: () => store.setFilterPanelOpen(safeDir, false),
+      togglePanel: () => store.setFilterPanelOpen(safeDir, (prev) => !prev),
+      setPeriod: (v: string) => store.setPeriod(safeDir, v),
+      setDateFrom: (v: string) => store.setDateFrom(safeDir, v),
+      setDateTo: (v: string) => store.setDateTo(safeDir, v),
       setChannel: () => {},
       setSearchInput: (v: string) => {
-        store.setSearchInput(direction, v);
+        store.setSearchInput(safeDir, v);
         if (!v) {
-          store.setSearch(direction, "");
+          store.setSearch(safeDir, "");
           return;
         }
         debounce(() => {
-          store.setSearch(direction, v);
+          store.setSearch(safeDir, v);
         });
       },
       setAmountMinInput: () => {},
       setAmountMaxInput: () => {},
-      setStatus: (v: string) => store.setStatus(direction, v),
+      setStatus: (v: string) => store.setStatus(safeDir, v),
       setCounterpartySource: () => {},
       setCustom: (key: string, v: string) => {
-        if (key === "seller_name") store.setSellerName(direction, v);
-        if (key === "buyer_name") store.setBuyerName(direction, v);
-        if (key === "tag_id") store.setTagId(direction, v);
+        if (key === "seller_name") store.setSellerName(safeDir, v);
+        if (key === "buyer_name") store.setBuyerName(safeDir, v);
+        if (key === "tag_id") store.setTagId(safeDir, v);
       },
       resetAll: () => {
-        store.resetAllFilters(direction);
+        store.resetAllFilters(safeDir);
         tableState.resetFilters();
       },
       hasActiveFilter: activeFilterCount > 0,
       activeFilterCount,
     }),
-    [state, store, direction, activeFilterCount],
+    [state, store, safeDir, activeFilterCount, tableState],
   );
 
   return {
     direction,
     setDirection,
     page: state.page,
-    setPage: (p: number) => store.setPage(direction, p),
+    setPage: (p: number) => store.setPage(safeDir, p),
     pageSize: state.pageSize,
-    setPageSize: (s: number) => store.setPageSize(direction, s),
+    setPageSize: (s: number) => store.setPageSize(safeDir, s),
     invoices,
     total,
     totalPages,
@@ -179,7 +188,7 @@ export function useErpInvoicesList(initialDirection: Direction = "IN") {
     sortOrder,
     handleSort: (key: string) => {
       tableState.toggleSort(key);
-      store.setPage(direction, 1);
+      store.setPage(safeDir, 1);
     },
     filterPanel,
     loadInvoices,

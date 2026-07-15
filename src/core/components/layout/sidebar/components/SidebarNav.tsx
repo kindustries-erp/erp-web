@@ -361,6 +361,7 @@ export function SidebarNav({
         hasMatch([
           t("nav.sections.accounting"),
           canReadInvoices ? t("nav.items.erpInvoices") : "",
+          canReadInvoices ? "Tổng quan hóa đơn" : "",
           canReadInvoices ? t("nav.items.inbound") : "",
           canReadInvoices ? t("nav.items.outbound") : "",
           canReadBankStatements ? t("nav.items.cashflow") : "",
@@ -379,9 +380,16 @@ export function SidebarNav({
                 label={t("nav.items.erpInvoices")}
                 active={
                   currentPage === "erp-invoices-in" ||
-                  currentPage === "erp-invoices-out"
+                  currentPage === "erp-invoices-out" ||
+                  currentPage === "invoice-dashboard"
                 }
               >
+                <NavGroupItem
+                  label="Tổng quan"
+                  active={currentPage === "invoice-dashboard"}
+                  onClick={() => navTo("invoice-dashboard")}
+                  contextPage="invoice-dashboard"
+                />
                 <NavGroupItem
                   label={t("nav.items.inbound")}
                   active={currentPage === "erp-invoices-in"}

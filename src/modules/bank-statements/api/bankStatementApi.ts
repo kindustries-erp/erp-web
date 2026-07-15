@@ -42,6 +42,8 @@ export const bankStatementApi = {
     tagIds?: string[];
     column_search?: string;
     column_filters?: string;
+    correspondentAccount?: string;
+    correspondentName?: string;
   }) => {
     const cleanParams = Object.fromEntries(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -94,6 +96,8 @@ export const bankStatementApi = {
     sourceType?: "BANK" | "CASH";
     branchId?: string;
     tagIds?: string[];
+    correspondentAccount?: string;
+    correspondentName?: string;
   }): Promise<{
     totalCashIn: number;
     totalCashOut: number;
@@ -115,6 +119,32 @@ export const bankStatementApi = {
     );
     const res = await axiosInstance.get(
       "/api/v1/bank-transactions-core/dashboard-stats",
+      {
+        params: cleanParams,
+        paramsSerializer: { indexes: null },
+      },
+    );
+    return res.data;
+  },
+
+  getPartnerStats: async (params: {
+    page?: number;
+    pageSize?: number;
+    startDate?: string;
+    endDate?: string;
+    sourceType?: "BANK" | "CASH";
+    branchId?: string;
+    tagIds?: string[];
+    column_search?: string;
+    column_filters?: string;
+    sortBy?: string;
+    sortOrder?: "ASC" | "DESC";
+  }) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+    );
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/partner-stats",
       {
         params: cleanParams,
         paramsSerializer: { indexes: null },

@@ -73,7 +73,7 @@ export const erpInvoicesVi = {
 
   // Import Modal
   importTitle: "Import XML hóa đơn",
-  importDropzoneText: "Kéo thả file <1>.xml</1> vào đây",
+  importDropzoneText: "Kéo thả file <1>.xml, .pdf, .zip</1> vào đây",
   importDropzoneSubtext:
     "hoặc click để chọn từ máy tính (tối đa 200 file, 5MB/file)",
   importSelected: "{{count}} file đã chọn",

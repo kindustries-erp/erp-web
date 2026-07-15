@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
@@ -356,6 +357,19 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             const branch = branches.find((b) => b.value === valStr);
             if (branch) labelStr = branch.label;
           }
+          if (columnKey === "invoiceDate" && valStr) {
+            // Backend now returns YYYY-MM-DD via TO_CHAR — use as value directly
+            const dateVal = valStr.substring(0, 10); // ensure YYYY-MM-DD
+            try {
+              const parsed = new Date(dateVal);
+              const label = isValid(parsed)
+                ? format(parsed, "dd-MM-yyyy")
+                : dateVal;
+              return { label, value: dateVal };
+            } catch {
+              return { label: valStr, value: valStr };
+            }
+          }
           return { label: labelStr, value: valStr };
         }),
         total: res.total,
@@ -388,6 +402,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="attachments"
             requireSearchToFetchOptions={false}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async ({ search }) => {
               const options = [
@@ -440,38 +455,42 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                       Danh sách file PDF
                     </div>
                     <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto">
-                      {inv.pdfFileKey && (
-                        <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg">
-                          <div className="flex flex-col min-w-0 flex-1 mr-2">
-                            <span
-                              className="truncate font-medium text-slate-700"
-                              title="Hóa đơn PDF"
+                      {inv.pdfFileKey &&
+                        !inv.pdfFiles?.some(
+                          (p: any) => p.key === inv.pdfFileKey,
+                        ) && (
+                          <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg mb-2">
+                            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                              <span
+                                className="truncate font-medium text-slate-700"
+                                title="Hóa đơn PDF"
+                              >
+                                {(inv.pdfFileKey as string).split("/").pop() ||
+                                  "Hóa đơn PDF"}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-0.5">
+                                Hóa đơn PDF (Gốc)
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPopoverId(null);
+                                handlePreviewPdf(
+                                  inv.id,
+                                  inv.pdfFileKey as string,
+                                  (inv.pdfFileKey as string).split("/").pop() ||
+                                    "Hóa đơn PDF",
+                                );
+                              }}
                             >
-                              {inv.pdfFileKey.split("/").pop() || "Hóa đơn PDF"}
-                            </span>
-                            <span className="text-xs text-gray-500 mt-0.5">
-                              Hóa đơn PDF (Gốc)
-                            </span>
+                              <Eye className="w-4 h-4" />
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="whitespace-nowrap h-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              handlePreviewPdf(
-                                inv.id,
-                                inv.pdfFileKey as string,
-                                (inv.pdfFileKey as string).split("/").pop() ||
-                                  "Hóa đơn PDF",
-                              );
-                            }}
-                          >
-                            Xem
-                          </Button>
-                        </div>
-                      )}
+                        )}
                       {inv.pdfFiles?.map((pdf: any) => (
                         <div
                           key={pdf.key}
@@ -489,16 +508,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             </span>
                           </div>
                           <Button
-                            variant="outline"
-                            size="sm"
-                            className="whitespace-nowrap h-8"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenPopoverId(null);
                               handlePreviewPdf(inv.id, pdf.key, pdf.filename);
                             }}
                           >
-                            Xem
+                            <Eye className="w-4 h-4" />
                           </Button>
                         </div>
                       ))}
@@ -538,6 +557,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="invoiceDate"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -545,7 +565,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         size: 100,
         headerClassName: "text-center",
         className: "text-right",
-        cell: (inv) => inv.invoiceDate,
+        cell: (inv) =>
+          inv.invoiceDate
+            ? format(new Date(inv.invoiceDate), "dd-MM-yyyy")
+            : "",
       },
       {
         key: "serialNo",
@@ -563,6 +586,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="serialNo"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -588,6 +612,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="invoiceNo"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -643,6 +668,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="partner"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -676,6 +702,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="taxCode"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -704,6 +731,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="description"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -884,6 +912,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="preVatAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -910,6 +939,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="vatAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -940,6 +970,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="discountAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -966,6 +997,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="totalAmount"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -1093,6 +1125,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="branchId"
             requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -1351,54 +1384,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         }}
         createActions={[
           {
-            groupLabel: t("groupInvoice", "Hóa đơn"),
+            groupLabel: t("groupTraCuu", "Tra cứu"),
             items: [
-              {
-                label: t("createInvoice", "Tạo hóa đơn"),
-                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
-                onClick: () => formHook.openNew(direction),
-              },
-            ],
-          },
-          {
-            groupLabel: t("groupData", "Đồng bộ & Tải"),
-            items: [
-              {
-                label: t("syncInvoices", "Đồng bộ hóa đơn"),
-                icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-                onClick: () => setImportModalOpen(true),
-              },
-              {
-                label: t("bulkDownloadXml", "Tải lại XML hàng loạt"),
-                icon: <RefreshCw className="w-4 h-4 text-orange-600" />,
-                onClick: async () => {
-                  const token = localStorage.getItem("erp_portal_token");
-                  if (!token) {
-                    toast.error(
-                      "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
-                    );
-                    return;
-                  }
-                  try {
-                    const res = await erpInvoicesCoreApi.bulkDownloadXml({
-                      token,
-                      direction,
-                    });
-                    toast.success(res.message);
-                  } catch (e: any) {
-                    toast.error(
-                      e.response?.data?.message ||
-                        e.message ||
-                        "Lỗi tải lại XML",
-                    );
-                  }
-                },
-              },
-              {
-                label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
-                icon: <Download className="w-4 h-4 text-blue-600" />,
-                onClick: () => setBulkDrawerOpen(true),
-              },
               {
                 label: t("exportExcelSummary", "Xuất Excel Bảng kê (Tổng hợp)"),
                 icon: <Download className="w-4 h-4 text-green-600" />,
@@ -1411,6 +1398,26 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 ),
                 icon: <Download className="w-4 h-4 text-emerald-600" />,
                 onClick: () => handleExportExcel("detailed"),
+              },
+              {
+                label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
+                icon: <Download className="w-4 h-4 text-blue-600" />,
+                onClick: () => setBulkDrawerOpen(true),
+              },
+            ],
+          },
+          {
+            groupLabel: t("groupThaoTac", "Thao tác"),
+            items: [
+              {
+                label: t("createInvoice", "Tạo hóa đơn"),
+                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
+                onClick: () => formHook.openNew(direction),
+              },
+              {
+                label: t("syncInvoices", "Đồng bộ hóa đơn"),
+                icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                onClick: () => setImportModalOpen(true),
               },
             ],
           },

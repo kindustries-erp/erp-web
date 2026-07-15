@@ -95,6 +95,7 @@ export interface ErpInvoiceListParams {
   search?: string;
   seller_name?: string;
   buyer_name?: string;
+  partner_tax_code?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -432,4 +433,6 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
+  pdfAttached?: { filename: string; invoiceNo: string }[];
+  pdfOrphans?: { filename: string; reason: string }[];
 }
