@@ -85,6 +85,7 @@ export function TableActionGroup({
       {createActions && createActions.length > 0 && (
         <ActionDropdown
           items={createActions}
+          align="end"
           customTrigger={
             <Button variant="secondary" size="icon" className="h-8 w-8 px-0">
               <MoreHorizontal className="h-4 w-4" />

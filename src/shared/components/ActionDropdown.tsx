@@ -25,9 +25,10 @@ export type ActionDropdownItem = ActionItem | ActionGroup;
 export interface ActionDropdownProps {
   items: ActionDropdownItem[];
   customTrigger?: React.ReactNode;
+  align?: "start" | "center" | "end";
 }
 
-export function ActionDropdown({ items, customTrigger }: ActionDropdownProps) {
+export function ActionDropdown({ items, customTrigger, align = "start" }: ActionDropdownProps) {
   const [open, setOpen] = useState(false);
 
   // Normalize items to easily handle separators
@@ -124,7 +125,7 @@ export function ActionDropdown({ items, customTrigger }: ActionDropdownProps) {
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           sideOffset={2}
-          align="start"
+          align={align}
           className="z-[9999] min-w-[140px] rounded-lg p-1 popup-content"
         >
           {visibleEntries.map((entry, index) => {

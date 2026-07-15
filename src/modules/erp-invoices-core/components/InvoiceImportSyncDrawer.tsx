@@ -19,11 +19,14 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { Combobox } from "@/shared/components/Combobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 
+import { toast } from "react-hot-toast";
+
 import {
   useInvoiceXmlUpload,
   type Direction,
 } from "../hooks/useInvoiceXmlUpload";
 import { usePortalSync } from "../hooks/usePortalSync";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 import { UploadDropzone } from "./xml-upload/UploadDropzone";
 import { UploadFileList } from "./xml-upload/UploadFileList";
@@ -165,6 +168,7 @@ export function InvoiceImportSyncDrawer({
   const [method, setMethod] = useState<"GDT" | "XML">("GDT");
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
+  const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
 
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
@@ -209,6 +213,30 @@ export function InvoiceImportSyncDrawer({
     const type = direction === "IN" ? "purchase" : "sold";
     const res = await portal.sync(type);
     if (res) onImported(direction);
+  };
+
+  const handleBulkXml = async () => {
+    const token = localStorage.getItem("erp_portal_token");
+    if (!token) {
+      toast.error(
+        "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
+      );
+      return;
+    }
+    try {
+      setBulkXmlLoading(true);
+      const res = await erpInvoicesCoreApi.bulkDownloadXml({
+        token,
+        direction,
+      });
+      toast.success(res.message);
+    } catch (e: any) {
+      toast.error(
+        e.response?.data?.message || e.message || "Lỗi tải lại XML",
+      );
+    } finally {
+      setBulkXmlLoading(false);
+    }
   };
 
   const actions = [];
@@ -312,19 +340,31 @@ export function InvoiceImportSyncDrawer({
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setConfigOpen(true)}
-                    className="gap-1.5"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Cấu hình token
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfigOpen(true)}
+                      className="gap-1.5"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Cấu hình token
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkXml}
+                      disabled={bulkXmlLoading || portal.loading}
+                      className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${bulkXmlLoading ? "animate-spin" : ""}`} />
+                      {bulkXmlLoading ? "Đang xử lý..." : "Tải lại XML"}
+                    </Button>
+                  </div>
 
                   <Button
                     onClick={handleSync}
-                    disabled={portal.loading}
+                    disabled={portal.loading || bulkXmlLoading}
                     className="gap-2 w-36 justify-center"
                   >
                     <RefreshCw
