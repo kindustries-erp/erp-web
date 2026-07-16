@@ -281,6 +281,7 @@ export function SidebarNav({
       {showInventory &&
         hasMatch([
           t("nav.sections.inventory"),
+          canReadInventoryItems ? t("nav.items.inventoryDashboard") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryStock") : "",
           canReadInventoryVouchers ? t("nav.items.erpInventoryVouchers") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryTracking") : "",
@@ -289,6 +290,18 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.inventory")}
             </div>
+            {canReadInventoryItems && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.inventoryDashboard")}
+                active={currentPage === "inventory-dashboard"}
+                onClick={() => navTo("inventory-dashboard")}
+                contextPage="inventory-dashboard"
+              />
+            )}
             {canReadInventoryItems && (
               <NavItem
                 collapsed={c}

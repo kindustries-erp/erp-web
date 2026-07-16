@@ -22,6 +22,10 @@ export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
+  "inventory-dashboard": {
+    labelKey: "nav.items.inventoryDashboard",
+    group: "inventory",
+  },
   "erp-inventory-stock": {
     labelKey: "nav.items.erpInventoryStock",
     group: "inventory",
@@ -179,6 +183,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
+  "inventory-dashboard": [
+    ["breadcrumb.inventory"],
+    ["nav.items.inventoryDashboard"],
+  ],
   "erp-inventory-stock": [
     ["breadcrumb.inventory"],
     ["breadcrumb.inventoryStock"],
