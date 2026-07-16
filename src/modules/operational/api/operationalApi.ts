@@ -44,9 +44,6 @@ export interface OperationalDocument {
   document_date: string;
   due_date?: string | null;
   status: string;
-  invoice_status: string;
-  payment_status: string;
-  accounting_status: string;
   inventory_status?: string;
   total_amount: number;
   settled_amount: number;
@@ -181,10 +178,6 @@ function normalizePurchaseRow(row: any): OperationalDocument {
     document_date: row.document_date ?? row.orderDate ?? "",
     due_date: row.due_date ?? row.expectedDate ?? null,
     status: row.status ?? "DRAFT",
-    invoice_status: row.invoice_status ?? row.invoiceStatus ?? "NO_INVOICE",
-    payment_status: row.payment_status ?? row.paymentStatus ?? "UNPAID",
-    accounting_status:
-      row.accounting_status ?? row.accountingStatus ?? "UNPOSTED",
     inventory_status:
       row.inventory_status ?? row.inventoryStatus ?? "NOT_RECEIVED",
     total_amount: totalAmount,
@@ -214,7 +207,6 @@ function toCorePurchasePayload(
     expectedDate:
       (payload as any).expected_receipt_date || payload.due_date || undefined,
     status: payload.status,
-    paymentStatus: payload.payment_status,
     remarks: payload.notes || undefined,
 
     supplierInvoiceNo: (payload as any).supplier_invoice_no || undefined,
@@ -248,8 +240,6 @@ function params(input: ListParams = {}) {
       ? { supplier_id: (input as any).supplier_id }
       : {}),
     ...(input.status ? { status: input.status } : {}),
-    ...(input.payment_status ? { payment_status: input.payment_status } : {}),
-    ...(input.invoice_status ? { invoice_status: input.invoice_status } : {}),
 
     ...((input as any).date_from
       ? { date_from: (input as any).date_from }

@@ -307,22 +307,18 @@ export function OperationalFormDrawer({
     const payload: CreateOperationalPayload = isPurchaseStatusOnlyMode
       ? {
           status: overrideStatus || store.status,
-          payment_status: store.paymentStatus,
           notes: store.notes.trim() || undefined,
           ...(purchaseEditableLines ? { lines: purchaseEditableLines } : {}),
         }
       : isPurchaseFullyLocked
         ? {
-            payment_status: store.paymentStatus,
             notes: store.notes.trim() || undefined,
           }
         : {
             document_date: store.documentDate,
             due_date: store.dueDate || undefined,
             branch_id: store.branchId || undefined,
-            invoice_status: store.invoiceStatus,
             status: overrideStatus || store.status,
-            payment_status: store.paymentStatus,
             total_amount: totalAmount,
             notes: store.notes.trim() || undefined,
             lines: lines.map((line, idx) => ({

@@ -176,7 +176,6 @@ export function buildSamplePayload(
       customer_name_snapshot: "Khách hàng mẫu",
       vehicle_plate: "51A-000.00",
       status: "CONFIRMED",
-      invoice_status: "NO_INVOICE",
       total_amount: 1500000,
       lines: [
         {
