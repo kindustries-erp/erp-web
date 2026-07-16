@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import {
-  PlusCircle,
   Receipt,
   DownloadCloud,
   Eye,
@@ -16,6 +15,8 @@ import {
   FileCode,
   FileText,
   Building2,
+  ChevronDown,
+  CheckSquare,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -120,8 +121,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         <ActionDropdown
           align="start"
           customTrigger={
-            <Button size="sm" className="h-8 shadow-sm">
-              Thao tác ({selectedIds.length})
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+            >
+              <CheckSquare className="w-4 h-4 mr-1.5" />
+              {t("bulkActions", "Thao tác")} ({selectedIds.length})
+              <ChevronDown className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           }
           items={[
@@ -1463,6 +1470,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             },
           ];
         }}
+        onCreate={() => formHook.openNew(direction)}
+        createLabel={t("createInvoice", "Tạo hóa đơn")}
         createActions={[
           {
             groupLabel: t("groupTraCuu", "Tra cứu"),
@@ -1490,11 +1499,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           {
             groupLabel: t("groupThaoTac", "Thao tác"),
             items: [
-              {
-                label: t("createInvoice", "Tạo hóa đơn"),
-                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
-                onClick: () => formHook.openNew(direction),
-              },
               {
                 label: t("syncInvoices", "Đồng bộ hóa đơn"),
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
