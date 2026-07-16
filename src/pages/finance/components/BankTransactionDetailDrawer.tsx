@@ -1,5 +1,5 @@
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { ExternalLink } from "lucide-react";
@@ -20,8 +20,6 @@ export function BankTransactionDetailDrawer({
     queryFn: () => bankStatementApi.getTransaction(transactionId!),
     enabled: isOpen && !!transactionId,
   });
-
-  const queryClient = useQueryClient();
 
   const openErpInvoice = (id: string) => {
     const event = new CustomEvent("open_erp_document", {

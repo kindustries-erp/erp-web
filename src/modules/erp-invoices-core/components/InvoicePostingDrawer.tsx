@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Plus, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
-import { formatGMT7, money } from "@/shared/utils/format";
+import { money } from "@/shared/utils/format";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import { DatePicker } from "@/shared/components/DatePicker";
 
@@ -353,7 +353,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {lines.map((line, index) => (
+                  {lines.map((line) => (
                     <tr key={line.id} className="hover:bg-gray-50">
                       <td className="px-2 py-2">
                         <Combobox
