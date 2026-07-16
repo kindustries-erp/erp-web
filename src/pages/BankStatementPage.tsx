@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -29,6 +30,11 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
+  const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<{
+    account?: string;
+    name?: string;
+  } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -452,13 +458,60 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       },
     },
     {
+      key: "invoiceSubject",
+      header: renderHeaderFilter("invoiceSubject", "Đối tượng HĐ"),
+      size: 200,
+      cell: (row: any) => {
+        let subject = row.invoiceSubject;
+        if (!subject && row.invoiceNetOffs && row.invoiceNetOffs.length > 0) {
+          const subjects = row.invoiceNetOffs
+            .map((link: any) => {
+              const inv = link.invoice || link.erpInvoice || {};
+              const name =
+                inv.direction === "IN" ? inv.sellerName : inv.buyerName;
+              const taxCode =
+                inv.direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
+              return taxCode && name ? `${taxCode} - ${name}` : name;
+            })
+            .filter(Boolean);
+          if (subjects.length > 0) {
+            subject = Array.from(new Set(subjects)).join(", ");
+          }
+        }
+        return renderCopyableText(subject);
+      },
+    },
+    {
       key: "correspondentName",
       header: renderHeaderFilter(
         "correspondentName",
         t("bankStatement.columns.correspondentName"),
       ),
       size: 200,
-      cell: (row: any) => renderCopyableText(row.correspondentName),
+      cell: (row: any) => {
+        if (!row.correspondentName) return null;
+        return (
+          <Tooltip
+            content={
+              <div className="whitespace-pre-wrap">{row.correspondentName}</div>
+            }
+          >
+            <span
+              className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer font-medium text-primary hover:opacity-80 active:opacity-50 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPartner({
+                  account: row.correspondentAccount,
+                  name: row.correspondentName,
+                });
+                setPartnerDrawerOpen(true);
+              }}
+            >
+              {row.correspondentName}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "correspondentAccount",
@@ -467,7 +520,32 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         t("bankStatement.columns.correspondentAccount"),
       ),
       size: 150,
-      cell: (row: any) => renderCopyableText(row.correspondentAccount),
+      cell: (row: any) => {
+        if (!row.correspondentAccount) return null;
+        return (
+          <Tooltip
+            content={
+              <div className="whitespace-pre-wrap">
+                {row.correspondentAccount}
+              </div>
+            }
+          >
+            <span
+              className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer font-medium text-primary hover:opacity-80 active:opacity-50 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPartner({
+                  account: row.correspondentAccount,
+                  name: row.correspondentName,
+                });
+                setPartnerDrawerOpen(true);
+              }}
+            >
+              {row.correspondentAccount}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "correspondentBank",
@@ -620,6 +698,16 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         isOpen={!!detailTransactionId}
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
+      />
+
+      <PartnerTransactionsDrawer
+        open={partnerDrawerOpen}
+        onClose={() => setPartnerDrawerOpen(false)}
+        correspondentAccount={selectedPartner?.account}
+        correspondentName={selectedPartner?.name}
+        globalStartDate={filter.state.dateFrom}
+        globalEndDate={filter.state.dateTo}
+        globalBranchId={filter.state.custom.branchId as string}
       />
     </>
   );
