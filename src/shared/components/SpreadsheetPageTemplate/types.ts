@@ -17,6 +17,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   tableId: string;
   items: T[];
   columns: DataTableColumn<T>[];
+  defaultColumnOrder?: string[];
   getRowKey: (row: T) => string;
   loading?: boolean;
   error?: string | null;

@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -29,6 +30,11 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
     null,
   );
+  const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState<{
+    account?: string;
+    name?: string;
+  } | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -95,7 +101,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
     });
 
     return {
-      search: true,
+      search: false,
       period: true,
       noDefaultPeriod: true,
       custom,
@@ -215,6 +221,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       <TableColumnHeaderFilter
         title={label}
         align="center"
+        className="w-full justify-center"
         sortState={getSortState(key)}
         onSortChange={(state) => handleSortChange(key, state)}
         searchValue={tableState.columnSearch[key] || ""}
@@ -330,7 +337,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
             : row.cashBook?.name || "";
         return renderCopyableText(text);
       },
-      size: 150,
+      size: 120,
     },
     {
       key: "transDate",
@@ -340,8 +347,30 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         t("bankStatement.columns.transDate"),
       ),
       cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 150,
+      size: 120,
       sortable: false,
+    },
+    {
+      key: "referenceNumber",
+      header: renderHeaderFilter(
+        "referenceNumber",
+        t("bankStatement.columns.referenceNumber"),
+      ),
+      size: 150,
+      cell: (row: any) => {
+        if (!row.referenceNumber) return "—";
+        return (
+          <div
+            className="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDetailTransactionId(row.id);
+            }}
+          >
+            {row.referenceNumber}
+          </div>
+        );
+      },
     },
 
     {
@@ -387,6 +416,15 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       sortable: false,
     },
     {
+      key: "balance",
+      dataIndex: "balance",
+      header: renderHeaderFilter("balance", t("bankStatement.columns.balance")),
+      cell: (row: any) => money(row.balance),
+      className: "text-right font-medium",
+      size: 150,
+      sortable: false,
+    },
+    {
       key: "netOffAmount",
       header: renderHeaderFilter("netOffAmount", "Đã cấn trừ"),
       className: "text-right bg-blue-50/50 border-l border-blue-200",
@@ -420,13 +458,28 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       },
     },
     {
-      key: "balance",
-      dataIndex: "balance",
-      header: renderHeaderFilter("balance", t("bankStatement.columns.balance")),
-      cell: (row: any) => money(row.balance),
-      className: "text-right font-medium",
-      size: 150,
-      sortable: false,
+      key: "invoiceSubject",
+      header: renderHeaderFilter("invoiceSubject", "Đối tượng HĐ"),
+      size: 200,
+      cell: (row: any) => {
+        let subject = row.invoiceSubject;
+        if (!subject && row.invoiceNetOffs && row.invoiceNetOffs.length > 0) {
+          const subjects = row.invoiceNetOffs
+            .map((link: any) => {
+              const inv = link.invoice || link.erpInvoice || {};
+              const name =
+                inv.direction === "IN" ? inv.sellerName : inv.buyerName;
+              const taxCode =
+                inv.direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
+              return taxCode && name ? `${taxCode} - ${name}` : name;
+            })
+            .filter(Boolean);
+          if (subjects.length > 0) {
+            subject = Array.from(new Set(subjects)).join(", ");
+          }
+        }
+        return renderCopyableText(subject);
+      },
     },
     {
       key: "correspondentName",
@@ -435,7 +488,30 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         t("bankStatement.columns.correspondentName"),
       ),
       size: 200,
-      cell: (row: any) => renderCopyableText(row.correspondentName),
+      cell: (row: any) => {
+        if (!row.correspondentName) return null;
+        return (
+          <Tooltip
+            content={
+              <div className="whitespace-pre-wrap">{row.correspondentName}</div>
+            }
+          >
+            <span
+              className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer font-medium text-primary hover:opacity-80 active:opacity-50 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPartner({
+                  account: row.correspondentAccount,
+                  name: row.correspondentName,
+                });
+                setPartnerDrawerOpen(true);
+              }}
+            >
+              {row.correspondentName}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "correspondentAccount",
@@ -444,7 +520,32 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         t("bankStatement.columns.correspondentAccount"),
       ),
       size: 150,
-      cell: (row: any) => renderCopyableText(row.correspondentAccount),
+      cell: (row: any) => {
+        if (!row.correspondentAccount) return null;
+        return (
+          <Tooltip
+            content={
+              <div className="whitespace-pre-wrap">
+                {row.correspondentAccount}
+              </div>
+            }
+          >
+            <span
+              className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer font-medium text-primary hover:opacity-80 active:opacity-50 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPartner({
+                  account: row.correspondentAccount,
+                  name: row.correspondentName,
+                });
+                setPartnerDrawerOpen(true);
+              }}
+            >
+              {row.correspondentAccount}
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "correspondentBank",
@@ -463,15 +564,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         const text = row.branch?.name || "";
         return renderCopyableText(text);
       },
-    },
-    {
-      key: "referenceNumber",
-      header: renderHeaderFilter(
-        "referenceNumber",
-        t("bankStatement.columns.referenceNumber"),
-      ),
-      size: 150,
-      cell: (row: any) => renderCopyableText(row.referenceNumber),
     },
   ];
 
@@ -606,6 +698,16 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         isOpen={!!detailTransactionId}
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
+      />
+
+      <PartnerTransactionsDrawer
+        open={partnerDrawerOpen}
+        onClose={() => setPartnerDrawerOpen(false)}
+        correspondentAccount={selectedPartner?.account}
+        correspondentName={selectedPartner?.name}
+        globalStartDate={filter.state.dateFrom}
+        globalEndDate={filter.state.dateTo}
+        globalBranchId={filter.state.custom.branchId as string}
       />
     </>
   );

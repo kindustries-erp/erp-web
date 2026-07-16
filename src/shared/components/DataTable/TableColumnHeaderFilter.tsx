@@ -222,7 +222,7 @@ export function TableColumnHeaderFilter({
       <Popover.Trigger asChild>
         <div
           className={cn(
-            "flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors group select-none",
+            "flex items-center gap-1 w-full cursor-pointer hover:text-foreground transition-colors group select-none",
             align === "right" && "justify-end",
             align === "center" && "justify-center",
             className,

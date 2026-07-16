@@ -10,8 +10,8 @@ import { money, formatGMT7 } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import toast from "react-hot-toast";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 
 interface PartnerTransactionsDrawerProps {
   open: boolean;
@@ -55,6 +55,9 @@ export function PartnerTransactionsDrawer({
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [detailTransactionId, setDetailTransactionId] = useState<string | null>(
+    null,
+  );
 
   const tableState = useTableColumnState("partner-transactions-table-v1");
 
@@ -65,6 +68,7 @@ export function PartnerTransactionsDrawer({
     queryKey: [
       "partner-chart",
       correspondentAccount,
+      correspondentName,
       globalStartDate,
       globalEndDate,
       globalBranchId,
@@ -75,8 +79,9 @@ export function PartnerTransactionsDrawer({
         endDate: globalEndDate,
         branchId: globalBranchId,
         correspondentAccount,
+        correspondentName,
       }),
-    enabled: open && !!correspondentAccount,
+    enabled: open && (!!correspondentAccount || !!correspondentName),
   });
 
   const {
@@ -87,6 +92,7 @@ export function PartnerTransactionsDrawer({
     queryKey: [
       "partner-transactions",
       correspondentAccount,
+      correspondentName,
       page,
       pageSize,
       tableState.sorts,
@@ -106,6 +112,7 @@ export function PartnerTransactionsDrawer({
         endDate: globalEndDate,
         branchId: globalBranchId,
         correspondentAccount,
+        correspondentName,
         column_search:
           Object.keys(tableState.columnSearch).length > 0
             ? JSON.stringify(tableState.columnSearch)
@@ -115,7 +122,7 @@ export function PartnerTransactionsDrawer({
             ? JSON.stringify(tableState.columnFilters)
             : undefined,
       }),
-    enabled: open && !!correspondentAccount,
+    enabled: open && (!!correspondentAccount || !!correspondentName),
   });
 
   const fetchColumnOptions = useCallback(
@@ -141,6 +148,9 @@ export function PartnerTransactionsDrawer({
       if (correspondentAccount) {
         currentFilters["correspondentAccount"] = [correspondentAccount];
       }
+      if (correspondentName) {
+        currentFilters["correspondentName"] = [correspondentName];
+      }
       const newFiltersStr = JSON.stringify(currentFilters);
 
       return bankStatementApi.getColumnOptions(
@@ -151,7 +161,7 @@ export function PartnerTransactionsDrawer({
         newFiltersStr,
       );
     },
-    [correspondentAccount],
+    [correspondentAccount, correspondentName],
   );
 
   const getSortState = (columnKey: string) => {
@@ -216,16 +226,51 @@ export function PartnerTransactionsDrawer({
 
   const columns: any[] = [
     {
+      key: "account",
+      header: renderHeaderFilter("account", "Tài khoản"),
+      cell: (row: any) => {
+        const text =
+          row.sourceType === "BANK"
+            ? row.bankAccount?.bankName
+              ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
+              : ""
+            : row.cashBook?.name || "";
+        return renderCopyableText(text);
+      },
+      size: 120,
+    },
+    {
       key: "transDate",
       dataIndex: "transDate",
       header: renderHeaderFilter(
         "transDate",
         t("bankStatement.columns.transDate"),
       ),
-      headerClassName: "text-center",
       cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 150,
+      size: 120,
       sortable: false,
+    },
+    {
+      key: "referenceNumber",
+      header: renderHeaderFilter(
+        "referenceNumber",
+        t("bankStatement.columns.referenceNumber"),
+      ),
+      size: 150,
+      cell: (row: any) => {
+        if (!row.referenceNumber) return "—";
+        return (
+          <div
+            className="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDetailTransactionId(row.id);
+            }}
+          >
+            {row.referenceNumber}
+          </div>
+        );
+      },
     },
     {
       key: "description",
@@ -234,14 +279,12 @@ export function PartnerTransactionsDrawer({
         "description",
         t("bankStatement.columns.description"),
       ),
-      headerClassName: "text-center",
       size: 400,
       cell: (row: any) => renderCopyableText(row.description),
     },
     {
       key: "thu",
       header: renderHeaderFilter("thu", t("bankStatement.columns.thu")),
-      headerClassName: "text-center",
       cell: (row: any) => {
         const credit = parseFloat(row.creditAmount) || 0;
         if (credit > 0)
@@ -259,7 +302,6 @@ export function PartnerTransactionsDrawer({
     {
       key: "chi",
       header: renderHeaderFilter("chi", t("bankStatement.columns.chi")),
-      headerClassName: "text-center",
       cell: (row: any) => {
         const debit = parseFloat(row.debitAmount) || 0;
         if (debit > 0)
@@ -273,30 +315,106 @@ export function PartnerTransactionsDrawer({
       sortable: false,
     },
     {
-      key: "tags",
-      header: "Danh mục",
-      headerClassName: "text-center",
-      cell: (row: any) => (
-        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
-          <div className="w-max">
-            <EntityTagSelector
-              entityType="bank_transaction"
-              entityId={row.id}
-            />
-          </div>
-        </div>
-      ),
-      size: 200,
+      key: "balance",
+      dataIndex: "balance",
+      header: renderHeaderFilter("balance", t("bankStatement.columns.balance")),
+      cell: (row: any) => money(row.balance),
+      className: "text-right font-medium",
+      size: 150,
+      sortable: false,
     },
     {
-      key: "referenceNumber",
-      header: renderHeaderFilter(
-        "referenceNumber",
-        t("bankStatement.columns.referenceNumber"),
-      ),
-      headerClassName: "text-center",
+      key: "netOffAmount",
+      header: renderHeaderFilter("netOffAmount", "Đã cấn trừ"),
+      className: "text-right bg-blue-50/50 border-l border-blue-200",
+      headerClassName: "text-center bg-blue-50/50 border-l border-blue-200",
       size: 150,
-      cell: (row: any) => renderCopyableText(row.referenceNumber),
+      cell: (row: any) => {
+        const netOff = parseFloat(row.netOffAmount) || 0;
+        if (netOff === 0) return "--";
+        return (
+          <span className="text-blue-600 font-medium">{money(netOff)}</span>
+        );
+      },
+    },
+    {
+      key: "remainingAmount",
+      header: renderHeaderFilter("remainingAmount", "Còn lại"),
+      className: "text-right font-semibold bg-blue-50/50",
+      headerClassName: "text-center bg-blue-50/50",
+      size: 150,
+      cell: (row: any) => {
+        const credit = parseFloat(row.creditAmount) || 0;
+        const debit = parseFloat(row.debitAmount) || 0;
+        const amount = credit > 0 ? credit : debit;
+        const netOff = parseFloat(row.netOffAmount) || 0;
+        const remaining = amount - netOff;
+        if (remaining === 0)
+          return <span className="text-emerald-600 font-medium">0</span>;
+        return (
+          <span className="text-slate-700 font-medium">{money(remaining)}</span>
+        );
+      },
+    },
+    {
+      key: "invoiceSubject",
+      header: renderHeaderFilter("invoiceSubject", "Đối tượng HĐ"),
+      size: 200,
+      cell: (row: any) => {
+        let subject = row.invoiceSubject;
+        if (!subject && row.invoiceNetOffs && row.invoiceNetOffs.length > 0) {
+          const subjects = row.invoiceNetOffs
+            .map((link: any) => {
+              const inv = link.invoice || link.erpInvoice || {};
+              const name =
+                inv.direction === "IN" ? inv.sellerName : inv.buyerName;
+              const taxCode =
+                inv.direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
+              return taxCode && name ? `${taxCode} - ${name}` : name;
+            })
+            .filter(Boolean);
+          if (subjects.length > 0) {
+            subject = Array.from(new Set(subjects)).join(", ");
+          }
+        }
+        return renderCopyableText(subject);
+      },
+    },
+    {
+      key: "correspondentName",
+      header: renderHeaderFilter(
+        "correspondentName",
+        t("bankStatement.columns.correspondentName"),
+      ),
+      size: 200,
+      cell: (row: any) => renderCopyableText(row.correspondentName),
+    },
+    {
+      key: "correspondentAccount",
+      header: renderHeaderFilter(
+        "correspondentAccount",
+        t("bankStatement.columns.correspondentAccount"),
+      ),
+      size: 150,
+      cell: (row: any) => renderCopyableText(row.correspondentAccount),
+    },
+    {
+      key: "correspondentBank",
+      header: renderHeaderFilter(
+        "correspondentBank",
+        t("bankStatement.columns.correspondentBank"),
+      ),
+      size: 150,
+      cell: (row: any) => renderCopyableText(row.correspondentBank),
+    },
+    {
+      key: "branch",
+      header: renderHeaderFilter("branch", "Chi nhánh"),
+      size: 150,
+      cell: (row: any) => {
+        const text = row.branch?.name || "";
+        return renderCopyableText(text);
+      },
     },
   ];
 
@@ -311,31 +429,55 @@ export function PartnerTransactionsDrawer({
       (acc: number, curr: any) => acc + (parseFloat(curr.creditAmount) || 0),
       0,
     );
-    const totalRemaining = tableData.items.reduce((acc: number, curr: any) => {
-      const c = parseFloat(curr.creditAmount) || 0;
-      const d = parseFloat(curr.debitAmount) || 0;
-      const amt = c > 0 ? c : d;
-      const netOff = parseFloat(curr.netOffAmount) || 0;
-      return acc + (amt - netOff);
-    }, 0);
+    const totalNetOff = tableData.items.reduce(
+      (acc: number, curr: any) => acc + (parseFloat(curr.netOffAmount) || 0),
+      0,
+    );
+    const totalRemaining = tableData.items.reduce(
+      (acc: number, curr: any) =>
+        acc +
+        (Math.max(
+          parseFloat(curr.creditAmount) || 0,
+          parseFloat(curr.debitAmount) || 0,
+        ) -
+          (parseFloat(curr.netOffAmount) || 0)),
+      0,
+    );
 
     return {
-      description: <span className="font-semibold text-right block">Tổng</span>,
-      chi: (
-        <span className="text-[#ea580c] font-semibold">
-          {money(totalDebit)}
-        </span>
-      ),
-      thu: (
-        <span className="text-emerald-600 font-semibold">
-          +{money(totalCredit)}
-        </span>
-      ),
-      remainingAmount: (
-        <span className="text-slate-700 font-semibold">
-          {money(totalRemaining)}
-        </span>
-      ),
+      transDate: null,
+      thu:
+        totalCredit > 0 ? (
+          <span className="text-emerald-600 font-medium">
+            +{money(totalCredit)}
+          </span>
+        ) : (
+          money(0)
+        ),
+      chi:
+        totalDebit > 0 ? (
+          <span className="text-[#ea580c] font-medium">
+            {money(totalDebit)}
+          </span>
+        ) : (
+          money(0)
+        ),
+      netOffAmount:
+        totalNetOff === 0 ? (
+          "--"
+        ) : (
+          <span className="text-blue-600 font-medium">
+            {money(totalNetOff)}
+          </span>
+        ),
+      remainingAmount:
+        totalRemaining === 0 ? (
+          <span className="text-emerald-600 font-medium">0</span>
+        ) : (
+          <span className="text-slate-700 font-medium">
+            {money(totalRemaining)}
+          </span>
+        ),
     };
   }, [tableData]);
 
@@ -412,6 +554,11 @@ export function PartnerTransactionsDrawer({
           </div>
         </div>
       </div>
+      <BankTransactionDetailDrawer
+        isOpen={!!detailTransactionId}
+        onClose={() => setDetailTransactionId(null)}
+        transactionId={detailTransactionId}
+      />
     </DrawerModal>
   );
 }

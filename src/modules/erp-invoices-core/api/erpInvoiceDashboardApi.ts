@@ -51,6 +51,8 @@ export const erpInvoiceDashboardApi = {
     date_from?: string;
     date_to?: string;
     branch_id?: string;
+    sortBy?: string;
+    sortOrder?: "ASC" | "DESC";
   }): Promise<InvoiceDashboardPartnersResponse> => {
     const { data } = await axiosInstance.get<InvoiceDashboardPartnersResponse>(
       `${BASE}/partners`,
@@ -74,6 +76,18 @@ export const erpInvoiceDashboardApi = {
         params,
       },
     );
+    return data;
+  },
+
+  exportExcel: async (params?: {
+    date_from?: string;
+    date_to?: string;
+    branch_id?: string;
+  }): Promise<Blob> => {
+    const { data } = await axiosInstance.get(`${BASE}/export`, {
+      params,
+      responseType: "blob",
+    });
     return data;
   },
 };

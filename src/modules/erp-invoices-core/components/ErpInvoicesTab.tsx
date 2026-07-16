@@ -15,11 +15,13 @@ import {
   Ban,
   FileCode,
   FileText,
+  Building2,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
@@ -76,6 +78,74 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkMonth, setBulkMonth] = useState("");
   const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
+  const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
+
+  const selectedIds = useMemo(
+    () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
+    [rowSelection],
+  );
+
+  async function handleBulkSetBranch() {
+    if (!selectedIds.length) return;
+    setBulkBranchSaving(true);
+    try {
+      const result = await erpInvoicesCoreApi.bulkSetBranch(
+        selectedIds,
+        bulkBranchId,
+      );
+      showToast({
+        title: `Đã cập nhật ${result.updated} hóa đơn`,
+        variant: "default",
+      });
+      setRowSelection({});
+      setBulkBranchModalOpen(false);
+      void listHook.loadInvoices();
+    } catch {
+      showToast({
+        title: "Không thể cập nhật chi nhánh",
+        variant: "destructive",
+      });
+    } finally {
+      setBulkBranchSaving(false);
+    }
+  }
+
+  const bulkActionsNode =
+    selectedIds.length > 0 ? (
+      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+        <ActionDropdown
+          align="start"
+          customTrigger={
+            <Button size="sm" className="h-8 shadow-sm">
+              Thao tác ({selectedIds.length})
+            </Button>
+          }
+          items={[
+            {
+              label: "Gán chi nhánh",
+              icon: (
+                <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+              ),
+              onClick: () => {
+                setBulkBranchId(null);
+                setBulkBranchModalOpen(true);
+              },
+            },
+            {
+              label: "Bỏ chọn",
+              icon: (
+                <RefreshCw className="w-4 h-4 mr-2 text-muted-foreground" />
+              ),
+              onClick: () => setRowSelection({}),
+            },
+          ]}
+        />
+      </div>
+    ) : null;
 
   const monthOptions = useMemo(() => {
     const opts = [];
@@ -1130,13 +1200,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 100,
+        size: 120,
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv: any) => {
           if (!inv.branchId) return "—";
           const branch = branches.find((b) => b.value === inv.branchId);
-          return branch ? branch.label : inv.branchId;
+          if (!branch) return inv.branchId;
+          const parts = branch.label.split(" — ");
+          return parts.length > 1 ? parts[1] : branch.label;
         },
       },
     ];
@@ -1240,6 +1312,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   return (
     <>
       <SpreadsheetPageTemplate
+        defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
           direction === "IN"
             ? t("inbound", "Hóa đơn mua vào")
@@ -1268,6 +1341,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onPage={listHook.setPage}
         onPageSize={listHook.setPageSize}
         onRefresh={() => void listHook.loadInvoices()}
+        enableRowSelection={true}
+        rowSelection={rowSelection}
+        onRowSelectionChange={(updater) =>
+          setRowSelection((prev) =>
+            typeof updater === "function" ? updater(prev) : updater,
+          )
+        }
+        bulkActionsNode={bulkActionsNode}
         filterConfig={filterConfig}
         filter={listHook.filterPanel}
         rowActions={(inv) => {
@@ -1635,6 +1716,36 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               disabled={bulkDownloading}
             >
               {bulkDownloading ? "Đang nén file..." : "Xác nhận tải"}
+            </Button>
+          </div>
+        </div>
+      </DrawerModal>
+
+      <DrawerModal
+        open={bulkBranchModalOpen}
+        onClose={() => setBulkBranchModalOpen(false)}
+        title={`Gán chi nhánh cho ${selectedIds.length} hóa đơn`}
+      >
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Chi nhánh *</label>
+            <Combobox
+              options={branches}
+              value={bulkBranchId ?? ""}
+              onChange={(v) => setBulkBranchId(v ?? null)}
+              placeholder="Chọn chi nhánh..."
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              onClick={() => setBulkBranchModalOpen(false)}
+              disabled={bulkBranchSaving}
+            >
+              Hủy
+            </Button>
+            <Button onClick={handleBulkSetBranch} disabled={bulkBranchSaving}>
+              {bulkBranchSaving ? "Đang lưu..." : "Xác nhận"}
             </Button>
           </div>
         </div>

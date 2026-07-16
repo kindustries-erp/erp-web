@@ -211,6 +211,14 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
+  bulkSetBranch: async (ids: string[], branchId: string | null) => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      ids: string[];
+    }>(`${BASE}/bulk-set-branch`, { ids, branchId });
+    return data;
+  },
+
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },

@@ -17,6 +17,7 @@ export interface DashboardTemplateProps {
   loading?: boolean;
   children: React.ReactNode;
   portalId?: string;
+  extraActions?: React.ReactNode;
 }
 
 export function DashboardTemplate({
@@ -29,6 +30,7 @@ export function DashboardTemplate({
   loading,
   children,
   portalId = "dashboard",
+  extraActions,
 }: DashboardTemplateProps) {
   return (
     <PageLayout
@@ -42,6 +44,7 @@ export function DashboardTemplate({
           onFilterToggle={filter?.togglePanel}
           activeFilterCount={filter?.activeFilterCount || 0}
           portalId={portalId}
+          extraActions={extraActions}
         />
       }
     >

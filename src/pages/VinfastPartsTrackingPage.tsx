@@ -15,7 +15,15 @@ import {
   useFilterPanel,
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
-import { FileText, Eye, Download, Info, Loader2 } from "lucide-react";
+import {
+  FileText,
+  Eye,
+  Download,
+  Info,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
+import { useUIStore } from "@/core/config/uiStore";
 import { Popover } from "@/core/components/ui/Popover";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -426,6 +434,7 @@ function PriceWithInvoicePopover({
 export function VinfastPartsTrackingPage() {
   const { t } = useTranslation("erpInvoices");
   const formHook = useErpInvoiceForm(() => {});
+  const showToast = useUIStore((s) => s.showToast);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -933,7 +942,7 @@ export function VinfastPartsTrackingPage() {
         tableId="vinfast-parts"
         createActions={[
           {
-            groupLabel: "Dữ liệu",
+            groupLabel: "TRA CỨU",
             items: [
               {
                 label: "Tải bảng kê",
@@ -955,11 +964,29 @@ export function VinfastPartsTrackingPage() {
                     const fileUrl = window.URL.createObjectURL(res.data);
                     const a = document.createElement("a");
                     a.href = fileUrl;
-                    a.download = `bang-ke-phu-tung-vinfast.xlsx`;
+                    const timeStr = format(new Date(), "ddMMyyyy_HHmm");
+                    a.download = `Báo_cáo_phụ_tùng_VINFAST_${timeStr}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(fileUrl);
                     document.body.removeChild(a);
+                  });
+                },
+              },
+            ],
+          },
+          {
+            groupLabel: "THAO TÁC",
+            items: [
+              {
+                label: "Đồng bộ mã phụ tùng",
+                icon: <RefreshCw className="w-4 h-4 text-blue-600" />,
+                onClick: () => {
+                  refetch();
+                  showToast({
+                    title: "Thành công",
+                    description:
+                      "Đã đồng bộ và trích xuất lại dữ liệu phụ tùng mới nhất!",
                   });
                 },
               },
