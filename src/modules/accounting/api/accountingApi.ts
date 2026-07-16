@@ -16,6 +16,13 @@ export const accountingApi = {
     return res.data;
   },
 
+  getJournalEntryById: async (id: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/accounting-core/journal-entries/${id}`,
+    );
+    return res.data.data;
+  },
+
   getChartOfAccounts: async (params?: any) => {
     const res = await axiosInstance.get(
       "/api/v1/accounting-core/chart-of-accounts",

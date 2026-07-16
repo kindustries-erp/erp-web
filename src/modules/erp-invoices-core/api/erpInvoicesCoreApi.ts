@@ -49,6 +49,9 @@ export interface ErpInvoice {
   xmlImportId?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  postingStatus?: string | null;
+  postingDate?: string | null;
+  journalEntryId?: string | null;
   items?: ErpInvoiceItem[];
   voucherNetOffs?: {
     id: string;
@@ -417,6 +420,33 @@ export const erpInvoicesCoreApi = {
       params,
       responseType: "blob",
     });
+    return data;
+  },
+
+  postInvoice: async (
+    id: string,
+    payload: {
+      postingDate: string;
+      description?: string;
+      lines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description?: string;
+      }[];
+    },
+  ): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/post`,
+      payload,
+    );
+    return data;
+  },
+
+  unpostInvoice: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/unpost`,
+    );
     return data;
   },
 };

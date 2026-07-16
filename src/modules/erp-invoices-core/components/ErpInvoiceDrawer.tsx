@@ -17,6 +17,7 @@ interface Props {
   onDownload: (id: string, type: "pdf" | "xml") => void;
   loadingDetail?: boolean;
   onSyncDetail?: () => void;
+  onPostInvoice?: () => void;
   leftPanel: React.ReactNode;
   rightPanel: React.ReactNode;
 }
@@ -34,12 +35,25 @@ export function ErpInvoiceDrawer({
   onDownload,
   loadingDetail,
   onSyncDetail,
+  onPostInvoice,
   leftPanel,
   rightPanel,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
   const viewActions = [
+    ...(detailInvoice && detailInvoice.status !== "CANCELLED"
+      ? [
+          {
+            label:
+              detailInvoice.postingStatus === "POSTED"
+                ? "Xem hạch toán"
+                : "Hạch toán",
+            onClick: onPostInvoice!,
+            variant: "secondary" as const,
+          },
+        ]
+      : []),
     {
       label: t("actionClose", "Đóng"),
       onClick: onClose,

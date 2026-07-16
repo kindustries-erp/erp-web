@@ -40,6 +40,7 @@ import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvo
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
+import { InvoicePostingDrawer } from "@/modules/erp-invoices-core/components/InvoicePostingDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
@@ -84,6 +85,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
   const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
+
+  const [postingInvoiceId, setPostingInvoiceId] = useState<string | null>(null);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
@@ -721,6 +724,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   {inv.status === "CANCELLED"
                     ? t("statusCancelled", "Đã hủy")
                     : t("statusDraft", "Nháp")}
+                </span>
+              )}
+              {inv.postingStatus === "POSTED" && (
+                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-blue-100 text-blue-800">
+                  HẠCH TOÁN
                 </span>
               )}
             </div>
@@ -1459,6 +1467,20 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
 
+          if (inv.postingStatus === "POSTED") {
+            traCuuItems.push({
+              label: "Xem hạch toán",
+              icon: <FileText className="w-3.5 h-3.5" />,
+              onClick: () => setPostingInvoiceId(inv.id),
+            });
+          } else if (inv.status !== "CANCELLED") {
+            thaoTacItems.push({
+              label: "Hạch toán kế toán",
+              icon: <FileText className="w-3.5 h-3.5" />,
+              onClick: () => setPostingInvoiceId(inv.id),
+            });
+          }
+
           return [
             {
               groupLabel: t("groupTraCuu", "Tra cứu"),
@@ -1522,6 +1544,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onDownload={handleDownload}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
+        onPostInvoice={() => {
+          if (formHook.detailInvoice?.id) {
+            setPostingInvoiceId(formHook.detailInvoice.id);
+            formHook.closeDrawer();
+          }
+        }}
         leftPanel={
           <div className="flex flex-col gap-5">
             {formHook.formError && (
@@ -1754,6 +1782,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           </div>
         </div>
       </DrawerModal>
+      <InvoicePostingDrawer
+        open={!!postingInvoiceId}
+        onClose={() => setPostingInvoiceId(null)}
+        invoiceId={postingInvoiceId}
+      />
     </>
   );
 }

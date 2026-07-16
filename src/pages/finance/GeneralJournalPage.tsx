@@ -77,24 +77,17 @@ export const GeneralJournalPage = () => {
     const result: any[] = [];
     journalData.items.forEach((entry: any) => {
       if (entry.lines && entry.lines.length > 0) {
-        const debitAccounts = Array.from(
-          new Set(
-            entry.lines
-              .filter((l: any) => Number(l.debit) > 0 && l.account?.accountCode)
-              .map((l: any) => l.account.accountCode),
-          ),
-        ).join(", ");
-        const creditAccounts = Array.from(
-          new Set(
-            entry.lines
-              .filter(
-                (l: any) => Number(l.credit) > 0 && l.account?.accountCode,
-              )
-              .map((l: any) => l.account.accountCode),
-          ),
-        ).join(", ");
+        // Sắp xếp lại lines theo trường sort từ backend để đảm bảo đúng thứ tự cặp (Nợ -> Có)
+        const sortedLines = [...entry.lines].sort(
+          (a: any, b: any) => a.sort - b.sort,
+        );
 
-        entry.lines.forEach((line: any, index: number) => {
+        sortedLines.forEach((line: any, index: number) => {
+          const isDebit = Number(line.debit) > 0;
+          // Because backend pairs them adjacently (Nợ -> Có), if it's debit, opposing is index + 1; if credit, opposing is index - 1
+          const opposingLine = sortedLines[isDebit ? index + 1 : index - 1];
+          const opposingAccountCode = opposingLine?.account?.accountCode || "";
+
           result.push({
             ...line,
             _id: `${entry.id}-${line.id}`,
@@ -107,8 +100,8 @@ export const GeneralJournalPage = () => {
             _sourceId: entry.sourceId,
             _sourceType: entry.sourceType,
             _subjectName: entry.subjectName,
-            _entryDebitAccounts: debitAccounts,
-            _entryCreditAccounts: creditAccounts,
+            _account: line.account?.accountCode,
+            _opposingAccount: opposingAccountCode,
             isFirstLine: index === 0,
             rowSpan: index === 0 ? entry.lines.length : 0,
           });
@@ -153,27 +146,20 @@ export const GeneralJournalPage = () => {
         ),
       },
       {
-        key: "debitAccount",
-        header: t("journalEntries.columns.debitAccount") || "TK Nợ",
+        key: "account",
+        header: "TK",
         size: 80,
         cell: (row: any) => {
-          const isDebit = Number(row.debit) > 0;
-          return (
-            <span className="font-mono text-sm">
-              {isDebit ? row._entryCreditAccounts : row._entryDebitAccounts}
-            </span>
-          );
+          return <span className="font-mono text-sm">{row._account}</span>;
         },
       },
       {
-        key: "creditAccount",
-        header: t("journalEntries.columns.creditAccount") || "TK Có",
+        key: "opposingAccount",
+        header: "TK đối ứng",
         size: 80,
         cell: (row: any) => {
           return (
-            <span className="font-mono text-sm">
-              {row.account?.accountCode}
-            </span>
+            <span className="font-mono text-sm">{row._opposingAccount}</span>
           );
         },
       },
