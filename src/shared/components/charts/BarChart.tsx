@@ -1,4 +1,4 @@
-import { Bar } from "react-chartjs-2";
+import { Chart } from "react-chartjs-2";
 import "@/shared/utils/chartSetup";
 import { useChartTheme } from "@/shared/utils/chartTheme";
 
@@ -8,6 +8,10 @@ interface BarChartProps {
     data: number[];
     color: string;
     label?: string;
+    type?: "bar" | "line";
+    borderColor?: string;
+    borderWidth?: number;
+    fill?: boolean;
   }>;
   yMax?: number;
   yCallback?: (v: number | string) => string;
@@ -16,13 +20,18 @@ interface BarChartProps {
 export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
   const { gridColor, tickColor } = useChartTheme();
   return (
-    <Bar
+    <Chart
+      type="bar"
       data={{
         labels,
         datasets: datasets.map((d) => ({
+          type: d.type || "bar",
           label: d.label ?? "",
           data: d.data,
           backgroundColor: d.color,
+          borderColor: d.borderColor || d.color,
+          borderWidth: d.borderWidth,
+          fill: d.fill,
           borderRadius: 4,
           barPercentage: 0.45,
         })),
