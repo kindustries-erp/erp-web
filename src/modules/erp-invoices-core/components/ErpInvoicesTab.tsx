@@ -28,6 +28,7 @@ import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { type DataTableColumn } from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
 
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
@@ -53,6 +54,56 @@ import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
+
+function formatTaxInvoiceType(type?: string | null) {
+  if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
+  if (type === "STANDARD") return "HĐ Điện tử";
+  return type || "—";
+}
+
+function formatTaxInvoiceStatus(val?: number | null) {
+  switch (val) {
+    case 1:
+      return "Mới";
+    case 2:
+      return "Bị hủy";
+    case 3:
+      return "Thay thế";
+    case 4:
+      return "Điều chỉnh";
+    case 5:
+      return "Bị thay thế";
+    case 6:
+      return "Bị điều chỉnh";
+    default:
+      return val?.toString() || "—";
+  }
+}
+
+function formatTaxProcessStatus(val?: number | null) {
+  switch (val) {
+    case 0:
+      return "Cục Thuế đã nhận";
+    case 1:
+      return "Đang tiến hành kiểm tra điều kiện cấp mã";
+    case 2:
+      return "CQT từ chối hóa đơn theo từng lần phát sinh";
+    case 3:
+      return "Hóa đơn đủ điều kiện cấp mã";
+    case 4:
+      return "Hóa đơn không đủ điều kiện cấp mã";
+    case 5:
+      return "Đã cấp mã hóa đơn";
+    case 6:
+      return "Cục Thuế đã nhận không mã";
+    case 7:
+      return "Đã kiểm tra định kỳ HĐĐT không có mã";
+    case 8:
+      return "Cục Thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền";
+    default:
+      return val?.toString() || "—";
+  }
+}
 
 interface ErpInvoicesTabProps {
   direction: "IN" | "OUT";
@@ -822,6 +873,61 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             : inv.buyerTaxCode || "—",
       },
       {
+        key: "taxInvoiceType",
+        header: (
+          <div className="text-center w-full font-semibold text-slate-700">
+            Loại HĐ
+          </div>
+        ),
+        size: 110,
+        className: "text-center text-xs",
+        cell: (inv) => formatTaxInvoiceType(inv.taxInvoiceType),
+      },
+      {
+        key: "taxInvoiceStatus",
+        header: (
+          <div className="text-center w-full font-semibold text-slate-700">
+            Trạng thái (GDT)
+          </div>
+        ),
+        size: 110,
+        className: "text-center",
+        cell: (inv) =>
+          inv.taxInvoiceStatus != null ? (
+            <Badge variant="outline">
+              {formatTaxInvoiceStatus(inv.taxInvoiceStatus)}
+            </Badge>
+          ) : (
+            "—"
+          ),
+      },
+      {
+        key: "taxProcessStatus",
+        header: (
+          <div className="text-center w-full font-semibold text-slate-700">
+            KQ Kiểm tra
+          </div>
+        ),
+        size: 150,
+        className: "text-center text-xs whitespace-normal",
+        cell: (inv) => {
+          const lbl = formatTaxProcessStatus(inv.taxProcessStatus);
+          return lbl !== "—" ? (
+            <span
+              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
+                inv.taxProcessStatus === 2 || inv.taxProcessStatus === 4
+                  ? "bg-red-100 text-red-800"
+                  : "bg-emerald-100 text-emerald-800"
+              }`}
+            >
+              {lbl}
+            </span>
+          ) : (
+            "—"
+          );
+        },
+      },
+      {
         key: "description",
         header: (
           <TableColumnHeaderFilter
@@ -1587,6 +1693,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               {
                 label: t("syncInvoices", "Đồng bộ hóa đơn"),
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                onClick: () => setImportModalOpen(true),
+              },
+              {
+                label: t(
+                  "syncAndHealInvoices",
+                  "Đồng bộ & cập nhật lại hóa đơn cũ",
+                ),
+                icon: <DownloadCloud className="w-4 h-4 text-orange-600" />,
                 onClick: () => setImportModalOpen(true),
               },
             ],

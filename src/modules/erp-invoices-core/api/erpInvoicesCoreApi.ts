@@ -47,6 +47,9 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
+  taxInvoiceType?: string | null;
+  taxInvoiceStatus?: number | null;
+  taxProcessStatus?: number | null;
   createdAt?: string;
   updatedAt?: string;
   postingStatus?: string | null;
