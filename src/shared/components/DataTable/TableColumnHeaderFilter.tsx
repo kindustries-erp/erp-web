@@ -142,6 +142,9 @@ export function TableColumnHeaderFilter({
   });
 
   const finalOptions = useMemo(() => {
+    if (filterOptions && filterOptions.length > 0) {
+      return filterOptions;
+    }
     if (columnKey) {
       const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
       const apiValues = new Set(apiOptions.map((o: any) => o.value));

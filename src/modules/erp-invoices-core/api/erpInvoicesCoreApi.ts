@@ -427,6 +427,7 @@ export const erpInvoicesCoreApi = {
     id: string,
     payload: {
       postingDate: string;
+      documentDate?: string;
       description?: string;
       lines: {
         accountId: string;

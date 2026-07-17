@@ -17,6 +17,7 @@ import {
   Building2,
   ChevronDown,
   CheckSquare,
+  XSquare,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -86,6 +87,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
   const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
+  const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
+    "post",
+  );
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
   const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
 
@@ -153,7 +157,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               icon: (
                 <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
               ),
-              onClick: () => setBulkPostingModalOpen(true),
+              onClick: () => {
+                setBulkPostingMode("post");
+                setBulkPostingModalOpen(true);
+              },
+            },
+            {
+              label: "Hủy hạch toán hàng loạt",
+              icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
+              onClick: () => {
+                setBulkPostingMode("unpost");
+                setBulkPostingModalOpen(true);
+              },
             },
             {
               label: "Bỏ chọn",
@@ -1221,10 +1236,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             ]}
             align="center"
             columnKey="postingStatus"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
           />
         ),
         size: 120,
@@ -1868,6 +1879,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
       <InvoiceBulkPostingDrawer
         open={bulkPostingModalOpen}
+        mode={bulkPostingMode}
         onClose={() => setBulkPostingModalOpen(false)}
         selectedInvoiceIds={selectedIds}
         invoices={listHook.invoices || []}

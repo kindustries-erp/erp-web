@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { type DrawerAction } from "@/shared/components/DrawerModal";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
@@ -19,6 +20,7 @@ interface Props {
   selectedInvoiceIds: string[];
   invoices: ErpInvoice[];
   direction?: "IN" | "OUT";
+  mode?: "post" | "unpost";
   onSuccess: () => void;
 }
 
@@ -86,21 +88,28 @@ export function InvoiceBulkPostingDrawer({
   selectedInvoiceIds,
   invoices,
   direction = "IN",
+  mode = "post",
   onSuccess,
 }: Props) {
   const selectedInvoices = useMemo(() => {
     return invoices.filter(
       (inv) =>
-        selectedInvoiceIds.includes(inv.id) && inv.postingStatus !== "POSTED",
+        selectedInvoiceIds.includes(inv.id) &&
+        (mode === "unpost"
+          ? inv.postingStatus === "POSTED"
+          : inv.postingStatus !== "POSTED"),
     );
-  }, [invoices, selectedInvoiceIds]);
+  }, [invoices, selectedInvoiceIds, mode]);
 
   const skippedInvoices = useMemo(() => {
     return invoices.filter(
       (inv) =>
-        selectedInvoiceIds.includes(inv.id) && inv.postingStatus === "POSTED",
+        selectedInvoiceIds.includes(inv.id) &&
+        (mode === "unpost"
+          ? inv.postingStatus !== "POSTED"
+          : inv.postingStatus === "POSTED"),
     );
-  }, [invoices, selectedInvoiceIds]);
+  }, [invoices, selectedInvoiceIds, mode]);
 
   const branchId =
     selectedInvoices.length > 0 ? selectedInvoices[0].branchId : null;
@@ -392,6 +401,7 @@ export function InvoiceBulkPostingDrawer({
         const config = getComputedConfig(inv);
         await erpInvoicesCoreApi.postInvoice(inv.id, {
           postingDate: globalDate,
+          documentDate: inv.invoiceDate,
           description: config.description,
           lines: config.lines.map((l) => ({
             accountId: l.accountId,
@@ -414,7 +424,27 @@ export function InvoiceBulkPostingDrawer({
     },
   });
 
-  const actions: DrawerAction[] = [
+  const bulkUnpostMutation = useMutation({
+    mutationFn: async () => {
+      for (const inv of selectedInvoices) {
+        await erpInvoicesCoreApi.unpostInvoice(inv.id);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Hủy hạch toán hàng loạt thành công!");
+      setIsDirty(false);
+      onSuccess();
+    },
+    onError: (err: any) => {
+      toast.error(
+        err?.response?.data?.message ||
+          err.message ||
+          "Có lỗi khi hủy hạch toán",
+      );
+    },
+  });
+
+  const postActions: DrawerAction[] = [
     {
       label: "Thực hiện hạch toán",
       primary: true,
@@ -423,6 +453,51 @@ export function InvoiceBulkPostingDrawer({
       loading: bulkPostMutation.isPending,
     },
   ];
+
+  if (mode === "unpost") {
+    return (
+      <ConfirmModal
+        open={open}
+        title={`Hủy hạch toán hàng loạt`}
+        message={
+          <div className="space-y-4">
+            {selectedInvoices.length > 0 ? (
+              <p>
+                Bạn có chắc chắn muốn hủy hạch toán cho{" "}
+                {selectedInvoices.length} hóa đơn?
+              </p>
+            ) : (
+              <p className="text-red-600 font-medium">
+                Không có hóa đơn nào khả dụng để hủy hạch toán!
+              </p>
+            )}
+            {skippedInvoices.length > 0 && (
+              <div className="flex items-start gap-2 py-2 px-3 bg-blue-50 text-blue-700 text-sm rounded-lg border border-blue-200">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  Đã bỏ qua <strong>{skippedInvoices.length}</strong> hóa đơn
+                  (HĐ:{" "}
+                  {skippedInvoices
+                    .slice(0, 3)
+                    .map((i) => i.invoiceNo)
+                    .join(", ")}
+                  {skippedInvoices.length > 3 ? "..." : ""}) vì chưa được hạch
+                  toán.
+                </div>
+              </div>
+            )}
+          </div>
+        }
+        confirmLabel="Hủy hạch toán"
+        onConfirm={() => bulkUnpostMutation.mutate()}
+        onCancel={onClose}
+        loading={bulkUnpostMutation.isPending}
+        confirmDisabled={selectedInvoices.length === 0}
+        danger
+      />
+    );
+  }
+
   return (
     <StandardFormDrawer
       open={open}
@@ -432,120 +507,122 @@ export function InvoiceBulkPostingDrawer({
       subtitle={`Áp dụng cho ${selectedInvoices.length} hóa đơn`}
       layout="2-columns"
       size="xl"
-      actions={actions}
+      actions={postActions}
       confirmOnClose={isDirty}
       rightPanel={
-        <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-4">
-          <h3 className="text-sm font-medium text-slate-800">
-            Cấu hình hạch toán chung
-          </h3>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
-              Ngày hạch toán <span className="text-red-500">*</span>
-            </label>
-            <DatePicker
-              value={globalDate}
-              onChange={(val) => {
-                setGlobalDate(val || "");
-                setIsDirty(true);
-              }}
-              placeholder="Chọn ngày"
-            />
-          </div>
+        mode === "post" ? (
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-4">
+            <h3 className="text-sm font-medium text-slate-800">
+              Cấu hình hạch toán chung
+            </h3>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Ngày hạch toán <span className="text-red-500">*</span>
+              </label>
+              <DatePicker
+                value={globalDate}
+                onChange={(val) => {
+                  setGlobalDate(val || "");
+                  setIsDirty(true);
+                }}
+                placeholder="Chọn ngày"
+              />
+            </div>
 
-          {direction === "IN" ? (
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  TK Chi phí/Tài sản (Nợ){" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <Combobox
-                  options={accountOptions}
-                  value={globalInCost}
-                  onChange={(val) => {
-                    setGlobalInCost(val || "");
-                    setIsDirty(true);
-                  }}
-                  placeholder="Tài khoản Nợ..."
-                />
+            {direction === "IN" ? (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    TK Chi phí/Tài sản (Nợ){" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <Combobox
+                    options={accountOptions}
+                    value={globalInCost}
+                    onChange={(val) => {
+                      setGlobalInCost(val || "");
+                      setIsDirty(true);
+                    }}
+                    placeholder="Tài khoản Nợ..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    TK Thuế GTGT (Nợ)
+                  </label>
+                  <Combobox
+                    options={accountOptions}
+                    value={globalInVat}
+                    onChange={(val) => {
+                      setGlobalInVat(val || "");
+                      setIsDirty(true);
+                    }}
+                    placeholder="Tài khoản Thuế..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    TK Phải trả (Có) <span className="text-red-500">*</span>
+                  </label>
+                  <Combobox
+                    options={accountOptions}
+                    value={globalInAp}
+                    onChange={(val) => {
+                      setGlobalInAp(val || "");
+                      setIsDirty(true);
+                    }}
+                    placeholder="Tài khoản Có..."
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  TK Thuế GTGT (Nợ)
-                </label>
-                <Combobox
-                  options={accountOptions}
-                  value={globalInVat}
-                  onChange={(val) => {
-                    setGlobalInVat(val || "");
-                    setIsDirty(true);
-                  }}
-                  placeholder="Tài khoản Thuế..."
-                />
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    TK Phải thu (Nợ) <span className="text-red-500">*</span>
+                  </label>
+                  <Combobox
+                    options={accountOptions}
+                    value={globalOutAr}
+                    onChange={(val) => {
+                      setGlobalOutAr(val || "");
+                      setIsDirty(true);
+                    }}
+                    placeholder="Tài khoản Nợ..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    TK Thuế GTGT (Có)
+                  </label>
+                  <Combobox
+                    options={accountOptions}
+                    value={globalOutVat}
+                    onChange={(val) => {
+                      setGlobalOutVat(val || "");
+                      setIsDirty(true);
+                    }}
+                    placeholder="Tài khoản Thuế..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">
+                    TK Doanh thu (Có) <span className="text-red-500">*</span>
+                  </label>
+                  <Combobox
+                    options={accountOptions}
+                    value={globalOutRev}
+                    onChange={(val) => {
+                      setGlobalOutRev(val || "");
+                      setIsDirty(true);
+                    }}
+                    placeholder="Tài khoản Có..."
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  TK Phải trả (Có) <span className="text-red-500">*</span>
-                </label>
-                <Combobox
-                  options={accountOptions}
-                  value={globalInAp}
-                  onChange={(val) => {
-                    setGlobalInAp(val || "");
-                    setIsDirty(true);
-                  }}
-                  placeholder="Tài khoản Có..."
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  TK Phải thu (Nợ) <span className="text-red-500">*</span>
-                </label>
-                <Combobox
-                  options={accountOptions}
-                  value={globalOutAr}
-                  onChange={(val) => {
-                    setGlobalOutAr(val || "");
-                    setIsDirty(true);
-                  }}
-                  placeholder="Tài khoản Nợ..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  TK Thuế GTGT (Có)
-                </label>
-                <Combobox
-                  options={accountOptions}
-                  value={globalOutVat}
-                  onChange={(val) => {
-                    setGlobalOutVat(val || "");
-                    setIsDirty(true);
-                  }}
-                  placeholder="Tài khoản Thuế..."
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  TK Doanh thu (Có) <span className="text-red-500">*</span>
-                </label>
-                <Combobox
-                  options={accountOptions}
-                  value={globalOutRev}
-                  onChange={(val) => {
-                    setGlobalOutRev(val || "");
-                    setIsDirty(true);
-                  }}
-                  placeholder="Tài khoản Có..."
-                />
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        ) : null
       }
       leftPanel={
         <div className="space-y-4">
@@ -646,15 +723,10 @@ export function InvoiceBulkPostingDrawer({
                               </strong>
                             </span>
                             <span>
-                              Thuế suất:{" "}
-                              <strong className="text-slate-700 font-medium">
-                                {inv.vatRate || 0}%
-                              </strong>
-                            </span>
-                            <span>
                               Tiền Thuế:{" "}
                               <strong className="text-slate-700 font-medium">
                                 {money(inv.vatAmount)}
+                                {inv.vatRate ? ` (${inv.vatRate}%)` : ""}
                               </strong>
                             </span>
                             <span className="text-xs">

@@ -9,6 +9,7 @@ import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { useAppStore } from "@/core/config/appStore";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
+import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/InvoiceDetailWrapper";
 
 export const GeneralJournalPage = () => {
   const t = useT();
@@ -17,6 +18,9 @@ export const GeneralJournalPage = () => {
   const [pageSize, setPageSize] = useState(50);
   const [sortArray, setSortArray] = useState<string[]>(["-date"]);
   const [selectedBankTxnId, setSelectedBankTxnId] = useState<string | null>(
+    null,
+  );
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
     null,
   );
 
@@ -93,6 +97,7 @@ export const GeneralJournalPage = () => {
             _id: `${entry.id}-${line.id}`,
             _entryNo: entry.entryNo,
             _date: entry.date,
+            _documentDate: entry.documentDate,
             _status: entry.status,
             _description: entry.description,
             _reference: entry.reference,
@@ -112,6 +117,7 @@ export const GeneralJournalPage = () => {
           _id: entry.id,
           _entryNo: entry.entryNo,
           _date: entry.date,
+          _documentDate: entry.documentDate,
           _status: entry.status,
           _description: entry.description,
           _reference: entry.reference,
@@ -134,6 +140,16 @@ export const GeneralJournalPage = () => {
         header: "Ngày hạch toán",
         size: 130,
         cell: (row: any) => <span>{formatGMT7(row._date, "date")}</span>,
+      },
+      {
+        key: "_documentDate",
+        header: "Ngày chứng từ",
+        size: 130,
+        cell: (row: any) => (
+          <span>
+            {row._documentDate ? formatGMT7(row._documentDate, "date") : "-"}
+          </span>
+        ),
       },
       {
         key: "_entryNo",
@@ -243,6 +259,16 @@ export const GeneralJournalPage = () => {
               </span>
             );
           }
+          if (row._sourceType === "INVOICE" && row._sourceId) {
+            return (
+              <span
+                className="text-blue-600 hover:underline cursor-pointer"
+                onClick={() => setSelectedInvoiceId(row._sourceId)}
+              >
+                {row._reference}
+              </span>
+            );
+          }
           return (
             <span className="text-gray-600 dark:text-gray-400">
               {row._reference}
@@ -305,6 +331,10 @@ export const GeneralJournalPage = () => {
         isOpen={!!selectedBankTxnId}
         onClose={() => setSelectedBankTxnId(null)}
         transactionId={selectedBankTxnId}
+      />
+      <InvoiceDetailWrapper
+        invoiceId={selectedInvoiceId}
+        onClose={() => setSelectedInvoiceId(null)}
       />
     </>
   );
