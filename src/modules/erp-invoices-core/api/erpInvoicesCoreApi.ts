@@ -22,6 +22,10 @@ export interface ErpInvoice {
   invoiceDate: string;
   direction: "IN" | "OUT";
   status: string;
+  taxInvoiceType?: string | null;
+  isValid?: boolean;
+  validatedAt?: string | null;
+  validatedBy?: string | null;
   source?: string | null;
   sellerName?: string | null;
   sellerTaxCode?: string | null;
@@ -47,7 +51,6 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
-  taxInvoiceType?: string | null;
   taxInvoiceStatus?: number | null;
   taxProcessStatus?: number | null;
   createdAt?: string;
@@ -326,6 +329,17 @@ export const erpInvoicesCoreApi = {
       `${BASE}/bulk-import-xml/seller`,
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data;
+  },
+
+  setValid: async (
+    id: string,
+    isValid: boolean,
+  ): Promise<{ success: boolean }> => {
+    const { data } = await axiosInstance.patch<{ success: boolean }>(
+      `${BASE}/${id}/validate`,
+      { isValid },
     );
     return data;
   },

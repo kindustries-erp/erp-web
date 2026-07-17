@@ -1358,6 +1358,58 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             </span>
           ),
       },
+      ...(direction === "IN"
+        ? [
+            {
+              key: "isValid",
+              header: (
+                <TableColumnHeaderFilter
+                  title="Kiểm duyệt"
+                  sortState="none"
+                  onSortChange={() => {}}
+                  searchValue=""
+                  onSearchChange={() => {}}
+                  selectedFilters={
+                    listHook.tableState.columnFilters["isValid"] || []
+                  }
+                  onFilterChange={(vals) => handleFilterChange("isValid", vals)}
+                  align="center"
+                  columnKey="isValid"
+                  requireSearchToFetchOptions={false}
+                  queryKeyPrefix="erp-invoice-options"
+                  allFilters={listHook.tableState.columnFilters}
+                  fetchOptions={async ({ search }: { search: string }) => {
+                    const options = [
+                      { value: "true", label: "Đã kiểm duyệt" },
+                      { value: "false", label: "Chưa kiểm duyệt" },
+                    ];
+                    const filtered = options.filter((o) =>
+                      o.label.toLowerCase().includes(search.toLowerCase()),
+                    );
+                    return {
+                      items: filtered,
+                      total: filtered.length,
+                      next: null,
+                    };
+                  }}
+                />
+              ),
+              size: 110,
+              headerClassName: "text-center",
+              className: "text-center",
+              cell: (inv: any) =>
+                inv.isValid ? (
+                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-green-100 text-green-800">
+                    HỢP LỆ
+                  </span>
+                ) : (
+                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-500">
+                    CHƯA DUYỆT
+                  </span>
+                ),
+            } as DataTableColumn<ErpInvoice>,
+          ]
+        : []),
       {
         key: "branchId",
         header: (

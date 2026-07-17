@@ -14,6 +14,9 @@ import { ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { useQuery } from "@tanstack/react-query";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { money } from "@/shared/utils/format";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
+import toast from "react-hot-toast";
 
 function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
   const { data: journalEntry, isLoading } = useQuery({
@@ -248,7 +251,50 @@ export function ErpInvoiceInternalInfo({
         </div>
       </DrawerSection>
 
-      {/* Group 3: Hạch toán kế toán */}
+      {/* Group 3: Kiểm duyệt hóa đơn (Chỉ cho IN) */}
+      {direction === "IN" && detailInvoice?.id && (
+        <DrawerSection title="KIỂM DUYỆT HÓA ĐƠN">
+          <div className="flex items-center justify-between p-3 bg-gray-50 border rounded-md">
+            <div>
+              <div className="text-sm font-medium text-gray-800">
+                Hóa đơn hợp lý, hợp lệ
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {detailInvoice.isValid ? (
+                  <span className="text-green-600 font-medium">
+                    Đã kiểm duyệt
+                  </span>
+                ) : (
+                  <span>Chưa kiểm duyệt</span>
+                )}
+                {detailInvoice.validatedAt && (
+                  <span className="ml-2 italic">
+                    lúc{" "}
+                    {new Date(detailInvoice.validatedAt).toLocaleString(
+                      "vi-VN",
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Checkbox
+              checked={!!detailInvoice.isValid}
+              disabled={!editMode}
+              onCheckedChange={async (val: boolean) => {
+                try {
+                  await erpInvoicesCoreApi.setValid(detailInvoice.id, val);
+                  toast.success("Đã cập nhật trạng thái kiểm duyệt");
+                  onRefreshDetail();
+                } catch {
+                  toast.error("Lỗi khi cập nhật trạng thái kiểm duyệt");
+                }
+              }}
+            />
+          </div>
+        </DrawerSection>
+      )}
+
+      {/* Group 4: Hạch toán kế toán */}
       <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
         <div className="space-y-4">
           <div className="pt-2">
