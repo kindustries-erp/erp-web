@@ -304,6 +304,32 @@ export const operationalApi = {
     });
     return data;
   },
+  exportInventoryStock: async (
+    input?: ListParams & {
+      item_type?: string;
+      column_search?: Record<string, string>;
+      column_filters?: Record<string, string[]>;
+    },
+  ) => {
+    const requestParams = {
+      ...params(input),
+      ...(input?.item_type ? { item_type: input.item_type } : {}),
+      ...(input?.column_search && Object.keys(input.column_search).length > 0
+        ? { searches: JSON.stringify(input.column_search) }
+        : {}),
+      ...(input?.column_filters && Object.keys(input.column_filters).length > 0
+        ? { filters: JSON.stringify(input.column_filters) }
+        : {}),
+    };
+    const { data } = await axiosInstance.get<Blob>(
+      "/api/v1/inventory/stock/export/excel",
+      {
+        params: requestParams,
+        responseType: "blob",
+      },
+    );
+    return data;
+  },
   getInventoryStockColumnOptions: async (
     column: string,
     search?: string,
