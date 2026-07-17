@@ -7,39 +7,57 @@ import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 interface Props {
   open: boolean;
   onClose: () => void;
-  editMode: boolean;
   detailInvoice: ErpInvoice | null;
-  startEdit: () => void;
-  saving: boolean;
-  handleSave: (statusOverride?: string) => void;
-  setEditMode: (mode: boolean) => void;
-  setDeleteConfirm: (confirm: boolean) => void;
   onDownload: (id: string, type: "pdf" | "xml") => void;
   loadingDetail?: boolean;
   onSyncDetail?: () => void;
+  onPostInvoice?: () => void;
+  onOpenInternal?: () => void;
   leftPanel: React.ReactNode;
   rightPanel: React.ReactNode;
+  editMode?: boolean;
+  saving?: boolean;
+  handleSave?: (statusOverride?: string) => void;
 }
 
-export function ErpInvoiceDrawer({
+export function ErpInvoiceInfoDrawer({
   open,
   onClose,
-  editMode,
   detailInvoice,
-  startEdit,
-  saving,
-  handleSave,
-  setEditMode,
-  setDeleteConfirm,
   onDownload,
   loadingDetail,
   onSyncDetail,
+  onPostInvoice,
+  onOpenInternal,
   leftPanel,
   rightPanel,
+  editMode = false,
+  saving = false,
+  handleSave,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
   const viewActions = [
+    ...(onOpenInternal && detailInvoice
+      ? [
+          {
+            label: "Quản lý nội bộ",
+            onClick: onOpenInternal,
+            variant: "outline" as const,
+            align: "left" as const,
+          },
+        ]
+      : []),
+    ...(detailInvoice && detailInvoice.status !== "CANCELLED"
+      ? [
+          {
+            label: "Hạch toán",
+            onClick: onPostInvoice!,
+            variant: "secondary" as const,
+            align: "left" as const,
+          },
+        ]
+      : []),
     {
       label: t("actionClose", "Đóng"),
       onClick: onClose,
@@ -47,55 +65,37 @@ export function ErpInvoiceDrawer({
     },
   ];
 
+  // For creation mode only
   const editActions = [
     {
-      label: detailInvoice
-        ? t("actionCancel", "Hủy")
-        : t("actionClose", "Đóng"),
-      onClick: detailInvoice ? () => setEditMode(false) : onClose,
+      label: t("actionClose", "Đóng"),
+      onClick: onClose,
       variant: "outline" as const,
       disabled: saving,
     },
-    ...(detailInvoice
-      ? [
-          {
-            label: t("actionDelete", "Xóa"),
-            onClick: () => setDeleteConfirm(true),
-            variant: "outline" as const,
-            disabled: saving,
-          },
-        ]
-      : []),
     ...(!detailInvoice || detailInvoice.status === "DRAFT"
       ? [
           {
             label: t("actionSaveDraft", "Lưu nháp"),
             variant: "secondary" as const,
             disabled: saving,
-            onClick: () => handleSave("DRAFT"),
+            onClick: () => handleSave?.("DRAFT"),
           },
         ]
       : []),
     {
       label: saving
         ? t("actionSaving", "Đang lưu...")
-        : detailInvoice
-          ? t("actionSaveChange", "Lưu thay đổi")
-          : t("actionCreate", "Tạo mới"),
+        : t("actionCreate", "Tạo mới"),
       primary: true,
       loading: saving,
       disabled: saving,
-      onClick: () => handleSave("CONFIRMED"),
+      onClick: () => handleSave?.("CONFIRMED"),
     },
   ];
 
   let drawerTitle = editMode
-    ? detailInvoice
-      ? t("drawerTitleEdit", {
-          invoiceNo: detailInvoice.invoiceNo,
-          defaultValue: `Chỉnh sửa: ${detailInvoice.invoiceNo}`,
-        })
-      : t("drawerTitleNew", "Tạo hóa đơn mới")
+    ? t("drawerTitleNew", "Tạo hóa đơn mới")
     : detailInvoice
       ? t("drawerTitleView", {
           invoiceNo: detailInvoice.invoiceNo,
@@ -158,7 +158,6 @@ export function ErpInvoiceDrawer({
       open={open}
       mode={editMode ? "edit" : "view"}
       onClose={onClose}
-      onToggleEdit={!editMode && detailInvoice ? startEdit : undefined}
       titleExtra={titleExtra}
       title={drawerTitle}
       size="xl"

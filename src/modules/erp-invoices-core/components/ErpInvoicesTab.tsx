@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import {
-  PlusCircle,
   Receipt,
   DownloadCloud,
   Eye,
@@ -16,6 +15,9 @@ import {
   FileCode,
   FileText,
   Building2,
+  ChevronDown,
+  CheckSquare,
+  XSquare,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -26,6 +28,7 @@ import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { type DataTableColumn } from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
 
 import { useErpInvoicesList } from "@/modules/erp-invoices-core/hooks/useErpInvoicesList";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
@@ -35,10 +38,13 @@ import {
   type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
-import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceDrawer";
+import { ErpInvoiceInfoDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInfoDrawer";
+import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
+import { InvoicePostingDrawer } from "@/modules/erp-invoices-core/components/InvoicePostingDrawer";
+import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
@@ -48,6 +54,56 @@ import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
+
+function formatTaxInvoiceType(type?: string | null) {
+  if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
+  if (type === "STANDARD") return "HĐ Điện tử";
+  return type || "—";
+}
+
+function formatTaxInvoiceStatus(val?: number | null) {
+  switch (val) {
+    case 1:
+      return "Mới";
+    case 2:
+      return "Bị hủy";
+    case 3:
+      return "Thay thế";
+    case 4:
+      return "Điều chỉnh";
+    case 5:
+      return "Bị thay thế";
+    case 6:
+      return "Bị điều chỉnh";
+    default:
+      return val?.toString() || "—";
+  }
+}
+
+function formatTaxProcessStatus(val?: number | null) {
+  switch (val) {
+    case 0:
+      return "Cục Thuế đã nhận";
+    case 1:
+      return "Đang tiến hành kiểm tra điều kiện cấp mã";
+    case 2:
+      return "CQT từ chối hóa đơn theo từng lần phát sinh";
+    case 3:
+      return "Hóa đơn đủ điều kiện cấp mã";
+    case 4:
+      return "Hóa đơn không đủ điều kiện cấp mã";
+    case 5:
+      return "Đã cấp mã hóa đơn";
+    case 6:
+      return "Cục Thuế đã nhận không mã";
+    case 7:
+      return "Đã kiểm tra định kỳ HĐĐT không có mã";
+    case 8:
+      return "Cục Thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền";
+    default:
+      return val?.toString() || "—";
+  }
+}
 
 interface ErpInvoicesTabProps {
   direction: "IN" | "OUT";
@@ -81,8 +137,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
+  const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
+    "post",
+  );
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
   const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
+
+  const [postingInvoiceId, setPostingInvoiceId] = useState<string | null>(null);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
@@ -120,8 +182,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         <ActionDropdown
           align="start"
           customTrigger={
-            <Button size="sm" className="h-8 shadow-sm">
-              Thao tác ({selectedIds.length})
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+            >
+              <CheckSquare className="w-4 h-4 mr-1.5" />
+              {t("bulkActions", "Thao tác")} ({selectedIds.length})
+              <ChevronDown className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           }
           items={[
@@ -133,6 +201,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               onClick: () => {
                 setBulkBranchId(null);
                 setBulkBranchModalOpen(true);
+              },
+            },
+            {
+              label: "Hạch toán hàng loạt",
+              icon: (
+                <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
+              ),
+              onClick: () => {
+                setBulkPostingMode("post");
+                setBulkPostingModalOpen(true);
+              },
+            },
+            {
+              label: "Hủy hạch toán hàng loạt",
+              icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
+              onClick: () => {
+                setBulkPostingMode("unpost");
+                setBulkPostingModalOpen(true);
               },
             },
             {
@@ -640,32 +726,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             ? format(new Date(inv.invoiceDate), "dd-MM-yyyy")
             : "",
       },
-      {
-        key: "serialNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("serialNo", "Ký hiệu")}
-            sortState={getSortState("serialNo")}
-            onSortChange={(state) => handleSortChange("serialNo", state)}
-            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("serialNo", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["serialNo"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
-            align="center"
-            columnKey="serialNo"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-          />
-        ),
-        size: 120,
-        headerClassName: "text-center",
-        className: "text-muted-foreground text-left",
-        cell: (inv) => inv.serialNo || "—",
-      },
+
       {
         key: "invoiceNo",
         header: (
@@ -719,6 +780,32 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             </div>
           </div>
         ),
+      },
+      {
+        key: "serialNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("serialNo", "Ký hiệu")}
+            sortState={getSortState("serialNo")}
+            onSortChange={(state) => handleSortChange("serialNo", state)}
+            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("serialNo", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["serialNo"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
+            align="center"
+            columnKey="serialNo"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-left",
+        cell: (inv) => inv.serialNo || "—",
       },
       {
         key: "partner",
@@ -784,6 +871,61 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           direction === "IN"
             ? inv.sellerTaxCode || "—"
             : inv.buyerTaxCode || "—",
+      },
+      {
+        key: "taxInvoiceType",
+        header: (
+          <div className="text-center w-full font-semibold text-slate-700">
+            Loại HĐ
+          </div>
+        ),
+        size: 110,
+        className: "text-center text-xs",
+        cell: (inv) => formatTaxInvoiceType(inv.taxInvoiceType),
+      },
+      {
+        key: "taxInvoiceStatus",
+        header: (
+          <div className="text-center w-full font-semibold text-slate-700">
+            Trạng thái (GDT)
+          </div>
+        ),
+        size: 110,
+        className: "text-center",
+        cell: (inv) =>
+          inv.taxInvoiceStatus != null ? (
+            <Badge variant="outline">
+              {formatTaxInvoiceStatus(inv.taxInvoiceStatus)}
+            </Badge>
+          ) : (
+            "—"
+          ),
+      },
+      {
+        key: "taxProcessStatus",
+        header: (
+          <div className="text-center w-full font-semibold text-slate-700">
+            KQ Kiểm tra
+          </div>
+        ),
+        size: 150,
+        className: "text-center text-xs whitespace-normal",
+        cell: (inv) => {
+          const lbl = formatTaxProcessStatus(inv.taxProcessStatus);
+          return lbl !== "—" ? (
+            <span
+              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
+                inv.taxProcessStatus === 2 || inv.taxProcessStatus === 4
+                  ? "bg-red-100 text-red-800"
+                  : "bg-emerald-100 text-emerald-800"
+              }`}
+            >
+              {lbl}
+            </span>
+          ) : (
+            "—"
+          );
+        },
       },
       {
         key: "description",
@@ -1180,6 +1322,95 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         },
       },
       {
+        key: "postingStatus",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("postingStatus", "Hạch toán")}
+            sortState={getSortState("postingStatus")}
+            onSortChange={(state) => handleSortChange("postingStatus", state)}
+            searchValue={
+              listHook.tableState.columnSearch["postingStatus"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("postingStatus", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["postingStatus"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("postingStatus", vals)}
+            filterOptions={[
+              { label: "HẠCH TOÁN", value: "POSTED" },
+              { label: "CHƯA HẠCH TOÁN", value: "UNPOSTED" },
+            ]}
+            align="center"
+            columnKey="postingStatus"
+          />
+        ),
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv) =>
+          inv.postingStatus === "POSTED" ? (
+            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-blue-100 text-blue-800">
+              HẠCH TOÁN
+            </span>
+          ) : (
+            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-800">
+              CHƯA HẠCH TOÁN
+            </span>
+          ),
+      },
+      ...(direction === "IN"
+        ? [
+            {
+              key: "isValid",
+              header: (
+                <TableColumnHeaderFilter
+                  title="Kiểm duyệt"
+                  sortState="none"
+                  onSortChange={() => {}}
+                  searchValue=""
+                  onSearchChange={() => {}}
+                  selectedFilters={
+                    listHook.tableState.columnFilters["isValid"] || []
+                  }
+                  onFilterChange={(vals) => handleFilterChange("isValid", vals)}
+                  align="center"
+                  columnKey="isValid"
+                  requireSearchToFetchOptions={false}
+                  queryKeyPrefix="erp-invoice-options"
+                  allFilters={listHook.tableState.columnFilters}
+                  fetchOptions={async ({ search }: { search: string }) => {
+                    const options = [
+                      { value: "true", label: "Đã kiểm duyệt" },
+                      { value: "false", label: "Chưa kiểm duyệt" },
+                    ];
+                    const filtered = options.filter((o) =>
+                      o.label.toLowerCase().includes(search.toLowerCase()),
+                    );
+                    return {
+                      items: filtered,
+                      total: filtered.length,
+                      next: null,
+                    };
+                  }}
+                />
+              ),
+              size: 110,
+              headerClassName: "text-center",
+              className: "text-center",
+              cell: (inv: any) =>
+                inv.isValid ? (
+                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-green-100 text-green-800">
+                    HỢP LỆ
+                  </span>
+                ) : (
+                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-500">
+                    CHƯA DUYỆT
+                  </span>
+                ),
+            } as DataTableColumn<ErpInvoice>,
+          ]
+        : []),
+      {
         key: "branchId",
         header: (
           <TableColumnHeaderFilter
@@ -1356,9 +1587,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           const thaoTacItems = [];
 
           traCuuItems.push({
-            label: t("actionDetail", "Chi tiết"),
+            label: t("actionDetail", "Chi tiết hóa đơn"),
             icon: <Eye className="w-3.5 h-3.5" />,
             onClick: () => formHook.openDetail(inv),
+          });
+          traCuuItems.push({
+            label: "Quản lý nội bộ",
+            icon: <Building2 className="w-3.5 h-3.5" />,
+            onClick: () => formHook.openInternal(inv),
           });
           if (inv.xmlFileKey) {
             traCuuItems.push({
@@ -1452,6 +1688,20 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
 
+          if (inv.postingStatus === "POSTED") {
+            traCuuItems.push({
+              label: "Xem hạch toán",
+              icon: <FileText className="w-3.5 h-3.5" />,
+              onClick: () => setPostingInvoiceId(inv.id),
+            });
+          } else if (inv.status !== "CANCELLED") {
+            traCuuItems.push({
+              label: "Hạch toán kế toán",
+              icon: <FileText className="w-3.5 h-3.5" />,
+              onClick: () => setPostingInvoiceId(inv.id),
+            });
+          }
+
           return [
             {
               groupLabel: t("groupTraCuu", "Tra cứu"),
@@ -1463,6 +1713,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             },
           ];
         }}
+        onCreate={() => formHook.openNew(direction)}
+        createLabel={t("createInvoice", "Tạo hóa đơn")}
         createActions={[
           {
             groupLabel: t("groupTraCuu", "Tra cứu"),
@@ -1491,13 +1743,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             groupLabel: t("groupThaoTac", "Thao tác"),
             items: [
               {
-                label: t("createInvoice", "Tạo hóa đơn"),
-                icon: <PlusCircle className="h-4 w-4 text-emerald-600" />,
-                onClick: () => formHook.openNew(direction),
-              },
-              {
                 label: t("syncInvoices", "Đồng bộ hóa đơn"),
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                onClick: () => setImportModalOpen(true),
+              },
+              {
+                label: t(
+                  "syncAndHealInvoices",
+                  "Đồng bộ & cập nhật lại hóa đơn cũ",
+                ),
+                icon: <DownloadCloud className="w-4 h-4 text-orange-600" />,
                 onClick: () => setImportModalOpen(true),
               },
             ],
@@ -1505,19 +1760,26 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         ]}
       />
 
-      <ErpInvoiceDrawer
-        open={formHook.drawerOpen}
+      <ErpInvoiceInfoDrawer
+        open={formHook.infoDrawerOpen}
         onClose={formHook.closeDrawer}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
-        startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         onDownload={handleDownload}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
+        onPostInvoice={() => {
+          if (formHook.detailInvoice?.id) {
+            setPostingInvoiceId(formHook.detailInvoice.id);
+          }
+        }}
+        onOpenInternal={() => {
+          if (formHook.detailInvoice) {
+            formHook.openInternal(formHook.detailInvoice);
+          }
+        }}
         leftPanel={
           <div className="flex flex-col gap-5">
             {formHook.formError && (
@@ -1525,23 +1787,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 {formHook.formError}
               </div>
             )}
-            <ErpInvoiceInternalInfo
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key, value) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={direction}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={() =>
-                formHook.openDetail({
-                  id: formHook.detailInvoice!.id,
-                } as ErpInvoice)
-              }
-            />
             <ErpInvoiceFormItems
               form={formHook.form}
               editMode={formHook.editMode && !formHook.detailInvoice?.id}
@@ -1555,20 +1800,62 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             <ErpInvoiceFormGeneral
               form={formHook.form}
               editMode={formHook.editMode}
-              fieldSet={(key, value) =>
+              fieldSet={(key: string, value: any) =>
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
               invoiceId={formHook.detailInvoice?.id ?? null}
             />
-            <ErpInvoicePdfUpload
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-              pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-              editMode={formHook.editMode}
-            />
           </div>
         }
       />
+
+      <ErpInvoiceInternalDrawer
+        open={formHook.internalDrawerOpen}
+        onClose={formHook.closeDrawer}
+        editMode={formHook.editMode}
+        detailInvoice={formHook.detailInvoice}
+        startEdit={formHook.startEdit}
+        saving={formHook.saving}
+        handleSave={formHook.handleSave}
+        setEditMode={formHook.setEditMode}
+        setDeleteConfirm={formHook.setDeleteConfirm}
+        onOpenInfo={() => {
+          if (formHook.detailInvoice) {
+            formHook.openDetail(formHook.detailInvoice);
+          }
+        }}
+      >
+        <div className="flex flex-col gap-5">
+          {formHook.formError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+              {formHook.formError}
+            </div>
+          )}
+          <ErpInvoiceInternalInfo
+            form={formHook.form}
+            editMode={formHook.editMode}
+            fieldSet={(key: string, value: any) =>
+              formHook.setForm((prev) => ({ ...prev, [key]: value }))
+            }
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pendingTagIds={formHook.pendingTagIds}
+            onPendingTagsChange={formHook.setPendingTagIds}
+            direction={direction}
+            detailInvoice={formHook.detailInvoice}
+            onRefreshDetail={() =>
+              formHook.openDetail({
+                id: formHook.detailInvoice!.id,
+              } as ErpInvoice)
+            }
+          />
+          <ErpInvoicePdfUpload
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+            editMode={formHook.editMode}
+          />
+        </div>
+      </ErpInvoiceInternalDrawer>
 
       <ConfirmModal
         open={formHook.deleteConfirm}
@@ -1750,6 +2037,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           </div>
         </div>
       </DrawerModal>
+      <InvoicePostingDrawer
+        open={!!postingInvoiceId}
+        onClose={() => setPostingInvoiceId(null)}
+        invoiceId={postingInvoiceId}
+      />
+
+      <InvoiceBulkPostingDrawer
+        open={bulkPostingModalOpen}
+        mode={bulkPostingMode}
+        onClose={() => setBulkPostingModalOpen(false)}
+        selectedInvoiceIds={selectedIds}
+        invoices={listHook.invoices || []}
+        direction={direction}
+        onSuccess={() => {
+          setBulkPostingModalOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
+      />
     </>
   );
 }

@@ -9,6 +9,7 @@ export interface ErpBankAccount {
   accountName: string;
   currency: string;
   isActive: boolean;
+  accountingAccountId: string;
   openingBalance?: number;
   periodDate?: string;
   createdAt: string;
@@ -20,6 +21,7 @@ export interface ErpCashBook {
   name: string;
   currency: string;
   isActive: boolean;
+  accountingAccountId: string;
   openingBalance?: number;
   periodDate?: string;
   createdAt: string;

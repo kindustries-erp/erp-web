@@ -7,6 +7,56 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { useTranslation } from "react-i18next";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 
+function formatTaxInvoiceType(type?: string | null) {
+  if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
+  if (type === "STANDARD") return "HĐ Điện tử";
+  return type || "—";
+}
+
+function formatTaxInvoiceStatus(val?: number | null) {
+  switch (val) {
+    case 1:
+      return "Mới";
+    case 2:
+      return "Bị hủy";
+    case 3:
+      return "Thay thế";
+    case 4:
+      return "Điều chỉnh";
+    case 5:
+      return "Bị thay thế";
+    case 6:
+      return "Bị điều chỉnh";
+    default:
+      return val?.toString() || "—";
+  }
+}
+
+function formatTaxProcessStatus(val?: number | null) {
+  switch (val) {
+    case 0:
+      return "Cục Thuế đã nhận";
+    case 1:
+      return "Đang tiến hành kiểm tra điều kiện cấp mã";
+    case 2:
+      return "CQT từ chối hóa đơn theo từng lần phát sinh";
+    case 3:
+      return "Hóa đơn đủ điều kiện cấp mã";
+    case 4:
+      return "Hóa đơn không đủ điều kiện cấp mã";
+    case 5:
+      return "Đã cấp mã hóa đơn";
+    case 6:
+      return "Cục Thuế đã nhận không mã";
+    case 7:
+      return "Đã kiểm tra định kỳ HĐĐT không có mã";
+    case 8:
+      return "Cục Thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền";
+    default:
+      return val?.toString() || "—";
+  }
+}
+
 function Linkify({ text }: { text: string }) {
   if (!text) return null;
   const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -101,6 +151,25 @@ export function ErpInvoiceFormGeneral({
                 </div>
               </DrawerField>
             )}
+          {!editMode && (
+            <>
+              <DrawerField label="Loại hóa đơn (GDT)">
+                <div className="text-sm font-medium text-slate-800">
+                  {formatTaxInvoiceType((form as any).taxInvoiceType)}
+                </div>
+              </DrawerField>
+              <DrawerField label="Trạng thái (GDT)">
+                <div className="text-sm text-slate-700">
+                  {formatTaxInvoiceStatus((form as any).taxInvoiceStatus)}
+                </div>
+              </DrawerField>
+              <DrawerField label="Kết quả kiểm tra (GDT)">
+                <div className="text-sm text-slate-700">
+                  {formatTaxProcessStatus((form as any).taxProcessStatus)}
+                </div>
+              </DrawerField>
+            </>
+          )}
           <DrawerField label={t("notes", "Ghi chú / Link tra cứu")}>
             {canEditCore ? (
               <textarea

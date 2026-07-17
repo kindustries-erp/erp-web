@@ -6,7 +6,7 @@ import { Button } from "@/shared/components/ui/Button";
 interface ConfirmModalProps {
   open: boolean;
   title?: string;
-  message: string;
+  message: React.ReactNode | string;
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void;
@@ -14,6 +14,7 @@ interface ConfirmModalProps {
   loading?: boolean;
   danger?: boolean;
   zIndex?: number;
+  confirmDisabled?: boolean;
 }
 
 export function ConfirmModal({
@@ -27,6 +28,7 @@ export function ConfirmModal({
   loading = false,
   danger = true,
   zIndex = 500,
+  confirmDisabled = false,
 }: ConfirmModalProps) {
   const t = useT();
 
@@ -49,7 +51,9 @@ export function ConfirmModal({
         <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
           {title || t("confirmModal.defaultTitle")}
         </h3>
-        <p className="text-xs text-slate-500 mb-6 leading-relaxed">{message}</p>
+        <div className="text-xs text-slate-500 mb-6 leading-relaxed">
+          {message}
+        </div>
         <div className="flex gap-2 justify-end">
           <Button
             variant="secondary"
@@ -63,7 +67,8 @@ export function ConfirmModal({
             variant={danger ? "danger" : "primary"}
             size="md"
             onClick={onConfirm}
-            disabled={loading}
+            disabled={loading || confirmDisabled}
+            className="min-w-[100px]"
           >
             {loading && (
               <svg

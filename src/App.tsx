@@ -12,6 +12,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
+import { InventoryDashboard } from "@/pages/InventoryDashboard";
 import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
@@ -62,6 +63,7 @@ import { PageKey } from "@/shared/types";
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,

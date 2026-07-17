@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { RefreshCcw, Plus, MoreHorizontal } from "lucide-react";
+import { RefreshCcw, Plus, ChevronDown } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { cn } from "@/shared/utils";
@@ -81,16 +81,39 @@ export function TableActionGroup({
         </Button>
       )}
 
-      {createActions && createActions.length > 0 && (
+      {!onCreate && createActions && createActions.length > 0 && (
         <ActionDropdown
           items={createActions}
           align="end"
           customTrigger={
-            <Button variant="secondary" size="icon" className="h-8 w-8 px-0">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button className="h-8 px-3">
+              {t(createLabel)}
+              <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
             </Button>
           }
         />
+      )}
+
+      {onCreate && createActions && createActions.length > 0 && (
+        <div className="flex items-center">
+          <Button
+            onClick={onCreate}
+            className="h-8 rounded-r-none px-3 border-r-0 focus:z-10"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            {t(createLabel)}
+          </Button>
+          <div className="w-[1px] h-8 bg-primary-foreground/20 z-10" />
+          <ActionDropdown
+            items={createActions}
+            align="end"
+            customTrigger={
+              <Button className="h-8 w-8 px-0 rounded-l-none border-l-0 focus:z-10">
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            }
+          />
+        </div>
       )}
     </div>
   );

@@ -22,6 +22,10 @@ export interface ErpInvoice {
   invoiceDate: string;
   direction: "IN" | "OUT";
   status: string;
+  taxInvoiceType?: string | null;
+  isValid?: boolean;
+  validatedAt?: string | null;
+  validatedBy?: string | null;
   source?: string | null;
   sellerName?: string | null;
   sellerTaxCode?: string | null;
@@ -47,8 +51,13 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
+  taxInvoiceStatus?: number | null;
+  taxProcessStatus?: number | null;
   createdAt?: string;
   updatedAt?: string;
+  postingStatus?: string | null;
+  postingDate?: string | null;
+  journalEntryId?: string | null;
   items?: ErpInvoiceItem[];
   voucherNetOffs?: {
     id: string;
@@ -324,6 +333,17 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  setValid: async (
+    id: string,
+    isValid: boolean,
+  ): Promise<{ success: boolean }> => {
+    const { data } = await axiosInstance.patch<{ success: boolean }>(
+      `${BASE}/${id}/validate`,
+      { isValid },
+    );
+    return data;
+  },
+
   getDownloadUrl: async (
     id: string,
     type: "pdf" | "xml",
@@ -417,6 +437,34 @@ export const erpInvoicesCoreApi = {
       params,
       responseType: "blob",
     });
+    return data;
+  },
+
+  postInvoice: async (
+    id: string,
+    payload: {
+      postingDate: string;
+      documentDate?: string;
+      description?: string;
+      lines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description?: string;
+      }[];
+    },
+  ): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/post`,
+      payload,
+    );
+    return data;
+  },
+
+  unpostInvoice: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/unpost`,
+    );
     return data;
   },
 };

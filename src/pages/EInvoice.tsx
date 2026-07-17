@@ -14,6 +14,7 @@ import { SearchInput } from "@/shared/components/SearchInput";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { useAppStore } from "@/core/config/appStore";
 import { PageLayout } from "@/shared/components/PageLayout";
@@ -76,6 +77,56 @@ function statusVariant(status: Einvoice["status"]) {
   if (status === "ISSUED" || status === "SYNCED") return "default";
   if (status === "ERROR" || status === "CANCELLED") return "destructive";
   return "secondary";
+}
+
+function formatTaxInvoiceType(type?: string | null) {
+  if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
+  if (type === "STANDARD") return "HĐ Điện tử";
+  return type || "-";
+}
+
+function formatTaxInvoiceStatus(val?: number | null) {
+  switch (val) {
+    case 1:
+      return "Mới";
+    case 2:
+      return "Bị hủy";
+    case 3:
+      return "Thay thế";
+    case 4:
+      return "Điều chỉnh";
+    case 5:
+      return "Bị thay thế";
+    case 6:
+      return "Bị điều chỉnh";
+    default:
+      return val?.toString() || "-";
+  }
+}
+
+function formatTaxProcessStatus(val?: number | null) {
+  switch (val) {
+    case 0:
+      return "Cục Thuế đã nhận";
+    case 1:
+      return "Đang tiến hành kiểm tra điều kiện cấp mã";
+    case 2:
+      return "CQT từ chối hóa đơn theo từng lần phát sinh";
+    case 3:
+      return "Hóa đơn đủ điều kiện cấp mã";
+    case 4:
+      return "Hóa đơn không đủ điều kiện cấp mã";
+    case 5:
+      return "Đã cấp mã hóa đơn";
+    case 6:
+      return "Cục Thuế đã nhận không mã";
+    case 7:
+      return "Đã kiểm tra định kỳ HĐĐT không có mã";
+    case 8:
+      return "Cục Thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền";
+    default:
+      return val?.toString() || "-";
+  }
 }
 
 function formatMoney(value?: number) {
@@ -801,6 +852,41 @@ const HoaDonDienTu: React.FC = () => {
         cell: (inv) => formatMoney(inv.total_amount),
       },
       {
+        key: "tax_invoice_type",
+        header: "Loại HĐ",
+        className: "text-center whitespace-nowrap",
+        headerClassName: "text-center whitespace-nowrap",
+        cell: (inv) =>
+          formatTaxInvoiceType(inv.tax_invoice_type || inv.taxInvoiceType),
+      },
+      {
+        key: "tax_invoice_status",
+        header: "Trạng thái (GDT)",
+        className: "text-center whitespace-nowrap",
+        headerClassName: "text-center whitespace-nowrap",
+        cell: (inv) => (
+          <div className="flex justify-center w-full">
+            <Badge variant="outline">
+              {formatTaxInvoiceStatus(
+                inv.tax_invoice_status ?? inv.taxInvoiceStatus,
+              )}
+            </Badge>
+          </div>
+        ),
+      },
+      {
+        key: "tax_process_status",
+        header: "KQ Kiểm tra",
+        className: "text-center whitespace-nowrap max-w-[200px] truncate",
+        headerClassName: "text-center whitespace-nowrap",
+        cell: (inv) => {
+          const lbl = formatTaxProcessStatus(
+            inv.tax_process_status ?? inv.taxProcessStatus,
+          );
+          return <span title={lbl}>{lbl}</span>;
+        },
+      },
+      {
         key: "status",
         header: "Trạng thái",
         className: "text-center",
@@ -1129,6 +1215,15 @@ const HoaDonDienTu: React.FC = () => {
               <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn bán ra qua
               Viettel Tax Portal
             </BtnPrimary>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSyncTax("OUT")}
+              disabled={loading}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ & cập nhật lại hóa
+              đơn cũ
+            </Button>
           </div>
           {renderTable("output")}
         </div>
@@ -1141,6 +1236,15 @@ const HoaDonDienTu: React.FC = () => {
               <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ hóa đơn mua vào qua
               Viettel Tax Portal
             </BtnPrimary>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleSyncTax("IN")}
+              disabled={loading}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" /> Đồng bộ & cập nhật lại hóa
+              đơn cũ
+            </Button>
           </div>
           {renderTable("input")}
         </div>

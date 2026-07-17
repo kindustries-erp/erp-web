@@ -295,9 +295,7 @@ export const useOperationalFormStore = create<
         ""
       ).slice(0, 16),
       dueDate: (doc.due_date || "").slice(0, 10),
-      invoiceStatus: doc.invoice_status || "NO_INVOICE",
       status: doc.status || "DRAFT",
-      paymentStatus: doc.payment_status || "UNPAID",
       recurrenceType: doc.recurrence_type || "ONE_TIME",
       recurrenceInterval: String(
         (doc as never as Record<string, number>)["recurrence_interval"] ?? 1,

@@ -33,7 +33,7 @@ describe("useErpInvoiceForm", () => {
 
   it("should initialize with default closed state", () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.infoDrawerOpen).toBe(false);
     expect(result.current.detailInvoice).toBeNull();
     expect(result.current.editMode).toBe(false);
   });
@@ -45,7 +45,7 @@ describe("useErpInvoiceForm", () => {
       result.current.openNew("IN");
     });
 
-    expect(result.current.drawerOpen).toBe(true);
+    expect(result.current.infoDrawerOpen).toBe(true);
     expect(result.current.editMode).toBe(true);
     expect(result.current.detailInvoice).toBeNull();
     expect(result.current.form.direction).toBe("IN");
@@ -64,7 +64,7 @@ describe("useErpInvoiceForm", () => {
       result.current.openDetail(mockInvoice);
     });
 
-    expect(result.current.drawerOpen).toBe(true);
+    expect(result.current.infoDrawerOpen).toBe(true);
     expect(result.current.editMode).toBe(false);
     expect(result.current.detailInvoice).toEqual(mockInvoice);
   });
@@ -130,7 +130,7 @@ describe("useErpInvoiceForm", () => {
 
     expect(erpInvoicesCoreApi.create).toHaveBeenCalled();
     expect(mockReload).toHaveBeenCalled();
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.infoDrawerOpen).toBe(false);
   });
 
   it("should update an existing invoice", async () => {
@@ -189,7 +189,7 @@ describe("useErpInvoiceForm", () => {
     });
 
     expect(erpInvoicesCoreApi.remove).toHaveBeenCalledWith("1");
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.infoDrawerOpen).toBe(false);
     expect(mockReload).toHaveBeenCalled();
   });
 
