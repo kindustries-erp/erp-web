@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { money } from "@/shared/utils/format";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
-import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceDrawer";
+import { ErpInvoiceInfoDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInfoDrawer";
+import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import api from "@/core/api/axiosInstance";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
@@ -1015,19 +1016,21 @@ export function VinfastPartsTrackingPage() {
         filter={filterProps}
       />
 
-      <ErpInvoiceDrawer
-        open={formHook.drawerOpen}
+      <ErpInvoiceInfoDrawer
+        open={formHook.infoDrawerOpen}
         onClose={formHook.closeDrawer}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
-        startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         onDownload={() => {}}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
+        onOpenInternal={() => {
+          if (formHook.detailInvoice) {
+            formHook.openInternal(formHook.detailInvoice);
+          }
+        }}
         leftPanel={
           <div className="flex flex-col gap-5">
             {formHook.formError && (
@@ -1035,23 +1038,6 @@ export function VinfastPartsTrackingPage() {
                 {formHook.formError}
               </div>
             )}
-            <ErpInvoiceInternalInfo
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key, value) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={formHook.detailInvoice?.direction || "IN"}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={() =>
-                formHook.openDetail({
-                  id: formHook.detailInvoice!.id,
-                } as any)
-              }
-            />
             <ErpInvoiceFormItems
               form={formHook.form}
               editMode={formHook.editMode && !formHook.detailInvoice?.id}
@@ -1065,20 +1051,57 @@ export function VinfastPartsTrackingPage() {
             <ErpInvoiceFormGeneral
               form={formHook.form}
               editMode={formHook.editMode}
-              fieldSet={(key, value) =>
+              fieldSet={(key: string, value: any) =>
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
               invoiceId={formHook.detailInvoice?.id ?? null}
             />
-            <ErpInvoicePdfUpload
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-              pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-              editMode={formHook.editMode}
-            />
           </div>
         }
       />
+
+      <ErpInvoiceInternalDrawer
+        open={formHook.internalDrawerOpen}
+        onClose={formHook.closeDrawer}
+        editMode={formHook.editMode}
+        detailInvoice={formHook.detailInvoice}
+        startEdit={formHook.startEdit}
+        saving={formHook.saving}
+        handleSave={formHook.handleSave}
+        setEditMode={formHook.setEditMode}
+        setDeleteConfirm={formHook.setDeleteConfirm}
+        onOpenInfo={() => {
+          if (formHook.detailInvoice) {
+            formHook.openDetail(formHook.detailInvoice);
+          }
+        }}
+      >
+        <div className="flex flex-col gap-5">
+          <ErpInvoiceInternalInfo
+            form={formHook.form}
+            editMode={formHook.editMode}
+            fieldSet={(key: string, value: any) =>
+              formHook.setForm((prev) => ({ ...prev, [key]: value }))
+            }
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pendingTagIds={formHook.pendingTagIds}
+            onPendingTagsChange={formHook.setPendingTagIds}
+            direction={formHook.detailInvoice?.direction || "IN"}
+            detailInvoice={formHook.detailInvoice}
+            onRefreshDetail={() =>
+              formHook.openDetail({
+                id: formHook.detailInvoice!.id,
+              } as any)
+            }
+          />
+          <ErpInvoicePdfUpload
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+            editMode={formHook.editMode}
+          />
+        </div>
+      </ErpInvoiceInternalDrawer>
 
       <VinfastPartDetailDrawer
         open={!!detailRow}

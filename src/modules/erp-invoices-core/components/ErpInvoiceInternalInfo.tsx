@@ -147,10 +147,10 @@ export function ErpInvoiceInternalInfo({
   }, [editMode, form.invoiceNo, direction]);
 
   return (
-    <DrawerSection title="THÔNG TIN QUẢN LÝ NỘI BỘ">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Column 1: Branch & Tags (col-span-1) */}
-        <div className="col-span-1 space-y-4">
+    <div className="flex flex-col gap-6">
+      {/* Group 1: Thông tin chung */}
+      <DrawerSection title="THÔNG TIN CHUNG">
+        <div className="space-y-4">
           <DrawerField label={t("branchId", "Chi nhánh")}>
             {editMode ? (
               <Combobox
@@ -189,38 +189,12 @@ export function ErpInvoiceInternalInfo({
               />
             ) : null}
           </div>
-
-          {/* Posting Status */}
-          <div className="pt-2">
-            <div className="text-sm font-medium mb-2 text-gray-700">
-              Trạng thái hạch toán
-            </div>
-            {detailInvoice?.postingStatus === "POSTED" ? (
-              <div className="flex flex-col gap-1">
-                <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 w-max">
-                  ĐÃ HẠCH TOÁN
-                </span>
-                {detailInvoice.postingDate && (
-                  <span className="text-xs text-gray-500">
-                    Ngày: {detailInvoice.postingDate.slice(0, 10)}
-                  </span>
-                )}
-                {detailInvoice.journalEntryId && (
-                  <TAccountDiagram
-                    journalEntryId={detailInvoice.journalEntryId}
-                  />
-                )}
-              </div>
-            ) : (
-              <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 w-max">
-                CHƯA HẠCH TOÁN
-              </span>
-            )}
-          </div>
         </div>
+      </DrawerSection>
 
-        {/* Column 2: Net-off & POs (col-span-2) */}
-        <div className="col-span-1 md:col-span-2 space-y-4">
+      {/* Group 2: Chứng từ liên kết */}
+      <DrawerSection title="CHỨNG TỪ LIÊN KẾT">
+        <div className="space-y-4">
           {/* Related POs */}
           {!editMode && direction === "IN" && (
             <div>
@@ -271,7 +245,39 @@ export function ErpInvoiceInternalInfo({
             </div>
           )}
         </div>
-      </div>
-    </DrawerSection>
+      </DrawerSection>
+
+      {/* Group 3: Hạch toán kế toán */}
+      <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
+        <div className="space-y-4">
+          <div className="pt-2">
+            <div className="text-sm font-medium mb-2 text-gray-700">
+              Trạng thái hạch toán
+            </div>
+            {detailInvoice?.postingStatus === "POSTED" ? (
+              <div className="flex flex-col gap-1">
+                <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 w-max">
+                  ĐÃ HẠCH TOÁN
+                </span>
+                {detailInvoice.postingDate && (
+                  <span className="text-xs text-gray-500">
+                    Ngày: {detailInvoice.postingDate.slice(0, 10)}
+                  </span>
+                )}
+                {detailInvoice.journalEntryId && (
+                  <TAccountDiagram
+                    journalEntryId={detailInvoice.journalEntryId}
+                  />
+                )}
+              </div>
+            ) : (
+              <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 w-max">
+                CHƯA HẠCH TOÁN
+              </span>
+            )}
+          </div>
+        </div>
+      </DrawerSection>
+    </div>
   );
 }

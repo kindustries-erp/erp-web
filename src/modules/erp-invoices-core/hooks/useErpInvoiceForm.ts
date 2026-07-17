@@ -38,7 +38,8 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
 export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const { t } = useTranslation("erpInvoices");
 
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [infoDrawerOpen, setInfoDrawerOpen] = useState(false);
+  const [internalDrawerOpen, setInternalDrawerOpen] = useState(false);
   const [detailInvoice, setDetailInvoice] = useState<ErpInvoice | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState<CreateErpInvoicePayload>(emptyForm());
@@ -57,7 +58,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingTagIds([]);
-    setDrawerOpen(true);
+    setInfoDrawerOpen(true);
   }
 
   function mapInvoiceToForm(inv: ErpInvoice): CreateErpInvoicePayload {
@@ -103,7 +104,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   async function openDetail(inv: ErpInvoice | string) {
     if (typeof inv === "string") {
-      setDrawerOpen(true);
+      setInfoDrawerOpen(true);
       setLoadingDetail(true);
       try {
         const fullInv = await erpInvoicesCoreApi.get(inv);
@@ -124,12 +125,64 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setEditMode(false);
     setDeleteConfirm(false);
     setCancelConfirm(false);
-    setDrawerOpen(true);
+    setInternalDrawerOpen(false);
+    setInfoDrawerOpen(true);
+
+    if (
+      detailInvoice?.id === inv.id &&
+      detailInvoice?.items &&
+      detailInvoice.items.length > 0
+    ) {
+      setForm(mapInvoiceToForm(detailInvoice));
+      return;
+    }
+
     setLoadingDetail(true);
 
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       // Auto query detail if items are empty
+      if (!fullInv.items || fullInv.items.length === 0) {
+        const token = localStorage.getItem("erp_portal_token");
+        if (token) {
+          try {
+            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
+          } catch (syncErr) {
+            console.warn("Auto sync detail failed", syncErr);
+          }
+        }
+      }
+      setDetailInvoice(fullInv);
+      setForm(mapInvoiceToForm(fullInv));
+    } catch (err) {
+      console.error("Failed to fetch full invoice", err);
+    } finally {
+      setLoadingDetail(false);
+    }
+  }
+
+  async function openInternal(inv: ErpInvoice) {
+    setDetailInvoice(inv);
+    setForm(mapInvoiceToForm(inv));
+    setEditMode(false);
+    setDeleteConfirm(false);
+    setCancelConfirm(false);
+    setInfoDrawerOpen(false);
+    setInternalDrawerOpen(true);
+
+    if (
+      detailInvoice?.id === inv.id &&
+      detailInvoice?.items &&
+      detailInvoice.items.length > 0
+    ) {
+      setForm(mapInvoiceToForm(detailInvoice));
+      return;
+    }
+
+    setLoadingDetail(true);
+
+    try {
+      let fullInv = await erpInvoicesCoreApi.get(inv.id);
       if (!fullInv.items || fullInv.items.length === 0) {
         const token = localStorage.getItem("erp_portal_token");
         if (token) {
@@ -178,7 +231,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   }
 
   function closeDrawer() {
-    setDrawerOpen(false);
+    setInfoDrawerOpen(false);
+    setInternalDrawerOpen(false);
     setDetailInvoice(null);
     setEditMode(false);
     setDeleteConfirm(false);
@@ -266,7 +320,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   }
 
   return {
-    drawerOpen,
+    infoDrawerOpen,
+    internalDrawerOpen,
     detailInvoice,
     editMode,
     form,
@@ -275,7 +330,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     deleteConfirm,
     cancelConfirm,
     pendingTagIds,
-    setDrawerOpen,
+    setInfoDrawerOpen,
+    setInternalDrawerOpen,
     setEditMode,
     setForm,
     setDeleteConfirm,
@@ -283,6 +339,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setPendingTagIds,
     openNew,
     openDetail,
+    openInternal,
     startEdit,
     closeDrawer,
     handleSave,

@@ -46,6 +46,13 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
     enabled: !!invoice?.branchId,
   });
 
+  // Fetch Journal Entry if posted
+  const { data: journalEntry } = useQuery({
+    queryKey: ["journal-entry", invoice?.journalEntryId],
+    queryFn: () => accountingApi.getJournalEntryById(invoice!.journalEntryId!),
+    enabled: !!invoice?.journalEntryId && invoice.postingStatus === "POSTED",
+  });
+
   const accountOptions = useMemo(() => {
     const list = Array.isArray(chartOfAccounts)
       ? chartOfAccounts
@@ -65,8 +72,29 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
     if (!invoice || !open) return;
 
     if (invoice.postingStatus === "POSTED") {
-      // If already posted, ideally we should load the journal entry lines.
-      // For now, we just show it's posted.
+      if (journalEntry) {
+        setPostingDate(journalEntry.entryDate?.slice(0, 10) || "");
+        setDescription(journalEntry.description || "");
+
+        const lineMap = new Map();
+        (journalEntry.lines || []).forEach((l: any) => {
+          const accId = l.accountId || (l.account ? l.account.id : "");
+          if (!lineMap.has(accId)) {
+            lineMap.set(accId, {
+              id: l.id || crypto.randomUUID(),
+              accountId: accId,
+              debit: 0,
+              credit: 0,
+              description: l.description || "",
+            });
+          }
+          const item = lineMap.get(accId);
+          item.debit += Number(l.debit) || 0;
+          item.credit += Number(l.credit) || 0;
+        });
+        const loadedLines = Array.from(lineMap.values());
+        setLines(loadedLines);
+      }
       setIsDirty(false);
       return;
     }
@@ -156,7 +184,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
 
     setLines(newLines);
     setIsDirty(false);
-  }, [invoice, open, accountOptions]);
+  }, [invoice, open, accountOptions, journalEntry]);
 
   const totalDebit = lines.reduce((sum, l) => sum + (l.debit || 0), 0);
   const totalCredit = lines.reduce((sum, l) => sum + (l.credit || 0), 0);
@@ -368,31 +396,41 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
                       </td>
                       <td className="px-2 py-2">
                         <input
-                          type="number"
+                          type="text"
                           className="w-full h-8 px-2 text-right border rounded disabled:bg-gray-100"
-                          value={line.debit || ""}
-                          onChange={(e) =>
-                            handleUpdateLine(
-                              line.id,
-                              "debit",
-                              Number(e.target.value),
-                            )
+                          value={
+                            line.debit
+                              ? new Intl.NumberFormat("vi-VN").format(
+                                  line.debit,
+                                )
+                              : ""
                           }
+                          onChange={(e) => {
+                            const val = Number(
+                              e.target.value.replace(/\D/g, ""),
+                            );
+                            handleUpdateLine(line.id, "debit", val);
+                          }}
                           disabled={isPosted}
                         />
                       </td>
                       <td className="px-2 py-2">
                         <input
-                          type="number"
+                          type="text"
                           className="w-full h-8 px-2 text-right border rounded disabled:bg-gray-100"
-                          value={line.credit || ""}
-                          onChange={(e) =>
-                            handleUpdateLine(
-                              line.id,
-                              "credit",
-                              Number(e.target.value),
-                            )
+                          value={
+                            line.credit
+                              ? new Intl.NumberFormat("vi-VN").format(
+                                  line.credit,
+                                )
+                              : ""
                           }
+                          onChange={(e) => {
+                            const val = Number(
+                              e.target.value.replace(/\D/g, ""),
+                            );
+                            handleUpdateLine(line.id, "credit", val);
+                          }}
                           disabled={isPosted}
                         />
                       </td>

@@ -12,7 +12,8 @@ import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
-import { ErpInvoiceDrawer } from "./ErpInvoiceDrawer";
+import { ErpInvoiceInfoDrawer } from "./ErpInvoiceInfoDrawer";
+import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
 import { ErpInvoiceFormGeneral } from "./ErpInvoiceFormGeneral";
 import { ErpInvoiceInternalInfo } from "./ErpInvoiceInternalInfo";
 import { ErpInvoiceFormItems } from "./ErpInvoiceFormItems";
@@ -499,38 +500,23 @@ export function PartnerInvoiceDrawer({
           </div>
         </div>
       </div>
-      <ErpInvoiceDrawer
-        open={formHook.drawerOpen}
+      <ErpInvoiceInfoDrawer
+        open={formHook.infoDrawerOpen}
         onClose={formHook.closeDrawer}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
-        startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         onDownload={handleDownload}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
+        onOpenInternal={() => {
+          if (formHook.detailInvoice) {
+            formHook.openInternal(formHook.detailInvoice);
+          }
+        }}
         leftPanel={
           <div className="flex flex-col gap-5">
-            <ErpInvoiceInternalInfo
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key, value) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={formHook.form.direction || "IN"}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={() =>
-                formHook.openDetail({
-                  id: formHook.detailInvoice!.id,
-                } as ErpInvoice)
-              }
-            />
             <ErpInvoiceFormItems
               form={formHook.form}
               editMode={formHook.editMode && !formHook.detailInvoice?.id}
@@ -544,20 +530,57 @@ export function PartnerInvoiceDrawer({
             <ErpInvoiceFormGeneral
               form={formHook.form}
               editMode={formHook.editMode}
-              fieldSet={(key, value) =>
+              fieldSet={(key: string, value: any) =>
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
               invoiceId={formHook.detailInvoice?.id ?? null}
             />
-            <ErpInvoicePdfUpload
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-              pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-              editMode={formHook.editMode}
-            />
           </div>
         }
       />
+
+      <ErpInvoiceInternalDrawer
+        open={formHook.internalDrawerOpen}
+        onClose={formHook.closeDrawer}
+        editMode={formHook.editMode}
+        detailInvoice={formHook.detailInvoice}
+        startEdit={formHook.startEdit}
+        saving={formHook.saving}
+        handleSave={formHook.handleSave}
+        setEditMode={formHook.setEditMode}
+        setDeleteConfirm={formHook.setDeleteConfirm}
+        onOpenInfo={() => {
+          if (formHook.detailInvoice) {
+            formHook.openDetail(formHook.detailInvoice);
+          }
+        }}
+      >
+        <div className="flex flex-col gap-5">
+          <ErpInvoiceInternalInfo
+            form={formHook.form}
+            editMode={formHook.editMode}
+            fieldSet={(key: string, value: any) =>
+              formHook.setForm((prev) => ({ ...prev, [key]: value }))
+            }
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pendingTagIds={formHook.pendingTagIds}
+            onPendingTagsChange={formHook.setPendingTagIds}
+            direction={formHook.form.direction || "IN"}
+            detailInvoice={formHook.detailInvoice}
+            onRefreshDetail={() =>
+              formHook.openDetail({
+                id: formHook.detailInvoice!.id,
+              } as ErpInvoice)
+            }
+          />
+          <ErpInvoicePdfUpload
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+            editMode={formHook.editMode}
+          />
+        </div>
+      </ErpInvoiceInternalDrawer>
 
       <ConfirmModal
         open={formHook.deleteConfirm}

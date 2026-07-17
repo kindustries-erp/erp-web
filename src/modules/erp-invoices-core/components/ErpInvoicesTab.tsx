@@ -36,7 +36,8 @@ import {
   type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
-import { ErpInvoiceDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceDrawer";
+import { ErpInvoiceInfoDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInfoDrawer";
+import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
@@ -1371,9 +1372,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           const thaoTacItems = [];
 
           traCuuItems.push({
-            label: t("actionDetail", "Chi tiết"),
+            label: t("actionDetail", "Chi tiết hóa đơn"),
             icon: <Eye className="w-3.5 h-3.5" />,
             onClick: () => formHook.openDetail(inv),
+          });
+          traCuuItems.push({
+            label: "Quản lý nội bộ",
+            icon: <Building2 className="w-3.5 h-3.5" />,
+            onClick: () => formHook.openInternal(inv),
           });
           if (inv.xmlFileKey) {
             traCuuItems.push({
@@ -1474,7 +1480,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               onClick: () => setPostingInvoiceId(inv.id),
             });
           } else if (inv.status !== "CANCELLED") {
-            thaoTacItems.push({
+            traCuuItems.push({
               label: "Hạch toán kế toán",
               icon: <FileText className="w-3.5 h-3.5" />,
               onClick: () => setPostingInvoiceId(inv.id),
@@ -1531,16 +1537,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         ]}
       />
 
-      <ErpInvoiceDrawer
-        open={formHook.drawerOpen}
+      <ErpInvoiceInfoDrawer
+        open={formHook.infoDrawerOpen}
         onClose={formHook.closeDrawer}
         editMode={formHook.editMode}
         detailInvoice={formHook.detailInvoice}
-        startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         onDownload={handleDownload}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
@@ -1550,6 +1553,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             formHook.closeDrawer();
           }
         }}
+        onOpenInternal={() => {
+          if (formHook.detailInvoice) {
+            formHook.openInternal(formHook.detailInvoice);
+          }
+        }}
         leftPanel={
           <div className="flex flex-col gap-5">
             {formHook.formError && (
@@ -1557,23 +1565,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 {formHook.formError}
               </div>
             )}
-            <ErpInvoiceInternalInfo
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key, value) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={direction}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={() =>
-                formHook.openDetail({
-                  id: formHook.detailInvoice!.id,
-                } as ErpInvoice)
-              }
-            />
             <ErpInvoiceFormItems
               form={formHook.form}
               editMode={formHook.editMode && !formHook.detailInvoice?.id}
@@ -1587,20 +1578,62 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             <ErpInvoiceFormGeneral
               form={formHook.form}
               editMode={formHook.editMode}
-              fieldSet={(key, value) =>
+              fieldSet={(key: string, value: any) =>
                 formHook.setForm((prev) => ({ ...prev, [key]: value }))
               }
               invoiceId={formHook.detailInvoice?.id ?? null}
             />
-            <ErpInvoicePdfUpload
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-              pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-              editMode={formHook.editMode}
-            />
           </div>
         }
       />
+
+      <ErpInvoiceInternalDrawer
+        open={formHook.internalDrawerOpen}
+        onClose={formHook.closeDrawer}
+        editMode={formHook.editMode}
+        detailInvoice={formHook.detailInvoice}
+        startEdit={formHook.startEdit}
+        saving={formHook.saving}
+        handleSave={formHook.handleSave}
+        setEditMode={formHook.setEditMode}
+        setDeleteConfirm={formHook.setDeleteConfirm}
+        onOpenInfo={() => {
+          if (formHook.detailInvoice) {
+            formHook.openDetail(formHook.detailInvoice);
+          }
+        }}
+      >
+        <div className="flex flex-col gap-5">
+          {formHook.formError && (
+            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+              {formHook.formError}
+            </div>
+          )}
+          <ErpInvoiceInternalInfo
+            form={formHook.form}
+            editMode={formHook.editMode}
+            fieldSet={(key: string, value: any) =>
+              formHook.setForm((prev) => ({ ...prev, [key]: value }))
+            }
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pendingTagIds={formHook.pendingTagIds}
+            onPendingTagsChange={formHook.setPendingTagIds}
+            direction={direction}
+            detailInvoice={formHook.detailInvoice}
+            onRefreshDetail={() =>
+              formHook.openDetail({
+                id: formHook.detailInvoice!.id,
+              } as ErpInvoice)
+            }
+          />
+          <ErpInvoicePdfUpload
+            invoiceId={formHook.detailInvoice?.id ?? null}
+            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+            editMode={formHook.editMode}
+          />
+        </div>
+      </ErpInvoiceInternalDrawer>
 
       <ConfirmModal
         open={formHook.deleteConfirm}
