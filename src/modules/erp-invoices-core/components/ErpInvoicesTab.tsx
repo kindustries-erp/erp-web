@@ -42,6 +42,7 @@ import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/Er
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { InvoicePostingDrawer } from "@/modules/erp-invoices-core/components/InvoicePostingDrawer";
+import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
@@ -84,6 +85,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
   const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
 
@@ -145,6 +147,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 setBulkBranchId(null);
                 setBulkBranchModalOpen(true);
               },
+            },
+            {
+              label: "Hạch toán hàng loạt",
+              icon: (
+                <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
+              ),
+              onClick: () => setBulkPostingModalOpen(true),
             },
             {
               label: "Bỏ chọn",
@@ -651,32 +660,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             ? format(new Date(inv.invoiceDate), "dd-MM-yyyy")
             : "",
       },
-      {
-        key: "serialNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("serialNo", "Ký hiệu")}
-            sortState={getSortState("serialNo")}
-            onSortChange={(state) => handleSortChange("serialNo", state)}
-            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("serialNo", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["serialNo"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
-            align="center"
-            columnKey="serialNo"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-          />
-        ),
-        size: 120,
-        headerClassName: "text-center",
-        className: "text-muted-foreground text-left",
-        cell: (inv) => inv.serialNo || "—",
-      },
+
       {
         key: "invoiceNo",
         header: (
@@ -727,14 +711,35 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                     : t("statusDraft", "Nháp")}
                 </span>
               )}
-              {inv.postingStatus === "POSTED" && (
-                <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-blue-100 text-blue-800">
-                  HẠCH TOÁN
-                </span>
-              )}
             </div>
           </div>
         ),
+      },
+      {
+        key: "serialNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("serialNo", "Ký hiệu")}
+            sortState={getSortState("serialNo")}
+            onSortChange={(state) => handleSortChange("serialNo", state)}
+            searchValue={listHook.tableState.columnSearch["serialNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("serialNo", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["serialNo"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
+            align="center"
+            columnKey="serialNo"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-muted-foreground text-left",
+        cell: (inv) => inv.serialNo || "—",
       },
       {
         key: "partner",
@@ -1196,6 +1201,47 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         },
       },
       {
+        key: "postingStatus",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("postingStatus", "Hạch toán")}
+            sortState={getSortState("postingStatus")}
+            onSortChange={(state) => handleSortChange("postingStatus", state)}
+            searchValue={
+              listHook.tableState.columnSearch["postingStatus"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("postingStatus", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["postingStatus"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("postingStatus", vals)}
+            filterOptions={[
+              { label: "HẠCH TOÁN", value: "POSTED" },
+              { label: "CHƯA HẠCH TOÁN", value: "UNPOSTED" },
+            ]}
+            align="center"
+            columnKey="postingStatus"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv) =>
+          inv.postingStatus === "POSTED" ? (
+            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-blue-100 text-blue-800">
+              HẠCH TOÁN
+            </span>
+          ) : (
+            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-800">
+              CHƯA HẠCH TOÁN
+            </span>
+          ),
+      },
+      {
         key: "branchId",
         header: (
           <TableColumnHeaderFilter
@@ -1550,7 +1596,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onPostInvoice={() => {
           if (formHook.detailInvoice?.id) {
             setPostingInvoiceId(formHook.detailInvoice.id);
-            formHook.closeDrawer();
           }
         }}
         onOpenInternal={() => {
@@ -1819,6 +1864,19 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         open={!!postingInvoiceId}
         onClose={() => setPostingInvoiceId(null)}
         invoiceId={postingInvoiceId}
+      />
+
+      <InvoiceBulkPostingDrawer
+        open={bulkPostingModalOpen}
+        onClose={() => setBulkPostingModalOpen(false)}
+        selectedInvoiceIds={selectedIds}
+        invoices={listHook.invoices || []}
+        direction={direction}
+        onSuccess={() => {
+          setBulkPostingModalOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
       />
     </>
   );

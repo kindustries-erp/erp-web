@@ -167,7 +167,6 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setEditMode(false);
     setDeleteConfirm(false);
     setCancelConfirm(false);
-    setInfoDrawerOpen(false);
     setInternalDrawerOpen(true);
 
     if (
