@@ -10,6 +10,7 @@ import { formatGMT7, money } from "@/shared/utils/format";
 import { useAppStore } from "@/core/config/appStore";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/InvoiceDetailWrapper";
+import { Popover } from "@/core/components/ui/Popover";
 
 export const GeneralJournalPage = () => {
   const t = useT();
@@ -218,19 +219,35 @@ export const GeneralJournalPage = () => {
         header: "Diễn giải",
         size: 400,
         cell: (row: any) => (
-          <div className="text-gray-600 dark:text-gray-300 whitespace-normal break-words w-full">
-            {row.description || row._description}
-          </div>
+          <Popover
+            content={
+              <div className="p-3 text-sm max-w-md break-words whitespace-normal text-slate-800">
+                {row.description || row._description || "—"}
+              </div>
+            }
+          >
+            <div className="text-gray-600 dark:text-gray-300 w-full cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 line-clamp-2">
+              {row.description || row._description}
+            </div>
+          </Popover>
         ),
       },
       {
         key: "_subjectName",
         header: "Đối tượng",
-        size: 150,
+        size: 200,
         cell: (row: any) => (
-          <span className="text-gray-600 dark:text-gray-400">
-            {row._subjectName || "-"}
-          </span>
+          <Popover
+            content={
+              <div className="p-3 text-sm max-w-sm break-words whitespace-normal text-slate-800">
+                {row._subjectName || "—"}
+              </div>
+            }
+          >
+            <span className="text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 truncate block">
+              {row._subjectName || "-"}
+            </span>
+          </Popover>
         ),
       },
       {

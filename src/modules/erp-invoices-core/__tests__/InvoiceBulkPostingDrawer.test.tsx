@@ -35,6 +35,7 @@ const mockInvoices: any[] = [
     vatRate: 8,
     postingStatus: "UNPOSTED",
     invoiceDate: "2026-07-01",
+    branchId: "branch-1",
     lines: [],
   },
   {
@@ -45,6 +46,7 @@ const mockInvoices: any[] = [
     vatRate: 0,
     postingStatus: "UNPOSTED",
     invoiceDate: "2026-07-02",
+    branchId: "branch-1",
     lines: [],
   },
 ];

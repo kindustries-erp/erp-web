@@ -288,7 +288,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       primary: true,
       onClick: () => postMutation.mutate(),
       loading: postMutation.isPending,
-      disabled: !isValid || !postingDate,
+      disabled: !isValid || !postingDate || !invoice?.branchId,
     });
   }
 
@@ -338,6 +338,15 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
               </div>
             </div>
 
+            {!invoice?.branchId && !isPosted && (
+              <div className="bg-amber-50 text-amber-800 border border-amber-200 px-3 py-2 rounded-lg text-sm mb-4">
+                <span className="font-semibold">⚠️ Cảnh báo:</span> Hóa đơn chưa
+                có chi nhánh. Vui lòng gán chi nhánh ở thông tin nội bộ trước
+                khi hạch toán.
+              </div>
+            )}
+
+            {/* Form */}
             <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-md">
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>

@@ -97,7 +97,7 @@ export function InvoiceBulkPostingDrawer({
         selectedInvoiceIds.includes(inv.id) &&
         (mode === "unpost"
           ? inv.postingStatus === "POSTED"
-          : inv.postingStatus !== "POSTED"),
+          : inv.postingStatus !== "POSTED" && !!inv.branchId),
     );
   }, [invoices, selectedInvoiceIds, mode]);
 
@@ -107,7 +107,7 @@ export function InvoiceBulkPostingDrawer({
         selectedInvoiceIds.includes(inv.id) &&
         (mode === "unpost"
           ? inv.postingStatus !== "POSTED"
-          : inv.postingStatus === "POSTED"),
+          : inv.postingStatus === "POSTED" || !inv.branchId),
     );
   }, [invoices, selectedInvoiceIds, mode]);
 
@@ -627,17 +627,33 @@ export function InvoiceBulkPostingDrawer({
       leftPanel={
         <div className="space-y-4">
           {skippedInvoices.length > 0 && (
-            <div className="flex items-center gap-2 py-2 px-3 bg-blue-50 text-blue-700 text-sm rounded-lg border border-blue-200">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>
-                Đã bỏ qua <strong>{skippedInvoices.length}</strong> hóa đơn (HĐ:{" "}
-                {skippedInvoices
-                  .slice(0, 3)
-                  .map((i) => i.invoiceNo)
-                  .join(", ")}
-                {skippedInvoices.length > 3 ? "..." : ""}) vì đã được hạch toán
-                trước đó.
-              </span>
+            <div className="flex flex-col gap-1 py-2 px-3 bg-blue-50 text-blue-700 text-sm rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 font-medium">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>
+                  Đã bỏ qua <strong>{skippedInvoices.length}</strong> hóa đơn
+                </span>
+              </div>
+              <div className="pl-6 space-y-1 text-xs">
+                {skippedInvoices.some((i) => i.postingStatus === "POSTED") && (
+                  <div>
+                    - <strong>Đã hạch toán</strong>:{" "}
+                    {skippedInvoices
+                      .filter((i) => i.postingStatus === "POSTED")
+                      .map((i) => i.invoiceNo)
+                      .join(", ")}
+                  </div>
+                )}
+                {skippedInvoices.some((i) => !i.branchId) && (
+                  <div>
+                    - <strong>Chưa có chi nhánh</strong>:{" "}
+                    {skippedInvoices
+                      .filter((i) => !i.branchId)
+                      .map((i) => i.invoiceNo)
+                      .join(", ")}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

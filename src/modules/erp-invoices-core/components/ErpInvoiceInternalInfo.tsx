@@ -158,6 +158,7 @@ export function ErpInvoiceInternalInfo({
                 value={form.branchId || ""}
                 onChange={(val) => fieldSet("branchId", val)}
                 placeholder="-- Chọn chi nhánh --"
+                allowClear={false}
               />
             ) : (
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
