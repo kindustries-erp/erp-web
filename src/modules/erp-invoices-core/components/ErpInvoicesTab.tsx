@@ -11,7 +11,6 @@ import {
   Download,
   RefreshCw,
   Trash,
-  Ban,
   FileCode,
   FileText,
   Building2,
@@ -43,6 +42,7 @@ import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components
 import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
+import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoicePostingDrawer } from "@/modules/erp-invoices-core/components/InvoicePostingDrawer";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
@@ -66,15 +66,15 @@ function formatTaxInvoiceStatus(val?: number | null) {
     case 1:
       return "Mới";
     case 2:
-      return "Bị hủy";
-    case 3:
       return "Thay thế";
-    case 4:
+    case 3:
       return "Điều chỉnh";
-    case 5:
+    case 4:
       return "Bị thay thế";
-    case 6:
+    case 5:
       return "Bị điều chỉnh";
+    case 6:
+      return "Bị hủy";
     default:
       return val?.toString() || "—";
   }
@@ -911,11 +911,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             }
             filterOptions={[
               { label: "Mới", value: "1" },
-              { label: "Bị hủy", value: "2" },
-              { label: "Thay thế", value: "3" },
-              { label: "Điều chỉnh", value: "4" },
-              { label: "Bị thay thế", value: "5" },
-              { label: "Bị điều chỉnh", value: "6" },
+              { label: "Thay thế", value: "2" },
+              { label: "Điều chỉnh", value: "3" },
+              { label: "Bị thay thế", value: "4" },
+              { label: "Bị điều chỉnh", value: "5" },
+              { label: "Bị hủy", value: "6" },
             ]}
             align="center"
             columnKey="taxInvoiceStatus"
@@ -1664,11 +1664,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             icon: <Eye className="w-3.5 h-3.5" />,
             onClick: () => formHook.openDetail(inv),
           });
-          traCuuItems.push({
-            label: "Quản lý nội bộ",
-            icon: <Building2 className="w-3.5 h-3.5" />,
-            onClick: () => formHook.openInternal(inv),
-          });
           if (inv.xmlFileKey) {
             traCuuItems.push({
               label: t("actionDownloadXml", "Tải XML"),
@@ -1738,6 +1733,26 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             icon: <RefreshCw className="w-3.5 h-3.5" />,
             onClick: () => handleReparseXml(inv),
           });
+          thaoTacItems.push({
+            label: "Quản lý nội bộ",
+            icon: <Building2 className="w-3.5 h-3.5" />,
+            onClick: () => formHook.openInternal(inv),
+          });
+
+          if (inv.postingStatus === "POSTED") {
+            thaoTacItems.push({
+              label: "Xem hạch toán",
+              icon: <FileText className="w-3.5 h-3.5" />,
+              onClick: () => setPostingInvoiceId(inv.id),
+            });
+          } else if (inv.status !== "CANCELLED") {
+            thaoTacItems.push({
+              label: "Hạch toán kế toán",
+              icon: <FileText className="w-3.5 h-3.5" />,
+              onClick: () => setPostingInvoiceId(inv.id),
+            });
+          }
+
           if (inv.status === "DRAFT") {
             thaoTacItems.push({
               label: t("actionDelete", "Xóa"),
@@ -1747,31 +1762,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 formHook.openDetail(inv);
                 formHook.setDeleteConfirm(true);
               },
-            });
-          }
-          if (inv.status === "CONFIRMED") {
-            thaoTacItems.push({
-              label: t("actionCancel", "Hủy"),
-              icon: <Ban className="w-3.5 h-3.5" />,
-              variant: "danger" as const,
-              onClick: () => {
-                formHook.openDetail(inv);
-                formHook.setCancelConfirm(true);
-              },
-            });
-          }
-
-          if (inv.postingStatus === "POSTED") {
-            traCuuItems.push({
-              label: "Xem hạch toán",
-              icon: <FileText className="w-3.5 h-3.5" />,
-              onClick: () => setPostingInvoiceId(inv.id),
-            });
-          } else if (inv.status !== "CANCELLED") {
-            traCuuItems.push({
-              label: "Hạch toán kế toán",
-              icon: <FileText className="w-3.5 h-3.5" />,
-              onClick: () => setPostingInvoiceId(inv.id),
             });
           }
 
@@ -1846,19 +1836,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           }
         }}
         leftPanel={
-          <div className="flex flex-col gap-5">
-            {formHook.formError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-                {formHook.formError}
-              </div>
-            )}
-            <ErpInvoiceFormItems
-              form={formHook.form}
-              editMode={formHook.editMode && !formHook.detailInvoice?.id}
-              setForm={formHook.setForm}
-              fmtAmt={fmtAmt}
-            />
-          </div>
+          !formHook.editMode && formHook.detailInvoice ? (
+            <div className="flex justify-center bg-slate-100 p-8 min-h-full">
+              <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-5">
+              {formHook.formError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+                  {formHook.formError}
+                </div>
+              )}
+              <ErpInvoiceFormItems
+                form={formHook.form}
+                editMode={formHook.editMode && !formHook.detailInvoice?.id}
+                setForm={formHook.setForm}
+                fmtAmt={fmtAmt}
+              />
+            </div>
+          )
         }
         rightPanel={
           <div className="flex flex-col gap-5">

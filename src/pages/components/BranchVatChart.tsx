@@ -35,12 +35,12 @@ export function BranchVatChart({
     enabled: canView,
   });
 
-  const barIn = "#059669"; // Emerald 600
-  const barOut = "#ea580c"; // Orange 600
-  const lineDiff = "#2563eb"; // Blue 600
+  const colorRevenue = "#059669"; // Emerald 600 (Đầu ra)
+  const colorExpense = "#ea580c"; // Orange 600 (Đầu vào)
+  const lineDiff = "#1e293b"; // Slate 800
 
   const cashTrendLabels = statsData?.cashTrend?.map((t: any) => t.label) || [];
-  const vatIn = statsData?.cashTrend?.map((t: any) => t.vatIn) || []; // VAT đầu vào
+  const vatIn = statsData?.cashTrend?.map((t: any) => -t.vatIn) || []; // VAT đầu vào
   const vatOut = statsData?.cashTrend?.map((t: any) => t.vatOut) || []; // VAT đầu ra
   const vatDiff =
     statsData?.cashTrend?.map((t: any) => t.vatOut - t.vatIn) || []; // Đầu ra - Đầu vào
@@ -65,13 +65,13 @@ export function BranchVatChart({
               {
                 type: "bar",
                 data: vatIn,
-                color: barIn,
+                color: colorExpense,
                 label: "VAT Đầu vào",
               },
               {
                 type: "bar",
                 data: vatOut,
-                color: barOut,
+                color: colorRevenue,
                 label: "VAT Đầu ra",
               },
             ]}
@@ -85,8 +85,8 @@ export function BranchVatChart({
         )}
       </div>
       <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={barIn} label="VAT Đầu vào" />
-        <LegendItem color={barOut} label="VAT Đầu ra" />
+        <LegendItem color={colorExpense} label="VAT Đầu vào" />
+        <LegendItem color={colorRevenue} label="VAT Đầu ra" />
         <LegendItem color={lineDiff} label="Chênh lệch" isLine={true} />
       </div>
     </Panel>

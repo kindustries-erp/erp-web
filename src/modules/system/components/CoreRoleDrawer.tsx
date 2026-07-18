@@ -107,7 +107,8 @@ export function CoreRoleDrawer({
 
   const isDirty =
     name.trim() !== (editing?.name ?? "") ||
-    description.trim() !== (editing?.description ?? "");
+    description.trim() !== (editing?.description ?? "") ||
+    (!editing && (isAnyChecked() || selectedUserIds.length > 0));
 
   const ACTION_LABEL: Record<CrudAction, string> = {
     create: t("permissionMatrix.actions.create"),
