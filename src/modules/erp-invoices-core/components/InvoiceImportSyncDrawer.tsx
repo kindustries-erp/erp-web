@@ -8,21 +8,23 @@ import {
   Settings,
   CheckCircle2,
   XCircle,
-  ArrowDownToLine,
-  ArrowUpFromLine,
   Eye,
   EyeOff,
 } from "lucide-react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Combobox } from "@/shared/components/Combobox";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+
+import { toast } from "react-hot-toast";
 
 import {
   useInvoiceXmlUpload,
   type Direction,
 } from "../hooks/useInvoiceXmlUpload";
 import { usePortalSync } from "../hooks/usePortalSync";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 import { UploadDropzone } from "./xml-upload/UploadDropzone";
 import { UploadFileList } from "./xml-upload/UploadFileList";
@@ -164,6 +166,7 @@ export function InvoiceImportSyncDrawer({
   const [method, setMethod] = useState<"GDT" | "XML">("GDT");
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
+  const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
 
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
@@ -208,6 +211,28 @@ export function InvoiceImportSyncDrawer({
     const type = direction === "IN" ? "purchase" : "sold";
     const res = await portal.sync(type);
     if (res) onImported(direction);
+  };
+
+  const handleBulkXml = async () => {
+    const token = localStorage.getItem("erp_portal_token");
+    if (!token) {
+      toast.error(
+        "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
+      );
+      return;
+    }
+    try {
+      setBulkXmlLoading(true);
+      const res = await erpInvoicesCoreApi.bulkDownloadXml({
+        token,
+        direction,
+      });
+      toast.success(res.message);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || e.message || "Lỗi tải lại XML");
+    } finally {
+      setBulkXmlLoading(false);
+    }
   };
 
   const actions = [];
@@ -264,62 +289,34 @@ export function InvoiceImportSyncDrawer({
       panelClassName="min-[1024px]:w-[520px]"
     >
       <div className="flex flex-col h-full">
-        {/* Tab Direction */}
-        <div className="flex border-b border-border shrink-0 px-6 mt-[-1rem]">
-          {(["IN", "OUT"] as Direction[]).map((d) => (
-            <button
-              key={d}
-              disabled={xml.step !== "select" && xml.step !== "result"}
-              onClick={() => handleDirectionChange(d)}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 text-sm font-medium border-b-2 transition-colors ${
-                direction === d
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground disabled:cursor-not-allowed"
-              }`}
-            >
-              {d === "IN" ? (
-                <>
-                  <ArrowDownToLine className="w-4 h-4" />
-                  {t("inbound", "Hóa đơn mua vào")}
-                </>
-              ) : (
-                <>
-                  <ArrowUpFromLine className="w-4 h-4" />
-                  {t("outbound", "Hóa đơn bán ra")}
-                </>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Method */}
-        <div className="px-6 py-3 border-b border-border/50">
-          <div className="flex p-1 bg-surface-hover rounded-md mx-auto w-fit">
-            <button
-              onClick={() => handleMethodChange("GDT")}
-              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${
-                method === "GDT"
-                  ? "bg-primary text-primary-fg shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Từ hệ thống GDT
-            </button>
-            <button
-              onClick={() => handleMethodChange("XML")}
-              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${
-                method === "XML"
-                  ? "bg-primary text-primary-fg shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Tải file XML
-            </button>
+        {/* Selection Dropdowns */}
+        <div className="flex items-center gap-3 px-4 py-4 border-b border-border shrink-0 mt-[-1rem]">
+          <div className="flex-1">
+            <Combobox
+              options={[
+                { value: "IN", label: t("inbound", "Hóa đơn mua vào") },
+                { value: "OUT", label: t("outbound", "Hóa đơn bán ra") },
+              ]}
+              value={direction}
+              onChange={(v) => handleDirectionChange(v as Direction)}
+              className="w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <Combobox
+              options={[
+                { value: "GDT", label: "Từ hệ thống GDT" },
+                { value: "XML", label: "Tải file từ máy tính" },
+              ]}
+              value={method}
+              onChange={(v) => handleMethodChange(v as "GDT" | "XML")}
+              className="w-full"
+            />
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4">
           {method === "GDT" && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
@@ -339,19 +336,33 @@ export function InvoiceImportSyncDrawer({
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setConfigOpen(true)}
-                    className="gap-1.5"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Cấu hình token
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfigOpen(true)}
+                      className="gap-1.5"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Cấu hình token
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkXml}
+                      disabled={bulkXmlLoading || portal.loading}
+                      className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${bulkXmlLoading ? "animate-spin" : ""}`}
+                      />
+                      {bulkXmlLoading ? "Đang xử lý..." : "Tải lại XML"}
+                    </Button>
+                  </div>
 
                   <Button
                     onClick={handleSync}
-                    disabled={portal.loading}
+                    disabled={portal.loading || bulkXmlLoading}
                     className="gap-2 w-36 justify-center"
                   >
                     <RefreshCw

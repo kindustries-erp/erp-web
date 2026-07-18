@@ -3,18 +3,30 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useT } from "@/core/i18n";
 import * as XLSX from "xlsx";
 import { AlertCircle, FileType, Loader2 } from "lucide-react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+// Using unpkg CDN to avoid MIME type issues with .mjs on production servers
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export interface FilePreviewDrawerProps {
   open: boolean;
   onClose: () => void;
   /** File object (if local) */
   file?: File | null;
-  /** Direct URL for the file (if server-side) */
+  /** Direct URL for the file (if server-side, for non-PDF or no-CORS cases) */
   previewUrl?: string;
   /** File name (useful when providing previewUrl) */
   fileName?: string;
   /** Custom download handler */
   onDownload?: () => void;
+  /**
+   * For PDF files served behind CORS (e.g. Cloudflare R2 presigned URLs):
+   * provide a function that fetches the raw Blob via an authenticated proxy
+   * (e.g. through axiosInstance). The result is converted to a blob: URL
+   * so react-pdf can render it without CORS restrictions.
+   */
+  fetchBlobFn?: () => Promise<Blob>;
 }
 
 type FileTypeCategory = "PDF" | "IMAGE" | "EXCEL" | "UNSUPPORTED" | "UNKNOWN";
@@ -26,12 +38,16 @@ export function FilePreviewDrawer({
   previewUrl,
   fileName,
   onDownload,
+  fetchBlobFn,
 }: FilePreviewDrawerProps) {
   const t = useT();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [excelData, setExcelData] = useState<any[][] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(600);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Derived properties
   const actualFileName = file?.name || fileName || "Document";
@@ -60,12 +76,24 @@ export function FilePreviewDrawer({
     return "UNSUPPORTED";
   }, [file, lowerName]);
 
+  // Track container width for responsive PDF page rendering
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   // Manage Blob URL lifecycle and parse Excel
   useEffect(() => {
     if (!open) {
       setBlobUrl(null);
       setExcelData(null);
       setError(null);
+      setNumPages(null);
       return;
     }
 
@@ -74,14 +102,21 @@ export function FilePreviewDrawer({
     const processFile = async () => {
       setLoading(true);
       setError(null);
+      setNumPages(null);
       try {
         let currentBlob: Blob | null = null;
+
         if (file) {
+          // Local file object
           currentBlob = file;
           activeUrl = URL.createObjectURL(file);
+        } else if (fetchBlobFn && fileTypeCategory === "PDF") {
+          // PDF via authenticated proxy — avoids CORS, safe for react-pdf
+          currentBlob = await fetchBlobFn();
+          activeUrl = URL.createObjectURL(currentBlob);
         } else if (previewUrl) {
-          activeUrl = previewUrl; // Ensure activeUrl is set
-          // If we need to parse Excel, we must fetch the blob
+          activeUrl = previewUrl;
+          // For Excel, we must fetch the raw bytes to parse with xlsx
           if (fileTypeCategory === "EXCEL") {
             try {
               const res = await fetch(previewUrl);
@@ -89,7 +124,6 @@ export function FilePreviewDrawer({
               currentBlob = await res.blob();
             } catch (err) {
               console.warn("Failed to fetch Excel blob for preview", err);
-              // Excel requires blob to parse, so it will fail to display
             }
           }
         }
@@ -126,7 +160,7 @@ export function FilePreviewDrawer({
         URL.revokeObjectURL(activeUrl);
       }
     };
-  }, [open, file, previewUrl, fileTypeCategory, t]);
+  }, [open, file, previewUrl, fetchBlobFn, fileTypeCategory, t]);
 
   const renderContent = () => {
     if (loading) {
@@ -153,11 +187,41 @@ export function FilePreviewDrawer({
     switch (fileTypeCategory) {
       case "PDF":
         return (
-          <iframe
-            src={blobUrl || ""}
-            className="w-full h-[75vh] border border-[color:var(--border)] rounded-md"
-            title={actualFileName}
-          />
+          <div
+            ref={containerRef}
+            className="w-full overflow-y-auto overflow-x-hidden bg-[#525659] rounded-md"
+            style={{ maxHeight: "75vh" }}
+          >
+            <Document
+              file={blobUrl || ""}
+              onLoadSuccess={({ numPages: n }) => setNumPages(n)}
+              loading={
+                <div className="flex h-64 items-center justify-center flex-col text-white gap-2">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <p>Đang tải PDF...</p>
+                </div>
+              }
+              error={
+                <div className="flex h-64 items-center justify-center flex-col text-red-300 gap-2 p-8">
+                  <AlertCircle className="w-8 h-8" />
+                  <p>Không thể hiển thị file PDF. Vui lòng tải xuống để xem.</p>
+                </div>
+              }
+              className="flex flex-col items-center gap-4 py-4"
+            >
+              {numPages &&
+                Array.from(new Array(numPages), (_, index) => (
+                  <Page
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
+                    width={Math.max(containerWidth - 32, 200)}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                    className="shadow-xl"
+                  />
+                ))}
+            </Document>
+          </div>
         );
       case "IMAGE":
         return (

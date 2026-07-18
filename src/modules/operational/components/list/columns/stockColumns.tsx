@@ -49,6 +49,12 @@ export function useStockColumns({
     store.setPage(1);
   };
 
+  const formatQty = (val: string | number) =>
+    Number(val || 0).toLocaleString("vi-VN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   return useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
@@ -96,6 +102,7 @@ export function useStockColumns({
             align="center"
             columnKey="item_code"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle text-left",
@@ -120,6 +127,7 @@ export function useStockColumns({
             align="center"
             columnKey="item_name"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle text-left",
@@ -145,6 +153,8 @@ export function useStockColumns({
             align="right"
             columnKey="received_qty"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
+            formatOptionLabel={formatQty}
           />
         ),
         className: "align-middle text-right",
@@ -154,7 +164,7 @@ export function useStockColumns({
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
-            {Number(row.received_qty || 0).toLocaleString("vi-VN")}
+            {formatQty(row.received_qty)}
           </span>
         ),
       },
@@ -172,6 +182,8 @@ export function useStockColumns({
             align="right"
             columnKey="issued_qty"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
+            formatOptionLabel={formatQty}
           />
         ),
         className: "align-middle text-right",
@@ -181,7 +193,7 @@ export function useStockColumns({
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm tabular-nums">
-            {Number(row.issued_qty || 0).toLocaleString("vi-VN")}
+            {formatQty(row.issued_qty)}
           </span>
         ),
       },
@@ -199,6 +211,8 @@ export function useStockColumns({
             align="right"
             columnKey="on_hand_qty"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
+            formatOptionLabel={formatQty}
           />
         ),
         className: "align-middle text-right",
@@ -208,7 +222,7 @@ export function useStockColumns({
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-emerald-600">
-            {Number(row.on_hand_qty || 0).toLocaleString("vi-VN")}
+            {formatQty(row.on_hand_qty)}
           </span>
         ),
       },
@@ -226,6 +240,8 @@ export function useStockColumns({
             align="right"
             columnKey="reserved_qty"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
+            formatOptionLabel={formatQty}
           />
         ),
         className: "align-middle text-right",
@@ -235,7 +251,7 @@ export function useStockColumns({
         enableResizing: true,
         cell: (row) => (
           <span className="inline-block w-full text-right text-sm font-medium tabular-nums text-amber-600">
-            {Number(row.reserved_qty || 0).toLocaleString("vi-VN")}
+            {formatQty(row.reserved_qty)}
           </span>
         ),
       },
@@ -252,6 +268,7 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("unit", vals)}
             align="center"
             columnKey="unit"
+            allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle text-left",
@@ -279,6 +296,7 @@ export function useStockColumns({
             align="right"
             columnKey="last"
             requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle whitespace-nowrap text-right",
@@ -303,6 +321,7 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("item_type", vals)}
             align="center"
             columnKey="item_type"
+            allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle text-center",
@@ -347,6 +366,7 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("status", vals)}
             align="center"
             columnKey="status"
+            allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle text-center flex justify-center w-full",

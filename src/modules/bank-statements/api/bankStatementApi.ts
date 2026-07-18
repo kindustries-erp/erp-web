@@ -9,6 +9,7 @@ export interface ErpBankAccount {
   accountName: string;
   currency: string;
   isActive: boolean;
+  accountingAccountId: string;
   openingBalance?: number;
   periodDate?: string;
   createdAt: string;
@@ -20,6 +21,7 @@ export interface ErpCashBook {
   name: string;
   currency: string;
   isActive: boolean;
+  accountingAccountId: string;
   openingBalance?: number;
   periodDate?: string;
   createdAt: string;
@@ -40,6 +42,10 @@ export const bankStatementApi = {
     sortOrder?: "ASC" | "DESC";
     transactionType?: string;
     tagIds?: string[];
+    column_search?: string;
+    column_filters?: string;
+    correspondentAccount?: string;
+    correspondentName?: string;
   }) => {
     const cleanParams = Object.fromEntries(
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -50,6 +56,30 @@ export const bankStatementApi = {
       {
         params: cleanParams,
         paramsSerializer: { indexes: null },
+      },
+    );
+    return res.data;
+  },
+
+  getColumnOptions: async (
+    column: string,
+    search: string,
+    page: number,
+    pageSize: number,
+    filtersStr?: string,
+    sourceType?: "BANK" | "CASH",
+  ) => {
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/transactions/column-options",
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          column_filters: filtersStr,
+          sourceType,
+        },
       },
     );
     return res.data;
@@ -68,6 +98,8 @@ export const bankStatementApi = {
     sourceType?: "BANK" | "CASH";
     branchId?: string;
     tagIds?: string[];
+    correspondentAccount?: string;
+    correspondentName?: string;
   }): Promise<{
     totalCashIn: number;
     totalCashOut: number;
@@ -89,6 +121,32 @@ export const bankStatementApi = {
     );
     const res = await axiosInstance.get(
       "/api/v1/bank-transactions-core/dashboard-stats",
+      {
+        params: cleanParams,
+        paramsSerializer: { indexes: null },
+      },
+    );
+    return res.data;
+  },
+
+  getPartnerStats: async (params: {
+    page?: number;
+    pageSize?: number;
+    startDate?: string;
+    endDate?: string;
+    sourceType?: "BANK" | "CASH";
+    branchId?: string;
+    tagIds?: string[];
+    column_search?: string;
+    column_filters?: string;
+    sortBy?: string;
+    sortOrder?: "ASC" | "DESC";
+  }) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+    );
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/partner-stats",
       {
         params: cleanParams,
         paramsSerializer: { indexes: null },
@@ -208,6 +266,40 @@ export const bankStatementApi = {
   deleteCashBook: async (id: string) => {
     const res = await axiosInstance.delete(
       `/api/v1/bank-transactions-core/cash-books/${id}`,
+    );
+    return res.data;
+  },
+
+  // --- Statement Files ---
+  getStatementFiles: async (params: {
+    page?: number;
+    pageSize?: number;
+    branchId?: string;
+    bankAccountId?: string;
+    cashBookId?: string;
+  }) => {
+    const cleanParams = Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== ""),
+    );
+    const res = await axiosInstance.get(
+      "/api/v1/bank-transactions-core/statement-files",
+      {
+        params: cleanParams,
+      },
+    );
+    return res.data;
+  },
+  createStatementFile: async (data: any) => {
+    const res = await axiosInstance.post(
+      "/api/v1/bank-transactions-core/statement-files",
+      data,
+    );
+    return res.data;
+  },
+  deleteStatementFile: async (id: string) => {
+    const res = await axiosInstance.delete(
+      `/api/v1/bank-transactions-core/statement-files/${id}`,
     );
     return res.data;
   },

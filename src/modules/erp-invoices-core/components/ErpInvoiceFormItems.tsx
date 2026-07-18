@@ -150,7 +150,14 @@ export function ErpInvoiceFormItems({
                     }}
                   />
                 ) : (
-                  <div>{row.quantity}</div>
+                  <div>
+                    {row.quantity != null
+                      ? Number(row.quantity).toLocaleString("vi-VN", {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        })
+                      : ""}
+                  </div>
                 ),
             },
             {
@@ -290,7 +297,12 @@ export function ErpInvoiceFormItems({
                   />
                 ) : (
                   <div className="font-semibold text-primary">
-                    {fmtAmt(String(row.totalAmount || 0))}
+                    {fmtAmt(
+                      String(
+                        (Number(row.preVatAmount) || 0) +
+                          (Number(row.vatAmount) || 0),
+                      ),
+                    )}
                   </div>
                 ),
             },

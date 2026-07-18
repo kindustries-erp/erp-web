@@ -47,6 +47,12 @@ export interface Einvoice {
   source?: "SINVOICE" | "TAX_PORTAL";
   direction?: "IN" | "OUT";
   tax_status?: string;
+  tax_invoice_status?: number;
+  taxInvoiceStatus?: number;
+  tax_process_status?: number;
+  taxProcessStatus?: number;
+  tax_invoice_type?: string;
+  taxInvoiceType?: string;
   external_invoice_id?: string;
   externalId?: string;
   viettel_transaction_id?: string;

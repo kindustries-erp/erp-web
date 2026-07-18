@@ -57,8 +57,14 @@ export function usePortalSync() {
           { duration: 6000 },
         );
         return res;
-      } catch {
-        toast.error("Có lỗi xảy ra khi đồng bộ từ TCT");
+      } catch (e: any) {
+        if (e?.response?.data?.message === "GDT_TOKEN_EXPIRED") {
+          toast.error("Token hết hạn! Vui lòng cập nhật lại token từ GDT", {
+            duration: 5000,
+          });
+        } else {
+          toast.error("Có lỗi xảy ra khi đồng bộ từ TCT");
+        }
       } finally {
         setLoading(false);
       }

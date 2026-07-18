@@ -22,6 +22,10 @@ export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
+  "inventory-dashboard": {
+    labelKey: "nav.items.inventoryDashboard",
+    group: "inventory",
+  },
   "erp-inventory-stock": {
     labelKey: "nav.items.erpInventoryStock",
     group: "inventory",
@@ -117,6 +121,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
+  "invoice-dashboard": {
+    labelKey: "nav.items.invoiceDashboard",
+    group: "accounting",
+  },
   "erp-invoices-in": {
     labelKey: "nav.items.erpInvoicesIn",
     group: "accounting",
@@ -175,6 +183,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
+  "inventory-dashboard": [
+    ["breadcrumb.inventory"],
+    ["nav.items.inventoryDashboard"],
+  ],
   "erp-inventory-stock": [
     ["breadcrumb.inventory"],
     ["breadcrumb.inventoryStock"],
@@ -227,11 +239,15 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryTrackingCategories"],
   ],
-  "erp-activity-logs": [["breadcrumb.settings"], ["breadcrumb.activitylog"]],
+  "erp-activity-logs": [
+    ["breadcrumb.settings"],
+    ["nav.items.accessControl"],
+    ["breadcrumb.activitylog"],
+  ],
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
-  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
-  "sys-tags": [["breadcrumb.settings"], ["nav.items.sysTags"]],
+  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.permissions"]],
+  "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
   "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],

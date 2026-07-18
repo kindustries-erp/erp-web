@@ -11,6 +11,85 @@ import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 import { ErpInvoiceNetOffSection } from "./ErpInvoiceNetOffSection";
 import { ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { useQuery } from "@tanstack/react-query";
+import { accountingApi } from "@/modules/accounting/api/accountingApi";
+import { money } from "@/shared/utils/format";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
+import toast from "react-hot-toast";
+
+function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
+  const { data: journalEntry, isLoading } = useQuery({
+    queryKey: ["journal-entry", journalEntryId],
+    queryFn: () => accountingApi.getJournalEntryById(journalEntryId),
+    enabled: !!journalEntryId,
+  });
+
+  if (isLoading)
+    return <div className="text-xs text-gray-500">Đang tải sơ đồ...</div>;
+  if (!journalEntry || !journalEntry.lines) return null;
+
+  // Group lines by account and sum the amounts
+  const accounts: Record<
+    string,
+    { accountCode: string; accountName: string; debit: number; credit: number }
+  > = {};
+
+  journalEntry.lines.forEach((line: any) => {
+    if (!line.account) return;
+    const ac = line.account.accountCode;
+    if (!accounts[ac]) {
+      accounts[ac] = {
+        accountCode: ac,
+        accountName: line.account.accountName,
+        debit: 0,
+        credit: 0,
+      };
+    }
+    if (Number(line.debit) > 0) accounts[ac].debit += Number(line.debit);
+    if (Number(line.credit) > 0) accounts[ac].credit += Number(line.credit);
+  });
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-4">
+      {Object.values(accounts).map((acc) => (
+        <div
+          key={acc.accountCode}
+          className="flex flex-col text-xs border border-gray-300 rounded-md overflow-hidden min-w-[140px] bg-white"
+        >
+          <div
+            className="bg-gray-100 text-center py-1 font-bold border-b border-gray-300 text-gray-800 px-2"
+            title={acc.accountName}
+          >
+            {acc.accountCode}
+          </div>
+          <div className="flex">
+            <div className="flex-1 border-r border-gray-300 px-2 py-1 min-h-[40px]">
+              <div className="text-[10px] text-gray-400 text-center font-medium mb-1 border-b border-gray-200">
+                NỢ
+              </div>
+              {acc.debit > 0 && (
+                <div className="text-right text-gray-700 tabular-nums">
+                  {money(acc.debit)}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 px-2 py-1 min-h-[40px]">
+              <div className="text-[10px] text-gray-400 text-center font-medium mb-1 border-b border-gray-200">
+                CÓ
+              </div>
+              {acc.credit > 0 && (
+                <div className="text-right text-gray-700 tabular-nums">
+                  {money(acc.credit)}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 interface Props {
   form: CreateErpInvoicePayload;
@@ -71,10 +150,10 @@ export function ErpInvoiceInternalInfo({
   }, [editMode, form.invoiceNo, direction]);
 
   return (
-    <DrawerSection title="THÔNG TIN QUẢN LÝ NỘI BỘ">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Column 1: Branch & Tags (col-span-1) */}
-        <div className="col-span-1 space-y-4">
+    <div className="flex flex-col gap-6">
+      {/* Group 1: Thông tin chung */}
+      <DrawerSection title="THÔNG TIN CHUNG">
+        <div className="space-y-4">
           <DrawerField label={t("branchId", "Chi nhánh")}>
             {editMode ? (
               <Combobox
@@ -82,6 +161,7 @@ export function ErpInvoiceInternalInfo({
                 value={form.branchId || ""}
                 onChange={(val) => fieldSet("branchId", val)}
                 placeholder="-- Chọn chi nhánh --"
+                allowClear={false}
               />
             ) : (
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
@@ -114,9 +194,11 @@ export function ErpInvoiceInternalInfo({
             ) : null}
           </div>
         </div>
+      </DrawerSection>
 
-        {/* Column 2: Net-off & POs (col-span-2) */}
-        <div className="col-span-1 md:col-span-2 space-y-4">
+      {/* Group 2: Chứng từ liên kết */}
+      <DrawerSection title="CHỨNG TỪ LIÊN KẾT">
+        <div className="space-y-4">
           {/* Related POs */}
           {!editMode && direction === "IN" && (
             <div>
@@ -167,7 +249,82 @@ export function ErpInvoiceInternalInfo({
             </div>
           )}
         </div>
-      </div>
-    </DrawerSection>
+      </DrawerSection>
+
+      {/* Group 3: Kiểm duyệt hóa đơn (Chỉ cho IN) */}
+      {direction === "IN" && detailInvoice?.id && (
+        <DrawerSection title="KIỂM DUYỆT HÓA ĐƠN">
+          <div className="flex items-center justify-between p-3 bg-gray-50 border rounded-md">
+            <div>
+              <div className="text-sm font-medium text-gray-800">
+                Hóa đơn hợp lý, hợp lệ
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                {detailInvoice.isValid ? (
+                  <span className="text-green-600 font-medium">
+                    Đã kiểm duyệt
+                  </span>
+                ) : (
+                  <span>Chưa kiểm duyệt</span>
+                )}
+                {detailInvoice.validatedAt && (
+                  <span className="ml-2 italic">
+                    lúc{" "}
+                    {new Date(detailInvoice.validatedAt).toLocaleString(
+                      "vi-VN",
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+            <Checkbox
+              checked={!!detailInvoice.isValid}
+              disabled={!editMode}
+              onCheckedChange={async (val: boolean) => {
+                try {
+                  await erpInvoicesCoreApi.setValid(detailInvoice.id, val);
+                  toast.success("Đã cập nhật trạng thái kiểm duyệt");
+                  onRefreshDetail();
+                } catch {
+                  toast.error("Lỗi khi cập nhật trạng thái kiểm duyệt");
+                }
+              }}
+            />
+          </div>
+        </DrawerSection>
+      )}
+
+      {/* Group 4: Hạch toán kế toán */}
+      <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
+        <div className="space-y-4">
+          <div className="pt-2">
+            <div className="text-sm font-medium mb-2 text-gray-700">
+              Trạng thái hạch toán
+            </div>
+            {detailInvoice?.postingStatus === "POSTED" ? (
+              <div className="flex flex-col gap-1">
+                <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 w-max">
+                  ĐÃ HẠCH TOÁN
+                </span>
+                {detailInvoice.postingDate && (
+                  <span className="text-xs text-gray-500">
+                    Ngày: {detailInvoice.postingDate.slice(0, 10)}
+                  </span>
+                )}
+                {detailInvoice.journalEntryId && (
+                  <TAccountDiagram
+                    journalEntryId={detailInvoice.journalEntryId}
+                  />
+                )}
+              </div>
+            ) : (
+              <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 w-max">
+                CHƯA HẠCH TOÁN
+              </span>
+            )}
+          </div>
+        </div>
+      </DrawerSection>
+    </div>
   );
 }

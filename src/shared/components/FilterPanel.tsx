@@ -28,19 +28,21 @@ export function FilterButton({
   return (
     <Button
       variant="secondary"
-      size="sm"
+      size="icon"
       onClick={onClick}
       className={cn(
-        "relative px-3 py-2 min-w-[90px] justify-center",
+        "relative h-8 w-8 shrink-0",
         activeCount > 0 && "border-primary/50 text-primary",
         className,
       )}
+      title={t("Bộ lọc")}
     >
-      <Filter className="h-3.5 w-3.5" />
-      <span>
-        {t("Bộ lọc")}
-        {activeCount > 0 && ` (${activeCount})`}
-      </span>
+      <Filter className="h-4 w-4" />
+      {activeCount > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-sm">
+          {activeCount}
+        </span>
+      )}
     </Button>
   );
 }

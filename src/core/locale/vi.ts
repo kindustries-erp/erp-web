@@ -53,6 +53,7 @@ export const vi = {
       operatingExpenses: "Chi phí vận hành",
       erpInventoryStock: "Tồn kho",
       inventoryGroup: "Kho",
+      inventoryDashboard: "Tổng quan kho",
       erpInventoryTracking: "Serial / Tracking",
       erpInventoryVouchers: "Chứng từ kho",
       suppliers: "Nhà cung cấp",
@@ -78,6 +79,7 @@ export const vi = {
       erpInvoices: "Hóa đơn",
       erpInvoicesIn: "Hóa đơn đầu vào",
       erpInvoicesOut: "Hóa đơn đầu ra",
+      invoiceDashboard: "Tổng quan hóa đơn",
       inbound: "Đầu vào",
       outbound: "Đầu ra",
       vinfastParts: "Báo cáo PT VINFAST",
@@ -148,6 +150,7 @@ export const vi = {
     operatingExpenses: "Chi phí vận hành",
     inventory: "Kho",
     inventoryGroup: "Kho",
+    inventoryDashboard: "Tổng quan kho",
     inventoryStock: "Tồn kho",
     inventoryTracking: "Serial / Tracking",
     inventoryVouchers: "Chứng từ",
@@ -193,6 +196,7 @@ export const vi = {
     notifications: {
       title: "Thông báo",
       empty: "Chưa có thông báo nào",
+      deleteAll: "Xoá tất cả",
     },
     impersonation: {
       stopButton: "Quay lại tài khoản gốc",

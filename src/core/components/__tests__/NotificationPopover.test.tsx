@@ -12,21 +12,36 @@ vi.mock("@/core/i18n", () => ({
   },
 }));
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
 describe("NotificationPopover", () => {
   it("renders trigger button", () => {
     render(
-      <NotificationPopover>
-        <button>Bell</button>
-      </NotificationPopover>,
+      <QueryClientProvider client={createTestQueryClient()}>
+        <NotificationPopover>
+          <button>Bell</button>
+        </NotificationPopover>
+      </QueryClientProvider>,
     );
     expect(screen.getByRole("button", { name: "Bell" })).toBeInTheDocument();
   });
 
   it("shows notification panel with title when clicked", () => {
     render(
-      <NotificationPopover>
-        <button>Bell</button>
-      </NotificationPopover>,
+      <QueryClientProvider client={createTestQueryClient()}>
+        <NotificationPopover>
+          <button>Bell</button>
+        </NotificationPopover>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Bell" }));
@@ -36,9 +51,11 @@ describe("NotificationPopover", () => {
 
   it("shows empty state message", () => {
     render(
-      <NotificationPopover>
-        <button>Bell</button>
-      </NotificationPopover>,
+      <QueryClientProvider client={createTestQueryClient()}>
+        <NotificationPopover>
+          <button>Bell</button>
+        </NotificationPopover>
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Bell" }));
@@ -48,9 +65,11 @@ describe("NotificationPopover", () => {
 
   it("does not show content before clicking", () => {
     render(
-      <NotificationPopover>
-        <button>Bell</button>
-      </NotificationPopover>,
+      <QueryClientProvider client={createTestQueryClient()}>
+        <NotificationPopover>
+          <button>Bell</button>
+        </NotificationPopover>
+      </QueryClientProvider>,
     );
 
     expect(screen.queryByText("Thông báo")).not.toBeInTheDocument();
