@@ -7,6 +7,7 @@ import {
 
 export function usePortalSync() {
   const [token, setTokenState] = useState<string>("");
+  const [cookies, setCookiesState] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -15,9 +16,10 @@ export function usePortalSync() {
 
   useEffect(() => {
     erpInvoicesCoreApi
-      .getPortalToken()
+      .getPortalConfig()
       .then((res) => {
         setTokenState(res.token);
+        setCookiesState(res.cookies);
         setIsTokenLoaded(true);
       })
       .catch(() => {
@@ -25,13 +27,14 @@ export function usePortalSync() {
       });
   }, []);
 
-  const setToken = useCallback(async (t: string) => {
+  const saveConfig = useCallback(async (t: string, c?: string) => {
     setTokenState(t);
+    if (c !== undefined) setCookiesState(c);
     try {
-      await erpInvoicesCoreApi.savePortalToken(t);
-      toast.success("Đã lưu cấu hình token thành công!");
+      await erpInvoicesCoreApi.savePortalConfig(t, c);
+      toast.success("Đã lưu cấu hình portal thành công!");
     } catch {
-      toast.error("Lưu cấu hình token thất bại");
+      toast.error("Lưu cấu hình portal thất bại");
     }
   }, []);
 
@@ -46,6 +49,7 @@ export function usePortalSync() {
       try {
         const res = await erpInvoicesCoreApi.portalSync({
           token: "",
+          cookies: "",
           dateFrom,
           dateTo,
           type,
@@ -74,7 +78,8 @@ export function usePortalSync() {
 
   return {
     token,
-    setToken,
+    cookies,
+    saveConfig,
     dateFrom,
     setDateFrom,
     dateTo,

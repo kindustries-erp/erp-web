@@ -35,23 +35,29 @@ function TokenConfigDrawer({
   open,
   onClose,
   token,
+  cookies,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
   token: string;
-  onSave: (t: string) => void;
+  cookies: string;
+  onSave: (t: string, c: string) => void;
 }) {
   const [draft, setDraft] = useState(token);
+  const [draftCookies, setDraftCookies] = useState(cookies);
   const [showToken, setShowToken] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    if (open) setDraft(token);
-  }, [open, token]);
+    if (open) {
+      setDraft(token);
+      setDraftCookies(cookies);
+    }
+  }, [open, token, cookies]);
 
   const handleClose = () => {
-    if (draft !== token) {
+    if (draft !== token || draftCookies !== cookies) {
       setShowConfirm(true);
     } else {
       onClose();
@@ -72,10 +78,10 @@ function TokenConfigDrawer({
             variant: "outline" as const,
           },
           {
-            label: "Lưu token",
+            label: "Lưu cấu hình",
             primary: true,
             onClick: () => {
-              onSave(draft);
+              onSave(draft, draftCookies);
               onClose();
             },
           },
@@ -83,9 +89,9 @@ function TokenConfigDrawer({
       >
         <div className="space-y-4 p-1">
           <p className="text-sm text-muted-foreground">
-            Nhập Bearer token đã đăng nhập vào hệ thống{" "}
-            <span className="font-medium">hoadondientu.gdt.gov.vn</span>. Token
-            được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
+            Nhập Bearer token và WAF Cookies (TS011...) đã đăng nhập vào hệ
+            thống <span className="font-medium">hoadondientu.gdt.gov.vn</span>.
+            Token được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
           </p>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -120,13 +126,33 @@ function TokenConfigDrawer({
                 )}
               </button>
             </div>
+            {draft && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Token đã nhập ({draft.length} ký tự)
+              </p>
+            )}
           </div>
-          {draft && (
-            <p className="text-xs text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Token đã nhập ({draft.length} ký tự)
-            </p>
-          )}
+
+          <div className="space-y-1 mt-4">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              WAF Cookies (Tùy chọn)
+            </label>
+            <div className="relative">
+              <textarea
+                className="w-full h-16 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                placeholder="TS0114b13e=..."
+                value={draftCookies}
+                onChange={(e) => setDraftCookies(e.target.value)}
+              />
+            </div>
+            {draftCookies && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Cookies đã nhập ({draftCookies.length} ký tự)
+              </p>
+            )}
+          </div>
         </div>
       </DrawerModal>
 
@@ -225,6 +251,7 @@ export function InvoiceImportSyncDrawer({
       setBulkXmlLoading(true);
       const res = await erpInvoicesCoreApi.bulkDownloadXml({
         token,
+        cookies: portal.cookies,
         direction,
       });
       toast.success(res.message);
@@ -480,7 +507,8 @@ export function InvoiceImportSyncDrawer({
         open={configOpen}
         onClose={() => setConfigOpen(false)}
         token={portal.token}
-        onSave={portal.setToken}
+        cookies={portal.cookies}
+        onSave={portal.saveConfig}
       />
       <ConfirmModal
         open={showDrawerConfirm}
