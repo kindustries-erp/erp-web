@@ -196,6 +196,7 @@ export const vi = {
     notifications: {
       title: "Thông báo",
       empty: "Chưa có thông báo nào",
+      deleteAll: "Xoá tất cả",
     },
     impersonation: {
       stopButton: "Quay lại tài khoản gốc",

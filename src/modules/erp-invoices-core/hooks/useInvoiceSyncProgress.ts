@@ -28,10 +28,27 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
             Authorization: `Bearer ${token}`,
           },
           signal: controller.current?.signal,
+          onopen(res) {
+            console.log(
+              "SSE onopen",
+              res.status,
+              res.headers.get("content-type"),
+            );
+            if (res.ok && res.status === 200) {
+              return Promise.resolve();
+            } else {
+              return Promise.reject(
+                new Error(`Failed to open SSE: ${res.status}`),
+              );
+            }
+          },
           onmessage(ev) {
+            if (!ev.data) return; // Ignore empty messages
             try {
               const data = JSON.parse(ev.data);
-              const { current, total, message, completed } = data;
+              const { current, total, message, completed, processId } = data;
+
+              if (processId === "ping") return; // Ignore keep-alive
 
               if (!completed) {
                 const percent = total > 0 ? (current / total) * 100 : 0;
@@ -57,6 +74,9 @@ export function useInvoiceSyncProgress(onComplete?: () => void) {
             } catch (err) {
               console.error("Failed to parse SSE message", err);
             }
+          },
+          onclose() {
+            console.log("SSE onclose");
           },
           onerror(err) {
             console.error("SSE error", err);

@@ -29,4 +29,8 @@ export const notificationsApi = {
     const res = await axiosInstance.delete(`/api/v1/notifications/${id}`);
     return res.data;
   },
+  deleteAll: async (): Promise<void> => {
+    const res = await axiosInstance.delete("/api/v1/notifications/all");
+    return res.data;
+  },
 };
