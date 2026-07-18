@@ -34,6 +34,10 @@ export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
           fill: d.fill,
           borderRadius: 4,
           barPercentage: 0.45,
+          tension: d.type === "line" ? 0 : undefined,
+          pointRadius: d.type === "line" ? 4 : undefined,
+          pointBackgroundColor:
+            d.type === "line" ? d.borderColor || d.color : undefined,
         })),
       }}
       options={{
@@ -66,7 +70,7 @@ export function BarChart({ labels, datasets, yMax, yCallback }: BarChartProps) {
           y: {
             grid: { color: gridColor },
             border: { display: false },
-            min: 0,
+            beginAtZero: true,
             ...(yMax ? { max: yMax } : {}),
             ticks: {
               font: { size: 11 },

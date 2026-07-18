@@ -18,15 +18,15 @@ function formatTaxInvoiceStatus(val?: number | null) {
     case 1:
       return "Mới";
     case 2:
-      return "Bị hủy";
-    case 3:
       return "Thay thế";
-    case 4:
+    case 3:
       return "Điều chỉnh";
-    case 5:
+    case 4:
       return "Bị thay thế";
-    case 6:
+    case 5:
       return "Bị điều chỉnh";
+    case 6:
+      return "Bị hủy";
     default:
       return val?.toString() || "—";
   }

@@ -161,13 +161,13 @@ export function ErpInvoiceInfoDrawer({
       titleExtra={titleExtra}
       title={drawerTitle}
       size="xl"
-      layout="2-columns"
+      layout={!editMode && detailInvoice ? "1-column" : "2-columns"}
       loading={loadingDetail}
       rightPanelTitle={t("generalInfo", "Thông tin chung")}
       stickyRightPanel={false}
       actions={editMode ? editActions : viewActions}
       leftPanel={leftPanel}
-      rightPanel={rightPanel}
+      rightPanel={!editMode && detailInvoice ? undefined : rightPanel}
     />
   );
 }

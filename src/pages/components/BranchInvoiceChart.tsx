@@ -35,12 +35,15 @@ export function BranchInvoiceChart({
     enabled: canView,
   });
 
-  const barIn = "#059669"; // Emerald 600
-  const barOut = "#ea580c"; // Orange 600
+  const colorRevenue = "#059669"; // Emerald 600 (Đầu ra)
+  const colorExpense = "#ea580c"; // Orange 600 (Đầu vào)
+  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận)
 
   const cashTrendLabels = statsData?.cashTrend?.map((t: any) => t.label) || [];
   const cashTrendIn = statsData?.cashTrend?.map((t: any) => t.cashIn) || []; // Đầu ra
-  const cashTrendOut = statsData?.cashTrend?.map((t: any) => t.cashOut) || []; // Đầu vào
+  const cashTrendOut = statsData?.cashTrend?.map((t: any) => -t.cashOut) || []; // Đầu vào
+  const cashProfit =
+    statsData?.cashTrend?.map((t: any) => t.cashIn - t.cashOut) || []; // Lợi nhuận
 
   return (
     <Panel title={branchName} extra={<PanelMore />}>
@@ -51,13 +54,24 @@ export function BranchInvoiceChart({
             yCallback={(v) => money(Number(v))}
             datasets={[
               {
+                type: "line",
+                data: cashProfit,
+                color: "transparent",
+                borderColor: lineProfit,
+                borderWidth: 2,
+                fill: false,
+                label: "Lợi nhuận (Đầu ra - Đầu vào)",
+              },
+              {
+                type: "bar",
                 data: cashTrendOut,
-                color: barIn, // Hóa đơn đầu vào
+                color: colorExpense, // Hóa đơn đầu vào
                 label: "HĐ Đầu vào (Chi phí)",
               },
               {
+                type: "bar",
                 data: cashTrendIn,
-                color: barOut, // Hóa đơn đầu ra
+                color: colorRevenue, // Hóa đơn đầu ra
                 label: "HĐ Đầu ra (Doanh thu)",
               },
             ]}
@@ -71,20 +85,33 @@ export function BranchInvoiceChart({
         )}
       </div>
       <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={barIn} label="Đầu vào" />
-        <LegendItem color={barOut} label="Đầu ra" />
+        <LegendItem color={colorExpense} label="Đầu vào" />
+        <LegendItem color={colorRevenue} label="Đầu ra" />
+        <LegendItem color={lineProfit} label="Lợi nhuận" isLine={true} />
       </div>
     </Panel>
   );
 }
 
-function LegendItem({ color, label }: { color: string; label: string }) {
+function LegendItem({
+  color,
+  label,
+  isLine,
+}: {
+  color: string;
+  label: string;
+  isLine?: boolean;
+}) {
   return (
     <div className="flex items-center text-xs">
-      <div
-        className="w-3 h-3 rounded-[3px] mr-2"
-        style={{ backgroundColor: color }}
-      />
+      {isLine ? (
+        <div className="w-4 h-[2px] mr-2" style={{ backgroundColor: color }} />
+      ) : (
+        <div
+          className="w-3 h-3 rounded-[3px] mr-2"
+          style={{ backgroundColor: color }}
+        />
+      )}
       <span className="text-[color:var(--muted-fg)] font-medium">{label}</span>
     </div>
   );

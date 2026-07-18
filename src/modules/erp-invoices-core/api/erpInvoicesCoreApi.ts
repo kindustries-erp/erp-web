@@ -32,6 +32,8 @@ export interface ErpInvoice {
   sellerAddress?: string | null;
   sellerBank?: string | null;
   buyerName?: string | null;
+  buyerPersonalName?: string | null;
+  buyerCccd?: string | null;
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
