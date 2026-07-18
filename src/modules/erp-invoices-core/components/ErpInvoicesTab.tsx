@@ -764,19 +764,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               >
                 {inv.invoiceNo}
               </Button>
-              {inv.status !== "CONFIRMED" && (
-                <span
-                  className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
-                    inv.status === "CANCELLED"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-amber-100 text-amber-800"
-                  }`}
-                >
-                  {inv.status === "CANCELLED"
-                    ? t("statusCancelled", "Đã hủy")
-                    : t("statusDraft", "Nháp")}
-                </span>
-              )}
             </div>
           </div>
         ),
@@ -1831,14 +1818,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               {
                 label: t("syncInvoices", "Đồng bộ hóa đơn"),
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-                onClick: () => setImportModalOpen(true),
-              },
-              {
-                label: t(
-                  "syncAndHealInvoices",
-                  "Đồng bộ & cập nhật lại hóa đơn cũ",
-                ),
-                icon: <DownloadCloud className="w-4 h-4 text-orange-600" />,
                 onClick: () => setImportModalOpen(true),
               },
             ],

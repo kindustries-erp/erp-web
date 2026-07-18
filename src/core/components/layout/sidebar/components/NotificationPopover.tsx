@@ -5,7 +5,13 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/shared/utils";
-import { AlertCircle, CheckCircle2, Info, BellRing } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Info,
+  BellRing,
+  Trash2,
+} from "lucide-react";
 
 export function NotificationPopover({
   children,
@@ -24,8 +30,22 @@ export function NotificationPopover({
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: notificationsApi.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
   const markAllAsReadMutation = useMutation({
     mutationFn: notificationsApi.markAllAsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: notificationsApi.deleteAll,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
@@ -57,14 +77,24 @@ export function NotificationPopover({
               <BellRing className="w-4 h-4" />
               {t("topbar.notifications.title")}
             </h3>
-            {notifications.some((n) => !n.isRead) && (
-              <button
-                onClick={() => markAllAsReadMutation.mutate()}
-                className="text-xs text-primary hover:underline bg-transparent border-none cursor-pointer"
-              >
-                Đánh dấu đã đọc tất cả
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {notifications.length > 0 && (
+                <button
+                  onClick={() => deleteAllMutation.mutate()}
+                  className="text-xs text-destructive hover:underline bg-transparent border-none cursor-pointer"
+                >
+                  {t("topbar.notifications.deleteAll", "Xóa tất cả")}
+                </button>
+              )}
+              {notifications.some((n) => !n.isRead) && (
+                <button
+                  onClick={() => markAllAsReadMutation.mutate()}
+                  className="text-xs text-primary hover:underline bg-transparent border-none cursor-pointer"
+                >
+                  Đánh dấu đã đọc tất cả
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="overflow-y-auto flex-1 p-2 custom-scrollbar">
@@ -82,23 +112,30 @@ export function NotificationPopover({
                 {notifications.map((notif) => (
                   <div
                     key={notif.id}
-                    onClick={() => {
-                      if (!notif.isRead) handleMarkAsRead(notif.id);
-                    }}
                     className={cn(
-                      "flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors",
+                      "group flex items-start gap-3 p-3 rounded-md cursor-pointer transition-colors relative",
                       notif.isRead
                         ? "opacity-60 hover:bg-surface-hover"
                         : "bg-primary/5 hover:bg-primary/10",
                     )}
                   >
-                    <div className="shrink-0 mt-0.5">
+                    <div
+                      className="shrink-0 mt-0.5"
+                      onClick={() => {
+                        if (!notif.isRead) handleMarkAsRead(notif.id);
+                      }}
+                    >
                       {renderIcon(notif.type)}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div
+                      className="flex-1 min-w-0"
+                      onClick={() => {
+                        if (!notif.isRead) handleMarkAsRead(notif.id);
+                      }}
+                    >
                       <h4
                         className={cn(
-                          "text-sm font-medium mb-1",
+                          "text-sm font-medium mb-1 pr-6",
                           notif.isRead
                             ? "text-[color:var(--muted-fg)]"
                             : "text-foreground",
@@ -116,8 +153,21 @@ export function NotificationPopover({
                         })}
                       </span>
                     </div>
+
+                    {/* Delete Button (visible on hover) */}
+                    <button
+                      className="absolute top-2 right-2 p-1.5 rounded-md text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-black/5 hover:text-destructive transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteMutation.mutate(notif.id);
+                      }}
+                      title="Xoá thông báo"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
                     {!notif.isRead && (
-                      <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
+                      <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2 absolute bottom-3 right-3" />
                     )}
                   </div>
                 ))}

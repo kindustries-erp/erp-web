@@ -198,6 +198,7 @@ export const en: Dict = {
     notifications: {
       title: "Notifications",
       empty: "No notifications yet",
+      deleteAll: "Delete all",
     },
     impersonation: {
       stopButton: "Return to your account",
