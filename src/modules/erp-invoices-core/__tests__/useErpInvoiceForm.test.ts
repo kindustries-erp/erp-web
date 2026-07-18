@@ -5,10 +5,11 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
-    get: vi.fn(),
+    get: vi.fn().mockResolvedValue({ items: [] }),
     create: vi.fn(),
     update: vi.fn(),
     remove: vi.fn(),
+    syncDetail: vi.fn().mockResolvedValue({ items: [] }),
   },
 }));
 
@@ -157,6 +158,7 @@ describe("useErpInvoiceForm", () => {
     } as unknown as ErpInvoice;
 
     act(() => {
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
       result.current.openDetail(mockInvoice);
     });
 

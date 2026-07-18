@@ -875,9 +875,27 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "taxInvoiceType",
         header: (
-          <div className="text-center w-full font-semibold text-slate-700">
-            Loại HĐ
-          </div>
+          <TableColumnHeaderFilter
+            title={t("taxInvoiceType", "Loại HĐ")}
+            sortState={getSortState("taxInvoiceType")}
+            onSortChange={(state) => handleSortChange("taxInvoiceType", state)}
+            searchValue={
+              listHook.tableState.columnSearch["taxInvoiceType"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("taxInvoiceType", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["taxInvoiceType"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("taxInvoiceType", vals)
+            }
+            filterOptions={[
+              { label: "HĐ Máy tính tiền", value: "CASH_REGISTER" },
+              { label: "HĐ Điện tử", value: "STANDARD" },
+            ]}
+            align="center"
+            columnKey="taxInvoiceType"
+          />
         ),
         size: 110,
         className: "text-center text-xs",
@@ -886,9 +904,35 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "taxInvoiceStatus",
         header: (
-          <div className="text-center w-full font-semibold text-slate-700">
-            Trạng thái (GDT)
-          </div>
+          <TableColumnHeaderFilter
+            title={t("taxInvoiceStatus", "Trạng thái (GDT)")}
+            sortState={getSortState("taxInvoiceStatus")}
+            onSortChange={(state) =>
+              handleSortChange("taxInvoiceStatus", state)
+            }
+            searchValue={
+              listHook.tableState.columnSearch["taxInvoiceStatus"] || ""
+            }
+            onSearchChange={(val) =>
+              handleSearchChange("taxInvoiceStatus", val)
+            }
+            selectedFilters={
+              listHook.tableState.columnFilters["taxInvoiceStatus"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("taxInvoiceStatus", vals)
+            }
+            filterOptions={[
+              { label: "Mới", value: "1" },
+              { label: "Bị hủy", value: "2" },
+              { label: "Thay thế", value: "3" },
+              { label: "Điều chỉnh", value: "4" },
+              { label: "Bị thay thế", value: "5" },
+              { label: "Bị điều chỉnh", value: "6" },
+            ]}
+            align="center"
+            columnKey="taxInvoiceStatus"
+          />
         ),
         size: 110,
         className: "text-center",
@@ -904,9 +948,45 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       {
         key: "taxProcessStatus",
         header: (
-          <div className="text-center w-full font-semibold text-slate-700">
-            KQ Kiểm tra
-          </div>
+          <TableColumnHeaderFilter
+            title={t("taxProcessStatus", "KQ Kiểm tra")}
+            sortState={getSortState("taxProcessStatus")}
+            onSortChange={(state) =>
+              handleSortChange("taxProcessStatus", state)
+            }
+            searchValue={
+              listHook.tableState.columnSearch["taxProcessStatus"] || ""
+            }
+            onSearchChange={(val) =>
+              handleSearchChange("taxProcessStatus", val)
+            }
+            selectedFilters={
+              listHook.tableState.columnFilters["taxProcessStatus"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("taxProcessStatus", vals)
+            }
+            filterOptions={[
+              { label: "Cục Thuế đã nhận", value: "0" },
+              { label: "Đang tiến hành kiểm tra điều kiện cấp mã", value: "1" },
+              {
+                label: "CQT từ chối hóa đơn theo từng lần phát sinh",
+                value: "2",
+              },
+              { label: "Hóa đơn đủ điều kiện cấp mã", value: "3" },
+              { label: "Hóa đơn không đủ điều kiện cấp mã", value: "4" },
+              { label: "Đã cấp mã hóa đơn", value: "5" },
+              { label: "Cục Thuế đã nhận không mã", value: "6" },
+              { label: "Đã kiểm tra định kỳ HĐĐT không có mã", value: "7" },
+              {
+                label:
+                  "Cục Thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền",
+                value: "8",
+              },
+            ]}
+            align="center"
+            columnKey="taxProcessStatus"
+          />
         ),
         size: 150,
         className: "text-center text-xs whitespace-normal",
@@ -1364,7 +1444,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               key: "isValid",
               header: (
                 <TableColumnHeaderFilter
-                  title="Kiểm duyệt"
+                  title={t("invoice.columns.isValid", "HĐ hợp lệ")}
                   sortState="none"
                   onSortChange={() => {}}
                   searchValue=""
@@ -1380,8 +1460,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={async ({ search }: { search: string }) => {
                     const options = [
-                      { value: "true", label: "Đã kiểm duyệt" },
-                      { value: "false", label: "Chưa kiểm duyệt" },
+                      {
+                        value: "true",
+                        label: t("invoice.isValid.true", "Hợp lệ"),
+                      },
+                      {
+                        value: "false",
+                        label: t("invoice.isValid.false", "Chưa hợp lệ"),
+                      },
                     ];
                     const filtered = options.filter((o) =>
                       o.label.toLowerCase().includes(search.toLowerCase()),
@@ -1400,11 +1486,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               cell: (inv: any) =>
                 inv.isValid ? (
                   <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-green-100 text-green-800">
-                    HỢP LỆ
+                    {t("invoice.isValid.true", "Hợp lệ")}
                   </span>
                 ) : (
                   <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-500">
-                    CHƯA DUYỆT
+                    {t("invoice.isValid.false", "Chưa hợp lệ")}
                   </span>
                 ),
             } as DataTableColumn<ErpInvoice>,
