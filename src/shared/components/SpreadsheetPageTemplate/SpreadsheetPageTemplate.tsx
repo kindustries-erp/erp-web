@@ -14,6 +14,7 @@ export function SpreadsheetPageTemplate<T>({
   tableId,
   items,
   columns,
+  defaultColumnOrder = ["__actions", "__expand", "__selection"],
   getRowKey,
   loading,
   error,
@@ -137,7 +138,7 @@ export function SpreadsheetPageTemplate<T>({
         <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
           <StandardTable
             tableId={tableId}
-            defaultColumnOrder={["__actions", "__expand", "__selection"]}
+            defaultColumnOrder={defaultColumnOrder}
             enableColumnVisibility={true}
             enableColumnResizing={true}
             variant="spreadsheet"

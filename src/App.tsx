@@ -12,6 +12,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
+import { InventoryDashboard } from "@/pages/InventoryDashboard";
 import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
@@ -37,6 +38,7 @@ import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { ErpPermissionsCorePage } from "@/pages/ErpPermissionsCorePage";
 import { ErpInvoicesInPage } from "@/pages/ErpInvoicesInPage";
 import { ErpInvoicesOutPage } from "@/pages/ErpInvoicesOutPage";
+import { InvoiceDashboard } from "@/pages/InvoiceDashboard";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -61,6 +63,7 @@ import { PageKey } from "@/shared/types";
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
@@ -84,6 +87,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
+  "invoice-dashboard": InvoiceDashboard,
   "sys-tags": SysTagsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,

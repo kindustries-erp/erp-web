@@ -5,9 +5,11 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
+    get: vi.fn().mockResolvedValue({ items: [] }),
     create: vi.fn(),
     update: vi.fn(),
     remove: vi.fn(),
+    syncDetail: vi.fn().mockResolvedValue({ items: [] }),
   },
 }));
 
@@ -32,7 +34,7 @@ describe("useErpInvoiceForm", () => {
 
   it("should initialize with default closed state", () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.infoDrawerOpen).toBe(false);
     expect(result.current.detailInvoice).toBeNull();
     expect(result.current.editMode).toBe(false);
   });
@@ -44,7 +46,7 @@ describe("useErpInvoiceForm", () => {
       result.current.openNew("IN");
     });
 
-    expect(result.current.drawerOpen).toBe(true);
+    expect(result.current.infoDrawerOpen).toBe(true);
     expect(result.current.editMode).toBe(true);
     expect(result.current.detailInvoice).toBeNull();
     expect(result.current.form.direction).toBe("IN");
@@ -63,7 +65,7 @@ describe("useErpInvoiceForm", () => {
       result.current.openDetail(mockInvoice);
     });
 
-    expect(result.current.drawerOpen).toBe(true);
+    expect(result.current.infoDrawerOpen).toBe(true);
     expect(result.current.editMode).toBe(false);
     expect(result.current.detailInvoice).toEqual(mockInvoice);
   });
@@ -129,7 +131,7 @@ describe("useErpInvoiceForm", () => {
 
     expect(erpInvoicesCoreApi.create).toHaveBeenCalled();
     expect(mockReload).toHaveBeenCalled();
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.infoDrawerOpen).toBe(false);
   });
 
   it("should update an existing invoice", async () => {
@@ -156,6 +158,7 @@ describe("useErpInvoiceForm", () => {
     } as unknown as ErpInvoice;
 
     act(() => {
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
       result.current.openDetail(mockInvoice);
     });
 
@@ -188,7 +191,7 @@ describe("useErpInvoiceForm", () => {
     });
 
     expect(erpInvoicesCoreApi.remove).toHaveBeenCalledWith("1");
-    expect(result.current.drawerOpen).toBe(false);
+    expect(result.current.infoDrawerOpen).toBe(false);
     expect(mockReload).toHaveBeenCalled();
   });
 

@@ -103,7 +103,6 @@ export function OperationalDetailDrawer({
               <DrawerField label={t("Trạng thái")}>
                 <div className="flex flex-wrap gap-2">
                   <StatusBadge status={detailDocument.status} />
-                  <StatusBadge status={detailDocument.payment_status} />
                 </div>
               </DrawerField>
               <DrawerField label={t("Kho")}>

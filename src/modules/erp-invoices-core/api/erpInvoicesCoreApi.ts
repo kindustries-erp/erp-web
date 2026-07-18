@@ -22,12 +22,18 @@ export interface ErpInvoice {
   invoiceDate: string;
   direction: "IN" | "OUT";
   status: string;
+  taxInvoiceType?: string | null;
+  isValid?: boolean;
+  validatedAt?: string | null;
+  validatedBy?: string | null;
   source?: string | null;
   sellerName?: string | null;
   sellerTaxCode?: string | null;
   sellerAddress?: string | null;
   sellerBank?: string | null;
   buyerName?: string | null;
+  buyerPersonalName?: string | null;
+  buyerCccd?: string | null;
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
@@ -47,8 +53,13 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
+  taxInvoiceStatus?: number | null;
+  taxProcessStatus?: number | null;
   createdAt?: string;
   updatedAt?: string;
+  postingStatus?: string | null;
+  postingDate?: string | null;
+  journalEntryId?: string | null;
   items?: ErpInvoiceItem[];
   voucherNetOffs?: {
     id: string;
@@ -95,6 +106,7 @@ export interface ErpInvoiceListParams {
   search?: string;
   seller_name?: string;
   buyer_name?: string;
+  partner_tax_code?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -210,6 +222,14 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
+  bulkSetBranch: async (ids: string[], branchId: string | null) => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      ids: string[];
+    }>(`${BASE}/bulk-set-branch`, { ids, branchId });
+    return data;
+  },
+
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },
@@ -315,6 +335,17 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  setValid: async (
+    id: string,
+    isValid: boolean,
+  ): Promise<{ success: boolean }> => {
+    const { data } = await axiosInstance.patch<{ success: boolean }>(
+      `${BASE}/${id}/validate`,
+      { isValid },
+    );
+    return data;
+  },
+
   getDownloadUrl: async (
     id: string,
     type: "pdf" | "xml",
@@ -353,6 +384,14 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getPdfBlob: async (id: string, key: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(
+      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
+      { responseType: "blob" },
+    );
+    return data;
+  },
+
   getPdfDownloadUrl: async (
     id: string,
     key: string,
@@ -372,6 +411,18 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  bulkDownloadFiles: async (payload: {
+    query: { date_from?: string; date_to?: string; direction?: string };
+    types: string[];
+  }): Promise<Blob> => {
+    const { data } = await axiosInstance.post<Blob>(
+      `${BASE}/bulk-download-files`,
+      payload,
+      { responseType: "blob", timeout: 600000 },
+    );
+    return data;
+  },
+
   deletePdf: async (
     id: string,
     key: string,
@@ -388,6 +439,34 @@ export const erpInvoicesCoreApi = {
       params,
       responseType: "blob",
     });
+    return data;
+  },
+
+  postInvoice: async (
+    id: string,
+    payload: {
+      postingDate: string;
+      documentDate?: string;
+      description?: string;
+      lines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description?: string;
+      }[];
+    },
+  ): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/post`,
+      payload,
+    );
+    return data;
+  },
+
+  unpostInvoice: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/unpost`,
+    );
     return data;
   },
 };
@@ -412,4 +491,6 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
+  pdfAttached?: { filename: string; invoiceNo: string }[];
+  pdfOrphans?: { filename: string; reason: string }[];
 }

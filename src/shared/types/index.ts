@@ -51,6 +51,7 @@ export type PageKey =
   | "sys-tags"
   | "erp-invoices-in"
   | "erp-invoices-out"
+  | "invoice-dashboard"
   | "purchasing-report-dashboard"
   | "bank-statement"
   | "cash-statement"
@@ -59,7 +60,8 @@ export type PageKey =
   | "garage-receivables"
   | "garage-payables"
   | "after-sales"
-  | "vinfast-parts";
+  | "vinfast-parts"
+  | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

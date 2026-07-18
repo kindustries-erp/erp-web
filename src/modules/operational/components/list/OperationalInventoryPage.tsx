@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Eye, Network, Package, Plus, Power, PowerOff } from "lucide-react";
+import { Eye, Network, Package, Power, PowerOff, Download } from "lucide-react";
 import { fmtQty } from "@/shared/utils/format";
 
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
@@ -23,7 +23,10 @@ import { useOperationalListStore } from "@/modules/operational/hooks/useOperatio
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useT } from "@/core/i18n";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
-import type { InventoryStockRow } from "@/modules/operational/api/operationalApi";
+import {
+  type InventoryStockRow,
+  operationalApi,
+} from "@/modules/operational/api/operationalApi";
 import {
   inventoryCoreApi,
   type InventoryMovementsPayload,
@@ -147,6 +150,36 @@ export function OperationalInventoryPage({
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      showToast({ title: "Đang tạo file Excel...", variant: "default" });
+      const blob = await operationalApi.exportInventoryStock({
+        search: searchInput || undefined,
+        item_type: itemTypeFilter || undefined,
+        sort: tableState.sorts.length > 0 ? tableState.sorts : undefined,
+        column_search: tableState.columnSearch,
+        column_filters: tableState.columnFilters,
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      const now = new Date();
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const yyyymmdd = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+      const hhmmss = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      a.download = `Bao_cao_xuat_nhap_kho_${yyyymmdd}_${hhmmss}.xlsx`;
+
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showToast({ title: "Xuất Excel thành công", variant: "default" });
+    } catch {
+      showToast({ title: "Không thể xuất Excel", variant: "destructive" });
+    }
+  };
+
   const activeFilterCount = [!!searchInput, !!itemTypeFilter].filter(
     Boolean,
   ).length;
@@ -257,14 +290,16 @@ export function OperationalInventoryPage({
         setPage(1);
       }}
       onRefresh={onRefetch}
+      onCreate={onOpenCreateItem}
+      createLabel={t("common.create", "Tạo mới")}
       createActions={[
         {
-          groupLabel: t("groupThemMoi", "Thêm mới"),
+          groupLabel: t("groupTraCuu", "Tra cứu"),
           items: [
             {
-              label: t("common.create", "Tạo mới"),
-              icon: <Plus className="w-4 h-4 text-emerald-600" />,
-              onClick: onOpenCreateItem,
+              label: t("inventory.exportExcel", "Xuất Excel Bảng kê"),
+              icon: <Download className="w-4 h-4 text-emerald-600" />,
+              onClick: handleExportExcel,
             },
           ],
         },

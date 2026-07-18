@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Shield, PlusCircle } from "lucide-react";
+import { Shield, PlusCircle, Eye, EyeOff } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -54,9 +54,46 @@ export function ErpUsersPage() {
   const [editingUser, setEditingUser] = useState<CoreUserAdmin | null>(null);
   const [selectedUser, setSelectedUser] = useState<CoreUserAdmin | null>(null);
   const [timeline, setTimeline] = useState<AuditLogEntry[]>([]);
-  const [form, setForm] = useState({ email: "", password: "", employeeId: "" });
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    employeeId: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [closeConfirmOpen, setCloseConfirmOpen] = useState(false);
   const [impersonateTarget, setImpersonateTarget] =
     useState<CoreUserAdmin | null>(null);
+
+  const isFormDirty = useMemo(() => {
+    if (editingUser) {
+      return form.employeeId !== (editingUser.employeeId || "");
+    }
+    return (
+      form.email !== "" ||
+      form.password !== "" ||
+      form.confirmPassword !== "" ||
+      form.employeeId !== ""
+    );
+  }, [form, editingUser]);
+
+  function handleCloseDrawer() {
+    if (isFormDirty) {
+      setCloseConfirmOpen(true);
+    } else {
+      setDrawerOpen(false);
+      setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
+      setEditingUser(null);
+    }
+  }
+
+  function handleConfirmClose() {
+    setCloseConfirmOpen(false);
+    setDrawerOpen(false);
+    setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
+    setEditingUser(null);
+  }
 
   const canImpersonate = useAuthStore((s) => s.canImpersonate);
   const impersonateAction = useAuthStore((s) => s.impersonateAction);
@@ -141,7 +178,15 @@ export function ErpUsersPage() {
         showToast({
           variant: "destructive",
           title: t("Thiếu thông tin"),
-          description: t("Cần nhập email và mật khẩu"),
+          description: t("Vui lòng nhập email và mật khẩu"),
+        });
+        return;
+      }
+      if (form.password !== form.confirmPassword) {
+        showToast({
+          variant: "destructive",
+          title: t("Lỗi nhập liệu"),
+          description: t("Xác nhận mật khẩu không khớp"),
         });
         return;
       }
@@ -165,7 +210,7 @@ export function ErpUsersPage() {
         showToast({ title: t("Đã tạo user"), description: form.email.trim() });
       }
       setDrawerOpen(false);
-      setForm({ email: "", password: "", employeeId: "" });
+      setForm({ email: "", password: "", confirmPassword: "", employeeId: "" });
       setEditingUser(null);
       await loadUsers();
     } catch (error: any) {
@@ -257,7 +302,7 @@ export function ErpUsersPage() {
   const drawerActions: DrawerAction[] = [
     {
       label: t("Đóng"),
-      onClick: () => setDrawerOpen(false),
+      onClick: handleCloseDrawer,
       variant: "outline",
       disabled: creating,
     },
@@ -312,7 +357,12 @@ export function ErpUsersPage() {
                 onClick: () => {
                   void loadEmployees();
                   setEditingUser(null);
-                  setForm({ email: "", password: "", employeeId: "" });
+                  setForm({
+                    email: "",
+                    password: "",
+                    confirmPassword: "",
+                    employeeId: "",
+                  });
                   setDrawerOpen(true);
                 },
               },
@@ -335,6 +385,7 @@ export function ErpUsersPage() {
                   setForm({
                     email: item.email,
                     password: "",
+                    confirmPassword: "",
                     employeeId: item.employeeId || "",
                   });
                   setDrawerOpen(true);
@@ -382,7 +433,7 @@ export function ErpUsersPage() {
       <StandardFormDrawer
         open={drawerOpen}
         mode={editingUser ? "edit" : "create"}
-        onClose={() => setDrawerOpen(false)}
+        onClose={handleCloseDrawer}
         title={editingUser ? t("Cập nhật user") : t("Tạo user mới")}
         subtitle={t("Flow production-grade cho ERP CORE")}
         actions={drawerActions}
@@ -401,17 +452,64 @@ export function ErpUsersPage() {
               />
             </DrawerField>
             {!editingUser && (
-              <DrawerField label={t("Mật khẩu")} required>
-                <input
-                  type="password"
-                  className={inputCls}
-                  value={form.password}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, password: e.target.value }))
-                  }
-                  placeholder={t("Tối thiểu 8 ký tự")}
-                />
-              </DrawerField>
+              <>
+                <DrawerField label={t("Mật khẩu")} required>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className={inputCls}
+                      value={form.password}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
+                      placeholder={t("Tối thiểu 8 ký tự")}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </DrawerField>
+                <DrawerField label={t("Xác nhận mật khẩu")} required>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      className={inputCls}
+                      value={form.confirmPassword}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
+                      placeholder={t("Nhập lại mật khẩu")}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </DrawerField>
+              </>
             )}
             <DrawerField label={t("Liên kết employee")}>
               <Combobox
@@ -507,9 +605,12 @@ export function ErpUsersPage() {
 
       <ConfirmModal
         open={!!impersonateTarget}
-        title={t("Xác nhận Login as")}
-        message={`${t("Bạn có chắc chắn muốn đăng nhập dưới quyền user")} ${impersonateTarget?.email}? ${t("Hành động này sẽ được ghi log.")}`}
-        confirmLabel="Login as"
+        title={t("Đăng nhập với tư cách user này?")}
+        message={
+          t("Bạn sẽ truy cập hệ thống với các quyền của ") +
+          (impersonateTarget?.email || "")
+        }
+        confirmLabel={t("Đăng nhập")}
         onConfirm={async () => {
           if (!impersonateTarget) return;
           try {
@@ -520,6 +621,17 @@ export function ErpUsersPage() {
           }
         }}
         onCancel={() => setImpersonateTarget(null)}
+      />
+
+      <ConfirmModal
+        open={closeConfirmOpen}
+        title={t("Chưa lưu thay đổi")}
+        message={t(
+          "Bạn có dữ liệu chưa lưu. Bạn có chắc chắn muốn đóng và hủy bỏ các thay đổi này không?",
+        )}
+        confirmLabel={t("Đóng")}
+        onConfirm={handleConfirmClose}
+        onCancel={() => setCloseConfirmOpen(false)}
       />
     </>
   );
