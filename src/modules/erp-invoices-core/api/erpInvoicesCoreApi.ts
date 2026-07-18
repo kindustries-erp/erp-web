@@ -143,9 +143,10 @@ export interface PortalInvoiceDto {
 
 export interface PortalSyncPayload {
   token: string;
+  cookies?: string;
   dateFrom: string;
   dateTo: string;
-  type: "purchase" | "sold";
+  type?: "purchase" | "sold";
 }
 
 export interface PortalSyncResult {
@@ -287,28 +288,33 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  bulkDownloadXml: async (payload: {
+  bulkDownloadXml: async (params: {
     token: string;
+    cookies?: string;
     direction: "IN" | "OUT";
-  }) => {
+  }): Promise<{ message: string; count: number }> => {
     const { data } = await axiosInstance.post<{
       message: string;
       count: number;
-    }>(`${BASE}/portal/bulk-download-xml`, payload);
+    }>(`${BASE}/portal/bulk-download-xml`, params);
     return data;
   },
 
-  getPortalToken: async (): Promise<{ token: string }> => {
-    const { data } = await axiosInstance.get<{ token: string }>(
-      `${BASE}/portal/token`,
-    );
+  getPortalConfig: async (): Promise<{ token: string; cookies: string }> => {
+    const { data } = await axiosInstance.get<{
+      token: string;
+      cookies: string;
+    }>(`${BASE}/portal/token`);
     return data;
   },
 
-  savePortalToken: async (token: string): Promise<{ message: string }> => {
+  savePortalConfig: async (
+    token: string,
+    cookies?: string,
+  ): Promise<{ message: string }> => {
     const { data } = await axiosInstance.post<{ message: string }>(
       `${BASE}/portal/token`,
-      { token },
+      { token, cookies },
     );
     return data;
   },
