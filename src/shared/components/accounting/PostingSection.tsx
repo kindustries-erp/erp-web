@@ -54,7 +54,7 @@ export function PostingSection({
   editMode,
 }: PostingSectionProps) {
   // Fetch Chart of Accounts (global, no branch required)
-  const { data: chartOfAccounts } = useQuery({
+  const { data: chartOfAccounts, isLoading: isLoadingCoA } = useQuery({
     queryKey: ["chart-of-accounts"],
     queryFn: () => accountingApi.getChartOfAccounts(),
   });
@@ -63,7 +63,7 @@ export function PostingSection({
   const { data: journalEntry } = useQuery({
     queryKey: ["journal-entry", journalEntryId],
     queryFn: () => accountingApi.getJournalEntryById(journalEntryId!),
-    enabled: !!journalEntryId && isPosted,
+    enabled: !!journalEntryId,
   });
 
   const accountOptions = useMemo(() => {
@@ -96,7 +96,7 @@ export function PostingSection({
 
   // Initialize or re-initialize data based on status
   useEffect(() => {
-    if (isPosted && journalEntry) {
+    if (journalEntry) {
       const lineMap = new Map();
       (journalEntry.lines || []).forEach((l: any) => {
         const accId = l.accountId || (l.account ? l.account.id : "");
@@ -120,7 +120,7 @@ export function PostingSection({
         lines: Array.from(lineMap.values()),
       });
       setIsDirty(false);
-    } else if (!isPosted && !isDirty) {
+    } else if (!journalEntry && !isDirty && !isLoadingCoA) {
       setPostingDate(defaultDate || new Date().toISOString().slice(0, 10));
       setDescription(defaultDescription || "");
 
@@ -134,6 +134,7 @@ export function PostingSection({
     defaultDate,
     defaultDescription,
     isDirty,
+    isLoadingCoA,
     accountOptions,
     editMode,
   ]);
@@ -264,7 +265,6 @@ export function PostingSection({
               setPostingDate(date);
               setIsDirty(true);
             }}
-            disabled={isPosted}
             className="w-full"
           />
         </div>
@@ -279,8 +279,7 @@ export function PostingSection({
               setDescription(e.target.value);
               setIsDirty(true);
             }}
-            disabled={isPosted}
-            className="w-full h-10 px-3 rounded-md border border-input bg-background disabled:bg-gray-100"
+            className="w-full h-10 px-3 rounded-md border border-input bg-background"
           />
         </div>
       </div>
@@ -297,7 +296,7 @@ export function PostingSection({
               <th className="px-3 py-2 text-left font-medium w-[25%]">
                 Diễn giải
               </th>
-              {!isPosted && <th className="px-3 py-2 w-[5%]"></th>}
+              <th className="px-3 py-2 w-[5%]"></th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -309,14 +308,13 @@ export function PostingSection({
                     value={line.accountId}
                     onChange={(val) => updateLine(line.id, "accountId", val)}
                     placeholder="-- Chọn --"
-                    disabled={isPosted}
                     className="w-full"
                   />
                 </td>
                 <td className="px-2 py-2">
                   <input
                     type="text"
-                    className="w-full h-8 px-2 text-right border rounded disabled:bg-gray-100"
+                    className="w-full h-8 px-2 text-right border rounded"
                     value={
                       line.debit
                         ? new Intl.NumberFormat("vi-VN").format(line.debit)
@@ -326,13 +324,12 @@ export function PostingSection({
                       const val = Number(e.target.value.replace(/\D/g, ""));
                       updateLine(line.id, "debit", val);
                     }}
-                    disabled={isPosted}
                   />
                 </td>
                 <td className="px-2 py-2">
                   <input
                     type="text"
-                    className="w-full h-8 px-2 text-right border rounded disabled:bg-gray-100"
+                    className="w-full h-8 px-2 text-right border rounded"
                     value={
                       line.credit
                         ? new Intl.NumberFormat("vi-VN").format(line.credit)
@@ -342,32 +339,28 @@ export function PostingSection({
                       const val = Number(e.target.value.replace(/\D/g, ""));
                       updateLine(line.id, "credit", val);
                     }}
-                    disabled={isPosted}
                   />
                 </td>
                 <td className="px-2 py-2">
                   <input
                     type="text"
-                    className="w-full h-8 px-2 border rounded disabled:bg-gray-100"
+                    className="w-full h-8 px-2 border rounded"
                     value={line.description}
                     onChange={(e) =>
                       updateLine(line.id, "description", e.target.value)
                     }
-                    disabled={isPosted}
                   />
                 </td>
-                {!isPosted && (
-                  <td className="px-2 py-2 text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-gray-500 hover:text-red-600"
-                      onClick={() => removeLine(line.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </td>
-                )}
+                <td className="px-2 py-2 text-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-gray-500 hover:text-red-600"
+                    onClick={() => removeLine(line.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -384,25 +377,18 @@ export function PostingSection({
               >
                 {money(totalCredit)}
               </td>
-              <td colSpan={isPosted ? 1 : 2}></td>
+              <td colSpan={2}></td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {!isPosted && (
-        <div className="mt-3 flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addLine}
-            className="gap-1"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm dòng
-          </Button>
-        </div>
-      )}
+      <div className="mt-3 flex items-center justify-between">
+        <Button variant="outline" size="sm" onClick={addLine} className="gap-1">
+          <Plus className="w-4 h-4" />
+          Thêm dòng
+        </Button>
+      </div>
 
       {!isPosted && !isBalanced && (
         <p className="text-sm text-red-500 mt-2">
@@ -410,7 +396,7 @@ export function PostingSection({
         </p>
       )}
 
-      {isPosted && (
+      {isPosted && onUnpost && !editMode && (
         <div className="flex justify-end mt-4">
           <Button variant="danger" onClick={onUnpost} disabled={unposting}>
             {unposting ? "Đang xử lý..." : "Bỏ hạch toán"}

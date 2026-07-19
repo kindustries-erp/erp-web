@@ -104,6 +104,7 @@ export interface CreateErpInvoicePayload {
     refId: string;
     amount?: number;
   }[];
+  accountingEnabled?: boolean;
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;

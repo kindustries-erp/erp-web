@@ -118,9 +118,6 @@ export function ErpInvoiceInternalDrawer({
       actions={editMode ? editActions : viewActions}
       leftPanel={children}
       rightPanel={rightPanel}
-      rightPanelTitle={
-        rightPanel ? t("internalGeneralInfo", "THÔNG TIN CHUNG") : undefined
-      }
     />
   );
 }

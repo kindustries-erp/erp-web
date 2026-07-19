@@ -32,12 +32,14 @@ interface Props {
   onRefresh: () => void;
 }
 
+const EMPTY_ARRAY: any[] = [];
+
 export function ErpInvoiceLinkedDocuments({
   form,
   fieldSet,
   direction,
-  voucherNetOffs = [],
-  relatedPos = [],
+  voucherNetOffs = EMPTY_ARRAY,
+  relatedPos = EMPTY_ARRAY,
   editMode,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);

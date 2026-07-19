@@ -93,6 +93,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       paymentDocumentNos: inv.paymentDocumentNos ?? "",
       notes: inv.notes ?? "",
       isValid: inv.isValid ?? false,
+      accountingEnabled: inv.postingStatus === "POSTED",
       items:
         inv.items && inv.items.length > 0
           ? inv.items
@@ -113,6 +114,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     if (typeof inv === "string") {
       setInfoDrawerOpen(true);
       setLoadingDetail(true);
+      setFormError(null);
       try {
         const fullInv = await erpInvoicesCoreApi.get(inv);
         setDetailInvoice(fullInv);
@@ -134,6 +136,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setCancelConfirm(false);
     setInternalDrawerOpen(false);
     setInfoDrawerOpen(true);
+    setFormError(null);
 
     if (
       detailInvoice?.id === inv.id &&
@@ -176,6 +179,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       setDeleteConfirm(false);
       setCancelConfirm(false);
       setPendingUnpost(false);
+      setFormError(null);
       postingState.reset();
       setLoadingDetail(true);
       try {
@@ -196,6 +200,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm(false);
     setCancelConfirm(false);
     setPendingUnpost(false);
+    setFormError(null);
     postingState.reset();
     setInternalDrawerOpen(true);
 
@@ -282,6 +287,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setEditMode(false);
     setDeleteConfirm(false);
     setCancelConfirm(false);
+    setFormError(null);
   }
 
   async function handleSave(statusOverride?: string) {
@@ -309,6 +315,23 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
+    const pendingChanges = form.pendingDocumentChanges || [];
+    let linkedCount =
+      (detailInvoice?.voucherNetOffs?.length || 0) +
+      ((detailInvoice as any)?.relatedPos?.length || 0);
+
+    pendingChanges.forEach((p) => {
+      if (p.action === "ADD") linkedCount++;
+      else if (p.action === "REMOVE") linkedCount--;
+    });
+
+    if (linkedCount > 0 && !(form as any).accountingEnabled) {
+      setFormError(
+        "Bắt buộc phải bật Hạch toán kế toán khi có Chứng từ liên kết.",
+      );
+      return;
+    }
+
     setSaving(true);
     setFormError(null);
     try {
@@ -317,18 +340,24 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
       // Remove frontend-only field before sending to API
       delete payload.pendingDocumentChanges;
+      delete (payload as any).accountingEnabled;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
 
+      const accountingEnabled = !!(form as any).accountingEnabled;
+      let needsRepost = false;
+
       if (detailInvoice) {
         invoiceIdToProcess = detailInvoice.id;
+        const wasPosted = detailInvoice.postingStatus === "POSTED";
 
-        const wasUnposting = pendingUnpost;
-        if (wasUnposting) {
+        if (wasPosted && !accountingEnabled) {
           await erpInvoicesCoreApi.unpostInvoice(invoiceIdToProcess);
-          setPendingUnpost(false);
-          postingState.reset(); // Đảm bảo lines rỗng, không auto-post lại
+          postingState.reset();
+        } else if (wasPosted && accountingEnabled && postingState.isDirty) {
+          await erpInvoicesCoreApi.unpostInvoice(invoiceIdToProcess);
+          needsRepost = true;
         }
 
         const updated = await erpInvoicesCoreApi.update(
@@ -401,8 +430,13 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         }
       }
 
-      // Auto-post accounting if there are lines — skip if we just unposted
-      if (postingState.lines.length > 0 && !pendingUnpost) {
+      // Auto-post accounting if there are lines and it should post
+      const wasPosted = detailInvoice?.postingStatus === "POSTED";
+      const shouldPost =
+        accountingEnabled &&
+        (!wasPosted || needsRepost) &&
+        postingState.lines.length > 0;
+      if (shouldPost) {
         // Validate accountId trước khi submit
         const emptyAccountLine = postingState.lines.find((l) => !l.accountId);
         if (emptyAccountLine) {

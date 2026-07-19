@@ -599,6 +599,14 @@ export function PartnerInvoiceDrawer({
               direction={formHook.form.direction || "IN"}
               detailInvoice={formHook.detailInvoice}
               onRefreshDetail={formHook.handleSyncDetail}
+              pdfSlot={
+                <ErpInvoicePdfUpload
+                  invoiceId={formHook.detailInvoice?.id ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  editMode={formHook.editMode}
+                />
+              }
             />
           </div>
         }
@@ -622,12 +630,6 @@ export function PartnerInvoiceDrawer({
                 } as ErpInvoice);
               }
             }}
-          />
-          <ErpInvoicePdfUpload
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-            editMode={formHook.editMode}
           />
         </div>
       </ErpInvoiceInternalDrawer>

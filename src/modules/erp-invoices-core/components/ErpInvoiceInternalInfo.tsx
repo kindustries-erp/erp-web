@@ -14,6 +14,7 @@ import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
+import { Button } from "@/shared/components/ui/Button";
 
 function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
   const { data: journalEntry, isLoading } = useQuery({
@@ -164,8 +165,6 @@ export function ErpInvoiceInternalSidebar({
         </div>
       </DrawerSection>
 
-      {pdfSlot && <div className="mt-2">{pdfSlot}</div>}
-
       {direction === "IN" && detailInvoice?.id && (
         <DrawerSection title="KIỂM DUYỆT HÓA ĐƠN">
           <div className="flex items-center justify-between p-3 bg-gray-50 border rounded-md">
@@ -192,15 +191,21 @@ export function ErpInvoiceInternalSidebar({
               </div>
             </div>
             <Checkbox
-              checked={!!detailInvoice.isValid}
+              checked={
+                editMode ? !!(form as any).isValid : !!detailInvoice.isValid
+              }
               disabled={!editMode}
               onCheckedChange={async (val: boolean) => {
-                try {
-                  await erpInvoicesCoreApi.setValid(detailInvoice.id, val);
-                  toast.success("Đã cập nhật trạng thái kiểm duyệt");
-                  if (onRefreshDetail) onRefreshDetail();
-                } catch {
-                  toast.error("Lỗi khi cập nhật trạng thái kiểm duyệt");
+                if (editMode) {
+                  fieldSet("isValid", val);
+                } else {
+                  try {
+                    await erpInvoicesCoreApi.setValid(detailInvoice.id, val);
+                    toast.success("Đã cập nhật trạng thái kiểm duyệt");
+                    if (onRefreshDetail) onRefreshDetail();
+                  } catch {
+                    toast.error("Lỗi khi cập nhật trạng thái kiểm duyệt");
+                  }
                 }
               }}
             />
@@ -208,36 +213,42 @@ export function ErpInvoiceInternalSidebar({
         </DrawerSection>
       )}
 
-      <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
-        <div className="space-y-4">
-          <div className="pt-2">
-            <div className="text-sm font-medium mb-2 text-gray-700">
-              Trạng thái hạch toán
+      {pdfSlot && <div className="mt-0">{pdfSlot}</div>}
+
+      {!editMode && (
+        <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
+          <div className="space-y-4">
+            <div className="pt-2">
+              {detailInvoice?.postingStatus === "POSTED" ? (
+                <>
+                  <div className="text-sm font-medium mb-2 text-gray-700">
+                    Trạng thái hạch toán
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 w-max">
+                      ĐÃ HẠCH TOÁN
+                    </span>
+                    {detailInvoice.postingDate && (
+                      <span className="text-xs text-gray-500">
+                        Ngày: {detailInvoice.postingDate.slice(0, 10)}
+                      </span>
+                    )}
+                    {detailInvoice.journalEntryId && (
+                      <TAccountDiagram
+                        journalEntryId={detailInvoice.journalEntryId}
+                      />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
+                  Chưa có hạch toán kế toán nào.
+                </div>
+              )}
             </div>
-            {detailInvoice?.postingStatus === "POSTED" ? (
-              <div className="flex flex-col gap-1">
-                <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 w-max">
-                  ĐÃ HẠCH TOÁN
-                </span>
-                {detailInvoice.postingDate && (
-                  <span className="text-xs text-gray-500">
-                    Ngày: {detailInvoice.postingDate.slice(0, 10)}
-                  </span>
-                )}
-                {detailInvoice.journalEntryId && (
-                  <TAccountDiagram
-                    journalEntryId={detailInvoice.journalEntryId}
-                  />
-                )}
-              </div>
-            ) : (
-              <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-600 w-max">
-                CHƯA HẠCH TOÁN
-              </span>
-            )}
           </div>
-        </div>
-      </DrawerSection>
+        </DrawerSection>
+      )}
     </div>
   );
 }
@@ -270,39 +281,52 @@ export function ErpInvoiceInternalMain({
 
   return (
     <div className="flex flex-col gap-6">
-      <DrawerSection title={t("accountingSection", "HẠCH TOÁN KẾ TOÁN")}>
-        <div className="space-y-4 pt-2">
-          {!detailInvoice?.branchId ? (
-            <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
-              Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch toán kế
-              toán.
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 mb-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-              <Checkbox
-                checked={isPosted || (form as any).accountingEnabled}
-                disabled={isPosted || !editMode}
-                onCheckedChange={(val: boolean) => {
-                  fieldSet("accountingEnabled", val);
-                  if (!val) {
-                    postingState.reset();
-                  }
+      {editMode && (
+        <DrawerSection
+          title={t("accountingSection", "HẠCH TOÁN KẾ TOÁN")}
+          titleExtra={
+            detailInvoice?.branchId ? (
+              <Button
+                type="button"
+                variant={
+                  (form as any).accountingEnabled ? "outline" : "primary"
+                }
+                size="sm"
+                className="ml-4 h-8"
+                onClick={() => {
+                  fieldSet(
+                    "accountingEnabled",
+                    !(form as any).accountingEnabled,
+                  );
                 }}
-              />
-              <span className="text-sm font-medium text-slate-700">
-                Nhập hạch toán kế toán cho hóa đơn này
-              </span>
-            </div>
-          )}
+              >
+                {(form as any).accountingEnabled
+                  ? "Hủy hạch toán"
+                  : "Bật hạch toán"}
+              </Button>
+            ) : null
+          }
+        >
+          <div className="space-y-4 pt-2">
+            {!detailInvoice?.branchId ? (
+              <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
+                Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch toán
+                kế toán.
+              </div>
+            ) : null}
 
-          {isPosted || ((form as any).accountingEnabled && editMode) ? (
             <div
-              className={`transition-opacity duration-300 ${isPosted ? "opacity-90 pointer-events-none" : "opacity-100"}`}
+              className={`transition-all duration-300 ${
+                (form as any).accountingEnabled
+                  ? "opacity-100"
+                  : "opacity-40 grayscale pointer-events-none"
+              }`}
             >
               <PostingSection
                 postingState={postingState}
-                editMode={editMode && !isPosted}
+                editMode={true}
                 isPosted={isPosted}
+                journalEntryId={detailInvoice?.journalEntryId}
                 defaultDate={form.invoiceDate || ""}
                 defaultDescription={
                   detailInvoice?.description ||
@@ -390,16 +414,9 @@ export function ErpInvoiceInternalMain({
                 }}
               />
             </div>
-          ) : !editMode ? null : (
-            <div className="p-6 text-center text-gray-400 text-sm border border-dashed border-gray-200 rounded-md">
-              {t(
-                "accountingDisabledHint",
-                "Bật checkbox phía trên để nhập hạch toán kế toán",
-              )}
-            </div>
-          )}
-        </div>
-      </DrawerSection>
+          </div>
+        </DrawerSection>
+      )}
 
       {detailInvoice?.id && (
         <ErpInvoiceLinkedDocuments
