@@ -835,6 +835,7 @@ export function DataTable<T>({
                             meta.className,
                             isFirstCol &&
                               !enableRowSelection &&
+                              variant !== "spreadsheet" &&
                               "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
                             variant === "spreadsheet" &&
                               "border-r border-border py-1 text-xs",
@@ -985,6 +986,7 @@ export function DataTable<T>({
                           meta.className,
                           isFirstCol &&
                             !enableRowSelection &&
+                            variant !== "spreadsheet" &&
                             "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
                           variant === "spreadsheet" &&
                             "border-r border-border px-2 py-1 text-xs truncate font-semibold",

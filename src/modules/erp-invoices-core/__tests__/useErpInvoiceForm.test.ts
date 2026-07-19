@@ -6,8 +6,8 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
     get: vi.fn().mockResolvedValue({ items: [] }),
-    create: vi.fn(),
-    update: vi.fn(),
+    create: vi.fn().mockResolvedValue({ id: "999", invoiceNo: "INV-999" }),
+    update: vi.fn().mockResolvedValue({ id: "999", invoiceNo: "INV-999" }),
     remove: vi.fn(),
     syncDetail: vi.fn().mockResolvedValue({ items: [] }),
   },

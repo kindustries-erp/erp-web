@@ -20,6 +20,8 @@ export function useAfterSalesQuery(
       sortField: params.sortField,
       sortOrder: params.sortOrder,
       dealerId: params.dealerId,
+      column_search: params.column_search,
+      column_filters: params.column_filters,
     }),
     [
       params.page,
@@ -30,6 +32,8 @@ export function useAfterSalesQuery(
       params.sortField,
       params.sortOrder,
       params.dealerId,
+      params.column_search,
+      params.column_filters,
     ],
   );
 
