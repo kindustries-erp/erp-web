@@ -15,7 +15,10 @@ import { Button } from "@/shared/components/ui/Button";
 import { ErpInvoiceInfoDrawer } from "./ErpInvoiceInfoDrawer";
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
 import { ErpInvoiceFormGeneral } from "./ErpInvoiceFormGeneral";
-import { ErpInvoiceInternalInfo } from "./ErpInvoiceInternalInfo";
+import {
+  ErpInvoiceInternalMain,
+  ErpInvoiceInternalSidebar,
+} from "./ErpInvoiceInternalInfo";
 import { ErpInvoiceFormItems } from "./ErpInvoiceFormItems";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -580,31 +583,45 @@ export function PartnerInvoiceDrawer({
         startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
+        cancelEdit={formHook.cancelEdit}
         setDeleteConfirm={formHook.setDeleteConfirm}
-        onOpenInfo={() => {
-          if (formHook.detailInvoice) {
-            formHook.openDetail(formHook.detailInvoice);
-          }
-        }}
+        rightPanel={
+          <div className="flex flex-col gap-5">
+            <ErpInvoiceInternalSidebar
+              form={formHook.form}
+              editMode={formHook.editMode}
+              fieldSet={(key: string, value: any) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+              direction={formHook.form.direction || "IN"}
+              detailInvoice={formHook.detailInvoice}
+              onRefreshDetail={formHook.handleSyncDetail}
+            />
+          </div>
+        }
       >
         <div className="flex flex-col gap-5">
-          <ErpInvoiceInternalInfo
+          <ErpInvoiceInternalMain
             form={formHook.form}
             editMode={formHook.editMode}
             fieldSet={(key: string, value: any) =>
               formHook.setForm((prev) => ({ ...prev, [key]: value }))
             }
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pendingTagIds={formHook.pendingTagIds}
-            onPendingTagsChange={formHook.setPendingTagIds}
             direction={formHook.form.direction || "IN"}
             detailInvoice={formHook.detailInvoice}
-            onRefreshDetail={() =>
-              formHook.openDetail({
-                id: formHook.detailInvoice!.id,
-              } as ErpInvoice)
-            }
+            postingState={formHook.postingState}
+            pendingUnpost={formHook.pendingUnpost}
+            onUnpost={() => formHook.setPendingUnpost(true)}
+            onRefreshDetail={() => {
+              if (formHook.detailInvoice?.id) {
+                formHook.openInternal({
+                  id: formHook.detailInvoice.id,
+                } as ErpInvoice);
+              }
+            }}
           />
           <ErpInvoicePdfUpload
             invoiceId={formHook.detailInvoice?.id ?? null}

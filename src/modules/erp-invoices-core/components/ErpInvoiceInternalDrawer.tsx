@@ -1,6 +1,7 @@
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useTranslation } from "react-i18next";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { RefreshCw, Download } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -10,10 +11,13 @@ interface Props {
   startEdit: () => void;
   saving: boolean;
   handleSave: (statusOverride?: string) => void;
-  setEditMode: (mode: boolean) => void;
+  cancelEdit: () => void;
   setDeleteConfirm: (confirm: boolean) => void;
-  onOpenInfo?: () => void;
+  rightPanel?: React.ReactNode;
   children: React.ReactNode;
+  onSyncDetail?: () => void;
+  onDownload?: (id: string, type: "pdf" | "xml") => void;
+  loadingDetail?: boolean;
 }
 
 export function ErpInvoiceInternalDrawer({
@@ -24,24 +28,47 @@ export function ErpInvoiceInternalDrawer({
   startEdit,
   saving,
   handleSave,
-  setEditMode,
+  cancelEdit,
   setDeleteConfirm,
-  onOpenInfo,
+  rightPanel,
   children,
+  onSyncDetail,
+  onDownload,
+  loadingDetail,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
+  // Header extras: Sync + Download (view mode only)
+  const titleExtra =
+    !editMode && detailInvoice ? (
+      <div className="flex items-center gap-2">
+        {onSyncDetail && (
+          <button
+            type="button"
+            onClick={onSyncDetail}
+            disabled={loadingDetail}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${loadingDetail ? "animate-spin" : ""}`}
+            />
+            {t("syncFromGdt", "Đồng bộ từ GĐT")}
+          </button>
+        )}
+        {onDownload && (
+          <button
+            type="button"
+            onClick={() => onDownload(detailInvoice.id, "xml")}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5" />
+            XML
+          </button>
+        )}
+      </div>
+    ) : undefined;
+
   const viewActions = [
-    ...(onOpenInfo && detailInvoice
-      ? [
-          {
-            label: "Chi tiết hóa đơn",
-            onClick: onOpenInfo,
-            variant: "outline" as const,
-            align: "left" as const,
-          },
-        ]
-      : []),
     {
       label: t("actionClose", "Đóng"),
       onClick: onClose,
@@ -50,20 +77,9 @@ export function ErpInvoiceInternalDrawer({
   ];
 
   const editActions = [
-    ...(onOpenInfo && detailInvoice
-      ? [
-          {
-            label: "Chi tiết hóa đơn",
-            onClick: onOpenInfo,
-            variant: "outline" as const,
-            align: "left" as const,
-            disabled: saving,
-          },
-        ]
-      : []),
     {
       label: t("actionCancel", "Hủy"),
-      onClick: () => setEditMode(false),
+      onClick: cancelEdit,
       variant: "outline" as const,
       disabled: saving,
     },
@@ -85,8 +101,8 @@ export function ErpInvoiceInternalDrawer({
   ];
 
   const drawerTitle = detailInvoice
-    ? `Thông tin nội bộ: ${detailInvoice.invoiceNo}`
-    : "Thông tin nội bộ";
+    ? `${t("internalTitle", "Thông tin nội bộ")}: ${detailInvoice.invoiceNo}`
+    : t("internalTitle", "Thông tin nội bộ");
 
   return (
     <StandardFormDrawer
@@ -95,11 +111,16 @@ export function ErpInvoiceInternalDrawer({
       onClose={onClose}
       onToggleEdit={!editMode ? startEdit : undefined}
       title={drawerTitle}
-      size="md"
-      layout="1-column"
+      titleExtra={titleExtra}
+      size="xl"
+      layout={rightPanel ? "2-columns" : "1-column"}
       confirmOnClose={editMode}
       actions={editMode ? editActions : viewActions}
       leftPanel={children}
+      rightPanel={rightPanel}
+      rightPanelTitle={
+        rightPanel ? t("internalGeneralInfo", "THÔNG TIN CHUNG") : undefined
+      }
     />
   );
 }

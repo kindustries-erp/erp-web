@@ -8,6 +8,8 @@ import { today } from "@/shared/utils/format";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useTranslation } from "react-i18next";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
+import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { usePosting } from "@/shared/components/accounting/usePosting";
 
 type Direction = "IN" | "OUT";
 
@@ -31,6 +33,7 @@ function emptyForm(direction: Direction = "IN"): CreateErpInvoicePayload {
     discountAmount: 0,
     totalAmount: 0,
     paymentDocumentNos: "",
+    isValid: false,
     items: [],
   };
 }
@@ -49,6 +52,9 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [pendingTagIds, setPendingTagIds] = useState<string[]>([]);
+  const [pendingUnpost, setPendingUnpost] = useState(false);
+
+  const postingState = usePosting();
 
   function openNew(direction: Direction) {
     setDetailInvoice(null);
@@ -86,6 +92,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       salesOrderId: inv.salesOrderId ?? undefined,
       paymentDocumentNos: inv.paymentDocumentNos ?? "",
       notes: inv.notes ?? "",
+      isValid: inv.isValid ?? false,
       items:
         inv.items && inv.items.length > 0
           ? inv.items
@@ -161,12 +168,35 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice) {
+  async function openInternal(inv: ErpInvoice | string) {
+    // Handle string ID — open drawer first then fetch
+    if (typeof inv === "string") {
+      setInternalDrawerOpen(true);
+      setEditMode(false);
+      setDeleteConfirm(false);
+      setCancelConfirm(false);
+      setPendingUnpost(false);
+      postingState.reset();
+      setLoadingDetail(true);
+      try {
+        const fullInv = await erpInvoicesCoreApi.get(inv);
+        setDetailInvoice(fullInv);
+        setForm(mapInvoiceToForm(fullInv));
+      } catch (err) {
+        console.error("Failed to fetch invoice by ID", err);
+      } finally {
+        setLoadingDetail(false);
+      }
+      return;
+    }
+
     setDetailInvoice(inv);
     setForm(mapInvoiceToForm(inv));
     setEditMode(false);
     setDeleteConfirm(false);
     setCancelConfirm(false);
+    setPendingUnpost(false);
+    postingState.reset();
     setInternalDrawerOpen(true);
 
     if (
@@ -224,9 +254,25 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   function startEdit() {
     if (!detailInvoice) return;
-    setForm(mapInvoiceToForm(detailInvoice));
+    // Reset về trạng thái từ server — xóa mọi thay đổi tạm thời chưa lưu
+    setForm({ ...mapInvoiceToForm(detailInvoice), pendingDocumentChanges: [] });
     setFormError(null);
+    setPendingUnpost(false);
+    postingState.reset();
     setEditMode(true);
+  }
+
+  function cancelEdit() {
+    if (detailInvoice) {
+      setForm({
+        ...mapInvoiceToForm(detailInvoice),
+        pendingDocumentChanges: [],
+      });
+    }
+    setFormError(null);
+    setPendingUnpost(false);
+    postingState.setIsDirty(false);
+    setEditMode(false);
   }
 
   function closeDrawer() {
@@ -247,13 +293,44 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       setFormError(t("errorInvoiceDateRequired", "Ngày hóa đơn là bắt buộc."));
       return;
     }
+
+    // Validate branch if internal drawer is open and there are accounting amounts
+    if (internalDrawerOpen && !form.branchId && (form.totalAmount || 0) > 0) {
+      setFormError(
+        "Vui lòng chọn chi nhánh trước khi lưu thông tin nội bộ và hạch toán.",
+      );
+      return;
+    }
+
+    if (postingState.lines.length > 0 && !postingState.isBalanced) {
+      setFormError(
+        "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.",
+      );
+      return;
+    }
+
     setSaving(true);
     setFormError(null);
     try {
       const payload = { ...form };
       if (statusOverride) payload.status = statusOverride;
 
+      // Remove frontend-only field before sending to API
+      delete payload.pendingDocumentChanges;
+
+      let invoiceIdToProcess = "";
+      let invoiceNoToProcess = form.invoiceNo;
+
       if (detailInvoice) {
+        invoiceIdToProcess = detailInvoice.id;
+
+        const wasUnposting = pendingUnpost;
+        if (wasUnposting) {
+          await erpInvoicesCoreApi.unpostInvoice(invoiceIdToProcess);
+          setPendingUnpost(false);
+          postingState.reset(); // Đảm bảo lines rỗng, không auto-post lại
+        }
+
         const updated = await erpInvoicesCoreApi.update(
           detailInvoice.id,
           payload,
@@ -262,6 +339,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         setEditMode(false);
       } else {
         const created = await erpInvoicesCoreApi.create(payload);
+        invoiceIdToProcess = created.id;
+        invoiceNoToProcess = created.invoiceNo;
         // Option B: apply pending tags to the newly created invoice
         if (pendingTagIds.length > 0) {
           try {
@@ -270,9 +349,110 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
             // tags are non-critical, don't block UX
           }
         }
+      }
+
+      // Process pending document changes — capture snapshot first to avoid double-apply
+      const pendingChanges = form.pendingDocumentChanges || [];
+      if (pendingChanges.length > 0) {
+        // Clear immediately in state so retry won't re-apply
+        setForm((prev) => ({ ...prev, pendingDocumentChanges: [] }));
+
+        for (const change of pendingChanges) {
+          try {
+            if (change.type === "BANK") {
+              if (change.action === "ADD") {
+                await erpInvoicesCoreApi.linkVouchers(invoiceIdToProcess, [
+                  {
+                    bankTransactionId: change.refId,
+                    netOffAmount: change.amount || 0,
+                  },
+                ]);
+              } else if (change.action === "REMOVE") {
+                await erpInvoicesCoreApi.removeVoucherLink(
+                  invoiceIdToProcess,
+                  change.refId,
+                );
+              }
+            } else if (change.type === "PO") {
+              const po = await purchaseOrdersCoreApi.get(change.refId);
+              let invNos = (po.supplierInvoiceNo || "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter((s) => s);
+
+              if (
+                change.action === "ADD" &&
+                !invNos.includes(invoiceNoToProcess)
+              ) {
+                invNos.push(invoiceNoToProcess);
+                await purchaseOrdersCoreApi.update(change.refId, {
+                  supplierInvoiceNo: invNos.join(", "),
+                });
+              } else if (change.action === "REMOVE") {
+                invNos = invNos.filter((s) => s !== invoiceNoToProcess);
+                await purchaseOrdersCoreApi.update(change.refId, {
+                  supplierInvoiceNo: invNos.join(", "),
+                });
+              }
+            }
+          } catch (err) {
+            console.error("Failed to process document change", change, err);
+          }
+        }
+      }
+
+      // Auto-post accounting if there are lines — skip if we just unposted
+      if (postingState.lines.length > 0 && !pendingUnpost) {
+        // Validate accountId trước khi submit
+        const emptyAccountLine = postingState.lines.find((l) => !l.accountId);
+        if (emptyAccountLine) {
+          setFormError(
+            "Vui lòng chọn Tài khoản đầy đủ cho các dòng hạch toán trước khi lưu.",
+          );
+          setSaving(false);
+          return;
+        }
+
+        try {
+          await erpInvoicesCoreApi.postInvoice(invoiceIdToProcess, {
+            postingDate:
+              postingState.postingDate ||
+              form.invoiceDate ||
+              new Date().toISOString().slice(0, 10),
+            description: postingState.description,
+            lines: postingState.lines.map((l) => ({
+              accountId: l.accountId,
+              debit: l.debit || 0,
+              credit: l.credit || 0,
+              description: l.description,
+            })),
+          });
+        } catch (err: any) {
+          throw new Error(
+            err?.response?.data?.message ||
+              err.message ||
+              "Lỗi hạch toán tự động sau khi lưu.",
+          );
+        }
+      }
+
+      if (!detailInvoice) {
         closeDrawer();
       }
-      await onReload();
+
+      if (detailInvoice) {
+        // Reload details for current invoice if editing without forcing drawer open
+        try {
+          const fullInv = await erpInvoicesCoreApi.get(detailInvoice.id);
+          setDetailInvoice(fullInv);
+          setForm(mapInvoiceToForm(fullInv));
+        } catch (e) {
+          console.error("Failed to reload invoice detail after save", e);
+        }
+        await onReload(); // Refresh table behind the scenes
+      } else {
+        await onReload();
+      }
     } catch (e) {
       setFormError(
         extractApiError(e, t("errorSave", "Không thể lưu hóa đơn.")),
@@ -329,6 +509,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     deleteConfirm,
     cancelConfirm,
     pendingTagIds,
+    pendingUnpost,
     setInfoDrawerOpen,
     setInternalDrawerOpen,
     setEditMode,
@@ -336,15 +517,18 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setDeleteConfirm,
     setCancelConfirm,
     setPendingTagIds,
+    setPendingUnpost,
     openNew,
     openDetail,
     openInternal,
     startEdit,
+    cancelEdit,
     closeDrawer,
     handleSave,
     handleDelete,
     handleCancel,
     loadingDetail,
     handleSyncDetail,
+    postingState,
   };
 }

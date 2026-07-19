@@ -43,10 +43,12 @@ import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/Er
 import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
-import { InvoicePostingDrawer } from "@/modules/erp-invoices-core/components/InvoicePostingDrawer";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { ErpInvoiceInternalInfo } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
+import {
+  ErpInvoiceInternalMain,
+  ErpInvoiceInternalSidebar,
+} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
@@ -143,8 +145,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   );
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
   const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
-
-  const [postingInvoiceId, setPostingInvoiceId] = useState<string | null>(null);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
@@ -311,7 +311,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     const params = new URLSearchParams(window.location.search);
     const viewId = params.get("viewId");
     if (viewId) {
-      formHook.openDetail({ id: viewId } as ErpInvoice);
+      // Route to merged internal drawer
+      formHook.openInternal({ id: viewId } as ErpInvoice);
       params.delete("viewId");
       const newUrl =
         window.location.pathname +
@@ -322,7 +323,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && detail.type === "erp_invoice" && detail.id) {
-        formHook.openDetail({ id: detail.id } as ErpInvoice);
+        formHook.openInternal({ id: detail.id } as ErpInvoice);
       } else if (detail && detail.type === "bank_transaction" && detail.id) {
         setDetailTransactionId(detail.id);
       }
@@ -758,7 +759,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 variant="link"
                 onClick={(e) => {
                   e.stopPropagation();
-                  formHook.openDetail(inv);
+                  formHook.openInternal(inv);
                 }}
                 className="font-medium text-primary hover:underline p-0 h-auto"
               >
@@ -1662,7 +1663,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           traCuuItems.push({
             label: t("actionDetail", "Chi tiết hóa đơn"),
             icon: <Eye className="w-3.5 h-3.5" />,
-            onClick: () => formHook.openDetail(inv),
+            onClick: () => formHook.openInternal(inv),
           });
           if (inv.xmlFileKey) {
             traCuuItems.push({
@@ -1733,25 +1734,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             icon: <RefreshCw className="w-3.5 h-3.5" />,
             onClick: () => handleReparseXml(inv),
           });
-          thaoTacItems.push({
-            label: "Quản lý nội bộ",
-            icon: <Building2 className="w-3.5 h-3.5" />,
-            onClick: () => formHook.openInternal(inv),
-          });
-
-          if (inv.postingStatus === "POSTED") {
-            thaoTacItems.push({
-              label: "Xem hạch toán",
-              icon: <FileText className="w-3.5 h-3.5" />,
-              onClick: () => setPostingInvoiceId(inv.id),
-            });
-          } else if (inv.status !== "CANCELLED") {
-            thaoTacItems.push({
-              label: "Hạch toán kế toán",
-              icon: <FileText className="w-3.5 h-3.5" />,
-              onClick: () => setPostingInvoiceId(inv.id),
-            });
-          }
 
           if (inv.status === "DRAFT") {
             thaoTacItems.push({
@@ -1759,7 +1741,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               icon: <Trash className="w-3.5 h-3.5" />,
               variant: "danger" as const,
               onClick: () => {
-                formHook.openDetail(inv);
+                formHook.openInternal(inv);
                 formHook.setDeleteConfirm(true);
               },
             });
@@ -1826,8 +1808,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
         onPostInvoice={() => {
-          if (formHook.detailInvoice?.id) {
-            setPostingInvoiceId(formHook.detailInvoice.id);
+          if (formHook.detailInvoice) {
+            formHook.openInternal(formHook.detailInvoice);
           }
         }}
         onOpenInternal={() => {
@@ -1878,13 +1860,36 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
+        cancelEdit={formHook.cancelEdit}
         setDeleteConfirm={formHook.setDeleteConfirm}
-        onOpenInfo={() => {
-          if (formHook.detailInvoice) {
-            formHook.openDetail(formHook.detailInvoice);
-          }
-        }}
+        loadingDetail={formHook.loadingDetail}
+        onSyncDetail={formHook.handleSyncDetail}
+        onDownload={handleDownload}
+        rightPanel={
+          <div className="flex flex-col gap-5">
+            <ErpInvoiceInternalSidebar
+              form={formHook.form}
+              editMode={formHook.editMode}
+              fieldSet={(key: string, value: any) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+              direction={direction}
+              detailInvoice={formHook.detailInvoice}
+              onRefreshDetail={formHook.handleSyncDetail}
+              pdfSlot={
+                <ErpInvoicePdfUpload
+                  invoiceId={formHook.detailInvoice?.id ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  editMode={formHook.editMode}
+                />
+              }
+            />
+          </div>
+        }
       >
         <div className="flex flex-col gap-5">
           {formHook.formError && (
@@ -1892,28 +1897,29 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               {formHook.formError}
             </div>
           )}
-          <ErpInvoiceInternalInfo
+          <ErpInvoiceInternalMain
             form={formHook.form}
             editMode={formHook.editMode}
             fieldSet={(key: string, value: any) =>
               formHook.setForm((prev) => ({ ...prev, [key]: value }))
             }
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pendingTagIds={formHook.pendingTagIds}
-            onPendingTagsChange={formHook.setPendingTagIds}
             direction={direction}
             detailInvoice={formHook.detailInvoice}
-            onRefreshDetail={() =>
-              formHook.openDetail({
-                id: formHook.detailInvoice!.id,
-              } as ErpInvoice)
+            postingState={formHook.postingState}
+            pendingUnpost={formHook.pendingUnpost}
+            onUnpost={() => formHook.setPendingUnpost(true)}
+            onRefreshDetail={() => {
+              if (formHook.detailInvoice?.id) {
+                formHook.openInternal({
+                  id: formHook.detailInvoice.id,
+                } as ErpInvoice);
+              }
+            }}
+            invoicePreview={
+              formHook.detailInvoice ? (
+                <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
+              ) : undefined
             }
-          />
-          <ErpInvoicePdfUpload
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-            editMode={formHook.editMode}
           />
         </div>
       </ErpInvoiceInternalDrawer>
@@ -2098,11 +2104,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           </div>
         </div>
       </DrawerModal>
-      <InvoicePostingDrawer
-        open={!!postingInvoiceId}
-        onClose={() => setPostingInvoiceId(null)}
-        invoiceId={postingInvoiceId}
-      />
 
       <InvoiceBulkPostingDrawer
         open={bulkPostingModalOpen}

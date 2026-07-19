@@ -28,7 +28,6 @@ export function ErpInvoiceInfoDrawer({
   loadingDetail,
   onSyncDetail,
   onPostInvoice,
-  onOpenInternal,
   leftPanel,
   rightPanel,
   editMode = false,
@@ -38,16 +37,6 @@ export function ErpInvoiceInfoDrawer({
   const { t } = useTranslation("erpInvoices");
 
   const viewActions = [
-    ...(onOpenInternal && detailInvoice
-      ? [
-          {
-            label: "Quản lý nội bộ",
-            onClick: onOpenInternal,
-            variant: "outline" as const,
-            align: "left" as const,
-          },
-        ]
-      : []),
     ...(detailInvoice && detailInvoice.status !== "CANCELLED"
       ? [
           {
