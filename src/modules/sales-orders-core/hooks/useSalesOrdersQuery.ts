@@ -24,6 +24,10 @@ export function useSalesOrdersQuery(
       dateTo: params.dateTo,
       customerId: params.customerId,
       notFullyIssued: params.notFullyIssued,
+      column_search: params.column_search,
+      column_filters: params.column_filters,
+      sortField: params.sortField,
+      sortOrder: params.sortOrder,
     }),
     [
       params.page,
@@ -34,6 +38,10 @@ export function useSalesOrdersQuery(
       params.dateTo,
       params.customerId,
       params.notFullyIssued,
+      params.column_search,
+      params.column_filters,
+      params.sortField,
+      params.sortOrder,
     ],
   );
 

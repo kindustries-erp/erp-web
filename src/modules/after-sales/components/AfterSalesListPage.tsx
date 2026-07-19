@@ -14,6 +14,9 @@ import { useAfterSalesQuery } from "../hooks/useAfterSalesQuery";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
 import { Button } from "@/shared/components/ui/Button";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 
 export function AfterSalesListPage() {
   const t = useT();
@@ -46,8 +49,33 @@ export function AfterSalesListPage() {
   const [pageSize, setPageSize] = useState(50);
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
 
-  const [sortField, setSortField] = useState<string | undefined>();
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | undefined>();
+  const tableState = useTableColumnState("after-sales-table");
+
+  const getSortState = (key: string) => {
+    if (tableState.sorts.includes(`-${key}`)) return "desc";
+    if (tableState.sorts.includes(key)) return "asc";
+    return undefined;
+  };
+
+  const fetchAfterSalesColumnOptions = async (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    const res = await inventoryCoreApi.getSerialLifecycleColumnOptions(
+      params.columnKey,
+      params.search,
+      params.pageParam,
+      20,
+      tableState.columnFilters,
+    );
+    return {
+      items: res.items.map((i) => ({ label: i, value: i })),
+      total: res.total,
+      next: res.page < res.totalPages ? res.page + 1 : null,
+    };
+  };
   const [dealerSearch, setDealerSearch] = useState("");
 
   const {
@@ -103,21 +131,26 @@ export function AfterSalesListPage() {
     search: filter.state.search,
     dateFrom: filter.state.dateFrom,
     dateTo: filter.state.dateTo,
-    sortField,
-    sortOrder,
+    sortField: tableState.sorts[0]
+      ? tableState.sorts[0].startsWith("-")
+        ? tableState.sorts[0].substring(1)
+        : tableState.sorts[0]
+      : undefined,
+    sortOrder: tableState.sorts[0]
+      ? tableState.sorts[0].startsWith("-")
+        ? "desc"
+        : "asc"
+      : undefined,
     dealerId: filter.state.custom?.dealerId,
+    column_search: JSON.stringify(tableState.columnSearch),
+    column_filters: JSON.stringify(tableState.columnFilters),
   });
 
-  const handleSort = (key: string) => {
-    let direction: "asc" | "desc" | undefined = "asc";
-    if (sortField === key) {
-      if (sortOrder === "asc") direction = "desc";
-      else direction = undefined;
-    }
-    setSortOrder(direction);
-    setSortField(direction ? key : undefined);
+  useEffect(() => {
     setPage(1);
-  };
+  }, [tableState.columnSearch, tableState.columnFilters, tableState.sorts]);
+
+  // handleSort removed in favor of tableState
 
   const data = resData?.items || [];
   const total = resData?.total || 0;
@@ -150,10 +183,27 @@ export function AfterSalesListPage() {
   const columns = [
     {
       key: "expectedDeliveryDate",
-      sortKey: "expectedDeliveryDate",
-      sortable: true,
       size: 100,
-      header: t("Ngày DK"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày DK")}
+          columnKey="expectedDeliveryDate"
+          sortState={getSortState("expectedDeliveryDate") || "none"}
+          onSortChange={(s) => tableState.setSort("expectedDeliveryDate", s)}
+          searchValue={tableState.columnSearch["expectedDeliveryDate"] || ""}
+          onSearchChange={(v) =>
+            tableState.setColumnSearch("expectedDeliveryDate", v)
+          }
+          selectedFilters={
+            tableState.columnFilters["expectedDeliveryDate"] || []
+          }
+          onFilterChange={(v) =>
+            tableState.setColumnFilter("expectedDeliveryDate", v)
+          }
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) =>
         row.expectedDeliveryDate
           ? format(new Date(row.expectedDeliveryDate), "dd/MM/yyyy")
@@ -161,10 +211,21 @@ export function AfterSalesListPage() {
     },
     {
       key: "deliveryDate",
-      sortKey: "deliveryDate",
-      sortable: true,
       size: 100,
-      header: t("Ngày giao"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày giao")}
+          columnKey="deliveryDate"
+          sortState={getSortState("deliveryDate") || "none"}
+          onSortChange={(s) => tableState.setSort("deliveryDate", s)}
+          searchValue={tableState.columnSearch["deliveryDate"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("deliveryDate", v)}
+          selectedFilters={tableState.columnFilters["deliveryDate"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("deliveryDate", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) =>
         row.deliveryDate
           ? format(new Date(row.deliveryDate), "dd/MM/yyyy")
@@ -172,7 +233,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "itemName",
-      header: t("Sản phẩm"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Sản phẩm")}
+          columnKey="itemName"
+          sortState={getSortState("itemName") || "none"}
+          onSortChange={(s) => tableState.setSort("itemName", s)}
+          searchValue={tableState.columnSearch["itemName"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("itemName", v)}
+          selectedFilters={tableState.columnFilters["itemName"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("itemName", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) => (
         <div className="flex flex-col">
           <span>{row.itemName}</span>
@@ -182,7 +256,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "serialNo",
-      header: t("Số Seri"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số Seri")}
+          columnKey="serialNo"
+          sortState={getSortState("serialNo") || "none"}
+          onSortChange={(s) => tableState.setSort("serialNo", s)}
+          searchValue={tableState.columnSearch["serialNo"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("serialNo", v)}
+          selectedFilters={tableState.columnFilters["serialNo"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("serialNo", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       size: 170,
       cell: (row: any) => (
         <div className="flex items-center gap-1.5 group">
@@ -199,7 +286,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "vinNo",
-      header: t("Số Khung"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số Khung")}
+          columnKey="vinNo"
+          sortState={getSortState("vinNo") || "none"}
+          onSortChange={(s) => tableState.setSort("vinNo", s)}
+          searchValue={tableState.columnSearch["vinNo"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("vinNo", v)}
+          selectedFilters={tableState.columnFilters["vinNo"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("vinNo", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       size: 170,
       cell: (row: any) => (
         <div className="flex items-center gap-1.5 group">
@@ -212,7 +312,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "engineNo",
-      header: t("Số Máy"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số Máy")}
+          columnKey="engineNo"
+          sortState={getSortState("engineNo") || "none"}
+          onSortChange={(s) => tableState.setSort("engineNo", s)}
+          searchValue={tableState.columnSearch["engineNo"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("engineNo", v)}
+          selectedFilters={tableState.columnFilters["engineNo"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("engineNo", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       size: 170,
       cell: (row: any) => (
         <div className="flex items-center gap-1.5 group">
@@ -225,7 +338,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "soNo",
-      header: t("Đơn hàng (SO)"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Đơn hàng (SO)")}
+          columnKey="soNo"
+          sortState={getSortState("soNo") || "none"}
+          onSortChange={(s) => tableState.setSort("soNo", s)}
+          searchValue={tableState.columnSearch["soNo"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("soNo", v)}
+          selectedFilters={tableState.columnFilters["soNo"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("soNo", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) => {
         if (!row.soNo) return "—";
         return (
@@ -241,7 +367,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "trackingAttributes",
-      header: t("Thuộc tính xe"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Thuộc tính xe (Màu sắc)")}
+          columnKey="color"
+          sortState={getSortState("color") || "none"}
+          onSortChange={(s) => tableState.setSort("color", s)}
+          searchValue={tableState.columnSearch["color"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("color", v)}
+          selectedFilters={tableState.columnFilters["color"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("color", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       size: 250,
       cell: (row: any) => {
         if (
@@ -273,7 +412,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "customerName",
-      header: t("Khách hàng"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Khách hàng")}
+          columnKey="customerName"
+          sortState={getSortState("customerName") || "none"}
+          onSortChange={(s) => tableState.setSort("customerName", s)}
+          searchValue={tableState.columnSearch["customerName"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("customerName", v)}
+          selectedFilters={tableState.columnFilters["customerName"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("customerName", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) => (
         <div className="flex flex-col">
           <span>{row.customerName || "-"}</span>
@@ -285,9 +437,24 @@ export function AfterSalesListPage() {
     },
     {
       key: "activationDate",
-      sortKey: "activationDate",
-      sortable: true,
-      header: t("Ngày kích hoạt"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày kích hoạt")}
+          columnKey="activationDate"
+          sortState={getSortState("activationDate") || "none"}
+          onSortChange={(s) => tableState.setSort("activationDate", s)}
+          searchValue={tableState.columnSearch["activationDate"] || ""}
+          onSearchChange={(v) =>
+            tableState.setColumnSearch("activationDate", v)
+          }
+          selectedFilters={tableState.columnFilters["activationDate"] || []}
+          onFilterChange={(v) =>
+            tableState.setColumnFilter("activationDate", v)
+          }
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) => {
         if (!row.warrantyActivatedAt) return "-";
         const dateObj = new Date(row.warrantyActivatedAt);
@@ -300,7 +467,38 @@ export function AfterSalesListPage() {
     },
     {
       key: "warrantyActivatedAt",
-      header: t("Bảo hành"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Bảo hành")}
+          columnKey="warrantyActivatedAt"
+          sortState={getSortState("warrantyActivatedAt") || "none"}
+          onSortChange={(s) => tableState.setSort("warrantyActivatedAt", s)}
+          searchValue={tableState.columnSearch["warrantyActivatedAt"] || ""}
+          onSearchChange={(v) =>
+            tableState.setColumnSearch("warrantyActivatedAt", v)
+          }
+          selectedFilters={
+            tableState.columnFilters["warrantyActivatedAt"] || []
+          }
+          onFilterChange={(v) =>
+            tableState.setColumnFilter("warrantyActivatedAt", v)
+          }
+          fetchOptions={async (params) => {
+            const all = [
+              { label: "Đang bảo hành", value: "ACTIVE" },
+              { label: "Hết bảo hành", value: "EXPIRED" },
+              { label: "Chưa kích hoạt", value: "NOT_ACTIVATED" },
+            ];
+            const filtered = params.search
+              ? all.filter((x) =>
+                  x.label.toLowerCase().includes(params.search.toLowerCase()),
+                )
+              : all;
+            return { items: filtered, total: filtered.length, next: null };
+          }}
+        />
+      ),
       cell: (row: any) => {
         if (!row.warrantyActivatedAt)
           return <span className="text-gray-400">Chưa kích hoạt</span>;
@@ -323,7 +521,20 @@ export function AfterSalesListPage() {
     },
     {
       key: "dealerName",
-      header: t("Đại lý"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Đại lý")}
+          columnKey="dealerName"
+          sortState={getSortState("dealerName") || "none"}
+          onSortChange={(s) => tableState.setSort("dealerName", s)}
+          searchValue={tableState.columnSearch["dealerName"] || ""}
+          onSearchChange={(v) => tableState.setColumnSearch("dealerName", v)}
+          selectedFilters={tableState.columnFilters["dealerName"] || []}
+          onFilterChange={(v) => tableState.setColumnFilter("dealerName", v)}
+          fetchOptions={fetchAfterSalesColumnOptions}
+        />
+      ),
       cell: (row: any) => row.dealerName || "-",
     },
   ];
@@ -340,9 +551,11 @@ export function AfterSalesListPage() {
         getRowKey={(row: any) => row.lifecycleId}
         loading={loading}
         sortArray={
-          sortField ? [(sortOrder === "desc" ? "-" : "") + sortField] : []
+          tableState.sorts.length > 0
+            ? tableState.sorts.map((s) => (s.startsWith("-") ? s : s))
+            : []
         }
-        onSort={handleSort}
+        onSort={(key) => tableState.toggleSort(key)}
         minWidth={1000}
         page={page}
         pageSize={pageSize}

@@ -434,12 +434,47 @@ export const inventoryCoreApi = {
       ...(params?.dateTo ? { deliveryDateTo: params.dateTo } : {}),
       ...(params?.sortField ? { sortField: params.sortField } : {}),
       ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
+      ...(params?.column_search ? { column_search: params.column_search } : {}),
+      ...(params?.column_filters
+        ? { column_filters: params.column_filters }
+        : {}),
     };
     const key = `inventory-serial-lifecycles:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
       const { data } = await axiosInstance.get<PaginatedResponse<any>>(
         `/api/v1/inventory/serial-lifecycles`,
         { params: requestParams },
+      );
+      return data;
+    });
+  },
+  getSerialLifecycleColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    columnFilters?: Record<string, string[]>,
+  ): Promise<{
+    items: string[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> => {
+    const params: any = {
+      column,
+      search,
+      page,
+      pageSize,
+    };
+    if (columnFilters && Object.keys(columnFilters).length > 0) {
+      params.column_filters = JSON.stringify(columnFilters);
+    }
+    const key = `inventory-serial-lifecycles:column-options:${JSON.stringify(params)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get(
+        `/api/v1/inventory/serial-lifecycles/column-options`,
+        { params },
       );
       return data;
     });

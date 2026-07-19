@@ -385,6 +385,7 @@ export function TableColumnHeaderFilter({
               className="text-xs text-muted-foreground hover:text-foreground hover:bg-transparent px-2 h-7"
               onClick={() => {
                 setPendingFilters([]);
+                setLocalSearch("");
                 onSearchChange("");
                 onFilterChange([]);
                 setOpen(false);
@@ -397,7 +398,7 @@ export function TableColumnHeaderFilter({
               size="sm"
               className="text-xs h-7 px-3"
               onClick={() => {
-                onSearchChange("");
+                onSearchChange(localSearch);
                 onFilterChange(pendingFilters);
                 setOpen(false);
               }}

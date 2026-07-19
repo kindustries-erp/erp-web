@@ -32,6 +32,8 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
 import { Button } from "@/shared/components/ui/Button";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 import {
   SoFormDrawer,
@@ -146,6 +148,51 @@ export function ErpSalesOrdersPage() {
     );
   }, [itemsData]);
 
+  const columnState = useTableColumnState("sales-orders-table");
+
+  useEffect(() => {
+    setPage(1);
+  }, [columnState.columnFilters, columnState.columnSearch, columnState.sorts]);
+
+  const fetchSalesOrdersColumnOptions = async (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    const filtersStr =
+      Object.keys(columnState.columnFilters).length > 0
+        ? JSON.stringify(columnState.columnFilters)
+        : undefined;
+
+    const res = await salesOrdersCoreApi.getColumnOptions(
+      params.columnKey,
+      params.search,
+      params.pageParam || 1,
+      20,
+      filtersStr,
+    );
+    return {
+      items: res.items.map((i: string) => ({ value: i, label: i })),
+      total: res.total,
+      next: res.page < res.totalPages ? res.page + 1 : null,
+    };
+  };
+
+  const getSortState = (key: string) => {
+    if (columnState.sorts.includes(key)) return "asc";
+    if (columnState.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+
+  const activeSort = columnState.sorts[0];
+  const sortField = activeSort ? activeSort.replace("-", "") : undefined;
+  const sortOrder = activeSort
+    ? activeSort.startsWith("-")
+      ? "desc"
+      : "asc"
+    : undefined;
+
   const {
     data: resData,
     isLoading: loading,
@@ -154,6 +201,16 @@ export function ErpSalesOrdersPage() {
     page,
     pageSize,
     search,
+    column_search:
+      Object.keys(columnState.columnSearch).length > 0
+        ? JSON.stringify(columnState.columnSearch)
+        : undefined,
+    column_filters:
+      Object.keys(columnState.columnFilters).length > 0
+        ? JSON.stringify(columnState.columnFilters)
+        : undefined,
+    sortField,
+    sortOrder,
   });
 
   const items = resData?.items || [];
@@ -489,7 +546,20 @@ export function ErpSalesOrdersPage() {
   const columns: DataTableColumn<ErpSalesOrder>[] = [
     {
       key: "orderDate",
-      header: t("Ngày đặt"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày đặt")}
+          columnKey="orderDate"
+          sortState={getSortState("orderDate") || "none"}
+          onSortChange={(s) => columnState.setSort("orderDate", s)}
+          searchValue={columnState.columnSearch["orderDate"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("orderDate", v)}
+          selectedFilters={columnState.columnFilters["orderDate"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("orderDate", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 100,
       headerClassName: "text-center",
       className: "text-center",
@@ -498,7 +568,26 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "expectedDeliveryDate",
-      header: t("Ngày giao DK"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày giao DK")}
+          columnKey="expectedDeliveryDate"
+          sortState={getSortState("expectedDeliveryDate") || "none"}
+          onSortChange={(s) => columnState.setSort("expectedDeliveryDate", s)}
+          searchValue={columnState.columnSearch["expectedDeliveryDate"] || ""}
+          onSearchChange={(v) =>
+            columnState.setColumnSearch("expectedDeliveryDate", v)
+          }
+          selectedFilters={
+            columnState.columnFilters["expectedDeliveryDate"] || []
+          }
+          onFilterChange={(v) =>
+            columnState.setColumnFilter("expectedDeliveryDate", v)
+          }
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 100,
       headerClassName: "text-center",
       className: "text-center",
@@ -507,7 +596,20 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "soNo",
-      header: t("Số SO"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số SO")}
+          columnKey="soNo"
+          sortState={getSortState("soNo") || "none"}
+          onSortChange={(s) => columnState.setSort("soNo", s)}
+          searchValue={columnState.columnSearch["soNo"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("soNo", v)}
+          selectedFilters={columnState.columnFilters["soNo"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("soNo", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 150,
       cell: (item) => (
         <Button
@@ -522,7 +624,20 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "customerName",
-      header: t("Khách hàng"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Khách hàng")}
+          columnKey="customerName"
+          sortState={getSortState("customerName") || "none"}
+          onSortChange={(s) => columnState.setSort("customerName", s)}
+          searchValue={columnState.columnSearch["customerName"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("customerName", v)}
+          selectedFilters={columnState.columnFilters["customerName"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("customerName", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 200,
       className: "text-left",
       cell: (item) => {
@@ -539,7 +654,20 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "totalQty",
-      header: t("Số lượng"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số lượng")}
+          columnKey="totalQty"
+          sortState={getSortState("totalQty") || "none"}
+          onSortChange={(s) => columnState.setSort("totalQty", s)}
+          searchValue={columnState.columnSearch["totalQty"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("totalQty", v)}
+          selectedFilters={columnState.columnFilters["totalQty"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("totalQty", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 100,
       className: "text-right",
       headerClassName: "text-center",
@@ -554,14 +682,40 @@ export function ErpSalesOrdersPage() {
     },
     {
       key: "status",
-      header: t("Trạng thái"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Trạng thái")}
+          columnKey="status"
+          sortState={getSortState("status") || "none"}
+          onSortChange={(s) => columnState.setSort("status", s)}
+          searchValue={columnState.columnSearch["status"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("status", v)}
+          selectedFilters={columnState.columnFilters["status"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("status", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 120,
       cell: (item) => <StatusBadge status={item.status || ""} />,
       skeletonClassName: "w-20",
     },
     {
       key: "remarks",
-      header: t("Ghi chú"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ghi chú")}
+          columnKey="remarks"
+          sortState={getSortState("remarks") || "none"}
+          onSortChange={(s) => columnState.setSort("remarks", s)}
+          searchValue={columnState.columnSearch["remarks"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("remarks", v)}
+          selectedFilters={columnState.columnFilters["remarks"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("remarks", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 200,
       className: "text-left",
       cell: (item) => {

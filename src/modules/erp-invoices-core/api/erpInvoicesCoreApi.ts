@@ -96,7 +96,15 @@ export interface CreateErpInvoicePayload {
   salesOrderId?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  isValid?: boolean;
   items?: ErpInvoiceItem[];
+  pendingDocumentChanges?: {
+    action: "ADD" | "REMOVE";
+    type: "PO" | "BANK";
+    refId: string;
+    amount?: number;
+  }[];
+  accountingEnabled?: boolean;
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
