@@ -111,10 +111,16 @@ export function ErpInvoiceLinkedDocuments({
         }
       });
 
-    // Keep any UI-only empty rows
-    const uiRows = rows.filter((r) => r.isNew);
+    // Keep any UI-only empty rows only if in edit mode
+    const uiRows = editMode ? rows.filter((r) => r.isNew) : [];
     setRows([...combined, ...uiRows]);
-  }, [relatedPos, voucherNetOffs, form.pendingDocumentChanges, poOptions]);
+  }, [
+    relatedPos,
+    voucherNetOffs,
+    form.pendingDocumentChanges,
+    poOptions,
+    editMode,
+  ]);
 
   // Fetch recent POs for dropdown
   useEffect(() => {
@@ -334,7 +340,6 @@ export function ErpInvoiceLinkedDocuments({
       <VoucherNetoffSelectionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        direction={direction}
         onSelect={handleSelectBank}
         existingVoucherIds={voucherNetOffs.map((v) => v.bankTransactionId)}
       />

@@ -168,7 +168,6 @@ export function ErpInvoiceNetOffSection({
       <VoucherNetoffSelectionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        direction={direction}
         onSelect={handleLink}
         existingVoucherIds={voucherNetOffs.map((v) => v.bankTransactionId)}
       />
