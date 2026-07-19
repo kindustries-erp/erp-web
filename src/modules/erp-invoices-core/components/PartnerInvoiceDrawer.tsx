@@ -176,6 +176,15 @@ export function PartnerInvoiceDrawer({
     [taxCode],
   );
 
+  const formatAmtOption = (val: string | number) => {
+    const n = Number(val || 0);
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString("vi-VN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   const columns = useMemo(() => {
     return [
       {
@@ -293,9 +302,17 @@ export function PartnerInvoiceDrawer({
             onSortChange={(state) => handleSortChange("preVatAmount", state)}
             searchValue={listHook.tableState.columnSearch["preVatAmount"] || ""}
             onSearchChange={(val) => handleSearchChange("preVatAmount", val)}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["preVatAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
             align="center"
+            columnKey="preVatAmount"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
           />
         ),
         size: 120,
@@ -311,9 +328,17 @@ export function PartnerInvoiceDrawer({
             onSortChange={(state) => handleSortChange("vatAmount", state)}
             searchValue={listHook.tableState.columnSearch["vatAmount"] || ""}
             onSearchChange={(val) => handleSearchChange("vatAmount", val)}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["vatAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
             align="center"
+            columnKey="vatAmount"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
           />
         ),
         size: 120,
@@ -329,9 +354,17 @@ export function PartnerInvoiceDrawer({
             onSortChange={(state) => handleSortChange("totalAmount", state)}
             searchValue={listHook.tableState.columnSearch["totalAmount"] || ""}
             onSearchChange={(val) => handleSearchChange("totalAmount", val)}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["totalAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
             align="center"
+            columnKey="totalAmount"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
           />
         ),
         size: 120,
