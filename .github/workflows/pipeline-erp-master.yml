@@ -105,6 +105,19 @@ jobs:
           test -n "${{ secrets.GHCR_PAT }}" || (echo "GHCR_PAT missing" && exit 1)
           test -n "${{ secrets.HEAD_PASSWORD }}" || (echo "HEAD_PASSWORD missing" && exit 1)
 
+      - name: Prepare Head DNS
+        env:
+          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
+        run: |
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            -p ${{ vars.HEAD_PORT }} \
+            ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
+            "sudo tee /etc/resolv.conf >/dev/null <<'EOF'
+          nameserver 1.1.1.1
+          nameserver 8.8.8.8
+          options timeout:2 attempts:2
+          EOF"
+
       - name: Run deploy script
         env:
           SSHPASS: ${{ secrets.HEAD_PASSWORD }}
