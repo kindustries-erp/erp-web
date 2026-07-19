@@ -37,6 +37,10 @@ export interface SalesOrderListFilters extends ListParams {
   dateTo?: string;
   customerId?: string;
   notFullyIssued?: boolean;
+  column_search?: string;
+  column_filters?: string;
+  sortField?: string;
+  sortOrder?: string;
 }
 
 export function createSalesOrdersKey(filters: SalesOrderListFilters) {
