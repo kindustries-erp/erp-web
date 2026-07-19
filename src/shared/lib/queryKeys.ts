@@ -50,6 +50,8 @@ export interface AfterSalesListFilters extends ListParams {
   sortField?: string;
   sortOrder?: string;
   dealerId?: string;
+  column_search?: string;
+  column_filters?: string;
 }
 
 export function createAfterSalesKey(filters: AfterSalesListFilters) {
