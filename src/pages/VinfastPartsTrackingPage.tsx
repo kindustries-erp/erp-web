@@ -5,8 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { money } from "@/shared/utils/format";
 import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
-import { ErpInvoiceInfoDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInfoDrawer";
+
 import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
+import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import api from "@/core/api/axiosInstance";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
@@ -35,8 +36,7 @@ import {
   ErpInvoiceInternalSidebar,
   ErpInvoiceInternalMain,
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
-import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
+
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 
 interface VinfastPartTrackingRow {
@@ -169,6 +169,22 @@ function VinfastPartDetailDrawer({
       className: "text-muted-foreground text-xs text-left",
       cell: (row) => row.taxCode || "—",
     },
+    {
+      key: "description",
+      header: "Diễn giải",
+      size: 250,
+      headerClassName: "text-center",
+      cell: (row) => (
+        <Tooltip content={row.description || ""}>
+          <div
+            className="whitespace-normal break-words w-full truncate max-w-[250px]"
+            title={row.description || ""}
+          >
+            {row.description || "—"}
+          </div>
+        </Tooltip>
+      ),
+    },
     { key: "unit", header: "ĐVT", size: 80, headerClassName: "text-center" },
     {
       key: "qty",
@@ -197,6 +213,17 @@ function VinfastPartDetailDrawer({
       headerClassName: "text-center",
       className: "text-right",
       cell: (row) => money(row.preVatAmount),
+    },
+    {
+      key: "vatRate",
+      header: "Thuế suất",
+      size: 80,
+      headerClassName: "text-center",
+      className: "text-right",
+      cell: (row) =>
+        row.vatRate != null
+          ? `${(Number(row.vatRate) * 100).toFixed(0)}%`
+          : "—",
     },
     {
       key: "vatAmount",
@@ -487,12 +514,6 @@ export function VinfastPartsTrackingPage() {
 
   const tableState = useTableColumnState("vinfast-parts-table");
 
-  function fmtAmt(val: string | null | undefined) {
-    if (val == null) return "—";
-    const n = Number(val);
-    return isNaN(n) ? "—" : money(n);
-  }
-
   const activeSort = tableState.sorts[0] || "";
   let sortBy = "";
   let sortOrder = "";
@@ -568,6 +589,17 @@ export function VinfastPartsTrackingPage() {
 
   const filterProps = useFilterPanel(filterConfig, () => setPage(1));
   const { state: filterState } = filterProps;
+
+  const commonFilterProps = useMemo(
+    () => ({
+      enableSelectAllMatching: true,
+      requireSearchToFetchOptions: false,
+      queryKeyPrefix: "vinfast-parts-options",
+      allFilters: tableState.columnFilters,
+      fetchOptions: fetchColumnOptions,
+    }),
+    [tableState.columnFilters, fetchColumnOptions],
+  );
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
@@ -697,10 +729,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("month", vals)}
           align="center"
           columnKey="month"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
         />
       ),
       size: 100,
@@ -721,10 +750,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("itemCode", vals)}
           align="center"
           columnKey="itemCode"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
         />
       ),
       headerClassName: "text-center",
@@ -754,10 +780,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("itemName", vals)}
           align="center"
           columnKey="itemName"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
         />
       ),
       size: 200,
@@ -787,10 +810,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("qtyBought", vals)}
           align="center"
           columnKey="qtyBought"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
           formatOptionLabel={(label) => {
             const num = Number(label);
             return isNaN(num)
@@ -826,10 +846,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("avgBuyPrice", vals)}
           align="center"
           columnKey="avgBuyPrice"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
           formatOptionLabel={(label) => {
             const num = Number(label);
             return isNaN(num) ? label : money(num);
@@ -861,10 +878,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("qtySold", vals)}
           align="center"
           columnKey="qtySold"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
           formatOptionLabel={(label) => {
             const num = Number(label);
             return isNaN(num)
@@ -900,10 +914,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("avgSellPrice", vals)}
           align="center"
           columnKey="avgSellPrice"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
           formatOptionLabel={(label) => {
             const num = Number(label);
             return isNaN(num) ? label : money(num);
@@ -935,10 +946,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("margin", vals)}
           align="center"
           columnKey="margin"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
           formatOptionLabel={(label) => {
             const num = Number(label);
             return isNaN(num) ? label : money(num);
@@ -966,10 +974,7 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("marginPct", vals)}
           align="center"
           columnKey="marginPct"
-          requireSearchToFetchOptions={false}
-          queryKeyPrefix="vinfast-parts-options"
-          allFilters={tableState.columnFilters}
-          fetchOptions={fetchColumnOptions}
+          {...commonFilterProps}
         />
       ),
       headerClassName: "text-center",
@@ -1072,50 +1077,6 @@ export function VinfastPartsTrackingPage() {
         filter={filterProps}
       />
 
-      <ErpInvoiceInfoDrawer
-        open={formHook.infoDrawerOpen}
-        onClose={formHook.closeDrawer}
-        editMode={formHook.editMode}
-        detailInvoice={formHook.detailInvoice}
-        saving={formHook.saving}
-        handleSave={formHook.handleSave}
-        onDownload={() => {}}
-        loadingDetail={formHook.loadingDetail}
-        onSyncDetail={formHook.handleSyncDetail}
-        onOpenInternal={() => {
-          if (formHook.detailInvoice) {
-            formHook.openInternal(formHook.detailInvoice);
-          }
-        }}
-        leftPanel={
-          <div className="flex flex-col gap-5">
-            {formHook.formError && (
-              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-                {formHook.formError}
-              </div>
-            )}
-            <ErpInvoiceFormItems
-              form={formHook.form}
-              editMode={formHook.editMode && !formHook.detailInvoice?.id}
-              setForm={formHook.setForm}
-              fmtAmt={fmtAmt}
-            />
-          </div>
-        }
-        rightPanel={
-          <div className="flex flex-col gap-5">
-            <ErpInvoiceFormGeneral
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key: string, value: any) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-            />
-          </div>
-        }
-      />
-
       <ErpInvoiceInternalDrawer
         open={formHook.internalDrawerOpen}
         onClose={formHook.closeDrawer}
@@ -1140,6 +1101,14 @@ export function VinfastPartsTrackingPage() {
               direction={formHook.detailInvoice?.direction || "IN"}
               detailInvoice={formHook.detailInvoice}
               onRefreshDetail={formHook.handleSyncDetail}
+              pdfSlot={
+                <ErpInvoicePdfUpload
+                  invoiceId={formHook.detailInvoice?.id ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  editMode={formHook.editMode}
+                />
+              }
             />
           </div>
         }
@@ -1161,12 +1130,13 @@ export function VinfastPartsTrackingPage() {
                 formHook.openInternal({ id: formHook.detailInvoice.id } as any);
               }
             }}
-          />
-          <ErpInvoicePdfUpload
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-            editMode={formHook.editMode}
+            invoicePreview={
+              formHook.detailInvoice ? (
+                <div className="flex justify-center bg-slate-100 p-8 min-h-full">
+                  <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
+                </div>
+              ) : undefined
+            }
           />
         </div>
       </ErpInvoiceInternalDrawer>
@@ -1177,7 +1147,7 @@ export function VinfastPartsTrackingPage() {
         itemCode={detailRow?.itemCode || ""}
         itemName={detailRow?.itemName || ""}
         month={detailRow?.month || ""}
-        onOpenInvoice={(id) => formHook.openDetail({ id } as any)}
+        onOpenInvoice={(id) => formHook.openInternal({ id } as any)}
       />
     </>
   );
