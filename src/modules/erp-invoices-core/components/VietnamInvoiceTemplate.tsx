@@ -122,7 +122,7 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                   Thuế suất
                 </th>
                 <th className="border border-slate-300 p-2.5 w-32">
-                  Thành tiền
+                  Thành tiền chưa có thuế GTGT
                 </th>
               </tr>
             </thead>

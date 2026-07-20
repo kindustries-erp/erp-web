@@ -370,7 +370,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     }
   }
 
-  async function handleExportExcel(type: "summary" | "detailed" = "summary") {
+  const handleExportExcel = async () => {
     try {
       showToast({
         title: "Đang tạo file Excel...",
@@ -389,13 +389,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         tag_id: (custom?.tag_id as string) || undefined,
         sort_by: listHook.sortBy || undefined,
         sort_order: listHook.sortOrder || undefined,
-        export_type: type,
       });
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `DanhSachHoaDon_${direction}.xlsx`;
+      a.download = `Bao_cao_hoa_don_${direction === "IN" ? "dau_vao" : "dau_ra"}_${format(new Date(), "yyyyMMdd_HHmmss")}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -411,7 +410,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         variant: "destructive",
       });
     }
-  }
+  };
 
   const handleReparseXml = async (inv: ErpInvoice) => {
     try {
@@ -1180,7 +1179,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         key: "preVatAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("preVatAmount", "Trước VAT")}
+            title={t("preVatAmount", "Trước GTGT")}
             sortState={getSortState("preVatAmount")}
             onSortChange={(state) => handleSortChange("preVatAmount", state)}
             searchValue={listHook.tableState.columnSearch["preVatAmount"] || ""}
@@ -1204,10 +1203,35 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         cell: (row) => fmtAmt(row.preVatAmount),
       },
       {
+        key: "vatRate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("vatRate", "Thuế suất GTGT")}
+            sortState={getSortState("vatRate")}
+            onSortChange={(state) => handleSortChange("vatRate", state)}
+            searchValue={listHook.tableState.columnSearch["vatRate"] || ""}
+            onSearchChange={(val) => handleSearchChange("vatRate", val)}
+            selectedFilters={listHook.tableState.columnFilters["vatRate"] || []}
+            onFilterChange={(vals) => handleFilterChange("vatRate", vals)}
+            align="center"
+            columnKey="vatRate"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
+        size: 110,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (row) =>
+          row.vatRate != null ? `${Number(row.vatRate) * 100}%` : "",
+      },
+      {
         key: "vatAmount",
         header: (
           <TableColumnHeaderFilter
-            title={t("vatAmount", "Thuế VAT")}
+            title={t("vatAmount", "Thuế GTGT")}
             sortState={getSortState("vatAmount")}
             onSortChange={(state) => handleSortChange("vatAmount", state)}
             searchValue={listHook.tableState.columnSearch["vatAmount"] || ""}
@@ -1765,17 +1789,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             groupLabel: t("groupTraCuu", "Tra cứu"),
             items: [
               {
-                label: t("exportExcelSummary", "Xuất Excel Bảng kê (Tổng hợp)"),
+                label: t("exportExcel", "Xuất Excel"),
                 icon: <Download className="w-4 h-4 text-green-600" />,
-                onClick: () => handleExportExcel("summary"),
-              },
-              {
-                label: t(
-                  "exportExcelDetailed",
-                  "Xuất Excel Hàng hóa (Chi tiết)",
-                ),
-                icon: <Download className="w-4 h-4 text-emerald-600" />,
-                onClick: () => handleExportExcel("detailed"),
+                onClick: () => handleExportExcel(),
               },
               {
                 label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),

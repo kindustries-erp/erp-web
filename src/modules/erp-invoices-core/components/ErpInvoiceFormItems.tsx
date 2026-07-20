@@ -55,7 +55,7 @@ export function ErpInvoiceFormItems({
         <div className="flex items-center gap-5 shrink-0 lg:pb-[1px]">
           <div className="flex flex-col text-right">
             <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
-              {t("preVatAmount", "Trước VAT")}
+              {t("preVatAmount", "Trước GTGT")}
             </span>
             <span className="text-[13px] font-semibold text-gray-900 leading-tight mt-0.5">
               {fmtAmt(String(form.preVatAmount || 0))}
@@ -64,7 +64,7 @@ export function ErpInvoiceFormItems({
           <div className="h-6 w-px bg-gray-200"></div>
           <div className="flex flex-col text-right">
             <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">
-              {t("vatAmount", "Thuế VAT")}
+              {t("vatAmount", "Thuế GTGT")}
             </span>
             <span className="text-[13px] font-semibold text-gray-900 leading-tight mt-0.5">
               {fmtAmt(String(form.vatAmount || 0))}
