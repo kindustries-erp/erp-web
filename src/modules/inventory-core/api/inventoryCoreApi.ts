@@ -202,7 +202,7 @@ export const inventoryCoreApi = {
       ...(params?.salesOrderLineId
         ? { salesOrderLineId: params.salesOrderLineId }
         : {}),
-      ...(params?.ids ? { ids: params.ids } : {}),
+      ...(params?.ids?.length ? { ids: params.ids.join(",") } : {}),
       ...(params?.missingSerial !== undefined
         ? { missingSerial: params.missingSerial }
         : {}),
