@@ -123,7 +123,6 @@ export interface ErpInvoiceListParams {
   pageSize?: number;
   sort_by?: string;
   sort_order?: "asc" | "desc";
-  export_type?: "summary" | "detailed";
   column_search?: string;
   column_filters?: string;
 }
