@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   PackagePlus,
   PackageMinus,
+  SlidersHorizontal,
   Trash2,
   XCircle,
   Printer,
@@ -38,6 +39,8 @@ import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDra
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import { IaFormDrawer } from "@/modules/inventory-adjustments/components/IaFormDrawer";
+import { useIaDrawer } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { useReactToPrint } from "react-to-print";
 import {
   GoodsReceiptPrintTemplate,
@@ -64,6 +67,21 @@ export function ErpWarehouseTab() {
   const canCreateIssue = useHasPermission("goods_issues", "create");
   const canUpdateIssue = useHasPermission("goods_issues", "update");
   const canDeleteIssue = useHasPermission("goods_issues", "delete");
+
+  const canReadAdjustments = useHasPermission("inventory_adjustments", "read");
+  const canCreateAdjustment = useHasPermission(
+    "inventory_adjustments",
+    "create",
+  );
+  const canUpdateAdjustment = useHasPermission(
+    "inventory_adjustments",
+    "update",
+  );
+  const canDeleteAdjustment = useHasPermission(
+    "inventory_adjustments",
+    "delete",
+  );
+
   const isAdmin = useHasPermission("*", "*");
 
   const showToast = useUIStore((s) => s.showToast);
@@ -90,6 +108,9 @@ export function ErpWarehouseTab() {
 
   // ── GI drawer — delegated to useGiDrawer
   const giDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
+
+  // ── IA drawer
+  const iaDrawer = useIaDrawer({ invalidateWarehouseQuery: true });
 
   // ── Background Print Setup
   const { data: companyProfile } = useCompanyProfile();
@@ -362,9 +383,13 @@ export function ErpWarehouseTab() {
   const total = vouchersQuery.data?.total ?? 0;
   const totalPages = vouchersQuery.data?.totalPages ?? 1;
 
-  // ── GR cancel (still used for the cancel confirm modal)
+  // ── GR/IA cancel (still used for the cancel confirm modal)
   async function handleGrCancel(id: string) {
-    await grDrawer.handleCancel(id);
+    if (cancelTarget?.type === "adjustment") {
+      await iaDrawer.handleCancel(id);
+    } else {
+      await grDrawer.handleCancel(id);
+    }
     setCancelTarget(null);
   }
 
@@ -378,9 +403,17 @@ export function ErpWarehouseTab() {
         await queryClient.invalidateQueries({
           queryKey: ["warehouse-vouchers", "unified"],
         });
-      } else {
+      } else if (deleteTarget.type === "issue") {
         await goodsIssuesCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu xuất kho", variant: "success" });
+        await queryClient.invalidateQueries({
+          queryKey: ["warehouse-vouchers", "unified"],
+        });
+      } else if (deleteTarget.type === "adjustment") {
+        const { inventoryAdjustmentsApi } =
+          await import("@/modules/inventory-adjustments/api/inventoryAdjustmentsApi");
+        await inventoryAdjustmentsApi.delete(deleteTarget.id);
+        showToast({ title: "Đã xóa phiếu điều chỉnh", variant: "success" });
         await queryClient.invalidateQueries({
           queryKey: ["warehouse-vouchers", "unified"],
         });
@@ -429,13 +462,21 @@ export function ErpWarehouseTab() {
         cell: (row) => (
           <div className="flex items-center gap-2">
             <span
-              title={row.type === "receipt" ? t("Nhập kho") : t("Xuất kho")}
+              title={
+                row.type === "receipt"
+                  ? t("Nhập kho")
+                  : row.type === "issue"
+                    ? t("Xuất kho")
+                    : t("Điều chỉnh")
+              }
               className="flex-shrink-0"
             >
               {row.type === "receipt" ? (
                 <PackagePlus className="h-4 w-4 text-emerald-600" />
-              ) : (
+              ) : row.type === "issue" ? (
                 <PackageMinus className="h-4 w-4 text-orange-600" />
+              ) : (
+                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
               )}
             </span>
             <span className="font-medium text-foreground">{row.voucherNo}</span>
@@ -513,7 +554,8 @@ export function ErpWarehouseTab() {
 
   // Actions are now passed to SpreadsheetPageTemplate
 
-  if (!canReadReceipts && !canReadIssues) return <Forbidden />;
+  if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
+    return <Forbidden />;
 
   return (
     <>
@@ -573,8 +615,10 @@ export function ErpWarehouseTab() {
                 onClick: () => {
                   if (row.type === "receipt") {
                     grDrawer.openDetail(row.id);
-                  } else {
+                  } else if (row.type === "issue") {
                     giDrawer.openDetail(row.id);
+                  } else if (row.type === "adjustment") {
+                    iaDrawer.openDetail(row.id);
                   }
                 },
               },
@@ -593,7 +637,7 @@ export function ErpWarehouseTab() {
               {
                 label: t("Xuất XLSX"),
                 icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
-                hidden: row.status === "DRAFT",
+                hidden: row.status === "DRAFT" || row.type === "adjustment",
                 disabled: xlsxExportingId === row.id,
                 onClick: () => handleExportXlsx(row),
               },
@@ -609,7 +653,8 @@ export function ErpWarehouseTab() {
                 hidden:
                   row.status !== "DRAFT" ||
                   (row.type === "receipt" && !canDeleteReceipt) ||
-                  (row.type === "issue" && !canDeleteIssue),
+                  (row.type === "issue" && !canDeleteIssue) ||
+                  (row.type === "adjustment" && !canDeleteAdjustment),
                 onClick: () => {
                   setDeleteTarget(row);
                 },
@@ -621,7 +666,8 @@ export function ErpWarehouseTab() {
                 hidden:
                   row.status !== "POSTED" ||
                   (row.type === "receipt" && !canUpdateReceipt) ||
-                  (row.type === "issue" && !canUpdateIssue),
+                  (row.type === "issue" && !canUpdateIssue) ||
+                  (row.type === "adjustment" && !canUpdateAdjustment),
                 onClick: () => {
                   setCancelTarget(row);
                 },
@@ -645,6 +691,12 @@ export function ErpWarehouseTab() {
                 onClick: () => giDrawer.openCreate(),
                 hidden: !canCreateIssue,
               },
+              {
+                label: t("Điều chỉnh kho"),
+                icon: <SlidersHorizontal className="h-4 w-4 text-blue-600" />,
+                onClick: () => iaDrawer.openCreate(),
+                hidden: !canCreateAdjustment,
+              },
             ],
           },
         ]}
@@ -659,7 +711,9 @@ export function ErpWarehouseTab() {
               " " +
               (deleteTarget.type === "receipt"
                 ? t("phiếu nhập")
-                : t("phiếu xuất")) +
+                : deleteTarget.type === "issue"
+                  ? t("phiếu xuất")
+                  : t("phiếu điều chỉnh")) +
               ` "${deleteTarget.voucherNo}"? ` +
               t("Hành động này sẽ ẩn phiếu này khỏi danh sách.")
             : ""
@@ -683,7 +737,9 @@ export function ErpWarehouseTab() {
               " " +
               (cancelTarget.type === "receipt"
                 ? t("phiếu nhập")
-                : t("phiếu xuất")) +
+                : cancelTarget.type === "issue"
+                  ? t("phiếu xuất")
+                  : t("phiếu điều chỉnh")) +
               ` "${cancelTarget.voucherNo}"? ` +
               t("Hệ thống sẽ tạo một bút toán đảo để cân bằng giá trị.")
             : ""
@@ -691,7 +747,11 @@ export function ErpWarehouseTab() {
         confirmLabel={t("Hủy phiếu")}
         cancelLabel={t("Đóng")}
         onConfirm={() => {
-          if (cancelTarget && cancelTarget.type === "receipt") {
+          if (
+            cancelTarget &&
+            (cancelTarget.type === "receipt" ||
+              cancelTarget.type === "adjustment")
+          ) {
             void handleGrCancel(cancelTarget.id);
           }
         }}
@@ -707,6 +767,9 @@ export function ErpWarehouseTab() {
 
       {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
       <GiFormDrawer drawer={giDrawer} />
+
+      {/* ─── IA Drawer ──────────────────────────────────────────────────────── */}
+      <IaFormDrawer drawer={iaDrawer} />
 
       <div style={{ display: "none" }}>
         {printGrData && (
