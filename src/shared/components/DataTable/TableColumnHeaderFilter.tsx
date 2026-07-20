@@ -50,6 +50,7 @@ export interface TableColumnHeaderFilterProps {
     next: number | null;
   }>;
   hideFilter?: boolean;
+  enableSelectAllMatching?: boolean;
 }
 
 const dropdownSearchState = new Map<string, string>();
@@ -71,6 +72,7 @@ export function TableColumnHeaderFilter({
   formatOptionLabel,
   fetchOptions,
   hideFilter,
+  enableSelectAllMatching,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -83,6 +85,14 @@ export function TableColumnHeaderFilter({
     useState<string[]>(selectedFilters);
   const debouncedLocalSearch = useDebounce(localSearch, 300);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isAllMatchingMode = pendingFilters[0] === "__ALL_MATCHING__";
+
+  useEffect(() => {
+    if (isAllMatchingMode) {
+      setPendingFilters([]);
+    }
+  }, [debouncedLocalSearch]);
 
   const shouldFetchOptions = !!columnKey;
 
@@ -148,9 +158,12 @@ export function TableColumnHeaderFilter({
     if (columnKey) {
       const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
-      const missingSelected = selectedFilters
-        .filter((v) => !apiValues.has(v))
-        .map((v) => ({ label: v, value: v }));
+      const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
+      const missingSelected = isAllMatchingActive
+        ? []
+        : selectedFilters
+            .filter((v) => !apiValues.has(v))
+            .map((v) => ({ label: v, value: v }));
       return [...missingSelected, ...apiOptions];
     }
     return filterOptions || [];
@@ -185,10 +198,18 @@ export function TableColumnHeaderFilter({
   };
 
   const handleSelectAll = () => {
-    if (pendingFilters.length === finalOptions.length) {
-      setPendingFilters([]);
+    if (enableSelectAllMatching) {
+      if (isAllMatchingMode) {
+        setPendingFilters([]);
+      } else {
+        setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
+      }
     } else {
-      setPendingFilters(finalOptions.map((o) => o.value));
+      if (pendingFilters.length === finalOptions.length) {
+        setPendingFilters([]);
+      } else {
+        setPendingFilters(finalOptions.map((o) => o.value));
+      }
     }
   };
 
@@ -330,13 +351,17 @@ export function TableColumnHeaderFilter({
                     <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
                       <Checkbox
                         checked={
-                          pendingFilters.length === finalOptions.length &&
-                          finalOptions.length > 0
+                          enableSelectAllMatching
+                            ? isAllMatchingMode
+                            : pendingFilters.length === finalOptions.length &&
+                              finalOptions.length > 0
                         }
                         onCheckedChange={handleSelectAll}
                       />
                       <span className="text-xs font-medium">
-                        (Chọn tất cả đang hiển thị)
+                        {enableSelectAllMatching
+                          ? "(Chọn tất cả kết quả tìm kiếm)"
+                          : "(Chọn tất cả đang hiển thị)"}
                       </span>
                     </label>
                     {finalOptions.map((opt) => (
@@ -345,8 +370,20 @@ export function TableColumnHeaderFilter({
                         className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
                       >
                         <Checkbox
-                          checked={pendingFilters.includes(opt.value)}
-                          onCheckedChange={() => handleToggleFilter(opt.value)}
+                          checked={
+                            isAllMatchingMode ||
+                            pendingFilters.includes(opt.value)
+                          }
+                          onCheckedChange={() => {
+                            if (isAllMatchingMode) {
+                              const all = finalOptions.map((o) => o.value);
+                              setPendingFilters(
+                                all.filter((v) => v !== opt.value),
+                              );
+                            } else {
+                              handleToggleFilter(opt.value);
+                            }
+                          }}
                         />
                         <span
                           className="text-xs truncate"
