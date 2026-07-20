@@ -192,7 +192,7 @@ function VinfastPartDetailDrawer({
     },
     {
       key: "preVatAmount",
-      header: "Trước VAT",
+      header: "Trước GTGT",
       size: 120,
       headerClassName: "text-center",
       className: "text-right",
@@ -200,7 +200,7 @@ function VinfastPartDetailDrawer({
     },
     {
       key: "vatAmount",
-      header: "Thuế VAT",
+      header: "Thuế GTGT",
       size: 120,
       headerClassName: "text-center",
       className: "text-right",
@@ -335,7 +335,7 @@ function PriceWithInvoicePopover({
       align="center"
       glass
       content={
-        <div className="p-3 w-[500px] max-h-[400px] overflow-auto text-sm text-gray-800">
+        <div className="p-3 min-w-[700px] w-max max-h-[400px] overflow-auto text-sm text-gray-800">
           {isLoading ? (
             <div className="flex justify-center items-center h-20 text-gray-500">
               <Loader2 className="w-5 h-5 animate-spin mr-2" /> Đang tải...
@@ -352,6 +352,15 @@ function PriceWithInvoicePopover({
                   <th className="py-1.5 font-semibold text-center">Số HĐ</th>
                   <th className="py-1.5 font-semibold text-center">Đối tác</th>
                   <th className="py-1.5 font-semibold text-center">Số lượng</th>
+                  <th className="py-1.5 font-semibold text-center whitespace-nowrap">
+                    Trước thuế GTGT
+                  </th>
+                  <th className="py-1.5 font-semibold text-center whitespace-nowrap">
+                    Thuế suất
+                  </th>
+                  <th className="py-1.5 font-semibold text-center whitespace-nowrap">
+                    Thuế GTGT
+                  </th>
                   <th className="py-1.5 font-semibold text-center">
                     Thành tiền
                   </th>
@@ -387,6 +396,17 @@ function PriceWithInvoicePopover({
                         maximumFractionDigits: 1,
                       })}
                     </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {money(row.preVatAmount)}
+                    </td>
+                    <td className="py-1.5 text-right">
+                      {row.vatRate != null
+                        ? `${Number(row.vatRate) * 100}%`
+                        : "—"}
+                    </td>
+                    <td className="py-1.5 text-right font-medium">
+                      {money(row.vatAmount)}
+                    </td>
                     <td className="py-1.5 text-right font-medium text-emerald-700">
                       {money(row.totalAmount)}
                     </td>
@@ -411,6 +431,25 @@ function PriceWithInvoicePopover({
                         minimumFractionDigits: 1,
                         maximumFractionDigits: 1,
                       })}
+                  </td>
+                  <td className="py-2 text-right font-bold text-slate-700">
+                    {money(
+                      filteredData.reduce(
+                        (acc: number, cur: any) =>
+                          acc + (Number(cur.preVatAmount) || 0),
+                        0,
+                      ),
+                    )}
+                  </td>
+                  <td></td>
+                  <td className="py-2 text-right font-bold text-slate-700">
+                    {money(
+                      filteredData.reduce(
+                        (acc: number, cur: any) =>
+                          acc + (Number(cur.vatAmount) || 0),
+                        0,
+                      ),
+                    )}
                   </td>
                   <td className="py-2 text-right font-bold text-slate-700">
                     {money(
@@ -550,6 +589,8 @@ export function VinfastPartsTrackingPage() {
       if (filterState.search) params.append("search", filterState.search);
       if (sortBy) params.append("sortBy", sortBy);
       if (sortOrder) params.append("sortDir", sortOrder);
+      if (tableState.sorts.length > 0)
+        params.append("sorts", JSON.stringify(tableState.sorts));
       if (Object.keys(tableState.columnSearch).length > 0)
         params.append("column_search", JSON.stringify(tableState.columnSearch));
       if (Object.keys(tableState.columnFilters).length > 0)
@@ -961,6 +1002,18 @@ export function VinfastPartsTrackingPage() {
                     params.append("search", filterState.search);
                   if (sortBy) params.append("sortBy", sortBy);
                   if (sortOrder) params.append("sortDir", sortOrder);
+                  if (tableState.sorts.length > 0)
+                    params.append("sorts", JSON.stringify(tableState.sorts));
+                  if (Object.keys(tableState.columnSearch).length > 0)
+                    params.append(
+                      "column_search",
+                      JSON.stringify(tableState.columnSearch),
+                    );
+                  if (Object.keys(tableState.columnFilters).length > 0)
+                    params.append(
+                      "column_filters",
+                      JSON.stringify(tableState.columnFilters),
+                    );
 
                   // Logic to trigger download
                   const url = `/api/v1/reports/vinfast-parts/export/excel?${params.toString()}`;
@@ -968,8 +1021,8 @@ export function VinfastPartsTrackingPage() {
                     const fileUrl = window.URL.createObjectURL(res.data);
                     const a = document.createElement("a");
                     a.href = fileUrl;
-                    const timeStr = format(new Date(), "ddMMyyyy_HHmm");
-                    a.download = `Báo_cáo_phụ_tùng_VINFAST_${timeStr}.xlsx`;
+                    const timeStr = format(new Date(), "yyyyMMdd_HHmmss");
+                    a.download = `Bao_cao_phu_tung_VINFAST_${timeStr}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(fileUrl);
