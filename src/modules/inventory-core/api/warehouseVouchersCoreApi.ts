@@ -5,7 +5,7 @@ export interface WarehouseRow {
   id: string;
   voucherNo: string;
   date: string;
-  type: "receipt" | "issue";
+  type: "receipt" | "issue" | "adjustment";
   status: string | null;
   partnerId: string | null;
   partnerName: string | null;

@@ -37,10 +37,8 @@ import {
   type ErpInvoice,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
-import { ErpInvoiceInfoDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInfoDrawer";
 import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
-import { ErpInvoiceFormGeneral } from "@/modules/erp-invoices-core/components/ErpInvoiceFormGeneral";
-import { ErpInvoiceFormItems } from "@/modules/erp-invoices-core/components/ErpInvoiceFormItems";
+
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
@@ -1811,61 +1809,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             ],
           },
         ]}
-      />
-
-      <ErpInvoiceInfoDrawer
-        open={formHook.infoDrawerOpen}
-        onClose={formHook.closeDrawer}
-        editMode={formHook.editMode}
-        detailInvoice={formHook.detailInvoice}
-        saving={formHook.saving}
-        handleSave={formHook.handleSave}
-        onDownload={handleDownload}
-        loadingDetail={formHook.loadingDetail}
-        onSyncDetail={formHook.handleSyncDetail}
-        onPostInvoice={() => {
-          if (formHook.detailInvoice) {
-            formHook.openInternal(formHook.detailInvoice);
-          }
-        }}
-        onOpenInternal={() => {
-          if (formHook.detailInvoice) {
-            formHook.openInternal(formHook.detailInvoice);
-          }
-        }}
-        leftPanel={
-          !formHook.editMode && formHook.detailInvoice ? (
-            <div className="flex justify-center bg-slate-100 p-8 min-h-full">
-              <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-            </div>
-          ) : (
-            <div className="flex flex-col gap-5">
-              {formHook.formError && (
-                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-                  {formHook.formError}
-                </div>
-              )}
-              <ErpInvoiceFormItems
-                form={formHook.form}
-                editMode={formHook.editMode && !formHook.detailInvoice?.id}
-                setForm={formHook.setForm}
-                fmtAmt={fmtAmt}
-              />
-            </div>
-          )
-        }
-        rightPanel={
-          <div className="flex flex-col gap-5">
-            <ErpInvoiceFormGeneral
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key: string, value: any) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-            />
-          </div>
-        }
       />
 
       <ErpInvoiceInternalDrawer

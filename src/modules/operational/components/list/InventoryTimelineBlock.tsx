@@ -5,6 +5,7 @@ import {
   PackagePlus,
   PackageMinus,
   History,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { fmtQty, formatGMT7 } from "@/shared/utils/format";
@@ -41,15 +42,7 @@ export function InventoryTimelineBlock({
   const movements = data?.movements;
   const sortedMovements = useMemo(() => {
     if (!movements) return [];
-    return [...movements].sort((a, b) => {
-      const timeA = a.transactionDate
-        ? new Date(a.transactionDate).getTime()
-        : 0;
-      const timeB = b.transactionDate
-        ? new Date(b.transactionDate).getTime()
-        : 0;
-      return timeB - timeA;
-    });
+    return [...movements].reverse();
   }, [movements]);
 
   const timelineColumns: DataTableColumn<InventoryMovement>[] = useMemo(
@@ -84,17 +77,26 @@ export function InventoryTimelineBlock({
         size: 120,
         cell: (m) => {
           const isIn = Number(m.qtyIn || 0) > 0;
+          const isAdjustment = m.documentType === "INVENTORY_ADJUSTMENT";
+
+          let icon;
+          let title;
+
+          if (isAdjustment) {
+            icon = <SlidersHorizontal className="h-4 w-4 text-blue-600" />;
+            title = t("Điều chỉnh kho");
+          } else if (isIn) {
+            icon = <PackagePlus className="h-4 w-4 text-emerald-600" />;
+            title = t("Nhập kho");
+          } else {
+            icon = <PackageMinus className="h-4 w-4 text-orange-600" />;
+            title = t("Xuất kho");
+          }
+
           return (
             <div className="flex justify-center items-center">
-              <span
-                title={isIn ? t("Nhập kho") : t("Xuất kho")}
-                className="flex-shrink-0"
-              >
-                {isIn ? (
-                  <PackagePlus className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <PackageMinus className="h-4 w-4 text-orange-600" />
-                )}
+              <span title={title} className="flex-shrink-0">
+                {icon}
               </span>
             </div>
           );
