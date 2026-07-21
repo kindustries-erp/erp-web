@@ -420,12 +420,14 @@ export const inventoryCoreApi = {
     );
     return data;
   },
-  confirmDelivery: async (
-    id: string,
-    payload: { deliveryDate: string; notes?: string },
-  ): Promise<any> => {
-    const { data } = await axiosInstance.patch(
-      `/api/v1/inventory/serials/${id}/confirm-delivery`,
+
+  confirmDeliveries: async (payload: {
+    serialIds: string[];
+    deliveryDate: string;
+    notes?: string;
+  }): Promise<any> => {
+    const { data } = await axiosInstance.post(
+      `/api/v1/inventory/serials/confirm-delivery-bulk`,
       payload,
     );
     return data;
