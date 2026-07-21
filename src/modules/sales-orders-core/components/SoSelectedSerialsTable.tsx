@@ -165,7 +165,9 @@ export function SoSelectedSerialsTable({
       sortable: false, // disabled default sorting to use custom header
       dataIndex: "serialNo",
       valueType: "text",
-      headerClassName: "text-center",
+      size: 150,
+      headerClassName: "text-center w-[150px] min-w-[150px]",
+      className: "w-[150px] min-w-[150px]",
     },
     {
       key: "vinNo",
@@ -189,15 +191,39 @@ export function SoSelectedSerialsTable({
       key: "color",
       header: renderHeader(t("Màu sắc"), "color"),
       sortable: false,
-      headerClassName: "text-center",
+      size: 120,
+      headerClassName: "text-center w-[120px] min-w-[120px]",
+      className: "w-[120px] min-w-[120px]",
       cell: (item) => <span>{item.attributes?.color || "-"}</span>,
+    },
+    {
+      key: "deliveredDate",
+      header: renderHeader(t("Ngày đã giao"), "deliveredDate"),
+      sortable: false,
+      size: 150,
+      headerClassName: "text-center w-[150px] min-w-[150px]",
+      className: "text-center w-[150px] min-w-[150px]",
+      cell: (item) => {
+        if (item.status === "DELIVERED" || item.status === "SOLD") {
+          const dateStr = (item as any).deliveryDate;
+          if (!dateStr) return "—";
+          try {
+            return new Date(dateStr).toLocaleDateString("vi-VN");
+          } catch {
+            return "—";
+          }
+        }
+        return "—";
+      },
     },
     {
       key: "status",
       header: renderHeader(t("Trạng thái"), "status"),
       sortable: false,
       valueType: "status",
-      headerClassName: "text-center",
+      size: 120,
+      headerClassName: "text-center w-[120px] min-w-[120px]",
+      className: "text-center w-[120px] min-w-[120px]",
       cell: (item) => t(STATUS_MAP[item.status || ""] || item.status || "-"),
     },
   ];
