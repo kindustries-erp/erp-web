@@ -22,6 +22,8 @@ export function useWarehouseVouchersQuery(
       status: params.status,
       partnerId: params.partnerId,
       sort: params.sort,
+      column_search: params.column_search,
+      column_filters: params.column_filters,
     }),
     [
       params.page,
@@ -33,6 +35,8 @@ export function useWarehouseVouchersQuery(
       params.status,
       params.partnerId,
       params.sort,
+      params.column_search,
+      params.column_filters,
     ],
   );
 
