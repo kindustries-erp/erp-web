@@ -17,6 +17,8 @@ import {
   ChevronDown,
   CheckSquare,
   XSquare,
+  PanelRightOpen,
+  MoreHorizontal,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -746,21 +748,22 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 80,
+        size: 120,
         headerClassName: "text-center",
         className: "font-medium text-primary text-left",
         cell: (inv) => (
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-1 w-full pr-1">
+            <div className="flex items-center gap-2 w-full">
               <Button
-                variant="link"
+                variant="ghost"
                 onClick={(e) => {
                   e.stopPropagation();
                   formHook.openInternal(inv);
                 }}
-                className="font-medium text-primary hover:underline p-0 h-auto"
+                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
               >
-                {inv.invoiceNo}
+                <span className="truncate">{inv.invoiceNo}</span>
+                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
               </Button>
             </div>
           </div>
@@ -1038,7 +1041,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           />
         ),
         size: 300,
-        className: "text-left",
+        className: "text-left whitespace-normal",
         headerClassName: "text-center",
         cell: (row) => (
           <Popover
@@ -1189,10 +1192,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             }
           >
             <div
-              className="whitespace-normal break-words w-full cursor-pointer hover:text-primary text-slate-700 underline decoration-dashed underline-offset-4 decoration-slate-300"
+              className="group flex w-full cursor-pointer hover:text-primary text-slate-700 items-center justify-between gap-1"
               title={row.description || ""}
             >
-              {row.description || "—"}
+              <div className="line-clamp-2 break-words flex-1 text-left">
+                {row.description || "—"}
+              </div>
+              {row.description && (
+                <div className="opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                  <MoreHorizontal className="w-4 h-4" />
+                </div>
+              )}
             </div>
           </Popover>
         ),
@@ -1458,7 +1468,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="postingStatus"
           />
         ),
-        size: 120,
+        size: 150,
         headerClassName: "text-center",
         className: "text-center",
         cell: (inv) => {
@@ -1522,7 +1532,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   }}
                 />
               ),
-              size: 110,
+              size: 150,
               headerClassName: "text-center",
               className: "text-center",
               cell: (inv: any) =>
@@ -1578,6 +1588,55 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           if (!branch) return inv.branchId;
           const parts = branch.label.split(" — ");
           return parts.length > 1 ? parts[1] : branch.label;
+        },
+      },
+      {
+        key: "notes",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoice.columns.notes", "Ghi chú")}
+            sortState={getSortState("notes")}
+            onSortChange={(state) => handleSortChange("notes", state)}
+            searchValue={listHook.tableState.columnSearch["notes"] || ""}
+            onSearchChange={(val) => handleSearchChange("notes", val)}
+            selectedFilters={listHook.tableState.columnFilters["notes"] || []}
+            onFilterChange={(vals) => handleFilterChange("notes", vals)}
+            align="center"
+            columnKey="notes"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+          />
+        ),
+        size: 200,
+        headerClassName: "text-center",
+        className: "text-left whitespace-normal",
+        cell: (inv: any) => {
+          if (!inv.notes) return "—";
+          return (
+            <Popover
+              content={
+                <div className="p-3 max-h-[300px] max-w-[400px] overflow-auto whitespace-pre-wrap text-sm text-slate-700">
+                  {inv.notes}
+                </div>
+              }
+            >
+              <div
+                className="group flex w-full cursor-pointer hover:text-primary text-slate-700 items-center justify-between gap-1"
+                title={inv.notes}
+              >
+                <div className="line-clamp-2 break-words flex-1 text-left">
+                  {inv.notes}
+                </div>
+                {inv.notes && (
+                  <div className="opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            </Popover>
+          );
         },
       },
     ];
@@ -1868,60 +1927,76 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onDownload={handleDownload}
         rightPanel={
           <div className="flex flex-col gap-5">
-            <ErpInvoiceInternalSidebar
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key: string, value: any) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={direction}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={formHook.handleSyncDetail}
-              pdfSlot={
-                <ErpInvoicePdfUpload
-                  invoiceId={formHook.detailInvoice?.id ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-                  editMode={formHook.editMode}
-                />
-              }
-            />
+            {formHook.loadingDetail ? (
+              <div className="space-y-6">
+                <div className="h-[200px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                <div className="h-[300px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+              </div>
+            ) : (
+              <ErpInvoiceInternalSidebar
+                form={formHook.form}
+                editMode={formHook.editMode}
+                fieldSet={(key: string, value: any) =>
+                  formHook.setForm((prev) => ({ ...prev, [key]: value }))
+                }
+                invoiceId={formHook.detailInvoice?.id ?? null}
+                pendingTagIds={formHook.pendingTagIds}
+                onPendingTagsChange={formHook.setPendingTagIds}
+                direction={direction}
+                detailInvoice={formHook.detailInvoice}
+                onRefreshDetail={formHook.handleSyncDetail}
+                pdfSlot={
+                  <ErpInvoicePdfUpload
+                    invoiceId={formHook.detailInvoice?.id ?? null}
+                    pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                    pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                    editMode={formHook.editMode}
+                  />
+                }
+              />
+            )}
           </div>
         }
       >
         <div className="flex flex-col gap-5">
-          {formHook.formError && (
-            <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
-              {formHook.formError}
+          {formHook.loadingDetail ? (
+            <div className="space-y-6">
+              <div className="h-[250px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+              <div className="h-[400px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
             </div>
+          ) : (
+            <>
+              {formHook.formError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+                  {formHook.formError}
+                </div>
+              )}
+              <ErpInvoiceInternalMain
+                form={formHook.form}
+                editMode={formHook.editMode}
+                fieldSet={(key: string, value: any) =>
+                  formHook.setForm((prev) => ({ ...prev, [key]: value }))
+                }
+                direction={direction}
+                detailInvoice={formHook.detailInvoice}
+                postingState={formHook.postingState}
+                pendingUnpost={formHook.pendingUnpost}
+                onUnpost={() => formHook.setPendingUnpost(true)}
+                onRefreshDetail={() => {
+                  if (formHook.detailInvoice?.id) {
+                    formHook.openInternal({
+                      id: formHook.detailInvoice.id,
+                    } as ErpInvoice);
+                  }
+                }}
+                invoicePreview={
+                  formHook.detailInvoice ? (
+                    <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
+                  ) : undefined
+                }
+              />
+            </>
           )}
-          <ErpInvoiceInternalMain
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key: string, value: any) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            direction={direction}
-            detailInvoice={formHook.detailInvoice}
-            postingState={formHook.postingState}
-            pendingUnpost={formHook.pendingUnpost}
-            onUnpost={() => formHook.setPendingUnpost(true)}
-            onRefreshDetail={() => {
-              if (formHook.detailInvoice?.id) {
-                formHook.openInternal({
-                  id: formHook.detailInvoice.id,
-                } as ErpInvoice);
-              }
-            }}
-            invoicePreview={
-              formHook.detailInvoice ? (
-                <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-              ) : undefined
-            }
-          />
         </div>
       </ErpInvoiceInternalDrawer>
 
