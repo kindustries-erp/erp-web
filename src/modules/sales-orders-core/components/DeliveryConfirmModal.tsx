@@ -92,14 +92,11 @@ export function DeliveryConfirmModal({
     setSaving(true);
     setError(null);
     try {
-      await Promise.all(
-        selectedIds.map((id) =>
-          inventoryCoreApi.confirmDelivery(id, {
-            deliveryDate,
-            notes: notes.trim() || undefined,
-          }),
-        ),
-      );
+      await inventoryCoreApi.confirmDeliveries({
+        serialIds: selectedIds,
+        deliveryDate,
+        notes: notes.trim() || undefined,
+      });
       if (onConfirmSuccess) onConfirmSuccess();
       onClose();
     } catch (err: any) {

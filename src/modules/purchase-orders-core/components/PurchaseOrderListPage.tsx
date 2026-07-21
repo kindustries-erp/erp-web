@@ -12,7 +12,10 @@ import { SettlementDrawer } from "@/modules/operational/components/list/Settleme
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
-import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
+import {
+  operationalApi,
+  type OperationalDocument,
+} from "@/modules/operational/api/operationalApi";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
@@ -88,6 +91,7 @@ export function PurchaseOrderListPage() {
     togglePurchaseSort,
     expandedRowIds,
     toggleExpandRow,
+    tableState,
   } = listData;
 
   const loading = listQuery.isLoading || listQuery.isFetching;
@@ -142,6 +146,15 @@ export function PurchaseOrderListPage() {
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
     onOpenDetail: openDetail,
+    tableState,
+    fetchColumnOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+      operationalApi.getPurchaseOrderColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        filtersStr,
+      ),
   });
 
   return (
