@@ -7,6 +7,7 @@ import {
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useOperationalListQuery } from "@/modules/operational/hooks/useOperationalListQuery";
 import { useTags } from "@/modules/tags/hooks/useTags";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 export function usePurchaseOrderList() {
   const t = useT();
@@ -70,7 +71,7 @@ export function usePurchaseOrderList() {
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
+      search: false,
       period: true,
       noDefaultPeriod: true,
       custom: [
@@ -118,19 +119,32 @@ export function usePurchaseOrderList() {
   );
 
   const filter = useFilterPanel(filterConfig, () => setPage(1));
+  const tableState = useTableColumnState("purchase-orders-table");
 
-  const purchaseSortArray = purchaseSort ? [purchaseSort] : undefined;
+  const purchaseSortArray =
+    tableState.sorts.length > 0
+      ? tableState.sorts
+      : purchaseSort
+        ? [purchaseSort]
+        : undefined;
   const listQuery = useOperationalListQuery({
     variant: "purchase",
     page,
     pageSize,
-    search: filter.state.search || undefined,
     supplier_id: filter.state.custom["supplier_id"] || undefined,
     inventory_item_id: filter.state.custom["inventory_item_id"] || undefined,
     tag_id: filter.state.custom["tag_id"] || undefined,
     date_from: filter.state.dateFrom || undefined,
     date_to: filter.state.dateTo || undefined,
     sort: purchaseSortArray,
+    column_search:
+      Object.keys(tableState.columnSearch).length > 0
+        ? tableState.columnSearch
+        : undefined,
+    column_filters:
+      Object.keys(tableState.columnFilters).length > 0
+        ? tableState.columnFilters
+        : undefined,
   });
 
   const toggleExpandRow = useCallback((id: string) => {
@@ -168,5 +182,6 @@ export function usePurchaseOrderList() {
     filterConfig,
     filter,
     listQuery,
+    tableState,
   };
 }

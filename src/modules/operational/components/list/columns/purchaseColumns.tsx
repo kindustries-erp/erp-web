@@ -18,16 +18,26 @@ import {
 } from "@/modules/operational/api/operationalApi";
 import { StatusBadge } from "@/shared/components/badges";
 import { useQuery } from "@tanstack/react-query";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { type useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
   expandedRowIds: Record<string, boolean>;
   onToggleExpand: (key: string) => void;
   onOpenDetail?: (row: OperationalDocument) => void;
+  tableState: ReturnType<typeof useTableColumnState>;
+  fetchColumnOptions: (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => Promise<any>;
 }
 
 function PoTooltipContent({ row }: { row: OperationalDocument }) {
   const t = useT();
+
   const { data, isLoading } = useQuery({
     queryKey: [
       "operational-document",
@@ -90,8 +100,26 @@ export function usePurchaseColumns({
   expandedRowIds,
   onToggleExpand,
   onOpenDetail,
+  tableState,
+  fetchColumnOptions,
 }: UsePurchaseColumnsOptions): DataTableColumn<OperationalDocument>[] {
   const t = useT();
+
+  const getSortState = (key: string) => {
+    if (tableState.sorts.includes(key)) return "asc";
+    if (tableState.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
+    tableState.setSort(key, state);
+  };
+  const handleSearchChange = (key: string, val: string) => {
+    tableState.setColumnSearch(key, val);
+  };
+  const handleFilterChange = (key: string, vals: string[]) => {
+    tableState.setColumnFilter(key, vals);
+  };
+
   return useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
       {
@@ -128,7 +156,20 @@ export function usePurchaseColumns({
       },
       {
         key: "order_date",
-        header: t("Ngày đặt"),
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="orderDate"
+            sortState={getSortState("orderDate")}
+            onSortChange={(state) => handleSortChange("orderDate", state)}
+            searchValue={tableState.columnSearch["orderDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("orderDate", val)}
+            selectedFilters={tableState.columnFilters["orderDate"] || []}
+            onFilterChange={(vals) => handleFilterChange("orderDate", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Ngày đặt")}
+            fetchOptions={fetchColumnOptions}
+          />
+        ),
         sortable: true,
         sortKey: "order_date",
         size: 120,
@@ -150,7 +191,20 @@ export function usePurchaseColumns({
       },
       {
         key: "expected_date",
-        header: t("Ngày nhập DK"),
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="expectedDate"
+            sortState={getSortState("expectedDate")}
+            onSortChange={(state) => handleSortChange("expectedDate", state)}
+            searchValue={tableState.columnSearch["expectedDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("expectedDate", val)}
+            selectedFilters={tableState.columnFilters["expectedDate"] || []}
+            onFilterChange={(vals) => handleFilterChange("expectedDate", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Ngày nhập DK")}
+            fetchOptions={fetchColumnOptions}
+          />
+        ),
         sortable: true,
         sortKey: "expected_date",
         size: 120,
