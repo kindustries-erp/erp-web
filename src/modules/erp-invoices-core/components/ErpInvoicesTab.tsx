@@ -921,14 +921,39 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         ),
         size: 110,
         className: "text-center",
-        cell: (inv) =>
-          inv.taxInvoiceStatus != null ? (
-            <Badge variant="outline">
-              {formatTaxInvoiceStatus(inv.taxInvoiceStatus)}
-            </Badge>
+        cell: (inv) => {
+          const lbl = formatTaxInvoiceStatus(inv.taxInvoiceStatus);
+
+          let badgeClass =
+            "w-[80px] border-slate-200 bg-slate-50 text-slate-700";
+          switch (inv.taxInvoiceStatus) {
+            case 1:
+              badgeClass =
+                "w-[80px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100";
+              break;
+            case 2:
+            case 3:
+            case 5:
+              badgeClass =
+                "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
+              break;
+            case 4:
+            case 6:
+              badgeClass =
+                "w-[80px] border-red-200 bg-red-50 text-red-700 hover:bg-red-100";
+              break;
+          }
+
+          return inv.taxInvoiceStatus != null ? (
+            <Tooltip content={lbl}>
+              <Badge variant="ghost" className={`border ${badgeClass}`}>
+                <span className="truncate block max-w-full">{lbl}</span>
+              </Badge>
+            </Tooltip>
           ) : (
             "—"
-          ),
+          );
+        },
       },
       {
         key: "taxProcessStatus",
@@ -978,15 +1003,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         cell: (inv) => {
           const lbl = formatTaxProcessStatus(inv.taxProcessStatus);
           return lbl !== "—" ? (
-            <span
-              className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none ${
-                inv.taxProcessStatus === 2 || inv.taxProcessStatus === 4
-                  ? "bg-red-100 text-red-800"
-                  : "bg-emerald-100 text-emerald-800"
-              }`}
-            >
-              {lbl}
-            </span>
+            <Tooltip content={lbl}>
+              <Badge
+                variant="outline"
+                className="w-[100px] bg-slate-50 text-slate-700 hover:bg-slate-100"
+              >
+                <span className="truncate block max-w-full">{lbl}</span>
+              </Badge>
+            </Tooltip>
           ) : (
             "—"
           );
@@ -1437,16 +1461,24 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         size: 120,
         headerClassName: "text-center",
         className: "text-center",
-        cell: (inv) =>
-          inv.postingStatus === "POSTED" ? (
-            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-blue-100 text-blue-800">
-              HẠCH TOÁN
-            </span>
-          ) : (
-            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-800">
-              CHƯA HẠCH TOÁN
-            </span>
-          ),
+        cell: (inv) => {
+          const isPosted = inv.postingStatus === "POSTED";
+          const lbl = isPosted ? "Hạch toán" : "Chưa hạch toán";
+          return (
+            <Tooltip content={lbl}>
+              <Badge
+                variant="ghost"
+                className={`border w-[110px] ${
+                  isPosted
+                    ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {lbl}
+              </Badge>
+            </Tooltip>
+          );
+        },
       },
       ...(direction === "IN"
         ? [
@@ -1495,13 +1527,23 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               className: "text-center",
               cell: (inv: any) =>
                 inv.isValid ? (
-                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-green-100 text-green-800">
-                    {t("invoice.isValid.true", "Hợp lệ")}
-                  </span>
+                  <Badge
+                    variant="ghost"
+                    className="border border-emerald-200 bg-emerald-50 text-emerald-700 w-[85px] hover:bg-emerald-100"
+                  >
+                    <span className="truncate block max-w-full">
+                      {t("invoice.isValid.true", "Hợp lệ")}
+                    </span>
+                  </Badge>
                 ) : (
-                  <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium leading-none bg-gray-100 text-gray-500">
-                    {t("invoice.isValid.false", "Chưa hợp lệ")}
-                  </span>
+                  <Badge
+                    variant="ghost"
+                    className="border border-slate-200 bg-slate-50 text-slate-700 w-[85px] hover:bg-slate-100"
+                  >
+                    <span className="truncate block max-w-full">
+                      {t("invoice.isValid.false", "Chưa hợp lệ")}
+                    </span>
+                  </Badge>
                 ),
             } as DataTableColumn<ErpInvoice>,
           ]
