@@ -21,8 +21,7 @@ import { SerialPicker } from "./SerialPicker";
 import { DeliveryConfirmModal } from "./DeliveryConfirmModal";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
-import { SoVehicleListDrawer } from "./SoVehicleListDrawer";
-import { List } from "lucide-react";
+import { SoSelectedSerialsTable } from "./SoSelectedSerialsTable";
 import { Button } from "@/shared/components/ui/Button";
 
 export interface SoLineForm {
@@ -126,16 +125,6 @@ function fmtMoney(value?: string | null) {
   }).format(n);
 }
 
-function fmtQty(value?: string | null) {
-  if (!value) return "0";
-  const n = Number(value);
-  if (Number.isNaN(n)) return value;
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  }).format(n);
-}
-
 export interface SoFormDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -205,9 +194,6 @@ export function SoFormDrawer({
   const isEditing = mode === "edit";
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const [isConfirmingBulk, setIsConfirmingBulk] = useState(false);
-  const [vehicleListLineId, setVehicleListLineId] = useState<string | null>(
-    null,
-  );
 
   const canConfirmDelivery =
     viewOnly &&
@@ -218,6 +204,11 @@ export function SoFormDrawer({
     editing?.lines?.flatMap(
       (l: any) => l.selectedSerialIds || l.serialIds || [],
     ) || [];
+
+  const allSelectedSerialIds = React.useMemo(
+    () => form.lines.flatMap((l) => l.selectedSerialIds || []).filter(Boolean),
+    [form.lines],
+  );
 
   const handleBulkConfirmDelivery = async () => {
     if (!editing?.id) return;
@@ -328,222 +319,262 @@ export function SoFormDrawer({
         }
         subtitle={editing ? editing.soNo : t("Thông tin chung & dòng hàng")}
         actions={drawerActions}
-        rightPanelTitle={t("Thông tin chung")}
         error={saveError}
         loading={drawerLoading}
         leftPanel={
           <div className="space-y-4">
-            <DrawerSection
-              title={
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:justify-between pr-4 mt-2 sm:mt-0">
-                  <span className="shrink-0 mb-2 sm:mb-0">
-                    {t("Chi tiết")} ({form.lines.length})
-                  </span>
-                </div>
-              }
-            >
-              <DocumentLineTable
-                data={form.lines}
-                getRowKey={(_, idx) => String(idx)}
-                viewOnly={viewOnly}
-                onAddLine={addLine}
-                onRemoveLine={removeLine}
-                columns={[
-                  {
-                    key: "item",
-                    header: t("Item"),
-                    minWidth: 240,
-                    cell: (line, idx) => {
-                      if (viewOnly) {
-                        const matched = itemOptions.find(
-                          (opt) => opt.value === line.itemId,
-                        );
-                        const displayItemName = matched
-                          ? matched.label.split(" — ").slice(1).join(" — ")
-                          : line.itemName || line.itemId || "—";
-                        return <span>{displayItemName}</span>;
-                      }
-                      return (
-                        <Combobox
-                          value={line.itemId}
-                          readOnly={!!editing}
-                          onChange={(value) => {
-                            const matched = itemOptions.find(
-                              (opt) => opt.value === value,
-                            );
-                            updateLine(idx, {
-                              itemId: value,
-                              itemName:
-                                matched?.label
-                                  .split(" — ")
-                                  .slice(1)
-                                  .join(" — ") || "",
-                            });
-                          }}
-                          options={itemOptions}
-                          placeholder={t("Chọn inventory item")}
-                          onSearch={setItemSearch}
-                          onScrollBottom={fetchNextItems}
-                          loading={loadingItems}
-                          fallbackLabel={line.itemName}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    key: "tracking",
-                    header: t("Serials / Số khung"),
-                    minWidth: 180,
-                    cell: (line, idx) => {
-                      const matchedItem = itemOptions.find(
-                        (o) => o.value === line.itemId,
-                      )?.original;
-                      const hasSerials =
-                        line.selectedSerialIds &&
-                        line.selectedSerialIds.length > 0;
-
-                      if (
-                        !line.itemId ||
-                        (!hasSerials &&
-                          (!matchedItem ||
-                            !matchedItem.trackingPolicyId ||
-                            matchedItem.trackingPolicyId === "NONE"))
-                      ) {
+            {!viewOnly && (
+              <DrawerSection
+                title={
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:justify-between pr-4 mt-2 sm:mt-0">
+                    <span className="shrink-0 mb-2 sm:mb-0">
+                      {t("Chi tiết")} ({form.lines.length})
+                    </span>
+                  </div>
+                }
+              >
+                <DocumentLineTable
+                  data={form.lines}
+                  getRowKey={(_, idx) => String(idx)}
+                  viewOnly={viewOnly}
+                  onAddLine={addLine}
+                  onRemoveLine={removeLine}
+                  columns={[
+                    {
+                      key: "item",
+                      header: t("Item"),
+                      minWidth: 240,
+                      cell: (line, idx) => {
+                        if (viewOnly) {
+                          const matched = itemOptions.find(
+                            (opt) => opt.value === line.itemId,
+                          );
+                          const displayItemName = matched
+                            ? matched.label.split(" — ").slice(1).join(" — ")
+                            : line.itemName || line.itemId || "—";
+                          return <span>{displayItemName}</span>;
+                        }
                         return (
-                          <span className="text-[11px] text-muted-foreground">
-                            —
-                          </span>
-                        );
-                      }
-                      if (viewOnly) {
-                        return (
-                          <div className="flex items-center gap-2 min-h-[36px] py-1">
-                            <span className="text-[13px] font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-700">
-                              {line.selectedSerialIds?.length || 0}{" "}
-                              {t("xe đã chọn")}
-                            </span>
-                            {(line.selectedSerialIds?.length || 0) > 0 &&
-                              line.id && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setVehicleListLineId(line.id as string)
-                                  }
-                                  className="p-1 hover:bg-gray-100 rounded text-blue-600 transition-colors"
-                                  title={t("Xem chi tiết xe")}
-                                >
-                                  <List className="w-4 h-4" />
-                                </button>
-                              )}
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="flex items-center min-h-[36px] py-1">
-                          <SerialPicker
-                            itemId={line.itemId}
-                            trackingPolicyId={
-                              matchedItem?.trackingPolicyId || "UNKNOWN"
-                            }
-                            value={line.selectedSerialIds || []}
-                            onChange={(ids) => {
+                          <Combobox
+                            value={line.itemId}
+                            readOnly={!!editing}
+                            onChange={(value) => {
+                              const matched = itemOptions.find(
+                                (opt) => opt.value === value,
+                              );
                               updateLine(idx, {
-                                selectedSerialIds: ids,
-                                qtyOrdered: String(ids.length || 1), // auto update qty
+                                itemId: value,
+                                itemName:
+                                  matched?.label
+                                    .split(" — ")
+                                    .slice(1)
+                                    .join(" — ") || "",
                               });
                             }}
-                            disabled={!!editing}
-                            readOnly={!!editing}
+                            options={itemOptions}
+                            placeholder={t("Chọn inventory item")}
+                            onSearch={setItemSearch}
+                            onScrollBottom={fetchNextItems}
+                            loading={loadingItems}
+                            fallbackLabel={line.itemName}
                           />
-                        </div>
-                      );
+                        );
+                      },
                     },
-                  },
-                  {
-                    key: "qty",
-                    header: t("Số lượng"),
-                    minWidth: 90,
-                    cell: (line, idx) => (
-                      <input
-                        value={line.qtyOrdered}
-                        readOnly={viewOnly || !!editing}
-                        onChange={(e) =>
-                          updateLine(idx, { qtyOrdered: e.target.value })
-                        }
-                        className={inputCls}
-                        placeholder="1"
-                      />
-                    ),
-                  },
-                  {
-                    key: "unitPrice",
-                    header: t("Đơn giá"),
-                    minWidth: 100,
-                    cell: (line, idx) => (
-                      <input
-                        value={line.unitPrice}
-                        readOnly={viewOnly || !!editing}
-                        onChange={(e) =>
-                          updateLine(idx, { unitPrice: e.target.value })
-                        }
-                        className={inputCls}
-                        placeholder="0"
-                      />
-                    ),
-                  },
-                  {
-                    key: "amount",
-                    header: t("Thành tiền"),
-                    minWidth: 100,
-                    cell: (line) => (
-                      <div
-                        className={`${inputCls} flex items-center bg-muted/40`}
-                      >
-                        {fmtMoney(line.amount)}
-                      </div>
-                    ),
-                  },
-                ]}
-              />
-            </DrawerSection>
+                    {
+                      key: "tracking",
+                      header: t("Serials / Số khung"),
+                      minWidth: 180,
+                      cell: (line, idx) => {
+                        const matchedItem = itemOptions.find(
+                          (o) => o.value === line.itemId,
+                        )?.original;
+                        const hasSerials =
+                          line.selectedSerialIds &&
+                          line.selectedSerialIds.length > 0;
 
-            {editing?.lines?.length ? (
-              <DrawerSection title="Trạng thái reserve/deliver hiện tại">
-                <div className="overflow-x-auto rounded-2xl border border-border">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2">Item</th>
-                        <th className="px-3 py-2 text-right">Ordered</th>
-                        <th className="px-3 py-2 text-right">Reserved</th>
-                        <th className="px-3 py-2 text-right">Delivered</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {editing.lines.map((line, idx) => (
-                        <tr
-                          key={line.id ?? idx}
-                          className="border-t border-border"
+                        if (
+                          !line.itemId ||
+                          (!hasSerials &&
+                            (!matchedItem ||
+                              !matchedItem.trackingPolicyId ||
+                              matchedItem.trackingPolicyId === "NONE"))
+                        ) {
+                          return (
+                            <span className="text-[11px] text-muted-foreground">
+                              —
+                            </span>
+                          );
+                        }
+                        if (viewOnly) {
+                          return (
+                            <div className="flex items-center gap-2 min-h-[36px] py-1">
+                              <span className="text-[13px] font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                                {line.selectedSerialIds?.length || 0}{" "}
+                                {t("xe đã chọn")}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex items-center min-h-[36px] py-1">
+                            <SerialPicker
+                              itemId={line.itemId}
+                              trackingPolicyId={
+                                matchedItem?.trackingPolicyId || "UNKNOWN"
+                              }
+                              value={line.selectedSerialIds || []}
+                              onChange={(ids) => {
+                                updateLine(idx, {
+                                  selectedSerialIds: ids,
+                                  qtyOrdered: String(ids.length || 1), // auto update qty
+                                });
+                              }}
+                              disabled={!!editing}
+                              readOnly={!!editing}
+                            />
+                          </div>
+                        );
+                      },
+                    },
+                    {
+                      key: "qty",
+                      header: t("Số lượng"),
+                      minWidth: 90,
+                      cell: (line, idx) => (
+                        <input
+                          value={line.qtyOrdered}
+                          readOnly={viewOnly || !!editing}
+                          onChange={(e) =>
+                            updateLine(idx, { qtyOrdered: e.target.value })
+                          }
+                          className={inputCls}
+                          placeholder="1"
+                        />
+                      ),
+                    },
+                    {
+                      key: "unitPrice",
+                      header: t("Đơn giá"),
+                      minWidth: 100,
+                      cell: (line, idx) => (
+                        <input
+                          value={line.unitPrice}
+                          readOnly={viewOnly || !!editing}
+                          onChange={(e) =>
+                            updateLine(idx, { unitPrice: e.target.value })
+                          }
+                          className={inputCls}
+                          placeholder="0"
+                        />
+                      ),
+                    },
+                    {
+                      key: "amount",
+                      header: t("Thành tiền"),
+                      minWidth: 100,
+                      cell: (line) => (
+                        <div
+                          className={`${inputCls} flex items-center bg-muted/40`}
                         >
-                          <td className="px-3 py-2">
-                            {line.itemName || line.itemId || "—"}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {fmtQty(line.qtyOrdered)}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {fmtQty(line.qtyReserved)}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {fmtQty(line.qtyDelivered)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          {fmtMoney(line.amount)}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </DrawerSection>
-            ) : null}
+            )}
+
+            {allSelectedSerialIds.length > 0 && (
+              <DrawerSection title={t("Danh sách Serial/Xe đã chọn")}>
+                <SoSelectedSerialsTable serialIds={allSelectedSerialIds} />
+              </DrawerSection>
+            )}
+          </div>
+        }
+        rightPanel={
+          <div className="flex flex-col gap-3">
+            <DrawerSection title={t("Thông tin chung")}>
+              <div className="flex flex-col gap-3">
+                <DrawerField label="Mã đơn hàng" required>
+                  <input
+                    value={form.soNo}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, soNo: e.target.value }))
+                    }
+                    readOnly={viewOnly || !!editing}
+                    className={inputCls}
+                    placeholder={t("VD: SO-2410-001")}
+                  />
+                </DrawerField>
+                <DrawerField label="Khách hàng" required>
+                  <Combobox
+                    value={form.customerId}
+                    onChange={(value) =>
+                      setForm((prev) => ({ ...prev, customerId: value }))
+                    }
+                    options={customerOptions}
+                    placeholder={t("Chọn khách hàng")}
+                    readOnly={viewOnly}
+                    onSearch={setCustomerSearch}
+                    onScrollBottom={fetchNextCustomers}
+                    loading={loadingCustomers}
+                    fallbackLabel={editing?.customerName || ""}
+                  />
+                </DrawerField>
+                <DrawerField label={t("Ngày đặt")} required>
+                  <DatePicker
+                    className={inputCls}
+                    value={form.orderDate}
+                    disabled={viewOnly}
+                    onChange={(v) =>
+                      setForm((prev) => ({ ...prev, orderDate: v }))
+                    }
+                  />
+                </DrawerField>
+                <DrawerField label={t("Ngày giao")}>
+                  <DatePicker
+                    className={inputCls}
+                    value={form.expectedDeliveryDate}
+                    disabled={viewOnly}
+                    placeholder={t("Chọn ngày giao")}
+                    onChange={(v) =>
+                      setForm((prev) => ({ ...prev, expectedDeliveryDate: v }))
+                    }
+                  />
+                </DrawerField>
+                <DrawerField label="Ghi chú">
+                  <textarea
+                    value={form.remarks}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, remarks: e.target.value }))
+                    }
+                    readOnly={viewOnly}
+                    className={`${inputCls} min-h-[88px]`}
+                    placeholder={t("Ghi chú đơn bán hàng")}
+                  />
+                </DrawerField>
+                <DrawerField label={t("Thẻ nhãn")}>
+                  {editing ? (
+                    <EntityTagSelector
+                      entityType="erp_sales_order"
+                      entityId={editing.id}
+                      readOnly={viewOnly}
+                    />
+                  ) : !viewOnly ? (
+                    <EntityTagSelector
+                      entityType="erp_sales_order"
+                      entityId="__pending__"
+                      readOnly={false}
+                      pendingMode
+                      pendingTagIds={pendingTagIds}
+                      onPendingChange={onPendingTagsChange}
+                    />
+                  ) : null}
+                </DrawerField>
+              </div>
+            </DrawerSection>
 
             {editing?.goodsIssues?.length ? (
               <DrawerSection title="Phiếu xuất kho liên kết">
@@ -592,84 +623,6 @@ export function SoFormDrawer({
             ) : null}
           </div>
         }
-        rightPanel={
-          <div className="flex flex-col gap-3">
-            <DrawerField label="Mã đơn hàng" required>
-              <input
-                value={form.soNo}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, soNo: e.target.value }))
-                }
-                readOnly={viewOnly || !!editing}
-                className={inputCls}
-                placeholder={t("VD: SO-2410-001")}
-              />
-            </DrawerField>
-            <DrawerField label="Khách hàng" required>
-              <Combobox
-                value={form.customerId}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, customerId: value }))
-                }
-                options={customerOptions}
-                placeholder={t("Chọn khách hàng")}
-                readOnly={viewOnly}
-                onSearch={setCustomerSearch}
-                onScrollBottom={fetchNextCustomers}
-                loading={loadingCustomers}
-                fallbackLabel={editing?.customerName || ""}
-              />
-            </DrawerField>
-            <DrawerField label={t("Ngày đặt")} required>
-              <DatePicker
-                className={inputCls}
-                value={form.orderDate}
-                disabled={viewOnly}
-                onChange={(v) => setForm((prev) => ({ ...prev, orderDate: v }))}
-              />
-            </DrawerField>
-            <DrawerField label={t("Ngày giao")}>
-              <DatePicker
-                className={inputCls}
-                value={form.expectedDeliveryDate}
-                disabled={viewOnly}
-                placeholder={t("Chọn ngày giao")}
-                onChange={(v) =>
-                  setForm((prev) => ({ ...prev, expectedDeliveryDate: v }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Ghi chú">
-              <textarea
-                value={form.remarks}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, remarks: e.target.value }))
-                }
-                readOnly={viewOnly}
-                className={`${inputCls} min-h-[88px]`}
-                placeholder={t("Ghi chú đơn bán hàng")}
-              />
-            </DrawerField>
-            <DrawerField label={t("Thẻ nhãn")}>
-              {editing ? (
-                <EntityTagSelector
-                  entityType="erp_sales_order"
-                  entityId={editing.id}
-                  readOnly={viewOnly}
-                />
-              ) : !viewOnly ? (
-                <EntityTagSelector
-                  entityType="erp_sales_order"
-                  entityId="__pending__"
-                  readOnly={false}
-                  pendingMode
-                  pendingTagIds={pendingTagIds}
-                  onPendingChange={onPendingTagsChange}
-                />
-              ) : null}
-            </DrawerField>
-          </div>
-        }
       />
       <DeliveryConfirmModal
         open={deliveryModalOpen}
@@ -682,11 +635,6 @@ export function SoFormDrawer({
         }}
       />
       <GiFormDrawer drawer={giDrawer} />
-      <SoVehicleListDrawer
-        open={!!vehicleListLineId}
-        onClose={() => setVehicleListLineId(null)}
-        lineId={vehicleListLineId || ""}
-      />
     </>
   );
 }
