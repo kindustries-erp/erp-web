@@ -279,6 +279,33 @@ export function ErpInvoiceInternalMain({
   const { t } = useTranslation("erpInvoices");
   const isPosted = detailInvoice?.postingStatus === "POSTED" && !pendingUnpost;
 
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isPdfLoading, setIsPdfLoading] = useState<boolean>(false);
+  const pdfKey =
+    detailInvoice?.pdfFileKey ||
+    (detailInvoice?.pdfFiles && detailInvoice.pdfFiles.length > 0
+      ? detailInvoice.pdfFiles[0].key
+      : null);
+
+  useEffect(() => {
+    if (pdfKey && detailInvoice?.id) {
+      setIsPdfLoading(true);
+      erpInvoicesCoreApi
+        .getPdfDownloadUrl(detailInvoice.id, pdfKey, true)
+        .then((res) => {
+          setPdfUrl(res.url);
+          setIsPdfLoading(false);
+        })
+        .catch(() => {
+          setPdfUrl(null);
+          setIsPdfLoading(false);
+        });
+    } else {
+      setPdfUrl(null);
+      setIsPdfLoading(false);
+    }
+  }, [pdfKey, detailInvoice?.id]);
+
   return (
     <div className="flex flex-col gap-6">
       {editMode && (
@@ -432,9 +459,21 @@ export function ErpInvoiceInternalMain({
       )}
 
       {/* Invoice preview — rendered below linked docs in view mode */}
-      {!editMode && invoicePreview && (
+      {!editMode && (pdfKey || invoicePreview) && (
         <div className="bg-slate-50 rounded-lg overflow-hidden">
-          {invoicePreview}
+          {isPdfLoading ? (
+            <div className="w-full min-h-[800px] flex items-center justify-center bg-gray-100 animate-pulse">
+              <div className="text-gray-400 font-medium">Đang tải PDF...</div>
+            </div>
+          ) : pdfUrl ? (
+            <iframe
+              src={pdfUrl}
+              className="w-full min-h-[800px] border-0"
+              title="PDF Preview"
+            />
+          ) : (
+            invoicePreview
+          )}
         </div>
       )}
     </div>
