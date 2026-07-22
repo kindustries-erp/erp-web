@@ -38,6 +38,7 @@ import {
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 interface VinfastPartTrackingRow {
   itemCode: string;
@@ -729,7 +730,22 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("month", vals)}
           align="center"
           columnKey="month"
-          {...commonFilterProps}
+          hideFilter={true}
+          hideFooter={true}
+          isActive={!!(filterState.dateFrom || filterState.dateTo)}
+          dateRangeSlot={({ close }) => (
+            <InvoiceDateRangeSlot
+              dateFrom={filterState.dateFrom}
+              dateTo={filterState.dateTo}
+              onChange={(from, to) => {
+                filterProps.setDateFrom(from);
+                filterProps.setDateTo(to);
+                setPage(1);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
         />
       ),
       size: 100,
@@ -1075,6 +1091,14 @@ export function VinfastPartsTrackingPage() {
         onRefresh={() => refetch()}
         filterConfig={filterConfig}
         filter={filterProps}
+        activeFilterCount={
+          filterProps.activeFilterCount + (tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          filterProps.resetAll();
+          tableState.resetFilters();
+          setPage(1);
+        }}
       />
 
       <ErpInvoiceInternalDrawer
