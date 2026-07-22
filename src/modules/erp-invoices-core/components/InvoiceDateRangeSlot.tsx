@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useT } from "@/core/i18n";
 import {
   format,
   isValid,
@@ -34,15 +35,6 @@ type PresetKey =
   | "thisYear"
   | "all";
 
-const PRESETS: { key: PresetKey; label: string }[] = [
-  { key: "today", label: "Hôm nay" },
-  { key: "thisMonth", label: "Tháng này" },
-  { key: "lastMonth", label: "Tháng trước" },
-  { key: "thisQuarter", label: "Quý này" },
-  { key: "thisYear", label: "Năm nay" },
-  { key: "all", label: "Tất cả" },
-];
-
 function getPresetRange(key: PresetKey): {
   from: Date | undefined;
   to: Date | undefined;
@@ -72,8 +64,21 @@ export function InvoiceDateRangeSlot({
   onChange,
   onClose,
 }: InvoiceDateRangeSlotProps) {
+  const t = useT();
   const [pendingFrom, setPendingFrom] = useState(dateFrom);
   const [pendingTo, setPendingTo] = useState(dateTo);
+
+  const presets = useMemo<{ key: PresetKey; label: string }[]>(
+    () => [
+      { key: "today", label: t("common.today", "Hôm nay") },
+      { key: "thisMonth", label: t("common.thisMonth", "Tháng này") },
+      { key: "lastMonth", label: t("common.lastMonth", "Tháng trước") },
+      { key: "thisQuarter", label: t("common.thisQuarter", "Quý này") },
+      { key: "thisYear", label: t("common.thisYear", "Năm nay") },
+      { key: "all", label: t("common.all", "Tất cả") },
+    ],
+    [t],
+  );
 
   // Sync external changes (e.g. external reset)
   useEffect(() => {
@@ -106,7 +111,7 @@ export function InvoiceDateRangeSlot({
           "[&::-webkit-scrollbar-thumb]:bg-border",
         )}
       >
-        {PRESETS.map((p) => (
+        {presets.map((p) => (
           <button
             key={p.key}
             type="button"
@@ -127,7 +132,7 @@ export function InvoiceDateRangeSlot({
       <div className="px-3 pt-3 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <label className="text-xs font-medium text-muted-foreground w-16 shrink-0">
-            Từ ngày
+            {t("common.dateFrom", "Từ ngày")}
           </label>
           <DatePicker
             value={pendingFrom}
@@ -138,7 +143,7 @@ export function InvoiceDateRangeSlot({
         </div>
         <div className="flex items-center gap-3">
           <label className="text-xs font-medium text-muted-foreground w-16 shrink-0">
-            Đến ngày
+            {t("common.dateTo", "Đến ngày")}
           </label>
           <DatePicker
             value={pendingTo}
@@ -161,7 +166,7 @@ export function InvoiceDateRangeSlot({
             if (onClose) onClose();
           }}
         >
-          Xóa bộ lọc
+          {t("common.clearFilter", "Xóa bộ lọc")}
         </Button>
         <Button
           variant="primary"
@@ -170,7 +175,7 @@ export function InvoiceDateRangeSlot({
           onClick={handleApply}
           disabled={!isPendingChanged}
         >
-          Áp dụng
+          {t("common.apply", "Áp dụng")}
         </Button>
       </div>
     </div>
