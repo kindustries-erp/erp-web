@@ -517,7 +517,6 @@ export function PartnerInvoiceDrawer({
         saving={formHook.saving}
         handleSave={formHook.handleSave}
         cancelEdit={formHook.cancelEdit}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         rightPanel={
           <div className="flex flex-col gap-5">
             <ErpInvoiceInternalSidebar

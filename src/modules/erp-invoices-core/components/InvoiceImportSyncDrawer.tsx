@@ -22,7 +22,6 @@ import { toast } from "react-hot-toast";
 import {
   useInvoiceXmlUpload,
   type Direction,
-  type FileEntry,
 } from "../hooks/useInvoiceXmlUpload";
 import { usePortalSync } from "../hooks/usePortalSync";
 import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
