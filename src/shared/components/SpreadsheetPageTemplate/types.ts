@@ -44,6 +44,8 @@ export interface SpreadsheetPageTemplateProps<T> {
   // --- Filter Panel ---
   filterConfig?: FilterPanelConfig;
   filter?: FilterPanelReturn;
+  activeFilterCount?: number;
+  onClearAllFilters?: () => void;
 
   // --- Selection & Expansion ---
   enableRowSelection?: boolean;

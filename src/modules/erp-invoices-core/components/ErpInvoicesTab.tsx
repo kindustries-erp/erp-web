@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { format, isValid } from "date-fns";
+import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
@@ -389,6 +390,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         tag_id: (custom?.tag_id as string) || undefined,
         sort_by: listHook.sortBy || undefined,
         sort_order: listHook.sortOrder || undefined,
+        column_search:
+          Object.keys(listHook.tableState.columnSearch).length > 0
+            ? JSON.stringify(listHook.tableState.columnSearch)
+            : undefined,
+        column_filters:
+          Object.keys(listHook.tableState.columnFilters).length > 0
+            ? JSON.stringify(listHook.tableState.columnFilters)
+            : undefined,
       });
 
       const url = window.URL.createObjectURL(blob);
@@ -452,7 +461,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      period: true,
       noDefaultPeriod: true,
       custom: [
         {
@@ -712,10 +720,27 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
             align="center"
             columnKey="invoiceDate"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
+            hideFilter={true}
+            hideFooter={true}
+            isActive={
+              !!(
+                listHook.filterPanel.state.dateFrom ||
+                listHook.filterPanel.state.dateTo
+              )
+            }
+            dateRangeSlot={({ close }) => (
+              <InvoiceDateRangeSlot
+                dateFrom={listHook.filterPanel.state.dateFrom}
+                dateTo={listHook.filterPanel.state.dateTo}
+                onChange={(from, to) => {
+                  listHook.filterPanel.setDateFrom(from);
+                  listHook.filterPanel.setDateTo(to);
+                  listHook.setPage(1);
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
           />
         ),
         size: 100,
@@ -1647,6 +1672,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     listHook.tableState.columnFilters,
     listHook.tableState.columnSearch,
     listHook.tableState.sorts,
+    listHook.filterPanel.state.dateFrom,
+    listHook.filterPanel.state.dateTo,
     fetchInvoiceOptions,
     openPopoverId,
   ]);
@@ -1756,6 +1783,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         loading={listHook.loading}
         emptyLabel={t("emptyData", "Chưa có hóa đơn nào.")}
         minWidth={1200}
+        activeFilterCount={
+          listHook.filterPanel.activeFilterCount +
+          (listHook.tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          listHook.filterPanel.resetAll();
+          listHook.setPage(1);
+        }}
         sortArray={
           activeSortKey
             ? [activeSortOrder === "desc" ? `-${activeSortKey}` : activeSortKey]

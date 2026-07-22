@@ -35,6 +35,8 @@ export function SpreadsheetPageTemplate<T>({
   customActionsNode,
   filterConfig,
   filter,
+  activeFilterCount,
+  onClearAllFilters,
   enableRowSelection = false,
   rowSelection,
   onRowSelectionChange,
@@ -112,7 +114,10 @@ export function SpreadsheetPageTemplate<T>({
           onRefresh={onRefresh}
           loading={loading}
           onFilterToggle={filter?.togglePanel}
-          activeFilterCount={filter?.activeFilterCount || 0}
+          activeFilterCount={
+            activeFilterCount ?? filter?.activeFilterCount ?? 0
+          }
+          onClearAllFilters={onClearAllFilters}
           onCreate={onCreate}
           createLabel={finalCreateLabel}
           createActions={createActions}
