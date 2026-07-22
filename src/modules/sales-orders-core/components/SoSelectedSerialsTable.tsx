@@ -9,6 +9,7 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 
 export interface SoSelectedSerialsTableProps {
   serialIds: string[];
+  serialLifecycles?: any[];
 }
 
 const STATUS_MAP: Record<string, string> = {
@@ -21,6 +22,7 @@ const STATUS_MAP: Record<string, string> = {
 
 export function SoSelectedSerialsTable({
   serialIds,
+  serialLifecycles,
 }: SoSelectedSerialsTableProps) {
   const t = useT();
   const [loading, setLoading] = useState(false);
@@ -205,7 +207,15 @@ export function SoSelectedSerialsTable({
       className: "text-center w-[150px] min-w-[150px]",
       cell: (item) => {
         if (item.status === "DELIVERED" || item.status === "SOLD") {
-          const dateStr = (item as any).deliveryDate;
+          let dateStr = (item as any).deliveryDate;
+          if (!dateStr && serialLifecycles) {
+            const lc = serialLifecycles.find(
+              (l: any) => l.serialId === item.id,
+            );
+            if (lc && lc.deliveryDate) {
+              dateStr = lc.deliveryDate;
+            }
+          }
           if (!dateStr) return "—";
           try {
             return new Date(dateStr).toLocaleDateString("vi-VN");

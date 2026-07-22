@@ -9,7 +9,11 @@ import {
   FileText,
   CheckCircle,
   FileSpreadsheet,
+  PanelRightOpen,
+  MoreHorizontal,
 } from "lucide-react";
+import { Popover } from "@/core/components/ui/Popover";
+import { useQuery } from "@tanstack/react-query";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useSalesOrdersQuery } from "@/modules/sales-orders-core/hooks/useSalesOrdersQuery";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -51,6 +55,143 @@ function fmtDate(value?: string | null) {
   return value.slice(0, 10);
 }
 
+function DeliveryDetailPopover({ item }: { item: ErpSalesOrder }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["sales-order-detail", item.id],
+    queryFn: () => salesOrdersCoreApi.get(item.id),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const itemAny = item as any;
+  const displayDate =
+    itemAny.deliveredDate ||
+    itemAny.actualDeliveryDate ||
+    itemAny.updatedAt ||
+    item.createdAt;
+  const dateStr = displayDate
+    ? new Date(displayDate).toLocaleDateString("vi-VN")
+    : "—";
+
+  const hasSerialLifecycles = Boolean(data?.serialLifecycles?.length);
+
+  return (
+    <Popover
+      content={
+        <div className="p-3 max-h-[400px] max-w-[800px] max-w-[90vw] overflow-auto">
+          <h4 className="font-semibold text-sm mb-3 text-slate-800">
+            Chi tiết đợt giao hàng
+          </h4>
+          {isLoading ? (
+            <div className="text-sm text-slate-500 py-2">Đang tải...</div>
+          ) : hasSerialLifecycles ? (
+            <table className="w-full text-sm text-left border-collapse min-w-[500px]">
+              <thead className="bg-slate-50 sticky top-0">
+                <tr>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Số Seri
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Số Khung
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Số Máy
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium text-center">
+                    Ngày giao
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data!.serialLifecycles!.map((sl: any) => {
+                  const deliveryDateStr = sl.deliveryDate
+                    ? new Date(sl.deliveryDate).toLocaleDateString("vi-VN")
+                    : "—";
+                  return (
+                    <tr
+                      key={sl.id}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {sl.serialNo || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {sl.vinNo || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {sl.engineNo || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap text-center">
+                        {deliveryDateStr}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : data?.goodsIssues && data.goodsIssues.length > 0 ? (
+            <table className="w-full text-sm text-left border-collapse min-w-[400px]">
+              <thead className="bg-slate-50 sticky top-0">
+                <tr>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Phiếu xuất
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium text-center">
+                    Ngày giao
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Xe / Biển số
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.goodsIssues.map((gi: any) => {
+                  const firstLine = gi.lines?.[0] || {};
+                  const vehicleInfo =
+                    firstLine.vehicleVin ||
+                    firstLine.vehicleId ||
+                    gi.remarks ||
+                    "—";
+                  const deliveryConfirmDate =
+                    gi.updatedAt || gi.createdAt || gi.issueDate;
+                  return (
+                    <tr
+                      key={gi.id}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {gi.issueNo}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap text-center">
+                        {deliveryConfirmDate
+                          ? new Date(deliveryConfirmDate).toLocaleDateString(
+                              "vi-VN",
+                            )
+                          : "—"}
+                      </td>
+                      <td className="px-2 py-2">{vehicleInfo}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-slate-500 text-sm italic py-2">
+              Chưa có chi tiết giao hàng.
+            </div>
+          )}
+        </div>
+      }
+    >
+      <div className="group relative flex w-full cursor-pointer hover:text-primary items-center justify-center h-full min-h-[24px]">
+        <span>{dateStr}</span>
+        <div className="absolute right-0 opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-primary" />
+        </div>
+      </div>
+    </Popover>
+  );
+}
+
 export function ErpSalesOrdersPage() {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
@@ -66,7 +207,7 @@ export function ErpSalesOrdersPage() {
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
+      search: false,
     }),
     [],
   );
@@ -82,6 +223,7 @@ export function ErpSalesOrdersPage() {
   }, [filterSearch]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpSalesOrder | null>(null);
   const [viewOnly, setViewOnly] = useState(true);
 
@@ -286,6 +428,10 @@ export function ErpSalesOrdersPage() {
   async function openView(item: ErpSalesOrder) {
     setViewOnly(true);
     setSaveError(null);
+    setEditing(item);
+    setForm(buildForm(item));
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       const detail = await salesOrdersCoreApi.get(item.id);
       // Detail API might not return customerName, fallback to list item's customerName
@@ -294,7 +440,6 @@ export function ErpSalesOrdersPage() {
       const mergedDetail = { ...detail, customerName };
       setEditing(mergedDetail);
       setForm(buildForm(mergedDetail));
-      setDrawerOpen(true);
 
       if (!customerName && detail.customerId) {
         import("@/modules/basic-masters/api/basicMastersApi").then(
@@ -324,6 +469,8 @@ export function ErpSalesOrdersPage() {
       setError(
         e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
       );
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
@@ -560,40 +707,13 @@ export function ErpSalesOrdersPage() {
           fetchOptions={fetchSalesOrdersColumnOptions}
         />
       ),
-      size: 100,
+      size: 150,
       headerClassName: "text-center",
       className: "text-center",
       cell: (item) => fmtDate(item.orderDate),
       skeletonClassName: "w-20",
     },
-    {
-      key: "expectedDeliveryDate",
-      header: (
-        <TableColumnHeaderFilter
-          align="center"
-          title={t("Ngày giao DK")}
-          columnKey="expectedDeliveryDate"
-          sortState={getSortState("expectedDeliveryDate") || "none"}
-          onSortChange={(s) => columnState.setSort("expectedDeliveryDate", s)}
-          searchValue={columnState.columnSearch["expectedDeliveryDate"] || ""}
-          onSearchChange={(v) =>
-            columnState.setColumnSearch("expectedDeliveryDate", v)
-          }
-          selectedFilters={
-            columnState.columnFilters["expectedDeliveryDate"] || []
-          }
-          onFilterChange={(v) =>
-            columnState.setColumnFilter("expectedDeliveryDate", v)
-          }
-          fetchOptions={fetchSalesOrdersColumnOptions}
-        />
-      ),
-      size: 100,
-      headerClassName: "text-center",
-      className: "text-center",
-      cell: (item) => fmtDate(item.expectedDeliveryDate),
-      skeletonClassName: "w-20",
-    },
+
     {
       key: "soNo",
       header: (
@@ -610,15 +730,20 @@ export function ErpSalesOrdersPage() {
           fetchOptions={fetchSalesOrdersColumnOptions}
         />
       ),
-      size: 150,
+      size: 200,
       cell: (item) => (
-        <Button
-          variant="link"
-          onClick={() => void openView(item)}
-          className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
-        >
-          {item.soNo}
-        </Button>
+        <div className="flex flex-col gap-1 w-full pr-1">
+          <div className="flex items-center gap-2 w-full">
+            <Button
+              variant="ghost"
+              onClick={() => void openView(item)}
+              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+            >
+              <span className="truncate">{item.soNo}</span>
+              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+            </Button>
+          </div>
+        </div>
       ),
       skeletonClassName: "w-24",
     },
@@ -681,6 +806,34 @@ export function ErpSalesOrdersPage() {
       },
     },
     {
+      key: "expectedDeliveryDate",
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày giao DK")}
+          columnKey="expectedDeliveryDate"
+          sortState={getSortState("expectedDeliveryDate") || "none"}
+          onSortChange={(s) => columnState.setSort("expectedDeliveryDate", s)}
+          searchValue={columnState.columnSearch["expectedDeliveryDate"] || ""}
+          onSearchChange={(v) =>
+            columnState.setColumnSearch("expectedDeliveryDate", v)
+          }
+          selectedFilters={
+            columnState.columnFilters["expectedDeliveryDate"] || []
+          }
+          onFilterChange={(v) =>
+            columnState.setColumnFilter("expectedDeliveryDate", v)
+          }
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 150,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (item) => fmtDate(item.expectedDeliveryDate),
+      skeletonClassName: "w-24",
+    },
+    {
       key: "deliveredDate",
       header: (
         <TableColumnHeaderFilter
@@ -700,7 +853,7 @@ export function ErpSalesOrdersPage() {
           fetchOptions={fetchSalesOrdersColumnOptions}
         />
       ),
-      size: 120,
+      size: 150,
       className: "text-center",
       headerClassName: "text-center",
       cell: (item: any) => {
@@ -708,14 +861,7 @@ export function ErpSalesOrdersPage() {
           item.status === "DELIVERED" ||
           item.status === "PARTIAL_DELIVERED"
         ) {
-          const dateStr =
-            item.deliveredDate || item.actualDeliveryDate || item.updatedAt;
-          if (!dateStr) return "—";
-          try {
-            return new Date(dateStr).toLocaleDateString("vi-VN");
-          } catch {
-            return "—";
-          }
+          return <DeliveryDetailPopover item={item} />;
         }
         return "—";
       },
@@ -935,7 +1081,7 @@ export function ErpSalesOrdersPage() {
         editing={editing}
         form={form}
         setForm={setForm}
-        drawerLoading={false}
+        drawerLoading={drawerLoading}
         saving={saving}
         saveError={saveError}
         handleSave={handleSave}
