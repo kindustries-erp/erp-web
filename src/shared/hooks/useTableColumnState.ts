@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useMemo } from "react";
 
 interface TableColumnState {
   sorts: string[];
@@ -130,8 +131,20 @@ export function useTableColumnState(tableId: string) {
   const store = useTableColumnStore();
   const tableState = store.tables[tableId] || defaultTableState;
 
+  const activeFilterCount = useMemo(() => {
+    const activeCols = new Set<string>();
+    Object.entries(tableState.columnFilters).forEach(([col, f]) => {
+      if (f && f.length > 0) activeCols.add(col);
+    });
+    Object.entries(tableState.columnSearch).forEach(([col, s]) => {
+      if (s) activeCols.add(col);
+    });
+    return activeCols.size;
+  }, [tableState.columnFilters, tableState.columnSearch]);
+
   return {
     ...tableState,
+    activeFilterCount,
     setSort: (field: string, state: "asc" | "desc" | "none") =>
       store.setSort(tableId, field, state),
     toggleSort: (field: string) => store.toggleSort(tableId, field),

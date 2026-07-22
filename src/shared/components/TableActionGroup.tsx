@@ -11,6 +11,7 @@ interface TableActionGroupProps {
 
   onFilterToggle?: () => void;
   activeFilterCount?: number;
+  onClearAllFilters?: () => void;
 
   onCreate?: () => void;
   createLabel?: string;
@@ -29,6 +30,7 @@ export function TableActionGroup({
   loading,
   onFilterToggle,
   activeFilterCount = 0,
+  onClearAllFilters,
   onCreate,
   createLabel = "Tạo mới",
   createActions,
@@ -53,6 +55,7 @@ export function TableActionGroup({
         <FilterButton
           onClick={onFilterToggle}
           activeCount={activeFilterCount}
+          onClear={onClearAllFilters}
         />
       )}
 
