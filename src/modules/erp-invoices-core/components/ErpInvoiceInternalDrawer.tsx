@@ -84,12 +84,6 @@ export function ErpInvoiceInternalDrawer({
       disabled: saving,
     },
     {
-      label: t("actionDelete", "Xóa"),
-      onClick: () => setDeleteConfirm(true),
-      variant: "outline" as const,
-      disabled: saving,
-    },
-    {
       label: saving
         ? t("actionSaving", "Đang lưu...")
         : t("actionSaveChange", "Lưu thay đổi"),

@@ -105,6 +105,8 @@ export interface CreateErpInvoicePayload {
     amount?: number;
   }[];
   accountingEnabled?: boolean;
+  pendingDeletedPdfs?: string[];
+  pendingAddedPdfs?: File[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -504,6 +506,13 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
-  pdfAttached?: { filename: string; invoiceNo: string }[];
+  pdfAttached?: {
+    filename: string;
+    invoiceNo: string;
+    invoiceId?: string;
+    serialNo?: string | null;
+    sellerName?: string | null;
+    totalAmount?: string | null;
+  }[];
   pdfOrphans?: { filename: string; reason: string }[];
 }

@@ -1,4 +1,4 @@
-import { SkipForward, AlertCircle, CheckCircle2 } from "lucide-react";
+import { SkipForward, AlertCircle, CheckCircle2, PanelRightOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   type BulkImportResult,
@@ -10,9 +10,10 @@ import { type DataTableColumn } from "@/shared/components/DataTable";
 
 interface Props {
   result: BulkImportResult;
+  onOpenInvoice?: (invoiceId: string) => void;
 }
 
-export function ImportResultTables({ result }: Props) {
+export function ImportResultTables({ result, onOpenInvoice }: Props) {
   const { t } = useTranslation("erpInvoices");
 
   const skippedColumns: DataTableColumn<BulkImportSkippedItem>[] = [
@@ -80,15 +81,66 @@ export function ImportResultTables({ result }: Props) {
     {
       key: "filename",
       header: "Tên file PDF",
-      cell: (r) => r.filename,
-      size: 200,
+      cell: (r) => (
+        <div className="max-w-[160px] truncate text-muted-foreground text-xs" title={r.filename}>
+          {r.filename}
+        </div>
+      ),
+      size: 160,
     },
     {
       key: "invoiceNo",
-      header: "Số hóa đơn",
+      header: "SỐ HĐ",
+      headerClassName: "text-center",
+      className: "font-medium text-primary text-left",
       cell: (r) => (
-        <span className="text-emerald-600 font-semibold">{r.invoiceNo}</span>
+        <div className="flex items-center gap-1.5 w-full">
+          {r.invoiceId && onOpenInvoice ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenInvoice(r.invoiceId);
+              }}
+              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:text-primary/80 transition-colors"
+            >
+              <span className="truncate">{r.invoiceNo}</span>
+              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+            </button>
+          ) : (
+            <span className="truncate">{r.invoiceNo}</span>
+          )}
+        </div>
       ),
+      size: 110,
+    },
+    {
+      key: "serialNo",
+      header: "Ký hiệu",
+      headerClassName: "text-center",
+      className: "text-muted-foreground text-left",
+      cell: (r) => r.serialNo || "—",
+      size: 110,
+    },
+    {
+      key: "sellerName",
+      header: "Bên bán",
+      cell: (r) => (
+        <div className="max-w-[180px] truncate" title={r.sellerName || undefined}>
+          {r.sellerName || "—"}
+        </div>
+      ),
+      size: 180,
+    },
+    {
+      key: "totalAmount",
+      header: "Thành tiền",
+      headerClassName: "text-right",
+      className: "text-right tabular-nums",
+      cell: (r) =>
+        r.totalAmount
+          ? Number(r.totalAmount).toLocaleString("vi-VN") + " đ"
+          : "—",
       size: 120,
     },
   ];
@@ -155,7 +207,7 @@ export function ImportResultTables({ result }: Props) {
             items={result.pdfAttached}
             columns={pdfAttachedColumns}
             getRowKey={(r: any) => r.filename}
-            minWidth={320}
+            minWidth={680}
           />
         </div>
       )}

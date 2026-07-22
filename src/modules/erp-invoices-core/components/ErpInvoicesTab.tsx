@@ -1951,6 +1951,21 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                     pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                     pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
                     editMode={formHook.editMode}
+                    pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
+                    onPendingDeletePdf={(key) => {
+                      const current = formHook.form.pendingDeletedPdfs || [];
+                      formHook.setForm((prev) => ({
+                        ...prev,
+                        pendingDeletedPdfs: [...current, key],
+                      }));
+                    }}
+                    pendingAddedPdfs={formHook.form.pendingAddedPdfs}
+                    onPendingAddedPdfsChange={(files) => {
+                      formHook.setForm((prev) => ({
+                        ...prev,
+                        pendingAddedPdfs: files,
+                      }));
+                    }}
                   />
                 }
               />
@@ -2083,8 +2098,23 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         open={bulkDrawerOpen}
         onClose={() => setBulkDrawerOpen(false)}
         title="Tải hàng loạt hóa đơn"
+        actions={[
+          {
+            label: "Hủy",
+            onClick: () => setBulkDrawerOpen(false),
+            variant: "outline" as const,
+            disabled: bulkDownloading,
+          },
+          {
+            label: bulkDownloading ? "Đang nén file..." : "Xác nhận tải",
+            onClick: handleBulkDownloadFiles,
+            primary: true,
+            disabled: bulkDownloading,
+            loading: bulkDownloading,
+          },
+        ]}
       >
-        <div className="p-4 space-y-6">
+        <div className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium">Kỳ tải hóa đơn *</label>
             <Combobox
@@ -2132,22 +2162,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               </label>
             </div>
           </div>
-
-          <div className="pt-4 flex justify-end space-x-2 border-t border-border">
-            <Button
-              onClick={() => setBulkDrawerOpen(false)}
-              variant="outline"
-              disabled={bulkDownloading}
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleBulkDownloadFiles}
-              disabled={bulkDownloading}
-            >
-              {bulkDownloading ? "Đang nén file..." : "Xác nhận tải"}
-            </Button>
-          </div>
         </div>
       </DrawerModal>
 
@@ -2155,8 +2169,23 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         open={bulkBranchModalOpen}
         onClose={() => setBulkBranchModalOpen(false)}
         title={`Gán chi nhánh cho ${selectedIds.length} hóa đơn`}
+        actions={[
+          {
+            label: "Hủy",
+            onClick: () => setBulkBranchModalOpen(false),
+            variant: "outline" as const,
+            disabled: bulkBranchSaving,
+          },
+          {
+            label: bulkBranchSaving ? "Đang lưu..." : "Xác nhận",
+            onClick: handleBulkSetBranch,
+            primary: true,
+            disabled: bulkBranchSaving,
+            loading: bulkBranchSaving,
+          },
+        ]}
       >
-        <div className="p-4 space-y-4">
+        <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Chi nhánh *</label>
             <Combobox
@@ -2165,18 +2194,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               onChange={(v) => setBulkBranchId(v ?? null)}
               placeholder="Chọn chi nhánh..."
             />
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-border">
-            <Button
-              variant="outline"
-              onClick={() => setBulkBranchModalOpen(false)}
-              disabled={bulkBranchSaving}
-            >
-              Hủy
-            </Button>
-            <Button onClick={handleBulkSetBranch} disabled={bulkBranchSaving}>
-              {bulkBranchSaving ? "Đang lưu..." : "Xác nhận"}
-            </Button>
           </div>
         </div>
       </DrawerModal>

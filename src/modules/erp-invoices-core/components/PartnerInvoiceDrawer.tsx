@@ -538,6 +538,21 @@ export function PartnerInvoiceDrawer({
                   pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                   pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
                   editMode={formHook.editMode}
+                  pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
+                  onPendingDeletePdf={(key) => {
+                    const current = formHook.form.pendingDeletedPdfs || [];
+                    formHook.setForm((prev) => ({
+                      ...prev,
+                      pendingDeletedPdfs: [...current, key],
+                    }));
+                  }}
+                  pendingAddedPdfs={formHook.form.pendingAddedPdfs}
+                  onPendingAddedPdfsChange={(files) => {
+                    formHook.setForm((prev) => ({
+                      ...prev,
+                      pendingAddedPdfs: files,
+                    }));
+                  }}
                 />
               }
             />

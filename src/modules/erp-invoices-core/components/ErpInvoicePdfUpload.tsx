@@ -1,19 +1,22 @@
 import { useState, useMemo } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
-import { Upload, Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
 import { Attachment } from "@/shared/components/ui/Attachment";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   invoiceId: string | null;
   pdfFiles: any[] | null;
   pdfFileKey?: string | null;
   editMode: boolean;
+  pendingDeletedPdfs?: string[];
+  onPendingDeletePdf?: (key: string) => void;
+  pendingAddedPdfs?: File[];
+  onPendingAddedPdfsChange?: (files: File[]) => void;
 }
 
 export function ErpInvoicePdfUpload({
@@ -21,25 +24,17 @@ export function ErpInvoicePdfUpload({
   pdfFiles,
   pdfFileKey,
   editMode,
+  pendingDeletedPdfs = [],
+  onPendingDeletePdf,
+  pendingAddedPdfs = [],
+  onPendingAddedPdfsChange,
 }: Props) {
-  const queryClient = useQueryClient();
-  const [uploading, setUploading] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<{
     url: string;
     fileName: string;
     fileKey: string;
   } | null>(null);
-
-  const deleteMutation = useMutation({
-    mutationFn: (key: string) => erpInvoicesCoreApi.deletePdf(invoiceId!, key),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["erpInvoices"] });
-      toast.success("Đã xóa file PDF");
-    },
-    onError: () => toast.error("Lỗi xóa file PDF"),
-  });
 
   const displayFiles = useMemo(() => {
     const list = [];
@@ -52,24 +47,9 @@ export function ErpInvoicePdfUpload({
     if (pdfFiles && pdfFiles.length > 0) {
       list.push(...pdfFiles);
     }
-    return list;
-  }, [pdfFileKey, pdfFiles]);
-
-  const handleUpload = async () => {
-    if (!invoiceId || files.length === 0) return;
-
-    setUploading(true);
-    try {
-      await erpInvoicesCoreApi.uploadPdfs(invoiceId, files);
-      toast.success("Đã tải lên file PDF thành công");
-      queryClient.invalidateQueries({ queryKey: ["erpInvoices"] });
-      setFiles([]);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Lỗi tải lên file PDF");
-    } finally {
-      setUploading(false);
-    }
-  };
+    // Filter out files that are pending deletion
+    return list.filter((f) => !pendingDeletedPdfs.includes(f.key));
+  }, [pdfFileKey, pdfFiles, pendingDeletedPdfs]);
 
   return (
     <DrawerSection
@@ -81,10 +61,11 @@ export function ErpInvoicePdfUpload({
             size="sm"
             className="h-6 text-xs px-2"
             onClick={async () => {
+              if (!invoiceId) return;
               try {
                 toast.loading("Đang nén file PDF...", { id: "zip-download" });
                 const blob = await erpInvoicesCoreApi.downloadPdfsZip(
-                  invoiceId!,
+                  invoiceId,
                 );
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -109,7 +90,7 @@ export function ErpInvoicePdfUpload({
       }
     >
       <div className="flex flex-col gap-3">
-        {displayFiles.length === 0 && (
+        {displayFiles.length === 0 && pendingAddedPdfs.length === 0 && (
           <div className="text-sm text-gray-500 italic">
             Chưa có tài liệu đính kèm.
           </div>
@@ -129,14 +110,15 @@ export function ErpInvoicePdfUpload({
                   } as any
                 }
                 onDelete={
-                  editMode && invoiceId
-                    ? () => deleteMutation.mutate(file.key)
+                  editMode && onPendingDeletePdf
+                    ? () => onPendingDeletePdf(file.key)
                     : undefined
                 }
                 onPreview={async () => {
+                  if (!invoiceId) return;
                   try {
                     const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-                      invoiceId!,
+                      invoiceId,
                       file.key,
                       true,
                     );
@@ -153,32 +135,16 @@ export function ErpInvoicePdfUpload({
             ))}
           </div>
         )}
-        {editMode && invoiceId && (
+        {editMode && onPendingAddedPdfsChange && (
           <div className="mt-2 space-y-3">
             <Attachment
-              files={files}
-              onFilesChange={setFiles}
+              files={pendingAddedPdfs}
+              onFilesChange={onPendingAddedPdfsChange}
               accept="application/pdf"
               maxFiles={10}
               maxSizeMb={20}
               onPreview={setPreviewFile}
             />
-            {files.length > 0 && (
-              <Button
-                onClick={handleUpload}
-                disabled={uploading}
-                className="w-full"
-              >
-                {uploading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Upload className="w-4 h-4 mr-2" />
-                )}
-                {uploading
-                  ? "Đang tải lên..."
-                  : `Lưu ${files.length} file đính kèm`}
-              </Button>
-            )}
           </div>
         )}
       </div>
@@ -192,17 +158,17 @@ export function ErpInvoicePdfUpload({
         previewUrl={previewUrl?.url}
         fileName={previewFile?.name || previewUrl?.fileName}
         fetchBlobFn={
-          previewUrl
+          previewUrl && invoiceId
             ? () =>
-                erpInvoicesCoreApi.getPdfBlob(invoiceId!, previewUrl.fileKey)
+                erpInvoicesCoreApi.getPdfBlob(invoiceId, previewUrl.fileKey)
             : undefined
         }
         onDownload={
-          previewUrl
+          previewUrl && invoiceId
             ? async () => {
                 try {
                   const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-                    invoiceId!,
+                    invoiceId,
                     previewUrl.fileKey,
                     false,
                   );

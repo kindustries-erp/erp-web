@@ -37,11 +37,15 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
     onClose();
   };
 
+  const fieldSet = (key: string, value: any) => {
+    formHook.setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
   return (
     <ErpInvoiceInternalDrawer
       open={!!invoiceId && formHook.internalDrawerOpen}
       onClose={handleClose}
-      editMode={false}
+      editMode={formHook.editMode}
       detailInvoice={formHook.detailInvoice}
       saving={formHook.saving}
       handleSave={formHook.handleSave}
@@ -54,8 +58,8 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
         <div className="flex flex-col gap-5">
           <ErpInvoiceInternalSidebar
             form={formHook.form}
-            editMode={false}
-            fieldSet={() => {}}
+            editMode={formHook.editMode}
+            fieldSet={fieldSet}
             invoiceId={formHook.detailInvoice?.id ?? null}
             pendingTagIds={formHook.pendingTagIds}
             onPendingTagsChange={formHook.setPendingTagIds}
@@ -66,7 +70,22 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
                 invoiceId={formHook.detailInvoice?.id ?? null}
                 pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                 pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-                editMode={false}
+                editMode={formHook.editMode}
+                pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
+                onPendingDeletePdf={(key) => {
+                  const current = formHook.form.pendingDeletedPdfs || [];
+                  formHook.setForm((prev) => ({
+                    ...prev,
+                    pendingDeletedPdfs: [...current, key],
+                  }));
+                }}
+                pendingAddedPdfs={formHook.form.pendingAddedPdfs}
+                onPendingAddedPdfsChange={(files) => {
+                  formHook.setForm((prev) => ({
+                    ...prev,
+                    pendingAddedPdfs: files,
+                  }));
+                }}
               />
             }
           />
@@ -76,8 +95,8 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
       <div className="flex flex-col gap-5">
         <ErpInvoiceInternalMain
           form={formHook.form}
-          editMode={false}
-          fieldSet={() => {}}
+          editMode={formHook.editMode}
+          fieldSet={fieldSet}
           direction={formHook.detailInvoice?.direction || "IN"}
           detailInvoice={formHook.detailInvoice}
           postingState={formHook.postingState}

@@ -16,6 +16,16 @@ export interface FileEntry {
   pairedPdf?: string; // Tên của file PDF (nếu đã ghép được)
 }
 
+export type FilePreviewStatus = "new-invoice" | "attach-pdf" | "extract-zip";
+
+/** Phân loại file ở bước preview (client-side, trước API).
+ *  PDF (cả standalone lẫn paired) đều là "attach-pdf" — server mới biết có ghép được không. */
+export function getFilePreviewStatus(entry: FileEntry): FilePreviewStatus {
+  if (entry.type === "zip") return "extract-zip";
+  if (entry.type === "pdf") return "attach-pdf";
+  return "new-invoice";
+}
+
 export function useInvoiceXmlUpload(
   onImported: (importId: string, direction: Direction) => void,
 ) {
@@ -117,12 +127,13 @@ export function useInvoiceXmlUpload(
     if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
   }, []);
 
-  async function handleImport() {
-    if (files.length === 0) return;
+  async function handleImport(filesToImport?: FileEntry[]) {
+    const targetFiles = filesToImport ?? files;
+    if (targetFiles.length === 0) return;
     setStep("importing");
     setImportError(null);
     try {
-      const rawFiles = files.map((e) => e.file);
+      const rawFiles = targetFiles.map((e) => e.file);
       const res =
         direction === "IN"
           ? await erpInvoicesCoreApi.bulkImportBuyerXml(rawFiles)
