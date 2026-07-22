@@ -30,6 +30,8 @@ import { UploadDropzone } from "./xml-upload/UploadDropzone";
 import { UploadFileList } from "./xml-upload/UploadFileList";
 import { ImportResultSummary } from "./xml-upload/ImportResultSummary";
 import { ImportResultTables } from "./xml-upload/ImportResultTables";
+import { ImportPreviewModal } from "./xml-upload/ImportPreviewModal";
+import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
 
 function TokenConfigDrawer({
   open,
@@ -193,6 +195,8 @@ export function InvoiceImportSyncDrawer({
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
   const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
 
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
@@ -271,12 +275,12 @@ export function InvoiceImportSyncDrawer({
         onClick: handleClose,
       });
       actions.push({
-        label: t("importActionStart", {
+        label: t("importActionPreview", {
           count: xml.files.length,
-          defaultValue: `Bắt đầu Import (${xml.files.length} file)`,
+          defaultValue: `Xem trước & Import (${xml.files.length} file)`,
         }),
         icon: <Upload className="w-4 h-4" />,
-        onClick: xml.handleImport,
+        onClick: () => setShowPreview(true),
         disabled: xml.files.length === 0,
       });
     } else if (xml.step === "result" && xml.result) {
@@ -313,11 +317,11 @@ export function InvoiceImportSyncDrawer({
       title="Đồng bộ hóa đơn"
       icon={<RefreshCw className="w-5 h-5" />}
       actions={actions}
-      panelClassName="min-[1024px]:w-[520px]"
+      panelClassName="min-[1024px]:w-[640px]"
     >
       <div className="flex flex-col h-full">
-        {/* Selection Dropdowns */}
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-border shrink-0 mt-[-1rem]">
+        {/* Selection Dropdowns — extend full-width, breaking out of body p-[18px] */}
+        <div className="flex items-center gap-3 px-[18px] py-3 border-b border-border shrink-0 -mx-[18px] -mt-[18px] mb-4">
           <div className="flex-1">
             <Combobox
               options={[
@@ -343,7 +347,7 @@ export function InvoiceImportSyncDrawer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {method === "GDT" && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
@@ -488,7 +492,10 @@ export function InvoiceImportSyncDrawer({
               {xml.step === "result" && xml.result && (
                 <div className="flex flex-col gap-5">
                   <ImportResultSummary result={xml.result} />
-                  <ImportResultTables result={xml.result} />
+                  <ImportResultTables
+                    result={xml.result}
+                    onOpenInvoice={(id) => setViewInvoiceId(id)}
+                  />
                   {xml.result.created === 0 &&
                     xml.result.skipped.length === 0 &&
                     xml.result.errors.length === 0 && (
@@ -509,6 +516,20 @@ export function InvoiceImportSyncDrawer({
         token={portal.token}
         cookies={portal.cookies}
         onSave={portal.saveConfig}
+      />
+      <ImportPreviewModal
+        open={showPreview}
+        files={xml.files}
+        direction={xml.direction || "IN"}
+        onConfirm={(selectedFiles) => {
+          setShowPreview(false);
+          xml.handleImport(selectedFiles);
+        }}
+        onCancel={() => setShowPreview(false)}
+      />
+      <InvoiceDetailWrapper
+        invoiceId={viewInvoiceId}
+        onClose={() => setViewInvoiceId(null)}
       />
       <ConfirmModal
         open={showDrawerConfirm}

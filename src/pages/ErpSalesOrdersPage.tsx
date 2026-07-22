@@ -681,6 +681,47 @@ export function ErpSalesOrdersPage() {
       },
     },
     {
+      key: "deliveredDate",
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày đã giao")}
+          columnKey="deliveredDate"
+          sortState={getSortState("deliveredDate") || "none"}
+          onSortChange={(s) => columnState.setSort("deliveredDate", s)}
+          searchValue={columnState.columnSearch["deliveredDate"] || ""}
+          onSearchChange={(v) =>
+            columnState.setColumnSearch("deliveredDate", v)
+          }
+          selectedFilters={columnState.columnFilters["deliveredDate"] || []}
+          onFilterChange={(v) =>
+            columnState.setColumnFilter("deliveredDate", v)
+          }
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 120,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (item: any) => {
+        if (
+          item.status === "DELIVERED" ||
+          item.status === "PARTIAL_DELIVERED"
+        ) {
+          const dateStr =
+            item.deliveredDate || item.actualDeliveryDate || item.updatedAt;
+          if (!dateStr) return "—";
+          try {
+            return new Date(dateStr).toLocaleDateString("vi-VN");
+          } catch {
+            return "—";
+          }
+        }
+        return "—";
+      },
+      skeletonClassName: "w-24",
+    },
+    {
       key: "status",
       header: (
         <TableColumnHeaderFilter

@@ -12,7 +12,6 @@ interface Props {
   saving: boolean;
   handleSave: (statusOverride?: string) => void;
   cancelEdit: () => void;
-  setDeleteConfirm: (confirm: boolean) => void;
   rightPanel?: React.ReactNode;
   children: React.ReactNode;
   onSyncDetail?: () => void;
@@ -29,7 +28,6 @@ export function ErpInvoiceInternalDrawer({
   saving,
   handleSave,
   cancelEdit,
-  setDeleteConfirm,
   rightPanel,
   children,
   onSyncDetail,
@@ -80,12 +78,6 @@ export function ErpInvoiceInternalDrawer({
     {
       label: t("actionCancel", "Hủy"),
       onClick: cancelEdit,
-      variant: "outline" as const,
-      disabled: saving,
-    },
-    {
-      label: t("actionDelete", "Xóa"),
-      onClick: () => setDeleteConfirm(true),
       variant: "outline" as const,
       disabled: saving,
     },

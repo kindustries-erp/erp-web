@@ -259,8 +259,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   function startEdit() {
     if (!detailInvoice) return;
-    // Reset về trạng thái từ server — xóa mọi thay đổi tạm thời chưa lưu
-    setForm({ ...mapInvoiceToForm(detailInvoice), pendingDocumentChanges: [] });
+    setForm({
+      ...mapInvoiceToForm(detailInvoice),
+      pendingDocumentChanges: [],
+      pendingDeletedPdfs: [],
+      pendingAddedPdfs: [],
+    });
     setFormError(null);
     setPendingUnpost(false);
     postingState.reset();
@@ -272,6 +276,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       setForm({
         ...mapInvoiceToForm(detailInvoice),
         pendingDocumentChanges: [],
+        pendingDeletedPdfs: [],
+        pendingAddedPdfs: [],
       });
     }
     setFormError(null);
@@ -341,6 +347,8 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       // Remove frontend-only field before sending to API
       delete payload.pendingDocumentChanges;
       delete (payload as any).accountingEnabled;
+      delete payload.pendingDeletedPdfs;
+      delete payload.pendingAddedPdfs;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -427,6 +435,32 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           } catch (err) {
             console.error("Failed to process document change", change, err);
           }
+        }
+      }
+
+      // Process pending PDF changes
+      const pendingDeletedPdfs = form.pendingDeletedPdfs || [];
+      if (pendingDeletedPdfs.length > 0) {
+        setForm((prev) => ({ ...prev, pendingDeletedPdfs: [] }));
+        for (const key of pendingDeletedPdfs) {
+          try {
+            await erpInvoicesCoreApi.deletePdf(invoiceIdToProcess, key);
+          } catch (err) {
+            console.error("Failed to delete PDF", key, err);
+          }
+        }
+      }
+
+      const pendingAddedPdfs = form.pendingAddedPdfs || [];
+      if (pendingAddedPdfs.length > 0) {
+        setForm((prev) => ({ ...prev, pendingAddedPdfs: [] }));
+        try {
+          await erpInvoicesCoreApi.uploadPdfs(
+            invoiceIdToProcess,
+            pendingAddedPdfs,
+          );
+        } catch (err) {
+          console.error("Failed to upload PDFs", err);
         }
       }
 

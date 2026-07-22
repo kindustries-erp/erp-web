@@ -517,7 +517,6 @@ export function PartnerInvoiceDrawer({
         saving={formHook.saving}
         handleSave={formHook.handleSave}
         cancelEdit={formHook.cancelEdit}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         rightPanel={
           <div className="flex flex-col gap-5">
             <ErpInvoiceInternalSidebar
@@ -538,6 +537,21 @@ export function PartnerInvoiceDrawer({
                   pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                   pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
                   editMode={formHook.editMode}
+                  pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
+                  onPendingDeletePdf={(key) => {
+                    const current = formHook.form.pendingDeletedPdfs || [];
+                    formHook.setForm((prev) => ({
+                      ...prev,
+                      pendingDeletedPdfs: [...current, key],
+                    }));
+                  }}
+                  pendingAddedPdfs={formHook.form.pendingAddedPdfs}
+                  onPendingAddedPdfsChange={(files) => {
+                    formHook.setForm((prev) => ({
+                      ...prev,
+                      pendingAddedPdfs: files,
+                    }));
+                  }}
                 />
               }
             />

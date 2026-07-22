@@ -105,6 +105,8 @@ export interface CreateErpInvoicePayload {
     amount?: number;
   }[];
   accountingEnabled?: boolean;
+  pendingDeletedPdfs?: string[];
+  pendingAddedPdfs?: File[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -326,6 +328,27 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  previewPdfMatch: async (
+    filenames: string[],
+    direction: "IN" | "OUT",
+  ): Promise<
+    Record<
+      string,
+      {
+        id: string;
+        invoiceNo: string;
+        serialNo: string | null;
+        totalAmount: string | null;
+      } | null
+    >
+  > => {
+    const res = await axiosInstance.post(`${BASE}/preview-pdf-match`, {
+      filenames,
+      direction,
+    });
+    return res.data;
+  },
+
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
@@ -504,6 +527,13 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
-  pdfAttached?: { filename: string; invoiceNo: string }[];
+  pdfAttached?: {
+    filename: string;
+    invoiceNo: string;
+    invoiceId?: string;
+    serialNo?: string | null;
+    sellerName?: string | null;
+    totalAmount?: string | null;
+  }[];
   pdfOrphans?: { filename: string; reason: string }[];
 }

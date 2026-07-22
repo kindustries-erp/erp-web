@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { Button } from "@/shared/components/ui/Button";
+import { Textarea } from "@/shared/components/ui/textarea";
 
 function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
   const { data: journalEntry, isLoading } = useQuery({
@@ -137,6 +138,22 @@ export function ErpInvoiceInternalSidebar({
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
                 {branchOptions.find((o) => o.value === form.branchId)?.label ||
                   "—"}
+              </div>
+            )}
+          </DrawerField>
+
+          <DrawerField label={t("notes", "Ghi chú")}>
+            {editMode ? (
+              <Textarea
+                className="w-full text-sm"
+                value={form.notes || ""}
+                onChange={(e) => fieldSet("notes", e.target.value)}
+                placeholder="Nhập ghi chú..."
+                rows={3}
+              />
+            ) : (
+              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent whitespace-pre-wrap">
+                {form.notes || "—"}
               </div>
             )}
           </DrawerField>
@@ -278,6 +295,33 @@ export function ErpInvoiceInternalMain({
 }) {
   const { t } = useTranslation("erpInvoices");
   const isPosted = detailInvoice?.postingStatus === "POSTED" && !pendingUnpost;
+
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isPdfLoading, setIsPdfLoading] = useState<boolean>(false);
+  const pdfKey =
+    detailInvoice?.pdfFileKey ||
+    (detailInvoice?.pdfFiles && detailInvoice.pdfFiles.length > 0
+      ? detailInvoice.pdfFiles[0].key
+      : null);
+
+  useEffect(() => {
+    if (pdfKey && detailInvoice?.id) {
+      setIsPdfLoading(true);
+      erpInvoicesCoreApi
+        .getPdfDownloadUrl(detailInvoice.id, pdfKey, true)
+        .then((res) => {
+          setPdfUrl(res.url);
+          setIsPdfLoading(false);
+        })
+        .catch(() => {
+          setPdfUrl(null);
+          setIsPdfLoading(false);
+        });
+    } else {
+      setPdfUrl(null);
+      setIsPdfLoading(false);
+    }
+  }, [pdfKey, detailInvoice?.id]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -432,9 +476,21 @@ export function ErpInvoiceInternalMain({
       )}
 
       {/* Invoice preview — rendered below linked docs in view mode */}
-      {!editMode && invoicePreview && (
+      {!editMode && (pdfKey || invoicePreview) && (
         <div className="bg-slate-50 rounded-lg overflow-hidden">
-          {invoicePreview}
+          {isPdfLoading ? (
+            <div className="w-full min-h-[800px] flex items-center justify-center bg-gray-100 animate-pulse">
+              <div className="text-gray-400 font-medium">Đang tải PDF...</div>
+            </div>
+          ) : pdfUrl ? (
+            <iframe
+              src={pdfUrl}
+              className="w-full min-h-[800px] border-0"
+              title="PDF Preview"
+            />
+          ) : (
+            invoicePreview
+          )}
         </div>
       )}
     </div>
