@@ -521,9 +521,9 @@ export function InvoiceImportSyncDrawer({
         open={showPreview}
         files={xml.files}
         direction={xml.direction || "IN"}
-        onConfirm={(selectedFiles) => {
+        onConfirm={(selectedFiles, manualMatches) => {
           setShowPreview(false);
-          xml.handleImport(selectedFiles);
+          xml.handleImport(selectedFiles, manualMatches);
         }}
         onCancel={() => setShowPreview(false)}
       />

@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { Combobox } from "@/shared/components/Combobox";
 import {
   FileCode,
   FileText,
@@ -22,8 +23,70 @@ interface Props {
   open: boolean;
   files: FileEntry[];
   direction: "IN" | "OUT";
-  onConfirm: (selectedFiles: FileEntry[]) => void;
+  onConfirm: (
+    selectedFiles: FileEntry[],
+    manualMatches: Record<string, string>,
+  ) => void;
   onCancel: () => void;
+}
+
+function ManualMatchSelect({
+  direction,
+  value,
+  onChange,
+  initialOptions,
+}: {
+  direction: "IN" | "OUT";
+  value: string;
+  onChange: (val: string) => void;
+  initialOptions: { value: string; label: string }[];
+}) {
+  const [options, setOptions] = useState(initialOptions);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setOptions(initialOptions);
+  }, [initialOptions]);
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setOptions(initialOptions);
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await erpInvoicesCoreApi.list({
+        direction,
+        search: query,
+        pageSize: 20,
+      });
+      setOptions(
+        res.items.map((inv) => ({
+          value: inv.id,
+          label: `[${inv.serialNo || "N/A"}] HĐ: ${inv.invoiceNo} - ${Number(inv.totalAmount).toLocaleString("vi-VN")}đ`,
+        })),
+      );
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Combobox
+      options={options}
+      value={value}
+      onChange={onChange}
+      onSearch={handleSearch}
+      loading={loading}
+      placeholder="Chọn ghép thủ công..."
+      searchPlaceholder="Tìm số HĐ, ký hiệu..."
+      emptyLabel="Không tìm thấy hóa đơn"
+      className="w-full min-w-[240px]"
+      fallbackLabel="Đã chọn hóa đơn"
+    />
+  );
 }
 
 /* ── Status config ── */
@@ -96,6 +159,13 @@ export function ImportPreviewModal({
   >({});
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
+  const [manualMatches, setManualMatches] = useState<Record<string, string>>(
+    {},
+  );
+  const [candidateInvoices, setCandidateInvoices] = useState<
+    { value: string; label: string }[]
+  >([]);
+
   // Re-sync when files list changes (e.g. modal reopened with new files)
   const allIds = useMemo(() => files.map((f) => f.id), [files]);
   const selectedCount = allIds.filter((id) => selectedIds.has(id)).length;
@@ -105,6 +175,7 @@ export function ImportPreviewModal({
   if (prevFiles !== files) {
     setPrevFiles(files);
     setSelectedIds(new Set(files.map((f) => f.id)));
+    setManualMatches({});
   }
 
   // Fetch matches when files change
@@ -123,6 +194,15 @@ export function ImportPreviewModal({
         .catch((err) => {
           console.error("Failed to preview pdf match", err);
         });
+
+      erpInvoicesCoreApi.list({ direction, pageSize: 50 }).then((res) => {
+        setCandidateInvoices(
+          res.items.map((inv) => ({
+            value: inv.id,
+            label: `[${inv.serialNo || "N/A"}] HĐ: ${inv.invoiceNo} - ${Number(inv.totalAmount).toLocaleString("vi-VN")}đ`,
+          })),
+        );
+      });
     }
   }, [open, files, direction]);
 
@@ -250,7 +330,10 @@ export function ImportPreviewModal({
                   <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-44">
                     Ghi chú
                   </th>
-                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-48">
+                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground min-w-[260px]">
+                    Ghép HĐ (Thủ công)
+                  </th>
+                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-36">
                     Trạng thái
                   </th>
                 </tr>
@@ -334,7 +417,7 @@ export function ImportPreviewModal({
                             {matchedInvoices[entry.file.name] ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-emerald-700 font-medium text-[11px]">
-                                  Ghép vào: HĐ{" "}
+                                  Tự động: HĐ{" "}
                                   {matchedInvoices[entry.file.name]?.invoiceNo}{" "}
                                   (KH:{" "}
                                   {matchedInvoices[entry.file.name]?.serialNo ||
@@ -349,7 +432,7 @@ export function ImportPreviewModal({
                               </div>
                             ) : (
                               <span className="text-muted-foreground text-[11px]">
-                                Ghép vào HĐ hiện có
+                                File mồ côi
                               </span>
                             )}
                           </>
@@ -358,6 +441,29 @@ export function ImportPreviewModal({
                           <span className="text-muted-foreground text-[11px]">
                             Server sẽ extract
                           </span>
+                        )}
+                      </td>
+
+                      {/* Manual Match Dropdown */}
+                      <td
+                        className="px-3 py-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {entry.type === "pdf" && !entry.pairedPdf && (
+                          <ManualMatchSelect
+                            direction={direction}
+                            initialOptions={candidateInvoices}
+                            value={manualMatches[entry.id] || ""}
+                            onChange={(val) => {
+                              setManualMatches((prev) => ({
+                                ...prev,
+                                [entry.id]: val,
+                              }));
+                              if (val && !selectedIds.has(entry.id)) {
+                                toggleFile(entry.id);
+                              }
+                            }}
+                          />
                         )}
                       </td>
 
@@ -405,7 +511,7 @@ export function ImportPreviewModal({
               <Button
                 size="sm"
                 disabled={selectedCount === 0}
-                onClick={() => onConfirm(selectedFiles)}
+                onClick={() => onConfirm(selectedFiles, manualMatches)}
               >
                 Xác nhận Import ({selectedCount} file)
               </Button>

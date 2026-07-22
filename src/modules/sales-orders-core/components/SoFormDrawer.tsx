@@ -586,7 +586,10 @@ export function SoFormDrawer({
 
             {allSelectedSerialIds.length > 0 && (
               <DrawerSection title={t("Danh sách Serial/Xe đã chọn")}>
-                <SoSelectedSerialsTable serialIds={allSelectedSerialIds} />
+                <SoSelectedSerialsTable
+                  serialIds={allSelectedSerialIds}
+                  serialLifecycles={editing?.serialLifecycles}
+                />
               </DrawerSection>
             )}
           </div>
