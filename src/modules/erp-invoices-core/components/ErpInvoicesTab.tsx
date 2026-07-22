@@ -389,6 +389,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         tag_id: (custom?.tag_id as string) || undefined,
         sort_by: listHook.sortBy || undefined,
         sort_order: listHook.sortOrder || undefined,
+        column_search:
+          Object.keys(listHook.tableState.columnSearch).length > 0
+            ? JSON.stringify(listHook.tableState.columnSearch)
+            : undefined,
+        column_filters:
+          Object.keys(listHook.tableState.columnFilters).length > 0
+            ? JSON.stringify(listHook.tableState.columnFilters)
+            : undefined,
       });
 
       const url = window.URL.createObjectURL(blob);
