@@ -71,13 +71,29 @@ function FileBadge({ type }: { type: FileEntry["type"] }) {
   );
 }
 
-export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel }: Props) {
+export function ImportPreviewModal({
+  open,
+  files,
+  direction,
+  onConfirm,
+  onCancel,
+}: Props) {
   // Init all files as selected
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     () => new Set(files.map((f) => f.id)),
   );
-  
-  const [matchedInvoices, setMatchedInvoices] = useState<Record<string, { id: string; invoiceNo: string; serialNo: string | null; totalAmount: string | null } | null>>({});
+
+  const [matchedInvoices, setMatchedInvoices] = useState<
+    Record<
+      string,
+      {
+        id: string;
+        invoiceNo: string;
+        serialNo: string | null;
+        totalAmount: string | null;
+      } | null
+    >
+  >({});
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   // Re-sync when files list changes (e.g. modal reopened with new files)
@@ -97,13 +113,16 @@ export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel
     const pdfNames = files
       .filter((f) => f.type === "pdf" && !f.pairedPdf)
       .map((f) => f.file.name);
-      
+
     if (pdfNames.length > 0) {
-      erpInvoicesCoreApi.previewPdfMatch(pdfNames, direction).then(res => {
-        setMatchedInvoices(res);
-      }).catch(err => {
-        console.error("Failed to preview pdf match", err);
-      });
+      erpInvoicesCoreApi
+        .previewPdfMatch(pdfNames, direction)
+        .then((res) => {
+          setMatchedInvoices(res);
+        })
+        .catch((err) => {
+          console.error("Failed to preview pdf match", err);
+        });
     }
   }, [open, files, direction]);
 
@@ -142,11 +161,17 @@ export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel
     <>
       <div
         className="fixed inset-0 z-[600] flex items-center justify-center"
-        style={{ background: "rgba(15,23,42,0.45)", backdropFilter: "blur(2px)" }}
+        style={{
+          background: "rgba(15,23,42,0.45)",
+          backdropFilter: "blur(2px)",
+        }}
       >
         <div
           className="bg-surface rounded-2xl shadow-2xl border border-border flex flex-col"
-          style={{ width: "min(860px, calc(100vw - 32px))", maxHeight: "calc(100vh - 48px)" }}
+          style={{
+            width: "min(860px, calc(100vw - 32px))",
+            maxHeight: "calc(100vh - 48px)",
+          }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
@@ -201,7 +226,9 @@ export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel
                   <th className="w-8 px-3 py-2.5 text-center font-medium text-muted-foreground">
                     <input
                       type="checkbox"
-                      checked={selectedCount === files.length && files.length > 0}
+                      checked={
+                        selectedCount === files.length && files.length > 0
+                      }
                       ref={(el) => {
                         if (el)
                           el.indeterminate =
@@ -237,7 +264,9 @@ export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel
                     <tr
                       key={entry.id}
                       className={`transition-colors cursor-pointer ${
-                        isChecked ? "hover:bg-muted/20" : "opacity-40 bg-muted/10"
+                        isChecked
+                          ? "hover:bg-muted/20"
+                          : "opacity-40 bg-muted/10"
                       }`}
                       onClick={() => toggleFile(entry.id)}
                     >
@@ -305,7 +334,17 @@ export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel
                             {matchedInvoices[entry.file.name] ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-emerald-700 font-medium text-[11px]">
-                                  Ghép vào: HĐ {matchedInvoices[entry.file.name]?.invoiceNo} (KH: {matchedInvoices[entry.file.name]?.serialNo || "N/A"}) - {Number(matchedInvoices[entry.file.name]?.totalAmount).toLocaleString("vi-VN")}đ
+                                  Ghép vào: HĐ{" "}
+                                  {matchedInvoices[entry.file.name]?.invoiceNo}{" "}
+                                  (KH:{" "}
+                                  {matchedInvoices[entry.file.name]?.serialNo ||
+                                    "N/A"}
+                                  ) -{" "}
+                                  {Number(
+                                    matchedInvoices[entry.file.name]
+                                      ?.totalAmount,
+                                  ).toLocaleString("vi-VN")}
+                                  đ
                                 </span>
                               </div>
                             ) : (
@@ -348,9 +387,15 @@ export function ImportPreviewModal({ open, files, direction, onConfirm, onCancel
           >
             <span className="text-xs text-muted-foreground">
               {selectedCount === 0 ? (
-                <span className="text-amber-600 font-medium">Chọn ít nhất 1 file để import</span>
+                <span className="text-amber-600 font-medium">
+                  Chọn ít nhất 1 file để import
+                </span>
               ) : (
-                <>Đã chọn <strong className="text-foreground">{selectedCount}</strong> / {files.length} file</>
+                <>
+                  Đã chọn{" "}
+                  <strong className="text-foreground">{selectedCount}</strong> /{" "}
+                  {files.length} file
+                </>
               )}
             </span>
             <div className="flex items-center gap-2">

@@ -330,7 +330,7 @@ export const erpInvoicesCoreApi = {
 
   previewPdfMatch: async (
     filenames: string[],
-    direction: "IN" | "OUT"
+    direction: "IN" | "OUT",
   ): Promise<
     Record<
       string,

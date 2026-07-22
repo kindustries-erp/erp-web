@@ -1,4 +1,9 @@
-import { SkipForward, AlertCircle, CheckCircle2, PanelRightOpen } from "lucide-react";
+import {
+  SkipForward,
+  AlertCircle,
+  CheckCircle2,
+  PanelRightOpen,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   type BulkImportResult,
@@ -82,7 +87,10 @@ export function ImportResultTables({ result, onOpenInvoice }: Props) {
       key: "filename",
       header: "Tên file PDF",
       cell: (r) => (
-        <div className="max-w-[160px] truncate text-muted-foreground text-xs" title={r.filename}>
+        <div
+          className="max-w-[160px] truncate text-muted-foreground text-xs"
+          title={r.filename}
+        >
           {r.filename}
         </div>
       ),
@@ -126,7 +134,10 @@ export function ImportResultTables({ result, onOpenInvoice }: Props) {
       key: "sellerName",
       header: "Bên bán",
       cell: (r) => (
-        <div className="max-w-[180px] truncate" title={r.sellerName || undefined}>
+        <div
+          className="max-w-[180px] truncate"
+          title={r.sellerName || undefined}
+        >
           {r.sellerName || "—"}
         </div>
       ),

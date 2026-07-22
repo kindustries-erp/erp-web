@@ -455,7 +455,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       if (pendingAddedPdfs.length > 0) {
         setForm((prev) => ({ ...prev, pendingAddedPdfs: [] }));
         try {
-          await erpInvoicesCoreApi.uploadPdfs(invoiceIdToProcess, pendingAddedPdfs);
+          await erpInvoicesCoreApi.uploadPdfs(
+            invoiceIdToProcess,
+            pendingAddedPdfs,
+          );
         } catch (err) {
           console.error("Failed to upload PDFs", err);
         }

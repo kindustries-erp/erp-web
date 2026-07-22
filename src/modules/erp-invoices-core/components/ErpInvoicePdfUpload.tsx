@@ -64,9 +64,8 @@ export function ErpInvoicePdfUpload({
               if (!invoiceId) return;
               try {
                 toast.loading("Đang nén file PDF...", { id: "zip-download" });
-                const blob = await erpInvoicesCoreApi.downloadPdfsZip(
-                  invoiceId,
-                );
+                const blob =
+                  await erpInvoicesCoreApi.downloadPdfsZip(invoiceId);
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
@@ -159,8 +158,7 @@ export function ErpInvoicePdfUpload({
         fileName={previewFile?.name || previewUrl?.fileName}
         fetchBlobFn={
           previewUrl && invoiceId
-            ? () =>
-                erpInvoicesCoreApi.getPdfBlob(invoiceId, previewUrl.fileKey)
+            ? () => erpInvoicesCoreApi.getPdfBlob(invoiceId, previewUrl.fileKey)
             : undefined
         }
         onDownload={
