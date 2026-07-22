@@ -28,6 +28,7 @@ export interface DocumentLineTableProps<T> {
   rowClassName?: (row: T, index: number) => string;
   tableContainerClassName?: string;
   footer?: ReactNode;
+  variant?: "default" | "spreadsheet";
 }
 
 export function DocumentLineTable<T>({
@@ -44,6 +45,7 @@ export function DocumentLineTable<T>({
   rowClassName,
   tableContainerClassName,
   footer,
+  variant = "default",
 }: DocumentLineTableProps<T>) {
   const t = useT();
   const topScrollRef = useRef<HTMLDivElement>(null);
@@ -101,7 +103,12 @@ export function DocumentLineTable<T>({
       >
         <table ref={tableRef} className="w-full text-sm text-left relative">
           <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
-            <tr>
+            <tr
+              className={cn(
+                variant === "spreadsheet" &&
+                  "divide-x divide-[color:var(--border)]",
+              )}
+            >
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -206,6 +213,8 @@ export function DocumentLineTable<T>({
                   key={getRowKey(row, idx)}
                   className={cn(
                     "group hover:bg-muted/30 transition-colors",
+                    variant === "spreadsheet" &&
+                      "divide-x divide-[color:var(--border)]",
                     rowClassName?.(row, idx),
                   )}
                 >
@@ -213,7 +222,7 @@ export function DocumentLineTable<T>({
                     <td
                       key={col.key}
                       className={cn(
-                        "px-3 py-2 align-top mt-2",
+                        "px-3 py-2 align-top",
                         col.align === "center"
                           ? "text-center"
                           : col.align === "right"
@@ -229,7 +238,7 @@ export function DocumentLineTable<T>({
                     </td>
                   ))}
                   {hasActions && (
-                    <td className="px-3 py-2 align-top text-center mt-2">
+                    <td className="px-3 py-2 align-top text-center">
                       <button
                         type="button"
                         className="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors mt-1"

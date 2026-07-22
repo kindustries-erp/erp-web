@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { Button } from "@/shared/components/ui/Button";
+import { Textarea } from "@/shared/components/ui/textarea";
 
 function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
   const { data: journalEntry, isLoading } = useQuery({
@@ -137,6 +138,22 @@ export function ErpInvoiceInternalSidebar({
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
                 {branchOptions.find((o) => o.value === form.branchId)?.label ||
                   "—"}
+              </div>
+            )}
+          </DrawerField>
+
+          <DrawerField label={t("notes", "Ghi chú")}>
+            {editMode ? (
+              <Textarea
+                className="w-full text-sm"
+                value={form.notes || ""}
+                onChange={(e) => fieldSet("notes", e.target.value)}
+                placeholder="Nhập ghi chú..."
+                rows={3}
+              />
+            ) : (
+              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent whitespace-pre-wrap">
+                {form.notes || "—"}
               </div>
             )}
           </DrawerField>

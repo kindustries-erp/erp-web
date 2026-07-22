@@ -27,6 +27,7 @@ export interface FilePreviewDrawerProps {
    * so react-pdf can render it without CORS restrictions.
    */
   fetchBlobFn?: () => Promise<Blob>;
+  zIndex?: number;
 }
 
 type FileTypeCategory = "PDF" | "IMAGE" | "EXCEL" | "UNSUPPORTED" | "UNKNOWN";
@@ -39,6 +40,7 @@ export function FilePreviewDrawer({
   fileName,
   onDownload,
   fetchBlobFn,
+  zIndex,
 }: FilePreviewDrawerProps) {
   const t = useT();
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
@@ -356,6 +358,7 @@ export function FilePreviewDrawer({
       title="Xem trước tài liệu"
       subtitle={actualFileName}
       size="lg"
+      zIndex={zIndex}
       layout="1-column"
       leftPanel={renderContent()}
       actions={[
