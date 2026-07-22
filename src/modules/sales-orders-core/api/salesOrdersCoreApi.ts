@@ -25,6 +25,7 @@ export interface ErpSalesOrder {
   createdAt?: string;
   lines?: ErpSoLine[];
   goodsIssues?: any[];
+  serialLifecycles?: any[];
 }
 
 export interface CreateSoPayload {
