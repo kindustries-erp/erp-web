@@ -53,7 +53,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
       loadingDetail={isFetching || formHook.loadingDetail}
       startEdit={formHook.startEdit}
       cancelEdit={formHook.cancelEdit}
-      setDeleteConfirm={formHook.setDeleteConfirm}
       rightPanel={
         <div className="flex flex-col gap-5">
           <ErpInvoiceInternalSidebar

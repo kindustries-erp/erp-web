@@ -1921,7 +1921,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         saving={formHook.saving}
         handleSave={formHook.handleSave}
         cancelEdit={formHook.cancelEdit}
-        setDeleteConfirm={formHook.setDeleteConfirm}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
         onDownload={handleDownload}
