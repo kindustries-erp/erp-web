@@ -1,13 +1,8 @@
 import { DrawerModal, DrawerSection } from "@/shared/components/DrawerModal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
-import { Combobox } from "@/shared/components/Combobox";
+import { useQuery } from "@tanstack/react-query";
 import { formatGMT7, money } from "@/shared/utils/format";
-import { ExternalLink, Save } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
-import { accountingApi } from "@/modules/accounting/api/accountingApi";
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
+import { ExternalLink } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -25,60 +20,6 @@ export function BankTransactionDetailDrawer({
     queryFn: () => bankStatementApi.getTransaction(transactionId!),
     enabled: isOpen && !!transactionId,
   });
-
-  const queryClient = useQueryClient();
-  const { data: chartOfAccounts } = useQuery({
-    queryKey: ["chart-of-accounts", transaction?.branchId],
-    queryFn: () =>
-      accountingApi.getChartOfAccounts({ branchId: transaction?.branchId }),
-    enabled: !!transaction?.branchId,
-  });
-
-  const [selectedAccount, setSelectedAccount] = useState<string>("");
-  const [accountingDescription, setAccountingDescription] =
-    useState<string>("");
-
-  useEffect(() => {
-    if (transaction) {
-      setSelectedAccount(transaction.correspondentAccountingAccountId || "");
-      setAccountingDescription(
-        transaction.accountingDescription || transaction.description || "",
-      );
-    } else {
-      setSelectedAccount("");
-      setAccountingDescription("");
-    }
-  }, [transaction, isOpen]);
-
-  const updateMutation = useMutation({
-    mutationFn: (data: {
-      id: string;
-      correspondentAccountingAccountId: string | null;
-      accountingDescription: string;
-    }) =>
-      bankStatementApi.updateTransaction(data.id, {
-        correspondentAccountingAccountId: data.correspondentAccountingAccountId,
-        accountingDescription: data.accountingDescription,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["bank-transaction", transactionId],
-      });
-      queryClient.invalidateQueries({ queryKey: ["bank-transactions"] });
-      toast.success(
-        "Đã cập nhật tài khoản đối ứng thành công và tự động đồng bộ sang Nhật ký chung!",
-      );
-    },
-  });
-
-  const handleSaveAccount = () => {
-    if (!transactionId) return;
-    updateMutation.mutate({
-      id: transactionId,
-      correspondentAccountingAccountId: selectedAccount || null,
-      accountingDescription,
-    });
-  };
 
   const openErpInvoice = (id: string) => {
     const event = new CustomEvent("open_erp_document", {
@@ -196,65 +137,6 @@ export function BankTransactionDetailDrawer({
                 Chưa có hóa đơn nào được cấn trừ.
               </div>
             )}
-          </DrawerSection>
-        )}
-        {transaction && (
-          <DrawerSection title="Hạch toán (Tài khoản đối ứng)">
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Tài khoản đối ứng
-                  </label>
-                  <Combobox
-                    options={
-                      chartOfAccounts?.map((acc: any) => ({
-                        value: acc.id,
-                        label: `${acc.accountCode} - ${acc.accountName}`,
-                      })) || []
-                    }
-                    value={selectedAccount}
-                    onChange={setSelectedAccount}
-                    placeholder="-- Chọn tài khoản đối ứng --"
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Diễn giải hạch toán
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                    placeholder="Nhập diễn giải hạch toán..."
-                    value={accountingDescription}
-                    onChange={(e) => setAccountingDescription(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <Button
-                  variant="primary"
-                  onClick={handleSaveAccount}
-                  disabled={
-                    updateMutation.isPending ||
-                    (selectedAccount ===
-                      (transaction.correspondentAccountingAccountId || "") &&
-                      accountingDescription ===
-                        (transaction.accountingDescription ||
-                          transaction.description ||
-                          ""))
-                  }
-                >
-                  <Save className="w-4 h-4" />
-                  {updateMutation.isPending ? "Đang lưu..." : "Lưu & Hạch toán"}
-                </Button>
-              </div>
-            </div>
-            <p className="text-xs text-gray-400 mt-2 italic">
-              * Lưu ý: Khi lưu, hệ thống sẽ tự động cập nhật hoặc phát sinh bút
-              toán Nhật ký chung tương ứng.
-            </p>
           </DrawerSection>
         )}
       </div>

@@ -29,9 +29,20 @@ export const ROUTES: RouteConfig[] = [
   { key: "journal", label: "Nhật ký chung", group: "reports" },
   { key: "partners", label: "Đối tác", group: "partners" },
   { key: "employees", label: "Nhân sự", group: "hr" },
+  { key: "invoice-dashboard", label: "Tổng quan hóa đơn", group: "dashboard" },
 
   { key: "customers", label: "Khách hàng", group: "sales" },
+  {
+    key: "sales-report-dashboard",
+    label: "Tổng quan bán hàng",
+    group: "sales",
+  },
   { key: "purchasing", label: "Đơn mua hàng", group: "purchasing" },
+  {
+    key: "purchasing-report-dashboard",
+    label: "Tổng quan mua hàng",
+    group: "purchasing",
+  },
   { key: "suppliers", label: "Nhà cung cấp", group: "purchasing" },
   { key: "permissions", label: "Phân quyền & Vai trò", group: "system" },
   {

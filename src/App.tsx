@@ -12,6 +12,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { Dashboard } from "@/pages/Dashboard";
+import { InventoryDashboard } from "@/pages/InventoryDashboard";
 import { EnvStamp } from "@/core/components/EnvStamp";
 
 import { MuaHang } from "@/pages/Purchasing";
@@ -37,6 +38,7 @@ import { ErpActivityLogsPage } from "@/pages/ErpActivityLogsPage";
 import { ErpPermissionsCorePage } from "@/pages/ErpPermissionsCorePage";
 import { ErpInvoicesInPage } from "@/pages/ErpInvoicesInPage";
 import { ErpInvoicesOutPage } from "@/pages/ErpInvoicesOutPage";
+import { InvoiceDashboard } from "@/pages/InvoiceDashboard";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -44,10 +46,13 @@ import { SysTagsPage } from "@/pages/SysTagsPage";
 import { BankStatementPage } from "@/pages/BankStatementPage";
 import { GeneralJournalPage } from "@/pages/finance/GeneralJournalPage";
 import { ChartOfAccountsPage } from "@/pages/finance/ChartOfAccountsPage";
+import { VinfastPartsTrackingPage } from "@/pages/VinfastPartsTrackingPage";
 import { ThietLapNganHang } from "@/pages/SettingsBankAccount";
 import { ThietLapQuy } from "@/pages/SettingsCashFund";
 import { SettingsBranch } from "@/pages/SettingsBranch";
 import { CashflowDashboard } from "@/pages/CashflowDashboard";
+import { SalesReportDashboardPage } from "@/pages/SalesReportDashboardPage";
+import { PurchasingReportDashboardPage } from "@/pages/PurchasingReportDashboardPage";
 import { GarageDashboard } from "@/modules/garage/pages/GarageDashboard";
 import { GarageCases } from "@/modules/garage/pages/GarageCases";
 import { GarageReceivables } from "@/modules/garage/pages/GarageReceivables";
@@ -58,6 +63,7 @@ import { PageKey } from "@/shared/types";
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
@@ -68,6 +74,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-bom": ErpBomPage,
   "erp-production": ErpProductionPage,
   "erp-sales-orders": ErpSalesOrdersPage,
+  "sales-report-dashboard": SalesReportDashboardPage,
   "erp-goods-issues": ErpGoodsIssuesPage,
   "erp-inventory-uom": InventoryUomPage,
   "erp-inventory-item-types": InventoryItemTypesPage,
@@ -80,6 +87,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
+  "invoice-dashboard": InvoiceDashboard,
   "sys-tags": SysTagsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,
@@ -93,6 +101,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
   "after-sales": AfterSalesPage,
+  "vinfast-parts": VinfastPartsTrackingPage,
+  "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
 
 export default function App() {

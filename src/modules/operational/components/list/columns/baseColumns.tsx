@@ -116,7 +116,6 @@ export function useBaseColumns({
         cell: (row) => (
           <div className="flex flex-col gap-1 items-center w-full">
             <StatusBadge status={row.status} />
-            <StatusBadge status={row.payment_status} />
             {variant === "sales" && row.inventory_status ? (
               <div className="text-xs text-[color:var(--muted-fg)]">
                 {t("Kho")}: {inventoryStatusLabel(row.inventory_status)}

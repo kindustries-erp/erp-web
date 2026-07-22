@@ -22,12 +22,18 @@ export interface ErpInvoice {
   invoiceDate: string;
   direction: "IN" | "OUT";
   status: string;
+  taxInvoiceType?: string | null;
+  isValid?: boolean;
+  validatedAt?: string | null;
+  validatedBy?: string | null;
   source?: string | null;
   sellerName?: string | null;
   sellerTaxCode?: string | null;
   sellerAddress?: string | null;
   sellerBank?: string | null;
   buyerName?: string | null;
+  buyerPersonalName?: string | null;
+  buyerCccd?: string | null;
   buyerTaxCode?: string | null;
   buyerAddress?: string | null;
   description?: string | null;
@@ -47,8 +53,13 @@ export interface ErpInvoice {
   pdfFiles?: any[] | null;
   xmlFileKey?: string | null;
   xmlImportId?: string | null;
+  taxInvoiceStatus?: number | null;
+  taxProcessStatus?: number | null;
   createdAt?: string;
   updatedAt?: string;
+  postingStatus?: string | null;
+  postingDate?: string | null;
+  journalEntryId?: string | null;
   items?: ErpInvoiceItem[];
   voucherNetOffs?: {
     id: string;
@@ -85,7 +96,17 @@ export interface CreateErpInvoicePayload {
   salesOrderId?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  isValid?: boolean;
   items?: ErpInvoiceItem[];
+  pendingDocumentChanges?: {
+    action: "ADD" | "REMOVE";
+    type: "PO" | "BANK";
+    refId: string;
+    amount?: number;
+  }[];
+  accountingEnabled?: boolean;
+  pendingDeletedPdfs?: string[];
+  pendingAddedPdfs?: File[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -95,6 +116,7 @@ export interface ErpInvoiceListParams {
   search?: string;
   seller_name?: string;
   buyer_name?: string;
+  partner_tax_code?: string;
   date_from?: string;
   date_to?: string;
   status?: string;
@@ -103,6 +125,8 @@ export interface ErpInvoiceListParams {
   pageSize?: number;
   sort_by?: string;
   sort_order?: "asc" | "desc";
+  column_search?: string;
+  column_filters?: string;
 }
 
 export interface ErpInvoiceListResponse {
@@ -128,9 +152,10 @@ export interface PortalInvoiceDto {
 
 export interface PortalSyncPayload {
   token: string;
+  cookies?: string;
   dateFrom: string;
   dateTo: string;
-  type: "purchase" | "sold";
+  type?: "purchase" | "sold";
 }
 
 export interface PortalSyncResult {
@@ -153,6 +178,32 @@ export const erpInvoicesCoreApi = {
       params,
     });
     return data;
+  },
+
+  getInvoiceColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    direction?: "IN" | "OUT",
+  ) => {
+    const res = await axiosInstance.get(`${BASE}/column-options`, {
+      params: {
+        column,
+        search,
+        page,
+        pageSize,
+        column_filters: filtersStr,
+        direction,
+      },
+    });
+    return res.data as {
+      items: string[];
+      total: number;
+      page: number;
+      totalPages: number;
+    };
   },
 
   get: async (id: string): Promise<ErpInvoice> => {
@@ -179,6 +230,14 @@ export const erpInvoicesCoreApi = {
       payload,
     );
     return data.data;
+  },
+
+  bulkSetBranch: async (ids: string[], branchId: string | null) => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      ids: string[];
+    }>(`${BASE}/bulk-set-branch`, { ids, branchId });
+    return data;
   },
 
   remove: async (id: string): Promise<void> => {
@@ -238,15 +297,56 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  bulkDownloadXml: async (payload: {
+  bulkDownloadXml: async (params: {
     token: string;
+    cookies?: string;
     direction: "IN" | "OUT";
-  }) => {
+  }): Promise<{ message: string; count: number }> => {
     const { data } = await axiosInstance.post<{
       message: string;
       count: number;
-    }>(`${BASE}/portal/bulk-download-xml`, payload);
+    }>(`${BASE}/portal/bulk-download-xml`, params);
     return data;
+  },
+
+  getPortalConfig: async (): Promise<{ token: string; cookies: string }> => {
+    const { data } = await axiosInstance.get<{
+      token: string;
+      cookies: string;
+    }>(`${BASE}/portal/token`);
+    return data;
+  },
+
+  savePortalConfig: async (
+    token: string,
+    cookies?: string,
+  ): Promise<{ message: string }> => {
+    const { data } = await axiosInstance.post<{ message: string }>(
+      `${BASE}/portal/token`,
+      { token, cookies },
+    );
+    return data;
+  },
+
+  previewPdfMatch: async (
+    filenames: string[],
+    direction: "IN" | "OUT",
+  ): Promise<
+    Record<
+      string,
+      {
+        id: string;
+        invoiceNo: string;
+        serialNo: string | null;
+        totalAmount: string | null;
+      } | null
+    >
+  > => {
+    const res = await axiosInstance.post(`${BASE}/preview-pdf-match`, {
+      filenames,
+      direction,
+    });
+    return res.data;
   },
 
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
@@ -267,6 +367,17 @@ export const erpInvoicesCoreApi = {
       `${BASE}/bulk-import-xml/seller`,
       formData,
       { headers: { "Content-Type": "multipart/form-data" } },
+    );
+    return data;
+  },
+
+  setValid: async (
+    id: string,
+    isValid: boolean,
+  ): Promise<{ success: boolean }> => {
+    const { data } = await axiosInstance.patch<{ success: boolean }>(
+      `${BASE}/${id}/validate`,
+      { isValid },
     );
     return data;
   },
@@ -309,12 +420,41 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  getPdfBlob: async (id: string, key: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(
+      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
+      { responseType: "blob" },
+    );
+    return data;
+  },
+
   getPdfDownloadUrl: async (
     id: string,
     key: string,
+    inline?: boolean,
   ): Promise<{ url: string }> => {
     const { data } = await axiosInstance.get<{ url: string }>(
       `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/download-url`,
+      { params: { inline } },
+    );
+    return data;
+  },
+
+  downloadPdfsZip: async (id: string): Promise<Blob> => {
+    const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
+      responseType: "blob",
+    });
+    return data;
+  },
+
+  bulkDownloadFiles: async (payload: {
+    query: { date_from?: string; date_to?: string; direction?: string };
+    types: string[];
+  }): Promise<Blob> => {
+    const { data } = await axiosInstance.post<Blob>(
+      `${BASE}/bulk-download-files`,
+      payload,
+      { responseType: "blob", timeout: 600000 },
     );
     return data;
   },
@@ -335,6 +475,34 @@ export const erpInvoicesCoreApi = {
       params,
       responseType: "blob",
     });
+    return data;
+  },
+
+  postInvoice: async (
+    id: string,
+    payload: {
+      postingDate: string;
+      documentDate?: string;
+      description?: string;
+      lines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description?: string;
+      }[];
+    },
+  ): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/post`,
+      payload,
+    );
+    return data;
+  },
+
+  unpostInvoice: async (id: string): Promise<ErpInvoice> => {
+    const { data } = await axiosInstance.post<ErpInvoice>(
+      `${BASE}/${id}/unpost`,
+    );
     return data;
   },
 };
@@ -359,4 +527,13 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
+  pdfAttached?: {
+    filename: string;
+    invoiceNo: string;
+    invoiceId?: string;
+    serialNo?: string | null;
+    sellerName?: string | null;
+    totalAmount?: string | null;
+  }[];
+  pdfOrphans?: { filename: string; reason: string }[];
 }

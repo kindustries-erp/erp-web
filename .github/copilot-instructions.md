@@ -1,17 +1,25 @@
-# ERP Frontend — Copilot Instructions
+# ERP Web - Copilot Instructions
 
-## Required reading order
+## Required read order
 
-1. `docs/ai/technical-instructions.md`
-2. `docs/app-structure.md`
-3. Relevant task file in `docs/tasks/`
+1. `.agents/context/current-truth.md`
+2. `.agents/context/working-contract.md`
+3. `.agents/tasks/current-lane.md`
+4. `.agents/AGENTS.md`
+5. `AGENTS.md`
+6. `.agents/rules/ai-instructions/technical-instructions.md`
+7. `.agents/context/system/app-structure.md`
+8. Relevant task file in `.agents/tasks/`
 
-## Mandatory workflow
+## Working rules
 
-- No code without task file.
-- Update checklist in realtime (`[ ]` -> `[x]`).
-- If issue/blocker happens, record lessons learned before closing.
+- Reuse existing skills, hooks, and UI patterns before creating new artifacts.
+- Follow gate order: DB -> API -> UI -> QC.
+- Use Bun/Bunx only.
+- No code without a task file in `.agents/tasks/`.
+- Respect pre-commit and pre-push hooks.
+- Before push, run this sequence explicitly: `bun run check:ci` -> `bun run test` (Vitest) -> `bun run build` -> `git push`.
 
-## Canonical source of truth
+## Notes
 
-Use `docs/ai/technical-instructions.md` as the only canonical rules document.
+- Treat Directus and Gitea docs as historical/reference unless the task explicitly sets legacy scope.

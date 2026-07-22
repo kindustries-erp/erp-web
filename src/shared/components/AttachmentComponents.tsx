@@ -3,6 +3,7 @@ import {
   type PaymentVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { IconPaperclip } from "@/shared/components/icons";
+import { Eye, X } from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -24,12 +25,17 @@ export function attachmentFileName(a: PaymentVoucherAttachment): string {
 interface AttachmentRowProps {
   item: PaymentVoucherAttachment;
   onDelete?: (item: PaymentVoucherAttachment) => void;
+  onPreview?: (url: string, fileName: string) => void;
 }
 
 /**
  * Một dòng đính kèm trong Drawer — hiển thị tên file, loại, ghi chú và nút Xem/Xóa.
  */
-export function AttachmentRow({ item, onDelete }: AttachmentRowProps) {
+export function AttachmentRow({
+  item,
+  onDelete,
+  onPreview,
+}: AttachmentRowProps) {
   const fileId = attachmentFileId(item);
   return (
     <div className="flex items-center gap-2 px-3 py-2 border-b border-[color:var(--border-light)] last:border-b-0 bg-[color:var(--muted)]/35">
@@ -45,21 +51,27 @@ export function AttachmentRow({ item, onDelete }: AttachmentRowProps) {
       <button
         type="button"
         disabled={!fileId}
-        onClick={() =>
-          window.open(getFileViewUrl(fileId), "_blank", "noopener,noreferrer")
-        }
-        className="px-2 py-1 rounded-lg border border-border bg-surface text-xs text-foreground hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={() => {
+          const url = getFileViewUrl(fileId);
+          if (onPreview) {
+            onPreview(url, attachmentFileName(item));
+          } else {
+            window.open(url, "_blank", "noopener,noreferrer");
+          }
+        }}
+        title="Xem tài liệu"
+        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        Xem
+        <Eye className="w-4 h-4" />
       </button>
       {onDelete && (
         <button
           type="button"
           title="Xóa đính kèm"
           onClick={() => onDelete(item)}
-          className="px-2 py-1 rounded-lg border border-border bg-surface text-xs text-[color:var(--warn-fg)] hover:bg-surface-hover"
+          className="p-1.5 rounded-lg border border-border bg-surface text-[color:var(--warn-fg)] hover:bg-destructive/10 hover:text-destructive transition-colors"
         >
-          Xóa
+          <X className="w-4 h-4" />
         </button>
       )}
     </div>

@@ -8,7 +8,12 @@ import {
   Eye,
   FileText,
   CheckCircle,
+  FileSpreadsheet,
+  PanelRightOpen,
+  MoreHorizontal,
 } from "lucide-react";
+import { Popover } from "@/core/components/ui/Popover";
+import { useQuery } from "@tanstack/react-query";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useSalesOrdersQuery } from "@/modules/sales-orders-core/hooks/useSalesOrdersQuery";
 import { type DataTableColumn } from "@/shared/components/DataTable";
@@ -26,9 +31,13 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
 import { useT } from "@/core/i18n";
+import { useUIStore } from "@/core/config/uiStore";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
+import { Button } from "@/shared/components/ui/Button";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 import {
   SoFormDrawer,
@@ -46,8 +55,146 @@ function fmtDate(value?: string | null) {
   return value.slice(0, 10);
 }
 
+function DeliveryDetailPopover({ item }: { item: ErpSalesOrder }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["sales-order-detail", item.id],
+    queryFn: () => salesOrdersCoreApi.get(item.id),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const itemAny = item as any;
+  const displayDate =
+    itemAny.deliveredDate ||
+    itemAny.actualDeliveryDate ||
+    itemAny.updatedAt ||
+    item.createdAt;
+  const dateStr = displayDate
+    ? new Date(displayDate).toLocaleDateString("vi-VN")
+    : "—";
+
+  const hasSerialLifecycles = Boolean(data?.serialLifecycles?.length);
+
+  return (
+    <Popover
+      content={
+        <div className="p-3 max-h-[400px] max-w-[800px] max-w-[90vw] overflow-auto">
+          <h4 className="font-semibold text-sm mb-3 text-slate-800">
+            Chi tiết đợt giao hàng
+          </h4>
+          {isLoading ? (
+            <div className="text-sm text-slate-500 py-2">Đang tải...</div>
+          ) : hasSerialLifecycles ? (
+            <table className="w-full text-sm text-left border-collapse min-w-[500px]">
+              <thead className="bg-slate-50 sticky top-0">
+                <tr>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Số Seri
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Số Khung
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Số Máy
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium text-center">
+                    Ngày giao
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data!.serialLifecycles!.map((sl: any) => {
+                  const deliveryDateStr = sl.deliveryDate
+                    ? new Date(sl.deliveryDate).toLocaleDateString("vi-VN")
+                    : "—";
+                  return (
+                    <tr
+                      key={sl.id}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {sl.serialNo || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {sl.vinNo || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {sl.engineNo || "—"}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap text-center">
+                        {deliveryDateStr}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : data?.goodsIssues && data.goodsIssues.length > 0 ? (
+            <table className="w-full text-sm text-left border-collapse min-w-[400px]">
+              <thead className="bg-slate-50 sticky top-0">
+                <tr>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Phiếu xuất
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium text-center">
+                    Ngày giao
+                  </th>
+                  <th className="px-2 py-1.5 border-b text-slate-600 font-medium">
+                    Xe / Biển số
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.goodsIssues.map((gi: any) => {
+                  const firstLine = gi.lines?.[0] || {};
+                  const vehicleInfo =
+                    firstLine.vehicleVin ||
+                    firstLine.vehicleId ||
+                    gi.remarks ||
+                    "—";
+                  const deliveryConfirmDate =
+                    gi.updatedAt || gi.createdAt || gi.issueDate;
+                  return (
+                    <tr
+                      key={gi.id}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="px-2 py-2 whitespace-nowrap">
+                        {gi.issueNo}
+                      </td>
+                      <td className="px-2 py-2 whitespace-nowrap text-center">
+                        {deliveryConfirmDate
+                          ? new Date(deliveryConfirmDate).toLocaleDateString(
+                              "vi-VN",
+                            )
+                          : "—"}
+                      </td>
+                      <td className="px-2 py-2">{vehicleInfo}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-slate-500 text-sm italic py-2">
+              Chưa có chi tiết giao hàng.
+            </div>
+          )}
+        </div>
+      }
+    >
+      <div className="group relative flex w-full cursor-pointer hover:text-primary items-center justify-center h-full min-h-[24px]">
+        <span>{dateStr}</span>
+        <div className="absolute right-0 opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
+          <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-primary" />
+        </div>
+      </div>
+    </Popover>
+  );
+}
+
 export function ErpSalesOrdersPage() {
   const t = useT();
+  const showToast = useUIStore((s) => s.showToast);
 
   const canRead = useHasPermission("sales_orders", "read");
   const canCreate = useHasPermission("sales_orders", "create");
@@ -60,7 +207,7 @@ export function ErpSalesOrdersPage() {
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
-      search: true,
+      search: false,
     }),
     [],
   );
@@ -76,6 +223,7 @@ export function ErpSalesOrdersPage() {
   }, [filterSearch]);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
   const [editing, setEditing] = useState<ErpSalesOrder | null>(null);
   const [viewOnly, setViewOnly] = useState(true);
 
@@ -92,6 +240,8 @@ export function ErpSalesOrdersPage() {
     id: string;
     serialIds: string[];
   } | null>(null);
+
+  const [xlsxExportingId, setXlsxExportingId] = useState<string | null>(null);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
@@ -140,6 +290,51 @@ export function ErpSalesOrdersPage() {
     );
   }, [itemsData]);
 
+  const columnState = useTableColumnState("sales-orders-table");
+
+  useEffect(() => {
+    setPage(1);
+  }, [columnState.columnFilters, columnState.columnSearch, columnState.sorts]);
+
+  const fetchSalesOrdersColumnOptions = async (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    const filtersStr =
+      Object.keys(columnState.columnFilters).length > 0
+        ? JSON.stringify(columnState.columnFilters)
+        : undefined;
+
+    const res = await salesOrdersCoreApi.getColumnOptions(
+      params.columnKey,
+      params.search,
+      params.pageParam || 1,
+      20,
+      filtersStr,
+    );
+    return {
+      items: res.items.map((i: string) => ({ value: i, label: i })),
+      total: res.total,
+      next: res.page < res.totalPages ? res.page + 1 : null,
+    };
+  };
+
+  const getSortState = (key: string) => {
+    if (columnState.sorts.includes(key)) return "asc";
+    if (columnState.sorts.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+
+  const activeSort = columnState.sorts[0];
+  const sortField = activeSort ? activeSort.replace("-", "") : undefined;
+  const sortOrder = activeSort
+    ? activeSort.startsWith("-")
+      ? "desc"
+      : "asc"
+    : undefined;
+
   const {
     data: resData,
     isLoading: loading,
@@ -148,6 +343,16 @@ export function ErpSalesOrdersPage() {
     page,
     pageSize,
     search,
+    column_search:
+      Object.keys(columnState.columnSearch).length > 0
+        ? JSON.stringify(columnState.columnSearch)
+        : undefined,
+    column_filters:
+      Object.keys(columnState.columnFilters).length > 0
+        ? JSON.stringify(columnState.columnFilters)
+        : undefined,
+    sortField,
+    sortOrder,
   });
 
   const items = resData?.items || [];
@@ -223,6 +428,10 @@ export function ErpSalesOrdersPage() {
   async function openView(item: ErpSalesOrder) {
     setViewOnly(true);
     setSaveError(null);
+    setEditing(item);
+    setForm(buildForm(item));
+    setDrawerLoading(true);
+    setDrawerOpen(true);
     try {
       const detail = await salesOrdersCoreApi.get(item.id);
       // Detail API might not return customerName, fallback to list item's customerName
@@ -231,7 +440,6 @@ export function ErpSalesOrdersPage() {
       const mergedDetail = { ...detail, customerName };
       setEditing(mergedDetail);
       setForm(buildForm(mergedDetail));
-      setDrawerOpen(true);
 
       if (!customerName && detail.customerId) {
         import("@/modules/basic-masters/api/basicMastersApi").then(
@@ -261,6 +469,8 @@ export function ErpSalesOrdersPage() {
       setError(
         e instanceof Error ? e.message : "Không thể tải chi tiết sales order",
       );
+    } finally {
+      setDrawerLoading(false);
     }
   }
 
@@ -452,35 +662,107 @@ export function ErpSalesOrdersPage() {
     }
   }
 
+  const handleExportXlsx = async (id: string, refNo?: string) => {
+    try {
+      setXlsxExportingId(id);
+      const blob = await salesOrdersCoreApi.exportXlsx(id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `DonBanHang_${refNo || id.split("-")[0]}.xlsx`,
+      );
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      showToast({
+        title: t("Lỗi xuất file"),
+        description:
+          err.response?.data?.message || t("Đã xảy ra lỗi khi xuất Excel."),
+        variant: "destructive",
+      });
+    } finally {
+      setXlsxExportingId(null);
+    }
+  };
+
   const columns: DataTableColumn<ErpSalesOrder>[] = [
     {
       key: "orderDate",
-      header: t("Ngày đặt"),
-      size: 100,
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày đặt")}
+          columnKey="orderDate"
+          sortState={getSortState("orderDate") || "none"}
+          onSortChange={(s) => columnState.setSort("orderDate", s)}
+          searchValue={columnState.columnSearch["orderDate"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("orderDate", v)}
+          selectedFilters={columnState.columnFilters["orderDate"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("orderDate", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 150,
       headerClassName: "text-center",
       className: "text-center",
       cell: (item) => fmtDate(item.orderDate),
       skeletonClassName: "w-20",
     },
-    {
-      key: "expectedDeliveryDate",
-      header: t("Ngày giao DK"),
-      size: 100,
-      headerClassName: "text-center",
-      className: "text-center",
-      cell: (item) => fmtDate(item.expectedDeliveryDate),
-      skeletonClassName: "w-20",
-    },
+
     {
       key: "soNo",
-      header: t("Số SO"),
-      size: 120,
-      cell: (item) => <span className="font-medium">{item.soNo}</span>,
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số SO")}
+          columnKey="soNo"
+          sortState={getSortState("soNo") || "none"}
+          onSortChange={(s) => columnState.setSort("soNo", s)}
+          searchValue={columnState.columnSearch["soNo"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("soNo", v)}
+          selectedFilters={columnState.columnFilters["soNo"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("soNo", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 200,
+      cell: (item) => (
+        <div className="flex flex-col gap-1 w-full pr-1">
+          <div className="flex items-center gap-2 w-full">
+            <Button
+              variant="ghost"
+              onClick={() => void openView(item)}
+              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+            >
+              <span className="truncate">{item.soNo}</span>
+              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+            </Button>
+          </div>
+        </div>
+      ),
       skeletonClassName: "w-24",
     },
     {
       key: "customerName",
-      header: t("Khách hàng"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Khách hàng")}
+          columnKey="customerName"
+          sortState={getSortState("customerName") || "none"}
+          onSortChange={(s) => columnState.setSort("customerName", s)}
+          searchValue={columnState.columnSearch["customerName"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("customerName", v)}
+          selectedFilters={columnState.columnFilters["customerName"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("customerName", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 200,
       className: "text-left",
       cell: (item) => {
@@ -496,15 +778,131 @@ export function ErpSalesOrdersPage() {
       skeletonClassName: "w-36",
     },
     {
+      key: "totalQty",
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Số lượng")}
+          columnKey="totalQty"
+          sortState={getSortState("totalQty") || "none"}
+          onSortChange={(s) => columnState.setSort("totalQty", s)}
+          searchValue={columnState.columnSearch["totalQty"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("totalQty", v)}
+          selectedFilters={columnState.columnFilters["totalQty"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("totalQty", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 100,
+      className: "text-right",
+      headerClassName: "text-center",
+      cell: (item) => {
+        const qty =
+          item.lines?.reduce(
+            (sum, line) => sum + Number(line.qtyOrdered || 0),
+            0,
+          ) || 0;
+        return qty.toLocaleString("vi-VN");
+      },
+    },
+    {
+      key: "expectedDeliveryDate",
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày giao DK")}
+          columnKey="expectedDeliveryDate"
+          sortState={getSortState("expectedDeliveryDate") || "none"}
+          onSortChange={(s) => columnState.setSort("expectedDeliveryDate", s)}
+          searchValue={columnState.columnSearch["expectedDeliveryDate"] || ""}
+          onSearchChange={(v) =>
+            columnState.setColumnSearch("expectedDeliveryDate", v)
+          }
+          selectedFilters={
+            columnState.columnFilters["expectedDeliveryDate"] || []
+          }
+          onFilterChange={(v) =>
+            columnState.setColumnFilter("expectedDeliveryDate", v)
+          }
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 150,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (item) => fmtDate(item.expectedDeliveryDate),
+      skeletonClassName: "w-24",
+    },
+    {
+      key: "deliveredDate",
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ngày đã giao")}
+          columnKey="deliveredDate"
+          sortState={getSortState("deliveredDate") || "none"}
+          onSortChange={(s) => columnState.setSort("deliveredDate", s)}
+          searchValue={columnState.columnSearch["deliveredDate"] || ""}
+          onSearchChange={(v) =>
+            columnState.setColumnSearch("deliveredDate", v)
+          }
+          selectedFilters={columnState.columnFilters["deliveredDate"] || []}
+          onFilterChange={(v) =>
+            columnState.setColumnFilter("deliveredDate", v)
+          }
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
+      size: 150,
+      className: "text-center",
+      headerClassName: "text-center",
+      cell: (item: any) => {
+        if (
+          item.status === "DELIVERED" ||
+          item.status === "PARTIAL_DELIVERED"
+        ) {
+          return <DeliveryDetailPopover item={item} />;
+        }
+        return "—";
+      },
+      skeletonClassName: "w-24",
+    },
+    {
       key: "status",
-      header: t("Trạng thái"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Trạng thái")}
+          columnKey="status"
+          sortState={getSortState("status") || "none"}
+          onSortChange={(s) => columnState.setSort("status", s)}
+          searchValue={columnState.columnSearch["status"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("status", v)}
+          selectedFilters={columnState.columnFilters["status"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("status", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 120,
       cell: (item) => <StatusBadge status={item.status || ""} />,
       skeletonClassName: "w-20",
     },
     {
       key: "remarks",
-      header: t("Ghi chú"),
+      header: (
+        <TableColumnHeaderFilter
+          align="center"
+          title={t("Ghi chú")}
+          columnKey="remarks"
+          sortState={getSortState("remarks") || "none"}
+          onSortChange={(s) => columnState.setSort("remarks", s)}
+          searchValue={columnState.columnSearch["remarks"] || ""}
+          onSearchChange={(v) => columnState.setColumnSearch("remarks", v)}
+          selectedFilters={columnState.columnFilters["remarks"] || []}
+          onFilterChange={(v) => columnState.setColumnFilter("remarks", v)}
+          fetchOptions={fetchSalesOrdersColumnOptions}
+        />
+      ),
       size: 200,
       className: "text-left",
       cell: (item) => {
@@ -521,6 +919,22 @@ export function ErpSalesOrdersPage() {
     },
   ];
 
+  const summaryRow = useMemo(() => {
+    const totalQty = items.reduce(
+      (acc, curr) =>
+        acc +
+        (curr.lines?.reduce(
+          (sum, line) => sum + Number(line.qtyOrdered || 0),
+          0,
+        ) || 0),
+      0,
+    );
+    return {
+      customerName: null,
+      totalQty: totalQty.toLocaleString("vi-VN"),
+    };
+  }, [items]);
+
   if (!canRead) return <Forbidden />;
 
   return (
@@ -530,6 +944,7 @@ export function ErpSalesOrdersPage() {
       icon={<FileText className="h-4 w-4" />}
       tableId="sales-orders-table"
       loading={loading}
+      summaryRow={summaryRow}
       onRefresh={loadOrders}
       createActions={
         canCreate
@@ -570,6 +985,13 @@ export function ErpSalesOrdersPage() {
               label: t("Chi tiết"),
               icon: <Eye className="h-[13px] w-[13px]" />,
               onClick: () => void openView(item),
+            },
+            {
+              label: t("Xuất XLSX"),
+              onClick: () => void handleExportXlsx(item.id, item.soNo),
+              icon: <FileSpreadsheet className="h-[13px] w-[13px]" />,
+              disabled: xlsxExportingId === item.id,
+              hidden: item.status === "DRAFT",
             },
           ],
         },
@@ -659,7 +1081,7 @@ export function ErpSalesOrdersPage() {
         editing={editing}
         form={form}
         setForm={setForm}
-        drawerLoading={false}
+        drawerLoading={drawerLoading}
         saving={saving}
         saveError={saveError}
         handleSave={handleSave}

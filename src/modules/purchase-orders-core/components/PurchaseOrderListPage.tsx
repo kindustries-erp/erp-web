@@ -12,12 +12,15 @@ import { SettlementDrawer } from "@/modules/operational/components/list/Settleme
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
-import { type OperationalDocument } from "@/modules/operational/api/operationalApi";
+import {
+  operationalApi,
+  type OperationalDocument,
+} from "@/modules/operational/api/operationalApi";
 import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 export function PurchaseOrderListPage() {
   const t = useT();
@@ -88,6 +91,7 @@ export function PurchaseOrderListPage() {
     togglePurchaseSort,
     expandedRowIds,
     toggleExpandRow,
+    tableState,
   } = listData;
 
   const loading = listQuery.isLoading || listQuery.isFetching;
@@ -96,6 +100,22 @@ export function PurchaseOrderListPage() {
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
   const { activeStep } = useOperationalFlowStore();
+
+  const summaryRow = useMemo(() => {
+    const totalQty = items.reduce(
+      (acc, curr) =>
+        acc +
+        (curr.lines?.reduce(
+          (sum, line: any) => sum + Number(line.qty || line.qtyOrdered || 0),
+          0,
+        ) || 0),
+      0,
+    );
+    return {
+      supplier: null,
+      total_qty: totalQty.toLocaleString("vi-VN"),
+    };
+  }, [items]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -125,6 +145,16 @@ export function PurchaseOrderListPage() {
     variant: "purchase",
     expandedRowIds,
     onToggleExpand: toggleExpandRow,
+    onOpenDetail: openDetail,
+    tableState,
+    fetchColumnOptions: ({ columnKey, search, pageParam, filtersStr }) =>
+      operationalApi.getPurchaseOrderColumnOptions(
+        columnKey,
+        search,
+        pageParam,
+        20,
+        filtersStr,
+      ),
   });
 
   return (
@@ -134,6 +164,7 @@ export function PurchaseOrderListPage() {
       icon={<FileText className="h-4 w-4" />}
       tableId="purchase-orders-table"
       loading={loading}
+      summaryRow={summaryRow}
       onRefresh={listQuery.refetch}
       createActions={
         canCreatePo

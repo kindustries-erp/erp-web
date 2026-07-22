@@ -30,6 +30,6 @@
 3. `.agents/context/working-contract.md`
 4. `.agents/tasks/current-lane.md`
 5. `AGENTS.md`
-6. `docs/ai/technical-instructions.md`
+6. `.agents/rules/ai-instructions/technical-instructions.md`
 7. `docs/app-structure.md`
-8. `docs/tasks/<relevant>.md`
+8. `.agents/tasks/<relevant>.md`

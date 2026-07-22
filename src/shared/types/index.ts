@@ -36,6 +36,7 @@ export type PageKey =
   | "erp-bom"
   | "erp-production"
   | "erp-sales-orders"
+  | "sales-report-dashboard"
   | "erp-goods-issues"
   | "erp-inventory-items"
   | "erp-inventory-uom"
@@ -50,13 +51,17 @@ export type PageKey =
   | "sys-tags"
   | "erp-invoices-in"
   | "erp-invoices-out"
+  | "invoice-dashboard"
+  | "purchasing-report-dashboard"
   | "bank-statement"
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
   | "garage-receivables"
   | "garage-payables"
-  | "after-sales";
+  | "after-sales"
+  | "vinfast-parts"
+  | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 
 export interface Transaction {

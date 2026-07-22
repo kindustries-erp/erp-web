@@ -37,6 +37,10 @@ export interface SalesOrderListFilters extends ListParams {
   dateTo?: string;
   customerId?: string;
   notFullyIssued?: boolean;
+  column_search?: string;
+  column_filters?: string;
+  sortField?: string;
+  sortOrder?: string;
 }
 
 export function createSalesOrdersKey(filters: SalesOrderListFilters) {
@@ -47,6 +51,11 @@ export interface AfterSalesListFilters extends ListParams {
   search?: string;
   dateFrom?: string;
   dateTo?: string;
+  sortField?: string;
+  sortOrder?: string;
+  dealerId?: string;
+  column_search?: string;
+  column_filters?: string;
 }
 
 export function createAfterSalesKey(filters: AfterSalesListFilters) {

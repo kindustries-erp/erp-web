@@ -10,8 +10,9 @@ import {
   DEFAULT_STACK_OFFSET,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { FileUploadBox } from "@/shared/components/FileUploadBox";
+import { Attachment } from "@/shared/components/ui/Attachment";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
+import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { PartnerDrawer } from "@/modules/partners/components/PartnerDrawer";
 import {
   emptyPartnerForm,
@@ -150,6 +151,11 @@ export function CashVoucherDrawer({
 
   const [isPartnerOpen, setIsPartnerOpen] = useState(false);
   const [isPartnerEditing, setIsPartnerEditing] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<{
+    url: string;
+    fileName: string;
+  } | null>(null);
 
   const [partnerForm, setPartnerForm] = useState<any>({ ...emptyPartnerForm });
 
@@ -551,6 +557,9 @@ export function CashVoucherDrawer({
                   onDelete={
                     canDeleteAttachment ? onDeleteAttachment : undefined
                   }
+                  onPreview={(url, name) =>
+                    setPreviewUrl({ url, fileName: name })
+                  }
                 />
               ))}
             </div>
@@ -579,10 +588,10 @@ export function CashVoucherDrawer({
                 </DrawerField>
               </div>
               <DrawerField label={t("voucher.drawer.newFile")}>
-                <FileUploadBox
-                  multiple
+                <Attachment
                   files={attachmentFiles}
                   onFilesChange={onAttachmentFilesChange}
+                  onPreview={setPreviewFile}
                   maxSizeMb={10}
                 />
               </DrawerField>
@@ -647,6 +656,17 @@ export function CashVoucherDrawer({
         saveError={null}
         stackOffset={DEFAULT_STACK_OFFSET}
         zIndex={600}
+      />
+
+      <FilePreviewDrawer
+        open={!!previewFile || !!previewUrl}
+        onClose={() => {
+          setPreviewFile(null);
+          setPreviewUrl(null);
+        }}
+        file={previewFile}
+        previewUrl={previewUrl?.url}
+        fileName={previewFile?.name || previewUrl?.fileName}
       />
     </>
   );

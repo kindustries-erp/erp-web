@@ -1,24 +1,278 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LayoutDashboard } from "lucide-react";
-import { KpiCard } from "@/shared/components/KpiCard";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
+// import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Button } from "@/shared/components/ui/Button";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { getTags } from "@/modules/tags/api/tagsApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
-import { money, formatGMT7 } from "@/shared/utils/format";
+import { money } from "@/shared/utils/format";
 import { StandardTable } from "@/shared/components/StandardTable";
-import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+// import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 
 import { CategoryTransactionsDrawer } from "./components/CategoryTransactionsDrawer";
+import { PartnerTransactionsDrawer } from "./components/PartnerTransactionsDrawer";
+
+function BranchPartnerStatsTable({
+  branchId,
+  branchName,
+  filterState,
+  onPartnerClick,
+}: {
+  branchId?: string;
+  branchName: string;
+  filterState: any;
+  onPartnerClick: (account?: string, name?: string) => void;
+}) {
+  const page = 1;
+  const pageSize = 20;
+  const tableState = useTableColumnState(
+    `cashflow-dashboard-partners-${branchId || "all"}`,
+  );
+
+  const getSortState = (columnKey: string) => {
+    const current = tableState.sorts[0];
+    if (!current) return "none";
+    if (current === columnKey) return "asc";
+    if (current === `-${columnKey}`) return "desc";
+    return "none";
+  };
+
+  const handleSortChange = (
+    columnKey: string,
+    state: "asc" | "desc" | "none",
+  ) => {
+    tableState.setSort(columnKey, state);
+  };
+
+  const handleSearchChange = (columnKey: string, value: string) => {
+    tableState.setColumnSearch(columnKey, value);
+  };
+
+  const handleFilterChange = (columnKey: string, values: string[]) => {
+    tableState.setColumnFilter(columnKey, values);
+  };
+
+  const { data: partnerStats, isFetching: isPartnerFetching } = useQuery({
+    queryKey: [
+      "partner-stats",
+      branchId,
+      page,
+      pageSize,
+      filterState.dateFrom,
+      filterState.dateTo,
+      filterState.custom.sourceType,
+      filterState.custom.tagIds,
+    ],
+    queryFn: () =>
+      bankStatementApi.getPartnerStats({
+        page,
+        pageSize,
+        startDate: filterState.dateFrom || undefined,
+        endDate: filterState.dateTo || undefined,
+        branchId: branchId || undefined,
+        sourceType: (filterState.custom.sourceType as any) || undefined,
+        tagIds: (filterState.custom.tagIds as unknown as string[]) || undefined,
+      }),
+  });
+
+  const partnerOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    (partnerStats?.items || []).forEach((row: any) => {
+      const name = row.correspondentName || row.correspondentAccount || "Khác";
+      options.add(name);
+    });
+    return Array.from(options).map((o) => ({ label: o, value: o }));
+  }, [partnerStats?.items]);
+
+  const filteredItems = React.useMemo(() => {
+    let items = partnerStats?.items || [];
+
+    if (tableState.columnFilters.partner?.length > 0) {
+      items = items.filter((row: any) => {
+        const name =
+          row.correspondentName || row.correspondentAccount || "Khác";
+        return tableState.columnFilters.partner.includes(name);
+      });
+    }
+
+    if (tableState.columnSearch.partner) {
+      const search = tableState.columnSearch.partner.toLowerCase();
+      items = items.filter((row: any) => {
+        const name =
+          row.correspondentName || row.correspondentAccount || "Khác";
+        return name.toLowerCase().includes(search);
+      });
+    }
+
+    if (tableState.sorts?.[0]) {
+      const sort = tableState.sorts[0];
+      const isDesc = sort.startsWith("-");
+      const key = sort.replace(/^-/, "");
+
+      items = [...items].sort((a: any, b: any) => {
+        let valA = a[key];
+        let valB = b[key];
+
+        if (key === "partner") {
+          valA = a.correspondentName || a.correspondentAccount || "Khác";
+          valB = b.correspondentName || b.correspondentAccount || "Khác";
+        } else if (key === "totalCredit" || key === "totalDebit") {
+          valA = Number(a[key]) || 0;
+          valB = Number(b[key]) || 0;
+        }
+
+        if (valA < valB) return isDesc ? 1 : -1;
+        if (valA > valB) return isDesc ? -1 : 1;
+        return 0;
+      });
+    }
+
+    return items;
+  }, [
+    partnerStats?.items,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+  ]);
+
+  const renderHeaderFilter = (
+    key: string,
+    title: string,
+    options?: { label: string; value: string }[],
+  ) => (
+    <TableColumnHeaderFilter
+      title={title}
+      align="center"
+      sortState={getSortState(key)}
+      onSortChange={(state) => handleSortChange(key, state)}
+      searchValue={tableState.columnSearch[key] || ""}
+      onSearchChange={(val) => handleSearchChange(key, val)}
+      selectedFilters={tableState.columnFilters[key] || []}
+      onFilterChange={(vals) => handleFilterChange(key, vals)}
+      filterOptions={options}
+    />
+  );
+
+  const partnerCols = [
+    {
+      key: "partner",
+      header: renderHeaderFilter("partner", "Đối tác", partnerOptions),
+      cell: (row: any) => {
+        const name =
+          row.correspondentName || row.correspondentAccount || "Khác";
+
+        return (
+          <Button
+            variant="link"
+            onClick={(e: React.MouseEvent) => {
+              e.stopPropagation();
+              onPartnerClick(row.correspondentAccount, row.correspondentName);
+            }}
+            className="font-medium text-primary hover:underline p-0 h-auto whitespace-normal text-left"
+          >
+            {name}
+          </Button>
+        );
+      },
+      size: 250,
+    },
+    {
+      key: "totalCredit",
+      header: "Tổng thu",
+      cell: (row: any) => {
+        if (row.totalCredit > 0)
+          return (
+            <span className="text-emerald-600 font-medium">
+              +{money(row.totalCredit)}
+            </span>
+          );
+        return null;
+      },
+      size: 150,
+      className: "text-right",
+      headerClassName: "text-center",
+    },
+    {
+      key: "totalDebit",
+      header: "Tổng chi",
+      cell: (row: any) => {
+        if (row.totalDebit > 0)
+          return (
+            <span className="text-[#ea580c] font-medium">
+              {money(row.totalDebit)}
+            </span>
+          );
+        return null;
+      },
+      size: 150,
+      className: "text-right",
+      headerClassName: "text-center",
+    },
+  ];
+
+  const topTransactionsInTotal = React.useMemo(() => {
+    return filteredItems.reduce(
+      (acc: number, row: any) => acc + (parseFloat(row.totalCredit) || 0),
+      0,
+    );
+  }, [filteredItems]);
+
+  const topTransactionsOutTotal = React.useMemo(() => {
+    return filteredItems.reduce(
+      (acc: number, row: any) => acc + (parseFloat(row.totalDebit) || 0),
+      0,
+    );
+  }, [filteredItems]);
+
+  return (
+    <div className="mb-8">
+      <h3 className="text-lg font-semibold mb-3">
+        Top 20 đối tác nổi bật - {branchName}
+      </h3>
+      <StandardTable
+        items={filteredItems}
+        columns={partnerCols}
+        getRowKey={(row: any) => row.id}
+        loading={isPartnerFetching}
+        variant="spreadsheet"
+        minWidth={800}
+        enableColumnResizing={true}
+        containerClassName=""
+        total={partnerStats?.total || 0}
+        totalPages={partnerStats?.totalPages || 0}
+        onRowClick={(row: any) => {
+          onPartnerClick(row.correspondentAccount, row.correspondentName);
+        }}
+        summaryRow={{
+          partner: <span className="font-semibold text-right block">Tổng</span>,
+          totalCredit: (
+            <span className="text-emerald-600 font-semibold">
+              +{money(topTransactionsInTotal)}
+            </span>
+          ),
+          totalDebit: (
+            <span className="text-[#ea580c] font-semibold">
+              {money(topTransactionsOutTotal)}
+            </span>
+          ),
+        }}
+      />
+    </div>
+  );
+}
 
 export function CashflowDashboard() {
   const t = useT();
@@ -31,6 +285,12 @@ export function CashflowDashboard() {
     label: string;
   } | null>(null);
 
+  const [partnerDrawerOpen, setPartnerDrawerOpen] = React.useState(false);
+  const [selectedPartner, setSelectedPartner] = React.useState<{
+    account?: string;
+    name?: string;
+  } | null>(null);
+
   const { data: branches = [] } = useQuery({
     queryKey: ["branches"],
     queryFn: () => getBranchesApi(),
@@ -39,16 +299,6 @@ export function CashflowDashboard() {
   const { data: tags = [] } = useQuery({
     queryKey: ["sys-tags"],
     queryFn: getTags,
-  });
-
-  const { data: bankAccounts = [] } = useQuery({
-    queryKey: ["bankAccounts"],
-    queryFn: () => bankStatementApi.getBankAccounts(),
-  });
-
-  const { data: cashBooks = [] } = useQuery({
-    queryKey: ["cashBooks"],
-    queryFn: () => bankStatementApi.getCashBooks(),
   });
 
   const filterConfig = React.useMemo(() => {
@@ -86,6 +336,48 @@ export function CashflowDashboard() {
 
   const filter = useFilterPanel(filterConfig, () => {});
 
+  const queryClient = useQueryClient();
+
+  const activeBranches = React.useMemo(() => {
+    if (filter.state.custom.branchId) {
+      const b = branches.find(
+        (b: any) => b.id === filter.state.custom.branchId,
+      );
+      return b ? [b] : [];
+    }
+    return branches; // If no branch selected, return all branches
+  }, [filter.state.custom.branchId, branches]);
+
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: [
+      "bankAccounts",
+      filter.state.custom.branchId,
+      filter.state.dateFrom,
+      filter.state.dateTo,
+    ],
+    queryFn: () =>
+      bankStatementApi.getBankAccounts(
+        filter.state.custom.branchId as string,
+        filter.state.dateFrom,
+        filter.state.dateTo,
+      ),
+  });
+
+  const { data: cashBooks = [] } = useQuery({
+    queryKey: [
+      "cashBooks",
+      filter.state.custom.branchId,
+      filter.state.dateFrom,
+      filter.state.dateTo,
+    ],
+    queryFn: () =>
+      bankStatementApi.getCashBooks(
+        filter.state.custom.branchId as string,
+        filter.state.dateFrom,
+        filter.state.dateTo,
+      ),
+  });
+
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
       "dashboard-stats",
@@ -106,8 +398,8 @@ export function CashflowDashboard() {
       }),
   });
 
-  const barIn = "#10b981"; // Emerald 500
-  const barOut = "#ef4444"; // Red 500
+  const barIn = "#059669"; // Emerald 600
+  const barOut = "#ea580c"; // Orange 600
 
   const cashTrendLabels = data?.cashTrend?.map((t: any) => t.label) || [];
   const cashTrendIn = data?.cashTrend?.map((t: any) => t.cashIn) || [];
@@ -145,116 +437,21 @@ export function CashflowDashboard() {
     }),
   );
 
-  const topTransactionsCols = [
-    {
-      key: "source",
-      header: t("bankStatement.columns.sourceName"),
-      cell: (row: any) => {
-        if (row.sourceType === "BANK")
-          return row.bankAccount?.bankName
-            ? `${row.bankAccount.bankName} - ${row.bankAccount.accountNumber}`
-            : "Bank";
-        return row.cashBook?.name || "Cash";
-      },
-      size: 150,
-    },
-    {
-      key: "transDate",
-      dataIndex: "transDate",
-      header: t("bankStatement.columns.transDate"),
-      cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 150,
-    },
-    {
-      key: "description",
-      dataIndex: "description",
-      header: t("bankStatement.columns.description"),
-      size: 400,
-      cell: (row: any) => (
-        <div className="whitespace-normal break-words w-full">
-          {row.description}
-        </div>
-      ),
-    },
-    {
-      key: "thu",
-      header: t("bankStatement.columns.thu"),
-      cell: (row: any) => {
-        const credit = parseFloat(row.creditAmount) || 0;
-        if (credit > 0)
-          return (
-            <span className="text-green-600 font-medium">+{money(credit)}</span>
-          );
-        return null;
-      },
-      size: 150,
-    },
-    {
-      key: "chi",
-      header: t("bankStatement.columns.chi"),
-      cell: (row: any) => {
-        const debit = parseFloat(row.debitAmount) || 0;
-        if (debit > 0)
-          return (
-            <span className="text-red-600 font-medium">{money(debit)}</span>
-          );
-        return null;
-      },
-      size: 150,
-    },
-    {
-      key: "tags",
-      header: "Danh mục",
-      cell: (row: any) => (
-        <div className="w-full overflow-x-auto pb-1 scrollbar-hide">
-          <div className="w-max">
-            <EntityTagSelector
-              entityType="bank_transaction"
-              entityId={row.id}
-            />
-          </div>
-        </div>
-      ),
-      size: 200,
-    },
-    {
-      key: "referenceNumber",
-      dataIndex: "referenceNumber",
-      header: t("bankStatement.columns.referenceNumber"),
-      size: 150,
-      valueType: "text" as const,
-    },
-  ];
+  const hasCashflowPerm = useHasAnyPermission(
+    [
+      "bank_statements",
+      "cash_statements",
+      "payment_vouchers",
+      "erp_cashflow_vouchers",
+      "bank_accounts",
+      "cash_books",
+    ],
+    "read",
+  );
 
-  const topTransactionsInTotal = React.useMemo(() => {
-    return (data?.topTransactionsIn || []).reduce(
-      (acc: number, row: any) => acc + (parseFloat(row.creditAmount) || 0),
-      0,
-    );
-  }, [data?.topTransactionsIn]);
+  const canView = hasCashflowPerm || isAdminEmail;
 
-  const topTransactionsOutTotal = React.useMemo(() => {
-    return (data?.topTransactionsOut || []).reduce(
-      (acc: number, row: any) => acc + (parseFloat(row.debitAmount) || 0),
-      0,
-    );
-  }, [data?.topTransactionsOut]);
-
-  const top20Transactions = React.useMemo(() => {
-    const combined = [
-      ...(data?.topTransactionsIn || []),
-      ...(data?.topTransactionsOut || []),
-    ];
-    return combined
-      .sort((a, b) => {
-        const dateA = new Date(a.transDate || 0).getTime();
-        const dateB = new Date(b.transDate || 0).getTime();
-        return dateB - dateA;
-      })
-      .slice(0, 20);
-  }, [data?.topTransactionsIn, data?.topTransactionsOut]);
-
-  if (!isAdminEmail) {
+  if (!canView) {
     return <ComingSoon />;
   }
 
@@ -266,26 +463,36 @@ export function CashflowDashboard() {
       filterConfig={filterConfig}
       filter={filter}
       loading={isFetching}
-      onRefresh={() => refetch()}
+      onRefresh={() => {
+        refetch();
+        queryClient.invalidateQueries({ queryKey: ["branches"] });
+        queryClient.invalidateQueries({ queryKey: ["partner-stats"] });
+        queryClient.invalidateQueries({ queryKey: ["bankAccounts"] });
+        queryClient.invalidateQueries({ queryKey: ["cashBooks"] });
+      }}
     >
       {/* Account Balances */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         {bankAccounts.map((acc: any) => (
-          <KpiCard
-            compact
-            loading={isFetching}
+          <AccountBalanceCard
             key={acc.id}
+            loading={isFetching}
             label={`${acc.bankName || acc.bankCode} - ${acc.accountNumber}`}
-            value={money(acc.currentBalance || 0)}
+            openingBalance={acc.openingBalance}
+            totalCredit={acc.totalCredit}
+            totalDebit={acc.totalDebit}
+            currentBalance={acc.currentBalance}
           />
         ))}
         {cashBooks.map((book: any) => (
-          <KpiCard
-            compact
-            loading={isFetching}
+          <AccountBalanceCard
             key={book.id}
+            loading={isFetching}
             label={book.name}
-            value={money(book.currentBalance || 0)}
+            openingBalance={book.openingBalance}
+            totalCredit={book.totalCredit}
+            totalDebit={book.totalDebit}
+            currentBalance={book.currentBalance}
           />
         ))}
       </div>
@@ -404,37 +611,30 @@ export function CashflowDashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 mt-8 mb-4">
-        <div>
-          <h3 className="text-lg font-semibold mb-3">
-            Top 20 Giao dịch Nổi Bật
-          </h3>
-          <StandardTable
-            items={top20Transactions}
-            columns={topTransactionsCols}
-            getRowKey={(row: any) => row.id}
-            loading={isLoading}
-            variant="spreadsheet"
-            minWidth={1500}
-            enableColumnResizing={true}
-            containerClassName="max-h-[500px] overflow-auto"
-            summaryRow={{
-              description: (
-                <span className="font-semibold text-right block"></span>
-              ),
-              thu: (
-                <span className="text-green-600 font-semibold">
-                  +{money(topTransactionsInTotal)}
-                </span>
-              ),
-              chi: (
-                <span className="text-red-600 font-semibold">
-                  {money(topTransactionsOutTotal)}
-                </span>
-              ),
+      <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-6 mt-8 mb-4 items-start">
+        {activeBranches.length > 0 ? (
+          activeBranches.map((b: any) => (
+            <BranchPartnerStatsTable
+              key={b.id}
+              branchId={b.id}
+              branchName={b.name}
+              filterState={filter.state}
+              onPartnerClick={(account, name) => {
+                setSelectedPartner({ account, name });
+                setPartnerDrawerOpen(true);
+              }}
+            />
+          ))
+        ) : (
+          <BranchPartnerStatsTable
+            branchName="Tất cả chi nhánh"
+            filterState={filter.state}
+            onPartnerClick={(account, name) => {
+              setSelectedPartner({ account, name });
+              setPartnerDrawerOpen(true);
             }}
           />
-        </div>
+        )}
       </div>
       <CategoryTransactionsDrawer
         open={drawerOpen}
@@ -443,6 +643,15 @@ export function CashflowDashboard() {
         tagLabel={selectedTag?.label}
         filterState={filter.state}
       />
+      <PartnerTransactionsDrawer
+        open={partnerDrawerOpen}
+        onClose={() => setPartnerDrawerOpen(false)}
+        correspondentAccount={selectedPartner?.account}
+        correspondentName={selectedPartner?.name}
+        globalStartDate={filter.state.dateFrom || undefined}
+        globalEndDate={filter.state.dateTo || undefined}
+        globalBranchId={filter.state.custom.branchId as string | undefined}
+      />
     </DashboardTemplate>
   );
 }
@@ -450,12 +659,76 @@ export function CashflowDashboard() {
 // ── Helpers ──
 function LegendItem({ color, label }: { color: string; label: string }) {
   return (
-    <div className="flex items-center gap-[6px] text-xs text-[color:var(--muted-fg)]">
+    <div className="flex items-center text-xs">
       <div
-        className="w-[10px] h-[10px] rounded-sm border border-[color:var(--border)]"
-        style={{ background: color }}
+        className="w-3 h-3 rounded-[3px] mr-2"
+        style={{ backgroundColor: color }}
       />
-      {label}
+      <span className="text-[color:var(--muted-fg)]">{label}</span>
+    </div>
+  );
+}
+
+function AccountBalanceCard({
+  label,
+  openingBalance = 0,
+  totalCredit = 0,
+  totalDebit = 0,
+  currentBalance = 0,
+  loading,
+}: {
+  label: string;
+  openingBalance: number;
+  totalCredit: number;
+  totalDebit: number;
+  currentBalance: number;
+  loading?: boolean;
+}) {
+  return (
+    <div className="bg-surface border border-border rounded-xl card-shadow p-3 max-[480px]:p-2 flex flex-col justify-between">
+      <div className="text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-2 text-[10px] truncate">
+        {label}
+      </div>
+
+      {loading ? (
+        <div className="space-y-2 mb-1">
+          <Skeleton className="h-4 w-3/4 rounded" />
+          <Skeleton className="h-4 w-2/3 rounded" />
+          <Skeleton className="h-5 w-full rounded mt-2" />
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center text-[12px] mb-1">
+            <span className="text-[color:var(--muted-fg)]">Đầu kỳ:</span>
+            <span className="font-medium text-foreground">
+              {money(openingBalance)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-[12px] mb-1">
+            <span className="text-[color:var(--muted-fg)]">Thu trong kỳ:</span>
+            <span className="font-medium text-emerald-600">
+              +{money(totalCredit)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-[12px] mb-2">
+            <span className="text-[color:var(--muted-fg)]">Chi trong kỳ:</span>
+            <span className="font-medium text-[#ea580c]">
+              -{money(totalDebit)}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center border-t border-border pt-2 mt-auto">
+            <span className="text-[10px] font-semibold text-[color:var(--muted-fg)] uppercase">
+              Cuối kỳ:
+            </span>
+            <span className="font-bold text-[16px] text-foreground">
+              {money(currentBalance)}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

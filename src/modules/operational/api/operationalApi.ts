@@ -44,9 +44,6 @@ export interface OperationalDocument {
   document_date: string;
   due_date?: string | null;
   status: string;
-  invoice_status: string;
-  payment_status: string;
-  accounting_status: string;
   inventory_status?: string;
   total_amount: number;
   settled_amount: number;
@@ -181,10 +178,6 @@ function normalizePurchaseRow(row: any): OperationalDocument {
     document_date: row.document_date ?? row.orderDate ?? "",
     due_date: row.due_date ?? row.expectedDate ?? null,
     status: row.status ?? "DRAFT",
-    invoice_status: row.invoice_status ?? row.invoiceStatus ?? "NO_INVOICE",
-    payment_status: row.payment_status ?? row.paymentStatus ?? "UNPAID",
-    accounting_status:
-      row.accounting_status ?? row.accountingStatus ?? "UNPOSTED",
     inventory_status:
       row.inventory_status ?? row.inventoryStatus ?? "NOT_RECEIVED",
     total_amount: totalAmount,
@@ -214,7 +207,6 @@ function toCorePurchasePayload(
     expectedDate:
       (payload as any).expected_receipt_date || payload.due_date || undefined,
     status: payload.status,
-    paymentStatus: payload.payment_status,
     remarks: payload.notes || undefined,
 
     supplierInvoiceNo: (payload as any).supplier_invoice_no || undefined,
@@ -248,8 +240,6 @@ function params(input: ListParams = {}) {
       ? { supplier_id: (input as any).supplier_id }
       : {}),
     ...(input.status ? { status: input.status } : {}),
-    ...(input.payment_status ? { payment_status: input.payment_status } : {}),
-    ...(input.invoice_status ? { invoice_status: input.invoice_status } : {}),
 
     ...((input as any).date_from
       ? { date_from: (input as any).date_from }
@@ -262,6 +252,12 @@ function params(input: ListParams = {}) {
       : {}),
 
     ...((input as any).tag_id ? { tag_id: (input as any).tag_id } : {}),
+    ...(input.column_search
+      ? { column_search: JSON.stringify(input.column_search) }
+      : {}),
+    ...(input.column_filters
+      ? { column_filters: JSON.stringify(input.column_filters) }
+      : {}),
   };
 }
 
@@ -281,23 +277,99 @@ export const operationalApi = {
         params: params(input),
       },
     );
-    return {
-      ...data,
-      items: (data.items || []).map((row) => normalizePurchaseRow(row)),
-    } as PaginatedResponse<OperationalDocument>;
+    const parsedItems = data.items.map(normalizePurchaseRow);
+    return { ...data, items: parsedItems };
+  },
+  async getPurchaseOrderColumnOptions(
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ): Promise<PaginatedResponse<string>> {
+    const { data } = await axiosInstance.get<PaginatedResponse<string>>(
+      "/api/v1/purchase-orders/column-options",
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          filters: filtersStr,
+        },
+      },
+    );
+    return data;
   },
   listExpenses: (input?: ListParams) => list("operating-expenses", input),
   listReceivables: (input?: ListParams) =>
     list("operational-receivables", input),
   listPayables: (input?: ListParams) => list("operational-payables", input),
-  listInventoryStock: async (input?: ListParams & { item_type?: string }) => {
+  listInventoryStock: async (
+    input?: ListParams & {
+      item_type?: string;
+      column_search?: Record<string, string>;
+      column_filters?: Record<string, string[]>;
+    },
+  ) => {
     const { data } = await axiosInstance.get<
       PaginatedResponse<InventoryStockRow>
     >("/api/v1/inventory/stock", {
       params: {
         ...params(input),
         ...(input?.item_type ? { item_type: input.item_type } : {}),
+        ...(input?.column_search && Object.keys(input.column_search).length > 0
+          ? { searches: JSON.stringify(input.column_search) }
+          : {}),
+        ...(input?.column_filters &&
+        Object.keys(input.column_filters).length > 0
+          ? { filters: JSON.stringify(input.column_filters) }
+          : {}),
       },
+    });
+    return data;
+  },
+  exportInventoryStock: async (
+    input?: ListParams & {
+      item_type?: string;
+      column_search?: Record<string, string>;
+      column_filters?: Record<string, string[]>;
+    },
+  ) => {
+    const requestParams = {
+      ...params(input),
+      ...(input?.item_type ? { item_type: input.item_type } : {}),
+      ...(input?.column_search && Object.keys(input.column_search).length > 0
+        ? { searches: JSON.stringify(input.column_search) }
+        : {}),
+      ...(input?.column_filters && Object.keys(input.column_filters).length > 0
+        ? { filters: JSON.stringify(input.column_filters) }
+        : {}),
+    };
+    const { data } = await axiosInstance.get<Blob>(
+      "/api/v1/inventory/stock/export/excel",
+      {
+        params: requestParams,
+        responseType: "blob",
+      },
+    );
+    return data;
+  },
+  getInventoryStockColumnOptions: async (
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filters?: string,
+  ) => {
+    const { data } = await axiosInstance.get<{
+      items: string[];
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>("/api/v1/inventory/stock/column-options", {
+      params: { column, search, page, pageSize, filters },
     });
     return data;
   },

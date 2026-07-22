@@ -12,6 +12,18 @@ export type Direction = "IN" | "OUT";
 export interface FileEntry {
   file: File;
   id: string;
+  type: "xml" | "pdf" | "zip";
+  pairedPdf?: string; // Tên của file PDF (nếu đã ghép được)
+}
+
+export type FilePreviewStatus = "new-invoice" | "attach-pdf" | "extract-zip";
+
+/** Phân loại file ở bước preview (client-side, trước API).
+ *  PDF (cả standalone lẫn paired) đều là "attach-pdf" — server mới biết có ghép được không. */
+export function getFilePreviewStatus(entry: FileEntry): FilePreviewStatus {
+  if (entry.type === "zip") return "extract-zip";
+  if (entry.type === "pdf") return "attach-pdf";
+  return "new-invoice";
 }
 
 export function useInvoiceXmlUpload(
@@ -28,19 +40,78 @@ export function useInvoiceXmlUpload(
 
   function addFiles(incoming: FileList | File[]) {
     const arr = Array.from(incoming);
-    const xmlOnly = arr.filter((f) => f.name.toLowerCase().endsWith(".xml"));
-    if (xmlOnly.length === 0) return;
+    const supported = arr.filter((f) => {
+      const ext = f.name.toLowerCase();
+      return (
+        ext.endsWith(".xml") || ext.endsWith(".pdf") || ext.endsWith(".zip")
+      );
+    });
+
+    if (supported.length === 0) return;
+
     setFiles((prev) => {
       const existingNames = new Set(prev.map((e) => e.file.name));
-      const newEntries = xmlOnly
+      const newEntries = supported
         .filter((f) => !existingNames.has(f.name))
-        .map((f) => ({ file: f, id: crypto.randomUUID() }));
-      return [...prev, ...newEntries];
+        .map((f) => {
+          const ext = f.name.toLowerCase().split(".").pop() || "";
+          return {
+            file: f,
+            id: crypto.randomUUID(),
+            type: ext as "xml" | "pdf" | "zip",
+          };
+        });
+
+      const allEntries = [...prev, ...newEntries];
+
+      // Auto-pairing logic
+      const pdfMap = new Map<string, string>(); // basename -> fullName
+      allEntries.forEach((e) => {
+        if (e.type === "pdf") {
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
+          pdfMap.set(basename, e.file.name);
+        }
+      });
+
+      return allEntries.map((e) => {
+        if (e.type === "xml") {
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
+          if (pdfMap.has(basename)) {
+            return { ...e, pairedPdf: pdfMap.get(basename) };
+          }
+        }
+        return e;
+      });
     });
   }
 
   function removeFile(id: string) {
-    setFiles((prev) => prev.filter((e) => e.id !== id));
+    setFiles((prev) => {
+      const filtered = prev.filter((e) => e.id !== id);
+      // Re-run pairing in case a PDF was removed
+      const pdfMap = new Map<string, string>();
+      filtered.forEach((e) => {
+        if (e.type === "pdf") {
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
+          pdfMap.set(basename, e.file.name);
+        }
+      });
+      return filtered.map((e) => {
+        if (e.type === "xml") {
+          const basename = e.file.name
+            .substring(0, e.file.name.lastIndexOf("."))
+            .toLowerCase();
+          return { ...e, pairedPdf: pdfMap.get(basename) };
+        }
+        return e;
+      });
+    });
   }
 
   const onDragOver = useCallback((e: React.DragEvent) => {
@@ -56,20 +127,77 @@ export function useInvoiceXmlUpload(
     if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
   }, []);
 
-  async function handleImport() {
-    if (files.length === 0) return;
+  async function handleImport(
+    filesToImport?: FileEntry[],
+    manualMatches?: Record<string, string>,
+  ) {
+    const targetFiles = filesToImport ?? files;
+    if (targetFiles.length === 0) return;
     setStep("importing");
     setImportError(null);
     try {
-      const rawFiles = files.map((e) => e.file);
-      const res =
-        direction === "IN"
-          ? await erpInvoicesCoreApi.bulkImportBuyerXml(rawFiles)
-          : await erpInvoicesCoreApi.bulkImportSellerXml(rawFiles);
-      setResult(res);
+      const autoFiles: File[] = [];
+      const manualFiles = new Map<string, File[]>();
+
+      for (const entry of targetFiles) {
+        if (entry.type === "pdf" && manualMatches && manualMatches[entry.id]) {
+          const invoiceId = manualMatches[entry.id];
+          if (!manualFiles.has(invoiceId)) manualFiles.set(invoiceId, []);
+          manualFiles.get(invoiceId)!.push(entry.file);
+        } else {
+          autoFiles.push(entry.file);
+        }
+      }
+
+      let finalResult: BulkImportResult = {
+        importId: crypto.randomUUID(),
+        direction,
+        total: targetFiles.length,
+        created: 0,
+        skipped: [],
+        errors: [],
+        pdfAttached: [],
+        pdfOrphans: [],
+      };
+
+      if (autoFiles.length > 0) {
+        const res =
+          direction === "IN"
+            ? await erpInvoicesCoreApi.bulkImportBuyerXml(autoFiles)
+            : await erpInvoicesCoreApi.bulkImportSellerXml(autoFiles);
+        finalResult = res;
+      }
+
+      if (manualFiles.size > 0) {
+        if (!finalResult.pdfAttached) finalResult.pdfAttached = [];
+        const promises = Array.from(manualFiles.entries()).map(
+          async ([invoiceId, pdfs]) => {
+            try {
+              await erpInvoicesCoreApi.uploadPdfs(invoiceId, pdfs);
+              pdfs.forEach((f) => {
+                finalResult.pdfAttached!.push({
+                  filename: f.name,
+                  invoiceId: invoiceId,
+                  invoiceNo: "Ghép thủ công",
+                } as any);
+              });
+            } catch (e) {
+              pdfs.forEach((f) => {
+                finalResult.errors.push({
+                  filename: f.name,
+                  reason: extractApiError(e, "Lỗi ghép thủ công"),
+                });
+              });
+            }
+          },
+        );
+        await Promise.all(promises);
+      }
+
+      setResult(finalResult);
       setStep("result");
-      if (res.created > 0) {
-        onImported(res.importId, res.direction);
+      if (finalResult.created > 0 || manualFiles.size > 0) {
+        onImported(finalResult.importId, finalResult.direction);
       }
     } catch (e) {
       setImportError(

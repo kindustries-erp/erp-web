@@ -22,6 +22,10 @@ export const STATIC_TABS: Partial<Record<PageKey, TabInfo>> = {
 
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   purchasing: { labelKey: "nav.items.purchasing", group: "purchasing" },
+  "inventory-dashboard": {
+    labelKey: "nav.items.inventoryDashboard",
+    group: "inventory",
+  },
   "erp-inventory-stock": {
     labelKey: "nav.items.erpInventoryStock",
     group: "inventory",
@@ -69,6 +73,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpSalesOrders",
     group: "sales",
   },
+  "sales-report-dashboard": {
+    labelKey: "nav.items.salesReportDashboard",
+    group: "sales",
+  },
   "erp-customers": {
     labelKey: "nav.items.customers",
     group: "sales",
@@ -79,6 +87,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "erp-suppliers": {
     labelKey: "nav.items.suppliers",
+    group: "purchasing",
+  },
+  "purchasing-report-dashboard": {
+    labelKey: "nav.items.purchasingReportDashboard",
     group: "purchasing",
   },
   "journal-entry": {
@@ -109,12 +121,20 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
+  "invoice-dashboard": {
+    labelKey: "nav.items.invoiceDashboard",
+    group: "accounting",
+  },
   "erp-invoices-in": {
     labelKey: "nav.items.erpInvoicesIn",
     group: "accounting",
   },
   "erp-invoices-out": {
     labelKey: "nav.items.erpInvoicesOut",
+    group: "accounting",
+  },
+  "vinfast-parts": {
+    labelKey: "nav.items.vinfastParts",
     group: "accounting",
   },
   "settings-branch": {
@@ -163,6 +183,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
+  "inventory-dashboard": [
+    ["breadcrumb.inventory"],
+    ["nav.items.inventoryDashboard"],
+  ],
   "erp-inventory-stock": [
     ["breadcrumb.inventory"],
     ["breadcrumb.inventoryStock"],
@@ -184,9 +208,17 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.erpProduction"],
   ],
   "erp-sales-orders": [["breadcrumb.sales"], ["breadcrumb.erpSalesOrders"]],
+  "sales-report-dashboard": [
+    ["breadcrumb.sales"],
+    ["breadcrumb.salesReportDashboard"],
+  ],
   "erp-customers": [["breadcrumb.sales"], ["breadcrumb.customers"]],
   "after-sales": [["nav.items.sales"], ["nav.items.afterSales"]],
   "erp-suppliers": [["breadcrumb.purchasing"], ["breadcrumb.suppliers"]],
+  "purchasing-report-dashboard": [
+    ["breadcrumb.purchasing"],
+    ["breadcrumb.purchasingReportDashboard"],
+  ],
   "erp-goods-issues": [["breadcrumb.inventory"], ["breadcrumb.erpGoodsIssues"]],
   "erp-inventory-items": [
     ["breadcrumb.inventory"],
@@ -207,13 +239,18 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["breadcrumb.erpInventoryMasters"],
     ["breadcrumb.erpInventoryTrackingCategories"],
   ],
-  "erp-activity-logs": [["breadcrumb.settings"], ["breadcrumb.activitylog"]],
+  "erp-activity-logs": [
+    ["breadcrumb.settings"],
+    ["nav.items.accessControl"],
+    ["breadcrumb.activitylog"],
+  ],
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
-  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
-  "sys-tags": [["breadcrumb.settings"], ["nav.items.sysTags"]],
+  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.permissions"]],
+  "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [
     ["breadcrumb.accounting"],

@@ -100,7 +100,7 @@ export function ErpInvoiceNetOffSection({
                 : t("noReceiptVouchers", "Chưa có chứng từ thu tiền nào.")}
             </div>
           ) : (
-            <div className="border rounded-md overflow-hidden">
+            <div className="border rounded-md overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50 border-b">
                   <tr>
@@ -168,7 +168,6 @@ export function ErpInvoiceNetOffSection({
       <VoucherNetoffSelectionModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        direction={direction}
         onSelect={handleLink}
         existingVoucherIds={voucherNetOffs.map((v) => v.bankTransactionId)}
       />

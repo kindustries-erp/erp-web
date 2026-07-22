@@ -24,7 +24,13 @@ export function SoPreviewDrawer({ open, soNo, onClose }: SoPreviewDrawerProps) {
         .list({ search: soNo })
         .then((res) => {
           if (res.items.length > 0 && active) {
-            return salesOrdersCoreApi.get(res.items[0].id);
+            const listItem = res.items[0];
+            return salesOrdersCoreApi.get(listItem.id).then((detail) => {
+              return {
+                ...detail,
+                customerName: detail.customerName || listItem.customerName,
+              };
+            });
           }
           if (active) throw new Error("Không tìm thấy đơn hàng");
           return null;

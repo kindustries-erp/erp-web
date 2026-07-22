@@ -8,84 +8,171 @@ import {
   Settings,
   CheckCircle2,
   XCircle,
-  ArrowDownToLine,
-  ArrowUpFromLine,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
+import { Combobox } from "@/shared/components/Combobox";
+import { ConfirmModal } from "@/shared/components/ConfirmModal";
+
+import { toast } from "react-hot-toast";
 
 import {
   useInvoiceXmlUpload,
   type Direction,
 } from "../hooks/useInvoiceXmlUpload";
 import { usePortalSync } from "../hooks/usePortalSync";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 import { UploadDropzone } from "./xml-upload/UploadDropzone";
 import { UploadFileList } from "./xml-upload/UploadFileList";
 import { ImportResultSummary } from "./xml-upload/ImportResultSummary";
 import { ImportResultTables } from "./xml-upload/ImportResultTables";
+import { ImportPreviewModal } from "./xml-upload/ImportPreviewModal";
+import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
 
 function TokenConfigDrawer({
   open,
   onClose,
   token,
+  cookies,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
   token: string;
-  onSave: (t: string) => void;
+  cookies: string;
+  onSave: (t: string, c: string) => void;
 }) {
   const [draft, setDraft] = useState(token);
+  const [draftCookies, setDraftCookies] = useState(cookies);
+  const [showToken, setShowToken] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setDraft(token);
+      setDraftCookies(cookies);
+    }
+  }, [open, token, cookies]);
+
+  const handleClose = () => {
+    if (draft !== token || draftCookies !== cookies) {
+      setShowConfirm(true);
+    } else {
+      onClose();
+    }
+  };
 
   return (
-    <DrawerModal
-      open={open}
-      onClose={onClose}
-      title="Cấu hình Portal GDT"
-      panelClassName="min-[1024px]:w-[480px]"
-      actions={[
-        {
-          label: "Đóng",
-          onClick: onClose,
-          variant: "outline" as const,
-        },
-        {
-          label: "Lưu token",
-          primary: true,
-          onClick: () => {
-            onSave(draft);
-            onClose();
+    <>
+      <DrawerModal
+        open={open}
+        onClose={handleClose}
+        title="Cấu hình Portal GDT"
+        panelClassName="min-[1024px]:w-[480px]"
+        actions={[
+          {
+            label: "Đóng",
+            onClick: handleClose,
+            variant: "outline" as const,
           },
-        },
-      ]}
-    >
-      <div className="space-y-4 p-1">
-        <p className="text-sm text-muted-foreground">
-          Nhập Bearer token đã đăng nhập vào hệ thống{" "}
-          <span className="font-medium">hoadondientu.gdt.gov.vn</span>. Token
-          được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
-        </p>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Bearer Token
-          </label>
-          <textarea
-            className="w-full h-32 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-            placeholder="eyJhbGciOiJ..."
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-          />
-        </div>
-        {draft && (
-          <p className="text-xs text-emerald-600 flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Token đã nhập ({draft.length} ký tự)
+          {
+            label: "Lưu cấu hình",
+            primary: true,
+            onClick: () => {
+              onSave(draft, draftCookies);
+              onClose();
+            },
+          },
+        ]}
+      >
+        <div className="space-y-4 p-1">
+          <p className="text-sm text-muted-foreground">
+            Nhập Bearer token và WAF Cookies (TS011...) đã đăng nhập vào hệ
+            thống <span className="font-medium">hoadondientu.gdt.gov.vn</span>.
+            Token được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
           </p>
-        )}
-      </div>
-    </DrawerModal>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Bearer Token
+            </label>
+            <div className="relative">
+              {showToken ? (
+                <textarea
+                  className="w-full h-32 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none pr-10"
+                  placeholder="eyJhbGciOiJ..."
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                />
+              ) : (
+                <input
+                  type="password"
+                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 pr-10"
+                  placeholder="eyJhbGciOiJ..."
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                />
+              )}
+              <button
+                type="button"
+                className="absolute right-2 top-2 p-1 text-muted-foreground hover:text-foreground"
+                onClick={() => setShowToken(!showToken)}
+              >
+                {showToken ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+            {draft && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Token đã nhập ({draft.length} ký tự)
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1 mt-4">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              WAF Cookies (Tùy chọn)
+            </label>
+            <div className="relative">
+              <textarea
+                className="w-full h-16 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                placeholder="TS0114b13e=..."
+                value={draftCookies}
+                onChange={(e) => setDraftCookies(e.target.value)}
+              />
+            </div>
+            {draftCookies && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Cookies đã nhập ({draftCookies.length} ký tự)
+              </p>
+            )}
+          </div>
+        </div>
+      </DrawerModal>
+
+      <ConfirmModal
+        open={showConfirm}
+        title="Đóng mà không lưu?"
+        message="Thay đổi của bạn sẽ không được lưu."
+        confirmLabel="Đóng"
+        cancelLabel="Tiếp tục chỉnh sửa"
+        danger={true}
+        zIndex={1000}
+        onConfirm={() => {
+          setShowConfirm(false);
+          onClose();
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
+    </>
   );
 }
 
@@ -107,6 +194,9 @@ export function InvoiceImportSyncDrawer({
   const [method, setMethod] = useState<"GDT" | "XML">("GDT");
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
+  const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
 
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
@@ -131,7 +221,17 @@ export function InvoiceImportSyncDrawer({
     setMethod(m);
   }
 
+  const [showDrawerConfirm, setShowDrawerConfirm] = useState(false);
+
   function handleClose() {
+    if (method === "XML" && xml.step === "select" && xml.files.length > 0) {
+      setShowDrawerConfirm(true);
+      return;
+    }
+    doClose();
+  }
+
+  function doClose() {
     xml.handleReset();
     portal.clearResult();
     onClose();
@@ -143,6 +243,29 @@ export function InvoiceImportSyncDrawer({
     if (res) onImported(direction);
   };
 
+  const handleBulkXml = async () => {
+    const token = localStorage.getItem("erp_portal_token");
+    if (!token) {
+      toast.error(
+        "Vui lòng cấu hình token Cổng thuế trong chức năng Đồng bộ từ GDT trước.",
+      );
+      return;
+    }
+    try {
+      setBulkXmlLoading(true);
+      const res = await erpInvoicesCoreApi.bulkDownloadXml({
+        token,
+        cookies: portal.cookies,
+        direction,
+      });
+      toast.success(res.message);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || e.message || "Lỗi tải lại XML");
+    } finally {
+      setBulkXmlLoading(false);
+    }
+  };
+
   const actions = [];
   if (method === "XML") {
     if (xml.step === "select") {
@@ -152,12 +275,12 @@ export function InvoiceImportSyncDrawer({
         onClick: handleClose,
       });
       actions.push({
-        label: t("importActionStart", {
+        label: t("importActionPreview", {
           count: xml.files.length,
-          defaultValue: `Bắt đầu Import (${xml.files.length} file)`,
+          defaultValue: `Xem trước & Import (${xml.files.length} file)`,
         }),
         icon: <Upload className="w-4 h-4" />,
-        onClick: xml.handleImport,
+        onClick: () => setShowPreview(true),
         disabled: xml.files.length === 0,
       });
     } else if (xml.step === "result" && xml.result) {
@@ -194,65 +317,37 @@ export function InvoiceImportSyncDrawer({
       title="Đồng bộ hóa đơn"
       icon={<RefreshCw className="w-5 h-5" />}
       actions={actions}
-      panelClassName="min-[1024px]:w-[520px]"
+      panelClassName="min-[1024px]:w-[640px]"
     >
       <div className="flex flex-col h-full">
-        {/* Tab Direction */}
-        <div className="flex border-b border-border shrink-0 px-6 mt-[-1rem]">
-          {(["IN", "OUT"] as Direction[]).map((d) => (
-            <button
-              key={d}
-              disabled={xml.step !== "select" && xml.step !== "result"}
-              onClick={() => handleDirectionChange(d)}
-              className={`flex-1 py-3 flex items-center justify-center gap-2 text-sm font-medium border-b-2 transition-colors ${
-                direction === d
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground disabled:cursor-not-allowed"
-              }`}
-            >
-              {d === "IN" ? (
-                <>
-                  <ArrowDownToLine className="w-4 h-4" />
-                  {t("inbound", "Hóa đơn mua vào")}
-                </>
-              ) : (
-                <>
-                  <ArrowUpFromLine className="w-4 h-4" />
-                  {t("outbound", "Hóa đơn bán ra")}
-                </>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Method */}
-        <div className="px-6 py-3 border-b border-border/50">
-          <div className="flex p-1 bg-surface-hover rounded-md mx-auto w-fit">
-            <button
-              onClick={() => handleMethodChange("GDT")}
-              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${
-                method === "GDT"
-                  ? "bg-primary text-primary-fg shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Từ hệ thống GDT
-            </button>
-            <button
-              onClick={() => handleMethodChange("XML")}
-              className={`px-4 py-1.5 text-xs font-medium rounded transition-colors ${
-                method === "XML"
-                  ? "bg-primary text-primary-fg shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Tải file XML
-            </button>
+        {/* Selection Dropdowns — extend full-width, breaking out of body p-[18px] */}
+        <div className="flex items-center gap-3 px-[18px] py-3 border-b border-border shrink-0 -mx-[18px] -mt-[18px] mb-4">
+          <div className="flex-1">
+            <Combobox
+              options={[
+                { value: "IN", label: t("inbound", "Hóa đơn mua vào") },
+                { value: "OUT", label: t("outbound", "Hóa đơn bán ra") },
+              ]}
+              value={direction}
+              onChange={(v) => handleDirectionChange(v as Direction)}
+              className="w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <Combobox
+              options={[
+                { value: "GDT", label: "Từ hệ thống GDT" },
+                { value: "XML", label: "Tải file từ máy tính" },
+              ]}
+              value={method}
+              onChange={(v) => handleMethodChange(v as "GDT" | "XML")}
+              className="w-full"
+            />
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto">
           {method === "GDT" && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
@@ -272,19 +367,33 @@ export function InvoiceImportSyncDrawer({
                 </div>
 
                 <div className="flex justify-between items-center mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setConfigOpen(true)}
-                    className="gap-1.5"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Cấu hình token
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfigOpen(true)}
+                      className="gap-1.5"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Cấu hình token
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBulkXml}
+                      disabled={bulkXmlLoading || portal.loading}
+                      className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${bulkXmlLoading ? "animate-spin" : ""}`}
+                      />
+                      {bulkXmlLoading ? "Đang xử lý..." : "Tải lại XML"}
+                    </Button>
+                  </div>
 
                   <Button
                     onClick={handleSync}
-                    disabled={portal.loading}
+                    disabled={portal.loading || bulkXmlLoading}
                     className="gap-2 w-36 justify-center"
                   >
                     <RefreshCw
@@ -383,7 +492,10 @@ export function InvoiceImportSyncDrawer({
               {xml.step === "result" && xml.result && (
                 <div className="flex flex-col gap-5">
                   <ImportResultSummary result={xml.result} />
-                  <ImportResultTables result={xml.result} />
+                  <ImportResultTables
+                    result={xml.result}
+                    onOpenInvoice={(id) => setViewInvoiceId(id)}
+                  />
                   {xml.result.created === 0 &&
                     xml.result.skipped.length === 0 &&
                     xml.result.errors.length === 0 && (
@@ -402,7 +514,36 @@ export function InvoiceImportSyncDrawer({
         open={configOpen}
         onClose={() => setConfigOpen(false)}
         token={portal.token}
-        onSave={portal.setToken}
+        cookies={portal.cookies}
+        onSave={portal.saveConfig}
+      />
+      <ImportPreviewModal
+        open={showPreview}
+        files={xml.files}
+        direction={xml.direction || "IN"}
+        onConfirm={(selectedFiles, manualMatches) => {
+          setShowPreview(false);
+          xml.handleImport(selectedFiles, manualMatches);
+        }}
+        onCancel={() => setShowPreview(false)}
+      />
+      <InvoiceDetailWrapper
+        invoiceId={viewInvoiceId}
+        onClose={() => setViewInvoiceId(null)}
+      />
+      <ConfirmModal
+        open={showDrawerConfirm}
+        title="Đóng mà không lưu?"
+        message="Thay đổi của bạn sẽ không được lưu."
+        confirmLabel="Đóng"
+        cancelLabel="Tiếp tục chỉnh sửa"
+        danger={true}
+        zIndex={1000}
+        onConfirm={() => {
+          setShowDrawerConfirm(false);
+          doClose();
+        }}
+        onCancel={() => setShowDrawerConfirm(false)}
       />
     </DrawerModal>
   );

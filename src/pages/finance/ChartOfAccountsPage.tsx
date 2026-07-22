@@ -4,13 +4,13 @@ import { Layers } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { useT } from "@/core/i18n";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
-import { getBranchesApi } from "@/modules/branches/api/branchApi";
+
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useAppStore } from "@/core/config/appStore";
 
 export function ChartOfAccountsPage() {
   const t = useT();
-  const { currentBranchId, setCustomBreadcrumbs } = useAppStore();
+  const { setCustomBreadcrumbs } = useAppStore();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -24,48 +24,28 @@ export function ChartOfAccountsPage() {
     return () => setCustomBreadcrumbs(null);
   }, [setCustomBreadcrumbs]);
 
-  const { data: branches = [] } = useQuery({
-    queryKey: ["branches:list"],
-    queryFn: getBranchesApi,
-  });
-
-  const filterConfig = useMemo(() => {
-    return {
-      search: true,
-      custom: [
-        {
-          key: "branchId",
-          label: t("common.branch"),
-          placeholder: t("common.allBranches"),
-          options: branches.map((b) => ({ value: b.id, label: b.name })),
-          defaultValue: currentBranchId,
-        },
-      ],
-    };
-  }, [branches, t, currentBranchId]);
-
+  const filterConfig = useMemo(() => ({ search: true }), []);
   const filter = useFilterPanel(filterConfig, () => setPage(1));
 
   const {
-    data: chartOfAccounts,
+    data: pagedData,
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["chart-of-accounts"],
-    queryFn: () => accountingApi.getChartOfAccounts({}),
+    queryKey: ["chart-of-accounts", page, pageSize, filter.state.search],
+    queryFn: () =>
+      accountingApi.getChartOfAccounts({
+        page,
+        pageSize,
+        search: filter.state.search,
+      }),
   });
 
-  // Filter local results if backend doesn't support search yet, or rely on backend
-  const filteredData = useMemo(() => {
-    if (!chartOfAccounts) return [];
-    if (!filter.state.search) return chartOfAccounts;
-    const s = filter.state.search.toLowerCase();
-    return chartOfAccounts.filter(
-      (a: any) =>
-        a.accountCode?.toLowerCase().includes(s) ||
-        a.accountName?.toLowerCase().includes(s),
-    );
-  }, [chartOfAccounts, filter.state.search]);
+  const chartOfAccounts = pagedData?.items || [];
+  const totalItems = pagedData?.total || 0;
+  const totalPagesCount = pagedData?.totalPages || 1;
+
+  const filteredData = chartOfAccounts;
 
   const columns = useMemo(
     () => [
@@ -115,8 +95,8 @@ export function ChartOfAccountsPage() {
       loading={isLoading}
       page={page}
       pageSize={pageSize}
-      total={filteredData?.length || 0}
-      totalPages={Math.ceil((filteredData?.length || 0) / pageSize) || 1}
+      total={totalItems}
+      totalPages={totalPagesCount}
       onPage={setPage}
       onPageSize={setPageSize}
       onRefresh={refetch}

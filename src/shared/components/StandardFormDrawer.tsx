@@ -35,6 +35,8 @@ export interface StandardFormDrawerProps {
   loading?: boolean;
   error?: string | null;
 
+  zIndex?: number;
+
   /** Layout variant — defaults to "2-columns" */
   layout?: "1-column" | "2-columns";
 
@@ -96,6 +98,7 @@ export function StandardFormDrawer({
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
   stickyRightPanel = true,
+  zIndex,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -108,7 +111,6 @@ export function StandardFormDrawer({
     }
   }, [open, rightPanelDefaultCollapsed]);
 
-  // ── Edit button — outlined-primary style matching CompanyProfileDrawer ──
   // view mode: border-primary outline, hover fills primary bg
   const headerExtra =
     mode === "view" && onToggleEdit ? (
@@ -137,6 +139,7 @@ export function StandardFormDrawer({
       titleExtra={titleExtra}
       subtitle={subtitle}
       actions={actions}
+      zIndex={zIndex}
     >
       {loading ? (
         <FormLoadingSkeleton />
@@ -223,7 +226,7 @@ export function StandardFormDrawer({
             ) : (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 w-full lg:w-auto",
+                  "shrink-0 order-1 lg:order-2 w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px]",
                   stickyRightPanel && "lg:sticky lg:top-0",
                 )}
               >

@@ -7,6 +7,8 @@ export function EnvStamp() {
     env,
     isProduction,
     isDevelopment,
+    isLocal,
+    isLocalProdData,
     isKlotus,
     isGreenway,
     isBlueway,
@@ -18,7 +20,13 @@ export function EnvStamp() {
   }
 
   let text: string;
-  if (isDevelopment) {
+  if (isLocalProdData) {
+    const name = envPrefix ? envPrefix.toUpperCase() : "LOCAL";
+    text = `⚠️ ${name} (PROD DATA)`;
+  } else if (isLocal) {
+    const name = envPrefix ? envPrefix.toUpperCase() : "LOCAL";
+    text = `💻 ${name} LOCAL`;
+  } else if (isDevelopment) {
     text = "Development";
   } else if (env === AppEnvironment.KLOTUS_STAGING) {
     text = "Klotus Demo";
@@ -33,7 +41,13 @@ export function EnvStamp() {
   let bgClass = "bg-amber-500/90";
   let borderClass = "border-amber-400/50";
 
-  if (isKlotus) {
+  if (isLocalProdData) {
+    bgClass = "bg-red-600 shadow-md shadow-red-500/40";
+    borderClass = "border-red-500";
+  } else if (isLocal) {
+    bgClass = "bg-teal-600/90 shadow-md shadow-teal-500/40";
+    borderClass = "border-teal-500/50";
+  } else if (isKlotus) {
     bgClass = "bg-purple-600/90";
     borderClass = "border-purple-500/50";
   } else if (isGreenway) {

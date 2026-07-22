@@ -28,6 +28,7 @@ export interface JournalEntry {
   id: string;
   voucher_no?: string | null;
   date: string;
+  documentDate?: string | null;
   period_id?: string | AccountingPeriod | null;
   description?: string | null;
   status: JournalEntryStatus;

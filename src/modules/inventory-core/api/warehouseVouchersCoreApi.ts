@@ -5,7 +5,7 @@ export interface WarehouseRow {
   id: string;
   voucherNo: string;
   date: string;
-  type: "receipt" | "issue";
+  type: "receipt" | "issue" | "adjustment";
   status: string | null;
   partnerId: string | null;
   partnerName: string | null;
@@ -21,6 +21,8 @@ export interface WarehouseVoucherListParams extends ListParams {
   dateTo?: string;
   status?: string;
   partnerId?: string;
+  column_search?: string;
+  column_filters?: string;
 }
 
 const BASE = "/api/v1/inventory/warehouse-vouchers";
@@ -42,6 +44,36 @@ export const warehouseVouchersCoreApi = {
           ...(params?.status ? { status: params.status } : {}),
           ...(params?.partnerId ? { partnerId: params.partnerId } : {}),
           ...(params?.sort ? { sort: params.sort.join(",") } : {}),
+          ...(params?.column_search
+            ? { column_search: params.column_search }
+            : {}),
+          ...(params?.column_filters
+            ? { column_filters: params.column_filters }
+            : {}),
+        },
+      },
+    );
+    return data;
+  },
+
+  getColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+    type?: string,
+  ): Promise<PaginatedResponse<string>> => {
+    const { data } = await axiosInstance.get<PaginatedResponse<string>>(
+      `${BASE}/column-options`,
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          column_filters: filtersStr,
+          type,
         },
       },
     );

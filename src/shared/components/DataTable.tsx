@@ -118,6 +118,7 @@ interface DataTableProps<T> {
   expandedRowKeys?: string[];
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+  sortArray?: string[];
   onSort?: (key: string) => void;
   enableColumnVisibility?: boolean;
   tableId?: string;
@@ -311,6 +312,7 @@ export function DataTable<T>({
   expandedRowKeys,
   sortBy,
   sortOrder,
+  sortArray,
   onSort,
   enableColumnVisibility,
   tableId,
@@ -727,17 +729,26 @@ export function DataTable<T>({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={
-                                  sortBy === meta.sortKey && sortOrder === "asc"
-                                    ? 3.5
-                                    : 1.5
+                                  sortArray
+                                    ? sortArray.includes(meta.sortKey!)
+                                      ? 3.5
+                                      : 1.5
+                                    : sortBy === meta.sortKey &&
+                                        sortOrder === "asc"
+                                      ? 3.5
+                                      : 1.5
                                 }
                                 className={cn(
                                   "transition-all duration-150",
-                                  sortBy === meta.sortKey
-                                    ? sortOrder === "asc"
+                                  sortArray
+                                    ? sortArray.includes(meta.sortKey!)
                                       ? "text-foreground"
-                                      : "text-muted-foreground/5"
-                                    : "text-muted-foreground/35",
+                                      : "text-muted-foreground/35"
+                                    : sortBy === meta.sortKey
+                                      ? sortOrder === "asc"
+                                        ? "text-foreground"
+                                        : "text-muted-foreground/5"
+                                      : "text-muted-foreground/35",
                                 )}
                               >
                                 <path d="m18 15-6-6-6 6" />
@@ -752,18 +763,26 @@ export function DataTable<T>({
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={
-                                  sortBy === meta.sortKey &&
-                                  sortOrder === "desc"
-                                    ? 3.5
-                                    : 1.5
+                                  sortArray
+                                    ? sortArray.includes(`-${meta.sortKey!}`)
+                                      ? 3.5
+                                      : 1.5
+                                    : sortBy === meta.sortKey &&
+                                        sortOrder === "desc"
+                                      ? 3.5
+                                      : 1.5
                                 }
                                 className={cn(
                                   "transition-all duration-150",
-                                  sortBy === meta.sortKey
-                                    ? sortOrder === "desc"
+                                  sortArray
+                                    ? sortArray.includes(`-${meta.sortKey!}`)
                                       ? "text-foreground"
-                                      : "text-muted-foreground/5"
-                                    : "text-muted-foreground/35",
+                                      : "text-muted-foreground/35"
+                                    : sortBy === meta.sortKey
+                                      ? sortOrder === "desc"
+                                        ? "text-foreground"
+                                        : "text-muted-foreground/5"
+                                      : "text-muted-foreground/35",
                                 )}
                               >
                                 <path d="m6 9 6 6 6-6" />
@@ -816,6 +835,7 @@ export function DataTable<T>({
                             meta.className,
                             isFirstCol &&
                               !enableRowSelection &&
+                              variant !== "spreadsheet" &&
                               "sticky left-0 bg-surface shadow-[1px_0_0_0_var(--border-light)] z-10",
                             variant === "spreadsheet" &&
                               "border-r border-border py-1 text-xs",
@@ -966,6 +986,7 @@ export function DataTable<T>({
                           meta.className,
                           isFirstCol &&
                             !enableRowSelection &&
+                            variant !== "spreadsheet" &&
                             "sticky left-0 bg-muted z-10 shadow-[1px_0_0_0_var(--border-light)]",
                           variant === "spreadsheet" &&
                             "border-r border-border px-2 py-1 text-xs truncate font-semibold",

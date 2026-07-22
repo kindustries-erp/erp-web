@@ -169,13 +169,14 @@ describe("FilterButton", () => {
   it("renders with correct activeCount badge", () => {
     render(<FilterButton onClick={vi.fn()} activeCount={3} />);
 
-    expect(screen.getByText("Bộ lọc (3)")).toBeInTheDocument();
+    expect(screen.getByTitle("Bộ lọc")).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
   });
 
   it("does not render badge when activeCount is 0", () => {
     render(<FilterButton onClick={vi.fn()} activeCount={0} />);
 
-    expect(screen.getByText("Bộ lọc")).toBeInTheDocument();
+    expect(screen.getByTitle("Bộ lọc")).toBeInTheDocument();
     expect(screen.queryByText("0")).not.toBeInTheDocument();
   });
 

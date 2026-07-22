@@ -17,6 +17,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   tableId: string;
   items: T[];
   columns: DataTableColumn<T>[];
+  defaultColumnOrder?: string[];
   getRowKey: (row: T) => string;
   loading?: boolean;
   error?: string | null;
@@ -43,6 +44,8 @@ export interface SpreadsheetPageTemplateProps<T> {
   // --- Filter Panel ---
   filterConfig?: FilterPanelConfig;
   filter?: FilterPanelReturn;
+  activeFilterCount?: number;
+  onClearAllFilters?: () => void;
 
   // --- Selection & Expansion ---
   enableRowSelection?: boolean;

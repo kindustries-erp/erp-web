@@ -15,7 +15,7 @@ Apply to all work in this repo.
 - follow DB -> API -> UI -> QC
 - inspect current state before edits
 - use evidence-first wording
-- before push/commit, `cd /opt/repos/liouni-erp-core/liouni-erp-web`
+- before push/commit, `cd` vào root của repo hiện tại (`./erp-web` từ workspace root)
 - before push/commit, always run `bun run check:ci`, `bun run test`, and `bun run build`
 - push with `github-industries`
 - always check branch 1st when push. all commit must be push on erp-master 1st, then I will create PR to another branch

@@ -1,55 +1,55 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import {
   erpInvoicesCoreApi,
   type PortalSyncResult,
 } from "../api/erpInvoicesCoreApi";
 
-const TOKEN_KEY = "erp_portal_token";
-
-function loadToken(): string {
-  try {
-    return localStorage.getItem(TOKEN_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-
-function saveToken(token: string) {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch {
-    /* ignore */
-  }
-}
-
 export function usePortalSync() {
-  const [token, setTokenState] = useState<string>(loadToken);
+  const [token, setTokenState] = useState<string>("");
+  const [cookies, setCookiesState] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PortalSyncResult | null>(null);
+  const [isTokenLoaded, setIsTokenLoaded] = useState(false);
 
-  const setToken = useCallback((t: string) => {
+  useEffect(() => {
+    erpInvoicesCoreApi
+      .getPortalConfig()
+      .then((res) => {
+        setTokenState(res.token);
+        setCookiesState(res.cookies);
+        setIsTokenLoaded(true);
+      })
+      .catch(() => {
+        setIsTokenLoaded(true);
+      });
+  }, []);
+
+  const saveConfig = useCallback(async (t: string, c?: string) => {
     setTokenState(t);
-    saveToken(t);
+    if (c !== undefined) setCookiesState(c);
+    try {
+      await erpInvoicesCoreApi.savePortalConfig(t, c);
+      toast.success("Đã lưu cấu hình portal thành công!");
+    } catch {
+      toast.error("Lưu cấu hình portal thất bại");
+    }
   }, []);
 
   const sync = useCallback(
     async (type: "purchase" | "sold") => {
-      if (!token.trim()) {
-        toast.error("Vui lòng nhập Bearer token trong cấu hình");
-        return null;
-      }
       if (!dateFrom || !dateTo) {
-        toast.error("Vui lòng chọn khoảng thời gian");
-        return null;
+        toast.error("Vui lòng chọn từ ngày và đến ngày");
+        return;
       }
       setLoading(true);
       setResult(null);
       try {
         const res = await erpInvoicesCoreApi.portalSync({
-          token: token.trim(),
+          token: "",
+          cookies: "",
           dateFrom,
           dateTo,
           type,
@@ -61,19 +61,25 @@ export function usePortalSync() {
           { duration: 6000 },
         );
         return res;
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Đồng bộ thất bại");
-        return null;
+      } catch (e: any) {
+        if (e?.response?.data?.message === "GDT_TOKEN_EXPIRED") {
+          toast.error("Token hết hạn! Vui lòng cập nhật lại token từ GDT", {
+            duration: 5000,
+          });
+        } else {
+          toast.error("Có lỗi xảy ra khi đồng bộ từ TCT");
+        }
       } finally {
         setLoading(false);
       }
     },
-    [token, dateFrom, dateTo],
+    [dateFrom, dateTo],
   );
 
   return {
     token,
-    setToken,
+    cookies,
+    saveConfig,
     dateFrom,
     setDateFrom,
     dateTo,
@@ -81,6 +87,7 @@ export function usePortalSync() {
     loading,
     result,
     sync,
+    isTokenLoaded,
     clearResult: () => setResult(null),
   };
 }

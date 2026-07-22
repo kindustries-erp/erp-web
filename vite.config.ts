@@ -28,6 +28,9 @@ export default defineConfig(({ mode }) => {
         ],
       },
     },
+    optimizeDeps: {
+      include: ["pdfjs-dist/build/pdf.worker.min.mjs"],
+    },
     define: {
       __APP_BUILD_VERSION__: JSON.stringify(buildVersion),
       __APP_ENV__: JSON.stringify(

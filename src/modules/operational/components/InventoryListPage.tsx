@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { extractApiError } from "@/shared/utils/apiError";
 import { type InventoryStockRow } from "@/modules/operational/api/operationalApi";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useOperationalListQuery } from "@/modules/operational/hooks/useOperationalListQuery";
 import { OperationalInventoryPage } from "@/modules/operational/components/list/OperationalInventoryPage";
 import {
@@ -10,10 +11,12 @@ import {
 } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { Button } from "@/shared/components/ui/Button";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, Download, Trash } from "lucide-react";
+import { ChevronDown, Download, Trash, CheckSquare } from "lucide-react";
+import { useT } from "@/core/i18n";
 
 export function InventoryListPage() {
   const variant = "inventory" as const;
+  const t = useT();
 
   const listStore = useOperationalListStore();
   const {
@@ -26,8 +29,9 @@ export function InventoryListPage() {
     expandedStockItemIds,
     toggleExpandStockItem,
     itemTypeFilter,
-    inventorySort,
   } = listStore;
+
+  const tableState = useTableColumnState("inventory-stock-table");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +58,9 @@ export function InventoryListPage() {
     pageSize,
     search: search || undefined,
     item_type: itemTypeFilter || undefined,
-    sort: inventorySort ? [inventorySort] : undefined,
+    sort: tableState.sorts.length > 0 ? tableState.sorts : undefined,
+    column_search: tableState.columnSearch,
+    column_filters: tableState.columnFilters,
   });
 
   useEffect(() => {
@@ -98,12 +104,13 @@ export function InventoryListPage() {
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
-            className="px-3 py-2 bg-slate-800 text-white hover:bg-slate-700"
+            className="px-3 py-2 text-primary border-primary/30 hover:bg-primary/5 shadow-sm"
           >
-            Thao tác ({selectedCount})
-            <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+            <CheckSquare className="w-4 h-4 mr-1.5" />
+            {t("bulkActions", "Thao tác")} ({selectedCount})
+            <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
           </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>

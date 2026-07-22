@@ -9,6 +9,8 @@ import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { formatGMT7, money } from "@/shared/utils/format";
 import { useAppStore } from "@/core/config/appStore";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
+import { InvoiceDetailWrapper } from "@/modules/erp-invoices-core/components/InvoiceDetailWrapper";
+import { Popover } from "@/core/components/ui/Popover";
 
 export const GeneralJournalPage = () => {
   const t = useT();
@@ -17,6 +19,9 @@ export const GeneralJournalPage = () => {
   const [pageSize, setPageSize] = useState(50);
   const [sortArray, setSortArray] = useState<string[]>(["-date"]);
   const [selectedBankTxnId, setSelectedBankTxnId] = useState<string | null>(
+    null,
+  );
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
     null,
   );
 
@@ -77,29 +82,23 @@ export const GeneralJournalPage = () => {
     const result: any[] = [];
     journalData.items.forEach((entry: any) => {
       if (entry.lines && entry.lines.length > 0) {
-        const debitAccounts = Array.from(
-          new Set(
-            entry.lines
-              .filter((l: any) => Number(l.debit) > 0 && l.account?.accountCode)
-              .map((l: any) => l.account.accountCode),
-          ),
-        ).join(", ");
-        const creditAccounts = Array.from(
-          new Set(
-            entry.lines
-              .filter(
-                (l: any) => Number(l.credit) > 0 && l.account?.accountCode,
-              )
-              .map((l: any) => l.account.accountCode),
-          ),
-        ).join(", ");
+        // Sắp xếp lại lines theo trường sort từ backend để đảm bảo đúng thứ tự cặp (Nợ -> Có)
+        const sortedLines = [...entry.lines].sort(
+          (a: any, b: any) => a.sort - b.sort,
+        );
 
-        entry.lines.forEach((line: any, index: number) => {
+        sortedLines.forEach((line: any, index: number) => {
+          const isDebit = Number(line.debit) > 0;
+          // Because backend pairs them adjacently (Nợ -> Có), if it's debit, opposing is index + 1; if credit, opposing is index - 1
+          const opposingLine = sortedLines[isDebit ? index + 1 : index - 1];
+          const opposingAccountCode = opposingLine?.account?.accountCode || "";
+
           result.push({
             ...line,
             _id: `${entry.id}-${line.id}`,
             _entryNo: entry.entryNo,
             _date: entry.date,
+            _documentDate: entry.documentDate,
             _status: entry.status,
             _description: entry.description,
             _reference: entry.reference,
@@ -107,8 +106,8 @@ export const GeneralJournalPage = () => {
             _sourceId: entry.sourceId,
             _sourceType: entry.sourceType,
             _subjectName: entry.subjectName,
-            _entryDebitAccounts: debitAccounts,
-            _entryCreditAccounts: creditAccounts,
+            _account: line.account?.accountCode,
+            _opposingAccount: opposingAccountCode,
             isFirstLine: index === 0,
             rowSpan: index === 0 ? entry.lines.length : 0,
           });
@@ -119,6 +118,7 @@ export const GeneralJournalPage = () => {
           _id: entry.id,
           _entryNo: entry.entryNo,
           _date: entry.date,
+          _documentDate: entry.documentDate,
           _status: entry.status,
           _description: entry.description,
           _reference: entry.reference,
@@ -143,6 +143,16 @@ export const GeneralJournalPage = () => {
         cell: (row: any) => <span>{formatGMT7(row._date, "date")}</span>,
       },
       {
+        key: "_documentDate",
+        header: "Ngày chứng từ",
+        size: 130,
+        cell: (row: any) => (
+          <span>
+            {row._documentDate ? formatGMT7(row._documentDate, "date") : "-"}
+          </span>
+        ),
+      },
+      {
         key: "_entryNo",
         header: "Số CT",
         size: 120,
@@ -153,27 +163,20 @@ export const GeneralJournalPage = () => {
         ),
       },
       {
-        key: "debitAccount",
-        header: t("journalEntries.columns.debitAccount") || "TK Nợ",
+        key: "account",
+        header: "TK",
         size: 80,
         cell: (row: any) => {
-          const isDebit = Number(row.debit) > 0;
-          return (
-            <span className="font-mono text-sm">
-              {isDebit ? row._entryCreditAccounts : row._entryDebitAccounts}
-            </span>
-          );
+          return <span className="font-mono text-sm">{row._account}</span>;
         },
       },
       {
-        key: "creditAccount",
-        header: t("journalEntries.columns.creditAccount") || "TK Có",
+        key: "opposingAccount",
+        header: "TK đối ứng",
         size: 80,
         cell: (row: any) => {
           return (
-            <span className="font-mono text-sm">
-              {row.account?.accountCode}
-            </span>
+            <span className="font-mono text-sm">{row._opposingAccount}</span>
           );
         },
       },
@@ -216,19 +219,35 @@ export const GeneralJournalPage = () => {
         header: "Diễn giải",
         size: 400,
         cell: (row: any) => (
-          <div className="text-gray-600 dark:text-gray-300 whitespace-normal break-words w-full">
-            {row.description || row._description}
-          </div>
+          <Popover
+            content={
+              <div className="p-3 text-sm max-w-md break-words whitespace-normal text-slate-800">
+                {row.description || row._description || "—"}
+              </div>
+            }
+          >
+            <div className="text-gray-600 dark:text-gray-300 w-full cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 line-clamp-2">
+              {row.description || row._description}
+            </div>
+          </Popover>
         ),
       },
       {
         key: "_subjectName",
         header: "Đối tượng",
-        size: 150,
+        size: 200,
         cell: (row: any) => (
-          <span className="text-gray-600 dark:text-gray-400">
-            {row._subjectName || "-"}
-          </span>
+          <Popover
+            content={
+              <div className="p-3 text-sm max-w-sm break-words whitespace-normal text-slate-800">
+                {row._subjectName || "—"}
+              </div>
+            }
+          >
+            <span className="text-gray-600 dark:text-gray-400 cursor-pointer hover:text-primary underline decoration-dashed underline-offset-4 decoration-slate-300 truncate block">
+              {row._subjectName || "-"}
+            </span>
+          </Popover>
         ),
       },
       {
@@ -252,6 +271,16 @@ export const GeneralJournalPage = () => {
               <span
                 className="text-blue-600 hover:underline cursor-pointer"
                 onClick={() => setSelectedBankTxnId(row._sourceId)}
+              >
+                {row._reference}
+              </span>
+            );
+          }
+          if (row._sourceType === "INVOICE" && row._sourceId) {
+            return (
+              <span
+                className="text-blue-600 hover:underline cursor-pointer"
+                onClick={() => setSelectedInvoiceId(row._sourceId)}
               >
                 {row._reference}
               </span>
@@ -319,6 +348,10 @@ export const GeneralJournalPage = () => {
         isOpen={!!selectedBankTxnId}
         onClose={() => setSelectedBankTxnId(null)}
         transactionId={selectedBankTxnId}
+      />
+      <InvoiceDetailWrapper
+        invoiceId={selectedInvoiceId}
+        onClose={() => setSelectedInvoiceId(null)}
       />
     </>
   );

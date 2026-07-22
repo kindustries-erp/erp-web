@@ -1,37 +1,21 @@
-# ERP Web Agent Bootstrap
+# ERP Web Agent Entry
 
-Entry point for this repo.
+This file is the repo-root bridge for agents.
 
 ## Read order
 
-1. `.agents/README.md`
-2. `.agents/context/current-truth.md`
-3. `.agents/context/working-contract.md`
-4. `.agents/tasks/current-lane.md`
-5. `docs/ai/technical-instructions.md`
-6. `docs/app-structure.md`
-7. Relevant `docs/tasks/*`
+1. `.agents/context/current-truth.md`
+2. `.agents/context/working-contract.md`
+3. `.agents/tasks/current-lane.md`
+4. `.agents/skills/liouni-erp-web-current-truth/SKILL.md`
+5. `.agents/rules/liouni-erp-web.md`
+6. `.agents/rules/ai-instructions/technical-instructions.md`
+7. `.agents/context/system/app-structure.md`
 
-## Execution contract
+## Mandatory alignment
 
-- no code without a task file
-- update checklists in real time
-- record lessons learned for blockers
-- use `bun` / `bunx` unless Bun incompatibility is proven
-- before commit/push, `cd /opt/repos/liouni-erp-core/liouni-erp-web`
-- push with `github-industries`
-- reuse existing components/hooks/utils/helpers/functions/page patterns first
-- extend/adapt before duplicating
-
-## References
-
-- `docs/ai/technical-instructions.md`
-- `docs/tasks/_template.md`
-
-## Tests
-
-- pre-commit runs `bunx vitest run`
-- fix source, not tests
-- tests live in `__tests__/*.test.ts(x)`
-- run all: `bunx vitest run`
-- run one file: `bunx vitest run src/path/to/file.test.ts`
+- Reuse existing `.agents` skills, rules, and task artifacts before creating new ones.
+- Follow gate order: DB -> API -> UI -> QC.
+- Use Bun/Bunx only.
+- No code without a task file under `.agents/tasks/`.
+- Before push, run required checks defined by husky hooks.

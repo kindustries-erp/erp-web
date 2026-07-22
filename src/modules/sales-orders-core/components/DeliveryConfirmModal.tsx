@@ -63,7 +63,7 @@ export function DeliveryConfirmModal({
     let active = true;
     if (open && serialIds.length > 0) {
       inventoryCoreApi
-        .listSerials({ ids: serialIds.join(","), pageSize: 100 })
+        .listSerials({ ids: serialIds, pageSize: 100 })
         .then((res) => {
           if (active) {
             const deliverable = res.items.filter(
@@ -92,14 +92,11 @@ export function DeliveryConfirmModal({
     setSaving(true);
     setError(null);
     try {
-      await Promise.all(
-        selectedIds.map((id) =>
-          inventoryCoreApi.confirmDelivery(id, {
-            deliveryDate,
-            notes: notes.trim() || undefined,
-          }),
-        ),
-      );
+      await inventoryCoreApi.confirmDeliveries({
+        serialIds: selectedIds,
+        deliveryDate,
+        notes: notes.trim() || undefined,
+      });
       if (onConfirmSuccess) onConfirmSuccess();
       onClose();
     } catch (err: any) {

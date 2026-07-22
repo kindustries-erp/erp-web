@@ -105,6 +105,24 @@ jobs:
           test -n "${{ secrets.GHCR_PAT }}" || (echo "GHCR_PAT missing" && exit 1)
           test -n "${{ secrets.HEAD_PASSWORD }}" || (echo "HEAD_PASSWORD missing" && exit 1)
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Transfer Image to Head
+        env:
+          SSHPASS: ${{ secrets.HEAD_PASSWORD }}
+        run: |
+          docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}
+          docker save ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} | \
+            sshpass -e ssh -o StrictHostKeyChecking=no \
+            -p ${{ vars.HEAD_PORT }} \
+            ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
+            "docker load"
+
       - name: Run deploy script
         env:
           SSHPASS: ${{ secrets.HEAD_PASSWORD }}
@@ -112,9 +130,7 @@ jobs:
           sshpass -e ssh -o StrictHostKeyChecking=no \
             -p ${{ vars.HEAD_PORT }} \
             ${{ vars.HEAD_USER }}@${{ vars.HEAD_HOST }} \
-            "echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin ; \
-             docker pull ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }} || true ; \
-             docker rm -f erp-web-master || true ; \
+            "docker rm -f erp-web-master || true ; \
              docker run -d --name erp-web-master --restart always --add-host erp-api-master:host-gateway -p 8010:80 ${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.sha }}"
 
       - name: Health check

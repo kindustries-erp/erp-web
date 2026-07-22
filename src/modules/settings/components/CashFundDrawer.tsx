@@ -13,6 +13,7 @@ import {
   bankStatementApi,
   type ErpCashBook,
 } from "@/modules/bank-statements/api/bankStatementApi";
+import { getChartOfAccountsApi } from "@/modules/accounting/api/catalogApi";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/core/config/appStore";
@@ -39,6 +40,32 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
     queryFn: getBranchOptionsApi,
   });
 
+  const { data: accounts = [] } = useQuery({
+    queryKey: ["chartOfAccounts-flat"],
+    queryFn: getChartOfAccountsApi,
+  });
+
+  const accountOptions = React.useMemo(() => {
+    // Ưu tiên nhóm 111* lên đầu cho tiền mặt
+    const list = Array.isArray(accounts)
+      ? accounts
+      : (accounts as any).items || [];
+    const cashAccounts = list.filter(
+      (a: any) =>
+        a.accountCode?.startsWith("111") || a.account_code?.startsWith("111"),
+    );
+    const otherAccounts = list.filter(
+      (a: any) =>
+        !a.accountCode?.startsWith("111") && !a.account_code?.startsWith("111"),
+    );
+    return [...cashAccounts, ...otherAccounts].map((a: any) => ({
+      value: a.id,
+      label: `${a.accountCode || a.account_code} - ${a.accountName || a.account_name}`,
+    }));
+  }, [accounts]);
+
+  const [accountingAccountId, setAccountingAccountId] = useState("");
+
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("VND");
   const [isActive, setIsActive] = useState(true);
@@ -48,6 +75,7 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
   useEffect(() => {
     if (cashBook) {
       setSelectedBranchId(cashBook.branchId ?? currentBranchId ?? "");
+      setAccountingAccountId(cashBook.accountingAccountId ?? "");
       setName(cashBook.name ?? "");
       setCurrency(cashBook.currency ?? "VND");
       setIsActive(cashBook.isActive ?? true);
@@ -55,6 +83,7 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
       setPeriodDate(cashBook.periodDate ?? "");
     } else {
       setSelectedBranchId(currentBranchId || "");
+      setAccountingAccountId("");
       setName("");
       setCurrency("VND");
       setIsActive(true);
@@ -66,8 +95,11 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
   const { mutate, isPending } = useMutation({
     mutationFn: () => {
       if (!selectedBranchId) throw new Error("Branch ID is required");
+      if (!accountingAccountId)
+        throw new Error("Tài khoản kế toán là bắt buộc");
       const payload = {
         branchId: selectedBranchId,
+        accountingAccountId,
         name: name.trim(),
         currency: currency || "VND",
         isActive,
@@ -109,6 +141,15 @@ export function CashFundDrawer({ open, onClose, cashBook, onSuccess }: Props) {
               value={selectedBranchId}
               onChange={setSelectedBranchId}
               placeholder="-- Chọn chi nhánh --"
+            />
+          </DrawerField>
+
+          <DrawerField label="Tài khoản kế toán (111*) *" required>
+            <Combobox
+              options={accountOptions}
+              value={accountingAccountId}
+              onChange={setAccountingAccountId}
+              placeholder="-- Chọn tài khoản kế toán --"
             />
           </DrawerField>
 

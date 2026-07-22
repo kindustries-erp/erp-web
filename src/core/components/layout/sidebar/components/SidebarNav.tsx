@@ -37,11 +37,18 @@ export function SidebarNav({
 
   const canReadSalesOrders = useHasPermission("sales_orders", "read");
   const canReadCustomers = useHasPermission("business_partners", "read");
-  const showSales = canReadSalesOrders || canReadCustomers;
+  const canReadSalesReports = useHasPermission("sales_reports", "read");
+  const showSales =
+    canReadSalesOrders || canReadCustomers || canReadSalesReports;
 
   const canReadPurchasing = useHasPermission("purchase_orders", "read");
   const canReadSuppliers = useHasPermission("business_partners", "read");
-  const showPurchasing = canReadPurchasing || canReadSuppliers;
+  const canReadPurchasingReports = useHasPermission(
+    "purchasing_reports",
+    "read",
+  );
+  const showPurchasing =
+    canReadPurchasing || canReadSuppliers || canReadPurchasingReports;
 
   const canReadInventoryItems = useHasPermission("inventory_items", "read");
   const canReadInventoryVouchers = useHasPermission(
@@ -69,12 +76,9 @@ export function SidebarNav({
     "read",
   );
 
-  const showSettingsAccess = canReadAdminUsers;
+  const showSettingsAccess = canReadAdminUsers || canReadActivityLogs;
   const showSettingsGeneral =
-    canReadAdminUsers ||
-    canReadActivityLogs ||
-    canReadSysTags ||
-    canReadBankStatements;
+    canReadAdminUsers || canReadSysTags || canReadBankStatements;
   const showSettingsInventory = canReadInventoryItems;
   const showSettings =
     showSettingsAccess || showSettingsGeneral || showSettingsInventory;
@@ -171,11 +175,24 @@ export function SidebarNav({
           canReadSalesOrders ? t("nav.items.erpSalesOrders") : "",
           canReadCustomers ? t("nav.items.customers") : "",
           canReadSalesOrders ? t("nav.items.afterSales") : "",
+          canReadSalesReports ? t("nav.items.salesReportDashboard") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.sales")}
             </div>
+            {canReadSalesReports && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.salesReportDashboard")}
+                active={currentPage === "sales-report-dashboard"}
+                onClick={() => navTo("sales-report-dashboard")}
+                contextPage="sales-report-dashboard"
+              />
+            )}
             {canReadSalesOrders && (
               <NavItem
                 collapsed={c}
@@ -215,11 +232,26 @@ export function SidebarNav({
           t("nav.sections.purchasing"),
           canReadPurchasing ? t("nav.items.purchasing") : "",
           canReadSuppliers ? t("nav.items.suppliers") : "",
+          canReadPurchasingReports
+            ? t("nav.items.purchasingReportDashboard")
+            : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.purchasing")}
             </div>
+            {canReadPurchasingReports && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.purchasingReportDashboard")}
+                active={currentPage === "purchasing-report-dashboard"}
+                onClick={() => navTo("purchasing-report-dashboard")}
+                contextPage="purchasing-report-dashboard"
+              />
+            )}
             {canReadPurchasing && (
               <NavItem
                 collapsed={c}
@@ -249,6 +281,7 @@ export function SidebarNav({
       {showInventory &&
         hasMatch([
           t("nav.sections.inventory"),
+          canReadInventoryItems ? t("nav.items.inventoryDashboard") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryStock") : "",
           canReadInventoryVouchers ? t("nav.items.erpInventoryVouchers") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryTracking") : "",
@@ -257,6 +290,18 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.inventory")}
             </div>
+            {canReadInventoryItems && (
+              <NavItem
+                collapsed={c}
+                icon={
+                  <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.inventoryDashboard")}
+                active={currentPage === "inventory-dashboard"}
+                onClick={() => navTo("inventory-dashboard")}
+                contextPage="inventory-dashboard"
+              />
+            )}
             {canReadInventoryItems && (
               <NavItem
                 collapsed={c}
@@ -329,6 +374,7 @@ export function SidebarNav({
         hasMatch([
           t("nav.sections.accounting"),
           canReadInvoices ? t("nav.items.erpInvoices") : "",
+          canReadInvoices ? "Tổng quan hóa đơn" : "",
           canReadInvoices ? t("nav.items.inbound") : "",
           canReadInvoices ? t("nav.items.outbound") : "",
           canReadBankStatements ? t("nav.items.cashflow") : "",
@@ -347,9 +393,16 @@ export function SidebarNav({
                 label={t("nav.items.erpInvoices")}
                 active={
                   currentPage === "erp-invoices-in" ||
-                  currentPage === "erp-invoices-out"
+                  currentPage === "erp-invoices-out" ||
+                  currentPage === "invoice-dashboard"
                 }
               >
+                <NavGroupItem
+                  label="Tổng quan"
+                  active={currentPage === "invoice-dashboard"}
+                  onClick={() => navTo("invoice-dashboard")}
+                  contextPage="invoice-dashboard"
+                />
                 <NavGroupItem
                   label={t("nav.items.inbound")}
                   active={currentPage === "erp-invoices-in"}
@@ -417,6 +470,16 @@ export function SidebarNav({
                   onClick={() => navTo("settings-accounts" as PageKey)}
                   contextPage={"settings-accounts" as PageKey}
                 />
+                <NavItem
+                  collapsed={c}
+                  icon={
+                    <FileText className="w-4 h-4 opacity-65 flex-shrink-0" />
+                  }
+                  label={t("nav.items.vinfastParts")}
+                  active={currentPage === "vinfast-parts"}
+                  onClick={() => navTo("vinfast-parts" as PageKey)}
+                  contextPage={"vinfast-parts" as PageKey}
+                />
               </>
             )}
           </div>
@@ -447,8 +510,9 @@ export function SidebarNav({
         hasMatch([
           t("nav.sections.settings"),
           showSettingsAccess ? t("nav.items.accessControl") : "",
-          showSettingsAccess ? t("nav.items.users") : "",
-          showSettingsAccess ? t("nav.items.phanquyen") : "",
+          canReadAdminUsers ? t("nav.items.users") : "",
+          canReadAdminUsers ? t("nav.items.phanquyen") : "",
+          canReadActivityLogs ? t("nav.items.activitylog") : "",
           showSettingsGeneral ? t("nav.items.catalog") : "",
           showSettingsGeneral && canReadAdminUsers
             ? t("thietlap.tabs.chi-nhanh")
@@ -460,9 +524,6 @@ export function SidebarNav({
             ? t("thietlap.tabs.quy")
             : "",
           showSettingsGeneral && canReadSysTags ? t("nav.items.sysTags") : "",
-          showSettingsGeneral && canReadActivityLogs
-            ? t("nav.items.activitylog")
-            : "",
           showSettingsInventory ? t("nav.items.erpInventoryMasters") : "",
           showSettingsInventory ? t("nav.items.erpInventoryUom") : "",
           showSettingsInventory ? t("nav.items.erpInventoryItemTypes") : "",
@@ -482,21 +543,34 @@ export function SidebarNav({
                 label={t("nav.items.accessControl")}
                 active={
                   currentPage === "erp-users" ||
-                  currentPage === "erp-permissions-core"
+                  currentPage === "erp-permissions-core" ||
+                  currentPage === "erp-activity-logs"
                 }
               >
-                <NavGroupItem
-                  label={t("nav.items.users")}
-                  active={currentPage === "erp-users"}
-                  onClick={() => navTo("erp-users")}
-                  contextPage="erp-users"
-                />
-                <NavGroupItem
-                  label={t("nav.items.phanquyen")}
-                  active={currentPage === "erp-permissions-core"}
-                  onClick={() => navTo("erp-permissions-core")}
-                  contextPage="erp-permissions-core"
-                />
+                {canReadAdminUsers && (
+                  <>
+                    <NavGroupItem
+                      label={t("nav.items.users")}
+                      active={currentPage === "erp-users"}
+                      onClick={() => navTo("erp-users")}
+                      contextPage="erp-users"
+                    />
+                    <NavGroupItem
+                      label={t("nav.items.phanquyen")}
+                      active={currentPage === "erp-permissions-core"}
+                      onClick={() => navTo("erp-permissions-core")}
+                      contextPage="erp-permissions-core"
+                    />
+                  </>
+                )}
+                {canReadActivityLogs && (
+                  <NavGroupItem
+                    label={t("nav.items.activitylog")}
+                    active={currentPage === "erp-activity-logs"}
+                    onClick={() => navTo("erp-activity-logs")}
+                    contextPage="erp-activity-logs"
+                  />
+                )}
               </NavGroup>
             )}
 
@@ -509,8 +583,7 @@ export function SidebarNav({
                   currentPage === "settings-branch" ||
                   currentPage === "settings-bank" ||
                   currentPage === "settings-cash-fund" ||
-                  currentPage === "sys-tags" ||
-                  currentPage === "erp-activity-logs"
+                  currentPage === "sys-tags"
                 }
               >
                 {canReadAdminUsers && (
@@ -543,14 +616,6 @@ export function SidebarNav({
                     active={currentPage === "sys-tags"}
                     onClick={() => navTo("sys-tags")}
                     contextPage="sys-tags"
-                  />
-                )}
-                {canReadActivityLogs && (
-                  <NavGroupItem
-                    label={t("nav.items.activitylog")}
-                    active={currentPage === "erp-activity-logs"}
-                    onClick={() => navTo("erp-activity-logs")}
-                    contextPage="erp-activity-logs"
                   />
                 )}
               </NavGroup>

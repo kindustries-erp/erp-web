@@ -5,6 +5,7 @@ import {
   PackagePlus,
   PackageMinus,
   History,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { fmtQty, formatGMT7 } from "@/shared/utils/format";
@@ -21,6 +22,7 @@ interface InventoryTimelineBlockProps {
   loadingId: string | null;
   error: string | null;
   data?: InventoryMovementsPayload;
+  onOpenDocument?: (docId: string, docType: string) => void;
 }
 
 /**
@@ -32,6 +34,7 @@ export function InventoryTimelineBlock({
   loadingId,
   error,
   data,
+  onOpenDocument,
 }: InventoryTimelineBlockProps) {
   const t = useT();
   const isLoading = loadingId === itemId;
@@ -39,11 +42,7 @@ export function InventoryTimelineBlock({
   const movements = data?.movements;
   const sortedMovements = useMemo(() => {
     if (!movements) return [];
-    return [...movements].sort((a, b) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return timeB - timeA;
-    });
+    return [...movements].reverse();
   }, [movements]);
 
   const timelineColumns: DataTableColumn<InventoryMovement>[] = useMemo(
@@ -53,17 +52,17 @@ export function InventoryTimelineBlock({
         header: t("inventory.history.time"),
         headerClassName: "text-center",
         className: "text-right",
-        size: 150,
+        size: 120,
         cell: (m) => {
-          if (!m.createdAt) return "—";
+          if (!m.transactionDate) return "—";
           return (
             <div className="w-full text-right">
               <Tooltip
-                content={formatGMT7(m.createdAt, "datetime-sec")}
+                content={formatGMT7(m.transactionDate, "datetime-sec")}
                 side="top"
               >
                 <span className="cursor-help inline-block border-b border-dotted border-gray-400 text-xs">
-                  {formatGMT7(m.createdAt, "date")}
+                  {formatGMT7(m.transactionDate, "date")}
                 </span>
               </Tooltip>
             </div>
@@ -75,59 +74,56 @@ export function InventoryTimelineBlock({
         header: t("Loại"),
         headerClassName: "text-center",
         className: "text-center",
-        size: 150,
+        size: 120,
         cell: (m) => {
           const isIn = Number(m.qtyIn || 0) > 0;
+          const isAdjustment = m.documentType === "INVENTORY_ADJUSTMENT";
+
+          let icon;
+          let title;
+
+          if (isAdjustment) {
+            icon = <SlidersHorizontal className="h-4 w-4 text-blue-600" />;
+            title = t("Điều chỉnh kho");
+          } else if (isIn) {
+            icon = <PackagePlus className="h-4 w-4 text-emerald-600" />;
+            title = t("Nhập kho");
+          } else {
+            icon = <PackageMinus className="h-4 w-4 text-orange-600" />;
+            title = t("Xuất kho");
+          }
+
           return (
             <div className="flex justify-center items-center">
-              <span
-                title={isIn ? t("Nhập kho") : t("Xuất kho")}
-                className="flex-shrink-0"
-              >
-                {isIn ? (
-                  <PackagePlus className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <PackageMinus className="h-4 w-4 text-orange-600" />
-                )}
+              <span title={title} className="flex-shrink-0">
+                {icon}
               </span>
             </div>
           );
         },
       },
       {
-        key: "transactionType",
-        header: t("Loại giao dịch"),
+        key: "documentNo",
+        header: t("Số phiếu"),
         headerClassName: "text-center",
-        className: "text-left",
+        className: "text-center",
         size: 150,
         cell: (m) => {
-          const rawType = m.documentType || m.transactionType;
-          if (!rawType) return "—";
-
-          let displayDoc = rawType;
-          if (rawType === "GOODS_RECEIPT") displayDoc = t("Nhập kho");
-          else if (rawType === "GOODS_ISSUE") displayDoc = t("Xuất kho");
-          else {
-            const txType = t(`inventory.txTypes.${rawType}`);
-            if (txType !== `inventory.txTypes.${rawType}`) {
-              displayDoc = txType;
-            } else {
-              const docTypeLower = rawType.toLowerCase();
-              const translatedDoc = t(`inventory.docTypes.${docTypeLower}`);
-              if (translatedDoc !== `inventory.docTypes.${docTypeLower}`) {
-                displayDoc = translatedDoc;
-              } else {
-                const translatedDocS = t(`inventory.docTypes.${docTypeLower}s`);
-                if (translatedDocS !== `inventory.docTypes.${docTypeLower}s`) {
-                  displayDoc = translatedDocS;
-                }
-              }
-            }
-          }
-
+          if (!m.documentNo) return "—";
           return (
-            <span className="truncate font-medium text-foreground text-xs sm:text-sm">
-              {displayDoc}
+            <span
+              className={`truncate text-xs font-mono ${
+                m.documentId && m.documentType
+                  ? "text-blue-600 hover:underline cursor-pointer"
+                  : "text-muted-foreground"
+              }`}
+              onClick={() => {
+                if (m.documentId && m.documentType && onOpenDocument) {
+                  onOpenDocument(m.documentId, m.documentType);
+                }
+              }}
+            >
+              {m.documentNo}
             </span>
           );
         },
@@ -137,13 +133,15 @@ export function InventoryTimelineBlock({
         header: t("Ghi chú"),
         headerClassName: "text-center",
         className: "text-left",
-        size: 150,
+        size: 250,
         cell: (m) => {
           if (!m.notes) return null;
           return (
-            <span className="truncate text-xs text-muted-foreground">
-              {m.notes}
-            </span>
+            <Tooltip content={m.notes} side="top">
+              <span className="inline-block max-w-[250px] truncate text-xs text-muted-foreground cursor-help">
+                {m.notes}
+              </span>
+            </Tooltip>
           );
         },
       },
@@ -152,7 +150,7 @@ export function InventoryTimelineBlock({
         header: t("inventory.history.change"),
         headerClassName: "text-center",
         className: "text-right",
-        size: 150,
+        size: 120,
         cell: (m) => {
           const isIn = Number(m.qtyIn || 0) > 0;
           const qty = isIn ? m.qtyIn : m.qtyOut;
@@ -175,7 +173,7 @@ export function InventoryTimelineBlock({
         header: t("inventory.history.balance"),
         headerClassName: "text-center",
         className: "text-right",
-        size: 150,
+        size: 120,
         cell: (m) => (
           <div className="font-medium text-foreground text-xs sm:text-sm w-full text-right">
             {fmtQty(m.balanceAfter)}

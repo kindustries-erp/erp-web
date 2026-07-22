@@ -24,6 +24,8 @@ export interface OperationalListQueryParams {
   inventory_item_id?: string;
   tag_id?: string;
   sort?: string[];
+  column_search?: Record<string, string>;
+  column_filters?: Record<string, string[]>;
 }
 
 function normalize(filters: Record<string, unknown>) {
@@ -46,6 +48,8 @@ export function createOperationalListKey(params: OperationalListQueryParams) {
 
 export function useOperationalListQuery(params: OperationalListQueryParams) {
   const sortStr = params.sort?.join(",");
+  const columnSearchStr = JSON.stringify(params.column_search || {});
+  const columnFiltersStr = JSON.stringify(params.column_filters || {});
   const normalized = useMemo(
     () => ({
       variant: params.variant,
@@ -63,6 +67,8 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       inventory_item_id: params.inventory_item_id || undefined,
       tag_id: params.tag_id || undefined,
       sort: params.sort || undefined,
+      column_search: params.column_search || undefined,
+      column_filters: params.column_filters || undefined,
     }),
     [
       params.variant,
@@ -76,10 +82,11 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
       params.status,
       params.date_from,
       params.date_to,
-      params.item_type,
       params.inventory_item_id,
       params.tag_id,
       sortStr,
+      columnSearchStr,
+      columnFiltersStr,
     ],
   );
 
@@ -95,6 +102,8 @@ export function useOperationalListQuery(params: OperationalListQueryParams) {
           search: normalized.search,
           item_type: normalized.item_type,
           sort: normalized.sort,
+          column_search: normalized.column_search,
+          column_filters: normalized.column_filters,
         }) as Promise<
           PaginatedResponse<OperationalDocument | InventoryStockRow>
         >;
