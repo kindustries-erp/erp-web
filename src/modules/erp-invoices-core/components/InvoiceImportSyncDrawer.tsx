@@ -521,6 +521,7 @@ export function InvoiceImportSyncDrawer({
       <ImportPreviewModal
         open={showPreview}
         files={xml.files}
+        direction={xml.direction || "IN"}
         onConfirm={(selectedFiles) => {
           setShowPreview(false);
           xml.handleImport(selectedFiles);

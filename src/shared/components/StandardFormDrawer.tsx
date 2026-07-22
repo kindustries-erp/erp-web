@@ -35,6 +35,8 @@ export interface StandardFormDrawerProps {
   loading?: boolean;
   error?: string | null;
 
+  zIndex?: number;
+
   /** Layout variant — defaults to "2-columns" */
   layout?: "1-column" | "2-columns";
 
@@ -96,6 +98,7 @@ export function StandardFormDrawer({
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
   stickyRightPanel = true,
+  zIndex,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -136,6 +139,7 @@ export function StandardFormDrawer({
       titleExtra={titleExtra}
       subtitle={subtitle}
       actions={actions}
+      zIndex={zIndex}
     >
       {loading ? (
         <FormLoadingSkeleton />
