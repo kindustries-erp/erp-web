@@ -8,6 +8,7 @@ import {
   DrawerField,
   DrawerSection,
   inputCls,
+  DrawerRow,
 } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
 import type {
@@ -21,9 +22,43 @@ import { SerialPicker } from "./SerialPicker";
 import { DeliveryConfirmModal } from "./DeliveryConfirmModal";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
-import { SoVehicleListDrawer } from "./SoVehicleListDrawer";
-import { List } from "lucide-react";
+import { SoSelectedSerialsTable } from "./SoSelectedSerialsTable";
 import { Button } from "@/shared/components/ui/Button";
+
+const SO_STATUS_MAP: Record<string, { label: string; colorClass: string }> = {
+  DRAFT: {
+    label: "Nháp",
+    colorClass: "bg-amber-100 text-amber-800 border-amber-200",
+  },
+  CONFIRMED: {
+    label: "Đã chốt",
+    colorClass: "bg-blue-100 text-blue-800 border-blue-200",
+  },
+  RESERVED: {
+    label: "Đã giữ hàng",
+    colorClass: "bg-blue-100 text-blue-800 border-blue-200",
+  },
+  PARTIAL_RESERVED: {
+    label: "Giữ 1 phần",
+    colorClass: "bg-blue-100 text-blue-800 border-blue-200",
+  },
+  DELIVERING: {
+    label: "Đang giao",
+    colorClass: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  },
+  PARTIAL_DELIVERING: {
+    label: "Giao 1 phần",
+    colorClass: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  },
+  DELIVERED: {
+    label: "Đã giao",
+    colorClass: "bg-green-100 text-green-800 border-green-200",
+  },
+  CANCELLED: {
+    label: "Đã hủy",
+    colorClass: "bg-red-100 text-red-800 border-red-200",
+  },
+};
 
 export interface SoLineForm {
   id?: string;
@@ -126,16 +161,6 @@ function fmtMoney(value?: string | null) {
   }).format(n);
 }
 
-function fmtQty(value?: string | null) {
-  if (!value) return "0";
-  const n = Number(value);
-  if (Number.isNaN(n)) return value;
-  return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
-  }).format(n);
-}
-
 export interface SoFormDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -205,9 +230,14 @@ export function SoFormDrawer({
   const isEditing = mode === "edit";
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const [isConfirmingBulk, setIsConfirmingBulk] = useState(false);
-  const [vehicleListLineId, setVehicleListLineId] = useState<string | null>(
-    null,
-  );
+
+  const isSoDraft = form.status === "DRAFT";
+  const isSoLocked = ![
+    "DRAFT",
+    "CONFIRMED",
+    "RESERVED",
+    "PARTIAL_RESERVED",
+  ].includes(form.status);
 
   const canConfirmDelivery =
     viewOnly &&
@@ -218,6 +248,11 @@ export function SoFormDrawer({
     editing?.lines?.flatMap(
       (l: any) => l.selectedSerialIds || l.serialIds || [],
     ) || [];
+
+  const allSelectedSerialIds = React.useMemo(
+    () => form.lines.flatMap((l) => l.selectedSerialIds || []).filter(Boolean),
+    [form.lines],
+  );
 
   const handleBulkConfirmDelivery = async () => {
     if (!editing?.id) return;
@@ -241,6 +276,29 @@ export function SoFormDrawer({
     } finally {
       setIsConfirmingBulk(false);
     }
+  };
+
+  const onSaveValidated = (overrideStatus?: string) => {
+    // Validate serials count
+    for (let i = 0; i < form.lines.length; i++) {
+      const line = form.lines[i];
+      const matchedItem = itemOptions.find(
+        (o) => o.value === line.itemId,
+      )?.original;
+      const trackingPolicyId = matchedItem?.trackingPolicyId || "NONE";
+
+      if (trackingPolicyId !== "NONE") {
+        const selectedCount = line.selectedSerialIds?.length || 0;
+        const qty = Number(line.qtyOrdered || 0);
+        if (selectedCount !== qty) {
+          toast.error(
+            `Dòng ${i + 1}: Số lượng Serial/Số khung đã chọn (${selectedCount}) phải bằng với Số lượng mua (${qty})`,
+          );
+          return;
+        }
+      }
+    }
+    handleSave(overrideStatus);
   };
 
   const drawerActions = viewOnly
@@ -280,7 +338,7 @@ export function SoFormDrawer({
           {
             label: t("Lưu thay đổi"),
             primary: true,
-            onClick: () => handleSave(),
+            onClick: () => onSaveValidated(),
             disabled: saving,
           },
         ]
@@ -294,13 +352,13 @@ export function SoFormDrawer({
           {
             label: isEditing ? t("Lưu Nháp") : t("Tạo Nháp"),
             variant: "outline" as const,
-            onClick: () => handleSave("DRAFT"),
+            onClick: () => onSaveValidated("DRAFT"),
             disabled: saving,
           },
           {
             label: isEditing ? t("Xác nhận") : t("Tạo Mới"),
             primary: true,
-            onClick: () => handleSave("CONFIRMED"),
+            onClick: () => onSaveValidated("CONFIRMED"),
             disabled: saving,
           },
         ];
@@ -320,15 +378,19 @@ export function SoFormDrawer({
               : t("Tạo đơn bán hàng")
         }
         titleExtra={
-          form.status === "DRAFT" && (
-            <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200">
-              {t("Nháp")}
+          form.status ? (
+            <span
+              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
+                SO_STATUS_MAP[form.status]?.colorClass ||
+                "bg-gray-100 text-gray-800 border-gray-200"
+              }`}
+            >
+              {t(SO_STATUS_MAP[form.status]?.label || form.status)}
             </span>
-          )
+          ) : null
         }
         subtitle={editing ? editing.soNo : t("Thông tin chung & dòng hàng")}
         actions={drawerActions}
-        rightPanelTitle={t("Thông tin chung")}
         error={saveError}
         loading={drawerLoading}
         leftPanel={
@@ -346,204 +408,318 @@ export function SoFormDrawer({
                 data={form.lines}
                 getRowKey={(_, idx) => String(idx)}
                 viewOnly={viewOnly}
-                onAddLine={addLine}
-                onRemoveLine={removeLine}
-                columns={[
-                  {
-                    key: "item",
-                    header: t("Item"),
-                    minWidth: 240,
-                    cell: (line, idx) => {
-                      if (viewOnly) {
-                        const matched = itemOptions.find(
-                          (opt) => opt.value === line.itemId,
-                        );
-                        const displayItemName = matched
-                          ? matched.label.split(" — ").slice(1).join(" — ")
-                          : line.itemName || line.itemId || "—";
-                        return <span>{displayItemName}</span>;
-                      }
-                      return (
-                        <Combobox
-                          value={line.itemId}
-                          readOnly={!!editing}
-                          onChange={(value) => {
-                            const matched = itemOptions.find(
-                              (opt) => opt.value === value,
-                            );
-                            updateLine(idx, {
-                              itemId: value,
-                              itemName:
-                                matched?.label
-                                  .split(" — ")
-                                  .slice(1)
-                                  .join(" — ") || "",
-                            });
-                          }}
-                          options={itemOptions}
-                          placeholder={t("Chọn inventory item")}
-                          onSearch={setItemSearch}
-                          onScrollBottom={fetchNextItems}
-                          loading={loadingItems}
-                          fallbackLabel={line.itemName}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    key: "tracking",
-                    header: t("Serials / Số khung"),
-                    minWidth: 180,
-                    cell: (line, idx) => {
-                      const matchedItem = itemOptions.find(
-                        (o) => o.value === line.itemId,
-                      )?.original;
-                      const hasSerials =
-                        line.selectedSerialIds &&
-                        line.selectedSerialIds.length > 0;
-
-                      if (
-                        !line.itemId ||
-                        (!hasSerials &&
-                          (!matchedItem ||
-                            !matchedItem.trackingPolicyId ||
-                            matchedItem.trackingPolicyId === "NONE"))
-                      ) {
-                        return (
-                          <span className="text-[11px] text-muted-foreground">
-                            —
-                          </span>
-                        );
-                      }
-                      if (viewOnly) {
-                        return (
-                          <div className="flex items-center gap-2 min-h-[36px] py-1">
-                            <span className="text-[13px] font-medium bg-gray-100 px-2 py-0.5 rounded text-gray-700">
-                              {line.selectedSerialIds?.length || 0}{" "}
-                              {t("xe đã chọn")}
+                variant={viewOnly || !isSoDraft ? "spreadsheet" : "default"}
+                onAddLine={isSoDraft && !viewOnly ? addLine : undefined}
+                onRemoveLine={isSoDraft && !viewOnly ? removeLine : undefined}
+                columns={
+                  [
+                    {
+                      key: "item",
+                      header: t("Item"),
+                      minWidth: 240,
+                      cell: (line: any, idx: number) => {
+                        if (viewOnly || !isSoDraft) {
+                          const matched = itemOptions.find(
+                            (opt) => opt.value === line.itemId,
+                          );
+                          const displayItemName = matched
+                            ? matched.label.split(" — ").slice(1).join(" — ")
+                            : line.itemName || line.itemId || "—";
+                          return (
+                            <span className="font-medium">
+                              {displayItemName}
                             </span>
-                            {(line.selectedSerialIds?.length || 0) > 0 &&
-                              line.id && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setVehicleListLineId(line.id as string)
-                                  }
-                                  className="p-1 hover:bg-gray-100 rounded text-blue-600 transition-colors"
-                                  title={t("Xem chi tiết xe")}
-                                >
-                                  <List className="w-4 h-4" />
-                                </button>
-                              )}
-                          </div>
-                        );
-                      }
-                      return (
-                        <div className="flex items-center min-h-[36px] py-1">
-                          <SerialPicker
-                            itemId={line.itemId}
-                            trackingPolicyId={
-                              matchedItem?.trackingPolicyId || "UNKNOWN"
-                            }
-                            value={line.selectedSerialIds || []}
-                            onChange={(ids) => {
+                          );
+                        }
+                        return (
+                          <Combobox
+                            value={line.itemId}
+                            onChange={(value) => {
+                              const matched = itemOptions.find(
+                                (opt) => opt.value === value,
+                              );
                               updateLine(idx, {
-                                selectedSerialIds: ids,
-                                qtyOrdered: String(ids.length || 1), // auto update qty
+                                itemId: value,
+                                itemName:
+                                  matched?.label
+                                    .split(" — ")
+                                    .slice(1)
+                                    .join(" — ") || "",
                               });
                             }}
-                            disabled={!!editing}
-                            readOnly={!!editing}
+                            options={itemOptions}
+                            placeholder={t("Chọn inventory item")}
+                            onSearch={setItemSearch}
+                            onScrollBottom={fetchNextItems}
+                            loading={loadingItems}
+                            fallbackLabel={line.itemName}
                           />
-                        </div>
-                      );
+                        );
+                      },
                     },
-                  },
-                  {
-                    key: "qty",
-                    header: t("Số lượng"),
-                    minWidth: 90,
-                    cell: (line, idx) => (
-                      <input
-                        value={line.qtyOrdered}
-                        readOnly={viewOnly || !!editing}
-                        onChange={(e) =>
-                          updateLine(idx, { qtyOrdered: e.target.value })
+                    viewOnly || isSoLocked
+                      ? null
+                      : {
+                          key: "tracking",
+                          header: t("Serials / Số khung"),
+                          minWidth: 180,
+                          cell: (line: any, idx: number) => {
+                            const matchedItem = itemOptions.find(
+                              (o) => o.value === line.itemId,
+                            )?.original;
+                            const hasSerials =
+                              line.selectedSerialIds &&
+                              line.selectedSerialIds.length > 0;
+                            const trackingPolicyId =
+                              matchedItem?.trackingPolicyId || "NONE";
+
+                            if (
+                              !line.itemId ||
+                              (!hasSerials && trackingPolicyId === "NONE")
+                            ) {
+                              return (
+                                <span className="text-[11px] font-medium bg-gray-100/50 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-md">
+                                  Không quản lý Serial
+                                </span>
+                              );
+                            }
+
+                            if (viewOnly || isSoLocked) {
+                              if (!hasSerials) {
+                                return (
+                                  <span className="text-[12px] font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+                                    Chưa chọn Serial / Số khung
+                                  </span>
+                                );
+                              }
+                              return (
+                                <div className="flex items-center gap-2 py-1">
+                                  <span className="text-[12px] font-medium bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md text-blue-700">
+                                    {line.selectedSerialIds?.length || 0} Serial
+                                    / Số khung đã chọn
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="flex items-center min-h-[36px] py-1">
+                                <SerialPicker
+                                  itemId={line.itemId}
+                                  trackingPolicyId={trackingPolicyId}
+                                  value={line.selectedSerialIds || []}
+                                  onChange={(ids) => {
+                                    const updates: Partial<SoLineForm> = {
+                                      selectedSerialIds: ids,
+                                    };
+                                    if (isSoDraft) {
+                                      updates.qtyOrdered = String(
+                                        ids.length || 1,
+                                      );
+                                    }
+                                    updateLine(idx, updates);
+                                  }}
+                                  disabled={isSoLocked}
+                                  readOnly={isSoLocked}
+                                />
+                              </div>
+                            );
+                          },
+                        },
+                    {
+                      key: "qty",
+                      header: t("Số lượng"),
+                      minWidth: 90,
+                      cell: (line: any, idx: number) => {
+                        if (viewOnly || !isSoDraft) {
+                          return <span>{line.qtyOrdered}</span>;
                         }
-                        className={inputCls}
-                        placeholder="1"
-                      />
-                    ),
-                  },
-                  {
-                    key: "unitPrice",
-                    header: t("Đơn giá"),
-                    minWidth: 100,
-                    cell: (line, idx) => (
-                      <input
-                        value={line.unitPrice}
-                        readOnly={viewOnly || !!editing}
-                        onChange={(e) =>
-                          updateLine(idx, { unitPrice: e.target.value })
+                        return (
+                          <input
+                            value={line.qtyOrdered}
+                            onChange={(e) =>
+                              updateLine(idx, { qtyOrdered: e.target.value })
+                            }
+                            className={inputCls}
+                            placeholder="1"
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: "unitPrice",
+                      header: t("Đơn giá"),
+                      minWidth: 100,
+                      cell: (line: any, idx: number) => {
+                        if (viewOnly || !isSoDraft) {
+                          return <span>{fmtMoney(line.unitPrice)}</span>;
                         }
-                        className={inputCls}
-                        placeholder="0"
-                      />
-                    ),
-                  },
-                  {
-                    key: "amount",
-                    header: t("Thành tiền"),
-                    minWidth: 100,
-                    cell: (line) => (
-                      <div
-                        className={`${inputCls} flex items-center bg-muted/40`}
-                      >
-                        {fmtMoney(line.amount)}
-                      </div>
-                    ),
-                  },
-                ]}
+                        return (
+                          <input
+                            value={line.unitPrice}
+                            onChange={(e) =>
+                              updateLine(idx, { unitPrice: e.target.value })
+                            }
+                            className={inputCls}
+                            placeholder="0"
+                          />
+                        );
+                      },
+                    },
+                    {
+                      key: "amount",
+                      header: t("Thành tiền"),
+                      minWidth: 100,
+                      cell: (line: any) => (
+                        <span className="font-semibold text-primary">
+                          {fmtMoney(line.amount)}
+                        </span>
+                      ),
+                    },
+                  ].filter(Boolean) as any
+                }
+                rowClassName={(row: any) =>
+                  `group ${row.status === "DELETED" ? "opacity-50" : ""}`
+                }
               />
             </DrawerSection>
 
-            {editing?.lines?.length ? (
-              <DrawerSection title="Trạng thái reserve/deliver hiện tại">
-                <div className="overflow-x-auto rounded-2xl border border-border">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2">Item</th>
-                        <th className="px-3 py-2 text-right">Ordered</th>
-                        <th className="px-3 py-2 text-right">Reserved</th>
-                        <th className="px-3 py-2 text-right">Delivered</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {editing.lines.map((line, idx) => (
-                        <tr
-                          key={line.id ?? idx}
-                          className="border-t border-border"
-                        >
-                          <td className="px-3 py-2">
-                            {line.itemName || line.itemId || "—"}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {fmtQty(line.qtyOrdered)}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {fmtQty(line.qtyReserved)}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            {fmtQty(line.qtyDelivered)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+            {allSelectedSerialIds.length > 0 && (
+              <DrawerSection title={t("Danh sách Serial/Xe đã chọn")}>
+                <SoSelectedSerialsTable
+                  serialIds={allSelectedSerialIds}
+                  serialLifecycles={editing?.serialLifecycles}
+                />
               </DrawerSection>
-            ) : null}
+            )}
+          </div>
+        }
+        rightPanel={
+          <div className="flex flex-col gap-3">
+            <DrawerSection title={t("Thông tin chung")}>
+              <div className="flex flex-col gap-3">
+                {viewOnly || !!editing ? (
+                  <DrawerRow label="Mã đơn hàng" value={form.soNo || "—"} />
+                ) : (
+                  <DrawerField label="Mã đơn hàng" required>
+                    <input
+                      value={form.soNo}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, soNo: e.target.value }))
+                      }
+                      className={inputCls}
+                      placeholder={t("VD: SO-2410-001")}
+                    />
+                  </DrawerField>
+                )}
+                {viewOnly || !isSoDraft ? (
+                  <DrawerRow
+                    label="Khách hàng"
+                    value={
+                      customerOptions.find((c) => c.value === form.customerId)
+                        ?.label ||
+                      editing?.customerName ||
+                      form.customerId ||
+                      "—"
+                    }
+                  />
+                ) : (
+                  <DrawerField label="Khách hàng" required>
+                    <Combobox
+                      value={form.customerId}
+                      onChange={(value) =>
+                        setForm((prev) => ({ ...prev, customerId: value }))
+                      }
+                      options={customerOptions}
+                      placeholder={t("Chọn khách hàng")}
+                      onSearch={setCustomerSearch}
+                      onScrollBottom={fetchNextCustomers}
+                      loading={loadingCustomers}
+                      fallbackLabel={editing?.customerName || ""}
+                    />
+                  </DrawerField>
+                )}
+                {viewOnly || isSoLocked ? (
+                  <DrawerRow
+                    label={t("Ngày đặt")}
+                    value={form.orderDate || "—"}
+                  />
+                ) : (
+                  <DrawerField label={t("Ngày đặt")} required>
+                    <DatePicker
+                      className={inputCls}
+                      value={form.orderDate}
+                      onChange={(v) =>
+                        setForm((prev) => ({ ...prev, orderDate: v }))
+                      }
+                    />
+                  </DrawerField>
+                )}
+                {viewOnly ? (
+                  <DrawerRow
+                    label={t("Ngày giao dự kiến")}
+                    value={form.expectedDeliveryDate || "—"}
+                  />
+                ) : (
+                  <DrawerField label={t("Ngày giao dự kiến")}>
+                    <DatePicker
+                      className={inputCls}
+                      value={form.expectedDeliveryDate}
+                      placeholder={t("Chọn ngày giao")}
+                      onChange={(v) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          expectedDeliveryDate: v,
+                        }))
+                      }
+                    />
+                  </DrawerField>
+                )}
+                {viewOnly ? (
+                  <DrawerRow
+                    label={t("Ghi chú")}
+                    value={
+                      <span className="whitespace-pre-wrap text-right inline-block max-w-[250px]">
+                        {form.remarks || "—"}
+                      </span>
+                    }
+                  />
+                ) : (
+                  <DrawerField label={t("Ghi chú")}>
+                    <textarea
+                      value={form.remarks}
+                      className={inputCls}
+                      rows={3}
+                      placeholder={t("Ghi chú đơn bán hàng")}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          remarks: e.target.value,
+                        }))
+                      }
+                    />
+                  </DrawerField>
+                )}
+                <DrawerField label={t("Thẻ nhãn")}>
+                  {editing ? (
+                    <EntityTagSelector
+                      entityType="erp_sales_order"
+                      entityId={editing.id}
+                      readOnly={viewOnly}
+                    />
+                  ) : !viewOnly ? (
+                    <EntityTagSelector
+                      entityType="erp_sales_order"
+                      entityId="__pending__"
+                      readOnly={false}
+                      pendingMode
+                      pendingTagIds={pendingTagIds}
+                      onPendingChange={onPendingTagsChange}
+                    />
+                  ) : null}
+                </DrawerField>
+              </div>
+            </DrawerSection>
 
             {editing?.goodsIssues?.length ? (
               <DrawerSection title="Phiếu xuất kho liên kết">
@@ -592,84 +768,6 @@ export function SoFormDrawer({
             ) : null}
           </div>
         }
-        rightPanel={
-          <div className="flex flex-col gap-3">
-            <DrawerField label="Mã đơn hàng" required>
-              <input
-                value={form.soNo}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, soNo: e.target.value }))
-                }
-                readOnly={viewOnly || !!editing}
-                className={inputCls}
-                placeholder={t("VD: SO-2410-001")}
-              />
-            </DrawerField>
-            <DrawerField label="Khách hàng" required>
-              <Combobox
-                value={form.customerId}
-                onChange={(value) =>
-                  setForm((prev) => ({ ...prev, customerId: value }))
-                }
-                options={customerOptions}
-                placeholder={t("Chọn khách hàng")}
-                readOnly={viewOnly}
-                onSearch={setCustomerSearch}
-                onScrollBottom={fetchNextCustomers}
-                loading={loadingCustomers}
-                fallbackLabel={editing?.customerName || ""}
-              />
-            </DrawerField>
-            <DrawerField label={t("Ngày đặt")} required>
-              <DatePicker
-                className={inputCls}
-                value={form.orderDate}
-                disabled={viewOnly}
-                onChange={(v) => setForm((prev) => ({ ...prev, orderDate: v }))}
-              />
-            </DrawerField>
-            <DrawerField label={t("Ngày giao")}>
-              <DatePicker
-                className={inputCls}
-                value={form.expectedDeliveryDate}
-                disabled={viewOnly}
-                placeholder={t("Chọn ngày giao")}
-                onChange={(v) =>
-                  setForm((prev) => ({ ...prev, expectedDeliveryDate: v }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label="Ghi chú">
-              <textarea
-                value={form.remarks}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, remarks: e.target.value }))
-                }
-                readOnly={viewOnly}
-                className={`${inputCls} min-h-[88px]`}
-                placeholder={t("Ghi chú đơn bán hàng")}
-              />
-            </DrawerField>
-            <DrawerField label={t("Thẻ nhãn")}>
-              {editing ? (
-                <EntityTagSelector
-                  entityType="erp_sales_order"
-                  entityId={editing.id}
-                  readOnly={viewOnly}
-                />
-              ) : !viewOnly ? (
-                <EntityTagSelector
-                  entityType="erp_sales_order"
-                  entityId="__pending__"
-                  readOnly={false}
-                  pendingMode
-                  pendingTagIds={pendingTagIds}
-                  onPendingChange={onPendingTagsChange}
-                />
-              ) : null}
-            </DrawerField>
-          </div>
-        }
       />
       <DeliveryConfirmModal
         open={deliveryModalOpen}
@@ -682,11 +780,6 @@ export function SoFormDrawer({
         }}
       />
       <GiFormDrawer drawer={giDrawer} />
-      <SoVehicleListDrawer
-        open={!!vehicleListLineId}
-        onClose={() => setVehicleListLineId(null)}
-        lineId={vehicleListLineId || ""}
-      />
     </>
   );
 }

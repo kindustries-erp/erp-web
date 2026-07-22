@@ -1,5 +1,5 @@
 import axiosInstance from "@/core/api/axiosInstance";
-import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
+import type { PaginatedResponse } from "@/shared/types/pagination";
 
 export interface ErpSoLine {
   id?: string;
@@ -25,6 +25,7 @@ export interface ErpSalesOrder {
   createdAt?: string;
   lines?: ErpSoLine[];
   goodsIssues?: any[];
+  serialLifecycles?: any[];
 }
 
 export interface CreateSoPayload {
@@ -49,9 +50,7 @@ type SoDetailResponse = {
 };
 
 export const salesOrdersCoreApi = {
-  list: async (
-    params?: ListParams,
-  ): Promise<PaginatedResponse<ErpSalesOrder>> => {
+  list: async (params?: any): Promise<PaginatedResponse<ErpSalesOrder>> => {
     const { data } = await axiosInstance.get<PaginatedResponse<ErpSalesOrder>>(
       BASE,
       {
@@ -59,9 +58,41 @@ export const salesOrdersCoreApi = {
           page: params?.page ?? 1,
           pageSize: params?.pageSize ?? 20,
           ...(params?.search ? { search: params.search } : {}),
+          ...(params?.column_search
+            ? { column_search: params.column_search }
+            : {}),
+          ...(params?.column_filters
+            ? { column_filters: params.column_filters }
+            : {}),
+          ...(params?.sortField ? { sortField: params.sortField } : {}),
+          ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
           ...((params as any)?.notFullyIssued
             ? { notFullyIssued: (params as any).notFullyIssued }
             : {}),
+          ...((params as any)?.status
+            ? { status: (params as any).status }
+            : {}),
+        },
+      },
+    );
+    return data;
+  },
+  getColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ): Promise<PaginatedResponse<string>> => {
+    const { data } = await axiosInstance.get<PaginatedResponse<string>>(
+      `${BASE}/column-options`,
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          ...(filtersStr ? { filtersStr } : {}),
         },
       },
     );

@@ -21,6 +21,8 @@ export type InventorySerialListParams = BaseListParams & {
   salesOrderLineId?: string;
   ids?: string[];
   missingSerial?: boolean;
+  column_search?: string;
+  column_filters?: string;
 };
 
 export interface InventorySerialRow {
@@ -202,9 +204,13 @@ export const inventoryCoreApi = {
       ...(params?.salesOrderLineId
         ? { salesOrderLineId: params.salesOrderLineId }
         : {}),
-      ...(params?.ids ? { ids: params.ids } : {}),
+      ...(params?.ids?.length ? { ids: params.ids.join(",") } : {}),
       ...(params?.missingSerial !== undefined
         ? { missingSerial: params.missingSerial }
+        : {}),
+      ...(params?.column_search ? { column_search: params.column_search } : {}),
+      ...(params?.column_filters
+        ? { column_filters: params.column_filters }
         : {}),
     };
     const key = `inventory-serials:list:${JSON.stringify(requestParams)}`;
@@ -414,12 +420,14 @@ export const inventoryCoreApi = {
     );
     return data;
   },
-  confirmDelivery: async (
-    id: string,
-    payload: { deliveryDate: string; notes?: string },
-  ): Promise<any> => {
-    const { data } = await axiosInstance.patch(
-      `/api/v1/inventory/serials/${id}/confirm-delivery`,
+
+  confirmDeliveries: async (payload: {
+    serialIds: string[];
+    deliveryDate: string;
+    notes?: string;
+  }): Promise<any> => {
+    const { data } = await axiosInstance.post(
+      `/api/v1/inventory/serials/confirm-delivery-bulk`,
       payload,
     );
     return data;
@@ -434,12 +442,78 @@ export const inventoryCoreApi = {
       ...(params?.dateTo ? { deliveryDateTo: params.dateTo } : {}),
       ...(params?.sortField ? { sortField: params.sortField } : {}),
       ...(params?.sortOrder ? { sortOrder: params.sortOrder } : {}),
+      ...(params?.column_search ? { column_search: params.column_search } : {}),
+      ...(params?.column_filters
+        ? { column_filters: params.column_filters }
+        : {}),
     };
     const key = `inventory-serial-lifecycles:list:${JSON.stringify(requestParams)}`;
     return dedupeRequest(key, async () => {
       const { data } = await axiosInstance.get<PaginatedResponse<any>>(
         `/api/v1/inventory/serial-lifecycles`,
         { params: requestParams },
+      );
+      return data;
+    });
+  },
+  getSerialColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    columnFilters?: Record<string, string[]>,
+  ): Promise<{
+    items: string[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> => {
+    const params: any = {
+      column,
+      search,
+      page,
+      pageSize,
+    };
+    if (columnFilters && Object.keys(columnFilters).length > 0) {
+      params.column_filters = JSON.stringify(columnFilters);
+    }
+    const key = `inventory-serials:column-options:${JSON.stringify(params)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get(
+        `/api/v1/inventory/serials/column-options`,
+        { params },
+      );
+      return data;
+    });
+  },
+  getSerialLifecycleColumnOptions: async (
+    column: string,
+    search: string,
+    page: number = 1,
+    pageSize: number = 20,
+    columnFilters?: Record<string, string[]>,
+  ): Promise<{
+    items: string[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }> => {
+    const params: any = {
+      column,
+      search,
+      page,
+      pageSize,
+    };
+    if (columnFilters && Object.keys(columnFilters).length > 0) {
+      params.column_filters = JSON.stringify(columnFilters);
+    }
+    const key = `inventory-serial-lifecycles:column-options:${JSON.stringify(params)}`;
+    return dedupeRequest(key, async () => {
+      const { data } = await axiosInstance.get(
+        `/api/v1/inventory/serial-lifecycles/column-options`,
+        { params },
       );
       return data;
     });

@@ -252,6 +252,12 @@ function params(input: ListParams = {}) {
       : {}),
 
     ...((input as any).tag_id ? { tag_id: (input as any).tag_id } : {}),
+    ...(input.column_search
+      ? { column_search: JSON.stringify(input.column_search) }
+      : {}),
+    ...(input.column_filters
+      ? { column_filters: JSON.stringify(input.column_filters) }
+      : {}),
   };
 }
 
@@ -271,10 +277,29 @@ export const operationalApi = {
         params: params(input),
       },
     );
-    return {
-      ...data,
-      items: (data.items || []).map((row) => normalizePurchaseRow(row)),
-    } as PaginatedResponse<OperationalDocument>;
+    const parsedItems = data.items.map(normalizePurchaseRow);
+    return { ...data, items: parsedItems };
+  },
+  async getPurchaseOrderColumnOptions(
+    column: string,
+    search?: string,
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ): Promise<PaginatedResponse<string>> {
+    const { data } = await axiosInstance.get<PaginatedResponse<string>>(
+      "/api/v1/purchase-orders/column-options",
+      {
+        params: {
+          column,
+          search,
+          page,
+          pageSize,
+          filters: filtersStr,
+        },
+      },
+    );
+    return data;
   },
   listExpenses: (input?: ListParams) => list("operating-expenses", input),
   listReceivables: (input?: ListParams) =>

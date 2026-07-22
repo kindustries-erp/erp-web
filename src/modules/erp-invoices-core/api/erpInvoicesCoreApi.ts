@@ -96,7 +96,17 @@ export interface CreateErpInvoicePayload {
   salesOrderId?: string;
   paymentDocumentNos?: string;
   notes?: string;
+  isValid?: boolean;
   items?: ErpInvoiceItem[];
+  pendingDocumentChanges?: {
+    action: "ADD" | "REMOVE";
+    type: "PO" | "BANK";
+    refId: string;
+    amount?: number;
+  }[];
+  accountingEnabled?: boolean;
+  pendingDeletedPdfs?: string[];
+  pendingAddedPdfs?: File[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -115,7 +125,6 @@ export interface ErpInvoiceListParams {
   pageSize?: number;
   sort_by?: string;
   sort_order?: "asc" | "desc";
-  export_type?: "summary" | "detailed";
   column_search?: string;
   column_filters?: string;
 }
@@ -143,9 +152,10 @@ export interface PortalInvoiceDto {
 
 export interface PortalSyncPayload {
   token: string;
+  cookies?: string;
   dateFrom: string;
   dateTo: string;
-  type: "purchase" | "sold";
+  type?: "purchase" | "sold";
 }
 
 export interface PortalSyncResult {
@@ -287,30 +297,56 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  bulkDownloadXml: async (payload: {
+  bulkDownloadXml: async (params: {
     token: string;
+    cookies?: string;
     direction: "IN" | "OUT";
-  }) => {
+  }): Promise<{ message: string; count: number }> => {
     const { data } = await axiosInstance.post<{
       message: string;
       count: number;
-    }>(`${BASE}/portal/bulk-download-xml`, payload);
+    }>(`${BASE}/portal/bulk-download-xml`, params);
     return data;
   },
 
-  getPortalToken: async (): Promise<{ token: string }> => {
-    const { data } = await axiosInstance.get<{ token: string }>(
-      `${BASE}/portal/token`,
-    );
+  getPortalConfig: async (): Promise<{ token: string; cookies: string }> => {
+    const { data } = await axiosInstance.get<{
+      token: string;
+      cookies: string;
+    }>(`${BASE}/portal/token`);
     return data;
   },
 
-  savePortalToken: async (token: string): Promise<{ message: string }> => {
+  savePortalConfig: async (
+    token: string,
+    cookies?: string,
+  ): Promise<{ message: string }> => {
     const { data } = await axiosInstance.post<{ message: string }>(
       `${BASE}/portal/token`,
-      { token },
+      { token, cookies },
     );
     return data;
+  },
+
+  previewPdfMatch: async (
+    filenames: string[],
+    direction: "IN" | "OUT",
+  ): Promise<
+    Record<
+      string,
+      {
+        id: string;
+        invoiceNo: string;
+        serialNo: string | null;
+        totalAmount: string | null;
+      } | null
+    >
+  > => {
+    const res = await axiosInstance.post(`${BASE}/preview-pdf-match`, {
+      filenames,
+      direction,
+    });
+    return res.data;
   },
 
   bulkImportBuyerXml: async (files: File[]): Promise<BulkImportResult> => {
@@ -491,6 +527,13 @@ export interface BulkImportResult {
   created: number;
   skipped: BulkImportSkippedItem[];
   errors: BulkImportErrorItem[];
-  pdfAttached?: { filename: string; invoiceNo: string }[];
+  pdfAttached?: {
+    filename: string;
+    invoiceNo: string;
+    invoiceId?: string;
+    serialNo?: string | null;
+    sellerName?: string | null;
+    totalAmount?: string | null;
+  }[];
   pdfOrphans?: { filename: string; reason: string }[];
 }

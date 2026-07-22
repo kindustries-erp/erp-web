@@ -9,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   PackagePlus,
   PackageMinus,
+  SlidersHorizontal,
   Trash2,
   XCircle,
   Printer,
@@ -21,6 +22,8 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { ReceiptText } from "lucide-react";
 import {
   useFilterPanel,
@@ -30,14 +33,18 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { goodsReceiptsCoreApi } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
 import { goodsIssuesCoreApi } from "@/modules/goods-issues-core/api/goodsIssuesCoreApi";
 import { useT } from "@/core/i18n";
-import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useUIStore } from "@/core/config/uiStore";
 import { useWarehouseVouchersQuery } from "@/modules/inventory-core/hooks/useWarehouseVoucherQueries";
-import type { WarehouseRow } from "@/modules/inventory-core/api/warehouseVouchersCoreApi";
+import {
+  warehouseVouchersCoreApi,
+  type WarehouseRow,
+} from "@/modules/inventory-core/api/warehouseVouchersCoreApi";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
+import { IaFormDrawer } from "@/modules/inventory-adjustments/components/IaFormDrawer";
+import { useIaDrawer } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
 import { useReactToPrint } from "react-to-print";
 import {
   GoodsReceiptPrintTemplate,
@@ -64,6 +71,21 @@ export function ErpWarehouseTab() {
   const canCreateIssue = useHasPermission("goods_issues", "create");
   const canUpdateIssue = useHasPermission("goods_issues", "update");
   const canDeleteIssue = useHasPermission("goods_issues", "delete");
+
+  const canReadAdjustments = useHasPermission("inventory_adjustments", "read");
+  const canCreateAdjustment = useHasPermission(
+    "inventory_adjustments",
+    "create",
+  );
+  const canUpdateAdjustment = useHasPermission(
+    "inventory_adjustments",
+    "update",
+  );
+  const canDeleteAdjustment = useHasPermission(
+    "inventory_adjustments",
+    "delete",
+  );
+
   const isAdmin = useHasPermission("*", "*");
 
   const showToast = useUIStore((s) => s.showToast);
@@ -74,11 +96,6 @@ export function ErpWarehouseTab() {
   // ── list state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const [sortBy, setSortBy] = useState<string>("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  // activeSortKey: column đang được user chọn sort; null = default (không có active sort)
-  const [activeSortKey, setActiveSortKey] = useState<string | null>(null);
-  const [activeSortOrder, setActiveSortOrder] = useState<"asc" | "desc">("asc");
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── GR drawer — delegated to useGrDrawer
@@ -90,6 +107,9 @@ export function ErpWarehouseTab() {
 
   // ── GI drawer — delegated to useGiDrawer
   const giDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
+
+  // ── IA drawer
+  const iaDrawer = useIaDrawer({ invalidateWarehouseQuery: true });
 
   // ── Background Print Setup
   const { data: companyProfile } = useCompanyProfile();
@@ -257,84 +277,121 @@ export function ErpWarehouseTab() {
     }
   };
 
-  // Lookup hooks for basic masters
-  const { data: suppliersData } = useBasicMasterInfinite({
-    search: "",
-    limit: 50,
-    entities: "suppliers",
-  });
-  const supplierOptions = useMemo(() => {
-    return (
-      suppliersData?.pages.flatMap((p) =>
-        (p.items.suppliers || []).map((s) => ({
-          value: s.id,
-          label: s.name,
-        })),
-      ) || []
-    );
-  }, [suppliersData]);
-
-  const { data: customersData } = useBasicMasterInfinite({
-    search: "",
-    limit: 50,
-    entities: "customers",
-  });
-  const customerOptions = useMemo(() => {
-    return (
-      customersData?.pages.flatMap((p) =>
-        (p.items.customers || []).map((c) => ({
-          value: c.id,
-          label: `${c.code} — ${c.displayName || c.name}`,
-        })),
-      ) || []
-    );
-  }, [customersData]);
-
-  const STATUS_OPTIONS = useMemo(
-    () => [
-      { value: "DRAFT", label: t("Nháp") },
-      { value: "POSTED", label: t("Đã vào sổ") },
-      { value: "CANCELLED", label: t("Đã hủy") },
-    ],
-    [t],
-  );
-
   const filterConfig: FilterPanelConfig = {
-    search: true,
+    search: false,
     period: true,
     noDefaultPeriod: true,
-    status: {
-      placeholder: t("Trạng thái"),
-      options: STATUS_OPTIONS,
-    },
-    custom: [
-      {
-        key: "partnerId",
-        label: t("Đối tác"),
-        placeholder: t("Tất cả đối tác"),
-        type: "select",
-        options: [...supplierOptions, ...customerOptions],
-      },
-    ],
   };
 
   const filterPanel = useFilterPanel(filterConfig);
 
   const dateFrom = filterPanel.state.dateFrom;
   const dateTo = filterPanel.state.dateTo;
-  const status = filterPanel.state.status;
-  const partnerId = filterPanel.state.custom?.partnerId;
+
+  const tableState = useTableColumnState("inventory-vouchers-table");
+
+  const fetchColumnOptions = async ({
+    columnKey,
+    search,
+    pageParam,
+    filtersStr,
+  }: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    const res = await warehouseVouchersCoreApi.getColumnOptions(
+      columnKey,
+      search,
+      pageParam,
+      20,
+      filtersStr,
+      undefined, // No specific type filter
+    );
+    return {
+      items: res.items.map((i: string) => ({
+        label: String(i),
+        value: String(i),
+      })),
+      total: res.total,
+      next: res.page < res.totalPages ? res.page + 1 : null,
+    };
+  };
+
+  const getSortState = (columnKey: string) => {
+    const current = tableState.sorts[0];
+    if (!current) return "none";
+    if (current === columnKey) return "asc";
+    if (current === `-${columnKey}`) return "desc";
+    return "none";
+  };
+
+  const handleSortChange = (
+    columnKey: string,
+    state: "asc" | "desc" | "none",
+  ) => {
+    tableState.setSort(columnKey, state);
+  };
+
+  const handleSearchChange = (columnKey: string, value: string) => {
+    tableState.setColumnSearch(columnKey, value);
+    setPage(1);
+  };
+
+  const handleFilterChange = (columnKey: string, values: string[]) => {
+    tableState.setColumnFilter(columnKey, values);
+    setPage(1);
+  };
+
+  const renderHeaderFilter = (key: string, label: string) => {
+    let formatOptionLabel: ((val: string) => string) | undefined;
+    if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
+      formatOptionLabel = (val: string | number) => {
+        const n = Number(val || 0);
+        if (isNaN(n)) return String(val);
+        return n.toLocaleString("vi-VN");
+      };
+    }
+
+    return (
+      <TableColumnHeaderFilter
+        title={label}
+        align="center"
+        className="w-full justify-center"
+        sortState={getSortState(key)}
+        onSortChange={(state) => handleSortChange(key, state)}
+        searchValue={tableState.columnSearch[key] || ""}
+        onSearchChange={(val) => handleSearchChange(key, val)}
+        selectedFilters={tableState.columnFilters[key] || []}
+        onFilterChange={(vals) => handleFilterChange(key, vals)}
+        columnKey={key}
+        allFilters={tableState.columnFilters}
+        fetchOptions={fetchColumnOptions}
+        formatOptionLabel={formatOptionLabel}
+        queryKeyPrefix="warehouse-vouchers-col-options"
+      />
+    );
+  };
 
   const vouchersQuery = useWarehouseVouchersQuery({
     page,
     pageSize,
-    search: filterPanel.state.search || undefined,
+    search: undefined,
     type: undefined,
     dateFrom,
     dateTo,
-    status,
-    partnerId,
-    sort: sortOrder === "desc" ? [`-${sortBy}`] : [sortBy],
+    status: undefined,
+    partnerId: undefined,
+    sort: tableState.sorts.length > 0 ? tableState.sorts : undefined,
+    column_search:
+      Object.keys(tableState.columnSearch).length > 0
+        ? JSON.stringify(tableState.columnSearch)
+        : undefined,
+    column_filters:
+      Object.keys(tableState.columnFilters).length > 0
+        ? JSON.stringify(tableState.columnFilters)
+        : undefined,
   });
 
   useEffect(() => {
@@ -362,9 +419,13 @@ export function ErpWarehouseTab() {
   const total = vouchersQuery.data?.total ?? 0;
   const totalPages = vouchersQuery.data?.totalPages ?? 1;
 
-  // ── GR cancel (still used for the cancel confirm modal)
+  // ── GR/IA cancel (still used for the cancel confirm modal)
   async function handleGrCancel(id: string) {
-    await grDrawer.handleCancel(id);
+    if (cancelTarget?.type === "adjustment") {
+      await iaDrawer.handleCancel(id);
+    } else {
+      await grDrawer.handleCancel(id);
+    }
     setCancelTarget(null);
   }
 
@@ -378,9 +439,17 @@ export function ErpWarehouseTab() {
         await queryClient.invalidateQueries({
           queryKey: ["warehouse-vouchers", "unified"],
         });
-      } else {
+      } else if (deleteTarget.type === "issue") {
         await goodsIssuesCoreApi.remove(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu xuất kho", variant: "success" });
+        await queryClient.invalidateQueries({
+          queryKey: ["warehouse-vouchers", "unified"],
+        });
+      } else if (deleteTarget.type === "adjustment") {
+        const { inventoryAdjustmentsApi } =
+          await import("@/modules/inventory-adjustments/api/inventoryAdjustmentsApi");
+        await inventoryAdjustmentsApi.delete(deleteTarget.id);
+        showToast({ title: "Đã xóa phiếu điều chỉnh", variant: "success" });
         await queryClient.invalidateQueries({
           queryKey: ["warehouse-vouchers", "unified"],
         });
@@ -401,106 +470,166 @@ export function ErpWarehouseTab() {
     () => [
       {
         key: "date",
-        header: t("Ngày"),
+        header: renderHeaderFilter("date", t("Ngày")),
         size: 100,
         className: "text-right",
-        headerClassName: "text-center",
-        sortable: true,
-        sortKey: "date",
+        headerClassName: "p-0 h-full",
         cell: (row) => (
           <Tooltip
             content={formatGMT7(row.createdAt, "datetime-sec")}
             side="top"
           >
             <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.createdAt, "date")}
+              {formatGMT7(row.date || row.createdAt, "date")}
             </span>
           </Tooltip>
         ),
       },
       {
         key: "voucherNo",
-        header: t("Số phiếu"),
+        header: renderHeaderFilter("voucherNo", t("Số phiếu")),
         size: 150,
         className: "font-mono text-sm text-left",
-        headerClassName: "text-center",
-        sortable: true,
-        sortKey: "voucherNo",
+        headerClassName: "p-0 h-full",
         cell: (row) => (
           <div className="flex items-center gap-2">
             <span
-              title={row.type === "receipt" ? t("Nhập kho") : t("Xuất kho")}
+              title={
+                row.type === "receipt"
+                  ? t("Nhập kho")
+                  : row.type === "issue"
+                    ? t("Xuất kho")
+                    : t("Điều chỉnh")
+              }
               className="flex-shrink-0"
             >
               {row.type === "receipt" ? (
                 <PackagePlus className="h-4 w-4 text-emerald-600" />
-              ) : (
+              ) : row.type === "issue" ? (
                 <PackageMinus className="h-4 w-4 text-orange-600" />
+              ) : (
+                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
               )}
             </span>
-            <span className="font-medium text-foreground">{row.voucherNo}</span>
+            <button
+              className="font-medium text-primary hover:underline"
+              onClick={() => {
+                if (row.type === "receipt") {
+                  grDrawer.openDetail(row.id);
+                } else if (row.type === "issue") {
+                  giDrawer.openDetail(row.id);
+                } else if (row.type === "adjustment") {
+                  iaDrawer.openDetail(row.id);
+                }
+              }}
+            >
+              {row.voucherNo}
+            </button>
           </div>
         ),
       },
       {
-        key: "totalQty",
-        header: t("Tổng SL"),
-        size: 120,
+        key: "qtyReceipt",
+        header: renderHeaderFilter("qtyReceipt", t("SL Nhập")),
+        size: 150,
         className: "text-right",
-        headerClassName: "text-center",
+        headerClassName: "p-0 h-full",
         cell: (row) => {
+          if (row.type !== "receipt") return "";
           const qty = Number(row.totalQty);
-          return isNaN(qty) ? "—" : qty.toLocaleString("vi-VN");
+          return isNaN(qty) ? (
+            ""
+          ) : (
+            <span className="font-medium text-emerald-600">
+              {qty.toLocaleString("vi-VN")}
+            </span>
+          );
+        },
+      },
+      {
+        key: "qtyIssue",
+        header: renderHeaderFilter("qtyIssue", t("SL Xuất")),
+        size: 150,
+        className: "text-right",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          if (row.type !== "issue") return "";
+          const qty = Number(row.totalQty);
+          return isNaN(qty) ? (
+            ""
+          ) : (
+            <span className="font-medium text-orange-600">
+              {qty.toLocaleString("vi-VN")}
+            </span>
+          );
+        },
+      },
+      {
+        key: "qtyAdjustment",
+        header: renderHeaderFilter("qtyAdjustment", t("SL Điều chỉnh")),
+        size: 150,
+        className: "text-right",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          if (row.type !== "adjustment") return "";
+          const qty = Number(row.totalQty);
+          return isNaN(qty) ? (
+            ""
+          ) : (
+            <span className="font-medium text-blue-600">
+              {qty.toLocaleString("vi-VN")}
+            </span>
+          );
         },
       },
       {
         key: "poNo",
-        header: t("Số PO"),
+        header: renderHeaderFilter("poNo", t("Số PO")),
         size: 150,
         className: "font-mono text-sm text-left",
-        headerClassName: "text-center",
+        headerClassName: "p-0 h-full",
         cell: (row) => (
           <Tooltip content={row.poNo || ""}>
             <div className="whitespace-normal break-words w-full">
-              {row.poNo ?? "—"}
+              {row.poNo ?? ""}
             </div>
           </Tooltip>
         ),
       },
       {
         key: "partnerName",
-        header: t("Đối tác"),
+        header: renderHeaderFilter("partnerName", t("Đối tác")),
         size: 200,
         className: "text-left",
-        headerClassName: "text-center",
+        headerClassName: "p-0 h-full",
         cell: (row) => (
           <Tooltip content={row.partnerName || ""}>
             <div className="whitespace-normal break-words w-full">
-              {row.partnerName ?? "—"}
+              {row.partnerName ?? ""}
             </div>
           </Tooltip>
         ),
       },
       {
         key: "remarks",
-        header: t("Ghi chú"),
+        header: renderHeaderFilter("remarks", t("Ghi chú")),
         size: 300,
         className: "text-left",
-        headerClassName: "text-center",
+        headerClassName: "p-0 h-full",
         cell: (row) => (
           <Tooltip content={row.remarks || ""}>
             <div className="whitespace-normal break-words w-full">
-              {row.remarks ?? "—"}
+              {row.remarks ?? ""}
             </div>
           </Tooltip>
         ),
       },
       {
         key: "status",
-        header: t("Trạng thái"),
+        header: renderHeaderFilter("status", t("Trạng thái")),
         size: 150,
         className: "text-center",
-        headerClassName: "text-center",
+        headerClassName: "p-0 h-full",
         cell: (row) => (
           <div className="w-full flex justify-center">
             <StatusBadge status={row.status || ""} />
@@ -508,12 +637,14 @@ export function ErpWarehouseTab() {
         ),
       },
     ],
-    [t],
+
+    [t, tableState, grDrawer, giDrawer, iaDrawer],
   );
 
   // Actions are now passed to SpreadsheetPageTemplate
 
-  if (!canReadReceipts && !canReadIssues) return <Forbidden />;
+  if (!canReadReceipts && !canReadIssues && !canReadAdjustments)
+    return <Forbidden />;
 
   return (
     <>
@@ -529,26 +660,15 @@ export function ErpWarehouseTab() {
         error={loadError}
         emptyLabel={t("Chưa có chứng từ kho.")}
         minWidth={1000}
-        sortArray={
-          activeSortKey
-            ? [activeSortOrder === "desc" ? `-${activeSortKey}` : activeSortKey]
-            : undefined
-        }
+        sortArray={tableState.sorts}
         onSort={(key) => {
-          if (activeSortKey === key) {
-            if (activeSortOrder === "asc") {
-              setActiveSortOrder("desc");
-              setSortOrder("desc");
-            } else {
-              setActiveSortKey(null);
-              setSortBy("date");
-              setSortOrder("desc");
-            }
+          const current = tableState.sorts[0];
+          if (current === key) {
+            tableState.setSort(key, "desc");
+          } else if (current === `-${key}`) {
+            tableState.setSort(key, "none");
           } else {
-            setActiveSortKey(key);
-            setActiveSortOrder("asc");
-            setSortBy(key);
-            setSortOrder("asc");
+            tableState.setSort(key, "asc");
           }
         }}
         page={page}
@@ -573,8 +693,10 @@ export function ErpWarehouseTab() {
                 onClick: () => {
                   if (row.type === "receipt") {
                     grDrawer.openDetail(row.id);
-                  } else {
+                  } else if (row.type === "issue") {
                     giDrawer.openDetail(row.id);
+                  } else if (row.type === "adjustment") {
+                    iaDrawer.openDetail(row.id);
                   }
                 },
               },
@@ -593,7 +715,7 @@ export function ErpWarehouseTab() {
               {
                 label: t("Xuất XLSX"),
                 icon: <FileSpreadsheet className="h-3.5 w-3.5" />,
-                hidden: row.status === "DRAFT",
+                hidden: row.status === "DRAFT" || row.type === "adjustment",
                 disabled: xlsxExportingId === row.id,
                 onClick: () => handleExportXlsx(row),
               },
@@ -609,7 +731,8 @@ export function ErpWarehouseTab() {
                 hidden:
                   row.status !== "DRAFT" ||
                   (row.type === "receipt" && !canDeleteReceipt) ||
-                  (row.type === "issue" && !canDeleteIssue),
+                  (row.type === "issue" && !canDeleteIssue) ||
+                  (row.type === "adjustment" && !canDeleteAdjustment),
                 onClick: () => {
                   setDeleteTarget(row);
                 },
@@ -621,7 +744,8 @@ export function ErpWarehouseTab() {
                 hidden:
                   row.status !== "POSTED" ||
                   (row.type === "receipt" && !canUpdateReceipt) ||
-                  (row.type === "issue" && !canUpdateIssue),
+                  (row.type === "issue" && !canUpdateIssue) ||
+                  (row.type === "adjustment" && !canUpdateAdjustment),
                 onClick: () => {
                   setCancelTarget(row);
                 },
@@ -645,6 +769,12 @@ export function ErpWarehouseTab() {
                 onClick: () => giDrawer.openCreate(),
                 hidden: !canCreateIssue,
               },
+              {
+                label: t("Điều chỉnh kho"),
+                icon: <SlidersHorizontal className="h-4 w-4 text-blue-600" />,
+                onClick: () => iaDrawer.openCreate(),
+                hidden: !canCreateAdjustment,
+              },
             ],
           },
         ]}
@@ -659,7 +789,9 @@ export function ErpWarehouseTab() {
               " " +
               (deleteTarget.type === "receipt"
                 ? t("phiếu nhập")
-                : t("phiếu xuất")) +
+                : deleteTarget.type === "issue"
+                  ? t("phiếu xuất")
+                  : t("phiếu điều chỉnh")) +
               ` "${deleteTarget.voucherNo}"? ` +
               t("Hành động này sẽ ẩn phiếu này khỏi danh sách.")
             : ""
@@ -683,7 +815,9 @@ export function ErpWarehouseTab() {
               " " +
               (cancelTarget.type === "receipt"
                 ? t("phiếu nhập")
-                : t("phiếu xuất")) +
+                : cancelTarget.type === "issue"
+                  ? t("phiếu xuất")
+                  : t("phiếu điều chỉnh")) +
               ` "${cancelTarget.voucherNo}"? ` +
               t("Hệ thống sẽ tạo một bút toán đảo để cân bằng giá trị.")
             : ""
@@ -691,7 +825,11 @@ export function ErpWarehouseTab() {
         confirmLabel={t("Hủy phiếu")}
         cancelLabel={t("Đóng")}
         onConfirm={() => {
-          if (cancelTarget && cancelTarget.type === "receipt") {
+          if (
+            cancelTarget &&
+            (cancelTarget.type === "receipt" ||
+              cancelTarget.type === "adjustment")
+          ) {
             void handleGrCancel(cancelTarget.id);
           }
         }}
@@ -707,6 +845,9 @@ export function ErpWarehouseTab() {
 
       {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
       <GiFormDrawer drawer={giDrawer} />
+
+      {/* ─── IA Drawer ──────────────────────────────────────────────────────── */}
+      <IaFormDrawer drawer={iaDrawer} />
 
       <div style={{ display: "none" }}>
         {printGrData && (

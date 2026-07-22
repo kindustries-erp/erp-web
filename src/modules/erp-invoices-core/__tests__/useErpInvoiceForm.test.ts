@@ -6,8 +6,8 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 vi.mock("../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
     get: vi.fn().mockResolvedValue({ items: [] }),
-    create: vi.fn(),
-    update: vi.fn(),
+    create: vi.fn().mockResolvedValue({ id: "999", invoiceNo: "INV-999" }),
+    update: vi.fn().mockResolvedValue({ id: "999", invoiceNo: "INV-999" }),
     remove: vi.fn(),
     syncDetail: vi.fn().mockResolvedValue({ items: [] }),
   },
@@ -53,7 +53,7 @@ describe("useErpInvoiceForm", () => {
     expect(result.current.form.invoiceDate).toBe("2023-10-01");
   });
 
-  it("should open form for detail view", () => {
+  it("should open form for detail view", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
     const mockInvoice = {
       id: "1",
@@ -61,8 +61,9 @@ describe("useErpInvoiceForm", () => {
       direction: "OUT",
     } as unknown as ErpInvoice;
 
-    act(() => {
-      result.current.openDetail(mockInvoice);
+    await act(async () => {
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      await result.current.openDetail(mockInvoice);
     });
 
     expect(result.current.infoDrawerOpen).toBe(true);
@@ -70,7 +71,7 @@ describe("useErpInvoiceForm", () => {
     expect(result.current.detailInvoice).toEqual(mockInvoice);
   });
 
-  it("should enter edit mode with populated form", () => {
+  it("should enter edit mode with populated form", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
     const mockInvoice = {
       id: "1",
@@ -85,8 +86,9 @@ describe("useErpInvoiceForm", () => {
       totalAmount: 110,
     } as unknown as ErpInvoice;
 
-    act(() => {
-      result.current.openDetail(mockInvoice);
+    await act(async () => {
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      await result.current.openDetail(mockInvoice);
     });
 
     act(() => {
@@ -157,9 +159,9 @@ describe("useErpInvoiceForm", () => {
       items: [],
     } as unknown as ErpInvoice;
 
-    act(() => {
+    await act(async () => {
       vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
-      result.current.openDetail(mockInvoice);
+      await result.current.openDetail(mockInvoice);
     });
 
     act(() => {
@@ -182,8 +184,9 @@ describe("useErpInvoiceForm", () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
     const mockInvoice = { id: "1" } as unknown as ErpInvoice;
 
-    act(() => {
-      result.current.openDetail(mockInvoice);
+    await act(async () => {
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      await result.current.openDetail(mockInvoice);
     });
 
     await act(async () => {
@@ -199,8 +202,9 @@ describe("useErpInvoiceForm", () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
     const mockInvoice = { id: "1" } as unknown as ErpInvoice;
 
-    act(() => {
-      result.current.openDetail(mockInvoice);
+    await act(async () => {
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      await result.current.openDetail(mockInvoice);
     });
 
     await act(async () => {

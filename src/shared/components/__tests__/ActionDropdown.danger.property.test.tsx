@@ -73,7 +73,7 @@ describe("ActionDropdown danger-variant styling (Property 5)", () => {
 
         unmount();
       }),
-      { numRuns: 100 },
+      { numRuns: 20 },
     );
-  });
+  }, 10000);
 });

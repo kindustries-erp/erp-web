@@ -12,11 +12,13 @@ import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
-import { ErpInvoiceInfoDrawer } from "./ErpInvoiceInfoDrawer";
+import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
+
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
-import { ErpInvoiceFormGeneral } from "./ErpInvoiceFormGeneral";
-import { ErpInvoiceInternalInfo } from "./ErpInvoiceInternalInfo";
-import { ErpInvoiceFormItems } from "./ErpInvoiceFormItems";
+import {
+  ErpInvoiceInternalMain,
+  ErpInvoiceInternalSidebar,
+} from "./ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "./ErpInvoicePdfUpload";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
@@ -53,34 +55,6 @@ export function PartnerInvoiceDrawer({
 
   const listHook = useErpInvoicesList("ALL", taxCode);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
-
-  function fmtAmt(val: string | null | undefined) {
-    if (val == null) return "—";
-    const n = Number(val);
-    if (isNaN(n)) return "—";
-    return (
-      n.toLocaleString("vi-VN", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }) + " đ"
-    );
-  }
-
-  async function handleDownload(id: string, type: "pdf" | "xml") {
-    try {
-      const { url } = await erpInvoicesCoreApi.getDownloadUrl(id, type);
-      if (url) {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-    } catch {
-      console.error("Lỗi tải xuống");
-    }
-  }
 
   React.useEffect(() => {
     if (open && taxCode) {
@@ -175,6 +149,15 @@ export function PartnerInvoiceDrawer({
     },
     [taxCode],
   );
+
+  const formatAmtOption = (val: string | number) => {
+    const n = Number(val || 0);
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString("vi-VN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
 
   const columns = useMemo(() => {
     return [
@@ -276,7 +259,7 @@ export function PartnerInvoiceDrawer({
             variant="link"
             onClick={(e) => {
               e.stopPropagation();
-              formHook.openDetail(inv);
+              formHook.openInternal(inv);
             }}
             className="font-medium text-primary hover:underline p-0 h-auto"
           >
@@ -293,9 +276,17 @@ export function PartnerInvoiceDrawer({
             onSortChange={(state) => handleSortChange("preVatAmount", state)}
             searchValue={listHook.tableState.columnSearch["preVatAmount"] || ""}
             onSearchChange={(val) => handleSearchChange("preVatAmount", val)}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["preVatAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
             align="center"
+            columnKey="preVatAmount"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
           />
         ),
         size: 120,
@@ -311,9 +302,17 @@ export function PartnerInvoiceDrawer({
             onSortChange={(state) => handleSortChange("vatAmount", state)}
             searchValue={listHook.tableState.columnSearch["vatAmount"] || ""}
             onSearchChange={(val) => handleSearchChange("vatAmount", val)}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["vatAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
             align="center"
+            columnKey="vatAmount"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
           />
         ),
         size: 120,
@@ -329,9 +328,17 @@ export function PartnerInvoiceDrawer({
             onSortChange={(state) => handleSortChange("totalAmount", state)}
             searchValue={listHook.tableState.columnSearch["totalAmount"] || ""}
             onSearchChange={(val) => handleSearchChange("totalAmount", val)}
-            selectedFilters={[]}
-            onFilterChange={() => {}}
+            selectedFilters={
+              listHook.tableState.columnFilters["totalAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
             align="center"
+            columnKey="totalAmount"
+            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
+            requireSearchToFetchOptions={true}
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
           />
         ),
         size: 120,
@@ -500,44 +507,6 @@ export function PartnerInvoiceDrawer({
           </div>
         </div>
       </div>
-      <ErpInvoiceInfoDrawer
-        open={formHook.infoDrawerOpen}
-        onClose={formHook.closeDrawer}
-        editMode={formHook.editMode}
-        detailInvoice={formHook.detailInvoice}
-        saving={formHook.saving}
-        handleSave={formHook.handleSave}
-        onDownload={handleDownload}
-        loadingDetail={formHook.loadingDetail}
-        onSyncDetail={formHook.handleSyncDetail}
-        onOpenInternal={() => {
-          if (formHook.detailInvoice) {
-            formHook.openInternal(formHook.detailInvoice);
-          }
-        }}
-        leftPanel={
-          <div className="flex flex-col gap-5">
-            <ErpInvoiceFormItems
-              form={formHook.form}
-              editMode={formHook.editMode && !formHook.detailInvoice?.id}
-              setForm={formHook.setForm}
-              fmtAmt={fmtAmt}
-            />
-          </div>
-        }
-        rightPanel={
-          <div className="flex flex-col gap-5">
-            <ErpInvoiceFormGeneral
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key: string, value: any) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-            />
-          </div>
-        }
-      />
 
       <ErpInvoiceInternalDrawer
         open={formHook.internalDrawerOpen}
@@ -547,37 +516,74 @@ export function PartnerInvoiceDrawer({
         startEdit={formHook.startEdit}
         saving={formHook.saving}
         handleSave={formHook.handleSave}
-        setEditMode={formHook.setEditMode}
-        setDeleteConfirm={formHook.setDeleteConfirm}
-        onOpenInfo={() => {
-          if (formHook.detailInvoice) {
-            formHook.openDetail(formHook.detailInvoice);
-          }
-        }}
+        cancelEdit={formHook.cancelEdit}
+        rightPanel={
+          <div className="flex flex-col gap-5">
+            <ErpInvoiceInternalSidebar
+              form={formHook.form}
+              editMode={formHook.editMode}
+              fieldSet={(key: string, value: any) =>
+                formHook.setForm((prev) => ({ ...prev, [key]: value }))
+              }
+              invoiceId={formHook.detailInvoice?.id ?? null}
+              pendingTagIds={formHook.pendingTagIds}
+              onPendingTagsChange={formHook.setPendingTagIds}
+              direction={formHook.form.direction || "IN"}
+              detailInvoice={formHook.detailInvoice}
+              onRefreshDetail={formHook.handleSyncDetail}
+              pdfSlot={
+                <ErpInvoicePdfUpload
+                  invoiceId={formHook.detailInvoice?.id ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  editMode={formHook.editMode}
+                  pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
+                  onPendingDeletePdf={(key) => {
+                    const current = formHook.form.pendingDeletedPdfs || [];
+                    formHook.setForm((prev) => ({
+                      ...prev,
+                      pendingDeletedPdfs: [...current, key],
+                    }));
+                  }}
+                  pendingAddedPdfs={formHook.form.pendingAddedPdfs}
+                  onPendingAddedPdfsChange={(files) => {
+                    formHook.setForm((prev) => ({
+                      ...prev,
+                      pendingAddedPdfs: files,
+                    }));
+                  }}
+                />
+              }
+            />
+          </div>
+        }
       >
         <div className="flex flex-col gap-5">
-          <ErpInvoiceInternalInfo
+          <ErpInvoiceInternalMain
             form={formHook.form}
             editMode={formHook.editMode}
             fieldSet={(key: string, value: any) =>
               formHook.setForm((prev) => ({ ...prev, [key]: value }))
             }
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pendingTagIds={formHook.pendingTagIds}
-            onPendingTagsChange={formHook.setPendingTagIds}
             direction={formHook.form.direction || "IN"}
             detailInvoice={formHook.detailInvoice}
-            onRefreshDetail={() =>
-              formHook.openDetail({
-                id: formHook.detailInvoice!.id,
-              } as ErpInvoice)
+            postingState={formHook.postingState}
+            pendingUnpost={formHook.pendingUnpost}
+            onUnpost={() => formHook.setPendingUnpost(true)}
+            onRefreshDetail={() => {
+              if (formHook.detailInvoice?.id) {
+                formHook.openInternal({
+                  id: formHook.detailInvoice.id,
+                } as ErpInvoice);
+              }
+            }}
+            invoicePreview={
+              formHook.detailInvoice ? (
+                <div className="flex justify-center bg-slate-100 p-8 min-h-full">
+                  <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
+                </div>
+              ) : undefined
             }
-          />
-          <ErpInvoicePdfUpload
-            invoiceId={formHook.detailInvoice?.id ?? null}
-            pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-            pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
-            editMode={formHook.editMode}
           />
         </div>
       </ErpInvoiceInternalDrawer>

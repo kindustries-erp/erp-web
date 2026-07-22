@@ -30,28 +30,36 @@ import { UploadDropzone } from "./xml-upload/UploadDropzone";
 import { UploadFileList } from "./xml-upload/UploadFileList";
 import { ImportResultSummary } from "./xml-upload/ImportResultSummary";
 import { ImportResultTables } from "./xml-upload/ImportResultTables";
+import { ImportPreviewModal } from "./xml-upload/ImportPreviewModal";
+import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
 
 function TokenConfigDrawer({
   open,
   onClose,
   token,
+  cookies,
   onSave,
 }: {
   open: boolean;
   onClose: () => void;
   token: string;
-  onSave: (t: string) => void;
+  cookies: string;
+  onSave: (t: string, c: string) => void;
 }) {
   const [draft, setDraft] = useState(token);
+  const [draftCookies, setDraftCookies] = useState(cookies);
   const [showToken, setShowToken] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    if (open) setDraft(token);
-  }, [open, token]);
+    if (open) {
+      setDraft(token);
+      setDraftCookies(cookies);
+    }
+  }, [open, token, cookies]);
 
   const handleClose = () => {
-    if (draft !== token) {
+    if (draft !== token || draftCookies !== cookies) {
       setShowConfirm(true);
     } else {
       onClose();
@@ -72,10 +80,10 @@ function TokenConfigDrawer({
             variant: "outline" as const,
           },
           {
-            label: "Lưu token",
+            label: "Lưu cấu hình",
             primary: true,
             onClick: () => {
-              onSave(draft);
+              onSave(draft, draftCookies);
               onClose();
             },
           },
@@ -83,9 +91,9 @@ function TokenConfigDrawer({
       >
         <div className="space-y-4 p-1">
           <p className="text-sm text-muted-foreground">
-            Nhập Bearer token đã đăng nhập vào hệ thống{" "}
-            <span className="font-medium">hoadondientu.gdt.gov.vn</span>. Token
-            được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
+            Nhập Bearer token và WAF Cookies (TS011...) đã đăng nhập vào hệ
+            thống <span className="font-medium">hoadondientu.gdt.gov.vn</span>.
+            Token được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
           </p>
           <div className="space-y-1">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -120,13 +128,33 @@ function TokenConfigDrawer({
                 )}
               </button>
             </div>
+            {draft && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Token đã nhập ({draft.length} ký tự)
+              </p>
+            )}
           </div>
-          {draft && (
-            <p className="text-xs text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Token đã nhập ({draft.length} ký tự)
-            </p>
-          )}
+
+          <div className="space-y-1 mt-4">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              WAF Cookies (Tùy chọn)
+            </label>
+            <div className="relative">
+              <textarea
+                className="w-full h-16 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                placeholder="TS0114b13e=..."
+                value={draftCookies}
+                onChange={(e) => setDraftCookies(e.target.value)}
+              />
+            </div>
+            {draftCookies && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Cookies đã nhập ({draftCookies.length} ký tự)
+              </p>
+            )}
+          </div>
         </div>
       </DrawerModal>
 
@@ -167,6 +195,8 @@ export function InvoiceImportSyncDrawer({
   const [configOpen, setConfigOpen] = useState(false);
   const [direction, setDirection] = useState<Direction>(initialDirection);
   const [bulkXmlLoading, setBulkXmlLoading] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [viewInvoiceId, setViewInvoiceId] = useState<string | null>(null);
 
   const xml = useInvoiceXmlUpload((_importId, dir) => onImported(dir));
   const portal = usePortalSync();
@@ -225,6 +255,7 @@ export function InvoiceImportSyncDrawer({
       setBulkXmlLoading(true);
       const res = await erpInvoicesCoreApi.bulkDownloadXml({
         token,
+        cookies: portal.cookies,
         direction,
       });
       toast.success(res.message);
@@ -244,12 +275,12 @@ export function InvoiceImportSyncDrawer({
         onClick: handleClose,
       });
       actions.push({
-        label: t("importActionStart", {
+        label: t("importActionPreview", {
           count: xml.files.length,
-          defaultValue: `Bắt đầu Import (${xml.files.length} file)`,
+          defaultValue: `Xem trước & Import (${xml.files.length} file)`,
         }),
         icon: <Upload className="w-4 h-4" />,
-        onClick: xml.handleImport,
+        onClick: () => setShowPreview(true),
         disabled: xml.files.length === 0,
       });
     } else if (xml.step === "result" && xml.result) {
@@ -286,11 +317,11 @@ export function InvoiceImportSyncDrawer({
       title="Đồng bộ hóa đơn"
       icon={<RefreshCw className="w-5 h-5" />}
       actions={actions}
-      panelClassName="min-[1024px]:w-[520px]"
+      panelClassName="min-[1024px]:w-[640px]"
     >
       <div className="flex flex-col h-full">
-        {/* Selection Dropdowns */}
-        <div className="flex items-center gap-3 px-4 py-4 border-b border-border shrink-0 mt-[-1rem]">
+        {/* Selection Dropdowns — extend full-width, breaking out of body p-[18px] */}
+        <div className="flex items-center gap-3 px-[18px] py-3 border-b border-border shrink-0 -mx-[18px] -mt-[18px] mb-4">
           <div className="flex-1">
             <Combobox
               options={[
@@ -316,7 +347,7 @@ export function InvoiceImportSyncDrawer({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto">
           {method === "GDT" && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4">
@@ -461,7 +492,10 @@ export function InvoiceImportSyncDrawer({
               {xml.step === "result" && xml.result && (
                 <div className="flex flex-col gap-5">
                   <ImportResultSummary result={xml.result} />
-                  <ImportResultTables result={xml.result} />
+                  <ImportResultTables
+                    result={xml.result}
+                    onOpenInvoice={(id) => setViewInvoiceId(id)}
+                  />
                   {xml.result.created === 0 &&
                     xml.result.skipped.length === 0 &&
                     xml.result.errors.length === 0 && (
@@ -480,7 +514,22 @@ export function InvoiceImportSyncDrawer({
         open={configOpen}
         onClose={() => setConfigOpen(false)}
         token={portal.token}
-        onSave={portal.setToken}
+        cookies={portal.cookies}
+        onSave={portal.saveConfig}
+      />
+      <ImportPreviewModal
+        open={showPreview}
+        files={xml.files}
+        direction={xml.direction || "IN"}
+        onConfirm={(selectedFiles, manualMatches) => {
+          setShowPreview(false);
+          xml.handleImport(selectedFiles, manualMatches);
+        }}
+        onCancel={() => setShowPreview(false)}
+      />
+      <InvoiceDetailWrapper
+        invoiceId={viewInvoiceId}
+        onClose={() => setViewInvoiceId(null)}
       />
       <ConfirmModal
         open={showDrawerConfirm}

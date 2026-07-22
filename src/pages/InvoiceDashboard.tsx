@@ -1,5 +1,5 @@
 import React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { LayoutDashboard, Download } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Button } from "@/shared/components/ui/Button";
@@ -35,6 +35,19 @@ export function InvoiceDashboard() {
     queryKey: ["branches"],
     queryFn: () => getBranchesApi(),
   });
+
+  const isFetchingStats = useIsFetching({
+    queryKey: ["invoice-dashboard-stats"],
+  });
+  const isFetchingPartners = useIsFetching({
+    queryKey: ["invoice-dashboard-partners"],
+  });
+  const isFetchingBranches = useIsFetching({ queryKey: ["branches"] });
+  const isRefreshing =
+    isLoadingBranches ||
+    isFetchingStats > 0 ||
+    isFetchingPartners > 0 ||
+    isFetchingBranches > 0;
 
   const filterConfig = React.useMemo(() => {
     const custom: any[] = [
@@ -132,7 +145,7 @@ export function InvoiceDashboard() {
       icon={<LayoutDashboard className="h-4 w-4" />}
       filterConfig={filterConfig}
       filter={filter}
-      loading={isLoadingBranches}
+      loading={isRefreshing}
       onRefresh={() => {
         queryClient.invalidateQueries({ queryKey: ["branches"] });
         queryClient.invalidateQueries({
