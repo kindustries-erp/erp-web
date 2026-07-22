@@ -9,6 +9,7 @@ import type { FileEntry } from "../../hooks/useInvoiceXmlUpload";
 vi.mock("../../api/erpInvoicesCoreApi", () => ({
   erpInvoicesCoreApi: {
     previewPdfMatch: vi.fn(),
+    list: vi.fn().mockResolvedValue({ items: [], total: 0 }),
   },
 }));
 
@@ -58,7 +59,7 @@ describe("ImportPreviewModal", () => {
 
     // Wait for the UI to update with matched info
     await waitFor(() => {
-      expect(screen.getByText(/Ghép vào: HĐ 1234567/)).toBeInTheDocument();
+      expect(screen.getByText(/Tự động: HĐ 1234567/)).toBeInTheDocument();
       expect(screen.getByText(/KH: C26MGN/)).toBeInTheDocument();
       expect(screen.getByText(/1\.000\.000đ/)).toBeInTheDocument();
     });
@@ -84,7 +85,7 @@ describe("ImportPreviewModal", () => {
       expect(screen.getByTitle("Xem trước file")).toBeInTheDocument();
     });
 
-    const elements = screen.getAllByText(/Ghép vào HĐ hiện có/i);
+    const elements = screen.getAllByText(/File mồ côi/i);
     expect(elements.length).toBeGreaterThan(0);
   });
 });
