@@ -50,7 +50,13 @@ export interface TableColumnHeaderFilterProps {
     next: number | null;
   }>;
   hideFilter?: boolean;
+  hideFooter?: boolean;
   enableSelectAllMatching?: boolean;
+  isActive?: boolean;
+  /** Optional slot rendered between Sort buttons and Search input (e.g. a date range picker). Can be a function that receives a close function. */
+  dateRangeSlot?:
+    | React.ReactNode
+    | ((props: { close: () => void }) => React.ReactNode);
 }
 
 const dropdownSearchState = new Map<string, string>();
@@ -72,7 +78,10 @@ export function TableColumnHeaderFilter({
   formatOptionLabel,
   fetchOptions,
   hideFilter,
+  hideFooter,
   enableSelectAllMatching,
+  isActive,
+  dateRangeSlot,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -188,7 +197,10 @@ export function TableColumnHeaderFilter({
   }, [open, searchValue, columnKey]);
 
   const hasActiveFilters =
-    searchValue || selectedFilters.length > 0 || sortState !== "none";
+    isActive ||
+    searchValue ||
+    selectedFilters.length > 0 ||
+    sortState !== "none";
 
   const handleToggleFilter = (value: string) => {
     const next = pendingFilters.includes(value)
@@ -263,7 +275,7 @@ export function TableColumnHeaderFilter({
             )}
           >
             <ListFilter size={14} />
-            {selectedFilters.length > 0 && (
+            {(selectedFilters.length > 0 || isActive || !!searchValue) && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
@@ -277,7 +289,10 @@ export function TableColumnHeaderFilter({
         <Popover.Content
           align={align === "right" ? "end" : "start"}
           sideOffset={8}
-          className="z-[9999] w-64 rounded-xl border border-border bg-surface p-0 shadow-lg outline-none"
+          className={cn(
+            "z-[9999] rounded-xl border border-border bg-surface p-0 shadow-lg outline-none",
+            dateRangeSlot ? "w-72" : "w-64",
+          )}
         >
           {/* Sorting */}
           <div className="p-2 border-b border-border flex flex-col gap-1">
@@ -310,6 +325,11 @@ export function TableColumnHeaderFilter({
               {sortState === "desc" && <Check size={14} className="ml-auto" />}
             </Button>
           </div>
+
+          {/* Date range slot (e.g. for invoiceDate column) */}
+          {typeof dateRangeSlot === "function"
+            ? dateRangeSlot({ close: () => setOpen(false) })
+            : dateRangeSlot}
 
           {!hideFilter && (
             <>
@@ -415,34 +435,36 @@ export function TableColumnHeaderFilter({
           )}
 
           {/* Footer Actions */}
-          <div className="p-2 border-t border-border flex justify-between items-center bg-muted/50 rounded-b-xl">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground hover:text-foreground hover:bg-transparent px-2 h-7"
-              onClick={() => {
-                setPendingFilters([]);
-                setLocalSearch("");
-                onSearchChange("");
-                onFilterChange([]);
-                setOpen(false);
-              }}
-            >
-              Xóa bộ lọc
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              className="text-xs h-7 px-3"
-              onClick={() => {
-                onSearchChange(localSearch);
-                onFilterChange(pendingFilters);
-                setOpen(false);
-              }}
-            >
-              Áp dụng
-            </Button>
-          </div>
+          {!hideFooter && (
+            <div className="p-2 border-t border-border flex justify-between items-center bg-muted/50 rounded-b-xl">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground hover:bg-transparent px-2 h-7"
+                onClick={() => {
+                  setPendingFilters([]);
+                  setLocalSearch("");
+                  onSearchChange("");
+                  onFilterChange([]);
+                  setOpen(false);
+                }}
+              >
+                Xóa bộ lọc
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                className="text-xs h-7 px-3"
+                onClick={() => {
+                  onSearchChange(localSearch);
+                  onFilterChange(pendingFilters);
+                  setOpen(false);
+                }}
+              >
+                Áp dụng
+              </Button>
+            </div>
+          )}
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

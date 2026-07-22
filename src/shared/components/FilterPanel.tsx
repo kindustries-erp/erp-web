@@ -16,15 +16,44 @@ import type {
 interface FilterButtonProps {
   onClick: () => void;
   activeCount: number;
+  onClear?: () => void;
   className?: string;
 }
 
 export function FilterButton({
   onClick,
   activeCount,
+  onClear,
   className,
 }: FilterButtonProps) {
   const t = useT();
+  if (activeCount > 0 && onClear) {
+    return (
+      <div className={cn("flex items-center rounded-md shadow-sm", className)}>
+        <Button
+          variant="secondary"
+          onClick={onClick}
+          className="h-8 rounded-r-none px-3 border-r-0 border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 transition-colors"
+          title={t("Bộ lọc")}
+        >
+          <Filter className="h-4 w-4 mr-1.5" />
+          <span className="text-xs font-semibold">
+            {t("Bộ lọc")} ({activeCount})
+          </span>
+        </Button>
+        <div className="w-[1px] h-8 bg-primary/20 z-10" />
+        <Button
+          variant="secondary"
+          onClick={onClear}
+          className="h-8 w-8 px-0 rounded-l-none border-l-0 border-primary/40 bg-primary/5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors focus:z-10"
+          title={t("Xóa tất cả bộ lọc")}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Button
       variant="secondary"
