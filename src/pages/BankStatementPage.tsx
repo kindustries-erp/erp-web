@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
+import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -210,6 +211,39 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   };
 
   const renderHeaderFilter = (key: string, label: string) => {
+    if (key === "transDate") {
+      return (
+        <TableColumnHeaderFilter
+          title={label}
+          align="center"
+          className="w-full justify-center"
+          sortState={getSortState(key)}
+          onSortChange={(state) => handleSortChange(key, state)}
+          searchValue={tableState.columnSearch[key] || ""}
+          onSearchChange={(val) => handleSearchChange(key, val)}
+          selectedFilters={tableState.columnFilters[key] || []}
+          onFilterChange={(vals) => handleFilterChange(key, vals)}
+          columnKey={key}
+          hideFilter={true}
+          hideFooter={true}
+          isActive={!!(filter.state.dateFrom || filter.state.dateTo)}
+          dateRangeSlot={({ close }) => (
+            <InvoiceDateRangeSlot
+              dateFrom={filter.state.dateFrom}
+              dateTo={filter.state.dateTo}
+              onChange={(from, to) => {
+                filter.setDateFrom(from);
+                filter.setDateTo(to);
+                setPage(1);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      );
+    }
+
     let formatOptionLabel: ((val: string) => string) | undefined;
     if (
       ["thu", "chi", "balance", "netOffAmount", "remainingAmount"].includes(key)
@@ -606,6 +640,14 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         }}
         filterConfig={filterConfig}
         filter={filter}
+        activeFilterCount={
+          filter.activeFilterCount + (tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          filter.resetAll();
+          tableState.resetFilters();
+          setPage(1);
+        }}
         sortArray={tableState.sorts}
         onSort={(colKey) => {
           handleSortChange(

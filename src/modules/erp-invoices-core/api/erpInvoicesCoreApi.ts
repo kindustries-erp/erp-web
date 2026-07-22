@@ -170,6 +170,50 @@ export interface PortalSyncResult {
 
 const BASE = "/api/v1/erp-invoices";
 
+function extractErrorMessageFromPayload(payload: any): string | null {
+  if (!payload) return null;
+  if (typeof payload === "string") return payload;
+  if (typeof payload?.message === "string") return payload.message;
+  if (Array.isArray(payload?.message)) {
+    return payload.message.join(", ");
+  }
+  if (typeof payload?.error === "string") return payload.error;
+  return null;
+}
+
+async function resolveBlobErrorMessage(
+  error: any,
+  fallback: string,
+): Promise<string> {
+  const responseData = error?.response?.data;
+
+  if (responseData instanceof Blob) {
+    try {
+      const text = (await responseData.text())?.trim();
+      if (text) {
+        try {
+          const parsed = JSON.parse(text);
+          const parsedMsg = extractErrorMessageFromPayload(parsed);
+          if (parsedMsg) return parsedMsg;
+        } catch {
+          return text;
+        }
+      }
+    } catch {
+      // Ignore blob parsing errors and fall back to common paths.
+    }
+  }
+
+  const directMsg = extractErrorMessageFromPayload(responseData);
+  if (directMsg) return directMsg;
+
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 export const erpInvoicesCoreApi = {
   list: async (
     params?: ErpInvoiceListParams,
@@ -421,11 +465,17 @@ export const erpInvoicesCoreApi = {
   },
 
   getPdfBlob: async (id: string, key: string): Promise<Blob> => {
-    const { data } = await axiosInstance.get<Blob>(
-      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
-      { responseType: "blob" },
-    );
-    return data;
+    try {
+      const { data } = await axiosInstance.get<Blob>(
+        `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
+        { responseType: "blob" },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Không thể tải nội dung file PDF"),
+      );
+    }
   },
 
   getPdfDownloadUrl: async (
@@ -441,22 +491,55 @@ export const erpInvoicesCoreApi = {
   },
 
   downloadPdfsZip: async (id: string): Promise<Blob> => {
-    const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
-      responseType: "blob",
-    });
-    return data;
+    try {
+      const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
+        responseType: "blob",
+      });
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Không thể tải file ZIP PDF"),
+      );
+    }
   },
 
   bulkDownloadFiles: async (payload: {
     query: { date_from?: string; date_to?: string; direction?: string };
     types: string[];
   }): Promise<Blob> => {
-    const { data } = await axiosInstance.post<Blob>(
-      `${BASE}/bulk-download-files`,
-      payload,
-      { responseType: "blob", timeout: 600000 },
-    );
-    return data;
+    try {
+      const { data } = await axiosInstance.post<Blob>(
+        `${BASE}/bulk-download-files`,
+        payload,
+        { responseType: "blob", timeout: 600000 },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Tải ZIP hàng loạt thất bại"),
+      );
+    }
+  },
+
+  bulkDownloadSelected: async (payload: {
+    ids: string[];
+    types: string[];
+  }): Promise<Blob> => {
+    try {
+      const { data } = await axiosInstance.post<Blob>(
+        `${BASE}/bulk-download-selected`,
+        payload,
+        { responseType: "blob", timeout: 300000 },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(
+          error,
+          "Tải ZIP hóa đơn đã chọn thất bại",
+        ),
+      );
+    }
   },
 
   deletePdf: async (
@@ -471,11 +554,17 @@ export const erpInvoicesCoreApi = {
   },
 
   exportExcel: async (params: ErpInvoiceListParams): Promise<Blob> => {
-    const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
-      params,
-      responseType: "blob",
-    });
-    return data;
+    try {
+      const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
+        params,
+        responseType: "blob",
+      });
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Xuất Excel thất bại"),
+      );
+    }
   },
 
   postInvoice: async (

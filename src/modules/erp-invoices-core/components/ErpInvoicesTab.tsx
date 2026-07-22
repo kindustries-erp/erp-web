@@ -137,6 +137,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkMonth, setBulkMonth] = useState("");
   const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkSelectedTypes, setBulkSelectedTypes] = useState<string[]>([
+    "pdf",
+    "xml",
+  ]);
+  const [bulkSelectedDownloading, setBulkSelectedDownloading] = useState(false);
+  const [bulkSelectedModalOpen, setBulkSelectedModalOpen] = useState(false);
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
@@ -223,6 +229,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               },
             },
             {
+              label: "Tải ZIP PDF/XML",
+              icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
+              onClick: () => setBulkSelectedModalOpen(true),
+            },
+            {
               label: "Bỏ chọn",
               icon: (
                 <RefreshCw className="w-4 h-4 mr-2 text-muted-foreground" />
@@ -295,6 +306,40 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       toast.error("Tải hàng loạt thất bại: " + error.message);
     } finally {
       setBulkDownloading(false);
+    }
+  };
+
+  const handleBulkDownloadSelected = async () => {
+    if (bulkSelectedTypes.length === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 loại file");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      toast.error("Không có hóa đơn nào được chọn");
+      return;
+    }
+
+    try {
+      setBulkSelectedDownloading(true);
+      const blob = await erpInvoicesCoreApi.bulkDownloadSelected({
+        ids: selectedIds,
+        types: bulkSelectedTypes,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `HoaDon_${selectedIds.length}_invoices.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBulkSelectedModalOpen(false);
+      toast.success(`Đã tải ${selectedIds.length} hóa đơn thành công!`);
+    } catch (error: any) {
+      toast.error("Tải thất bại: " + error.message);
+    } finally {
+      setBulkSelectedDownloading(false);
     }
   };
 
@@ -1927,11 +1972,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 icon: <Download className="w-4 h-4 text-green-600" />,
                 onClick: () => handleExportExcel(),
               },
-              {
-                label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
-                icon: <Download className="w-4 h-4 text-blue-600" />,
-                onClick: () => setBulkDrawerOpen(true),
-              },
             ],
           },
           {
@@ -2127,6 +2167,79 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
       />
+
+      <DrawerModal
+        open={bulkSelectedModalOpen}
+        onClose={() => setBulkSelectedModalOpen(false)}
+        title={`Tải ZIP ${selectedIds.length} hóa đơn đã chọn`}
+        actions={[
+          {
+            label: "Hủy",
+            onClick: () => setBulkSelectedModalOpen(false),
+            variant: "outline" as const,
+            disabled: bulkSelectedDownloading,
+          },
+          {
+            label: bulkSelectedDownloading
+              ? "Đang nén file..."
+              : "Xác nhận tải",
+            onClick: handleBulkDownloadSelected,
+            primary: true,
+            disabled: bulkSelectedDownloading,
+            loading: bulkSelectedDownloading,
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Đã chọn <strong>{selectedIds.length}</strong> hóa đơn. Hệ thống sẽ
+            nén PDF/XML của các hóa đơn này thành 1 file ZIP.
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Định dạng file tải về *
+            </label>
+            <div className="flex flex-col gap-3 mt-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkSelectedTypes.includes("pdf")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkSelectedTypes((prev) =>
+                        prev.includes("pdf") ? prev : [...prev, "pdf"],
+                      );
+                    } else {
+                      setBulkSelectedTypes((prev) =>
+                        prev.filter((t) => t !== "pdf"),
+                      );
+                    }
+                  }}
+                />
+                <span className="text-sm">File PDF</span>
+              </label>
+
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkSelectedTypes.includes("xml")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkSelectedTypes((prev) =>
+                        prev.includes("xml") ? prev : [...prev, "xml"],
+                      );
+                    } else {
+                      setBulkSelectedTypes((prev) =>
+                        prev.filter((t) => t !== "xml"),
+                      );
+                    }
+                  }}
+                />
+                <span className="text-sm">File XML</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </DrawerModal>
 
       <DrawerModal
         open={bulkDrawerOpen}
