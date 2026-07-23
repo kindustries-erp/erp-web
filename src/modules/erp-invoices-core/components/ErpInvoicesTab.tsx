@@ -51,6 +51,7 @@ import {
   ErpInvoiceInternalSidebar,
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/BulkEditDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { DrawerModal } from "@/shared/components/DrawerModal";
@@ -145,71 +146,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkSelectedModalOpen, setBulkSelectedModalOpen] = useState(false);
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkEditDrawerOpen, setBulkEditDrawerOpen] = useState(false);
   const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
   const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
     "post",
   );
-  const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
-  const [bulkBranchAssignments, setBulkBranchAssignments] = useState<
-    Record<string, string>
-  >({});
-  const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
     [rowSelection],
   );
-
-  useEffect(() => {
-    if (bulkBranchModalOpen && selectedIds.length > 0) {
-      const initial: Record<string, string> = {};
-      const selectedInvoices = (listHook.invoices || []).filter((inv) =>
-        selectedIds.includes(inv.id),
-      );
-      selectedInvoices.forEach((inv) => {
-        if (inv.branchId) {
-          initial[inv.id] = inv.branchId;
-        }
-      });
-      setBulkBranchAssignments(initial);
-      setBulkBranchId(null);
-    }
-  }, [bulkBranchModalOpen, selectedIds, listHook.invoices]);
-
-  async function handleBulkSetBranch() {
-    if (!selectedIds.length) return;
-    setBulkBranchSaving(true);
-    try {
-      const groups: Record<string, string[]> = {};
-      selectedIds.forEach((id) => {
-        const bId = bulkBranchAssignments[id] || bulkBranchId || "";
-        if (!groups[bId]) groups[bId] = [];
-        groups[bId].push(id);
-      });
-
-      let totalUpdated = 0;
-      for (const [bId, ids] of Object.entries(groups)) {
-        const result = await erpInvoicesCoreApi.bulkSetBranch(ids, bId || null);
-        totalUpdated += result.updated || ids.length;
-      }
-
-      showToast({
-        title: `Đã cập nhật ${totalUpdated} hóa đơn`,
-        variant: "default",
-      });
-      setRowSelection({});
-      setBulkBranchModalOpen(false);
-      void listHook.loadInvoices();
-    } catch {
-      showToast({
-        title: "Không thể cập nhật chi nhánh",
-        variant: "destructive",
-      });
-    } finally {
-      setBulkBranchSaving(false);
-    }
-  }
 
   const bulkActionsNode =
     selectedIds.length > 0 ? (
@@ -231,13 +177,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               groupLabel: "Nghiệp vụ & Hạch toán",
               items: [
                 {
-                  label: "Gán chi nhánh",
+                  label: t("bulkAssignAll", "Gán hàng loạt"),
                   icon: (
                     <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
                   ),
                   onClick: () => {
-                    setBulkBranchId(null);
-                    setBulkBranchModalOpen(true);
+                    setBulkEditDrawerOpen(true);
                   },
                 },
                 {
@@ -2355,99 +2300,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         </div>
       </DrawerModal>
 
-      <DrawerModal
-        open={bulkBranchModalOpen}
-        onClose={() => setBulkBranchModalOpen(false)}
-        title={`Gán chi nhánh cho ${selectedIds.length} hóa đơn`}
-        actions={[
-          {
-            label: "Hủy",
-            onClick: () => setBulkBranchModalOpen(false),
-            variant: "outline" as const,
-            disabled: bulkBranchSaving,
-          },
-          {
-            label: bulkBranchSaving ? "Đang lưu..." : "Xác nhận",
-            onClick: handleBulkSetBranch,
-            primary: true,
-            disabled: bulkBranchSaving,
-            loading: bulkBranchSaving,
-          },
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
-            <label className="text-xs font-semibold text-slate-700">
-              Chi nhánh chung (Áp dụng cho tất cả)
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <Combobox
-                  options={branches}
-                  value={bulkBranchId ?? ""}
-                  onChange={(v) => setBulkBranchId(v ?? null)}
-                  placeholder="Chọn chi nhánh áp dụng chung..."
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 shrink-0 text-xs"
-                onClick={() => {
-                  if (!bulkBranchId) return;
-                  const updated: Record<string, string> = {};
-                  selectedIds.forEach((id) => {
-                    updated[id] = bulkBranchId;
-                  });
-                  setBulkBranchAssignments(updated);
-                }}
-              >
-                Áp dụng tất cả
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold text-slate-700">
-              Chi tiết chi nhánh theo từng hóa đơn ({selectedIds.length})
-            </label>
-            <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1">
-              {(listHook.invoices || [])
-                .filter((inv) => selectedIds.includes(inv.id))
-                .map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg gap-2"
-                  >
-                    <div className="flex flex-col min-w-0">
-                      <span className="font-medium text-xs text-slate-800">
-                        HĐ: {inv.invoiceNo}{" "}
-                        {inv.serialNo ? `(${inv.serialNo})` : ""}
-                      </span>
-                      <span className="text-[11px] text-slate-500 truncate">
-                        {inv.sellerName || inv.buyerName || "---"}
-                      </span>
-                    </div>
-                    <div className="w-full sm:w-56 shrink-0">
-                      <Combobox
-                        options={branches}
-                        value={bulkBranchAssignments[inv.id] || ""}
-                        onChange={(v) =>
-                          setBulkBranchAssignments((prev) => ({
-                            ...prev,
-                            [inv.id]: v || "",
-                          }))
-                        }
-                        placeholder="Chọn chi nhánh..."
-                      />
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </DrawerModal>
+      <BulkEditDrawer
+        open={bulkEditDrawerOpen}
+        onClose={() => setBulkEditDrawerOpen(false)}
+        selectedIds={selectedIds}
+        invoices={listHook.invoices || []}
+        branches={branches}
+        onSuccess={() => {
+          setBulkEditDrawerOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
+      />
 
       <InvoiceBulkPostingDrawer
         open={bulkPostingModalOpen}
