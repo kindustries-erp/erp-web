@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { erpInvoiceDashboardApi } from "../api/erpInvoiceDashboardApi";
@@ -193,10 +194,23 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
             align="center"
             columnKey="invoiceDate"
-            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
+            hideFilter={true}
+            hideFooter={true}
+            dateRangeSlot={({ close }) => {
+              const val = listHook.tableState.columnSearch["invoiceDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    handleSearchChange("invoiceDate", next);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
           />
         ),
         size: 100,

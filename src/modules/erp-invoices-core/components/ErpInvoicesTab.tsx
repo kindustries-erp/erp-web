@@ -15,11 +15,11 @@ import {
   FileCode,
   FileText,
   Building2,
-  ChevronDown,
   CheckSquare,
   XSquare,
   PanelRightOpen,
   MoreHorizontal,
+  X,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -151,6 +151,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     "post",
   );
   const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
+  const [bulkBranchAssignments, setBulkBranchAssignments] = useState<
+    Record<string, string>
+  >({});
   const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
 
   const selectedIds = useMemo(
@@ -158,16 +161,41 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     [rowSelection],
   );
 
+  useEffect(() => {
+    if (bulkBranchModalOpen && selectedIds.length > 0) {
+      const initial: Record<string, string> = {};
+      const selectedInvoices = (listHook.invoices || []).filter((inv) =>
+        selectedIds.includes(inv.id),
+      );
+      selectedInvoices.forEach((inv) => {
+        if (inv.branchId) {
+          initial[inv.id] = inv.branchId;
+        }
+      });
+      setBulkBranchAssignments(initial);
+      setBulkBranchId(null);
+    }
+  }, [bulkBranchModalOpen, selectedIds, listHook.invoices]);
+
   async function handleBulkSetBranch() {
     if (!selectedIds.length) return;
     setBulkBranchSaving(true);
     try {
-      const result = await erpInvoicesCoreApi.bulkSetBranch(
-        selectedIds,
-        bulkBranchId,
-      );
+      const groups: Record<string, string[]> = {};
+      selectedIds.forEach((id) => {
+        const bId = bulkBranchAssignments[id] || bulkBranchId || "";
+        if (!groups[bId]) groups[bId] = [];
+        groups[bId].push(id);
+      });
+
+      let totalUpdated = 0;
+      for (const [bId, ids] of Object.entries(groups)) {
+        const result = await erpInvoicesCoreApi.bulkSetBranch(ids, bId || null);
+        totalUpdated += result.updated || ids.length;
+      }
+
       showToast({
-        title: `Đã cập nhật ${result.updated} hóa đơn`,
+        title: `Đã cập nhật ${totalUpdated} hóa đơn`,
         variant: "default",
       });
       setRowSelection({});
@@ -185,63 +213,75 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
   const bulkActionsNode =
     selectedIds.length > 0 ? (
-      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+      <div className="flex items-center rounded-md shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
         <ActionDropdown
           align="start"
           customTrigger={
             <Button
               variant="outline"
               size="sm"
-              className="h-8 shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+              className="h-8 rounded-r-none border-r-0 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
             >
               <CheckSquare className="w-4 h-4 mr-1.5" />
               {t("bulkActions", "Thao tác")} ({selectedIds.length})
-              <ChevronDown className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           }
           items={[
             {
-              label: "Gán chi nhánh",
-              icon: (
-                <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => {
-                setBulkBranchId(null);
-                setBulkBranchModalOpen(true);
-              },
+              groupLabel: "Nghiệp vụ & Hạch toán",
+              items: [
+                {
+                  label: "Gán chi nhánh",
+                  icon: (
+                    <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkBranchId(null);
+                    setBulkBranchModalOpen(true);
+                  },
+                },
+                {
+                  label: "Hạch toán hàng loạt",
+                  icon: (
+                    <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkPostingMode("post");
+                    setBulkPostingModalOpen(true);
+                  },
+                },
+                {
+                  label: "Hủy hạch toán hàng loạt",
+                  icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
+                  onClick: () => {
+                    setBulkPostingMode("unpost");
+                    setBulkPostingModalOpen(true);
+                  },
+                },
+              ],
             },
             {
-              label: "Hạch toán hàng loạt",
-              icon: (
-                <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => {
-                setBulkPostingMode("post");
-                setBulkPostingModalOpen(true);
-              },
-            },
-            {
-              label: "Hủy hạch toán hàng loạt",
-              icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
-              onClick: () => {
-                setBulkPostingMode("unpost");
-                setBulkPostingModalOpen(true);
-              },
-            },
-            {
-              label: "Tải ZIP PDF/XML",
-              icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
-              onClick: () => setBulkSelectedModalOpen(true),
-            },
-            {
-              label: "Bỏ chọn",
-              icon: (
-                <RefreshCw className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => setRowSelection({}),
+              groupLabel: "Tải & Xuất tệp",
+              items: [
+                {
+                  label: "Tải ZIP PDF/XML",
+                  icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
+                  onClick: () => setBulkSelectedModalOpen(true),
+                },
+              ],
             },
           ]}
         />
+        <div className="w-[1px] h-8 bg-primary/20 z-10" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setRowSelection({})}
+          className="h-8 w-8 px-0 rounded-l-none border-l-0 border-primary/30 bg-primary/5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors focus:z-10"
+          title={t("deselectAll", "Bỏ chọn")}
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
     ) : null;
 
@@ -564,7 +604,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               : String(i);
           if (columnKey === "branchId") {
             const branch = branches.find((b) => b.value === valStr);
-            if (branch) labelStr = branch.label;
+            if (branch) {
+              const parts = branch.label.split(" — ");
+              labelStr = parts.length > 1 ? parts[1] : branch.label;
+            }
           }
           if (columnKey === "invoiceDate" && valStr) {
             // Backend now returns YYYY-MM-DD via TO_CHAR — use as value directly
@@ -585,7 +628,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [direction],
+    [direction, branches],
   );
 
   const handleFilterChange = (key: string, vals: string[]) => {
@@ -1644,7 +1687,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="branchId"
             requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -2333,14 +2376,75 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         ]}
       >
         <div className="space-y-4">
+          <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2">
+            <label className="text-xs font-semibold text-slate-700">
+              Chi nhánh chung (Áp dụng cho tất cả)
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <Combobox
+                  options={branches}
+                  value={bulkBranchId ?? ""}
+                  onChange={(v) => setBulkBranchId(v ?? null)}
+                  placeholder="Chọn chi nhánh áp dụng chung..."
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 shrink-0 text-xs"
+                onClick={() => {
+                  if (!bulkBranchId) return;
+                  const updated: Record<string, string> = {};
+                  selectedIds.forEach((id) => {
+                    updated[id] = bulkBranchId;
+                  });
+                  setBulkBranchAssignments(updated);
+                }}
+              >
+                Áp dụng tất cả
+              </Button>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <label className="text-sm font-medium">Chi nhánh *</label>
-            <Combobox
-              options={branches}
-              value={bulkBranchId ?? ""}
-              onChange={(v) => setBulkBranchId(v ?? null)}
-              placeholder="Chọn chi nhánh..."
-            />
+            <label className="text-xs font-semibold text-slate-700">
+              Chi tiết chi nhánh theo từng hóa đơn ({selectedIds.length})
+            </label>
+            <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1">
+              {(listHook.invoices || [])
+                .filter((inv) => selectedIds.includes(inv.id))
+                .map((inv) => (
+                  <div
+                    key={inv.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg gap-2"
+                  >
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium text-xs text-slate-800">
+                        HĐ: {inv.invoiceNo}{" "}
+                        {inv.serialNo ? `(${inv.serialNo})` : ""}
+                      </span>
+                      <span className="text-[11px] text-slate-500 truncate">
+                        {inv.sellerName || inv.buyerName || "---"}
+                      </span>
+                    </div>
+                    <div className="w-full sm:w-56 shrink-0">
+                      <Combobox
+                        options={branches}
+                        value={bulkBranchAssignments[inv.id] || ""}
+                        onChange={(v) =>
+                          setBulkBranchAssignments((prev) => ({
+                            ...prev,
+                            [inv.id]: v || "",
+                          }))
+                        }
+                        placeholder="Chọn chi nhánh..."
+                      />
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       </DrawerModal>

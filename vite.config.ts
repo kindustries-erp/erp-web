@@ -31,6 +31,30 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       include: ["pdfjs-dist/build/pdf.worker.min.mjs"],
     },
+    build: {
+      chunkSizeWarningLimit: 2000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return;
+            if (
+              id.includes("react-pdf") ||
+              id.includes("pdfjs-dist") ||
+              id.includes("xlsx") ||
+              id.includes("jszip")
+            ) {
+              return "vendor-docs";
+            }
+            if (id.includes("chart.js") || id.includes("react-chartjs-2")) {
+              return "vendor-chart";
+            }
+            if (id.includes("i18next") || id.includes("react-i18next")) {
+              return "vendor-i18n";
+            }
+          },
+        },
+      },
+    },
     define: {
       __APP_BUILD_VERSION__: JSON.stringify(buildVersion),
       __APP_ENV__: JSON.stringify(
