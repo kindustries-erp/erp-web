@@ -62,10 +62,31 @@ export function usePortalSync() {
         );
         return res;
       } catch (e: any) {
-        if (e?.response?.data?.message === "GDT_TOKEN_EXPIRED") {
+        const message = e?.response?.data?.message;
+        if (message === "GDT_TOKEN_EXPIRED") {
           toast.error("Token hết hạn! Vui lòng cập nhật lại token từ GDT", {
             duration: 5000,
           });
+        } else if (message === "GDT_TAXPAYER_MISMATCH") {
+          toast.error(
+            "Token GDT đang đăng nhập khác mã số thuế công ty trên hệ thống. Vui lòng kiểm tra lại.",
+            { duration: 6000 },
+          );
+        } else if (message === "GDT_COMPANY_TAX_CODE_NOT_CONFIGURED") {
+          toast.error(
+            "Chưa cấu hình mã số thuế công ty trong hồ sơ doanh nghiệp, chưa thể đồng bộ GDT.",
+            { duration: 6000 },
+          );
+        } else if (message === "GDT_PROFILE_FETCH_FAILED") {
+          toast.error(
+            "Không lấy được hồ sơ người nộp thuế từ GDT. Vui lòng thử lại.",
+            { duration: 6000 },
+          );
+        } else if (message === "GDT_PROFILE_MISSING_TAX_CODE") {
+          toast.error(
+            "Hồ sơ GDT không trả về mã số thuế hợp lệ để đối chiếu.",
+            { duration: 6000 },
+          );
         } else {
           toast.error("Có lỗi xảy ra khi đồng bộ từ TCT");
         }
