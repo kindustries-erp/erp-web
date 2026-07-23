@@ -15,6 +15,7 @@ import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPrevie
 import { Button } from "@/shared/components/ui/Button";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 
@@ -183,7 +184,7 @@ export function AfterSalesListPage() {
   const columns = [
     {
       key: "expectedDeliveryDate",
-      size: 100,
+      size: 150,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -202,6 +203,23 @@ export function AfterSalesListPage() {
             tableState.setColumnFilter("expectedDeliveryDate", v)
           }
           fetchOptions={fetchAfterSalesColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch["expectedDeliveryDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch("expectedDeliveryDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       cell: (row: any) =>
@@ -211,7 +229,7 @@ export function AfterSalesListPage() {
     },
     {
       key: "deliveryDate",
-      size: 100,
+      size: 150,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -224,6 +242,23 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["deliveryDate"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("deliveryDate", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch["deliveryDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch("deliveryDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       cell: (row: any) =>
@@ -453,6 +488,23 @@ export function AfterSalesListPage() {
             tableState.setColumnFilter("activationDate", v)
           }
           fetchOptions={fetchAfterSalesColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch["activationDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch("activationDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       cell: (row: any) => {

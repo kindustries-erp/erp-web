@@ -38,6 +38,7 @@ import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
 import { Button } from "@/shared/components/ui/Button";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 import {
@@ -64,11 +65,7 @@ function DeliveryDetailPopover({ item }: { item: ErpSalesOrder }) {
   });
 
   const itemAny = item as any;
-  const displayDate =
-    itemAny.deliveredDate ||
-    itemAny.actualDeliveryDate ||
-    itemAny.updatedAt ||
-    item.createdAt;
+  const displayDate = itemAny.deliveredDate;
   const dateStr = displayDate
     ? new Date(displayDate).toLocaleDateString("vi-VN")
     : "—";
@@ -700,6 +697,23 @@ export function ErpSalesOrdersPage() {
           selectedFilters={columnState.columnFilters["orderDate"] || []}
           onFilterChange={(v) => columnState.setColumnFilter("orderDate", v)}
           fetchOptions={fetchSalesOrdersColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = columnState.columnSearch["orderDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  columnState.setColumnSearch("orderDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       size: 150,
@@ -820,6 +834,23 @@ export function ErpSalesOrdersPage() {
             columnState.setColumnFilter("expectedDeliveryDate", v)
           }
           fetchOptions={fetchSalesOrdersColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = columnState.columnSearch["expectedDeliveryDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  columnState.setColumnSearch("expectedDeliveryDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       size: 150,
@@ -846,6 +877,23 @@ export function ErpSalesOrdersPage() {
             columnState.setColumnFilter("deliveredDate", v)
           }
           fetchOptions={fetchSalesOrdersColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = columnState.columnSearch["deliveredDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  columnState.setColumnSearch("deliveredDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       size: 150,
