@@ -604,7 +604,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               : String(i);
           if (columnKey === "branchId") {
             const branch = branches.find((b) => b.value === valStr);
-            if (branch) labelStr = branch.label;
+            if (branch) {
+              const parts = branch.label.split(" — ");
+              labelStr = parts.length > 1 ? parts[1] : branch.label;
+            }
           }
           if (columnKey === "invoiceDate" && valStr) {
             // Backend now returns YYYY-MM-DD via TO_CHAR — use as value directly
@@ -625,7 +628,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [direction],
+    [direction, branches],
   );
 
   const handleFilterChange = (key: string, vals: string[]) => {
@@ -1684,7 +1687,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="branchId"
             requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
