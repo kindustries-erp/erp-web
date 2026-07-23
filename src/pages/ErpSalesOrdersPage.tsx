@@ -26,6 +26,7 @@ import {
   salesOrdersCoreApi,
   type ErpSalesOrder,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
@@ -442,28 +443,22 @@ export function ErpSalesOrdersPage() {
       setForm(buildForm(mergedDetail));
 
       if (!customerName && detail.customerId) {
-        import("@/modules/basic-masters/api/basicMastersApi").then(
-          ({ basicMastersApi }) => {
-            basicMastersApi
-              .list({
-                search: detail.customerId || undefined,
-                entities: "customers",
-              })
-              .then((res) => {
-                const c = res.items.customers?.find(
-                  (x: any) => x.id === detail.customerId,
-                );
-                if (c) {
-                  const name = `${c.code} — ${c.displayName || c.name}`;
-                  setEditing((prev) =>
-                    prev?.id === detail.id
-                      ? { ...prev, customerName: name }
-                      : prev,
-                  );
-                }
-              });
-          },
-        );
+        basicMastersApi
+          .list({
+            search: detail.customerId || undefined,
+            entities: "customers",
+          })
+          .then((res) => {
+            const c = res.items.customers?.find(
+              (x: any) => x.id === detail.customerId,
+            );
+            if (c) {
+              const name = `${c.code} — ${c.displayName || c.name}`;
+              setEditing((prev) =>
+                prev?.id === detail.id ? { ...prev, customerName: name } : prev,
+              );
+            }
+          });
       }
     } catch (e) {
       setError(
