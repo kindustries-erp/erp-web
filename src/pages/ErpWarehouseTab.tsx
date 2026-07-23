@@ -45,6 +45,7 @@ import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawe
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { IaFormDrawer } from "@/modules/inventory-adjustments/components/IaFormDrawer";
 import { useIaDrawer } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
+import { inventoryAdjustmentsApi } from "@/modules/inventory-adjustments/api/inventoryAdjustmentsApi";
 import { useReactToPrint } from "react-to-print";
 import {
   GoodsReceiptPrintTemplate,
@@ -446,8 +447,6 @@ export function ErpWarehouseTab() {
           queryKey: ["warehouse-vouchers", "unified"],
         });
       } else if (deleteTarget.type === "adjustment") {
-        const { inventoryAdjustmentsApi } =
-          await import("@/modules/inventory-adjustments/api/inventoryAdjustmentsApi");
         await inventoryAdjustmentsApi.delete(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu điều chỉnh", variant: "success" });
         await queryClient.invalidateQueries({

@@ -284,6 +284,14 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  bulkSetNotes: async (ids: string[], notes: string) => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      ids: string[];
+    }>(`${BASE}/bulk-set-notes`, { ids, notes });
+    return data;
+  },
+
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },
