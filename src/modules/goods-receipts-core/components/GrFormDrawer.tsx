@@ -225,6 +225,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                   purchaseOrderLineId: poLine.id ?? "",
                                   productionOrderMaterialId: "",
                                   itemId: poLine.itemId ?? "",
+                                  itemCode: "",
                                   itemName: poLine.itemName ?? "",
                                   qtyReceived:
                                     remaining > 0 ? remaining.toString() : "",
@@ -389,6 +390,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                         purchaseOrderLineId: poLine.id ?? "",
                                         productionOrderMaterialId: "",
                                         itemId: poLine.itemId ?? "",
+                                        itemCode: "",
                                         itemName: poLine.itemName ?? "",
                                         qtyReceived: qty,
                                         unitCost: poLine.unitPrice ?? "",
@@ -450,9 +452,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         minWidth: 140,
                         cell: (line) => {
                           const itemCode =
-                            line.itemId && itemsDict[line.itemId]
+                            line.itemCode ||
+                            (line.itemId && itemsDict[line.itemId]
                               ? itemsDict[line.itemId].sku
-                              : "—";
+                              : "—");
                           return <span>{itemCode}</span>;
                         },
                       },
@@ -656,6 +659,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                   purchaseOrderLineId: "",
                                   productionOrderMaterialId: "",
                                   itemId: "",
+                                  itemCode: "",
                                   itemName: "",
                                   qtyReceived: "",
                                   unitCost: "",
@@ -832,10 +836,12 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
 
             const skuToId: Record<string, string> = {};
             const idToName: Record<string, string> = {};
+            const idToSku: Record<string, string> = {};
             allItems.forEach((item: any) => {
               if (item.sku) {
                 skuToId[item.sku.toLowerCase()] = item.id;
                 idToName[item.id] = item.itemName;
+                idToSku[item.id] = item.sku;
               }
             });
 
@@ -852,6 +858,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                   purchaseOrderLineId: "",
                   productionOrderMaterialId: "",
                   itemId,
+                  itemCode: idToSku[itemId] || "",
                   itemName: idToName[itemId] || "",
                   qtyReceived: qty || "",
                   unitCost: price || "",

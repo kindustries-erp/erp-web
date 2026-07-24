@@ -28,6 +28,7 @@ export interface GrLineForm {
   purchaseOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
+  itemCode?: string;
   itemName: string;
   qtyReceived: string;
   unitCost: string;
@@ -68,6 +69,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         purchaseOrderLineId: line.purchaseOrderLineId ?? "",
         productionOrderMaterialId: line.productionOrderMaterialId ?? "",
         itemId: line.itemId ?? "",
+        itemCode: "",
         itemName: line.itemName ?? "",
         qtyReceived: line.qtyReceived ?? "0",
         unitCost: line.unitCost ?? "",

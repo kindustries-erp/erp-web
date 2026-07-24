@@ -17,6 +17,7 @@ import { useMemo } from "react";
 export interface IaLineForm {
   id?: string;
   itemId: string;
+  itemCode?: string;
   itemName?: string;
   qtyAdjusted: string;
   unitCost: string;
@@ -47,6 +48,7 @@ export function buildIaForm(adj: IaHeaderDto): IaForm {
       adj.lines?.map((line) => ({
         id: line.id,
         itemId: line.itemId ?? "",
+        itemCode: "",
         qtyAdjusted: line.qtyAdjusted?.toString() ?? "0",
         unitCost: line.unitCost?.toString() ?? "0",
       })) ?? [],

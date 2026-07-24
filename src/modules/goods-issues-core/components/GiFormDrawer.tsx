@@ -324,7 +324,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                       minWidth: isLineViewOnly ? 140 : 200,
                       cell: (line, idx) => {
                         if (isLineViewOnly) {
-                          const code = line.itemName?.split(" — ")[0] || "—";
+                          const code =
+                            line.itemCode ||
+                            line.itemName?.split(" — ")[0] ||
+                            "—";
                           return <span>{code}</span>;
                         }
                         return (
@@ -347,6 +350,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                                 lines[idx] = {
                                   ...lines[idx],
                                   itemId: v || "",
+                                  itemCode: found?.label?.split(" — ")[0] || "",
                                   itemName: found?.label ?? "",
                                 };
                                 return { ...f, lines };
@@ -707,10 +711,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
 
             const skuToId: Record<string, string> = {};
             const idToName: Record<string, string> = {};
+            const idToSku: Record<string, string> = {};
             allItems.forEach((item: any) => {
               if (item.sku) {
                 skuToId[item.sku.toLowerCase()] = item.id;
                 idToName[item.id] = item.itemName;
+                idToSku[item.id] = item.sku;
               }
             });
 
@@ -725,6 +731,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               if (itemId) {
                 newLines.push({
                   itemId,
+                  itemCode: idToSku[itemId] || "",
                   itemName: idToName[itemId] || "",
                   qtyIssued: qty || "",
                   unitCost: price || "",

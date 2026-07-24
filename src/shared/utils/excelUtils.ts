@@ -20,7 +20,18 @@ export async function parseExcelFile(file: File): Promise<any[]> {
         }
         const worksheet = workbook.Sheets[firstSheetName];
         const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-        resolve(json);
+        const cleanJson = json.map((row: any) => {
+          const cleanRow: any = {};
+          for (const key in row) {
+            let val = row[key];
+            if (typeof val === "number") {
+              val = Number(val.toFixed(10));
+            }
+            cleanRow[key] = val;
+          }
+          return cleanRow;
+        });
+        resolve(cleanJson);
       } catch (error) {
         reject(error);
       }
