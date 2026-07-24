@@ -18,14 +18,20 @@ import {
 } from "@/shared/components/DrawerModal";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
 import { GoodsReceiptPrintTemplate } from "@/shared/components/print-templates/GoodsReceiptPrintTemplate";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
-
+import { ImportExcelModal } from "@/shared/components/ImportExcelModal";
+import {
+  downloadInventoryTemplate,
+  parseExcelFile,
+} from "@/shared/utils/excelUtils";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
+import toast from "react-hot-toast";
 function fmtQty(value?: string | null) {
   if (!value) return "0";
   const n = Number(value);
@@ -73,6 +79,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     documentTitle: `PhieuNhapKho_${editing?.receiptNo || "New"}`,
   });
   const { data: companyProfile } = useCompanyProfile();
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const actions =
     viewOnly || loading
@@ -637,27 +644,35 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                   <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-center text-muted-foreground space-y-4">
                     <p>{t("Chọn PO để hiện danh sách hàng cần nhận.")}</p>
                     {form.receiptType === "OTHER" && !viewOnly && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setForm((f) => ({
-                            ...f,
-                            lines: [
-                              ...f.lines,
-                              {
-                                purchaseOrderLineId: "",
-                                productionOrderMaterialId: "",
-                                itemId: "",
-                                itemName: "",
-                                qtyReceived: "",
-                                unitCost: "",
-                              },
-                            ],
-                          }));
-                        }}
-                      >
-                        + {t("Thêm dòng")}
-                      </Button>
+                      <div className="flex justify-center gap-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setForm((f) => ({
+                              ...f,
+                              lines: [
+                                ...f.lines,
+                                {
+                                  purchaseOrderLineId: "",
+                                  productionOrderMaterialId: "",
+                                  itemId: "",
+                                  itemName: "",
+                                  qtyReceived: "",
+                                  unitCost: "",
+                                },
+                              ],
+                            }));
+                          }}
+                        >
+                          + {t("Thêm dòng")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsImportOpen(true)}
+                        >
+                          {t("Nhập từ Excel")}
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -773,6 +788,97 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
           }}
         />
       </div>
+      <ImportExcelModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onDownloadTemplate={async () => {
+          const headers = [
+            "Mã linh kiện",
+            "Tên linh kiện",
+            "Số lượng",
+            "Đơn giá",
+          ];
+          let refItems: any[] = [];
+          try {
+            const res = await basicMastersApi.list({
+              entities: "inventoryItems",
+              limit: 5000,
+            });
+            refItems = (res.items.inventoryItems || []).map((item: any) => ({
+              sku: item.sku || "",
+              name: item.itemName || "",
+            }));
+          } catch (e) {
+            console.error("Failed to fetch reference items", e);
+          }
+          downloadInventoryTemplate(headers, "Template_NhapKho.xlsx", refItems);
+        }}
+        onUpload={async (file, overwrite) => {
+          try {
+            const data = await parseExcelFile(file);
+            let skipped = 0;
+            const newLines: any[] = [];
+
+            let allItems: any[] = [];
+            try {
+              const res = await basicMastersApi.list({
+                entities: "inventoryItems",
+                limit: 5000,
+              });
+              allItems = res.items.inventoryItems || [];
+            } catch (e) {
+              console.error("Failed to fetch items for upload lookup", e);
+            }
+
+            const skuToId: Record<string, string> = {};
+            const idToName: Record<string, string> = {};
+            allItems.forEach((item: any) => {
+              if (item.sku) {
+                skuToId[item.sku.toLowerCase()] = item.id;
+                idToName[item.id] = item.itemName;
+              }
+            });
+
+            data.forEach((row: any) => {
+              const sku = row["Mã linh kiện"]?.toString().trim();
+              const qty = row["Số lượng"]?.toString().trim();
+              const price = row["Đơn giá"]?.toString().trim();
+
+              if (!sku) return;
+
+              const itemId = skuToId[sku.toLowerCase()];
+              if (itemId) {
+                newLines.push({
+                  purchaseOrderLineId: "",
+                  productionOrderMaterialId: "",
+                  itemId,
+                  itemName: idToName[itemId] || "",
+                  qtyReceived: qty || "",
+                  unitCost: price || "",
+                });
+              } else {
+                skipped++;
+              }
+            });
+
+            if (skipped > 0) {
+              toast.error(
+                `Đã bỏ qua ${skipped} dòng chứa mã linh kiện không tồn tại.`,
+              );
+            }
+
+            setForm((f) => {
+              const filteredOldLines = overwrite
+                ? []
+                : f.lines.filter((l: any) => l.itemId);
+              return { ...f, lines: [...filteredOldLines, ...newLines] };
+            });
+            setIsImportOpen(false);
+          } catch {
+            toast.error("Lỗi khi đọc file Excel");
+          }
+        }}
+      />
     </>
   );
 }

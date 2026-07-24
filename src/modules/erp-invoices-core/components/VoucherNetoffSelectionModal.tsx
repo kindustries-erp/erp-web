@@ -12,7 +12,14 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSelect: (selectedVouchers: { id: string; amount: number }[]) => void;
+  onSelect: (
+    selectedVouchers: {
+      id: string;
+      amount: number;
+      maxAmount?: number;
+      txn?: any;
+    }[],
+  ) => void;
   existingVoucherIds?: string[];
 }
 
@@ -61,10 +68,14 @@ export function VoucherNetoffSelectionModal({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    existingVoucherIds || [],
+  );
   const [netOffAmounts, setNetOffAmounts] = useState<Record<string, number>>(
     {},
   );
+  const [maxAmounts, setMaxAmounts] = useState<Record<string, number>>({});
+  const [selectedTxns, setSelectedTxns] = useState<Record<string, any>>({});
 
   const tableState = useTableColumnState(`voucher-netoff-selection-table`);
   const sortBy = tableState.sorts[0]?.replace("-", "") || "transDate";
@@ -106,6 +117,8 @@ export function VoucherNetoffSelectionModal({
     if (open) {
       setSelectedIds([]);
       setNetOffAmounts({});
+      setMaxAmounts({});
+      setSelectedTxns({});
     }
   }, [open]);
 
@@ -122,9 +135,21 @@ export function VoucherNetoffSelectionModal({
         ...prev,
         [v.id]: remaining > 0 ? remaining : 0,
       }));
+      setMaxAmounts((prev) => ({ ...prev, [v.id]: remaining }));
+      setSelectedTxns((prev) => ({ ...prev, [v.id]: v }));
     } else {
       setSelectedIds((prev) => prev.filter((id) => id !== v.id));
       setNetOffAmounts((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+      setMaxAmounts((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+      setSelectedTxns((prev) => {
         const next = { ...prev };
         delete next[v.id];
         return next;
@@ -141,6 +166,8 @@ export function VoucherNetoffSelectionModal({
       selectedIds.map((id) => ({
         id,
         amount: netOffAmounts[id] || 0,
+        maxAmount: maxAmounts[id],
+        txn: selectedTxns[id],
       })),
     );
     onClose();
