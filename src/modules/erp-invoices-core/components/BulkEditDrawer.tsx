@@ -386,21 +386,24 @@ export function BulkEditDrawer({
       ]}
       leftPanel={
         <div className="space-y-4 pr-1 flex flex-col h-full min-h-[500px]">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <label className="text-xs font-semibold text-slate-700 shrink-0">
-              {t("bulkEditInvoiceListLabel", "Chi tiết theo từng hóa đơn")}
+              {t("bulkEditInvoiceListLabel", "Chi tiết theo từng hóa đơn")} (
+              {filteredInvoices.length}/{selectedIds.length})
             </label>
-            <span className="text-[11px] text-slate-400">
-              {filteredInvoices.length}/{selectedIds.length} hóa đơn
-            </span>
+            <div className="w-full md:w-64 shrink-0">
+              <SearchInput
+                value={invoiceSearch}
+                onChange={setInvoiceSearch}
+                placeholder={t(
+                  "bulkEditSearchPlaceholder",
+                  "Tìm kiếm hóa đơn...",
+                )}
+                className="w-full"
+                inputClassName="h-8 text-xs bg-white"
+              />
+            </div>
           </div>
-
-          <SearchInput
-            value={invoiceSearch}
-            onChange={setInvoiceSearch}
-            placeholder={t("bulkEditSearchPlaceholder", "Tìm kiếm hóa đơn...")}
-            className="w-full shrink-0"
-          />
 
           <div className="flex-1 min-h-0 bg-white flex flex-col">
             <DataTable<ErpInvoice>

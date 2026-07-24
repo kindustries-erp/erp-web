@@ -591,12 +591,11 @@ export function InvoiceBulkPostingDrawer({
       size="xl"
       actions={postActions}
       confirmOnClose={isDirty}
+      rightPanelTitle={mode === "post" ? "Cấu hình hạch toán chung" : undefined}
+      rightPanelDefaultCollapsed={false}
       rightPanel={
         mode === "post" ? (
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-4">
-            <h3 className="text-sm font-medium text-slate-800">
-              Cấu hình hạch toán chung
-            </h3>
+          <div className="flex flex-col gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">
                 Chi nhánh mặc định chung <span className="text-red-500">*</span>
@@ -764,14 +763,13 @@ export function InvoiceBulkPostingDrawer({
           )}
 
           {/* Invoice List */}
-          <div>
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 gap-2">
-              <h3 className="text-sm font-medium text-slate-800 shrink-0">
-                Danh sách hóa đơn áp dụng{" "}
-                {displayedInvoices.length < selectedInvoices.length &&
-                  `(Hiển thị ${displayedInvoices.length}/${selectedInvoices.length})`}
-              </h3>
-              <div className="w-full md:w-80 shrink-0">
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <label className="text-xs font-semibold text-slate-700 shrink-0">
+                Danh sách hóa đơn áp dụng ({displayedInvoices.length}/
+                {selectedInvoices.length})
+              </label>
+              <div className="w-full md:w-64 shrink-0">
                 <SearchInput
                   className="w-full"
                   value={searchTerm}
