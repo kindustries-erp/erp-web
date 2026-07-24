@@ -21,6 +21,15 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
+import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
+
+const SUGGESTION_FILTER_OPTIONS: ComboboxOption[] = [
+  { value: "ALL", label: "Tất cả HĐ" },
+  { value: "HAS_SUGGESTION", label: "Có gợi ý / Lưu ý" },
+  { value: "PERFECT_HIGH", label: "Hoàn hảo / Tốt" },
+  { value: "NOTICE", label: "Nhóm Lưu ý" },
+  { value: "NO_SUGGESTION", label: "Chưa có gợi ý" },
+];
 
 interface Props {
   open: boolean;
@@ -50,78 +59,92 @@ interface BankTxn {
 interface MatchResult {
   score: number;
   amountMatch: boolean;
-  textMatch: boolean;
-  badge: "STRONG" | "AMOUNT_ONLY" | "WARNING" | "NONE";
+  invoiceNoMatch: boolean;
+  correspondentMatch: boolean;
+  badge:
+    | "PERFECT"
+    | "HIGH"
+    | "LIKELY"
+    | "POSSIBLE"
+    | "NOTICE_STRONG"
+    | "NOTICE"
+    | "NONE";
 }
 
-const PAGE_SIZE = 100;
-const MAX_RECORDS = 500;
+const PAGE_SIZE = 200;
+const MAX_RECORDS = 1000;
 
 // ---------------------------------------------------------------------------
 // SCORING LOGIC
 // ---------------------------------------------------------------------------
+
+// Helper: tách keyword từ tên công ty, bỏ các từ generic
+function extractKeywords(name: string | undefined | null): string[] {
+  if (!name || name.length <= 2) return [];
+  return name
+    .toLowerCase()
+    .replace(/công ty|tnhh|cổ phần|\bmtv\b|\bcp\b|chi nhánh/gi, "")
+    .trim()
+    .split(/\s+/)
+    .filter((w: string) => w.length > 2);
+}
 
 function scoreTransaction(
   txn: BankTxn,
   invoice: ErpInvoice,
   direction: "IN" | "OUT",
 ): MatchResult {
-  let score = 0;
-
-  // 1. KIỂM TRA SỐ TIỀN
+  // 1. SỐ TIỀN — chỉ exact match (< 0.1% sai lệch)
   const targetAmt = parseFloat(invoice.totalAmount as any) || 0;
   const txnAmt =
     direction === "IN"
       ? parseFloat(txn.debitAmount as any) || 0
       : parseFloat(txn.creditAmount as any) || 0;
-
   const amtDiff = targetAmt > 0 ? Math.abs(txnAmt - targetAmt) / targetAmt : 1;
+  const amountMatch = amtDiff < 0.001;
 
-  let amountMatch = false;
-  if (amtDiff < 0.001) {
-    score += 10;
-    amountMatch = true;
-  } else if (amtDiff < 0.05) {
-    score += 5;
-    amountMatch = true;
-  } else if (amtDiff < 0.2) {
-    score += 2;
-  }
+  let score = amountMatch ? 10 : 0;
 
-  // 2. KIỂM TRA TEXT
+  // 2. SỐ HĐ trong diễn giải (txn.description)
   const desc = (txn.description || "").toLowerCase();
-  let textScore = 0;
+  const invoiceNoMatch = !!(
+    invoice.invoiceNo && desc.includes(invoice.invoiceNo.toLowerCase())
+  );
+  if (invoiceNoMatch) score += 8;
 
+  // 3. TÊN ĐỐI ỨNG (txn.correspondentName) so với đối tác HĐ
+  //    - HĐ đầu vào (IN)  → Bên bán (sellerName)  ↔ Tên đối ứng
+  //    - HĐ đầu ra  (OUT) → Bên mua (buyerName)   ↔ Tên đối ứng
   const partnerName =
     direction === "IN" ? invoice.sellerName : invoice.buyerName;
-  if (partnerName && partnerName.length > 2) {
-    const keywords = partnerName
-      .toLowerCase()
-      .replace(/công ty|tnhh|cổ phần|mtv|cp\b/gi, "")
-      .trim()
-      .split(/\s+/)
-      .filter((w: string) => w.length > 2);
-    if (keywords.some((kw: string) => desc.includes(kw))) textScore += 5;
+  const corrName = (txn.correspondentName || "").toLowerCase();
+  const keywords = extractKeywords(partnerName);
+  const correspondentMatch =
+    corrName.length > 0 &&
+    keywords.length > 0 &&
+    keywords.some((kw) => corrName.includes(kw));
+  if (correspondentMatch) score += 5;
+
+  // 4. BONUS: cùng tháng
+  if (txn.transDate?.substring(0, 7) === invoice.invoiceDate?.substring(0, 7))
+    score += 2;
+
+  // 5. XÁC ĐỊNH BADGE
+  let badge: MatchResult["badge"];
+  if (amountMatch) {
+    // Nhóm 1 — Có khớp tiền: hiện gợi ý + nút Nhận
+    if (invoiceNoMatch && correspondentMatch) badge = "PERFECT";
+    else if (invoiceNoMatch) badge = "HIGH";
+    else if (correspondentMatch) badge = "LIKELY";
+    else badge = "POSSIBLE";
+  } else {
+    // Nhóm 2 — Không khớp tiền nhưng có tín hiệu text: chỉ hiện badge cảnh báo, không có nút Nhận
+    if (invoiceNoMatch && correspondentMatch) badge = "NOTICE_STRONG";
+    else if (invoiceNoMatch) badge = "NOTICE";
+    else badge = "NONE";
   }
 
-  if (invoice.invoiceNo && desc.includes(invoice.invoiceNo.toLowerCase())) {
-    textScore += 8;
-  }
-
-  const txnMonth = txn.transDate?.substring(0, 7);
-  const invMonth = invoice.invoiceDate?.substring(0, 7);
-  if (txnMonth && txnMonth === invMonth) score += 2;
-
-  score += textScore;
-  const textMatch = textScore >= 5;
-
-  // 3. XÁC ĐỊNH BADGE
-  let badge: MatchResult["badge"] = "NONE";
-  if (amountMatch && textMatch) badge = "STRONG";
-  else if (amountMatch) badge = "AMOUNT_ONLY";
-  else if (textMatch) badge = "WARNING";
-
-  return { score, amountMatch, textMatch, badge };
+  return { score, amountMatch, invoiceNoMatch, correspondentMatch, badge };
 }
 
 // ---------------------------------------------------------------------------
@@ -141,16 +164,7 @@ export function InvoiceBulkNetOffDrawer({
     [invoices, selectedInvoiceIds],
   );
   const [invoiceSearch, setInvoiceSearch] = useState("");
-  const displayedInvoices = useMemo(() => {
-    if (!invoiceSearch.trim()) return selectedInvoices;
-    const lower = invoiceSearch.toLowerCase();
-    return selectedInvoices.filter(
-      (inv) =>
-        inv.invoiceNo?.toLowerCase().includes(lower) ||
-        inv.buyerName?.toLowerCase().includes(lower) ||
-        inv.sellerName?.toLowerCase().includes(lower),
-    );
-  }, [selectedInvoices, invoiceSearch]);
+  const [suggestionFilter, setSuggestionFilter] = useState("ALL"); // ALL, HAS_SUGGESTION, PERFECT_HIGH, NOTICE, NO_SUGGESTION
 
   // Cấu hình kỳ
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -216,6 +230,7 @@ export function InvoiceBulkNetOffDrawer({
         endDate: dateTo,
         sortBy: "transDate",
         sortOrder: "DESC", // Lấy giao dịch mới nhất trước
+        transactionType: direction === "IN" ? "OUT" : "IN", // Đầu vào -> quét tiền chi; Đầu ra -> quét tiền thu
       });
 
       const newTxns = res.items || [];
@@ -234,17 +249,16 @@ export function InvoiceBulkNetOffDrawer({
         return;
       }
 
-      // Check if we have enough STRONG matches
+      // Dừng sớm khi mọi invoice đã có ít nhất 1 PERFECT hoặc HIGH match (nhóm có khớp tiền)
+      // NOTICE_STRONG / NOTICE không kích hoạt fetch thêm — chỉ xuất hiện tình cờ trong pool đã load
       const combined = pageToFetch === 1 ? newTxns : [...allTxns, ...newTxns];
       let needsMore = false;
       for (const inv of selectedInvoices) {
-        let strongCount = 0;
-        for (const t of combined) {
-          const res = scoreTransaction(t, inv, direction);
-          if (res.badge === "STRONG") strongCount++;
-        }
-        if (strongCount < 1) {
-          // Giảm xuống 1 để quét nhanh hơn, vì UI chỉ hiện 1 gợi ý
+        const hasGoodMatch = combined.some((t: BankTxn) => {
+          const r = scoreTransaction(t, inv, direction);
+          return r.badge === "PERFECT" || r.badge === "HIGH";
+        });
+        if (!hasGoodMatch) {
           needsMore = true;
           break;
         }
@@ -282,6 +296,17 @@ export function InvoiceBulkNetOffDrawer({
     return Math.max(0, total - currentNetOff - pendingNetOff);
   };
 
+  // Thứ tự ưu tiên badge: PERFECT > HIGH > LIKELY > POSSIBLE > NOTICE_STRONG > NOTICE
+  const BADGE_PRIORITY: Record<MatchResult["badge"], number> = {
+    PERFECT: 6,
+    HIGH: 5,
+    LIKELY: 4,
+    POSSIBLE: 3,
+    NOTICE_STRONG: 2,
+    NOTICE: 1,
+    NONE: 0,
+  };
+
   // Find best suggestion for each invoice
   const suggestionsMap = useMemo(() => {
     const map: Record<string, { txn: BankTxn; score: MatchResult }> = {};
@@ -290,11 +315,15 @@ export function InvoiceBulkNetOffDrawer({
       let bestScore: MatchResult | null = null;
       for (const txn of allTxns) {
         const score = scoreTransaction(txn, inv, direction);
-        if (score.badge !== "NONE") {
-          if (!bestScore || score.score > bestScore.score) {
-            bestTxn = txn;
-            bestScore = score;
-          }
+        if (score.badge === "NONE") continue;
+        if (
+          !bestScore ||
+          BADGE_PRIORITY[score.badge] > BADGE_PRIORITY[bestScore.badge] ||
+          (BADGE_PRIORITY[score.badge] === BADGE_PRIORITY[bestScore.badge] &&
+            score.score > bestScore.score)
+        ) {
+          bestTxn = txn;
+          bestScore = score;
         }
       }
       if (bestTxn && bestScore) {
@@ -303,6 +332,39 @@ export function InvoiceBulkNetOffDrawer({
     }
     return map;
   }, [allTxns, selectedInvoices, direction]);
+
+  const displayedInvoices = useMemo(() => {
+    let filtered = selectedInvoices;
+
+    // 1. Text Search
+    if (invoiceSearch.trim()) {
+      const lower = invoiceSearch.toLowerCase();
+      filtered = filtered.filter(
+        (inv) =>
+          inv.invoiceNo?.toLowerCase().includes(lower) ||
+          inv.buyerName?.toLowerCase().includes(lower) ||
+          inv.sellerName?.toLowerCase().includes(lower),
+      );
+    }
+
+    // 2. Suggestion Filter
+    if (suggestionFilter !== "ALL") {
+      filtered = filtered.filter((inv) => {
+        const badge = suggestionsMap[inv.id]?.score?.badge;
+        if (suggestionFilter === "HAS_SUGGESTION")
+          return badge && badge !== "NONE";
+        if (suggestionFilter === "PERFECT_HIGH")
+          return badge === "PERFECT" || badge === "HIGH";
+        if (suggestionFilter === "NOTICE")
+          return badge === "NOTICE_STRONG" || badge === "NOTICE";
+        if (suggestionFilter === "NO_SUGGESTION")
+          return !badge || badge === "NONE";
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [selectedInvoices, invoiceSearch, suggestionFilter, suggestionsMap]);
 
   const handleQuickAccept = (invId: string, txn: BankTxn, amt: number) => {
     setIsDirty(true);
@@ -405,26 +467,61 @@ export function InvoiceBulkNetOffDrawer({
           }
 
           const { txn, score } = suggestion;
-          let badgeClasses = "";
-          let glowClasses = "";
-          let dotClasses = "";
-          let label = "";
-          if (score.badge === "STRONG") {
-            badgeClasses = "text-emerald-700 bg-emerald-50 border-emerald-200";
-            glowClasses = "bg-emerald-400";
-            dotClasses = "bg-emerald-500";
-            label = "Phù hợp";
-          } else if (score.badge === "AMOUNT_ONLY") {
-            badgeClasses = "text-blue-700 bg-blue-50 border-blue-200";
-            glowClasses = "bg-blue-400";
-            dotClasses = "bg-blue-500";
-            label = "Khớp tiền";
-          } else if (score.badge === "WARNING") {
-            badgeClasses = "text-amber-700 bg-amber-50 border-amber-200";
-            glowClasses = "bg-amber-400";
-            dotClasses = "bg-amber-500";
-            label = "Xem xét";
-          }
+
+          // Badge config — 6 mức, rõ nghĩa ngay khi nhìn
+          const BADGE_CONFIG: Record<
+            Exclude<MatchResult["badge"], "NONE">,
+            {
+              label: string;
+              badgeClasses: string;
+              glowClasses: string;
+              dotClasses: string;
+              noAction?: boolean;
+            }
+          > = {
+            PERFECT: {
+              label: "Tiền + Số HĐ + Đối ứng",
+              badgeClasses:
+                "text-emerald-800 bg-emerald-100 border-emerald-300",
+              glowClasses: "bg-emerald-500",
+              dotClasses: "bg-emerald-600",
+            },
+            HIGH: {
+              label: "Tiền + Số HĐ",
+              badgeClasses: "text-emerald-700 bg-emerald-50 border-emerald-200",
+              glowClasses: "bg-emerald-400",
+              dotClasses: "bg-emerald-500",
+            },
+            LIKELY: {
+              label: "Tiền + Đối ứng",
+              badgeClasses: "text-blue-700 bg-blue-50 border-blue-200",
+              glowClasses: "bg-blue-400",
+              dotClasses: "bg-blue-500",
+            },
+            POSSIBLE: {
+              label: "Chỉ khớp tiền",
+              badgeClasses: "text-amber-700 bg-amber-50 border-amber-200",
+              glowClasses: "bg-amber-400",
+              dotClasses: "bg-amber-500",
+            },
+            NOTICE_STRONG: {
+              label: "Khớp Số HĐ + Đối ứng (khác tiền)",
+              badgeClasses: "text-orange-700 bg-orange-100 border-orange-300",
+              glowClasses: "bg-orange-500",
+              dotClasses: "bg-orange-600",
+              noAction: true,
+            },
+            NOTICE: {
+              label: "Khớp Số HĐ (khác tiền)",
+              badgeClasses: "text-orange-600 bg-orange-50 border-orange-200",
+              glowClasses: "bg-orange-400",
+              dotClasses: "bg-orange-500",
+              noAction: true,
+            },
+          };
+
+          const cfg = score.badge !== "NONE" ? BADGE_CONFIG[score.badge] : null;
+          if (!cfg) return null;
 
           const txnAmt =
             Number(direction === "IN" ? txn.debitAmount : txn.creditAmount) ||
@@ -438,11 +535,14 @@ export function InvoiceBulkNetOffDrawer({
               amount={txnAmt}
               isSuggestion={true}
               suggestionProps={{
-                badgeLabel: label,
-                badgeClasses: badgeClasses,
-                glowClasses: glowClasses,
-                dotClasses: dotClasses,
-                onAccept: () => handleQuickAccept(inv.id, txn, amtToApply),
+                badgeLabel: cfg.label,
+                badgeClasses: cfg.badgeClasses,
+                glowClasses: cfg.glowClasses,
+                dotClasses: cfg.dotClasses,
+                // NOTICE group: chỉ hiện badge, không có nút Nhận gợi ý
+                onAccept: cfg.noAction
+                  ? undefined
+                  : () => handleQuickAccept(inv.id, txn, amtToApply),
               }}
               onViewDetail={(id) => setDetailTxnId(id)}
             />
@@ -686,17 +786,26 @@ export function InvoiceBulkNetOffDrawer({
                 Chi tiết theo từng hóa đơn ({invoicesWithSelection}/
                 {totalInvoices})
               </label>
-              <div className="w-full md:w-64 shrink-0">
-                <SearchInput
-                  value={invoiceSearch}
-                  onChange={setInvoiceSearch}
-                  placeholder="Tìm kiếm hóa đơn..."
-                  className="w-full"
-                  inputClassName="h-8 text-xs bg-white"
+              <div className="w-full md:w-auto shrink-0 flex items-center gap-2">
+                <Combobox
+                  options={SUGGESTION_FILTER_OPTIONS}
+                  value={suggestionFilter}
+                  onChange={(val) => setSuggestionFilter(val || "ALL")}
+                  allowClear={false}
+                  className="h-8 text-xs w-48 bg-white"
                 />
+                <div className="w-48">
+                  <SearchInput
+                    value={invoiceSearch}
+                    onChange={setInvoiceSearch}
+                    placeholder="Tìm kiếm hóa đơn..."
+                    className="w-full"
+                    inputClassName="h-8 text-xs bg-white"
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex-1 min-h-0 bg-white flex flex-col">
+            <div className="flex-1 min-h-0 bg-white flex flex-col overflow-auto">
               <DataTable<ErpInvoice>
                 variant="spreadsheet"
                 items={displayedInvoices}
@@ -772,7 +881,7 @@ const TransactionCard = ({
     badgeClasses: string;
     glowClasses?: string;
     dotClasses?: string;
-    onAccept: () => void;
+    onAccept?: () => void; // undefined = NOTICE group, chỉ hiện badge, không có nút Nhận
   };
   netOffProps?: {
     value: number;
@@ -812,12 +921,12 @@ const TransactionCard = ({
   return (
     <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm relative group">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex flex-col">
+        <div className="flex flex-col min-w-0 flex-1">
           <span className="text-[10px] text-slate-400 font-medium">
             {txn?.transDate ? formatGMT7(txn.transDate, "date") : ""}
           </span>
           <span
-            className="text-[10px] font-mono font-semibold text-slate-800 cursor-pointer hover:opacity-75"
+            className="text-[10px] font-mono font-semibold text-slate-800 cursor-pointer hover:opacity-75 truncate"
             onClick={() => txn && onViewDetail(txn.id)}
             title="Nhấn để xem chi tiết sao kê"
           >
@@ -825,16 +934,16 @@ const TransactionCard = ({
           </span>
         </div>
 
-        <div className="flex items-start gap-1.5">
+        <div className="flex items-start gap-1.5 shrink-0">
           <div className="text-right flex flex-col items-end">
             <div className="font-medium text-xs text-slate-800">
               {money(amount)}
             </div>
             {isSuggestion && suggestionProps && (
               <div
-                className={`mt-0.5 flex items-center px-1.5 py-0.5 rounded text-[9px] border ${suggestionProps.badgeClasses}`}
+                className={`mt-0.5 flex items-start px-1.5 py-0.5 rounded text-[9px] border whitespace-normal text-right max-w-[140px] leading-[1.2] ${suggestionProps.badgeClasses}`}
               >
-                <span className="relative flex h-1.5 w-1.5 mr-1">
+                <span className="relative flex h-1.5 w-1.5 mr-1 shrink-0 mt-[2px]">
                   <span
                     className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${suggestionProps.glowClasses}`}
                   ></span>
@@ -864,7 +973,7 @@ const TransactionCard = ({
         </div>
       </Tooltip>
 
-      {isSuggestion && suggestionProps && (
+      {isSuggestion && suggestionProps && suggestionProps.onAccept && (
         <Button
           size="sm"
           variant="outline"
