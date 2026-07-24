@@ -22,6 +22,7 @@ export interface GiLineForm {
   salesOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
+  itemCode?: string;
   itemName: string;
   serialId: string;
   vehicleId: string;
@@ -50,6 +51,7 @@ export const emptyGiLine = (): GiLineForm => ({
   salesOrderLineId: "",
   productionOrderMaterialId: "",
   itemId: "",
+  itemCode: "",
   itemName: "",
   serialId: "",
   vehicleId: "",
@@ -82,6 +84,7 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           salesOrderLineId: line.salesOrderLineId ?? "",
           productionOrderMaterialId: line.productionOrderMaterialId ?? "",
           itemId: line.itemId ?? "",
+          itemCode: "",
           itemName: line.itemName ?? "",
           serialId: line.serialId ?? "",
           vehicleId: line.vehicleId ?? "",
@@ -236,6 +239,7 @@ export function useGiDrawer({
                 ...emptyGiLine(),
                 salesOrderLineId: l.id || "",
                 itemId: l.itemId || "",
+                itemCode: "",
                 itemName: l.itemName || "",
                 qtyIssued: "1",
                 unitCost: l.unitPrice || "",
@@ -247,6 +251,7 @@ export function useGiDrawer({
               ...emptyGiLine(),
               salesOrderLineId: l.id || "",
               itemId: l.itemId || "",
+              itemCode: "",
               itemName: l.itemName || "",
               qtyIssued: String(qtyToDeliver),
               unitCost: l.unitPrice || "",

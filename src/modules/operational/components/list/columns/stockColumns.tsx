@@ -198,6 +198,35 @@ export function useStockColumns({
         ),
       },
       {
+        key: "adjusted_qty",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("inventory.table.columns.adjusted", "Điều chỉnh")}
+            sortState={getSortState("adjusted_qty")}
+            onSortChange={(state) => handleSortChange("adjusted_qty", state)}
+            searchValue={tableState.columnSearch["adjusted_qty"] || ""}
+            onSearchChange={(val) => handleSearchChange("adjusted_qty", val)}
+            selectedFilters={tableState.columnFilters["adjusted_qty"] || []}
+            onFilterChange={(vals) => handleFilterChange("adjusted_qty", vals)}
+            align="right"
+            columnKey="adjusted_qty"
+            requireSearchToFetchOptions={true}
+            allFilters={tableState.columnFilters}
+            formatOptionLabel={formatQty}
+          />
+        ),
+        className: "align-middle text-right",
+        headerClassName: "px-2",
+        sortable: false,
+        size: 140,
+        enableResizing: true,
+        cell: (row) => (
+          <span className="inline-block w-full text-right text-sm tabular-nums">
+            {formatQty(row.adjusted_qty)}
+          </span>
+        ),
+      },
+      {
         key: "on_hand_qty",
         header: (
           <TableColumnHeaderFilter

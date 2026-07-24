@@ -256,9 +256,10 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                       minWidth: 140,
                       cell: (line: any) => {
                         const itemCode =
-                          line.itemId && itemsDict[line.itemId]
+                          line.itemCode ||
+                          (line.itemId && itemsDict[line.itemId]
                             ? itemsDict[line.itemId].sku
-                            : "—";
+                            : "—");
                         return (
                           <span className="font-medium text-foreground">
                             {itemCode}
@@ -313,6 +314,8 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                                   lines[actualIndex] = {
                                     ...lines[actualIndex],
                                     itemId: v || "",
+                                    itemCode:
+                                      found?.label?.split(" — ")[0] || "",
                                     itemName: found?.label ?? "",
                                   };
                                 }
@@ -476,6 +479,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                             ...f.lines,
                             {
                               itemId: "",
+                              itemCode: "",
                               itemName: "",
                               qtyAdjusted: "",
                               unitCost: "",
@@ -586,10 +590,12 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
             const skuToId: Record<string, string> = {};
             const idToName: Record<string, string> = {};
+            const idToSku: Record<string, string> = {};
             allItems.forEach((item: any) => {
               if (item.sku) {
                 skuToId[item.sku.toLowerCase()] = item.id;
                 idToName[item.id] = item.itemName;
+                idToSku[item.id] = item.sku;
               }
             });
 
@@ -604,6 +610,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
               if (itemId) {
                 newLines.push({
                   itemId,
+                  itemCode: idToSku[itemId] || "",
                   itemName: idToName[itemId] || "",
                   qtyAdjusted: qty || "",
                   unitCost: price || "",
