@@ -111,6 +111,7 @@ export interface InventoryStockRow {
   unit: string;
   received_qty: number;
   issued_qty: number;
+  adjusted_qty: number;
   on_hand_qty: number;
   reserved_qty: number;
   stock_value: number;

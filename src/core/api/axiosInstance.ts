@@ -31,6 +31,12 @@ const RETRY_DELAY_MS = 1000;
 const RETRYABLE_STATUS = new Set([502, 503, 504]);
 
 function isRetryable(error: AxiosError): boolean {
+  // Only retry idempotent methods automatically
+  const method = error.config?.method?.toLowerCase();
+  if (method !== "get" && method !== "head" && method !== "options") {
+    return false;
+  }
+
   // Network errors (no response received)
   if (
     !error.response &&
@@ -64,7 +70,7 @@ function tToast(key: keyof typeof vi.apiToast): string {
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 60000,
   headers: { "Content-Type": "application/json" },
 });
 

@@ -42,6 +42,7 @@ export function InventoryListPage() {
   >({});
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
   const [creatingItem, setCreatingItem] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function InventoryListPage() {
   });
 
   useEffect(() => {
-    setLoading(listQuery.isLoading || listQuery.isFetching);
+    setLoading(listQuery.isLoading || listQuery.isFetching || isReloading);
     setError(
       listQuery.error
         ? extractApiError(listQuery.error, "Không tải được dữ liệu")
@@ -162,7 +163,12 @@ export function InventoryListPage() {
         onRowSelectionChange={setRowSelection}
         bulkActionsNode={bulkActionsNode}
         onRefetch={useCallback(() => {
-          void listQuery.refetch();
+          setIsReloading(true);
+          Promise.all([
+            listQuery.refetch(),
+            new Promise((resolve) => setTimeout(resolve, 500)),
+          ]).finally(() => setIsReloading(false));
+
           const expandedIds = Object.keys(expandedStockItemIds).filter(
             (key) => expandedStockItemIds[key],
           );
