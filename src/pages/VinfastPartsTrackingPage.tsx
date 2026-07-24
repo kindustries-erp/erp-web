@@ -38,7 +38,7 @@ import {
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
-import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 
 interface VinfastPartTrackingRow {
   itemCode: string;
@@ -734,14 +734,13 @@ export function VinfastPartsTrackingPage() {
           hideFooter={true}
           isActive={!!(filterState.dateFrom || filterState.dateTo)}
           dateRangeSlot={({ close }) => (
-            <InvoiceDateRangeSlot
+            <DateRangeColumnSlot
               dateFrom={filterState.dateFrom}
               dateTo={filterState.dateTo}
               onChange={(from, to) => {
                 filterProps.setDateFrom(from);
                 filterProps.setDateTo(to);
                 setPage(1);
-                close();
               }}
               onClose={close}
             />

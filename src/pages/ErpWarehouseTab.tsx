@@ -23,6 +23,7 @@ import { Forbidden } from "@/pages/Forbidden";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { ReceiptText } from "lucide-react";
 import {
@@ -346,6 +347,42 @@ export function ErpWarehouseTab() {
   };
 
   const renderHeaderFilter = (key: string, label: string) => {
+    if (key === "date") {
+      return (
+        <TableColumnHeaderFilter
+          title={label}
+          align="center"
+          className="w-full justify-center"
+          sortState={getSortState(key)}
+          onSortChange={(state) => handleSortChange(key, state)}
+          searchValue={tableState.columnSearch[key] || ""}
+          onSearchChange={(val) => handleSearchChange(key, val)}
+          selectedFilters={tableState.columnFilters[key] || []}
+          onFilterChange={(vals) => handleFilterChange(key, vals)}
+          columnKey={key}
+          hideFilter={true}
+          hideFooter={true}
+          isActive={!!tableState.columnSearch[key]}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch[key] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch(key, next);
+                  setPage(1);
+                }}
+                onClose={close}
+              />
+            );
+          }}
+        />
+      );
+    }
+
     let formatOptionLabel: ((val: string) => string) | undefined;
     if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
       formatOptionLabel = (val: string | number) => {

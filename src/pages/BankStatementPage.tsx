@@ -20,7 +20,7 @@ import toast from "react-hot-toast";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
-import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -235,14 +235,13 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
           hideFooter={true}
           isActive={!!(filter.state.dateFrom || filter.state.dateTo)}
           dateRangeSlot={({ close }) => (
-            <InvoiceDateRangeSlot
+            <DateRangeColumnSlot
               dateFrom={filter.state.dateFrom}
               dateTo={filter.state.dateTo}
               onChange={(from, to) => {
                 filter.setDateFrom(from);
                 filter.setDateTo(to);
                 setPage(1);
-                close();
               }}
               onClose={close}
             />
