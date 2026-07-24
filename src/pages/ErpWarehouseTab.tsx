@@ -5,6 +5,7 @@
  */
 
 import { useEffect, useMemo, useState, useRef } from "react";
+import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   PackagePlus,
@@ -609,10 +610,17 @@ export function ErpWarehouseTab() {
         cell: (row) => {
           if (row.type !== "adjustment") return "";
           const qty = Number(row.totalQty);
-          return isNaN(qty) ? (
-            ""
-          ) : (
-            <span className="font-medium text-blue-600">
+          if (isNaN(qty)) return "";
+
+          const colorClass =
+            qty > 0
+              ? "text-emerald-600"
+              : qty < 0
+                ? "text-red-600"
+                : "text-blue-600";
+          return (
+            <span className={cn("font-medium", colorClass)}>
+              {qty > 0 ? "+" : ""}
               {qty.toLocaleString("vi-VN")}
             </span>
           );
