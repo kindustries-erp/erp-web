@@ -160,7 +160,6 @@ export function InvoiceBulkNetOffDrawer({
   const [allTxns, setAllTxns] = useState<BankTxn[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [reachedCap, setReachedCap] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
 
   // { invoiceId: { txnId: amount } }
   const [netOffMap, setNetOffMap] = useState<
@@ -252,7 +251,6 @@ export function InvoiceBulkNetOffDrawer({
       }
 
       if (needsMore) {
-        setCurrentPage(pageToFetch + 1);
         fetchPage(pageToFetch + 1);
       } else {
         setLoadingMore(false);
@@ -266,7 +264,6 @@ export function InvoiceBulkNetOffDrawer({
   useEffect(() => {
     if (open && dateFrom && dateTo) {
       setAllTxns([]);
-      setCurrentPage(1);
       setReachedCap(false);
       fetchPage(1);
     }
@@ -457,12 +454,12 @@ export function InvoiceBulkNetOffDrawer({
         header: "Giao dịch cấn trừ",
         size: 250,
         cell: (inv) => {
-          const selectedTxns = Object.entries(netOffMap[inv.id] || {});
+          const currentSelections = Object.entries(netOffMap[inv.id] || {});
           return (
             <div className="flex flex-col gap-2">
-              {selectedTxns.length > 0 ? (
+              {currentSelections.length > 0 ? (
                 <div className="flex flex-col gap-2">
-                  {selectedTxns.map(([txnId, data], idx) => (
+                  {currentSelections.map(([txnId, data]) => (
                     <TransactionCard
                       key={txnId}
                       txn={data.txn}
