@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Wallet, Plus, Upload } from "lucide-react";
+import { Building2, Wallet, Plus, Upload, PanelRightOpen } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { FolderArchive } from "lucide-react";
@@ -19,6 +20,7 @@ import toast from "react-hot-toast";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 
 export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   const t = useT();
@@ -112,8 +114,14 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
 
   const tableState = useTableColumnState(`bank-statement-${type}-table-v3`);
 
-  const sortBy = tableState.sorts[0]?.replace("-", "") || "transDate";
-  const sortOrder = tableState.sorts[0]?.startsWith("-") ? "DESC" : "ASC";
+  const sortBy = tableState.sorts[0]
+    ? tableState.sorts[0].replace("-", "")
+    : undefined;
+  const sortOrder = tableState.sorts[0]
+    ? tableState.sorts[0].startsWith("-")
+      ? "DESC"
+      : "ASC"
+    : undefined;
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: [
@@ -210,6 +218,38 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
   };
 
   const renderHeaderFilter = (key: string, label: string) => {
+    if (key === "transDate") {
+      return (
+        <TableColumnHeaderFilter
+          title={label}
+          align="center"
+          className="w-full justify-center"
+          sortState={getSortState(key)}
+          onSortChange={(state) => handleSortChange(key, state)}
+          searchValue={tableState.columnSearch[key] || ""}
+          onSearchChange={(val) => handleSearchChange(key, val)}
+          selectedFilters={tableState.columnFilters[key] || []}
+          onFilterChange={(vals) => handleFilterChange(key, vals)}
+          columnKey={key}
+          hideFilter={true}
+          hideFooter={true}
+          isActive={!!(filter.state.dateFrom || filter.state.dateTo)}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={filter.state.dateFrom}
+              dateTo={filter.state.dateTo}
+              onChange={(from, to) => {
+                filter.setDateFrom(from);
+                filter.setDateTo(to);
+                setPage(1);
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      );
+    }
+
     let formatOptionLabel: ((val: string) => string) | undefined;
     if (
       ["thu", "chi", "balance", "netOffAmount", "remainingAmount"].includes(key)
@@ -271,7 +311,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       thu:
         totalCredit > 0 ? (
           <span className="text-emerald-600 font-medium">
-            +{money(totalCredit)}
+            {money(totalCredit)}
           </span>
         ) : (
           money(0)
@@ -356,18 +396,26 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         "referenceNumber",
         t("bankStatement.columns.referenceNumber"),
       ),
-      size: 150,
+      size: 200,
       cell: (row: any) => {
         if (!row.referenceNumber) return "—";
         return (
-          <div
-            className="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
-            onClick={(e) => {
-              e.stopPropagation();
-              setDetailTransactionId(row.id);
-            }}
-          >
-            {row.referenceNumber}
+          <div className="flex flex-col gap-1 w-full pr-1">
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailTransactionId(row.id);
+                }}
+                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+              >
+                <span className="truncate w-full text-left">
+                  {row.referenceNumber}
+                </span>
+                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+              </Button>
+            </div>
           </div>
         );
       },
@@ -391,7 +439,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         if (credit > 0)
           return (
             <span className="text-emerald-600 font-medium">
-              +{money(credit)}
+              {money(credit)}
             </span>
           );
         return null;
@@ -491,25 +539,35 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       cell: (row: any) => {
         if (!row.correspondentName) return null;
         return (
-          <Tooltip
-            content={
-              <div className="whitespace-pre-wrap">{row.correspondentName}</div>
-            }
-          >
-            <span
-              className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer font-medium text-primary hover:opacity-80 active:opacity-50 underline"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPartner({
-                  account: row.correspondentAccount,
-                  name: row.correspondentName,
-                });
-                setPartnerDrawerOpen(true);
-              }}
-            >
-              {row.correspondentName}
-            </span>
-          </Tooltip>
+          <div className="flex flex-col gap-1 w-full pr-1">
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPartner({
+                    account: row.correspondentAccount,
+                    name: row.correspondentName,
+                  });
+                  setPartnerDrawerOpen(true);
+                }}
+                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+              >
+                <Tooltip
+                  content={
+                    <div className="whitespace-pre-wrap">
+                      {row.correspondentName}
+                    </div>
+                  }
+                >
+                  <span className="truncate w-full text-left">
+                    {row.correspondentName}
+                  </span>
+                </Tooltip>
+                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+              </Button>
+            </div>
+          </div>
         );
       },
     },
@@ -519,31 +577,39 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         "correspondentAccount",
         t("bankStatement.columns.correspondentAccount"),
       ),
-      size: 150,
+      size: 200,
       cell: (row: any) => {
         if (!row.correspondentAccount) return null;
         return (
-          <Tooltip
-            content={
-              <div className="whitespace-pre-wrap">
-                {row.correspondentAccount}
-              </div>
-            }
-          >
-            <span
-              className="w-full line-clamp-2 break-words whitespace-normal cursor-pointer font-medium text-primary hover:opacity-80 active:opacity-50 underline"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPartner({
-                  account: row.correspondentAccount,
-                  name: row.correspondentName,
-                });
-                setPartnerDrawerOpen(true);
-              }}
-            >
-              {row.correspondentAccount}
-            </span>
-          </Tooltip>
+          <div className="flex flex-col gap-1 w-full pr-1">
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPartner({
+                    account: row.correspondentAccount,
+                    name: row.correspondentName,
+                  });
+                  setPartnerDrawerOpen(true);
+                }}
+                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+              >
+                <Tooltip
+                  content={
+                    <div className="whitespace-pre-wrap">
+                      {row.correspondentAccount}
+                    </div>
+                  }
+                >
+                  <span className="truncate w-full text-left">
+                    {row.correspondentAccount}
+                  </span>
+                </Tooltip>
+                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+              </Button>
+            </div>
+          </div>
         );
       },
     },
@@ -553,7 +619,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         "correspondentBank",
         t("bankStatement.columns.correspondentBank"),
       ),
-      size: 150,
+      size: 200,
       cell: (row: any) => renderCopyableText(row.correspondentBank),
     },
     {
@@ -606,6 +672,14 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         }}
         filterConfig={filterConfig}
         filter={filter}
+        activeFilterCount={
+          filter.activeFilterCount + (tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          filter.resetAll();
+          tableState.resetFilters();
+          setPage(1);
+        }}
         sortArray={tableState.sorts}
         onSort={(colKey) => {
           handleSortChange(

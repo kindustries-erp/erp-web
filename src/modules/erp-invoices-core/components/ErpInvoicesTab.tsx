@@ -15,11 +15,11 @@ import {
   FileCode,
   FileText,
   Building2,
-  ChevronDown,
   CheckSquare,
   XSquare,
   PanelRightOpen,
   MoreHorizontal,
+  X,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -51,6 +51,7 @@ import {
   ErpInvoiceInternalSidebar,
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/BulkEditDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { DrawerModal } from "@/shared/components/DrawerModal";
@@ -137,100 +138,95 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [bulkMonth, setBulkMonth] = useState("");
   const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkSelectedTypes, setBulkSelectedTypes] = useState<string[]>([
+    "pdf",
+    "xml",
+  ]);
+  const [bulkSelectedDownloading, setBulkSelectedDownloading] = useState(false);
+  const [bulkSelectedModalOpen, setBulkSelectedModalOpen] = useState(false);
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkEditDrawerOpen, setBulkEditDrawerOpen] = useState(false);
   const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
   const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
     "post",
   );
-  const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
-  const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
     [rowSelection],
   );
 
-  async function handleBulkSetBranch() {
-    if (!selectedIds.length) return;
-    setBulkBranchSaving(true);
-    try {
-      const result = await erpInvoicesCoreApi.bulkSetBranch(
-        selectedIds,
-        bulkBranchId,
-      );
-      showToast({
-        title: `Đã cập nhật ${result.updated} hóa đơn`,
-        variant: "default",
-      });
-      setRowSelection({});
-      setBulkBranchModalOpen(false);
-      void listHook.loadInvoices();
-    } catch {
-      showToast({
-        title: "Không thể cập nhật chi nhánh",
-        variant: "destructive",
-      });
-    } finally {
-      setBulkBranchSaving(false);
-    }
-  }
-
   const bulkActionsNode =
     selectedIds.length > 0 ? (
-      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+      <div className="flex items-center rounded-md shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
         <ActionDropdown
           align="start"
           customTrigger={
             <Button
               variant="outline"
               size="sm"
-              className="h-8 shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+              className="h-8 rounded-r-none border-r-0 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
             >
               <CheckSquare className="w-4 h-4 mr-1.5" />
               {t("bulkActions", "Thao tác")} ({selectedIds.length})
-              <ChevronDown className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           }
           items={[
             {
-              label: "Gán chi nhánh",
-              icon: (
-                <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => {
-                setBulkBranchId(null);
-                setBulkBranchModalOpen(true);
-              },
+              groupLabel: "Nghiệp vụ & Hạch toán",
+              items: [
+                {
+                  label: t("bulkAssignAll", "Gán hàng loạt"),
+                  icon: (
+                    <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkEditDrawerOpen(true);
+                  },
+                },
+                {
+                  label: "Hạch toán hàng loạt",
+                  icon: (
+                    <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkPostingMode("post");
+                    setBulkPostingModalOpen(true);
+                  },
+                },
+                {
+                  label: "Hủy hạch toán hàng loạt",
+                  icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
+                  onClick: () => {
+                    setBulkPostingMode("unpost");
+                    setBulkPostingModalOpen(true);
+                  },
+                },
+              ],
             },
             {
-              label: "Hạch toán hàng loạt",
-              icon: (
-                <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => {
-                setBulkPostingMode("post");
-                setBulkPostingModalOpen(true);
-              },
-            },
-            {
-              label: "Hủy hạch toán hàng loạt",
-              icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
-              onClick: () => {
-                setBulkPostingMode("unpost");
-                setBulkPostingModalOpen(true);
-              },
-            },
-            {
-              label: "Bỏ chọn",
-              icon: (
-                <RefreshCw className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => setRowSelection({}),
+              groupLabel: "Tải & Xuất tệp",
+              items: [
+                {
+                  label: "Tải ZIP PDF/XML",
+                  icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
+                  onClick: () => setBulkSelectedModalOpen(true),
+                },
+              ],
             },
           ]}
         />
+        <div className="w-[1px] h-8 bg-primary/20 z-10" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setRowSelection({})}
+          className="h-8 w-8 px-0 rounded-l-none border-l-0 border-primary/30 bg-primary/5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors focus:z-10"
+          title={t("deselectAll", "Bỏ chọn")}
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
     ) : null;
 
@@ -295,6 +291,40 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       toast.error("Tải hàng loạt thất bại: " + error.message);
     } finally {
       setBulkDownloading(false);
+    }
+  };
+
+  const handleBulkDownloadSelected = async () => {
+    if (bulkSelectedTypes.length === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 loại file");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      toast.error("Không có hóa đơn nào được chọn");
+      return;
+    }
+
+    try {
+      setBulkSelectedDownloading(true);
+      const blob = await erpInvoicesCoreApi.bulkDownloadSelected({
+        ids: selectedIds,
+        types: bulkSelectedTypes,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `HoaDon_${selectedIds.length}_invoices.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBulkSelectedModalOpen(false);
+      toast.success(`Đã tải ${selectedIds.length} hóa đơn thành công!`);
+    } catch (error: any) {
+      toast.error("Tải thất bại: " + error.message);
+    } finally {
+      setBulkSelectedDownloading(false);
     }
   };
 
@@ -519,7 +549,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               : String(i);
           if (columnKey === "branchId") {
             const branch = branches.find((b) => b.value === valStr);
-            if (branch) labelStr = branch.label;
+            if (branch) {
+              const parts = branch.label.split(" — ");
+              labelStr = parts.length > 1 ? parts[1] : branch.label;
+            }
           }
           if (columnKey === "invoiceDate" && valStr) {
             // Backend now returns YYYY-MM-DD via TO_CHAR — use as value directly
@@ -540,7 +573,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [direction],
+    [direction, branches],
   );
 
   const handleFilterChange = (key: string, vals: string[]) => {
@@ -1599,7 +1632,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             align="center"
             columnKey="branchId"
             requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -1927,11 +1960,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 icon: <Download className="w-4 h-4 text-green-600" />,
                 onClick: () => handleExportExcel(),
               },
-              {
-                label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
-                icon: <Download className="w-4 h-4 text-blue-600" />,
-                onClick: () => setBulkDrawerOpen(true),
-              },
             ],
           },
           {
@@ -2129,6 +2157,79 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       />
 
       <DrawerModal
+        open={bulkSelectedModalOpen}
+        onClose={() => setBulkSelectedModalOpen(false)}
+        title={`Tải ZIP ${selectedIds.length} hóa đơn đã chọn`}
+        actions={[
+          {
+            label: "Hủy",
+            onClick: () => setBulkSelectedModalOpen(false),
+            variant: "outline" as const,
+            disabled: bulkSelectedDownloading,
+          },
+          {
+            label: bulkSelectedDownloading
+              ? "Đang nén file..."
+              : "Xác nhận tải",
+            onClick: handleBulkDownloadSelected,
+            primary: true,
+            disabled: bulkSelectedDownloading,
+            loading: bulkSelectedDownloading,
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Đã chọn <strong>{selectedIds.length}</strong> hóa đơn. Hệ thống sẽ
+            nén PDF/XML của các hóa đơn này thành 1 file ZIP.
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Định dạng file tải về *
+            </label>
+            <div className="flex flex-col gap-3 mt-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkSelectedTypes.includes("pdf")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkSelectedTypes((prev) =>
+                        prev.includes("pdf") ? prev : [...prev, "pdf"],
+                      );
+                    } else {
+                      setBulkSelectedTypes((prev) =>
+                        prev.filter((t) => t !== "pdf"),
+                      );
+                    }
+                  }}
+                />
+                <span className="text-sm">File PDF</span>
+              </label>
+
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkSelectedTypes.includes("xml")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkSelectedTypes((prev) =>
+                        prev.includes("xml") ? prev : [...prev, "xml"],
+                      );
+                    } else {
+                      setBulkSelectedTypes((prev) =>
+                        prev.filter((t) => t !== "xml"),
+                      );
+                    }
+                  }}
+                />
+                <span className="text-sm">File XML</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </DrawerModal>
+
+      <DrawerModal
         open={bulkDrawerOpen}
         onClose={() => setBulkDrawerOpen(false)}
         title="Tải hàng loạt hóa đơn"
@@ -2199,38 +2300,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         </div>
       </DrawerModal>
 
-      <DrawerModal
-        open={bulkBranchModalOpen}
-        onClose={() => setBulkBranchModalOpen(false)}
-        title={`Gán chi nhánh cho ${selectedIds.length} hóa đơn`}
-        actions={[
-          {
-            label: "Hủy",
-            onClick: () => setBulkBranchModalOpen(false),
-            variant: "outline" as const,
-            disabled: bulkBranchSaving,
-          },
-          {
-            label: bulkBranchSaving ? "Đang lưu..." : "Xác nhận",
-            onClick: handleBulkSetBranch,
-            primary: true,
-            disabled: bulkBranchSaving,
-            loading: bulkBranchSaving,
-          },
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Chi nhánh *</label>
-            <Combobox
-              options={branches}
-              value={bulkBranchId ?? ""}
-              onChange={(v) => setBulkBranchId(v ?? null)}
-              placeholder="Chọn chi nhánh..."
-            />
-          </div>
-        </div>
-      </DrawerModal>
+      <BulkEditDrawer
+        open={bulkEditDrawerOpen}
+        onClose={() => setBulkEditDrawerOpen(false)}
+        selectedIds={selectedIds}
+        invoices={listHook.invoices || []}
+        branches={branches}
+        onSuccess={() => {
+          setBulkEditDrawerOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
+      />
 
       <InvoiceBulkPostingDrawer
         open={bulkPostingModalOpen}

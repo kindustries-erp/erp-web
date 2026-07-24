@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useInventorySerialsQuery } from "@/modules/inventory-core/hooks/useInventorySerialsQuery";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useT } from "@/core/i18n";
@@ -172,10 +173,25 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("createdAt", vals)}
             align="center"
             columnKey="createdAt"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
+            hideFilter={true}
+            hideFooter={true}
+            isActive={!!tableState.columnSearch["createdAt"]}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["createdAt"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    tableState.setColumnSearch("createdAt", next);
+                    setPage(1);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
           />
         ),
         size: 120,
@@ -485,10 +501,25 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("delivery", vals)}
             align="center"
             columnKey="delivery"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
+            hideFilter={true}
+            hideFooter={true}
+            isActive={!!tableState.columnSearch["delivery"]}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["delivery"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    tableState.setColumnSearch("delivery", next);
+                    setPage(1);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
           />
         ),
         size: 120,

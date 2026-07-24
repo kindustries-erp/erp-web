@@ -110,10 +110,10 @@ describe("App forbidden handling", () => {
     };
   });
 
-  it("renders the current page instead of the 403 error page when logged in", () => {
+  it("renders the current page instead of the 403 error page when logged in", async () => {
     render(<App />);
 
-    expect(screen.getByText("purchasing-page")).toBeInTheDocument();
+    expect(await screen.findByText("purchasing-page")).toBeInTheDocument();
     expect(screen.queryByText("error-page-403")).not.toBeInTheDocument();
   });
 });

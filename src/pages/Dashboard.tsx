@@ -11,7 +11,7 @@ import {
 import { KpiCard } from "@/shared/components/KpiCard";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel } from "@/shared/components/Panel";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -436,10 +436,14 @@ function SummaryCard({
 }) {
   if (loading) {
     return (
-      <div className="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-xl p-4 shadow-sm h-[100px]">
-        <ChartSkeleton type="donut" />
+      <div className="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-xl p-4 shadow-sm flex flex-col gap-2 h-[104px]">
+        <div className="flex items-center justify-between">
+          <Skeleton className="w-24 h-5" />
+          <Skeleton className="w-9 h-9 rounded-lg" />
+        </div>
+        <Skeleton className="w-32 h-8 mt-1" />
       </div>
-    ); // Simple loading
+    );
   }
   return (
     <div className="bg-[color:var(--surface)] border border-[color:var(--border)] rounded-xl p-4 shadow-sm flex flex-col gap-2 transition-transform hover:-translate-y-1 hover:shadow-md">

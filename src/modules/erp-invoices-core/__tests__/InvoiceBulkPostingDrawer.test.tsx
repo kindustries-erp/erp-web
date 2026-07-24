@@ -6,6 +6,7 @@ import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: vi.fn().mockReturnValue({ data: [] }),
+  useQueries: vi.fn().mockReturnValue([]),
   useMutation: vi
     .fn()
     .mockImplementation(({ mutationFn, onSuccess, onError }: any) => ({
