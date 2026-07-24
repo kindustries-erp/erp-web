@@ -20,6 +20,7 @@ import {
   PanelRightOpen,
   MoreHorizontal,
   X,
+  GitMerge,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -45,6 +46,7 @@ import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
+import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
   ErpInvoiceInternalMain,
@@ -148,6 +150,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
   const [bulkEditDrawerOpen, setBulkEditDrawerOpen] = useState(false);
   const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
+  const [bulkNetOffDrawerOpen, setBulkNetOffDrawerOpen] = useState(false);
   const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
     "post",
   );
@@ -193,6 +196,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onClick: () => {
                     setBulkPostingMode("post");
                     setBulkPostingModalOpen(true);
+                  },
+                },
+                {
+                  label: "Đề xuất cấn trừ sao kê",
+                  icon: (
+                    <GitMerge className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkNetOffDrawerOpen(true);
                   },
                 },
                 {
@@ -2322,6 +2334,19 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         direction={direction}
         onSuccess={() => {
           setBulkPostingModalOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
+      />
+
+      <InvoiceBulkNetOffDrawer
+        open={bulkNetOffDrawerOpen}
+        onClose={() => setBulkNetOffDrawerOpen(false)}
+        selectedInvoiceIds={selectedIds}
+        invoices={listHook.invoices || []}
+        direction={direction}
+        onSuccess={() => {
+          setBulkNetOffDrawerOpen(false);
           setRowSelection({});
           listHook.loadInvoices();
         }}
