@@ -30,6 +30,7 @@ import { Popover } from "@/core/components/ui/Popover";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
+import { Badge } from "@/shared/components/ui/badge";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import {
@@ -43,6 +44,7 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 interface VinfastPartTrackingRow {
   itemCode: string;
   itemName: string;
+  vehicleType: "CAR" | "MOTORBIKE";
   month: string;
   qtyBought: number;
   qtySold: number;
@@ -52,6 +54,16 @@ interface VinfastPartTrackingRow {
   marginPct: string;
   buyInvoiceIds: string[];
   sellInvoiceIds: string[];
+}
+
+function getVehicleTypeLabel(vehicleType: "CAR" | "MOTORBIKE") {
+  return vehicleType === "CAR" ? "Ô tô" : "Xe máy";
+}
+
+function getVehicleTypeBadgeClass(vehicleType: "CAR" | "MOTORBIKE") {
+  return vehicleType === "CAR"
+    ? "w-[80px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+    : "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
 }
 
 function VinfastPartDetailDrawer({
@@ -811,6 +823,41 @@ export function VinfastPartsTrackingPage() {
         </Tooltip>
       ),
     },
+    {
+      key: "vehicleType",
+      header: (
+        <TableColumnHeaderFilter
+          title="Loại xe"
+          sortState={getSortState("vehicleType")}
+          onSortChange={(state) => handleSortChange("vehicleType", state)}
+          searchValue={tableState.columnSearch["vehicleType"] || ""}
+          onSearchChange={(val) => handleSearchChange("vehicleType", val)}
+          selectedFilters={tableState.columnFilters["vehicleType"] || []}
+          onFilterChange={(vals) => handleFilterChange("vehicleType", vals)}
+          align="center"
+          columnKey="vehicleType"
+          {...commonFilterProps}
+          formatOptionLabel={(label) =>
+            label === "CAR" ? "Ô tô" : label === "MOTORBIKE" ? "Xe máy" : label
+          }
+        />
+      ),
+      size: 120,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row) => (
+        <Tooltip content={getVehicleTypeLabel(row.vehicleType)}>
+          <Badge
+            variant="ghost"
+            className={`border ${getVehicleTypeBadgeClass(row.vehicleType)}`}
+          >
+            <span className="truncate block max-w-full">
+              {getVehicleTypeLabel(row.vehicleType)}
+            </span>
+          </Badge>
+        </Tooltip>
+      ),
+    },
 
     {
       key: "qtyBought",
@@ -972,7 +1019,7 @@ export function VinfastPartsTrackingPage() {
       className: "text-right",
       cell: (row) => (
         <span className="font-semibold text-slate-700">
-          {money(row.margin)}
+          {row.qtySold > 0 && row.margin != null ? money(row.margin) : ""}
         </span>
       ),
     },
@@ -994,7 +1041,11 @@ export function VinfastPartsTrackingPage() {
       ),
       headerClassName: "text-center",
       className: "text-right",
-      cell: (row) => <span className="text-gray-600">{row.marginPct}</span>,
+      cell: (row) => (
+        <span className="text-gray-600">
+          {row.qtySold > 0 ? row.marginPct : ""}
+        </span>
+      ),
     },
   ];
 
