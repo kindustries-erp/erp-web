@@ -15,11 +15,12 @@ import {
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { Barcode, Eye, Copy, Check } from "lucide-react";
+import { Barcode, Eye, Copy, Check, PanelRightOpen } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
-import { Button } from "@/shared/components/ui/Button";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
 export function TrackedGoodsPage() {
   const t = useT();
@@ -39,6 +40,7 @@ export function TrackedGoodsPage() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
+  const giDrawer = useGiDrawer();
 
   const tableState = useTableColumnState("inventory-tracked-goods-table");
 
@@ -197,16 +199,7 @@ export function TrackedGoodsPage() {
         size: 120,
         className: "align-middle text-right",
         headerClassName: "text-center",
-        cell: (row) => (
-          <Tooltip
-            content={formatGMT7(row.createdAt, "datetime-sec")}
-            side="top"
-          >
-            <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.createdAt, "date")}
-            </span>
-          </Tooltip>
-        ),
+        cell: (row) => formatGMT7(row.createdAt, "date"),
       },
       {
         key: "itemCode",
@@ -453,6 +446,97 @@ export function TrackedGoodsPage() {
         },
       },
       {
+        key: "goodsIssueNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Phiếu xuất kho")}
+            sortState={getSortState("goodsIssueNo")}
+            onSortChange={(state) => handleSortChange("goodsIssueNo", state)}
+            searchValue={tableState.columnSearch["goodsIssueNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("goodsIssueNo", val)}
+            selectedFilters={tableState.columnFilters["goodsIssueNo"] || []}
+            onFilterChange={(vals) => handleFilterChange("goodsIssueNo", vals)}
+            align="center"
+            columnKey="goodsIssueNo"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="inventory-serial-options"
+            allFilters={tableState.columnFilters}
+            fetchOptions={fetchSerialOptions}
+          />
+        ),
+        size: 200,
+        className: "align-middle text-center",
+        headerClassName: "text-center",
+        cell: (row) => {
+          if (!row.lifecycle?.goodsIssueNo) return "—";
+          return (
+            <div className="flex flex-col gap-1 w-full pr-1">
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span className="truncate text-primary font-normal">
+                  {row.lifecycle.goodsIssueNo}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (row.lifecycle?.goodsIssueId) {
+                      giDrawer.openDetail(row.lifecycle.goodsIssueId);
+                    }
+                  }}
+                  className="shrink-0 p-1 flex items-center justify-center outline-none"
+                >
+                  <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        key: "goodsIssueDate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ngày XK")}
+            sortState={getSortState("goodsIssueDate")}
+            onSortChange={(state) => handleSortChange("goodsIssueDate", state)}
+            searchValue={tableState.columnSearch["goodsIssueDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("goodsIssueDate", val)}
+            selectedFilters={tableState.columnFilters["goodsIssueDate"] || []}
+            onFilterChange={(vals) =>
+              handleFilterChange("goodsIssueDate", vals)
+            }
+            align="center"
+            columnKey="goodsIssueDate"
+            hideFilter={true}
+            hideFooter={true}
+            isActive={!!tableState.columnSearch["goodsIssueDate"]}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["goodsIssueDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    tableState.setColumnSearch("goodsIssueDate", next);
+                    setPage(1);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
+          />
+        ),
+        size: 120,
+        className: "align-middle text-right",
+        headerClassName: "text-center",
+        cell: (row) =>
+          row.lifecycle?.goodsIssueDate
+            ? formatGMT7(row.lifecycle.goodsIssueDate, "date")
+            : "—",
+      },
+      {
         key: "soNo",
         header: (
           <TableColumnHeaderFilter
@@ -471,19 +555,29 @@ export function TrackedGoodsPage() {
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-center",
         headerClassName: "text-center",
         cell: (row) => {
           if (!row.soNo) return "—";
           return (
-            <Button
-              variant="link"
-              onClick={() => setPreviewSoNo(row.soNo || null)}
-              className="text-primary hover:underline p-0 h-auto"
-            >
-              {row.soNo}
-            </Button>
+            <div className="flex flex-col gap-1 w-full pr-1">
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span className="truncate text-primary font-normal">
+                  {row.soNo}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewSoNo(row.soNo || null);
+                  }}
+                  className="shrink-0 p-1 flex items-center justify-center outline-none"
+                >
+                  <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+            </div>
           );
         },
       },
@@ -523,7 +617,7 @@ export function TrackedGoodsPage() {
           />
         ),
         size: 120,
-        className: "align-middle text-center",
+        className: "align-middle text-right",
         headerClassName: "text-center",
         cell: (row) => {
           return row.lifecycle?.deliveryDate
@@ -599,10 +693,19 @@ export function TrackedGoodsPage() {
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 200,
+        size: 250,
         className: "align-middle text-left",
         headerClassName: "text-center",
-        cell: (row) => row.attributes?.dealer_name || "—",
+        cell: (row) =>
+          row.attributes?.dealer_name ? (
+            <Tooltip content={row.attributes.dealer_name} side="top">
+              <span className="truncate block max-w-full cursor-help">
+                {row.attributes.dealer_name}
+              </span>
+            </Tooltip>
+          ) : (
+            "—"
+          ),
       },
     ],
     [t, tableState, fetchSerialOptions],
@@ -753,6 +856,7 @@ export function TrackedGoodsPage() {
         soNo={previewSoNo}
         onClose={() => setPreviewSoNo(null)}
       />
+      <GiFormDrawer drawer={giDrawer} />
     </>
   );
 }
