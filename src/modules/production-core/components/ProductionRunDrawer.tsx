@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   PlayCircle,
   CheckCircle2,
@@ -23,6 +23,20 @@ import {
   type ErpProductionOrder,
 } from "@/modules/production-core/api/productionCoreApi";
 import { cn } from "@/shared/utils";
+import * as Popover from "@radix-ui/react-popover";
+import { DataTable } from "@/shared/components/DataTable";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { Combobox } from "@/shared/components/Combobox";
+
+const VALID_COLORS = ["DEN", "TRANG", "DO", "XANH", "XAM", "BAC"];
+const COLOR_NAMES: Record<string, string> = {
+  DEN: "Màu đen",
+  TRANG: "Màu trắng",
+  DO: "Màu đỏ",
+  XANH: "Màu xanh",
+  XAM: "Màu xám",
+  BAC: "Màu bạc",
+};
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -55,6 +69,7 @@ interface ProductionIdentifier {
   vinNo: string;
   engineNo: string;
   serialNo: string;
+  colorCode: string;
   lotNo: string;
   notes: string;
   attributes: Array<{ key: string; value: string }>;
@@ -67,6 +82,7 @@ function emptyIdentifier(): ProductionIdentifier {
     vinNo: "",
     engineNo: "",
     serialNo: "",
+    colorCode: "",
     lotNo: "",
     notes: "",
     attributes: [],
@@ -81,7 +97,15 @@ function isIdentifierValid(
   id: ProductionIdentifier,
   policy: TrackingPolicy,
 ): boolean {
-  if (policy === "VEHICLE") return !!id.vinNo.trim() && !!id.engineNo.trim();
+  if (policy === "VEHICLE") {
+    return (
+      !!id.vinNo.trim() &&
+      !!id.engineNo.trim() &&
+      !!id.serialNo.trim() &&
+      !!id.colorCode.trim() &&
+      VALID_COLORS.includes(id.colorCode.trim())
+    );
+  }
   if (policy === "SERIAL") return !!id.serialNo.trim();
   if (policy === "LOT") return !!id.lotNo.trim();
   return true;
@@ -92,15 +116,21 @@ function identifiersAllValid(
   policy: TrackingPolicy,
 ): boolean {
   if (policy === "NONE") return true;
-  return ids.every((id) => isIdentifierValid(id, policy));
+  return ids.every((x) => isIdentifierValid(x, policy));
 }
 
 function findVehicleDuplicate(ids: ProductionIdentifier[]) {
   const seenVin = new Set<string>();
   const seenEngine = new Set<string>();
+  const seenSerial = new Set<string>();
   for (const row of ids) {
     const vin = row.vinNo.trim().toUpperCase();
     const engine = row.engineNo.trim().toUpperCase();
+    const serial = row.serialNo.trim().toUpperCase();
+    if (serial) {
+      if (seenSerial.has(serial)) return "Số Seri bị trùng trong danh sách";
+      seenSerial.add(serial);
+    }
     if (vin) {
       if (seenVin.has(vin)) return "Số VIN bị trùng trong danh sách";
       seenVin.add(vin);
@@ -113,62 +143,91 @@ function findVehicleDuplicate(ids: ProductionIdentifier[]) {
   return null;
 }
 
+function ValidColorsPopover() {
+  const colorData = VALID_COLORS.map((c) => ({
+    code: c,
+    name: COLOR_NAMES[c] || c,
+  }));
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          className="text-blue-600 hover:underline cursor-pointer"
+        >
+          xem mã màu
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content
+          side="top"
+          align="start"
+          className="z-[999] bg-white p-3 rounded-md shadow-lg border border-slate-200 max-h-[300px] overflow-auto w-[300px]"
+        >
+          <h4 className="font-semibold text-xs mb-2">Mã Màu</h4>
+          <DataTable
+            items={colorData}
+            columns={[
+              {
+                key: "code",
+                header: "Mã",
+                dataIndex: "code",
+                className: "w-[100px] min-w-[100px] max-w-[100px]",
+              },
+              {
+                key: "name",
+                header: "Tên Màu",
+                dataIndex: "name",
+                cell: (item: any) => (
+                  <Tooltip content={item.name} side="top">
+                    <span className="truncate block w-full cursor-default">
+                      {item.name}
+                    </span>
+                  </Tooltip>
+                ),
+              },
+            ]}
+            variant="spreadsheet"
+            getRowKey={(r) => r.code}
+            emptyLabel="Không có màu"
+            minWidth={100}
+          />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 function parseVehicleBulkInput(input: string): ProductionIdentifier[] {
   return input
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .map((line) => {
+    .map((line, index) => {
       const parts = line.includes("\t") ? line.split("\t") : line.split(",");
-      const attributes = parts
-        .slice(2)
-        .map((attrStr) => {
-          let key = "",
-            value = "";
-          if (attrStr.includes("=")) {
-            const split = attrStr.split("=");
-            key = split[0];
-            value = split.slice(1).join("=");
-          } else if (attrStr.includes(":")) {
-            const split = attrStr.split(":");
-            key = split[0];
-            value = split.slice(1).join(":");
-          }
-          return { key: key.trim(), value: value.trim() };
-        })
-        .filter((a) => a.key !== "");
+      const serialNo = (parts[0] ?? "").trim();
+      const vinNo = (parts[1] ?? "").trim();
+      const engineNo = (parts[2] ?? "").trim();
+      const colorCode = (parts[3] ?? "").trim();
+      const notes = (parts[4] ?? "").trim();
 
-      let notes = "";
-      let hasGhiChu = false;
-      let hasNotes = false;
-      const finalAttributes: { key: string; value: string }[] = [];
-
-      for (const attr of attributes) {
-        const lowerKey = attr.key.toLowerCase();
-        if (lowerKey === "ghi chú") {
-          hasGhiChu = true;
-          notes = attr.value;
-        } else if (lowerKey === "notes") {
-          hasNotes = true;
-          notes = attr.value;
-        } else {
-          finalAttributes.push(attr);
-        }
+      if (!serialNo || !colorCode) {
+        throw new Error(`Dòng ${index + 1}: Số seri và Mã màu là bắt buộc.`);
       }
-
-      if (hasGhiChu && hasNotes) {
+      if (!VALID_COLORS.includes(colorCode)) {
         throw new Error(
-          `Dòng "${line}" chứa cả "Ghi chú" và "Notes". Vui lòng chỉ dùng 1 trong 2.`,
+          `Dòng ${index + 1}: Mã màu '${colorCode}' không hợp lệ.`,
         );
       }
 
       return {
-        vinNo: (parts[0] ?? "").trim(),
-        engineNo: (parts[1] ?? "").trim(),
-        serialNo: "",
+        vinNo,
+        engineNo,
+        serialNo,
+        colorCode,
         lotNo: "",
         notes,
-        attributes: finalAttributes,
+        attributes: [],
       };
     });
 }
@@ -179,42 +238,6 @@ export interface ProductionRunDrawerProps {
   order: ErpProductionOrder | null;
   onClose: () => void;
   onRefresh: () => Promise<void> | void;
-}
-
-function AttributeInput({
-  value,
-  onChange,
-}: {
-  value: Array<{ key: string; value: string }>;
-  onChange: (val: Array<{ key: string; value: string }>) => void;
-}) {
-  const [str, setStr] = useState(() =>
-    value.map((a) => `${a.key}=${a.value}`).join(", "),
-  );
-
-  useEffect(() => {
-    setStr(value.map((a) => `${a.key}=${a.value}`).join(", "));
-  }, [value]);
-
-  return (
-    <input
-      className={cn(inputCls, "w-full text-xs h-7")}
-      placeholder="VD: Màu=Đen, Size=L"
-      value={str}
-      onChange={(e) => setStr(e.target.value)}
-      onBlur={() => {
-        const parsed = str
-          .split(",")
-          .map((part) => {
-            const [k, v] = part.split("=").map((s) => s.trim());
-            if (k && v) return { key: k, value: v };
-            return null;
-          })
-          .filter(Boolean) as { key: string; value: string }[];
-        onChange(parsed);
-      }}
-    />
-  );
 }
 
 // ── Shared Table cho danh sách định danh ───────────────────────────────────
@@ -246,10 +269,16 @@ function IdentifierTable({
               {policy === "VEHICLE" && (
                 <>
                   <th className="px-2 py-1 text-left font-semibold">
+                    Số Seri <span className="text-red-500">*</span>
+                  </th>
+                  <th className="px-2 py-1 text-left font-semibold">
                     Số VIN <span className="text-red-500">*</span>
                   </th>
                   <th className="px-2 py-1 text-left font-semibold">
                     Số máy <span className="text-red-500">*</span>
+                  </th>
+                  <th className="px-2 py-1 text-left font-semibold">
+                    Mã Màu <span className="text-red-500">*</span>
                   </th>
                 </>
               )}
@@ -264,9 +293,6 @@ function IdentifierTable({
                 </th>
               )}
               <th className="px-2 py-1 text-left font-semibold">Ghi chú</th>
-              <th className="px-2 py-1 text-left font-semibold">
-                Thuộc tính mở rộng
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -275,6 +301,19 @@ function IdentifierTable({
                 <td className="px-2 py-1 text-muted-foreground">{idx + 1}</td>
                 {policy === "VEHICLE" && (
                   <>
+                    <td className="px-1 py-1 w-[80px]">
+                      <input
+                        value={item.serialNo}
+                        onChange={(e) =>
+                          onChange(idx, { ...item, serialNo: e.target.value })
+                        }
+                        className={cn(
+                          inputCls,
+                          "w-full min-w-[60px] text-xs h-7",
+                        )}
+                        placeholder="Số seri"
+                      />
+                    </td>
                     <td className="px-1 py-1 w-[80px]">
                       <input
                         value={item.vinNo}
@@ -301,6 +340,20 @@ function IdentifierTable({
                         placeholder="Số máy"
                       />
                     </td>
+                    <td className="px-1 py-1 min-w-[120px]">
+                      <Combobox
+                        value={item.colorCode}
+                        onChange={(val) =>
+                          onChange(idx, { ...item, colorCode: val })
+                        }
+                        options={VALID_COLORS.map((c) => ({
+                          value: c,
+                          label: COLOR_NAMES[c] || c,
+                        }))}
+                        placeholder="— Chọn màu —"
+                        allowClear
+                      />
+                    </td>
                   </>
                 )}
                 {policy === "SERIAL" && (
@@ -323,14 +376,6 @@ function IdentifierTable({
                     }
                     className={cn(inputCls, "w-full text-xs h-7")}
                     placeholder="Ghi chú"
-                  />
-                </td>
-                <td className="px-1 py-1">
-                  <AttributeInput
-                    value={item.attributes}
-                    onChange={(newAttrs) =>
-                      onChange(idx, { ...item, attributes: newAttrs })
-                    }
                   />
                 </td>
               </tr>
@@ -441,25 +486,29 @@ export function ProductionRunDrawer({
   }, []);
 
   const applyVehicleBulkInput = useCallback(() => {
-    const rows = parseVehicleBulkInput(vehicleBulkInput);
-    const qty = Math.max(1, Math.floor(Number(batchCompleteQty) || 1));
-    if (rows.length !== qty) {
+    try {
+      const rows = parseVehicleBulkInput(vehicleBulkInput);
+      const qty = Math.max(1, Math.floor(Number(batchCompleteQty) || 1));
+      if (rows.length !== qty) {
+        showToast({
+          title: t(`Số dòng bulk phải bằng số lượng hoàn thành (${qty})`),
+          variant: "destructive",
+        });
+        return;
+      }
+      const duplicateMessage = findVehicleDuplicate(rows);
+      if (duplicateMessage) {
+        showToast({ title: t(duplicateMessage), variant: "destructive" });
+        return;
+      }
+      setIdentifiers(rows);
       showToast({
-        title: t(`Số dòng bulk phải bằng số lượng hoàn thành (${qty})`),
-        variant: "destructive",
+        title: t("Đã nạp danh sách VIN / số máy"),
+        variant: "success",
       });
-      return;
+    } catch (e: any) {
+      showToast({ title: e.message, variant: "destructive" });
     }
-    const duplicateMessage = findVehicleDuplicate(rows);
-    if (duplicateMessage) {
-      showToast({ title: t(duplicateMessage), variant: "destructive" });
-      return;
-    }
-    setIdentifiers(rows);
-    showToast({
-      title: t("Đã nạp danh sách VIN / số máy"),
-      variant: "success",
-    });
   }, [batchCompleteQty, showToast, t, vehicleBulkInput]);
 
   const handleToggleEdit = useCallback(() => {
@@ -543,16 +592,26 @@ export function ProductionRunDrawer({
     }
     setSaving(true);
     try {
-      const identifiersPayload = identifiers.slice(0, 1).map((id) => ({
-        ...id,
-        attributes: id.attributes.length
-          ? Object.fromEntries(
-              id.attributes
-                .filter((a) => a.key.trim())
-                .map((a) => [a.key, a.value]),
-            )
-          : undefined,
-      }));
+      const identifiersPayload = identifiers.slice(0, 1).map((id) => {
+        const mergedAttrs = {
+          ...id.attributes.reduce(
+            (acc, curr) => {
+              if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
+        };
+        if (id.colorCode) mergedAttrs["colorCode"] = id.colorCode;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { colorCode, attributes, ...restId } = id;
+        return {
+          ...restId,
+          attributes:
+            Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
+        };
+      });
       await productionCoreApi.complete(localOrder.id, {
         qtyFinished: 1,
         ...(needsIdentifiers ? { identifiers: identifiersPayload } : {}),
@@ -602,16 +661,26 @@ export function ProductionRunDrawer({
     }
     setSaving(true);
     try {
-      const identifiersPayload = identifiers.map((id) => ({
-        ...id,
-        attributes: id.attributes.length
-          ? Object.fromEntries(
-              id.attributes
-                .filter((a) => a.key.trim())
-                .map((a) => [a.key, a.value]),
-            )
-          : undefined,
-      }));
+      const identifiersPayload = identifiers.map((id) => {
+        const mergedAttrs = {
+          ...id.attributes.reduce(
+            (acc, curr) => {
+              if (curr.key.trim()) acc[curr.key.trim()] = curr.value.trim();
+              return acc;
+            },
+            {} as Record<string, string>,
+          ),
+        };
+        if (id.colorCode) mergedAttrs["colorCode"] = id.colorCode;
+
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { colorCode, attributes, ...restId } = id;
+        return {
+          ...restId,
+          attributes:
+            Object.keys(mergedAttrs).length > 0 ? mergedAttrs : undefined,
+        };
+      });
       await productionCoreApi.complete(localOrder.id, {
         qtyFinished: qty,
         unitCost: 0,
@@ -819,9 +888,11 @@ export function ProductionRunDrawer({
                             {t("Quy tắc nhập (mỗi dòng 1 xe):")}
                           </p>
                           <p className="font-mono text-[10px] text-slate-600">
-                            Số VIN, Số máy, Thuộc tính 1=..., Thuộc tính 2=...,
-                            Ghi chú=...
+                            Số Seri, Số VIN, Số máy, Mã màu, Ghi chú
                           </p>
+                          <div className="mt-1 font-mono text-[10px] flex items-center gap-2">
+                            <ValidColorsPopover />
+                          </div>
                         </div>
                         <textarea
                           value={vehicleBulkInput}
@@ -833,7 +904,7 @@ export function ProductionRunDrawer({
                             "w-full font-mono text-xs bg-slate-50/50 focus:bg-white resize-none border-slate-200",
                           )}
                           placeholder={
-                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ,Ghi chú=Giao khách VIP ngay\nVIN002,ENG002,Option=Đủ,Ghi chú=Chờ đăng kiểm"
+                            "SER001,VIN001,ENG001,DEN,Giao khách VIP ngay\nSER002,VIN002,ENG002,DO,Chờ đăng kiểm"
                           }
                         />
                         <button
@@ -936,9 +1007,11 @@ export function ProductionRunDrawer({
                             {t("Quy tắc nhập (mỗi dòng 1 xe):")}
                           </p>
                           <p className="font-mono text-[10px] text-slate-600">
-                            Số VIN, Số máy, Thuộc tính 1=..., Thuộc tính 2=...,
-                            Ghi chú=...
+                            Số Seri, Số VIN, Số máy, Mã màu, Ghi chú
                           </p>
+                          <div className="mt-1 font-mono text-[10px] flex items-center gap-2">
+                            <ValidColorsPopover />
+                          </div>
                         </div>
                         <textarea
                           value={vehicleBulkInput}
@@ -950,7 +1023,7 @@ export function ProductionRunDrawer({
                             "w-full font-mono text-xs bg-slate-50/50 focus:bg-white resize-none border-slate-200",
                           )}
                           placeholder={
-                            "VIN001,ENG001,Màu=Đen,Nội thất=Nỉ,Ghi chú=Giao khách VIP ngay\nVIN002,ENG002,Option=Đủ,Ghi chú=Chờ đăng kiểm"
+                            "SER001,VIN001,ENG001,DEN,Giao khách VIP ngay\nSER002,VIN002,ENG002,DO,Chờ đăng kiểm"
                           }
                         />
                         <button
