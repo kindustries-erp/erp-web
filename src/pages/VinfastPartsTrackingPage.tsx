@@ -24,6 +24,7 @@ import {
   Info,
   Loader2,
   RefreshCw,
+  PanelRightOpen,
 } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { Popover } from "@/core/components/ui/Popover";
@@ -782,16 +783,21 @@ export function VinfastPartsTrackingPage() {
       ),
       headerClassName: "text-center",
       cell: (row) => (
-        <Button
-          variant="link"
-          className="font-medium text-primary hover:underline p-0 h-auto"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDetailRow(row);
-          }}
-        >
-          {row.itemCode}
-        </Button>
+        <div className="flex flex-col gap-1 w-full pr-1">
+          <div className="flex items-center gap-2 w-full">
+            <Button
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailRow(row);
+              }}
+              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+            >
+              <span className="truncate">{row.itemCode}</span>
+              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+            </Button>
+          </div>
+        </div>
       ),
     },
     {
