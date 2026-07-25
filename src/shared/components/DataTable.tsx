@@ -814,10 +814,12 @@ export function DataTable<T>({
                       </TableHead>
                     );
                   })}
-                  <TableHead
-                    className="w-auto p-0 m-0 border-none"
-                    style={{ width: "auto" }}
-                  />
+                  {variant !== "spreadsheet" && (
+                    <TableHead
+                      className="w-auto p-0 m-0 border-none"
+                      style={{ width: "auto" }}
+                    />
+                  )}
                 </TableRow>
               ))}
             </TableHeader>
@@ -868,10 +870,12 @@ export function DataTable<T>({
                         </TableCell>
                       );
                     })}
-                    <TableCell
-                      className="w-auto p-0 m-0 border-none"
-                      style={{ width: "auto" }}
-                    />
+                    {variant !== "spreadsheet" && (
+                      <TableCell
+                        className="w-auto p-0 m-0 border-none"
+                        style={{ width: "auto" }}
+                      />
+                    )}
                   </TableRow>
                 ))}
 
@@ -954,10 +958,12 @@ export function DataTable<T>({
                             </TableCell>
                           );
                         })}
-                        <TableCell
-                          className="w-auto p-0 m-0 border-none"
-                          style={{ width: "auto" }}
-                        />
+                        {variant !== "spreadsheet" && (
+                          <TableCell
+                            className="w-auto p-0 m-0 border-none"
+                            style={{ width: "auto" }}
+                          />
+                        )}
                       </TableRow>
                       {renderSubRow && isExpanded && (
                         <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">

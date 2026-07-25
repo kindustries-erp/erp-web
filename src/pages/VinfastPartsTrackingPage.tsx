@@ -24,12 +24,14 @@ import {
   Info,
   Loader2,
   RefreshCw,
+  PanelRightOpen,
 } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { Popover } from "@/core/components/ui/Popover";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
+import { Badge } from "@/shared/components/ui/badge";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import {
@@ -43,6 +45,7 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 interface VinfastPartTrackingRow {
   itemCode: string;
   itemName: string;
+  vehicleType: "CAR" | "MOTORBIKE";
   month: string;
   qtyBought: number;
   qtySold: number;
@@ -52,6 +55,16 @@ interface VinfastPartTrackingRow {
   marginPct: string;
   buyInvoiceIds: string[];
   sellInvoiceIds: string[];
+}
+
+function getVehicleTypeLabel(vehicleType: "CAR" | "MOTORBIKE") {
+  return vehicleType === "CAR" ? "Ô tô" : "Xe máy";
+}
+
+function getVehicleTypeBadgeClass(vehicleType: "CAR" | "MOTORBIKE") {
+  return vehicleType === "CAR"
+    ? "w-[80px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+    : "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
 }
 
 function VinfastPartDetailDrawer({
@@ -770,16 +783,21 @@ export function VinfastPartsTrackingPage() {
       ),
       headerClassName: "text-center",
       cell: (row) => (
-        <Button
-          variant="link"
-          className="font-medium text-primary hover:underline p-0 h-auto"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDetailRow(row);
-          }}
-        >
-          {row.itemCode}
-        </Button>
+        <div className="flex flex-col gap-1 w-full pr-1">
+          <div className="flex items-center gap-2 w-full">
+            <Button
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailRow(row);
+              }}
+              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+            >
+              <span className="truncate">{row.itemCode}</span>
+              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
+            </Button>
+          </div>
+        </div>
       ),
     },
     {
@@ -808,6 +826,41 @@ export function VinfastPartsTrackingPage() {
           >
             {row.itemName}
           </div>
+        </Tooltip>
+      ),
+    },
+    {
+      key: "vehicleType",
+      header: (
+        <TableColumnHeaderFilter
+          title="Loại xe"
+          sortState={getSortState("vehicleType")}
+          onSortChange={(state) => handleSortChange("vehicleType", state)}
+          searchValue={tableState.columnSearch["vehicleType"] || ""}
+          onSearchChange={(val) => handleSearchChange("vehicleType", val)}
+          selectedFilters={tableState.columnFilters["vehicleType"] || []}
+          onFilterChange={(vals) => handleFilterChange("vehicleType", vals)}
+          align="center"
+          columnKey="vehicleType"
+          {...commonFilterProps}
+          formatOptionLabel={(label) =>
+            label === "CAR" ? "Ô tô" : label === "MOTORBIKE" ? "Xe máy" : label
+          }
+        />
+      ),
+      size: 120,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row) => (
+        <Tooltip content={getVehicleTypeLabel(row.vehicleType)}>
+          <Badge
+            variant="ghost"
+            className={`border ${getVehicleTypeBadgeClass(row.vehicleType)}`}
+          >
+            <span className="truncate block max-w-full">
+              {getVehicleTypeLabel(row.vehicleType)}
+            </span>
+          </Badge>
         </Tooltip>
       ),
     },
@@ -972,7 +1025,7 @@ export function VinfastPartsTrackingPage() {
       className: "text-right",
       cell: (row) => (
         <span className="font-semibold text-slate-700">
-          {money(row.margin)}
+          {row.qtySold > 0 && row.margin != null ? money(row.margin) : ""}
         </span>
       ),
     },
@@ -994,7 +1047,11 @@ export function VinfastPartsTrackingPage() {
       ),
       headerClassName: "text-center",
       className: "text-right",
-      cell: (row) => <span className="text-gray-600">{row.marginPct}</span>,
+      cell: (row) => (
+        <span className="text-gray-600">
+          {row.qtySold > 0 ? row.marginPct : ""}
+        </span>
+      ),
     },
   ];
 

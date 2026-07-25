@@ -1,5 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
-import { Shield, PlusCircle, Settings, Trash } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  Shield,
+  PlusCircle,
+  Settings,
+  Trash,
+  PanelRightOpen,
+} from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -189,16 +196,33 @@ export function ErpPermissionsCorePage() {
       {
         key: "name",
         header: t("rbac.headers.name"),
-        cell: (role) => role.name,
-        className: "font-medium text-foreground whitespace-nowrap text-left",
+        cell: (role) => (
+          <div className="flex items-center justify-between w-full gap-2 pr-1">
+            <span className="truncate font-medium text-foreground">
+              {role.name}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                openEdit(role);
+              }}
+              className="h-6 w-6 p-0 opacity-60 hover:bg-transparent hover:text-primary hover:opacity-100 transition-opacity flex-shrink-0"
+            >
+              <PanelRightOpen className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        ),
+        className: "whitespace-nowrap text-left px-4",
         headerClassName: "text-center",
       },
       {
         key: "description",
         header: t("rbac.headers.description"),
+        size: 250,
         cell: (role) => role.description || "—",
-        className:
-          "text-[color:var(--muted-fg)] max-w-[300px] truncate text-left",
+        className: "text-[color:var(--muted-fg)] truncate text-left",
         headerClassName: "text-center",
       },
       {
