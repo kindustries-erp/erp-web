@@ -246,7 +246,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
-  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.permissions"]],
+  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
   "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
