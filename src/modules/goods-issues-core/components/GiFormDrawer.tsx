@@ -3,7 +3,7 @@ import { fmtQty } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Skeleton } from "@/shared/components/Skeleton";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { DataTable } from "@/shared/components/DataTable";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   DrawerField,
@@ -54,7 +54,6 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     setItemSearch,
     fetchNextItems,
     loadingItems,
-    vehicleOptions,
     moOptions,
     close,
     handleSave,
@@ -249,25 +248,22 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   ) : undefined
                 }
               >
-                <DocumentLineTable
-                  data={form.lines}
-                  getRowKey={(_, idx) => idx}
-                  viewOnly={viewOnly || form.issueType === "SALE"}
-                  disabled={
-                    viewOnly ||
-                    form.issueType === "SALE" ||
-                    editing?.status === "POSTED"
-                  }
-                  tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-                  footer={
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-3 py-3 text-right font-semibold"
-                      ></td>
-                      <td
+                <DataTable
+                  items={form.lines}
+                  getRowKey={(item) => String(form.lines.indexOf(item))}
+                  variant="spreadsheet"
+                  emptyLabel={t("Không có dữ liệu")}
+                  containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                  summaryRow={{
+                    tracking: (
+                      <div className="text-right w-full font-semibold">
+                        {t("Tổng")}:
+                      </div>
+                    ),
+                    qtyIssued: (
+                      <div
                         className={cn(
-                          "px-3 py-3 font-semibold text-center",
+                          "text-center font-semibold",
                           viewOnly ? "text-red-600" : "",
                         )}
                       >
@@ -281,47 +277,30 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                             )
                             .toString(),
                         )}
-                      </td>
-                      <td
-                        className="px-3 py-3"
-                        colSpan={
-                          vehicleOptions.length > 0
-                            ? viewOnly || form.issueType === "SALE"
-                              ? 2
-                              : 3
-                            : viewOnly || form.issueType === "SALE"
-                              ? 1
-                              : 2
-                        }
-                      ></td>
-                    </tr>
-                  }
-                  onAddLine={() =>
-                    setForm((f) => ({
-                      ...f,
-                      lines: [...f.lines, emptyGiLine()],
-                    }))
-                  }
-                  onRemoveLine={(idx) =>
-                    setForm((f) => ({
-                      ...f,
-                      lines: f.lines.filter((_, i) => i !== idx),
-                    }))
-                  }
+                      </div>
+                    ),
+                  }}
                   columns={[
                     {
                       key: "index",
                       header: "#",
-                      width: 40,
-                      align: "center",
+                      size: 40,
+                      headerClassName: "text-center w-[40px] min-w-[40px]",
+                      className: "text-center w-[40px] min-w-[40px]",
                       cell: (_, idx) => (
-                        <span className="text-muted-foreground">{idx + 1}</span>
+                        <span className="text-muted-foreground">{idx}</span>
                       ),
                     },
                     {
                       key: "itemCode",
                       header: t("Mã vật tư"),
-                      minWidth: isLineViewOnly ? 140 : 200,
+                      minSize: isLineViewOnly ? 140 : 200,
+                      headerClassName: isLineViewOnly
+                        ? "w-[140px] min-w-[140px]"
+                        : "w-[200px] min-w-[200px]",
+                      className: isLineViewOnly
+                        ? "w-[140px] min-w-[140px]"
+                        : "w-[200px] min-w-[200px]",
                       cell: (line, idx) => {
                         if (isLineViewOnly) {
                           const code =
@@ -347,8 +326,14 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                               );
                               setForm((f) => {
                                 const lines = [...f.lines];
-                                lines[idx] = {
-                                  ...lines[idx],
+                                const currentLine = form.lines.find(
+                                  (l) => l === line,
+                                );
+                                const actualIdx = currentLine
+                                  ? form.lines.indexOf(currentLine)
+                                  : idx - 1;
+                                lines[actualIdx] = {
+                                  ...lines[actualIdx],
                                   itemId: v || "",
                                   itemCode: found?.label?.split(" — ")[0] || "",
                                   itemName: found?.label ?? "",
@@ -363,7 +348,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "itemName",
                       header: t("Tên vật tư"),
-                      minWidth: 200,
+                      minSize: 200,
+                      headerClassName: "w-[200px] min-w-[200px]",
+                      className: "w-[200px] min-w-[200px]",
                       cell: (line) => {
                         const nameParts = line.itemName?.split(" — ");
                         const name =
@@ -388,7 +375,9 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "tracking",
                       header: t("Serials / Số khung"),
-                      minWidth: 250,
+                      minSize: 250,
+                      headerClassName: "w-[250px] min-w-[250px]",
+                      className: "w-[250px] min-w-[250px]",
                       cell: (line) => {
                         if (!line.serialId) {
                           return (
@@ -422,8 +411,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "qtyIssued",
                       header: t("Số lượng"),
-                      minWidth: 140,
-                      align: isLineViewOnly ? "center" : "left",
+                      minSize: 140,
+                      headerClassName: isLineViewOnly
+                        ? "text-center w-[140px] min-w-[140px]"
+                        : "text-left w-[140px] min-w-[140px]",
+                      className: isLineViewOnly
+                        ? "text-center w-[140px] min-w-[140px]"
+                        : "text-left w-[140px] min-w-[140px]",
                       cell: (line, idx) => {
                         const qty = line.itemId ? line.qtyIssued : "0";
                         if (isLineViewOnly) {
@@ -455,7 +449,16 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                               const v = e.target.value;
                               setForm((f) => {
                                 const lines = [...f.lines];
-                                lines[idx] = { ...lines[idx], qtyIssued: v };
+                                const currentLine = form.lines.find(
+                                  (l) => l === line,
+                                );
+                                const actualIdx = currentLine
+                                  ? form.lines.indexOf(currentLine)
+                                  : idx - 1;
+                                lines[actualIdx] = {
+                                  ...lines[actualIdx],
+                                  qtyIssued: v,
+                                };
                                 return { ...f, lines };
                               });
                             }}
@@ -466,8 +469,13 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                     {
                       key: "unitCost",
                       header: t("Đơn giá"),
-                      minWidth: 140,
-                      align: isLineViewOnly ? "right" : "left",
+                      minSize: 140,
+                      headerClassName: isLineViewOnly
+                        ? "text-right w-[140px] min-w-[140px]"
+                        : "text-left w-[140px] min-w-[140px]",
+                      className: isLineViewOnly
+                        ? "text-right w-[140px] min-w-[140px]"
+                        : "text-left w-[140px] min-w-[140px]",
                       cell: (line, idx) => {
                         if (isLineViewOnly) {
                           return line.unitCost ? (
@@ -491,7 +499,16 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                               const v = e.target.value;
                               setForm((f) => {
                                 const lines = [...f.lines];
-                                lines[idx] = { ...lines[idx], unitCost: v };
+                                const currentLine = form.lines.find(
+                                  (l) => l === line,
+                                );
+                                const actualIdx = currentLine
+                                  ? form.lines.indexOf(currentLine)
+                                  : idx - 1;
+                                lines[actualIdx] = {
+                                  ...lines[actualIdx],
+                                  unitCost: v,
+                                };
                                 return { ...f, lines };
                               });
                             }}
@@ -499,51 +516,53 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                         );
                       },
                     },
-                    /*
-                    ...(vehicleOptions.length > 0
-                      ? [
-                          {
-                            key: "vehicle",
-                            header: t("Xe") + " (" + t("tùy chọn") + ")",
-                            minWidth: 160,
-                            cell: (line: GiLineForm, idx: number) => {
-                              if (viewOnly) {
-                                const vName = vehicleOptions.find(
-                                  (v) => v.value === line.vehicleId,
-                                )?.label;
-                                return (
-                                  <span className="text-muted-foreground">
-                                    {vName || "—"}
-                                  </span>
-                                );
-                              }
-                              return (
-                                <Combobox
-                                  options={vehicleOptions}
-                                  value={line.vehicleId}
-                                  disabled={
-                                    viewOnly || editing?.status === "POSTED"
-                                  }
-                                  placeholder={t("Chọn xe...")}
-                                  onChange={(v) => {
-                                    setForm((f) => {
-                                      const lines = [...f.lines];
-                                      lines[idx] = {
-                                        ...lines[idx],
-                                        vehicleId: v || "",
-                                      };
-                                      return { ...f, lines };
-                                    });
-                                  }}
-                                />
-                              );
-                            },
-                          },
-                        ]
-                      : []),
-                    */
                   ]}
+                  actionsColumn={
+                    !(
+                      viewOnly ||
+                      form.issueType === "SALE" ||
+                      editing?.status === "POSTED"
+                    )
+                      ? {
+                          header: "",
+                          cell: (item: any) => (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500"
+                              onClick={() => {
+                                setForm((f) => ({
+                                  ...f,
+                                  lines: f.lines.filter((l) => l !== item),
+                                }));
+                              }}
+                            >
+                              ✕
+                            </Button>
+                          ),
+                        }
+                      : undefined
+                  }
                 />
+                {!(
+                  viewOnly ||
+                  form.issueType === "SALE" ||
+                  editing?.status === "POSTED"
+                ) && (
+                  <div className="mt-4 flex justify-center gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        setForm((f) => ({
+                          ...f,
+                          lines: [...f.lines, emptyGiLine()],
+                        }))
+                      }
+                    >
+                      + {t("Thêm dòng")}
+                    </Button>
+                  </div>
+                )}
               </DrawerSection>
             )}
           </>

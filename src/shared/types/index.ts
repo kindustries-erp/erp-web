@@ -22,6 +22,7 @@ export type PageKey =
   | "operating-expenses"
   | "erp-inventory-stock"
   | "erp-inventory-tracking"
+  | "erp-inventory-tracking-parts"
   | "erp-inventory-vouchers"
   | "suppliers"
   | "activity-log"

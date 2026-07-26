@@ -286,7 +286,9 @@ export function SidebarNav({
           canReadInventoryItems ? t("nav.items.inventoryDashboard") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryStock") : "",
           canReadInventoryVouchers ? t("nav.items.erpInventoryVouchers") : "",
+          canReadInventoryItems ? t("nav.items.erpInventoryTrackingGroup") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryTracking") : "",
+          canReadInventoryItems ? t("nav.items.erpInventoryTrackingParts") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
@@ -325,14 +327,28 @@ export function SidebarNav({
               />
             )}
             {canReadInventoryItems && (
-              <NavItem
+              <NavGroup
                 collapsed={c}
                 icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpInventoryTracking")}
-                active={currentPage === "erp-inventory-tracking"}
-                onClick={() => navTo("erp-inventory-tracking")}
-                contextPage="erp-inventory-tracking"
-              />
+                label={t("nav.items.erpInventoryTrackingGroup")}
+                active={
+                  currentPage === "erp-inventory-tracking" ||
+                  currentPage === "erp-inventory-tracking-parts"
+                }
+              >
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTracking")}
+                  active={currentPage === "erp-inventory-tracking"}
+                  onClick={() => navTo("erp-inventory-tracking")}
+                  contextPage="erp-inventory-tracking"
+                />
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTrackingParts")}
+                  active={currentPage === "erp-inventory-tracking-parts"}
+                  onClick={() => navTo("erp-inventory-tracking-parts")}
+                  contextPage="erp-inventory-tracking-parts"
+                />
+              </NavGroup>
             )}
             {canReadVinfastParts && (
               <NavGroup

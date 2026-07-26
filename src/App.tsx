@@ -226,6 +226,11 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
+  "erp-inventory-tracking-parts": () => (
+    <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
+      Tính năng Quản lý Serial Phụ tùng đang được phát triển...
+    </div>
+  ),
   "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
