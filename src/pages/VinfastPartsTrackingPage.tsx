@@ -823,20 +823,20 @@ export function VinfastPartsTrackingPage({
       headerClassName: "text-center",
       cell: (row) => (
         <div className="group flex items-center justify-between w-full pr-1">
-          <div className="flex items-center text-slate-700">
-            <span className="truncate">{row.itemCode}</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailRow(row);
+              }}
+              className="h-5 w-5 p-0 flex items-center justify-center rounded opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+              title="Xem chi tiết"
+            >
+              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+            </button>
+            <span className="truncate text-slate-700">{row.itemCode}</span>
             <CopyIconBtn text={row.itemCode} />
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setDetailRow(row);
-            }}
-            className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-primary transition-colors flex-shrink-0"
-            title="Xem chi tiết"
-          >
-            <PanelRightOpen className="w-4 h-4" />
-          </button>
         </div>
       ),
     },

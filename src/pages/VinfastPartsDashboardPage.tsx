@@ -149,7 +149,7 @@ export function VinfastPartsDashboardPage() {
         </div>
 
         <div className="flex flex-col gap-6">
-          <div className="h-[500px]">
+          <div className="h-auto">
             <VinfastPartDashboardTable
               filterState={filter.state}
               vehicleType="CAR"
@@ -157,7 +157,7 @@ export function VinfastPartsDashboardPage() {
               onRowClick={(row) => handleRowClick(row, "CAR")}
             />
           </div>
-          <div className="h-[500px]">
+          <div className="h-auto">
             <VinfastPartDashboardTable
               filterState={filter.state}
               vehicleType="MOTORBIKE"

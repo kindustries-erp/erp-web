@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { PanelRightOpen, Check, Copy } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { money } from "@/shared/utils/format";
 import {
@@ -20,7 +22,29 @@ export function VinfastPartDashboardTable({
   onRowClick,
 }: Props) {
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const [limit, setLimit] = useState(10);
+
+  const CopyIconBtn = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded text-slate-500 ml-1"
+        title="Copy"
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-green-600" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+    );
+  };
 
   const { data, isLoading } = useVinfastPartsDashboardTable(
     filterState,
@@ -33,8 +57,28 @@ export function VinfastPartDashboardTable({
     {
       key: "itemCode",
       header: <div className="text-left font-semibold">Mã phụ tùng</div>,
+      size: 150,
       cell: (row: any) => (
-        <div className="text-left font-medium">{row.itemCode}</div>
+        <div className="flex items-center gap-1.5 group w-full">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e: any) => {
+              e.stopPropagation();
+              onRowClick?.(row);
+            }}
+            className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+            title="Mở chi tiết"
+          >
+            <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+          </Button>
+          <div className="flex items-center text-slate-700 flex-1 min-w-0">
+            <span className="truncate" title={row.itemCode}>
+              {row.itemCode}
+            </span>
+            <CopyIconBtn text={row.itemCode} />
+          </div>
+        </div>
       ),
     },
     {
@@ -98,14 +142,16 @@ export function VinfastPartDashboardTable({
           columns={columns}
           items={data?.items || []}
           getRowKey={(row: any) => row.itemCode}
+          total={data?.total || 0}
           totalPages={data?.totalPages || 0}
           onPage={setPage}
+          onPageSize={setLimit}
           page={page}
           pageSize={limit}
           loading={isLoading}
           minWidth={500}
           enableColumnResizing={false}
-          onRowClick={onRowClick}
+          variant="spreadsheet"
         />
       </div>
     </div>

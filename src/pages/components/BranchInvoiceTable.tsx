@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { PanelRightOpen } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { StandardTable } from "@/shared/components/StandardTable";
@@ -54,24 +55,14 @@ export function BranchInvoiceTable({
       {
         key: "taxCode",
         header: "MST",
-        className: "text-left w-[110px]",
-        headerClassName: "w-[110px]",
-        cell: (row: any) =>
-          row.taxCode ? (
-            <Button
-              variant="link"
-              onClick={(e: any) => {
-                e.stopPropagation();
-                onRowClick(row);
-              }}
-              className="font-bold underline text-primary p-0 h-auto inline-block truncate max-w-[100px]"
-              title={row.taxCode}
-            >
-              {row.taxCode}
-            </Button>
-          ) : (
-            "—"
-          ),
+        size: 150,
+        className: "text-left",
+        headerClassName: "text-left",
+        cell: (row: any) => (
+          <div className="truncate" title={row.taxCode || ""}>
+            {row.taxCode || "—"}
+          </div>
+        ),
       },
       {
         key: "partnerName",
@@ -79,11 +70,28 @@ export function BranchInvoiceTable({
         className: "text-left w-full",
         headerClassName: "w-full text-left",
         cell: (row: any) => (
-          <Tooltip content={row.partnerName || "—"}>
-            <div className="truncate max-w-[250px]">
-              {row.partnerName || "—"}
-            </div>
-          </Tooltip>
+          <div className="flex items-center gap-1.5 group w-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e: any) => {
+                e.stopPropagation();
+                onRowClick(row);
+              }}
+              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+              title="Mở chi tiết"
+            >
+              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+            </Button>
+            <Tooltip content={row.partnerName || "—"}>
+              <span
+                className="truncate flex-1 min-w-0"
+                style={{ maxWidth: "calc(100% - 28px)" }}
+              >
+                {row.partnerName || "—"}
+              </span>
+            </Tooltip>
+          </div>
         ),
       },
       {
@@ -138,6 +146,7 @@ export function BranchInvoiceTable({
           totalPages={partnersData?.totalPages || 0}
           onPage={setPage}
           onPageSize={setPageSize}
+          variant="spreadsheet"
         />
       </div>
     </div>

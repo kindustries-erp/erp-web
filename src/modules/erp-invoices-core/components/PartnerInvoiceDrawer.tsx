@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from "react";
+import { PanelRightOpen } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
@@ -267,18 +268,25 @@ export function PartnerInvoiceDrawer({
           />
         ),
         size: 100,
-        className: "font-medium text-primary text-left",
+        className: "text-primary text-left",
         cell: (inv: any) => (
-          <Button
-            variant="link"
-            onClick={(e) => {
-              e.stopPropagation();
-              formHook.openInternal(inv);
-            }}
-            className="font-medium text-primary hover:underline p-0 h-auto"
-          >
-            {inv.invoiceNo}
-          </Button>
+          <div className="flex items-center gap-1.5 group w-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                formHook.openInternal(inv);
+              }}
+              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+              title="Mở chi tiết"
+            >
+              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+            </Button>
+            <span className="truncate" title={inv.invoiceNo}>
+              {inv.invoiceNo}
+            </span>
+          </div>
         ),
       },
       {

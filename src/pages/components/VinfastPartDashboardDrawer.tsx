@@ -1,4 +1,5 @@
 import { DrawerModal } from "@/shared/components/DrawerModal";
+import { PanelRightOpen } from "lucide-react";
 import { VinfastPartTrendChart } from "../VinfastPartsDashboardPage";
 import { money } from "@/shared/utils/format";
 import { useMemo } from "react";
@@ -98,20 +99,28 @@ export function VinfastPartDashboardDrawer({
       cell: (row) => (
         <div className="flex items-center gap-1">
           {onOpenInvoice && row.invoiceId ? (
-            <Button
-              variant="link"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenInvoice(row.invoiceId);
-              }}
-              className="font-medium text-primary hover:underline p-0 h-auto"
-            >
-              {row.invoiceNo || "—"}
-            </Button>
+            <div className="flex items-center gap-1.5 group w-full">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenInvoice(row.invoiceId);
+                }}
+                className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+                title="Mở chi tiết"
+              >
+                <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+              </Button>
+              <span
+                className="truncate text-primary"
+                title={row.invoiceNo || "—"}
+              >
+                {row.invoiceNo || "—"}
+              </span>
+            </div>
           ) : (
-            <span className="font-medium text-primary">
-              {row.invoiceNo || "—"}
-            </span>
+            <span className="text-primary">{row.invoiceNo || "—"}</span>
           )}
           {row.status && row.status !== "CONFIRMED" && (
             <span
