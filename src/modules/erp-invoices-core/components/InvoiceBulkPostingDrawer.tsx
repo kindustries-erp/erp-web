@@ -38,6 +38,14 @@ type CustomConfig = {
   lines: PostInvoiceLine[];
 };
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 // Component helper để format số tiền
 function NumberInput({ value, onChange, ...props }: any) {
   const [isFocused, setIsFocused] = useState(false);
@@ -257,7 +265,7 @@ export function InvoiceBulkPostingDrawer({
     if (direction === "IN") {
       if (preVat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalInCost,
           debit: preVat,
           credit: 0,
@@ -265,7 +273,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (vat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalInVat,
           debit: vat,
           credit: 0,
@@ -273,7 +281,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (total > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalInAp,
           debit: 0,
           credit: total,
@@ -282,7 +290,7 @@ export function InvoiceBulkPostingDrawer({
     } else {
       if (total > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalOutAr,
           debit: total,
           credit: 0,
@@ -290,7 +298,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (preVat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalOutRev,
           debit: 0,
           credit: preVat,
@@ -298,7 +306,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (vat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalOutVat,
           debit: 0,
           credit: vat,
@@ -380,7 +388,7 @@ export function InvoiceBulkPostingDrawer({
           lines: [
             ...conf.lines,
             {
-              id: crypto.randomUUID(),
+              id: createClientId(),
               accountId: "",
               debit: 0,
               credit: 0,

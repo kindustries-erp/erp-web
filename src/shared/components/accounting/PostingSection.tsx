@@ -7,6 +7,14 @@ import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { money } from "@/shared/utils/format";
 import { DatePicker } from "@/shared/components/DatePicker";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export interface PostingLineData {
   id: string;
   accountId: string;
@@ -40,6 +48,7 @@ export interface PostingSectionProps {
   onUnpost?: () => void;
   unposting?: boolean;
   editMode?: boolean;
+  autoBalanceOnAddLine?: boolean;
 }
 
 export function PostingSection({
@@ -52,6 +61,7 @@ export function PostingSection({
   onUnpost,
   unposting,
   editMode,
+  autoBalanceOnAddLine,
 }: PostingSectionProps) {
   // Fetch Chart of Accounts (global, no branch required)
   const { data: chartOfAccounts, isLoading: isLoadingCoA } = useQuery({
@@ -94,6 +104,26 @@ export function PostingSection({
     setAllState,
   } = postingState;
 
+  const handleAddLine = () => {
+    if (!autoBalanceOnAddLine) {
+      addLine();
+      return;
+    }
+
+    const diff = Number((totalDebit - totalCredit).toFixed(2));
+    const amount = Math.abs(diff);
+    const fallbackDesc =
+      description ||
+      lines.find((line) => !!line.description)?.description ||
+      "";
+
+    addLine({
+      debit: diff < 0 ? amount : 0,
+      credit: diff > 0 ? amount : 0,
+      description: fallbackDesc,
+    });
+  };
+
   // Initialize or re-initialize data based on status
   useEffect(() => {
     if (journalEntry) {
@@ -102,7 +132,7 @@ export function PostingSection({
         const accId = l.accountId || (l.account ? l.account.id : "");
         if (!lineMap.has(accId)) {
           lineMap.set(accId, {
-            id: l.id || crypto.randomUUID(),
+            id: l.id || createClientId(),
             accountId: accId,
             debit: 0,
             credit: 0,
@@ -384,7 +414,12 @@ export function PostingSection({
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <Button variant="outline" size="sm" onClick={addLine} className="gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAddLine}
+          className="gap-1"
+        >
           <Plus className="w-4 h-4" />
           Thêm dòng
         </Button>

@@ -17,6 +17,14 @@ import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { Button } from "@/shared/components/ui/Button";
 import { Textarea } from "@/shared/components/ui/textarea";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
   const { data: journalEntry, isLoading } = useQuery({
     queryKey: ["journal-entry", journalEntryId],
@@ -403,7 +411,7 @@ export function ErpInvoiceInternalMain({
                   if (direction === "IN") {
                     if (preVat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId:
                           findAccount("642") ||
                           findAccount("152") ||
@@ -414,7 +422,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (vat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("133"),
                         debit: vat,
                         credit: 0,
@@ -422,7 +430,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (total > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("331"),
                         debit: 0,
                         credit: total,
@@ -431,7 +439,7 @@ export function ErpInvoiceInternalMain({
                   } else {
                     if (total > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("131"),
                         debit: total,
                         credit: 0,
@@ -439,7 +447,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (preVat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("511"),
                         debit: 0,
                         credit: preVat,
@@ -447,7 +455,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (vat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("333"),
                         debit: 0,
                         credit: vat,
