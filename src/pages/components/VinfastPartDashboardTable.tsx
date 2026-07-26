@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DataTable, DataTableColumn } from "@/shared/components/DataTable";
+import { StandardTable } from "@/shared/components/StandardTable";
 import { money } from "@/shared/utils/format";
 import {
   VinfastPartDashboardTableRow,
@@ -29,18 +29,18 @@ export function VinfastPartDashboardTable({
     vehicleType,
   );
 
-  const columns: DataTableColumn<any>[] = [
+  const columns: any[] = [
     {
       key: "itemCode",
       header: <div className="text-left font-semibold">Mã phụ tùng</div>,
-      cell: (row) => (
+      cell: (row: any) => (
         <div className="text-left font-medium">{row.itemCode}</div>
       ),
     },
     {
       key: "itemName",
       header: <div className="text-left font-semibold">Tên phụ tùng</div>,
-      cell: (row) => (
+      cell: (row: any) => (
         <div className="text-left max-w-[200px] truncate" title={row.itemName}>
           {row.itemName}
         </div>
@@ -49,12 +49,12 @@ export function VinfastPartDashboardTable({
     {
       key: "qtyBought",
       header: <div className="text-right font-semibold">SL Mua</div>,
-      cell: (row) => <div className="text-right">{row.qtyBought}</div>,
+      cell: (row: any) => <div className="text-right">{row.qtyBought}</div>,
     },
     {
       key: "amountBought",
       header: <div className="text-right font-semibold">Tiền Mua</div>,
-      cell: (row) => (
+      cell: (row: any) => (
         <div className="text-right text-[#ea580c]">
           {money(row.amountBought)} đ
         </div>
@@ -63,12 +63,12 @@ export function VinfastPartDashboardTable({
     {
       key: "qtySold",
       header: <div className="text-right font-semibold">SL Bán</div>,
-      cell: (row) => <div className="text-right">{row.qtySold}</div>,
+      cell: (row: any) => <div className="text-right">{row.qtySold}</div>,
     },
     {
       key: "amountSold",
       header: <div className="text-right font-semibold">Tiền Bán</div>,
-      cell: (row) => (
+      cell: (row: any) => (
         <div className="text-right text-[#059669]">
           {money(row.amountSold)} đ
         </div>
@@ -77,7 +77,7 @@ export function VinfastPartDashboardTable({
     {
       key: "profit",
       header: <div className="text-right font-semibold">Lợi nhuận</div>,
-      cell: (row) => {
+      cell: (row: any) => {
         const val = row.profit;
         return (
           <div
@@ -91,16 +91,10 @@ export function VinfastPartDashboardTable({
   ];
 
   return (
-    <div className="bg-white rounded-lg border shadow-sm flex flex-col h-full overflow-hidden">
-      <div className="p-4 border-b flex-shrink-0">
-        <h4 className="font-semibold text-lg text-gray-800">{title}</h4>
-        <p className="text-sm text-gray-500">
-          Danh sách chi tiết mua bán theo từng mã phụ tùng — click để xem chi
-          tiết hóa đơn
-        </p>
-      </div>
-      <div className="flex-1 overflow-auto p-4">
-        <DataTable
+    <div className="flex flex-col h-full">
+      <h4 className="font-semibold text-sm text-slate-700 mb-2">{title}</h4>
+      <div className="flex-1">
+        <StandardTable
           columns={columns}
           items={data?.items || []}
           getRowKey={(row: any) => row.itemCode}
@@ -109,7 +103,8 @@ export function VinfastPartDashboardTable({
           page={page}
           pageSize={limit}
           loading={isLoading}
-          emptyLabel="Không có dữ liệu"
+          minWidth={500}
+          enableColumnResizing={false}
           onRowClick={onRowClick}
         />
       </div>
