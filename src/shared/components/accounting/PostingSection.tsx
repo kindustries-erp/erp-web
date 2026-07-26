@@ -194,85 +194,126 @@ export function PostingSection({
       return match[0] || accountId;
     };
 
+    const summaryItems = [
+      {
+        label: "Trạng thái",
+        value: (
+          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+            Đã hạch toán
+          </span>
+        ),
+      },
+      { label: "Ngày hạch toán", value: postingDate || "—" },
+      { label: "Số dòng", value: `${lines.length} dòng` },
+      {
+        label: "Tổng Nợ",
+        value: totalDebit > 0 ? money(totalDebit) : "0 đ",
+      },
+      {
+        label: "Tổng Có",
+        value: totalCredit > 0 ? money(totalCredit) : "0 đ",
+      },
+      {
+        label: "Bút toán",
+        value: journalEntryId ? journalEntryId.slice(0, 8) : "—",
+      },
+    ];
+
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500 mr-2">Ngày hạch toán:</span>
-            <span className="font-medium">{postingDate || "—"}</span>
-          </div>
-          <div>
-            <span className="text-gray-500 mr-2">Diễn giải chung:</span>
-            <span className="font-medium">{description || "—"}</span>
-          </div>
-        </div>
+        <div className="grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)] items-start">
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3 space-y-3">
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Diễn giải chung
+              </div>
+              <div className="text-sm font-medium text-gray-800 leading-5 break-words">
+                {description || "—"}
+              </div>
+            </div>
 
-        {lines.length > 0 ? (
-          <div className="mt-2 flex justify-center">
-            <div className="border border-gray-300 rounded-sm overflow-hidden text-sm w-full max-w-2xl shadow-sm">
-              <div className="flex divide-x divide-gray-300">
-                <div className="flex-1 bg-white">
-                  <div className="bg-gray-50 border-b border-gray-200 px-3 py-1 font-bold text-center text-gray-700 text-[13px]">
-                    NỢ
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {summaryItems.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2"
+                >
+                  <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">
+                    {item.label}
                   </div>
-                  <div className="px-3 py-2 min-h-[3rem] space-y-1.5">
-                    {debitLines.map((l) => (
-                      <div
-                        key={l.id}
-                        className="flex justify-between items-center text-gray-700 text-[13px]"
-                      >
-                        <span
-                          className="font-medium truncate pr-2"
-                          title={resolveAccountCode(l.accountId)}
-                        >
-                          {resolveAccountCode(l.accountId)}
-                        </span>
-                        <span className="whitespace-nowrap">
-                          {money(l.debit)}
-                        </span>
-                      </div>
-                    ))}
+                  <div className="font-semibold text-gray-800 break-words">
+                    {item.value}
                   </div>
                 </div>
-                <div className="flex-1 bg-white">
-                  <div className="bg-gray-50 border-b border-gray-200 px-3 py-1 font-bold text-center text-gray-700 text-[13px]">
-                    CÓ
-                  </div>
-                  <div className="px-3 py-2 min-h-[3rem] space-y-1.5">
-                    {creditLines.map((l) => (
-                      <div
-                        key={l.id}
-                        className="flex justify-between items-center text-gray-700 text-[13px]"
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-gray-300 rounded-lg overflow-hidden text-sm w-full shadow-sm bg-white">
+            <div className="grid grid-cols-1 xl:grid-cols-2 divide-y xl:divide-y-0 xl:divide-x divide-gray-300">
+              <div className="bg-white">
+                <div className="bg-gray-50 border-b border-gray-200 px-3 py-2 font-bold text-center text-gray-700 text-[13px]">
+                  NỢ
+                </div>
+                <div className="px-3 py-3 min-h-[8rem] space-y-1.5">
+                  {debitLines.map((l) => (
+                    <div
+                      key={l.id}
+                      className="flex justify-between items-center text-gray-700 text-[13px] gap-3"
+                    >
+                      <span
+                        className="font-medium truncate pr-2"
+                        title={resolveAccountCode(l.accountId)}
                       >
-                        <span
-                          className="font-medium truncate pr-2"
-                          title={resolveAccountCode(l.accountId)}
-                        >
-                          {resolveAccountCode(l.accountId)}
-                        </span>
-                        <span className="whitespace-nowrap">
-                          {money(l.credit)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                        {resolveAccountCode(l.accountId)}
+                      </span>
+                      <span className="whitespace-nowrap font-medium">
+                        {money(l.debit)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="flex divide-x divide-gray-300 border-t border-gray-300 bg-gray-50">
-                <div className="flex-1 px-3 py-1.5 text-right">
-                  <span className="font-bold text-emerald-700 text-[13px]">
-                    Tổng Nợ: {totalDebit > 0 ? money(totalDebit) : "0 đ"}
-                  </span>
+              <div className="bg-white">
+                <div className="bg-gray-50 border-b border-gray-200 px-3 py-2 font-bold text-center text-gray-700 text-[13px]">
+                  CÓ
                 </div>
-                <div className="flex-1 px-3 py-1.5 text-right">
-                  <span className="font-bold text-emerald-700 text-[13px]">
-                    Tổng Có: {totalCredit > 0 ? money(totalCredit) : "0 đ"}
-                  </span>
+                <div className="px-3 py-3 min-h-[8rem] space-y-1.5">
+                  {creditLines.map((l) => (
+                    <div
+                      key={l.id}
+                      className="flex justify-between items-center text-gray-700 text-[13px] gap-3"
+                    >
+                      <span
+                        className="font-medium truncate pr-2"
+                        title={resolveAccountCode(l.accountId)}
+                      >
+                        {resolveAccountCode(l.accountId)}
+                      </span>
+                      <span className="whitespace-nowrap font-medium">
+                        {money(l.credit)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
+            <div className="grid grid-cols-2 divide-x divide-gray-300 border-t border-gray-300 bg-gray-50">
+              <div className="px-3 py-2 text-right">
+                <span className="font-bold text-emerald-700 text-[13px]">
+                  Tổng Nợ: {totalDebit > 0 ? money(totalDebit) : "0 đ"}
+                </span>
+              </div>
+              <div className="px-3 py-2 text-right">
+                <span className="font-bold text-emerald-700 text-[13px]">
+                  Tổng Có: {totalCredit > 0 ? money(totalCredit) : "0 đ"}
+                </span>
+              </div>
+            </div>
           </div>
-        ) : (
+        </div>
+
+        {lines.length === 0 && (
           <div className="text-sm text-gray-500 italic mt-4">
             Chưa có dữ liệu hạch toán.
           </div>

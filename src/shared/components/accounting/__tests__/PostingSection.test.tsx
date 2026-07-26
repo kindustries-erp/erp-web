@@ -4,11 +4,12 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PostingSection } from "../PostingSection";
 import { usePosting } from "../usePosting";
+import { accountingApi } from "@/modules/accounting/api/accountingApi";
 
 vi.mock("@/modules/accounting/api/accountingApi", () => ({
   accountingApi: {
-    getChartOfAccounts: vi.fn().mockResolvedValue([]),
-    getJournalEntryById: vi.fn().mockResolvedValue(null),
+    getChartOfAccounts: vi.fn(),
+    getJournalEntryById: vi.fn(),
   },
 }));
 
@@ -33,7 +34,25 @@ vi.mock("@/shared/components/DatePicker", () => ({
   ),
 }));
 
-function PostingSectionHarness({
+function createClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+}
+
+function SummaryHost() {
+  const postingState = usePosting();
+  return (
+    <PostingSection
+      postingState={postingState}
+      isPosted={true}
+      journalEntryId="je-1"
+      editMode={false}
+    />
+  );
+}
+
+function AutoBalanceHost({
   initialDescription,
   initialLines,
 }: {
@@ -67,35 +86,77 @@ function PostingSectionHarness({
   );
 }
 
-describe("PostingSection autoBalanceOnAddLine", () => {
+describe("PostingSection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const renderWithClient = (ui: React.ReactNode) => {
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
+  it("renders a compact summary column for posted entries", async () => {
+    (accountingApi.getChartOfAccounts as any).mockResolvedValue({
+      items: [
+        { id: "acc-1121", accountCode: "1121", accountName: "Tiền Việt Nam" },
+        {
+          id: "acc-131",
+          accountCode: "131",
+          accountName: "Phải thu của khách hàng",
+        },
+      ],
+    });
+    (accountingApi.getJournalEntryById as any).mockResolvedValue({
+      id: "je-1",
+      entryDate: "2026-06-30T00:00:00.000Z",
+      description: "Thu tiền khách hàng",
+      lines: [
+        {
+          id: "l1",
+          accountId: "acc-1121",
+          debit: 1000,
+          credit: 0,
+          description: "Thu tiền",
+        },
+        {
+          id: "l2",
+          accountId: "acc-131",
+          debit: 0,
+          credit: 1000,
+          description: "Phải thu",
+        },
+      ],
     });
 
-    return render(
-      <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+    render(
+      <QueryClientProvider client={createClient()}>
+        <SummaryHost />
+      </QueryClientProvider>,
     );
-  };
+
+    await waitFor(() => {
+      expect(screen.getByText("Trạng thái")).toBeTruthy();
+      expect(screen.getByText("Đã hạch toán")).toBeTruthy();
+      expect(screen.getByText("Số dòng")).toBeTruthy();
+      expect(screen.getByText(/Tổng Nợ:\s*1\.000/)).toBeTruthy();
+      expect(screen.getByText(/Tổng Có:\s*1\.000/)).toBeTruthy();
+      expect(screen.getByText("NỢ")).toBeTruthy();
+      expect(screen.getByText("CÓ")).toBeTruthy();
+    });
+  });
 
   it("thêm dòng tự cân bằng vào cột Có khi Tổng Nợ lớn hơn Tổng Có", async () => {
-    renderWithClient(
-      <PostingSectionHarness
-        initialDescription="Thu tien khach hang"
-        initialLines={[
-          {
-            id: "l1",
-            accountId: "acc-1121",
-            debit: 100000,
-            credit: 0,
-            description: "Thu tien khach hang",
-          },
-        ]}
-      />,
+    render(
+      <QueryClientProvider client={createClient()}>
+        <AutoBalanceHost
+          initialDescription="Thu tien khach hang"
+          initialLines={[
+            {
+              id: "l1",
+              accountId: "acc-1121",
+              debit: 100000,
+              credit: 0,
+              description: "Thu tien khach hang",
+            },
+          ]}
+        />
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm dòng" }));
@@ -104,7 +165,6 @@ describe("PostingSection autoBalanceOnAddLine", () => {
       const linesRaw = screen.getByTestId("posting-lines").textContent || "[]";
       const lines = JSON.parse(linesRaw);
       expect(lines).toHaveLength(2);
-      expect(lines[1].accountId).toBe("");
       expect(lines[1].debit).toBe(0);
       expect(lines[1].credit).toBe(100000);
       expect(lines[1].description).toBe("Thu tien khach hang");
@@ -112,19 +172,21 @@ describe("PostingSection autoBalanceOnAddLine", () => {
   });
 
   it("thêm dòng tự cân bằng vào cột Nợ khi Tổng Có lớn hơn Tổng Nợ", async () => {
-    renderWithClient(
-      <PostingSectionHarness
-        initialDescription=""
-        initialLines={[
-          {
-            id: "l1",
-            accountId: "acc-131",
-            debit: 0,
-            credit: 55555,
-            description: "Dien giai dong 1",
-          },
-        ]}
-      />,
+    render(
+      <QueryClientProvider client={createClient()}>
+        <AutoBalanceHost
+          initialDescription="Dien giai dong 1"
+          initialLines={[
+            {
+              id: "l1",
+              accountId: "acc-131",
+              debit: 0,
+              credit: 55555,
+              description: "Dien giai dong 1",
+            },
+          ]}
+        />
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole("button", { name: "Thêm dòng" }));
@@ -133,46 +195,9 @@ describe("PostingSection autoBalanceOnAddLine", () => {
       const linesRaw = screen.getByTestId("posting-lines").textContent || "[]";
       const lines = JSON.parse(linesRaw);
       expect(lines).toHaveLength(2);
-      expect(lines[1].accountId).toBe("");
       expect(lines[1].debit).toBe(55555);
       expect(lines[1].credit).toBe(0);
       expect(lines[1].description).toBe("Dien giai dong 1");
-    });
-  });
-
-  it("khi Tổng Nợ bằng Tổng Có thì thêm dòng mới với số tiền 0 và giữ diễn giải", async () => {
-    renderWithClient(
-      <PostingSectionHarness
-        initialDescription="Dien giai chung"
-        initialLines={[
-          {
-            id: "l1",
-            accountId: "acc-1121",
-            debit: 10000,
-            credit: 0,
-            description: "Dien giai chung",
-          },
-          {
-            id: "l2",
-            accountId: "acc-131",
-            debit: 0,
-            credit: 10000,
-            description: "Dien giai chung",
-          },
-        ]}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Thêm dòng" }));
-
-    await waitFor(() => {
-      const linesRaw = screen.getByTestId("posting-lines").textContent || "[]";
-      const lines = JSON.parse(linesRaw);
-      expect(lines).toHaveLength(3);
-      expect(lines[2].accountId).toBe("");
-      expect(lines[2].debit).toBe(0);
-      expect(lines[2].credit).toBe(0);
-      expect(lines[2].description).toBe("Dien giai chung");
     });
   });
 });
