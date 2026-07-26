@@ -420,37 +420,6 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.accounting")}
             </div>
-            {canReadInvoices && (
-              <NavGroup
-                collapsed={c}
-                icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpInvoices")}
-                active={
-                  currentPage === "erp-invoices-in" ||
-                  currentPage === "erp-invoices-out" ||
-                  currentPage === "invoice-dashboard"
-                }
-              >
-                <NavGroupItem
-                  label="Tổng quan"
-                  active={currentPage === "invoice-dashboard"}
-                  onClick={() => navTo("invoice-dashboard")}
-                  contextPage="invoice-dashboard"
-                />
-                <NavGroupItem
-                  label={t("nav.items.inbound")}
-                  active={currentPage === "erp-invoices-in"}
-                  onClick={() => navTo("erp-invoices-in")}
-                  contextPage="erp-invoices-in"
-                />
-                <NavGroupItem
-                  label={t("nav.items.outbound")}
-                  active={currentPage === "erp-invoices-out"}
-                  onClick={() => navTo("erp-invoices-out")}
-                  contextPage="erp-invoices-out"
-                />
-              </NavGroup>
-            )}
             {canReadBankStatements && (
               <NavGroup
                 collapsed={c}
@@ -479,6 +448,37 @@ export function SidebarNav({
                   active={currentPage === "cash-statement"}
                   onClick={() => navTo("cash-statement")}
                   contextPage="cash-statement"
+                />
+              </NavGroup>
+            )}
+            {canReadInvoices && (
+              <NavGroup
+                collapsed={c}
+                icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.erpInvoices")}
+                active={
+                  currentPage === "erp-invoices-in" ||
+                  currentPage === "erp-invoices-out" ||
+                  currentPage === "invoice-dashboard"
+                }
+              >
+                <NavGroupItem
+                  label="Tổng quan"
+                  active={currentPage === "invoice-dashboard"}
+                  onClick={() => navTo("invoice-dashboard")}
+                  contextPage="invoice-dashboard"
+                />
+                <NavGroupItem
+                  label={t("nav.items.inbound")}
+                  active={currentPage === "erp-invoices-in"}
+                  onClick={() => navTo("erp-invoices-in")}
+                  contextPage="erp-invoices-in"
+                />
+                <NavGroupItem
+                  label={t("nav.items.outbound")}
+                  active={currentPage === "erp-invoices-out"}
+                  onClick={() => navTo("erp-invoices-out")}
+                  contextPage="erp-invoices-out"
                 />
               </NavGroup>
             )}
