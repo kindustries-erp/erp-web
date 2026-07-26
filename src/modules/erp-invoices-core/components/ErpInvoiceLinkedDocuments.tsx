@@ -9,6 +9,14 @@ import { Combobox } from "@/shared/components/Combobox";
 
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 interface LinkedDocument {
   id: string;
   type: "PO" | "BANK";
@@ -135,7 +143,7 @@ export function ErpInvoiceLinkedDocuments({
     setRows([
       ...rows,
       {
-        id: crypto.randomUUID(),
+        id: createClientId(),
         type: direction === "IN" ? "PO" : "BANK",
         refId: "",
         refNo: "",

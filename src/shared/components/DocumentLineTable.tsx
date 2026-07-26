@@ -96,13 +96,25 @@ export function DocumentLineTable<T>({
       <div
         ref={bottomScrollRef}
         className={cn(
-          "w-full overflow-x-auto rounded-lg border border-[color:var(--border)]",
+          variant === "spreadsheet"
+            ? "bg-surface border border-border rounded-[10px] overflow-auto shadow-panel"
+            : "w-full overflow-x-auto rounded-lg border border-[color:var(--border)]",
           tableContainerClassName,
         )}
         onScroll={handleBottomScroll}
       >
-        <table ref={tableRef} className="w-full text-sm text-left relative">
-          <thead className="bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-sm">
+        <table
+          ref={tableRef}
+          className={cn(
+            "w-full text-sm text-left relative",
+            variant === "spreadsheet" && "border-collapse border-spacing-0",
+          )}
+        >
+          <thead
+            className={cn(
+              "bg-muted text-muted-foreground text-xs uppercase sticky top-0 z-10 shadow-[0_1px_0_0_var(--border-light)]",
+            )}
+          >
             <tr
               className={cn(
                 variant === "spreadsheet" &&
@@ -113,7 +125,10 @@ export function DocumentLineTable<T>({
                 <th
                   key={col.key}
                   className={cn(
-                    "px-3 py-2 font-medium",
+                    "font-medium",
+                    variant === "spreadsheet"
+                      ? "px-2 py-1 h-auto text-[11px]"
+                      : "px-3 py-2",
                     col.align === "center"
                       ? "text-center"
                       : col.align === "right"

@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, PanelRightOpen } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
@@ -36,8 +36,9 @@ function BranchPartnerStatsTable({
   filterState: any;
   onPartnerClick: (account?: string, name?: string) => void;
 }) {
-  const page = 1;
-  const pageSize = 20;
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(20);
+
   const tableState = useTableColumnState(
     `cashflow-dashboard-partners-${branchId || "all"}`,
   );
@@ -75,6 +76,9 @@ function BranchPartnerStatsTable({
       filterState.dateTo,
       filterState.custom.sourceType,
       filterState.custom.tagIds,
+      tableState.columnSearch,
+      tableState.columnFilters,
+      tableState.sorts,
     ],
     queryFn: () =>
       bankStatementApi.getPartnerStats({
@@ -85,6 +89,10 @@ function BranchPartnerStatsTable({
         branchId: branchId || undefined,
         sourceType: (filterState.custom.sourceType as any) || undefined,
         tagIds: (filterState.custom.tagIds as unknown as string[]) || undefined,
+        column_search: JSON.stringify(tableState.columnSearch),
+        column_filters: JSON.stringify(tableState.columnFilters),
+        sortBy: tableState.sorts?.[0]?.replace(/^-/, ""),
+        sortOrder: tableState.sorts?.[0]?.startsWith("-") ? "DESC" : "ASC",
       }),
   });
 
@@ -96,57 +104,6 @@ function BranchPartnerStatsTable({
     });
     return Array.from(options).map((o) => ({ label: o, value: o }));
   }, [partnerStats?.items]);
-
-  const filteredItems = React.useMemo(() => {
-    let items = partnerStats?.items || [];
-
-    if (tableState.columnFilters.partner?.length > 0) {
-      items = items.filter((row: any) => {
-        const name =
-          row.correspondentName || row.correspondentAccount || "Khác";
-        return tableState.columnFilters.partner.includes(name);
-      });
-    }
-
-    if (tableState.columnSearch.partner) {
-      const search = tableState.columnSearch.partner.toLowerCase();
-      items = items.filter((row: any) => {
-        const name =
-          row.correspondentName || row.correspondentAccount || "Khác";
-        return name.toLowerCase().includes(search);
-      });
-    }
-
-    if (tableState.sorts?.[0]) {
-      const sort = tableState.sorts[0];
-      const isDesc = sort.startsWith("-");
-      const key = sort.replace(/^-/, "");
-
-      items = [...items].sort((a: any, b: any) => {
-        let valA = a[key];
-        let valB = b[key];
-
-        if (key === "partner") {
-          valA = a.correspondentName || a.correspondentAccount || "Khác";
-          valB = b.correspondentName || b.correspondentAccount || "Khác";
-        } else if (key === "totalCredit" || key === "totalDebit") {
-          valA = Number(a[key]) || 0;
-          valB = Number(b[key]) || 0;
-        }
-
-        if (valA < valB) return isDesc ? 1 : -1;
-        if (valA > valB) return isDesc ? -1 : 1;
-        return 0;
-      });
-    }
-
-    return items;
-  }, [
-    partnerStats?.items,
-    tableState.columnFilters,
-    tableState.columnSearch,
-    tableState.sorts,
-  ]);
 
   const renderHeaderFilter = (
     key: string,
@@ -175,19 +132,31 @@ function BranchPartnerStatsTable({
           row.correspondentName || row.correspondentAccount || "Khác";
 
         return (
-          <Button
-            variant="link"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              onPartnerClick(row.correspondentAccount, row.correspondentName);
-            }}
-            className="font-medium text-primary hover:underline p-0 h-auto whitespace-normal text-left"
-          >
-            {name}
-          </Button>
+          <div className="flex items-center gap-1.5 group w-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e: any) => {
+                e.stopPropagation();
+                onPartnerClick(row.correspondentAccount, row.correspondentName);
+              }}
+              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+              title="Mở chi tiết"
+            >
+              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+            </Button>
+            <span
+              className="truncate flex-1 min-w-0"
+              style={{ maxWidth: "calc(100% - 28px)" }}
+              title={name}
+            >
+              {name}
+            </span>
+          </div>
         );
       },
-      size: 250,
+      className: "text-left w-1/3",
+      headerClassName: "text-left w-1/3",
     },
     {
       key: "totalCredit",
@@ -202,8 +171,8 @@ function BranchPartnerStatsTable({
         return null;
       },
       size: 150,
-      className: "text-right",
-      headerClassName: "text-center",
+      className: "text-right w-1/3",
+      headerClassName: "text-center w-1/3",
     },
     {
       key: "totalDebit",
@@ -218,41 +187,45 @@ function BranchPartnerStatsTable({
         return null;
       },
       size: 150,
-      className: "text-right",
-      headerClassName: "text-center",
+      className: "text-right w-1/3",
+      headerClassName: "text-center w-1/3",
     },
   ];
 
   const topTransactionsInTotal = React.useMemo(() => {
-    return filteredItems.reduce(
+    return (partnerStats?.items || []).reduce(
       (acc: number, row: any) => acc + (parseFloat(row.totalCredit) || 0),
       0,
     );
-  }, [filteredItems]);
+  }, [partnerStats?.items]);
 
   const topTransactionsOutTotal = React.useMemo(() => {
-    return filteredItems.reduce(
+    return (partnerStats?.items || []).reduce(
       (acc: number, row: any) => acc + (parseFloat(row.totalDebit) || 0),
       0,
     );
-  }, [filteredItems]);
+  }, [partnerStats?.items]);
 
   return (
     <div className="mb-8">
       <h3 className="text-lg font-semibold mb-3">
-        Top 20 đối tác nổi bật - {branchName}
+        Danh sách đối tác - {branchName}
       </h3>
       <StandardTable
-        items={filteredItems}
+        items={partnerStats?.items || []}
         columns={partnerCols}
         getRowKey={(row: any) => row.id}
         loading={isPartnerFetching}
         variant="spreadsheet"
-        minWidth={800}
-        enableColumnResizing={true}
+        minWidth={550}
+        enableColumnResizing={false}
         containerClassName=""
         total={partnerStats?.total || 0}
         totalPages={partnerStats?.totalPages || 0}
+        page={page}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={setPageSize}
         onRowClick={(row: any) => {
           onPartnerClick(row.correspondentAccount, row.correspondentName);
         }}
@@ -611,7 +584,7 @@ export function CashflowDashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-6 mt-8 mb-4 items-start">
+      <div className="flex flex-col gap-6 mt-8 mb-4 items-start">
         {activeBranches.length > 0 ? (
           activeBranches.map((b: any) => (
             <BranchPartnerStatsTable

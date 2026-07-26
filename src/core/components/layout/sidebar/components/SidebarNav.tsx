@@ -55,7 +55,9 @@ export function SidebarNav({
     "inventory_vouchers",
     "read",
   );
-  const showInventory = canReadInventoryItems || canReadInventoryVouchers;
+  const canReadVinfastParts = useHasPermission("vinfast_parts_reports", "read");
+  const showInventory =
+    canReadInventoryItems || canReadInventoryVouchers || canReadVinfastParts;
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
@@ -284,7 +286,9 @@ export function SidebarNav({
           canReadInventoryItems ? t("nav.items.inventoryDashboard") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryStock") : "",
           canReadInventoryVouchers ? t("nav.items.erpInventoryVouchers") : "",
+          canReadInventoryItems ? t("nav.items.erpInventoryTrackingGroup") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryTracking") : "",
+          canReadInventoryItems ? t("nav.items.erpInventoryTrackingParts") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
@@ -323,14 +327,60 @@ export function SidebarNav({
               />
             )}
             {canReadInventoryItems && (
-              <NavItem
+              <NavGroup
                 collapsed={c}
                 icon={<Layers className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpInventoryTracking")}
-                active={currentPage === "erp-inventory-tracking"}
-                onClick={() => navTo("erp-inventory-tracking")}
-                contextPage="erp-inventory-tracking"
-              />
+                label={t("nav.items.erpInventoryTrackingGroup")}
+                active={
+                  currentPage === "erp-inventory-tracking" ||
+                  currentPage === "erp-inventory-tracking-parts"
+                }
+              >
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTracking")}
+                  active={currentPage === "erp-inventory-tracking"}
+                  onClick={() => navTo("erp-inventory-tracking")}
+                  contextPage="erp-inventory-tracking"
+                />
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTrackingParts")}
+                  active={currentPage === "erp-inventory-tracking-parts"}
+                  onClick={() => navTo("erp-inventory-tracking-parts")}
+                  contextPage="erp-inventory-tracking-parts"
+                />
+              </NavGroup>
+            )}
+            {canReadVinfastParts && (
+              <NavGroup
+                collapsed={c}
+                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Phụ tùng Vinfast"
+                active={
+                  currentPage === "vinfast-parts-dashboard" ||
+                  currentPage === "vinfast-parts-oto" ||
+                  currentPage === "vinfast-parts-xemay" ||
+                  currentPage === "vinfast-parts"
+                }
+              >
+                <NavGroupItem
+                  label="Tổng quan"
+                  active={currentPage === "vinfast-parts-dashboard"}
+                  onClick={() => navTo("vinfast-parts-dashboard")}
+                  contextPage="vinfast-parts-dashboard"
+                />
+                <NavGroupItem
+                  label="Phụ tùng ôtô"
+                  active={currentPage === "vinfast-parts-oto"}
+                  onClick={() => navTo("vinfast-parts-oto")}
+                  contextPage="vinfast-parts-oto"
+                />
+                <NavGroupItem
+                  label="Phụ tùng xe máy"
+                  active={currentPage === "vinfast-parts-xemay"}
+                  onClick={() => navTo("vinfast-parts-xemay")}
+                  contextPage="vinfast-parts-xemay"
+                />
+              </NavGroup>
             )}
           </div>
         )}
@@ -386,37 +436,6 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.accounting")}
             </div>
-            {canReadInvoices && (
-              <NavGroup
-                collapsed={c}
-                icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label={t("nav.items.erpInvoices")}
-                active={
-                  currentPage === "erp-invoices-in" ||
-                  currentPage === "erp-invoices-out" ||
-                  currentPage === "invoice-dashboard"
-                }
-              >
-                <NavGroupItem
-                  label="Tổng quan"
-                  active={currentPage === "invoice-dashboard"}
-                  onClick={() => navTo("invoice-dashboard")}
-                  contextPage="invoice-dashboard"
-                />
-                <NavGroupItem
-                  label={t("nav.items.inbound")}
-                  active={currentPage === "erp-invoices-in"}
-                  onClick={() => navTo("erp-invoices-in")}
-                  contextPage="erp-invoices-in"
-                />
-                <NavGroupItem
-                  label={t("nav.items.outbound")}
-                  active={currentPage === "erp-invoices-out"}
-                  onClick={() => navTo("erp-invoices-out")}
-                  contextPage="erp-invoices-out"
-                />
-              </NavGroup>
-            )}
             {canReadBankStatements && (
               <NavGroup
                 collapsed={c}
@@ -448,6 +467,37 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
+            {canReadInvoices && (
+              <NavGroup
+                collapsed={c}
+                icon={<Receipt className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.erpInvoices")}
+                active={
+                  currentPage === "erp-invoices-in" ||
+                  currentPage === "erp-invoices-out" ||
+                  currentPage === "invoice-dashboard"
+                }
+              >
+                <NavGroupItem
+                  label="Tổng quan"
+                  active={currentPage === "invoice-dashboard"}
+                  onClick={() => navTo("invoice-dashboard")}
+                  contextPage="invoice-dashboard"
+                />
+                <NavGroupItem
+                  label={t("nav.items.inbound")}
+                  active={currentPage === "erp-invoices-in"}
+                  onClick={() => navTo("erp-invoices-in")}
+                  contextPage="erp-invoices-in"
+                />
+                <NavGroupItem
+                  label={t("nav.items.outbound")}
+                  active={currentPage === "erp-invoices-out"}
+                  onClick={() => navTo("erp-invoices-out")}
+                  contextPage="erp-invoices-out"
+                />
+              </NavGroup>
+            )}
             {showAccounting && (
               <>
                 <NavItem
@@ -469,16 +519,6 @@ export function SidebarNav({
                   active={currentPage === "settings-accounts"}
                   onClick={() => navTo("settings-accounts" as PageKey)}
                   contextPage={"settings-accounts" as PageKey}
-                />
-                <NavItem
-                  collapsed={c}
-                  icon={
-                    <FileText className="w-4 h-4 opacity-65 flex-shrink-0" />
-                  }
-                  label={t("nav.items.vinfastParts")}
-                  active={currentPage === "vinfast-parts"}
-                  onClick={() => navTo("vinfast-parts" as PageKey)}
-                  contextPage={"vinfast-parts" as PageKey}
                 />
               </>
             )}

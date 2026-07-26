@@ -30,12 +30,12 @@ import { Combobox } from "@/shared/components/Combobox";
 
 const VALID_COLORS = ["DEN", "TRANG", "DO", "XANH", "XAM", "BAC"];
 const COLOR_NAMES: Record<string, string> = {
-  DEN: "Màu đen",
-  TRANG: "Màu trắng",
-  DO: "Màu đỏ",
-  XANH: "Màu xanh",
-  XAM: "Màu xám",
-  BAC: "Màu bạc",
+  DEN: "ĐEN",
+  TRANG: "TRẮNG",
+  DO: "ĐỎ",
+  XANH: "XANH",
+  XAM: "XÁM",
+  BAC: "BẠC",
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -602,7 +602,9 @@ export function ProductionRunDrawer({
             {} as Record<string, string>,
           ),
         };
-        if (id.colorCode) mergedAttrs["colorCode"] = id.colorCode;
+        if (id.colorCode) {
+          mergedAttrs["color"] = COLOR_NAMES[id.colorCode] || id.colorCode;
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { colorCode, attributes, ...restId } = id;
@@ -645,6 +647,18 @@ export function ProductionRunDrawer({
       showToast({ title: t("Số lượng không hợp lệ"), variant: "destructive" });
       return;
     }
+    const remainingQty =
+      Number(localOrder?.qtyToProduce || 0) -
+      Number(localOrder?.qtyFinished || 0);
+    if (qty > remainingQty) {
+      showToast({
+        title: t(
+          `Số lượng hoàn thành không được vượt quá số lượng còn lại (${remainingQty})`,
+        ),
+        variant: "destructive",
+      });
+      return;
+    }
     if (needsIdentifiers && !identifiersAllValid(identifiers, trackingPolicy)) {
       showToast({
         title: t("Vui lòng nhập đầy đủ thông tin định danh cho tất cả đơn vị"),
@@ -671,7 +685,9 @@ export function ProductionRunDrawer({
             {} as Record<string, string>,
           ),
         };
-        if (id.colorCode) mergedAttrs["colorCode"] = id.colorCode;
+        if (id.colorCode) {
+          mergedAttrs["color"] = COLOR_NAMES[id.colorCode] || id.colorCode;
+        }
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { colorCode, attributes, ...restId } = id;

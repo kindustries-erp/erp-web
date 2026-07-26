@@ -299,6 +299,14 @@ export function useFilterPanel(
     const defaultTo =
       config.period && !config.noDefaultPeriod ? initDateTo() : "";
 
+    let hasCustomActive = false;
+    Object.entries(custom).forEach(([key, val]) => {
+      const configItem = config.custom?.find((c) => c.key === key);
+      if (val && val !== configItem?.initialValue) {
+        hasCustomActive = true;
+      }
+    });
+
     return (
       period !== defaultPeriod ||
       dateFrom !== defaultFrom ||
@@ -309,7 +317,7 @@ export function useFilterPanel(
       !!amountMax ||
       !!status ||
       !!counterpartySource ||
-      Object.values(custom).some(Boolean)
+      hasCustomActive
     );
   }, [
     period,
@@ -323,6 +331,8 @@ export function useFilterPanel(
     counterpartySource,
     custom,
     config.period,
+    config.noDefaultPeriod,
+    config.custom,
   ]);
 
   const activeFilterCount = useMemo(() => {
@@ -344,7 +354,16 @@ export function useFilterPanel(
     if (amountMin || amountMax) count++;
     if (status) count++;
     if (counterpartySource) count++;
-    count += Object.values(custom).filter(Boolean).length;
+
+    let customCount = 0;
+    Object.entries(custom).forEach(([key, val]) => {
+      const configItem = config.custom?.find((c) => c.key === key);
+      if (val && val !== configItem?.initialValue) {
+        customCount++;
+      }
+    });
+    count += customCount;
+
     return count;
   }, [
     period,
@@ -358,6 +377,8 @@ export function useFilterPanel(
     counterpartySource,
     custom,
     config.period,
+    config.noDefaultPeriod,
+    config.custom,
   ]);
 
   return {

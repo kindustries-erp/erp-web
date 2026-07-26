@@ -2,7 +2,7 @@ import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { DataTable } from "@/shared/components/DataTable";
 import { Combobox } from "@/shared/components/Combobox";
 import {
   DrawerField,
@@ -214,17 +214,20 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                   </span>
                 }
               >
-                <DocumentLineTable
-                  data={filteredLines}
-                  getRowKey={(_, i) => i}
-                  tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-                  footer={
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-3 py-3 text-right font-semibold"
-                      ></td>
-                      <td className="px-3 py-3 text-center font-semibold">
+                <DataTable
+                  items={filteredLines}
+                  getRowKey={(item: any) => String(form.lines.indexOf(item))}
+                  variant="spreadsheet"
+                  emptyLabel={t("Không có dữ liệu")}
+                  containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                  summaryRow={{
+                    itemName: (
+                      <div className="text-right w-full font-semibold">
+                        {t("Tổng")}:
+                      </div>
+                    ),
+                    qtyAdjusted: (
+                      <div className="text-center font-semibold">
                         {fmtQty(
                           filteredLines
                             .reduce(
@@ -233,19 +236,21 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                             )
                             .toString(),
                         )}
-                      </td>
-                      <td className="px-3 py-3 text-center font-semibold">
+                      </div>
+                    ),
+                    amount: (
+                      <div className="text-center font-semibold text-emerald-600">
                         {Number(filteredTotalAmount).toLocaleString("vi-VN")}
-                      </td>
-                      {!viewOnly && <td className="px-3 py-3"></td>}
-                    </tr>
-                  }
+                      </div>
+                    ),
+                  }}
                   columns={[
                     {
                       key: "index",
                       header: "#",
-                      width: 40,
-                      align: "center",
+                      size: 40,
+                      headerClassName: "text-center w-[40px] min-w-[40px]",
+                      className: "text-center w-[40px] min-w-[40px]",
                       cell: (_: any, i: number) => (
                         <span className="text-muted-foreground">{i + 1}</span>
                       ),
@@ -253,7 +258,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                     {
                       key: "item_code",
                       header: t("Mã linh kiện"),
-                      minWidth: 140,
+                      minSize: 140,
+                      headerClassName: "w-[140px] min-w-[140px]",
+                      className: "w-[140px] min-w-[140px]",
                       cell: (line: any) => {
                         const itemCode =
                           line.itemCode ||
@@ -270,7 +277,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                     {
                       key: "itemName",
                       header: t("Linh kiện / Tên hàng"),
-                      minWidth: 260,
+                      minSize: 260,
+                      headerClassName: "w-[260px] min-w-[260px]",
+                      className: "w-[260px] min-w-[260px]",
                       cell: (line: any) => {
                         if (viewOnly || editing?.status === "POSTED") {
                           const nameParts = line.itemName?.split(" — ");
@@ -329,8 +338,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                     {
                       key: "qtyAdjusted",
                       header: t("SL Điều chỉnh"),
-                      minWidth: 140,
-                      align: "center",
+                      minSize: 140,
+                      headerClassName: "text-center w-[140px] min-w-[140px]",
+                      className: "text-center w-[140px] min-w-[140px]",
                       cell: (line: any) => {
                         if (viewOnly || editing?.status === "POSTED") {
                           const val = Number(line.qtyAdjusted);
@@ -382,8 +392,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                     {
                       key: "unitCost",
                       header: t("Đơn giá"),
-                      minWidth: 140,
-                      align: "center",
+                      minSize: 140,
+                      headerClassName: "text-center w-[140px] min-w-[140px]",
+                      className: "text-center w-[140px] min-w-[140px]",
                       cell: (line: any) => {
                         if (viewOnly || editing?.status === "POSTED") {
                           return (
@@ -425,8 +436,9 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                     {
                       key: "amount",
                       header: t("Thành tiền"),
-                      minWidth: 140,
-                      align: "center",
+                      minSize: 140,
+                      headerClassName: "text-center w-[140px] min-w-[140px]",
+                      className: "text-center w-[140px] min-w-[140px]",
                       cell: (line: any) => {
                         const amount =
                           Number(line.qtyAdjusted || 0) *
@@ -438,35 +450,29 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                         );
                       },
                     },
-                    ...(!viewOnly && editing?.status !== "POSTED"
-                      ? [
-                          {
-                            key: "actions",
-                            header: "",
-                            minWidth: 50,
-                            align: "center" as const,
-                            cell: (_: any, i: number) => (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-500"
-                                onClick={() => {
-                                  const lineToRemove = filteredLines[i];
-                                  setForm((f) => ({
-                                    ...f,
-                                    lines: f.lines.filter(
-                                      (l) => l !== lineToRemove,
-                                    ),
-                                  }));
-                                }}
-                              >
-                                ✕
-                              </Button>
-                            ),
-                          },
-                        ]
-                      : []),
                   ]}
+                  actionsColumn={
+                    !viewOnly && editing?.status !== "POSTED"
+                      ? {
+                          header: "",
+                          cell: (item: any) => (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500"
+                              onClick={() => {
+                                setForm((f) => ({
+                                  ...f,
+                                  lines: f.lines.filter((l) => l !== item),
+                                }));
+                              }}
+                            >
+                              ✕
+                            </Button>
+                          ),
+                        }
+                      : undefined
+                  }
                 />
                 {!viewOnly && editing?.status !== "POSTED" && (
                   <div className="mt-4 flex justify-center gap-3">

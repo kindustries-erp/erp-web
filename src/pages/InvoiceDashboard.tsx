@@ -235,7 +235,7 @@ export function InvoiceDashboard() {
           <h3 className="text-lg font-semibold mb-4">
             Công nợ Phải thu (Khách hàng)
           </h3>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-6">
             {sectionsToRender.map((section) => (
               <BranchInvoiceTable
                 key={`receivable-${section.id || "unclassified"}`}
@@ -255,7 +255,7 @@ export function InvoiceDashboard() {
           <h3 className="text-lg font-semibold mb-4">
             Công nợ Phải trả (Nhà cung cấp)
           </h3>
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-6">
             {sectionsToRender.map((section) => (
               <BranchInvoiceTable
                 key={`payable-${section.id || "unclassified"}`}

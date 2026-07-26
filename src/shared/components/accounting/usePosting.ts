@@ -1,11 +1,23 @@
 import { useState, useMemo } from "react";
 import { type PostingLineData } from "./PostingSection";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export interface PostingState {
   postingDate: string;
   description: string;
   lines: PostingLineData[];
 }
+
+type AddLineDefaults = Partial<
+  Pick<PostingLineData, "accountId" | "debit" | "credit" | "description">
+>;
 
 export function usePosting(initialState?: Partial<PostingState>) {
   const [postingDate, setPostingDate] = useState(
@@ -32,15 +44,15 @@ export function usePosting(initialState?: Partial<PostingState>) {
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
   // Actions
-  const addLine = () => {
+  const addLine = (defaults?: AddLineDefaults) => {
     setLines([
       ...lines,
       {
-        id: crypto.randomUUID(),
-        accountId: "",
-        debit: 0,
-        credit: 0,
-        description: "",
+        id: createClientId(),
+        accountId: defaults?.accountId || "",
+        debit: defaults?.debit || 0,
+        credit: defaults?.credit || 0,
+        description: defaults?.description || "",
       },
     ]);
     setIsDirty(true);

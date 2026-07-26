@@ -772,6 +772,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         isOpen={!!detailTransactionId}
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
+        onSaved={() => {
+          refetch();
+        }}
       />
 
       <PartnerTransactionsDrawer
