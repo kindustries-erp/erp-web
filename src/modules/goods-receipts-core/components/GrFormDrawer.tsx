@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/Button";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { DataTable } from "@/shared/components/DataTable";
 import {
   DrawerField,
   DrawerSection,
@@ -244,18 +244,20 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 }
               >
                 {poDetail ? (
-                  <DocumentLineTable
-                    data={poDetail.lines || []}
-                    getRowKey={(line) => line.id || ""}
-                    viewOnly={true}
-                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-                    footer={
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-3 py-3 text-right font-semibold"
-                        ></td>
-                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                  <DataTable
+                    items={poDetail.lines || []}
+                    getRowKey={(line: any) => line.id || String(Math.random())}
+                    variant="spreadsheet"
+                    emptyLabel={t("Không có dữ liệu")}
+                    containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    summaryRow={{
+                      remaining: (
+                        <div className="text-right w-full font-semibold">
+                          {t("Tổng")}:
+                        </div>
+                      ),
+                      qtyInput: (
+                        <div className="text-center font-semibold text-emerald-600">
                           {viewOnly
                             ? `+${fmtQty(form.lines.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0).toString())}`
                             : fmtQty(
@@ -267,15 +269,16 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                   )
                                   .toString(),
                               )}
-                        </td>
-                      </tr>
-                    }
+                        </div>
+                      ),
+                    }}
                     columns={[
                       {
                         key: "index",
                         header: "#",
-                        width: 40,
-                        align: "center",
+                        size: 40,
+                        headerClassName: "text-center w-[40px] min-w-[40px]",
+                        className: "text-center w-[40px] min-w-[40px]",
                         cell: (_, idx) => (
                           <span className="text-muted-foreground">
                             {idx + 1}
@@ -285,8 +288,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "itemCode",
                         header: t("Mã linh kiện"),
-                        minWidth: 140,
-                        cell: (poLine) => {
+                        minSize: 140,
+                        headerClassName: "w-[140px] min-w-[140px]",
+                        className: "w-[140px] min-w-[140px]",
+                        cell: (poLine: any) => {
                           const itemCode =
                             poLine.itemId && itemsDict[poLine.itemId]
                               ? itemsDict[poLine.itemId].sku
@@ -297,8 +302,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "itemName",
                         header: t("Tên linh kiện"),
-                        minWidth: 260,
-                        cell: (poLine) => {
+                        minSize: 260,
+                        headerClassName: "w-[260px] min-w-[260px]",
+                        className: "w-[260px] min-w-[260px]",
+                        cell: (poLine: any) => {
                           const itemName =
                             poLine.itemName ||
                             (poLine.itemId && itemsDict[poLine.itemId]
@@ -320,9 +327,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "ordered",
                         header: t("Đã đặt"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: (poLine) => (
+                        minSize: 100,
+                        headerClassName: "text-center w-[100px] min-w-[100px]",
+                        className: "text-center w-[100px] min-w-[100px]",
+                        cell: (poLine: any) => (
                           <div className="font-medium text-foreground">
                             {Number(poLine.qtyOrdered ?? 0).toLocaleString(
                               "vi-VN",
@@ -333,9 +341,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "remaining",
                         header: t("Còn lại"),
-                        minWidth: 100,
-                        align: "center",
-                        cell: (poLine) => {
+                        minSize: 100,
+                        headerClassName: "text-center w-[100px] min-w-[100px]",
+                        className: "text-center w-[100px] min-w-[100px]",
+                        cell: (poLine: any) => {
                           const ordered = Number(poLine.qtyOrdered ?? 0);
                           const received = Number(poLine.qtyReceived ?? 0);
                           const remaining = Math.max(0, ordered - received);
@@ -349,9 +358,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "qtyInput",
                         header: t("SL Nhập"),
-                        minWidth: 140,
-                        align: "center",
-                        cell: (poLine) => {
+                        minSize: 140,
+                        headerClassName: "text-center w-[140px] min-w-[140px]",
+                        className: "text-center w-[140px] min-w-[140px]",
+                        cell: (poLine: any) => {
                           const lineIdx = form.lines.findIndex(
                             (l) => l.purchaseOrderLineId === poLine.id,
                           );
@@ -413,17 +423,20 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     ]}
                   />
                 ) : form.receiptType === "OTHER" && !viewOnly ? (
-                  <DocumentLineTable
-                    data={form.lines}
-                    getRowKey={(_, i) => i}
-                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-                    footer={
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="px-3 py-3 text-right font-semibold"
-                        ></td>
-                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                  <DataTable
+                    items={form.lines}
+                    getRowKey={(line: any) => String(form.lines.indexOf(line))}
+                    variant="spreadsheet"
+                    emptyLabel={t("Không có dữ liệu")}
+                    containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    summaryRow={{
+                      itemName: (
+                        <div className="text-right w-full font-semibold">
+                          {t("Tổng")}:
+                        </div>
+                      ),
+                      qtyInput: (
+                        <div className="text-center font-semibold text-emerald-600">
                           {fmtQty(
                             form.lines
                               .reduce(
@@ -432,16 +445,16 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                               )
                               .toString(),
                           )}
-                        </td>
-                        <td className="px-3 py-3"></td>
-                      </tr>
-                    }
+                        </div>
+                      ),
+                    }}
                     columns={[
                       {
                         key: "index",
                         header: "#",
-                        width: 40,
-                        align: "center",
+                        size: 40,
+                        headerClassName: "text-center w-[40px] min-w-[40px]",
+                        className: "text-center w-[40px] min-w-[40px]",
                         cell: (_, i) => (
                           <span className="text-muted-foreground">{i + 1}</span>
                         ),
@@ -449,8 +462,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "itemCode",
                         header: t("Mã linh kiện"),
-                        minWidth: 140,
-                        cell: (line) => {
+                        minSize: 140,
+                        headerClassName: "w-[140px] min-w-[140px]",
+                        className: "w-[140px] min-w-[140px]",
+                        cell: (line: any) => {
                           const itemCode =
                             line.itemCode ||
                             (line.itemId && itemsDict[line.itemId]
@@ -462,8 +477,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "itemName",
                         header: t("Tên linh kiện"),
-                        minWidth: 260,
-                        cell: (line, i) => {
+                        minSize: 260,
+                        headerClassName: "w-[260px] min-w-[260px]",
+                        className: "w-[260px] min-w-[260px]",
+                        cell: (line: any) => {
+                          const i = form.lines.indexOf(line);
                           return (
                             <input
                               type="text"
@@ -477,7 +495,8 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                 const val = e.target.value;
                                 setForm((f) => {
                                   const lines = [...f.lines];
-                                  lines[i] = { ...lines[i], itemName: val };
+                                  if (i > -1)
+                                    lines[i] = { ...lines[i], itemName: val };
                                   return { ...f, lines };
                                 });
                               }}
@@ -488,9 +507,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "qtyInput",
                         header: t("SL Nhập"),
-                        minWidth: 140,
-                        align: "center",
-                        cell: (line, i) => {
+                        minSize: 140,
+                        headerClassName: "text-center w-[140px] min-w-[140px]",
+                        className: "text-center w-[140px] min-w-[140px]",
+                        cell: (line: any) => {
+                          const i = form.lines.indexOf(line);
                           return (
                             <input
                               type="number"
@@ -505,7 +526,11 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                 const qty = e.target.value;
                                 setForm((f) => {
                                   const lines = [...f.lines];
-                                  lines[i] = { ...lines[i], qtyReceived: qty };
+                                  if (i > -1)
+                                    lines[i] = {
+                                      ...lines[i],
+                                      qtyReceived: qty,
+                                    };
                                   return { ...f, lines };
                                 });
                               }}
@@ -513,48 +538,44 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                           );
                         },
                       },
-                      {
-                        key: "actions",
-                        header: "",
-                        minWidth: 50,
-                        align: "center",
-                        cell: (_, i) => {
-                          return (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                              disabled={
-                                viewOnly || editing?.status === "POSTED"
-                              }
-                              onClick={() => {
-                                setForm((f) => {
-                                  const lines = [...f.lines];
-                                  lines.splice(i, 1);
-                                  return { ...f, lines };
-                                });
-                              }}
-                            >
-                              ✕
-                            </Button>
-                          );
-                        },
-                      },
                     ]}
+                    actionsColumn={{
+                      header: "",
+                      cell: (line: any) => {
+                        return (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500"
+                            disabled={viewOnly || editing?.status === "POSTED"}
+                            onClick={() => {
+                              setForm((f) => {
+                                const lines = f.lines.filter((l) => l !== line);
+                                return { ...f, lines };
+                              });
+                            }}
+                          >
+                            ✕
+                          </Button>
+                        );
+                      },
+                    }}
                   />
                 ) : viewOnly ? (
-                  <DocumentLineTable
-                    data={form.lines.filter((l) => Number(l.qtyReceived) > 0)}
-                    getRowKey={(_, i) => i}
-                    viewOnly={true}
-                    tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-                    footer={
-                      <tr>
-                        <td
-                          colSpan={form.receiptType === "PO" ? 5 : 3}
-                          className="px-3 py-3 text-right font-semibold"
-                        ></td>
-                        <td className="px-3 py-3 text-center font-semibold text-emerald-600">
+                  <DataTable
+                    items={form.lines.filter((l) => Number(l.qtyReceived) > 0)}
+                    getRowKey={(line: any) => String(form.lines.indexOf(line))}
+                    variant="spreadsheet"
+                    emptyLabel={t("Không có dữ liệu")}
+                    containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+                    summaryRow={{
+                      itemName: (
+                        <div className="text-right w-full font-semibold">
+                          {t("Tổng")}:
+                        </div>
+                      ),
+                      qtyReceived: (
+                        <div className="text-center font-semibold text-emerald-600">
                           +
                           {fmtQty(
                             form.lines
@@ -564,16 +585,16 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                               )
                               .toString(),
                           )}
-                        </td>
-                        {!viewOnly && <td className="px-3 py-3"></td>}
-                      </tr>
-                    }
+                        </div>
+                      ),
+                    }}
                     columns={[
                       {
                         key: "index",
                         header: "#",
-                        width: 40,
-                        align: "center",
+                        size: 40,
+                        headerClassName: "text-center w-[40px] min-w-[40px]",
+                        className: "text-center w-[40px] min-w-[40px]",
                         cell: (_, i) => (
                           <span className="text-muted-foreground">{i + 1}</span>
                         ),
@@ -581,8 +602,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "itemCode",
                         header: t("Mã linh kiện"),
-                        minWidth: 140,
-                        cell: (line) => {
+                        minSize: 140,
+                        headerClassName: "w-[140px] min-w-[140px]",
+                        className: "w-[140px] min-w-[140px]",
+                        cell: (line: any) => {
                           const itemCode =
                             line.itemId && itemsDict[line.itemId]
                               ? itemsDict[line.itemId].sku
@@ -593,8 +616,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "itemName",
                         header: t("Tên linh kiện"),
-                        minWidth: 260,
-                        cell: (line) => {
+                        minSize: 260,
+                        headerClassName: "w-[260px] min-w-[260px]",
+                        className: "w-[260px] min-w-[260px]",
+                        cell: (line: any) => {
                           const itemName =
                             line.itemName ||
                             (line.itemId && itemsDict[line.itemId]
@@ -617,15 +642,19 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                             {
                               key: "ordered",
                               header: t("Đã đặt"),
-                              minWidth: 100,
-                              align: "center" as const,
+                              minSize: 100,
+                              headerClassName:
+                                "text-center w-[100px] min-w-[100px]",
+                              className: "text-center w-[100px] min-w-[100px]",
                               cell: () => "—",
                             },
                             {
                               key: "remaining",
                               header: t("Còn lại"),
-                              minWidth: 100,
-                              align: "center" as const,
+                              minSize: 100,
+                              headerClassName:
+                                "text-center w-[100px] min-w-[100px]",
+                              className: "text-center w-[100px] min-w-[100px]",
                               cell: () => "—",
                             },
                           ]
@@ -633,9 +662,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       {
                         key: "qtyReceived",
                         header: t("SL Nhập"),
-                        minWidth: 140,
-                        align: "center",
-                        cell: (line) => (
+                        minSize: 140,
+                        headerClassName: "text-center w-[140px] min-w-[140px]",
+                        className: "text-center w-[140px] min-w-[140px]",
+                        cell: (line: any) => (
                           <div className="font-medium text-emerald-600">
                             +{fmtQty(line.qtyReceived)}
                           </div>

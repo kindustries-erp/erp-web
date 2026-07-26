@@ -25,6 +25,8 @@ import {
   Loader2,
   RefreshCw,
   PanelRightOpen,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { Popover } from "@/core/components/ui/Popover";
@@ -66,6 +68,28 @@ function getVehicleTypeBadgeClass(vehicleType: "CAR" | "MOTORBIKE") {
     ? "w-[80px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
     : "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
 }
+
+const CopyIconBtn = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded text-slate-500"
+      title="Copy"
+    >
+      {copied ? (
+        <Check className="w-3.5 h-3.5 text-green-600" />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
+    </button>
+  );
+};
 
 function VinfastPartDetailDrawer({
   open,
@@ -515,7 +539,11 @@ function PriceWithInvoicePopover({
   );
 }
 
-export function VinfastPartsTrackingPage() {
+export function VinfastPartsTrackingPage({
+  vehicleType,
+}: {
+  vehicleType?: "CAR" | "MOTORBIKE";
+}) {
   const { t } = useTranslation("erpInvoices");
   const formHook = useErpInvoiceForm(() => {});
   const showToast = useUIStore((s) => s.showToast);
@@ -526,7 +554,9 @@ export function VinfastPartsTrackingPage() {
     null,
   );
 
-  const tableState = useTableColumnState("vinfast-parts-table");
+  const tableState = useTableColumnState(
+    `vinfast-parts-table-${vehicleType || "all"}`,
+  );
 
   const activeSort = tableState.sorts[0] || "";
   let sortBy = "";
@@ -572,6 +602,10 @@ export function VinfastPartsTrackingPage() {
       pageParam: number;
       filtersStr?: string;
     }) => {
+      const parsedFilters = filtersStr ? JSON.parse(filtersStr) : {};
+      if (vehicleType) {
+        parsedFilters["vehicleType"] = [vehicleType];
+      }
       const res = await api.get(
         "/api/v1/reports/vinfast-parts/column-options",
         {
@@ -580,7 +614,7 @@ export function VinfastPartsTrackingPage() {
             search,
             page: pageParam,
             limit: 20,
-            filters: filtersStr,
+            filters: JSON.stringify(parsedFilters),
           },
         },
       );
@@ -590,7 +624,7 @@ export function VinfastPartsTrackingPage() {
         next: res.data.page < res.data.totalPages ? res.data.page + 1 : null,
       };
     },
-    [],
+    [vehicleType],
   );
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -608,16 +642,17 @@ export function VinfastPartsTrackingPage() {
     () => ({
       enableSelectAllMatching: true,
       requireSearchToFetchOptions: false,
-      queryKeyPrefix: "vinfast-parts-options",
+      queryKeyPrefix: `vinfast-parts-options-${vehicleType || "all"}`,
       allFilters: tableState.columnFilters,
       fetchOptions: fetchColumnOptions,
     }),
-    [tableState.columnFilters, fetchColumnOptions],
+    [tableState.columnFilters, fetchColumnOptions, vehicleType],
   );
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
       "vinfast-parts",
+      vehicleType || "all",
       page,
       pageSize,
       sortBy,
@@ -639,11 +674,14 @@ export function VinfastPartsTrackingPage() {
         params.append("sorts", JSON.stringify(tableState.sorts));
       if (Object.keys(tableState.columnSearch).length > 0)
         params.append("column_search", JSON.stringify(tableState.columnSearch));
-      if (Object.keys(tableState.columnFilters).length > 0)
-        params.append(
-          "column_filters",
-          JSON.stringify(tableState.columnFilters),
-        );
+
+      // Inject vehicleType filter if provided
+      const finalColumnFilters = { ...tableState.columnFilters };
+      if (vehicleType) {
+        finalColumnFilters["vehicleType"] = [vehicleType];
+      }
+      if (Object.keys(finalColumnFilters).length > 0)
+        params.append("column_filters", JSON.stringify(finalColumnFilters));
       params.append("page", page.toString());
       params.append("limit", pageSize.toString());
 
@@ -781,21 +819,23 @@ export function VinfastPartsTrackingPage() {
           {...commonFilterProps}
         />
       ),
+      size: 200,
       headerClassName: "text-center",
       cell: (row) => (
-        <div className="flex flex-col gap-1 w-full pr-1">
-          <div className="flex items-center gap-2 w-full">
-            <Button
-              variant="ghost"
+        <div className="group flex items-center justify-between w-full pr-1">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 setDetailRow(row);
               }}
-              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+              className="h-5 w-5 p-0 flex items-center justify-center rounded opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+              title="Xem chi tiết"
             >
-              <span className="truncate">{row.itemCode}</span>
-              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-            </Button>
+              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+            </button>
+            <span className="truncate text-slate-700">{row.itemCode}</span>
+            <CopyIconBtn text={row.itemCode} />
           </div>
         </div>
       ),
@@ -816,7 +856,7 @@ export function VinfastPartsTrackingPage() {
           {...commonFilterProps}
         />
       ),
-      size: 200,
+      size: 250,
       headerClassName: "text-center",
       cell: (row) => (
         <Tooltip content={row.itemName || ""}>
@@ -1058,10 +1098,22 @@ export function VinfastPartsTrackingPage() {
   return (
     <>
       <SpreadsheetPageTemplate
-        title="Báo cáo phụ tùng VINFAST"
-        desc="Tổng hợp và đối chiếu phụ tùng mua vào từ VINFAST và bán ra theo tháng"
+        title={
+          vehicleType === "CAR"
+            ? "Báo cáo phụ tùng Ô tô VINFAST"
+            : vehicleType === "MOTORBIKE"
+              ? "Báo cáo phụ tùng Xe máy VINFAST"
+              : "Báo cáo phụ tùng VINFAST"
+        }
+        desc={
+          vehicleType === "CAR"
+            ? "Tổng hợp và đối chiếu phụ tùng ô tô mua vào từ VINFAST và bán ra theo tháng"
+            : vehicleType === "MOTORBIKE"
+              ? "Tổng hợp và đối chiếu phụ tùng xe máy mua vào từ VINFAST và bán ra theo tháng"
+              : "Tổng hợp và đối chiếu phụ tùng mua vào từ VINFAST và bán ra theo tháng"
+        }
         icon={<FileText className="w-4 h-4 opacity-75" />}
-        tableId="vinfast-parts"
+        tableId={`vinfast-parts-${vehicleType || "all"}`}
         createActions={[
           {
             groupLabel: "TRA CỨU",
@@ -1086,10 +1138,14 @@ export function VinfastPartsTrackingPage() {
                       "column_search",
                       JSON.stringify(tableState.columnSearch),
                     );
-                  if (Object.keys(tableState.columnFilters).length > 0)
+                  const finalExportFilters = { ...tableState.columnFilters };
+                  if (vehicleType) {
+                    finalExportFilters["vehicleType"] = [vehicleType];
+                  }
+                  if (Object.keys(finalExportFilters).length > 0)
                     params.append(
                       "column_filters",
-                      JSON.stringify(tableState.columnFilters),
+                      JSON.stringify(finalExportFilters),
                     );
 
                   // Logic to trigger download
@@ -1099,7 +1155,13 @@ export function VinfastPartsTrackingPage() {
                     const a = document.createElement("a");
                     a.href = fileUrl;
                     const timeStr = format(new Date(), "yyyyMMdd_HHmmss");
-                    a.download = `Bao_cao_phu_tung_VINFAST_${timeStr}.xlsx`;
+                    const prefix =
+                      vehicleType === "CAR"
+                        ? "O_to_"
+                        : vehicleType === "MOTORBIKE"
+                          ? "Xe_may_"
+                          : "";
+                    a.download = `Bao_cao_phu_tung_${prefix}VINFAST_${timeStr}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(fileUrl);

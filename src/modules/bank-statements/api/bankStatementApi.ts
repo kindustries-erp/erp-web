@@ -27,6 +27,25 @@ export interface ErpCashBook {
   createdAt: string;
 }
 
+export interface BankTransactionPostingLine {
+  id: string;
+  accountId: string;
+  debit: number;
+  credit: number;
+  description: string;
+}
+
+export interface BankTransactionPostingDetail {
+  postingStatus: "POSTED" | "UNPOSTED";
+  journalEntryId: string | null;
+  postingDate: string | null;
+  description: string | null;
+  lines: BankTransactionPostingLine[];
+  totalDebit: number;
+  totalCredit: number;
+  isBalanced: boolean;
+}
+
 export const bankStatementApi = {
   getTransactions: async (params: {
     page?: number;
@@ -88,6 +107,44 @@ export const bankStatementApi = {
   getTransaction: async (id: string) => {
     const res = await axiosInstance.get(
       `/api/v1/bank-transactions-core/transactions/${id}`,
+    );
+    return res.data;
+  },
+
+  getTransactionPosting: async (
+    id: string,
+  ): Promise<BankTransactionPostingDetail> => {
+    const res = await axiosInstance.get(
+      `/api/v1/bank-transactions-core/transactions/${id}/posting`,
+    );
+    return res.data;
+  },
+
+  postTransaction: async (
+    id: string,
+    payload: {
+      postingDate: string;
+      description?: string;
+      lines: {
+        accountId: string;
+        debit: number;
+        credit: number;
+        description?: string;
+      }[];
+    },
+  ): Promise<BankTransactionPostingDetail> => {
+    const res = await axiosInstance.post(
+      `/api/v1/bank-transactions-core/transactions/${id}/post`,
+      payload,
+    );
+    return res.data;
+  },
+
+  unpostTransaction: async (
+    id: string,
+  ): Promise<BankTransactionPostingDetail> => {
+    const res = await axiosInstance.post(
+      `/api/v1/bank-transactions-core/transactions/${id}/unpost`,
     );
     return res.data;
   },

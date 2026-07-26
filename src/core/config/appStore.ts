@@ -34,6 +34,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInventoryTracking",
     group: "inventory",
   },
+  "erp-inventory-tracking-parts": {
+    labelKey: "nav.items.erpInventoryTrackingParts",
+    group: "inventory",
+  },
   "erp-inventory-vouchers": {
     labelKey: "nav.items.erpInventoryVouchers",
     group: "inventory",
@@ -137,6 +141,18 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.vinfastParts",
     group: "accounting",
   },
+  "vinfast-parts-dashboard": {
+    labelKey: "Tổng quan phụ tùng",
+    group: "inventory",
+  },
+  "vinfast-parts-oto": {
+    labelKey: "Phụ tùng ôtô",
+    group: "inventory",
+  },
+  "vinfast-parts-xemay": {
+    labelKey: "Phụ tùng xe máy",
+    group: "inventory",
+  },
   "settings-branch": {
     labelKey: "thietlap.tabs.chi-nhanh",
     group: "settings",
@@ -193,7 +209,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-inventory-tracking": [
     ["breadcrumb.inventory"],
-    ["breadcrumb.inventoryTracking"],
+    ["nav.items.erpInventoryTracking"],
+  ],
+  "erp-inventory-tracking-parts": [
+    ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingParts"],
   ],
   "erp-inventory-vouchers": [
     ["breadcrumb.inventory"],
@@ -251,6 +271,9 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
   "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
+  "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
+  "vinfast-parts-oto": [["breadcrumb.inventory"], ["Phụ tùng ôtô"]],
+  "vinfast-parts-xemay": [["breadcrumb.inventory"], ["Phụ tùng xe máy"]],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [
     ["breadcrumb.accounting"],
