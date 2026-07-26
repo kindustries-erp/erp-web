@@ -55,7 +55,9 @@ export function SidebarNav({
     "inventory_vouchers",
     "read",
   );
-  const showInventory = canReadInventoryItems || canReadInventoryVouchers;
+  const canReadVinfastParts = useHasPermission("vinfast_parts_reports", "read");
+  const showInventory =
+    canReadInventoryItems || canReadInventoryVouchers || canReadVinfastParts;
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
@@ -332,6 +334,38 @@ export function SidebarNav({
                 contextPage="erp-inventory-tracking"
               />
             )}
+            {canReadVinfastParts && (
+              <NavGroup
+                collapsed={c}
+                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Phụ tùng Vinfast"
+                active={
+                  currentPage === "vinfast-parts-dashboard" ||
+                  currentPage === "vinfast-parts-oto" ||
+                  currentPage === "vinfast-parts-xemay" ||
+                  currentPage === "vinfast-parts"
+                }
+              >
+                <NavGroupItem
+                  label="Tổng quan"
+                  active={currentPage === "vinfast-parts-dashboard"}
+                  onClick={() => navTo("vinfast-parts-dashboard")}
+                  contextPage="vinfast-parts-dashboard"
+                />
+                <NavGroupItem
+                  label="Phụ tùng ôtô"
+                  active={currentPage === "vinfast-parts-oto"}
+                  onClick={() => navTo("vinfast-parts-oto")}
+                  contextPage="vinfast-parts-oto"
+                />
+                <NavGroupItem
+                  label="Phụ tùng xe máy"
+                  active={currentPage === "vinfast-parts-xemay"}
+                  onClick={() => navTo("vinfast-parts-xemay")}
+                  contextPage="vinfast-parts-xemay"
+                />
+              </NavGroup>
+            )}
           </div>
         )}
 
@@ -469,16 +503,6 @@ export function SidebarNav({
                   active={currentPage === "settings-accounts"}
                   onClick={() => navTo("settings-accounts" as PageKey)}
                   contextPage={"settings-accounts" as PageKey}
-                />
-                <NavItem
-                  collapsed={c}
-                  icon={
-                    <FileText className="w-4 h-4 opacity-65 flex-shrink-0" />
-                  }
-                  label={t("nav.items.vinfastParts")}
-                  active={currentPage === "vinfast-parts"}
-                  onClick={() => navTo("vinfast-parts" as PageKey)}
-                  contextPage={"vinfast-parts" as PageKey}
                 />
               </>
             )}
