@@ -12,6 +12,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
+import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -419,6 +420,7 @@ export default function App() {
         <ReloadPrompt />
         <AppContextMenu />
         <DocumentDependencyModal />
+        <GlobalErpDocumentOpener />
       </div>
     </TooltipProvider>
   );

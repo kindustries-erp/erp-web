@@ -116,8 +116,6 @@ export function SidebarNav({
         </div>
       )}
 
-
-
       {/* Sales */}
       {showSales &&
         hasMatch([
@@ -478,7 +476,9 @@ export function SidebarNav({
             {canReadGreenwayIntegration && (
               <NavGroup
                 collapsed={c}
-                icon={<WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                icon={
+                  <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
                 label={t("nav.items.garage")}
                 active={
                   currentPage === "garage-receivables" ||

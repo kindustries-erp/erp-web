@@ -5,12 +5,10 @@ import { Car } from "lucide-react";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useGarageStore } from "../store/garageStore";
 import { GarageBranchSelector } from "../components/GarageBranchSelector";
-import { useTranslation } from "react-i18next";
 import { money } from "@/shared/utils/format";
 import { KpiCard } from "@/shared/components/KpiCard";
 
 export function GarageGrossProfit() {
-  const { t } = useTranslation("garage");
   const { selectedBranchId } = useGarageStore();
 
   const filterConfig = useMemo(() => {
@@ -24,15 +22,19 @@ export function GarageGrossProfit() {
 
   const filter = useFilterPanel(filterConfig, () => {});
 
-  const { data: profitData, isLoading, refetch } = useGarageGrossProfit(
+  const {
+    data: profitData,
+    isLoading,
+    refetch,
+  } = useGarageGrossProfit(
     selectedBranchId,
     filter.state.dateFrom || undefined,
-    filter.state.dateTo || undefined
+    filter.state.dateTo || undefined,
   );
 
   const groups = profitData?.results?.Groups || [];
   const cases = groups.flatMap((g: any) => g.Items || []);
-  
+
   const totalRevenue = profitData?.results?.TongCong?.DoanhThu || 0;
   const totalCost = profitData?.results?.TongCong?.ChiPhi || 0;
   const totalGrossProfit = profitData?.results?.TongCong?.LaiGop || 0;
@@ -42,7 +44,9 @@ export function GarageGrossProfit() {
       key: "caseCode",
       header: "Mã vụ việc",
       sortable: true,
-      cell: (item: any) => <span className="font-medium text-blue-600">{item.VuViecCode}</span>,
+      cell: (item: any) => (
+        <span className="font-medium text-blue-600">{item.VuViecCode}</span>
+      ),
     },
     {
       key: "info",
@@ -50,8 +54,12 @@ export function GarageGrossProfit() {
       sortable: true,
       cell: (item: any) => (
         <div className="flex flex-col">
-          <span className="font-semibold text-gray-800">{item.TenKhachHang || "-"}</span>
-          <span className="text-xs text-gray-500">{item.VuViecName || "-"}</span>
+          <span className="font-semibold text-gray-800">
+            {item.TenKhachHang || "-"}
+          </span>
+          <span className="text-xs text-gray-500">
+            {item.VuViecName || "-"}
+          </span>
         </div>
       ),
     },
@@ -59,26 +67,38 @@ export function GarageGrossProfit() {
       key: "revenue",
       header: "Doanh thu",
       sortable: true,
-      cell: (item: any) => <span className="text-gray-900 font-semibold">{money(item.DoanhThu || 0)}</span>,
+      cell: (item: any) => (
+        <span className="text-gray-900 font-semibold">
+          {money(item.DoanhThu || 0)}
+        </span>
+      ),
     },
     {
       key: "cost",
       header: "Chi phí",
       sortable: true,
-      cell: (item: any) => <span className="text-red-600">{money(item.ChiPhi || 0)}</span>,
+      cell: (item: any) => (
+        <span className="text-red-600">{money(item.ChiPhi || 0)}</span>
+      ),
     },
     {
       key: "grossProfit",
       header: "Lợi nhuận gộp",
       sortable: true,
-      cell: (item: any) => <span className="text-green-600 font-bold">{money(item.LoiNhuan || 0)}</span>,
+      cell: (item: any) => (
+        <span className="text-green-600 font-bold">
+          {money(item.LoiNhuan || 0)}
+        </span>
+      ),
     },
     {
       key: "margin",
       header: "Biên lợi nhuận",
       sortable: true,
       cell: (item: any) => {
-        const margin = item.DoanhThu ? (item.LoiNhuan / item.DoanhThu) * 100 : 0;
+        const margin = item.DoanhThu
+          ? (item.LoiNhuan / item.DoanhThu) * 100
+          : 0;
         return <span>{margin.toFixed(2)}%</span>;
       },
     },

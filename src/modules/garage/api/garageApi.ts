@@ -27,6 +27,11 @@ export const garageApi = {
     return res.data;
   },
 
+  getCaseById: async (id: string) => {
+    const res = await axiosInstance.get(`${BASE}/cases/${id}`);
+    return res.data;
+  },
+
   syncBranches: async () => {
     const res = await axiosInstance.post(`${BASE}/sync/branches`);
     return res.data;
@@ -139,22 +144,59 @@ export const garageApi = {
     const res = await axiosInstance.get(`${BASE}/cases/${caseId}/payments`);
     return res.data;
   },
+
+  getCaseLinkedInvoices: async (caseId: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/${caseId}/linked-invoices`,
+    );
+    return res.data;
+  },
+
+  addCaseLinkedInvoice: async (
+    caseId: string,
+    invoiceId: string,
+    linkType: "IN" | "OUT",
+    note?: string,
+  ) => {
+    const res = await axiosInstance.post(
+      `${BASE}/cases/${caseId}/linked-invoices`,
+      { invoiceId, linkType, note },
+    );
+    return res.data;
+  },
+
+  removeCaseLinkedInvoice: async (caseId: string, linkedId: string) => {
+    const res = await axiosInstance.delete(
+      `${BASE}/cases/${caseId}/linked-invoices/${linkedId}`,
+    );
+    return res.data;
+  },
   getGrossProfit: async (branchId: string, from?: string, to?: string) => {
     const params = new URLSearchParams();
     if (from) params.append("from", from);
     if (to) params.append("to", to);
-    const res = await axiosInstance.get(`/api/v1/kgara/reports/gross-profit-detail?${params.toString()}`, {
-      headers: { "x-kgara-branch-id": branchId },
-    });
+    const res = await axiosInstance.get(
+      `/api/v1/kgara/reports/gross-profit-detail?${params.toString()}`,
+      {
+        headers: { "x-kgara-branch-id": branchId },
+      },
+    );
     return res.data;
   },
-  getGrossProfitJournal: async (branchId: string, from?: string, to?: string) => {
+  getGrossProfitJournal: async (
+    branchId: string,
+    from?: string,
+    to?: string,
+  ) => {
     const params = new URLSearchParams();
     if (from) params.append("from", from);
     if (to) params.append("to", to);
-    const res = await axiosInstance.get(`/api/v1/kgara/reports/gross-profit-detail/journal?${params.toString()}`, {
-      headers: { "x-kgara-branch-id": branchId },
-    });
+    const res = await axiosInstance.get(
+      `/api/v1/kgara/reports/gross-profit-detail/journal?${params.toString()}`,
+      {
+        headers: { "x-kgara-branch-id": branchId },
+      },
+    );
     return res.data;
   },
 };

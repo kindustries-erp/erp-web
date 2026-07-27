@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { RefreshCw, Car } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { format } from "date-fns";
+import { RefreshCw } from "lucide-react";
 import { useGarageStore } from "../store/garageStore";
 import { useSyncGarageCases } from "../hooks/useGarage";
 import { GarageBranchSelector } from "./GarageBranchSelector";
@@ -20,7 +18,6 @@ export function GarageCaseSyncDrawer({
   onClose,
   onSuccess,
 }: GarageCaseSyncDrawerProps) {
-  const { t } = useTranslation("garage");
   const { selectedBranchId } = useGarageStore();
   const { mutateAsync: syncCases, isPending: isSyncing } = useSyncGarageCases();
 
@@ -47,7 +44,7 @@ export function GarageCaseSyncDrawer({
         onSuccess();
       }
       onClose();
-    } catch (error) {
+    } catch {
       // Error handled in the mutation
     }
   };
@@ -77,8 +74,9 @@ export function GarageCaseSyncDrawer({
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-6">
             <div className="text-sm text-muted-foreground">
-              Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) từ hệ thống Kgara về ERP.
-              Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả về dữ liệu.
+              Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) từ hệ thống
+              Kgara về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả
+              về dữ liệu.
             </div>
             <div className="flex flex-col gap-4">
               <div className="flex gap-3">
@@ -99,7 +97,9 @@ export function GarageCaseSyncDrawer({
               <div className="flex justify-end items-center mt-2">
                 <Button
                   onClick={handleSync}
-                  disabled={!selectedBranchId || isSyncing || (!dateFrom && !dateTo)}
+                  disabled={
+                    !selectedBranchId || isSyncing || (!dateFrom && !dateTo)
+                  }
                   className="gap-2 w-36 justify-center"
                 >
                   <RefreshCw

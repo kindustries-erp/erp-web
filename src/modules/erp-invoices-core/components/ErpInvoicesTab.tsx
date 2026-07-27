@@ -365,9 +365,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail && detail.type === "erp_invoice" && detail.id) {
-        formHook.openInternal({ id: detail.id } as ErpInvoice);
-      } else if (detail && detail.type === "bank_transaction" && detail.id) {
+      if (detail && detail.type === "bank_transaction" && detail.id) {
         setDetailTransactionId(detail.id);
       }
     };
