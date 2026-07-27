@@ -830,10 +830,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   e.stopPropagation();
                   formHook.openInternal(inv);
                 }}
-                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
+                className="font-normal text-primary p-0 h-auto flex items-center justify-start w-full hover:bg-transparent hover:text-primary/80"
               >
+                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 mr-1" />
                 <span className="truncate">{inv.invoiceNo}</span>
-                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
               </Button>
             </div>
           </div>
