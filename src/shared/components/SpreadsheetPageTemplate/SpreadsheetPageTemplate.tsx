@@ -20,6 +20,7 @@ export function SpreadsheetPageTemplate<T>({
   error,
   emptyLabel,
   minWidth = 1300,
+  actionColumnSize,
   page,
   pageSize,
   total,
@@ -161,6 +162,7 @@ export function SpreadsheetPageTemplate<T>({
             sortArray={sortArray}
             onSort={onSort}
             actions={rowActions}
+            actionColumnSize={actionColumnSize}
             summaryRow={summaryRow}
             page={page}
             pageSize={pageSize}

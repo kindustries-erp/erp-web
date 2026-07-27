@@ -23,6 +23,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   error?: string | null;
   emptyLabel?: string;
   minWidth?: number;
+  actionColumnSize?: number;
 
   // --- Pagination ---
   page: number;
