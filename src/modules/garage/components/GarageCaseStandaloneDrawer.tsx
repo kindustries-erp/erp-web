@@ -13,31 +13,7 @@ import {
 import { GarageCaseLinkedDocuments } from "./GarageCaseLinkedDocuments";
 import { GarageCasePreview } from "./GarageCasePreview";
 
-function KgaraCaseStatusBadge({ status }: { status?: string }) {
-  if (!status) return null;
-  const s = status.toLowerCase();
-  let cls = "bg-slate-100 text-slate-700";
-  if (s.includes("hoàn thành") || s.includes("giao xe") || s.includes("xong")) {
-    cls = "bg-emerald-100 text-emerald-700";
-  } else if (
-    s.includes("đang sửa") ||
-    s.includes("đang làm") ||
-    s.includes("tiếp nhận")
-  ) {
-    cls = "bg-blue-100 text-blue-700";
-  } else if (s.includes("chờ") || s.includes("phụ tùng")) {
-    cls = "bg-amber-100 text-amber-700";
-  } else if (s.includes("hủy") || s.includes("từ chối")) {
-    cls = "bg-red-100 text-red-700";
-  }
-  return (
-    <span
-      className={`text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap ${cls}`}
-    >
-      {status}
-    </span>
-  );
-}
+import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
 
 interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;

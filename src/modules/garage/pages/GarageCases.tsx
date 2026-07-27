@@ -7,9 +7,11 @@ import {
 } from "../hooks/useGarage";
 import { RefreshCw, DownloadCloud, MoreHorizontal, Car } from "lucide-react";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { useGarageStore } from "../store/garageStore";
 import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
+import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import { useTranslation } from "react-i18next";
 
 export function GarageCases() {
@@ -86,11 +88,34 @@ export function GarageCases() {
       },
     },
     {
+      key: "updatedAt",
+      header: t("cases.columns.updatedAt"),
+      sortable: true,
+      cell: (item: any) => {
+        if (!item.updatedAt) return "-";
+        return new Date(item.updatedAt).toLocaleString();
+      },
+    },
+    {
+      key: "statusName",
+      header: t("cases.columns.status"),
+      sortable: true,
+      cell: (item: any) => (
+        <KgaraCaseStatusBadge
+          status={item.tenTinhTrangDichVu || t("cases.common.unknown")}
+        />
+      ),
+    },
+    {
       key: "caseCode",
       header: t("cases.columns.caseCode"),
       sortable: true,
       cell: (item: any) => (
-        <span className="font-medium text-blue-600">{item.soChungTu}</span>
+        <TableText
+          text={item.soChungTu}
+          textClassName="font-medium text-blue-600"
+          enableCopy={true}
+        />
       ),
     },
     {
@@ -157,25 +182,6 @@ export function GarageCases() {
         if (!item.createdAt) return "-";
         return new Date(item.createdAt).toLocaleString();
       },
-    },
-    {
-      key: "updatedAt",
-      header: t("cases.columns.updatedAt"),
-      sortable: true,
-      cell: (item: any) => {
-        if (!item.updatedAt) return "-";
-        return new Date(item.updatedAt).toLocaleString();
-      },
-    },
-    {
-      key: "statusName",
-      header: t("cases.columns.status"),
-      sortable: true,
-      cell: (item: any) => (
-        <span className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700">
-          {item.tenTinhTrangDichVu || t("cases.common.unknown")}
-        </span>
-      ),
     },
   ];
 
