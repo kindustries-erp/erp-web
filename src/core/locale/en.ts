@@ -1347,6 +1347,13 @@ export const en: Dict = {
       authorize: "Authorize",
       delete: "Delete",
     },
+    drawer: {
+      createTitle: "Create new role (Core)",
+      editTitle: "Edit role (Core)",
+      createSubtitle: "New role in the system",
+      sectionInfo: "Role information",
+      descPlaceholder: "Short description about this role...",
+    },
     toast: {
       createSuccess: "Role created successfully",
       updateSuccess: "Role updated successfully",

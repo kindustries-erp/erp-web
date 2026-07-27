@@ -1338,6 +1338,13 @@ export const vi = {
       authorize: "Phân quyền",
       delete: "Xóa",
     },
+    drawer: {
+      createTitle: "Tạo vai trò mới (Core)",
+      editTitle: "Chỉnh sửa vai trò (Core)",
+      createSubtitle: "Vai trò mới trong hệ thống",
+      sectionInfo: "Thông tin vai trò",
+      descPlaceholder: "Mô tả ngắn về vai trò này...",
+    },
     toast: {
       createSuccess: "Tạo vai trò thành công",
       updateSuccess: "Cập nhật vai trò thành công",

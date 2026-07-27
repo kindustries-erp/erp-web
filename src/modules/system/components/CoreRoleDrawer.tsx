@@ -42,6 +42,7 @@ interface CoreRoleDrawerProps {
   onClose: () => void;
   onSave: (dto: CreateRoleDto | UpdateRoleDto) => Promise<void>;
   // permissions
+  initialPermMap?: PermissionMap;
   resources: { resource: string; label: string }[];
   permMap: PermissionMap;
   permLoading: boolean;
@@ -55,6 +56,7 @@ interface CoreRoleDrawerProps {
   isAllFull: () => boolean;
   isAnyChecked: () => boolean;
   // users
+  initialSelectedUserIds?: string[];
   selectedUserIds: string[];
   onUsersChange: (ids: string[]) => void;
   allUsers: SelectableUser[];
@@ -68,6 +70,7 @@ export function CoreRoleDrawer({
   saveError,
   onClose,
   onSave,
+  initialPermMap,
   resources,
   permMap,
   permLoading,
@@ -80,6 +83,7 @@ export function CoreRoleDrawer({
   isColumnFull,
   isAllFull,
   isAnyChecked,
+  initialSelectedUserIds,
   selectedUserIds,
   onUsersChange,
   allUsers,
@@ -105,10 +109,52 @@ export function CoreRoleDrawer({
     });
   }
 
-  const isDirty =
+  const isFormDirty =
     name.trim() !== (editing?.name ?? "") ||
-    description.trim() !== (editing?.description ?? "") ||
-    (!editing && (isAnyChecked() || selectedUserIds.length > 0));
+    description.trim() !== (editing?.description ?? "");
+
+  const isPermissionsDirty = (() => {
+    if (!editing) return isAnyChecked();
+    if (!initialPermMap) return false;
+
+    const allKeys = new Set([
+      ...Object.keys(permMap),
+      ...Object.keys(initialPermMap),
+    ]);
+    for (const key of allKeys) {
+      const p1 = permMap[key] || {
+        create: false,
+        read: false,
+        update: false,
+        delete: false,
+      };
+      const p2 = initialPermMap[key] || {
+        create: false,
+        read: false,
+        update: false,
+        delete: false,
+      };
+      if (
+        p1.create !== p2.create ||
+        p1.read !== p2.read ||
+        p1.update !== p2.update ||
+        p1.delete !== p2.delete
+      ) {
+        return true;
+      }
+    }
+    return false;
+  })();
+
+  const isUsersDirty = (() => {
+    if (!editing) return selectedUserIds.length > 0;
+    const initial = initialSelectedUserIds || [];
+    if (selectedUserIds.length !== initial.length) return true;
+    const set = new Set(initial);
+    return selectedUserIds.some((id) => !set.has(id));
+  })();
+
+  const isDirty = isFormDirty || isPermissionsDirty || isUsersDirty;
 
   const ACTION_LABEL: Record<CrudAction, string> = {
     create: t("permissionMatrix.actions.create"),
@@ -132,8 +178,10 @@ export function CoreRoleDrawer({
       mode={editing ? "edit" : "create"}
       onClose={onClose}
       icon={<IconShield />}
-      title={editing ? "Chỉnh sửa vai trò (Core)" : "Tạo vai trò mới (Core)"}
-      subtitle={editing ? editing.name : "Vai trò mới trong hệ thống"}
+      title={
+        editing ? t("rbac.drawer.editTitle") : t("rbac.drawer.createTitle")
+      }
+      subtitle={editing ? editing.name : t("rbac.drawer.createSubtitle")}
       confirmOnClose={isDirty}
       layout="1-column"
       size="md"
@@ -149,8 +197,8 @@ export function CoreRoleDrawer({
       ]}
       leftPanel={
         <>
-          <DrawerSection title="Thông tin vai trò">
-            <DrawerField label="Tên vai trò" required>
+          <DrawerSection title={t("rbac.drawer.sectionInfo")}>
+            <DrawerField label={t("rbac.headers.name")} required>
               <input
                 className={inputCls}
                 value={name}
@@ -168,7 +216,7 @@ export function CoreRoleDrawer({
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mô tả ngắn về vai trò này..."
+                placeholder={t("rbac.drawer.descPlaceholder")}
               />
             </DrawerField>
           </DrawerSection>
