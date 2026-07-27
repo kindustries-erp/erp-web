@@ -66,6 +66,22 @@ export function useGarageCasePayments(caseId?: string) {
   });
 }
 
+export function useGarageGrossProfit(branchId?: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: ["garage", "grossProfit", branchId, from, to],
+    queryFn: () => garageApi.getGrossProfit(branchId!, from, to),
+    enabled: !!branchId,
+  });
+}
+
+export function useGarageGrossProfitJournal(branchId?: string, from?: string, to?: string) {
+  return useQuery({
+    queryKey: ["garage", "grossProfitJournal", branchId, from, to],
+    queryFn: () => garageApi.getGrossProfitJournal(branchId!, from, to),
+    enabled: !!branchId,
+  });
+}
+
 export const useSyncGarageBranches = () => {
   const qc = useQueryClient();
   return useMutation({

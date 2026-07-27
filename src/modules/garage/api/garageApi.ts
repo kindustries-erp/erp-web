@@ -139,4 +139,22 @@ export const garageApi = {
     const res = await axiosInstance.get(`${BASE}/cases/${caseId}/payments`);
     return res.data;
   },
+  getGrossProfit: async (branchId: string, from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    const res = await axiosInstance.get(`/api/v1/kgara/reports/gross-profit-detail?${params.toString()}`, {
+      headers: { "x-kgara-branch-id": branchId },
+    });
+    return res.data;
+  },
+  getGrossProfitJournal: async (branchId: string, from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    const res = await axiosInstance.get(`/api/v1/kgara/reports/gross-profit-detail/journal?${params.toString()}`, {
+      headers: { "x-kgara-branch-id": branchId },
+    });
+    return res.data;
+  },
 };

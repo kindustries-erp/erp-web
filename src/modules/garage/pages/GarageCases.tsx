@@ -1,24 +1,33 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import {
   useGarageCases,
+  useGarageBranches,
   useSyncGarageCases,
-  useGarageCaseServices,
-  useGarageCasePayments,
   useSyncGarageCaseDetail,
+  useGarageDashboard,
 } from "../hooks/useGarage";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { RefreshCw, Car } from "lucide-react";
+import { RefreshCw, Car, DownloadCloud, Download, MoreHorizontal } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { useGarageStore } from "../store/garageStore";
 import { GarageBranchSelector } from "../components/GarageBranchSelector";
+import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
 import { useTranslation } from "react-i18next";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
-  const { selectedBranchId } = useGarageStore();
+  const { selectedBranchId, setSelectedBranchId } = useGarageStore();
+  const { data: branches } = useGarageBranches();
+
+  useEffect(() => {
+    if (branches && branches.length > 0 && !selectedBranchId) {
+      setSelectedBranchId(branches[0].externalId);
+    }
+  }, [branches, selectedBranchId, setSelectedBranchId]);
 
   const filterConfig = useMemo(() => {
     return {
@@ -51,17 +60,30 @@ export function GarageCases() {
   const { mutate: syncCaseDetail, isPending: isSyncingDetail } =
     useSyncGarageCaseDetail();
 
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+
+
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   const selectedCase = useMemo(
-    () => cases.find((c: any) => c.id === selectedCaseId) || null,
+    () => cases?.find((c: any) => c.id === selectedCaseId),
     [cases, selectedCaseId],
   );
 
-  const { isLoading: isLoadingServices } = useGarageCaseServices(
-    selectedCase?.hdPhieuDichVuId,
+  const createActions = useMemo(
+    () => [
+      {
+        groupLabel: "Thao tác",
+        items: [
+          {
+            label: "Đồng bộ Cases",
+            icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+            onClick: () => setSyncDrawerOpen(true),
+          },
+        ],
+      },
+    ],
+    [],
   );
-  const { data: payments, isLoading: isLoadingPayments } =
-    useGarageCasePayments(selectedCase?.hdPhieuDichVuId);
 
   const columns = [
     {
@@ -170,15 +192,6 @@ export function GarageCases() {
     },
   ];
 
-  const handleSync = () => {
-    if (!selectedBranchId) return;
-    syncCases({
-      branchId: selectedBranchId,
-      from: filter.state.dateFrom || undefined,
-      to: filter.state.dateTo || undefined,
-    });
-  };
-
   return (
     <>
       <SpreadsheetPageTemplate
@@ -193,25 +206,29 @@ export function GarageCases() {
         onRefresh={() => refetch()}
         filterConfig={filterConfig}
         filter={filter}
-        customActionsNode={<GarageBranchSelector />}
-        extraActions={
-          <Button
-            onClick={handleSync}
-            disabled={!selectedBranchId || isSyncing}
-            variant="primary"
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
-            />
-            {t("cases.actions.syncCases")}
-          </Button>
-        }
+        createLabel="Tạo phiếu dịch vụ"
+        createActions={createActions}
+        rowActions={(item: any) => [
+          {
+            label: "Xem chi tiết",
+            icon: <MoreHorizontal className="w-4 h-4" />,
+            onClick: () => {
+              setSelectedCaseId(item.id);
+            },
+          },
+          {
+            label: t("cases.actions.syncDetails"),
+            icon: <RefreshCw className="w-4 h-4" />,
+            onClick: () => {
+              syncCaseDetail({
+                branchId: selectedBranchId!,
+                caseId: item.hdPhieuDichVuId,
+              });
+            },
+          }
+        ]}
         onRowClick={(item) => {
           setSelectedCaseId(item.id);
-          syncCaseDetail({
-            branchId: selectedBranchId!,
-            caseId: item.hdPhieuDichVuId,
-          });
         }}
         page={page}
         pageSize={pageSize}
@@ -245,7 +262,7 @@ export function GarageCases() {
         ]}
         leftPanel={
           selectedCase &&
-          (isSyncingDetail || isLoadingServices || isLoadingPayments) ? (
+          isSyncingDetail ? (
             <div className="space-y-4 animate-pulse pt-2">
               <div className="h-32 bg-gray-200 rounded"></div>
               <div className="h-32 bg-gray-200 rounded"></div>
@@ -353,60 +370,16 @@ export function GarageCases() {
               </DrawerSection>
 
               <DrawerSection title={t("cases.drawer.payments")}>
-                {payments?.length ? (
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-xs text-left border-collapse">
-                      <thead className="bg-gray-50 border-y border-gray-200 text-gray-500 uppercase">
-                        <tr>
-                          <th className="px-2 py-2 font-semibold">
-                            {t("cases.drawer.method")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.amount")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.date")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payments.map((p: any) => (
-                          <tr
-                            key={p.id}
-                            className="border-b border-gray-100 last:border-b-0"
-                          >
-                            <td className="px-2 py-2 font-medium">
-                              {p.paymentMethod}
-                            </td>
-                            <td className="px-2 py-2 text-right font-semibold text-green-600">
-                              {new Intl.NumberFormat("vi-VN").format(
-                                p.amount || 0,
-                              )}
-                            </td>
-                            <td className="px-2 py-2 text-right text-gray-500">
-                              {p.paymentDate
-                                ? new Date(p.paymentDate).toLocaleDateString()
-                                : "-"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 py-2">
-                    {t("cases.drawer.noPaymentsFound")}
-                  </p>
-                )}
+                <p className="text-sm text-gray-500 py-2">
+                  {t("cases.drawer.noPaymentsFound", "Chưa có dữ liệu thanh toán")}
+                </p>
               </DrawerSection>
             </div>
           ) : null
         }
         rightPanel={
           selectedCase &&
-          !isSyncingDetail &&
-          !isLoadingServices &&
-          !isLoadingPayments ? (
+          !isSyncingDetail ? (
             <div className="space-y-4">
               <DrawerSection
                 title={t("cases.drawer.customerAndVehicle")}
@@ -636,6 +609,12 @@ export function GarageCases() {
             </div>
           ) : null
         }
+      />
+
+      <GarageCaseSyncDrawer
+        open={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
+        onSuccess={() => refetch()}
       />
     </>
   );

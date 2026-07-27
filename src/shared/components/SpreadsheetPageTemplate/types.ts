@@ -64,6 +64,7 @@ export interface SpreadsheetPageTemplateProps<T> {
 
   // --- Drawers / Modals ---
   children?: ReactNode;
+  topNode?: ReactNode;
 
   // --- Row Interaction ---
   onRowClick?: (row: T) => void;
