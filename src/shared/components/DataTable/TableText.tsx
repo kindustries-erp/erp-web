@@ -17,7 +17,7 @@ export interface TableTextProps {
    * If true, shows a tooltip.
    * If string, shows that specific string as the tooltip.
    */
-  tooltip?: boolean | string;
+  tooltip?: boolean | string | React.ReactNode;
   /** If true, shows a copy icon that copies the text to clipboard */
   enableCopy?: boolean;
   /** Callback when the drawer icon is clicked */
