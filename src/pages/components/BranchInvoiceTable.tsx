@@ -1,13 +1,11 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { PanelRightOpen } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
 import { money } from "@/shared/utils/format";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
-import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 
 interface BranchInvoiceTableProps {
   branchId: string | null;
@@ -146,28 +144,15 @@ export function BranchInvoiceTable({
         className: "text-left w-1/4",
         headerClassName: "text-left w-1/4",
         cell: (row: any) => (
-          <div className="flex items-center gap-1.5 group w-full">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e: any) => {
-                e.stopPropagation();
-                onRowClick(row);
-              }}
-              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
-              title="Mở chi tiết"
-            >
-              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
-            </Button>
-            <Tooltip content={row.partnerName || "—"}>
-              <span
-                className="truncate flex-1 min-w-0"
-                style={{ maxWidth: "calc(100% - 28px)" }}
-              >
-                {row.partnerName || "—"}
-              </span>
-            </Tooltip>
-          </div>
+          <TableText
+            text={row.partnerName || "—"}
+            onDrawerClick={(e: any) => {
+              e.stopPropagation();
+              onRowClick(row);
+            }}
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {

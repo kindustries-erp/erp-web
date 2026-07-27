@@ -1,11 +1,10 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, PanelRightOpen } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 // import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -21,7 +20,7 @@ import { StandardTable } from "@/shared/components/StandardTable";
 // import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { CategoryTransactionsDrawer } from "./components/CategoryTransactionsDrawer";
 import { PartnerTransactionsDrawer } from "./components/PartnerTransactionsDrawer";
 
@@ -132,27 +131,15 @@ function BranchPartnerStatsTable({
           row.correspondentName || row.correspondentAccount || "Khác";
 
         return (
-          <div className="flex items-center gap-1.5 group w-full">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e: any) => {
-                e.stopPropagation();
-                onPartnerClick(row.correspondentAccount, row.correspondentName);
-              }}
-              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
-              title="Mở chi tiết"
-            >
-              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
-            </Button>
-            <span
-              className="truncate flex-1 min-w-0"
-              style={{ maxWidth: "calc(100% - 28px)" }}
-              title={name}
-            >
-              {name}
-            </span>
-          </div>
+          <TableText
+            text={name}
+            onDrawerClick={(e: any) => {
+              e.stopPropagation();
+              onPartnerClick(row.correspondentAccount, row.correspondentName);
+            }}
+            tooltip={name !== "Khác"}
+            enableCopy={name !== "Khác"}
+          />
         );
       },
       className: "text-left w-1/3",

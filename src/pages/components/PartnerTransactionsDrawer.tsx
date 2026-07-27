@@ -5,6 +5,7 @@ import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
@@ -260,15 +261,16 @@ export function PartnerTransactionsDrawer({
       cell: (row: any) => {
         if (!row.referenceNumber) return "—";
         return (
-          <div
-            className="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
-            onClick={(e) => {
+          <TableText
+            text={row.referenceNumber}
+            onDrawerClick={(e) => {
               e.stopPropagation();
               setDetailTransactionId(row.id);
             }}
-          >
-            {row.referenceNumber}
-          </div>
+            tooltip={true}
+            enableCopy={true}
+            textClassName="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
+          />
         );
       },
     },
