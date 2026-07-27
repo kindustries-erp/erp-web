@@ -188,6 +188,7 @@ export function OperationalInventoryPage({
     expandedStockItemIds,
     onToggleExpand: onToggleInventoryExpand,
     stockItems,
+    onViewItem,
   });
 
   const expandedStockRowKeys = useMemo(

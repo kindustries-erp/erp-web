@@ -22,6 +22,7 @@ import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import type { DataTableColumn } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
@@ -525,32 +526,15 @@ export function ErpWarehouseTab() {
       {
         key: "voucherNo",
         header: renderHeaderFilter("voucherNo", t("Số phiếu")),
-        size: 150,
+        size: 200,
         className: "font-mono text-sm text-left",
         headerClassName: "p-0 h-full",
         cell: (row) => (
           <div className="flex items-center gap-2">
-            <span
-              title={
-                row.type === "receipt"
-                  ? t("Nhập kho")
-                  : row.type === "issue"
-                    ? t("Xuất kho")
-                    : t("Điều chỉnh")
-              }
-              className="flex-shrink-0"
-            >
-              {row.type === "receipt" ? (
-                <PackagePlus className="h-4 w-4 text-emerald-600" />
-              ) : row.type === "issue" ? (
-                <PackageMinus className="h-4 w-4 text-orange-600" />
-              ) : (
-                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
-              )}
-            </span>
-            <button
-              className="font-medium text-primary hover:underline"
-              onClick={() => {
+            <TableText
+              text={row.voucherNo || ""}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
                 if (row.type === "receipt") {
                   grDrawer.openDetail(row.id);
                 } else if (row.type === "issue") {
@@ -559,9 +543,10 @@ export function ErpWarehouseTab() {
                   iaDrawer.openDetail(row.id);
                 }
               }}
-            >
-              {row.voucherNo}
-            </button>
+              tooltip={true}
+              enableCopy={true}
+              textClassName="font-medium text-primary"
+            />
           </div>
         ),
       },
