@@ -4,8 +4,14 @@ import {
   useGarageCases,
   useGarageBranches,
   useSyncGarageCaseDetail,
+  useGarageGrossProfit,
 } from "../hooks/useGarage";
-import { RefreshCw, DownloadCloud, MoreHorizontal, Car } from "lucide-react";
+import {
+  RefreshCw,
+  DownloadCloud,
+  MoreHorizontal,
+  FileText,
+} from "lucide-react";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { useGarageStore } from "../store/garageStore";
@@ -39,6 +45,17 @@ export function GarageCases() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
+  const { data: profitData } = useGarageGrossProfit(
+    selectedBranchId,
+    filter.state.dateFrom || undefined,
+    filter.state.dateTo || undefined,
+  );
+
+  const profitCases = useMemo(() => {
+    const groups = profitData?.results?.Groups || profitData?.Groups || [];
+    return groups.flatMap((g: any) => g.Items || []);
+  }, [profitData]);
+
   const {
     data: casesData,
     isLoading,
@@ -48,6 +65,8 @@ export function GarageCases() {
     page,
     pageSize,
     filter.state.search || "",
+    filter.state.dateFrom || undefined,
+    filter.state.dateTo || undefined,
   );
   const cases = casesData?.data || [];
   const totalCases = casesData?.pagination?.total || 0;
@@ -110,11 +129,13 @@ export function GarageCases() {
       key: "caseCode",
       header: t("cases.columns.caseCode"),
       sortable: true,
+      size: 200,
       cell: (item: any) => (
         <TableText
           text={item.soChungTu}
-          textClassName="font-medium text-blue-600"
+          textClassName="font-medium text-primary text-left"
           enableCopy={true}
+          onDrawerClick={() => setSelectedCaseId(item.soChungTu)}
         />
       ),
     },
@@ -144,6 +165,66 @@ export function GarageCases() {
         item.rawData?.XeLamBaoHiem
           ? t("cases.common.yes")
           : t("cases.common.no"),
+    },
+    {
+      key: "doanhThu",
+      header: "Doanh thu",
+      sortable: true,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const val = pItem?.DoanhThu ?? item.doanhThu ?? item.rawData?.DoanhThu;
+        if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(val) || 0);
+      },
+    },
+    {
+      key: "chiPhi",
+      header: "Chi phí",
+      sortable: true,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const val = pItem?.ChiPhi ?? item.chiPhi ?? item.rawData?.ChiPhi;
+        if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(val) || 0);
+      },
+    },
+    {
+      key: "loiNhuan",
+      header: "Lợi nhuận",
+      sortable: true,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const val = pItem?.LoiNhuan ?? item.loiNhuan ?? item.rawData?.LoiNhuan;
+        if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(val) || 0);
+      },
     },
     {
       key: "totalAmount",
@@ -190,7 +271,7 @@ export function GarageCases() {
       <SpreadsheetPageTemplate
         title={t("cases.title")}
         desc={t("cases.desc")}
-        icon={<Car className="w-5 h-5 text-blue-600" />}
+        icon={<FileText className="w-5 h-5 text-slate-700" />}
         tableId="garage-cases-table"
         items={cases}
         columns={columns}
@@ -220,9 +301,6 @@ export function GarageCases() {
             },
           },
         ]}
-        onRowClick={(item) => {
-          setSelectedCaseId(item.id);
-        }}
         page={page}
         pageSize={pageSize}
         total={totalCases}
@@ -236,7 +314,7 @@ export function GarageCases() {
 
       <GarageCaseStandaloneDrawer
         isOpen={!!selectedCaseId}
-        caseId={selectedCaseId}
+        caseCode={selectedCaseId}
         onClose={() => setSelectedCaseId(null)}
         onSuccess={() => refetch()}
       />

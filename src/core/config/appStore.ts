@@ -185,6 +185,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.garageCases",
     group: "garage",
   },
+  "garage-gross-profit": {
+    labelKey: "Báo cáo lợi nhuận gộp",
+    group: "garage",
+  },
   "garage-receivables": {
     labelKey: "nav.items.garageReceivables",
     group: "garage",
@@ -299,6 +303,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
   "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
   "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
+  "garage-gross-profit": [["nav.items.garage"], ["Báo cáo lợi nhuận gộp"]],
   "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
   "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
 };

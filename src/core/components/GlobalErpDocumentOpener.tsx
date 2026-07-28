@@ -36,7 +36,7 @@ export function GlobalErpDocumentOpener() {
       />
       <GarageCaseStandaloneDrawer
         isOpen={!!activeCaseId}
-        caseId={activeCaseId}
+        caseCode={activeCaseId}
         onClose={() => setActiveCaseId(null)}
       />
     </>

@@ -9,24 +9,47 @@ export const useGarageBranches = () => {
   });
 };
 
-export const useGarageCases = (
+export function useGarageCases(
   branchId?: string,
   page: number = 1,
   pageSize: number = 20,
   q: string = "",
-) => {
+  from?: string,
+  to?: string,
+) {
   return useQuery({
-    queryKey: ["garage-cases", branchId, page, pageSize, q],
-    queryFn: () => garageApi.getCases(branchId, page, pageSize, q),
+    queryKey: ["garage", "cases", branchId, page, pageSize, q, from, to],
+    queryFn: () => garageApi.getCases(branchId!, page, pageSize, q, from, to),
     enabled: !!branchId,
+    staleTime: 1000 * 60,
   });
-};
+}
 
 export const useGarageCaseById = (id?: string) => {
   return useQuery({
     queryKey: ["garage-case", id],
     queryFn: () => garageApi.getCaseById(id!),
     enabled: !!id,
+  });
+};
+
+export const useGarageCaseByExternalId = (
+  externalId?: string,
+  branchId?: string,
+) => {
+  return useQuery({
+    queryKey: ["garage-case-external", externalId, branchId],
+    queryFn: () => garageApi.getCaseByExternalId(externalId!, branchId),
+    enabled: !!externalId,
+    retry: false,
+  });
+};
+
+export const useGarageCaseByCode = (code?: string) => {
+  return useQuery({
+    queryKey: ["garage-case-code", code],
+    queryFn: () => garageApi.getCaseByCode(code!),
+    enabled: !!code,
   });
 };
 
@@ -80,8 +103,8 @@ export function useGarageGrossProfit(
   to?: string,
 ) {
   return useQuery({
-    queryKey: ["garage", "grossProfit", branchId, from, to],
-    queryFn: () => garageApi.getGrossProfit(branchId!, from, to),
+    queryKey: ["garage", "grossProfitReport", branchId, from, to],
+    queryFn: () => garageApi.getGrossProfitReport(branchId!, from, to),
     enabled: !!branchId,
   });
 }
@@ -202,68 +225,95 @@ export function useSyncGaragePayables() {
   });
 }
 
-export function useGarageCaseLinkedInvoices(caseId?: string) {
+export const useSyncGarageGrossProfit = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { branchId: string; from?: string; to?: string }) =>
+      garageApi.syncGrossProfit(params.branchId, params.from, params.to),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["garage-cases"] });
+      queryClient.invalidateQueries({ queryKey: ["garage-gross-profit"] });
+      toast.success("Đồng bộ lợi nhuận gộp thành công!");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Đồng bộ thất bại");
+    },
+  });
+};
+
+export function useGarageGrossProfitLinkedInvoices(grossProfitId?: string) {
   return useQuery({
-    queryKey: ["garage", "caseLinkedInvoices", caseId],
-    queryFn: () => garageApi.getCaseLinkedInvoices(caseId!),
-    enabled: !!caseId,
+    queryKey: ["garage", "grossProfitLinkedInvoices", grossProfitId],
+    queryFn: () => garageApi.getGrossProfitLinkedInvoices(grossProfitId!),
+    enabled: !!grossProfitId,
   });
 }
 
-export function useMutateCaseLinkedInvoices() {
+export function useMutateGrossProfitLinkedInvoices() {
   const queryClient = useQueryClient();
 
   const addMutation = useMutation({
-    mutationFn: ({
-      caseId,
-      invoiceId,
-      linkType,
-      note,
-    }: {
-      caseId: string;
+    mutationFn: (variables: {
+      grossProfitId: string;
       invoiceId: string;
       linkType: "IN" | "OUT";
       note?: string;
-    }) => garageApi.addCaseLinkedInvoice(caseId, invoiceId, linkType, note),
+    }) =>
+      garageApi.addGrossProfitLinkedInvoice(
+        variables.grossProfitId,
+        variables.invoiceId,
+        variables.linkType,
+        variables.note,
+      ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["garage", "caseLinkedInvoices", variables.caseId],
+        queryKey: [
+          "garage",
+          "grossProfitLinkedInvoices",
+          variables.grossProfitId,
+        ],
       });
-      toast.success("Đã thêm chứng từ liên kết");
+      toast.success("Đã liên kết chứng từ.");
     },
-    onError: () => toast.error("Lỗi khi thêm chứng từ liên kết"),
+    onError: (err: any) => {
+      toast.error(err.message || "Lỗi khi thêm chứng từ liên kết");
+    },
   });
 
   const removeMutation = useMutation({
-    mutationFn: ({ caseId, linkedId }: { caseId: string; linkedId: string }) =>
-      garageApi.removeCaseLinkedInvoice(caseId, linkedId),
+    mutationFn: ({
+      grossProfitId,
+      linkedId,
+    }: {
+      grossProfitId: string;
+      linkedId: string;
+    }) => garageApi.removeGrossProfitLinkedInvoice(grossProfitId, linkedId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["garage", "caseLinkedInvoices", variables.caseId],
+        queryKey: [
+          "garage",
+          "grossProfitLinkedInvoices",
+          variables.grossProfitId,
+        ],
       });
-      toast.success("Đã xóa chứng từ liên kết");
+      toast.success("Đã hủy liên kết chứng từ.");
     },
-    onError: () => toast.error("Lỗi khi xóa chứng từ liên kết"),
+    onError: (err: any) => {
+      toast.error(err.message || "Lỗi khi xóa chứng từ liên kết");
+    },
   });
 
   return { addMutation, removeMutation };
 }
 
-export function useGarageCaseGrossProfit(branchId?: string, caseId?: string) {
+export function useGarageCaseGrossProfit(caseCode?: string) {
   return useQuery({
-    queryKey: ["garage", "grossProfitDetail", branchId, caseId],
+    queryKey: ["garage", "grossProfitDetail", caseCode],
     queryFn: async () => {
-      const year = new Date().getFullYear();
-      const from = `${year}-01-01`;
-      const to = `${year}-12-31`;
-      const res = await garageApi.getGrossProfit(branchId!, from, to);
-      if (res && res.data && Array.isArray(res.data)) {
-        return (
-          res.data.find((item: any) => item.HdPhieuDichVuID === caseId) || null
-        );
-      }
-      return null;
+      const res = await garageApi.getGrossProfitByCode(caseCode!);
+      return res || null;
     },
-    enabled: !!branchId && !!caseId,
+    enabled: !!caseCode,
+    retry: false,
   });
 }

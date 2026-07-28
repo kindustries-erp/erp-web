@@ -9,15 +9,20 @@ export const garageApi = {
   },
 
   getCases: async (
-    branchId?: string,
+    branchId: string,
     page: number = 1,
     pageSize: number = 20,
     q: string = "",
+    from?: string,
+    to?: string,
   ) => {
-    const params = new URLSearchParams();
-    params.append("page", page.toString());
-    params.append("pageSize", pageSize.toString());
-    if (q) params.append("q", q);
+    const params = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+      q,
+    });
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
 
     const res = await axiosInstance.get(`${BASE}/cases?${params.toString()}`, {
       headers: {
@@ -29,6 +34,20 @@ export const garageApi = {
 
   getCaseById: async (id: string) => {
     const res = await axiosInstance.get(`${BASE}/cases/${id}`);
+    return res.data;
+  },
+
+  getCaseByExternalId: async (externalId: string, branchId?: string) => {
+    let url = `${BASE}/cases/external/${externalId}`;
+    if (branchId) url += `?branchId=${branchId}`;
+    const res = await axiosInstance.get(url);
+    return res.data;
+  },
+
+  getCaseByCode: async (code: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/by-code/${encodeURIComponent(code)}`,
+    );
     return res.data;
   },
 
@@ -44,6 +63,23 @@ export const garageApi = {
 
     const res = await axiosInstance.post(
       `${BASE}/sync/cases?${params.toString()}`,
+      {},
+      {
+        headers: {
+          "x-greenway-branch-id": branchId,
+        },
+      },
+    );
+    return res.data;
+  },
+
+  syncGrossProfit: async (branchId: string, from?: string, to?: string) => {
+    const params = new URLSearchParams();
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+
+    const res = await axiosInstance.post(
+      `${BASE}/sync/gross-profit?${params.toString()}`,
       {},
       {
         headers: {
@@ -172,6 +208,7 @@ export const garageApi = {
     return res.data;
   },
   getGrossProfit: async (branchId: string, from?: string, to?: string) => {
+    // Legacy mapping kept for compatibility if needed.
     const params = new URLSearchParams();
     if (from) params.append("from", from);
     if (to) params.append("to", to);
@@ -183,6 +220,61 @@ export const garageApi = {
     );
     return res.data;
   },
+
+  getGrossProfitByCode: async (code: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/cases/by-code/${encodeURIComponent(code)}/gross-profit`,
+    );
+    return res.data;
+  },
+
+  getGrossProfitReport: async (
+    branchId: string,
+    from?: string,
+    to?: string,
+  ) => {
+    const params = new URLSearchParams();
+    if (from) params.append("from", from);
+    if (to) params.append("to", to);
+    const res = await axiosInstance.get(
+      `${BASE}/cases/gross-profit-report?${params.toString()}`,
+      {
+        headers: { "x-greenway-branch-id": branchId },
+      },
+    );
+    return res.data;
+  },
+
+  getGrossProfitLinkedInvoices: async (grossProfitId: string) => {
+    const res = await axiosInstance.get(
+      `${BASE}/gross-profit/${grossProfitId}/linked-invoices`,
+    );
+    return res.data;
+  },
+
+  addGrossProfitLinkedInvoice: async (
+    grossProfitId: string,
+    invoiceId: string,
+    linkType: "IN" | "OUT",
+    note?: string,
+  ) => {
+    const res = await axiosInstance.post(
+      `${BASE}/gross-profit/${grossProfitId}/linked-invoices`,
+      { invoiceId, linkType, note },
+    );
+    return res.data;
+  },
+
+  removeGrossProfitLinkedInvoice: async (
+    grossProfitId: string,
+    linkedId: string,
+  ) => {
+    const res = await axiosInstance.delete(
+      `${BASE}/gross-profit/${grossProfitId}/linked-invoices/${linkedId}`,
+    );
+    return res.data;
+  },
+
   getGrossProfitJournal: async (
     branchId: string,
     from?: string,
