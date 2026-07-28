@@ -414,7 +414,11 @@ export function ImportPreviewModal({
                         )}
                         {entry.type === "pdf" && (
                           <>
-                            {matchedInvoices[entry.file.name] ? (
+                            {manualMatches[entry.id] ? (
+                              <span className="text-blue-700 font-medium text-[11px]">
+                                Đã chọn ghép thủ công (chờ import)
+                              </span>
+                            ) : matchedInvoices[entry.file.name] ? (
                               <div className="flex items-center gap-2">
                                 <span className="text-emerald-700 font-medium text-[11px]">
                                   Tự động: HĐ{" "}
