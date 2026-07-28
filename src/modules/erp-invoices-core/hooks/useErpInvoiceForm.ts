@@ -314,7 +314,11 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
-    if (postingState.lines.length > 0 && !postingState.isBalanced) {
+    if (
+      (form as any).accountingEnabled &&
+      postingState.lines.length > 0 &&
+      !postingState.isBalanced
+    ) {
       setFormError(
         "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.",
       );

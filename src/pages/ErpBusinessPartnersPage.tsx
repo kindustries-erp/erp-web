@@ -16,6 +16,7 @@ import {
   type FilterPanelConfig,
 } from "@/shared/hooks/useFilterPanel";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useUIStore } from "@/core/config/uiStore";
 import { Combobox } from "@/shared/components/Combobox";
@@ -156,7 +157,14 @@ export function ErpBusinessPartnersPage({
     {
       key: "code",
       header: "Mã",
-      cell: (item) => item.code || "—",
+      cell: (item) => (
+        <TableText
+          text={item.code || "—"}
+          tooltip={item.code || false}
+          enableCopy={Boolean(item.code)}
+          onDrawerClick={item.code ? () => openView(item) : undefined}
+        />
+      ),
       className: "text-left",
       headerClassName: "text-center",
     },

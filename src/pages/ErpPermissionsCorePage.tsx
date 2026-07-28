@@ -52,6 +52,7 @@ export function ErpPermissionsCorePage() {
   } = useCoreRoles();
 
   const {
+    initialPermMap,
     permMap,
     resources,
     loading: permLoading,
@@ -71,6 +72,7 @@ export function ErpPermissionsCorePage() {
   } = useCorePermissionsEditor();
 
   const {
+    initialSelectedIds,
     selectedIds: selectedUserIds,
     setSelectedIds: setSelectedUserIds,
     allUsers,
@@ -325,6 +327,8 @@ export function ErpPermissionsCorePage() {
         saveError={saveError}
         onClose={handleClose}
         onSave={handleSave}
+        initialPermMap={initialPermMap}
+        initialSelectedUserIds={initialSelectedIds}
         resources={resources}
         permMap={permMap}
         permLoading={permLoading}

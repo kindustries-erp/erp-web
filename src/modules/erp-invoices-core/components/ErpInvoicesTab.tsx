@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { format, isValid } from "date-fns";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -17,7 +18,6 @@ import {
   Building2,
   CheckSquare,
   XSquare,
-  PanelRightOpen,
   MoreHorizontal,
   X,
   GitMerge,
@@ -365,9 +365,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail && detail.type === "erp_invoice" && detail.id) {
-        formHook.openInternal({ id: detail.id } as ErpInvoice);
-      } else if (detail && detail.type === "bank_transaction" && detail.id) {
+      if (detail && detail.type === "bank_transaction" && detail.id) {
         setDetailTransactionId(detail.id);
       }
     };
@@ -822,21 +820,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         headerClassName: "text-center",
         className: "font-medium text-primary text-left",
         cell: (inv) => (
-          <div className="flex flex-col gap-1 w-full pr-1">
-            <div className="flex items-center gap-2 w-full">
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  formHook.openInternal(inv);
-                }}
-                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-              >
-                <span className="truncate">{inv.invoiceNo}</span>
-                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <TableText
+            text={inv.invoiceNo || ""}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              formHook.openInternal(inv);
+            }}
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {
@@ -1113,169 +1105,162 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         size: 300,
         className: "text-left whitespace-normal",
         headerClassName: "text-center",
-        cell: (row) => (
-          <Popover
-            content={
-              <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
-                <h4 className="font-semibold text-sm mb-2 text-slate-800">
-                  Chi tiết mặt hàng
-                </h4>
-                {row.items && row.items.length > 0 ? (
-                  <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                    <thead className="bg-slate-50 sticky top-0">
-                      <tr>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium">
-                          Tên mặt hàng
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          SL
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
-                          ĐVT
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Đơn giá
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thành tiền trước thuế
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thuế suất
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thuế VAT
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thành tiền
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {row.items.map((item: any, idx: number) => (
-                        <tr
-                          key={item.id || idx}
-                          className="border-b last:border-0 hover:bg-slate-50"
-                        >
-                          <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
-                            {item.description || "—"}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {item.quantity != null
-                              ? Number(item.quantity).toLocaleString("vi-VN", {
-                                  minimumFractionDigits: 1,
-                                  maximumFractionDigits: 1,
-                                })
-                              : "—"}
-                          </td>
-                          <td className="px-2 py-1 text-left whitespace-nowrap">
-                            {item.unit || "—"}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {fmtAmt(item.unitPrice?.toString())}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
-                            {fmtAmt(item.preVatAmount?.toString())}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {item.vatRate != null
-                              ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
-                              : "—"}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {fmtAmt(item.vatAmount?.toString())}
-                          </td>
-                          <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                            {fmtAmt(
-                              (
-                                (Number(item.preVatAmount) || 0) +
-                                (Number(item.vatAmount) || 0)
-                              ).toString(),
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-slate-50 sticky bottom-0 border-t">
-                      <tr>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          Tổng cộng
+        cell: (row) => {
+          const popoverContent = (
+            <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
+              <h4 className="font-semibold text-sm mb-2 text-slate-800">
+                Chi tiết mặt hàng
+              </h4>
+              {row.items && row.items.length > 0 ? (
+                <table className="w-full text-sm text-left border-collapse min-w-[700px]">
+                  <thead className="bg-slate-50 sticky top-0">
+                    <tr>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium">
+                        Tên mặt hàng
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        SL
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
+                        ĐVT
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Đơn giá
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thành tiền trước thuế
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thuế suất
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thuế VAT
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thành tiền
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {row.items.map((item: any, idx: number) => (
+                      <tr
+                        key={item.id || idx}
+                        className="border-b last:border-0 hover:bg-slate-50"
+                      >
+                        <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
+                          {item.description || "—"}
                         </td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {row.items
+                        <td className="px-2 py-1 text-right whitespace-nowrap">
+                          {item.quantity != null
+                            ? Number(item.quantity).toLocaleString("vi-VN", {
+                                minimumFractionDigits: 1,
+                                maximumFractionDigits: 1,
+                              })
+                            : "—"}
+                        </td>
+                        <td className="px-2 py-1 text-left whitespace-nowrap">
+                          {item.unit || "—"}
+                        </td>
+                        <td className="px-2 py-1 text-right whitespace-nowrap">
+                          {fmtAmt(item.unitPrice?.toString())}
+                        </td>
+                        <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
+                          {fmtAmt(item.preVatAmount?.toString())}
+                        </td>
+                        <td className="px-2 py-1 text-right whitespace-nowrap">
+                          {item.vatRate != null
+                            ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
+                            : "—"}
+                        </td>
+                        <td className="px-2 py-1 text-right whitespace-nowrap">
+                          {fmtAmt(item.vatAmount?.toString())}
+                        </td>
+                        <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
+                          {fmtAmt(
+                            (
+                              (Number(item.preVatAmount) || 0) +
+                              (Number(item.vatAmount) || 0)
+                            ).toString(),
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                    <tr>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        Tổng cộng
+                      </td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        {row.items
+                          .reduce(
+                            (acc: number, item: any) =>
+                              acc + (Number(item.quantity) || 0),
+                            0,
+                          )
+                          .toLocaleString("vi-VN", {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
+                      </td>
+                      <td className="px-2 py-2"></td>
+                      <td className="px-2 py-2"></td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        {fmtAmt(
+                          row.items
                             .reduce(
                               (acc: number, item: any) =>
-                                acc + (Number(item.quantity) || 0),
+                                acc + (Number(item.preVatAmount) || 0),
                               0,
                             )
-                            .toLocaleString("vi-VN", {
-                              minimumFractionDigits: 1,
-                              maximumFractionDigits: 1,
-                            })}
-                        </td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {fmtAmt(
-                            row.items
-                              .reduce(
-                                (acc: number, item: any) =>
-                                  acc + (Number(item.preVatAmount) || 0),
-                                0,
-                              )
-                              .toString(),
-                          )}
-                        </td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {fmtAmt(
-                            row.items
-                              .reduce(
-                                (acc: number, item: any) =>
-                                  acc + (Number(item.vatAmount) || 0),
-                                0,
-                              )
-                              .toString(),
-                          )}
-                        </td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-800">
-                          {fmtAmt(
-                            row.items
-                              .reduce(
-                                (acc: number, item: any) =>
-                                  acc +
-                                  (Number(item.preVatAmount) || 0) +
-                                  (Number(item.vatAmount) || 0),
-                                0,
-                              )
-                              .toString(),
-                          )}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                ) : (
-                  <div className="text-slate-500 text-sm italic">
-                    Không có chi tiết mặt hàng.
-                  </div>
-                )}
-              </div>
-            }
-          >
-            <div
-              className="group flex w-full cursor-pointer hover:text-primary text-slate-700 items-center justify-between gap-1"
-              title={row.description || ""}
-            >
-              <div className="line-clamp-2 break-words flex-1 text-left">
-                {row.description || "—"}
-              </div>
-              {row.description && (
-                <div className="opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <MoreHorizontal className="w-4 h-4" />
+                            .toString(),
+                        )}
+                      </td>
+                      <td className="px-2 py-2"></td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        {fmtAmt(
+                          row.items
+                            .reduce(
+                              (acc: number, item: any) =>
+                                acc + (Number(item.vatAmount) || 0),
+                              0,
+                            )
+                            .toString(),
+                        )}
+                      </td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-800">
+                        {fmtAmt(
+                          row.items
+                            .reduce(
+                              (acc: number, item: any) =>
+                                acc +
+                                (Number(item.preVatAmount) || 0) +
+                                (Number(item.vatAmount) || 0),
+                              0,
+                            )
+                            .toString(),
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : (
+                <div className="text-slate-500 text-sm italic">
+                  Không có chi tiết mặt hàng.
                 </div>
               )}
             </div>
-          </Popover>
-        ),
+          );
+
+          return (
+            <TableText
+              text={row.description || "—"}
+              tooltip={true}
+              popoverContent={popoverContent}
+              textClassName="line-clamp-2 break-words whitespace-normal text-slate-700"
+            />
+          );
+        },
       },
       {
         key: "preVatAmount",

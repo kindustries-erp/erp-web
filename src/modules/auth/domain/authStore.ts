@@ -5,10 +5,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
+  changePasswordApi,
   loginApi,
   getProfileApi,
   impersonateApi,
   logoutApi,
+  selfUpdateProfileApi,
   type CoreLoginResponse,
   type CoreProfileResponse,
 } from "@/modules/auth/api/auth.core";
@@ -53,7 +55,8 @@ export type ImpersonationMetadata =
   | { active: true; actor: { id: string; email: string } };
 
 export interface SelfUpdateProfileRequest {
-  full_name?: string;
+  email?: string;
+  full_name?: string | null;
   phone?: string | null;
   notes?: string | null;
 }
@@ -61,13 +64,14 @@ export interface SelfUpdateProfileRequest {
 // ── Helpers — build Employee stub từ CoreProfileResponse ─────────────────────
 
 function profileToEmployee(p: CoreProfileResponse): Employee {
+  const snapshot = p.employee;
   return {
     id: p.id,
-    email: p.email,
-    full_name: p.email, // placeholder cho đến khi BE trả full_name
-    phone: null,
-    notes: null,
-    employee_code: "—",
+    email: snapshot?.email ?? p.email,
+    full_name: snapshot?.fullName ?? p.email,
+    phone: snapshot?.phone ?? null,
+    notes: snapshot?.notes ?? null,
+    employee_code: snapshot?.employeeCode ?? "—",
     status: p.status,
     department_id: { department_name: "—" },
     position_id: { position_name: "—" },
@@ -119,7 +123,10 @@ interface AuthState {
   logoutAction: () => Promise<void>;
   clearAuth: () => void;
   updateProfileAction: (payload: SelfUpdateProfileRequest) => Promise<void>;
-  changePasswordAction: (newPassword: string) => Promise<void>;
+  changePasswordAction: (
+    oldPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
   bootstrapAction: () => Promise<void>;
   stopImpersonationAction: (reason?: string) => Promise<void>;
   impersonateAction: (targetUserId: string) => Promise<void>;
@@ -230,16 +237,50 @@ export const useAuthStore = create<AuthState>()(
         useAppStore.getState().logout();
       },
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      updateProfileAction: async (_payload) => {
-        // TODO: wire to core BE update endpoint khi có
-        return;
+      updateProfileAction: async (payload) => {
+        set({ loading: true, error: null });
+        try {
+          const data = await selfUpdateProfileApi(payload);
+          set((state) => ({
+            loading: false,
+            error: null,
+            profile: state.profile
+              ? {
+                  ...state.profile,
+                  email: data.email,
+                }
+              : state.profile,
+            employee: state.employee
+              ? {
+                  ...state.employee,
+                  email: data.email,
+                  full_name: data.full_name ?? state.employee.full_name,
+                  phone: data.phone,
+                  notes: data.notes,
+                }
+              : state.employee,
+          }));
+        } catch (err: unknown) {
+          const message =
+            (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message ?? "Cập nhật hồ sơ thất bại";
+          set({ loading: false, error: message });
+          throw err;
+        }
       },
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      changePasswordAction: async (_newPassword) => {
-        // TODO: wire to core BE change-password endpoint khi có
-        return;
+      changePasswordAction: async (oldPassword, newPassword) => {
+        set({ loading: true, error: null });
+        try {
+          await changePasswordApi({ oldPassword, newPassword });
+          set({ loading: false, error: null });
+        } catch (err: unknown) {
+          const message =
+            (err as { response?: { data?: { message?: string } } })?.response
+              ?.data?.message ?? "Đổi mật khẩu thất bại";
+          set({ loading: false, error: message });
+          throw err;
+        }
       },
 
       bootstrapAction: async () => {

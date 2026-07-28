@@ -1,7 +1,7 @@
 export const garageVi = {
   cases: {
-    title: "Quản lý Cases",
-    desc: "Quản lý cases được đồng bộ từ Greenway",
+    title: "Sổ báo giá",
+    desc: "Quản lý phiếu dịch vụ từ hệ thống Kgara",
     columns: {
       caseDate: "Ngày tiếp nhận",
       caseCode: "Số chứng từ",
@@ -17,11 +17,11 @@ export const garageVi = {
       status: "Trạng thái",
     },
     actions: {
-      syncCases: "Đồng bộ Cases",
+      syncCases: "Đồng bộ Sổ báo giá",
       syncDetails: "Đồng bộ chi tiết",
     },
     drawer: {
-      caseDetails: "Chi tiết Case: ",
+      caseDetails: "Sổ báo giá:",
       overview: "Tổng quan",
       conditionAndNotes: "Tình trạng & Ghi chú",
       customerRequest: "Yêu cầu của khách hàng",

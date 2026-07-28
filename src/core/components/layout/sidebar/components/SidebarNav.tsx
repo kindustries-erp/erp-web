@@ -116,60 +116,6 @@ export function SidebarNav({
         </div>
       )}
 
-      {/* Garage */}
-      {canReadGreenwayIntegration &&
-        hasMatch([
-          t("nav.items.garage"),
-          t("nav.items.garageDashboard"),
-          t("nav.items.garageCases"),
-          t("nav.items.garageReceivables"),
-          t("nav.items.garagePayables"),
-        ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.items.garage")}
-            </div>
-            <NavItem
-              collapsed={c}
-              icon={
-                <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.garageDashboard")}
-              active={currentPage === "garage-dashboard"}
-              onClick={() => navTo("garage-dashboard")}
-              contextPage="garage-dashboard"
-            />
-            <NavItem
-              collapsed={c}
-              icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.garageCases")}
-              active={currentPage === "garage-cases"}
-              onClick={() => navTo("garage-cases")}
-              contextPage="garage-cases"
-            />
-            <NavItem
-              collapsed={c}
-              icon={
-                <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.garageReceivables")}
-              active={currentPage === "garage-receivables"}
-              onClick={() => navTo("garage-receivables")}
-              contextPage="garage-receivables"
-            />
-            <NavItem
-              collapsed={c}
-              icon={
-                <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.garagePayables")}
-              active={currentPage === "garage-payables"}
-              onClick={() => navTo("garage-payables")}
-              contextPage="garage-payables"
-            />
-          </div>
-        )}
-
       {/* Sales */}
       {showSales &&
         hasMatch([
@@ -391,6 +337,9 @@ export function SidebarNav({
           t("nav.sections.manufacturing"),
           canReadBom ? t("nav.items.erpBom") : "",
           canReadProduction ? t("nav.items.erpProduction") : "",
+          canReadGreenwayIntegration ? t("nav.items.garage") : "",
+          canReadGreenwayIntegration ? t("nav.items.garageCases") : "",
+          canReadGreenwayIntegration ? t("nav.items.garageGrossProfit") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
@@ -416,6 +365,30 @@ export function SidebarNav({
                 contextPage="erp-production"
               />
             )}
+            {canReadGreenwayIntegration && (
+              <NavGroup
+                collapsed={c}
+                icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.garage")}
+                active={
+                  currentPage === "garage-cases" ||
+                  currentPage === "garage-gross-profit"
+                }
+              >
+                <NavGroupItem
+                  label={t("nav.items.garageCases")}
+                  active={currentPage === "garage-cases"}
+                  onClick={() => navTo("garage-cases")}
+                  contextPage="garage-cases"
+                />
+                <NavGroupItem
+                  label={t("nav.items.garageGrossProfit")}
+                  active={currentPage === "garage-gross-profit"}
+                  onClick={() => navTo("garage-gross-profit")}
+                  contextPage="garage-gross-profit"
+                />
+              </NavGroup>
+            )}
           </div>
         )}
 
@@ -431,6 +404,8 @@ export function SidebarNav({
           canReadBankStatements ? t("nav.items.cashflowDashboard") : "",
           canReadBankStatements ? t("bankStatement.bankTitle") : "",
           canReadBankStatements ? t("bankStatement.cashTitle") : "",
+          canReadGreenwayIntegration ? t("nav.items.garageReceivables") : "",
+          canReadGreenwayIntegration ? t("nav.items.garagePayables") : "",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
@@ -495,6 +470,32 @@ export function SidebarNav({
                   active={currentPage === "erp-invoices-out"}
                   onClick={() => navTo("erp-invoices-out")}
                   contextPage="erp-invoices-out"
+                />
+              </NavGroup>
+            )}
+            {canReadGreenwayIntegration && (
+              <NavGroup
+                collapsed={c}
+                icon={
+                  <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.garage")}
+                active={
+                  currentPage === "garage-receivables" ||
+                  currentPage === "garage-payables"
+                }
+              >
+                <NavGroupItem
+                  label={t("nav.items.garageReceivables")}
+                  active={currentPage === "garage-receivables"}
+                  onClick={() => navTo("garage-receivables")}
+                  contextPage="garage-receivables"
+                />
+                <NavGroupItem
+                  label={t("nav.items.garagePayables")}
+                  active={currentPage === "garage-payables"}
+                  onClick={() => navTo("garage-payables")}
+                  contextPage="garage-payables"
                 />
               </NavGroup>
             )}

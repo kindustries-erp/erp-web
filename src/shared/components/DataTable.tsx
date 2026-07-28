@@ -82,6 +82,9 @@ export interface ActionsColumnConfig<T> {
   header?: ReactNode;
   className?: string;
   headerClassName?: string;
+  size?: number;
+  minSize?: number;
+  maxSize?: number;
 }
 
 interface DataTableRowMeta {
@@ -288,6 +291,15 @@ function ColumnToggle<T>({
 
 import { subscribePortalTarget } from "./portalStore";
 
+function sanitizeActionColumnSizing(
+  sizing: ColumnSizingState,
+): ColumnSizingState {
+  if (!("__actions" in sizing)) return sizing;
+  const next = { ...sizing };
+  delete next.__actions;
+  return next;
+}
+
 export function DataTable<T>({
   items,
   columns,
@@ -361,7 +373,11 @@ export function DataTable<T>({
 
   const [internalColumnSizing, setInternalColumnSizing] =
     useState<ColumnSizingState>(() =>
-      tableId ? getTablePreference(tableId)?.columnSizing || {} : {},
+      tableId
+        ? sanitizeActionColumnSizing(
+            getTablePreference(tableId)?.columnSizing || {},
+          )
+        : {},
     );
 
   const handleColumnVisibilityChange = (
@@ -399,12 +415,15 @@ export function DataTable<T>({
   const handleColumnSizingChange = (
     updaterOrValue: Updater<ColumnSizingState>,
   ) => {
-    setInternalColumnSizing(updaterOrValue);
+    const newState = sanitizeActionColumnSizing(
+      typeof updaterOrValue === "function"
+        ? updaterOrValue(internalColumnSizing)
+        : updaterOrValue,
+    );
+
+    setInternalColumnSizing(newState);
+
     if (tableId) {
-      const newState =
-        typeof updaterOrValue === "function"
-          ? updaterOrValue(internalColumnSizing)
-          : updaterOrValue;
       setTablePreferences(tableId, {
         columnOrder: internalColumnOrder,
         columnVisibility: internalVisibility,
@@ -536,6 +555,10 @@ export function DataTable<T>({
   );
 
   if (actionsColumn) {
+    const actionColSize = actionsColumn.size ?? 40;
+    const actionColMinSize = actionsColumn.minSize ?? actionColSize;
+    const actionColMaxSize = actionsColumn.maxSize ?? actionColSize;
+
     tableColumns.push({
       id: "__actions",
       header: () => actionsColumn.header ?? "",
@@ -547,16 +570,18 @@ export function DataTable<T>({
             : row.index + 1,
         ),
       enableResizing: false,
-      size: 40,
+      size: actionColSize,
+      minSize: actionColMinSize,
+      maxSize: actionColMaxSize,
       meta: {
         className: cn(
-          "w-[40px] min-w-[40px] max-w-[40px] px-0 text-center",
+          "px-0 text-center",
           variant !== "spreadsheet" &&
             "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
           actionsColumn.className,
         ),
         headerClassName: cn(
-          "w-[40px] min-w-[40px] max-w-[40px] px-0 text-center",
+          "px-0 text-center",
           variant !== "spreadsheet" &&
             "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
           actionsColumn.headerClassName,
@@ -678,6 +703,8 @@ export function DataTable<T>({
                     const meta = header.column.columnDef
                       .meta as DataTableRowMeta;
                     const isFirstCol = index === 0;
+                    const isActionsCol = header.column.id === "__actions";
+                    const actionsWidth = header.column.getSize();
                     return (
                       <TableHead
                         key={header.id}
@@ -698,9 +725,13 @@ export function DataTable<T>({
                           enableColumnResizing && "relative group",
                         )}
                         style={{
-                          width: enableColumnResizing
-                            ? header.getSize()
-                            : undefined,
+                          width: isActionsCol
+                            ? actionsWidth
+                            : enableColumnResizing
+                              ? header.getSize()
+                              : undefined,
+                          minWidth: isActionsCol ? actionsWidth : undefined,
+                          maxWidth: isActionsCol ? actionsWidth : undefined,
                         }}
                       >
                         {header.isPlaceholder ? null : meta.sortable ? (
@@ -926,6 +957,8 @@ export function DataTable<T>({
                           const meta = cell.column.columnDef
                             .meta as DataTableRowMeta;
                           const isFirstCol = index === 0;
+                          const isActionsCol = cell.column.id === "__actions";
+                          const actionsWidth = cell.column.getSize();
                           return (
                             <TableCell
                               key={cell.id}
@@ -946,9 +979,15 @@ export function DataTable<T>({
                                   "px-2 truncate",
                               )}
                               style={{
-                                maxWidth: enableColumnResizing
-                                  ? cell.column.getSize()
+                                width: isActionsCol ? actionsWidth : undefined,
+                                minWidth: isActionsCol
+                                  ? actionsWidth
                                   : undefined,
+                                maxWidth: isActionsCol
+                                  ? actionsWidth
+                                  : enableColumnResizing
+                                    ? cell.column.getSize()
+                                    : undefined,
                               }}
                             >
                               {flexRender(

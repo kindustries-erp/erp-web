@@ -9,10 +9,12 @@ import type { InventoryStockRow } from "@/modules/operational/api/operationalApi
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableText } from "@/shared/components/DataTable/TableText";
 interface UseStockColumnsOptions {
   expandedStockItemIds: Record<string, boolean>;
   onToggleExpand: (row: InventoryStockRow) => void;
   stockItems: InventoryStockRow[];
+  onViewItem: (id: string) => void;
 }
 
 /**
@@ -23,6 +25,7 @@ export function useStockColumns({
   expandedStockItemIds,
   onToggleExpand,
   stockItems,
+  onViewItem,
 }: UseStockColumnsOptions): DataTableColumn<InventoryStockRow>[] {
   const t = useT();
   const store = useOperationalListStore();
@@ -108,10 +111,20 @@ export function useStockColumns({
         className: "align-middle text-left",
         headerClassName: "px-2",
         sortable: false,
-        size: 140,
+        size: 200,
         enableResizing: true,
-        dataIndex: "item_code",
-        valueType: "text",
+        cell: (row) => (
+          <TableText
+            text={row.item_code || ""}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              onViewItem(row.inventory_item_id);
+            }}
+            tooltip={true}
+            enableCopy={true}
+            textClassName="font-medium text-primary"
+          />
+        ),
       },
       {
         key: "item_name",
@@ -407,6 +420,14 @@ export function useStockColumns({
         valueType: "status",
       },
     ],
-    [expandedStockItemIds, onToggleExpand, t, store, tableState, stockItems],
+    [
+      expandedStockItemIds,
+      onToggleExpand,
+      t,
+      store,
+      tableState,
+      stockItems,
+      onViewItem,
+    ],
   );
 }

@@ -36,7 +36,7 @@ import { useUIStore } from "@/core/config/uiStore";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
-import { Button } from "@/shared/components/ui/Button";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
@@ -741,18 +741,15 @@ export function ErpSalesOrdersPage() {
       ),
       size: 200,
       cell: (item) => (
-        <div className="flex flex-col gap-1 w-full pr-1">
-          <div className="flex items-center gap-2 w-full">
-            <Button
-              variant="ghost"
-              onClick={() => void openView(item)}
-              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-            >
-              <span className="truncate">{item.soNo}</span>
-              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-            </Button>
-          </div>
-        </div>
+        <TableText
+          text={item.soNo || "—"}
+          tooltip={item.soNo || false}
+          enableCopy={Boolean(item.soNo)}
+          onDrawerClick={item.soNo ? () => void openView(item) : undefined}
+          drawerIcon={
+            <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0" />
+          }
+        />
       ),
       skeletonClassName: "w-24",
     },

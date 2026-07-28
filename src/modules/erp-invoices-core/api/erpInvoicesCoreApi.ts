@@ -303,6 +303,13 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
+  getLinkedCases: async (invoiceId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/greenway/invoices/${invoiceId}/linked-cases`,
+    );
+    return res.data;
+  },
+
   reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<ErpInvoice>(
       `${BASE}/${id}/reparse-xml`,
