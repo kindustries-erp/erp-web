@@ -1,76 +1,49 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { useTranslation } from "react-i18next";
 import { useGarageStore } from "../store/garageStore";
 import {
-  useGarageCaseById,
-  useGarageCaseLinkedInvoices,
-  useMutateCaseLinkedInvoices,
   useGarageCaseGrossProfit,
   useSyncGarageCaseDetail,
+  useGarageCaseByCode,
 } from "../hooks/useGarage";
-import { GarageCaseLinkedDocuments } from "./GarageCaseLinkedDocuments";
 import { GarageCasePreview } from "./GarageCasePreview";
 
 import { KgaraCaseStatusBadge } from "./KgaraCaseStatusBadge";
 
 interface GarageCaseStandaloneDrawerProps {
   isOpen: boolean;
-  caseId: string | null;
+  caseCode?: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
 export function GarageCaseStandaloneDrawer({
   isOpen,
-  caseId,
+  caseCode,
   onClose,
-  onSuccess,
 }: GarageCaseStandaloneDrawerProps) {
   const { t } = useTranslation("garage");
   const { selectedBranchId } = useGarageStore();
 
-  const {
-    data: selectedCase,
-    isLoading: isLoadingCase,
-    refetch,
-  } = useGarageCaseById(caseId || undefined);
+  const { data: selectedCase, isLoading: isLoadingCase } = useGarageCaseByCode(
+    isOpen && caseCode ? caseCode : undefined,
+  );
 
   const { mutate: syncCaseDetail, isPending: isSyncingDetail } =
     useSyncGarageCaseDetail();
 
   const [drawerMode, setDrawerMode] = useState<"view" | "edit">("view");
-  const [pendingChanges, setPendingChanges] = useState<any[]>([]);
 
-  const { data: linkedInvoices, isLoading: isLoadingLinked } =
-    useGarageCaseLinkedInvoices(caseId || undefined);
-  const { addMutation, removeMutation } = useMutateCaseLinkedInvoices();
-  const { data: grossProfit } = useGarageCaseGrossProfit(
-    selectedBranchId || undefined,
-    selectedCase?.hdPhieuDichVuId,
-  );
-
-  const linkedDocs = useMemo(() => {
-    if (!linkedInvoices) return [];
-    return linkedInvoices.map((inv: any) => ({
-      id: inv.id,
-      type: inv.linkType === "IN" ? "HĐ Đầu vào" : "HĐ Đầu ra",
-      refNo: inv.invoiceNo
-        ? `${inv.invoiceNo} - ${inv.buyerName || inv.sellerName || "---"}`
-        : "Không tìm thấy hóa đơn",
-      refId: inv.invoiceId,
-      detail: inv.note,
-    }));
-  }, [linkedInvoices]);
+  const { data: grossProfit } = useGarageCaseGrossProfit(caseCode || undefined);
 
   // Reset state when caseId changes or drawer opens
   useEffect(() => {
     if (isOpen) {
       setDrawerMode("view");
-      setPendingChanges([]);
     }
-  }, [isOpen, caseId]);
+  }, [isOpen, caseCode]);
 
   return (
     <StandardFormDrawer
@@ -92,36 +65,8 @@ export function GarageCaseStandaloneDrawer({
                 label: "Hủy",
                 variant: "outline" as const,
                 onClick: () => {
-                  setPendingChanges([]);
                   setDrawerMode("view");
                 },
-                disabled: addMutation.isPending || removeMutation.isPending,
-              },
-              {
-                label: "Lưu thay đổi",
-                onClick: async () => {
-                  if (selectedCase?.id) {
-                    for (const change of pendingChanges) {
-                      if (change.action === "ADD") {
-                        await addMutation.mutateAsync({
-                          caseId: selectedCase.id,
-                          invoiceId: change.refId,
-                          linkType: change.linkType,
-                        });
-                      } else if (change.action === "REMOVE") {
-                        await removeMutation.mutateAsync({
-                          caseId: selectedCase.id,
-                          linkedId: change.id,
-                        });
-                      }
-                    }
-                  }
-                  setPendingChanges([]);
-                  setDrawerMode("view");
-                  refetch();
-                  if (onSuccess) onSuccess();
-                },
-                loading: addMutation.isPending || removeMutation.isPending,
               },
             ]
           : [
@@ -152,13 +97,6 @@ export function GarageCaseStandaloneDrawer({
           </div>
         ) : selectedCase ? (
           <div className="space-y-4 pt-2">
-            <GarageCaseLinkedDocuments
-              linkedDocs={linkedDocs}
-              editMode={drawerMode === "edit"}
-              pendingChanges={pendingChanges}
-              setPendingChanges={setPendingChanges}
-              isLoading={isLoadingLinked}
-            />
             {drawerMode === "view" && (
               <GarageCasePreview
                 caseData={selectedCase}

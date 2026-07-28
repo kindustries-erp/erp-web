@@ -4,22 +4,36 @@ import { Button } from "@/shared/components/ui/Button";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { RefreshCw } from "lucide-react";
 import { useGarageStore } from "../store/garageStore";
-import { useSyncGarageCases } from "../hooks/useGarage";
+import {
+  useSyncGarageCases,
+  useSyncGarageGrossProfit,
+} from "../hooks/useGarage";
 import { GarageBranchSelector } from "./GarageBranchSelector";
 
 interface GarageCaseSyncDrawerProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  mode?: "cases" | "gross-profit";
+  title?: string;
+  description?: string;
 }
 
 export function GarageCaseSyncDrawer({
   open,
   onClose,
   onSuccess,
+  mode,
+  title = "Đồng bộ Cases từ Kgara",
+  description = "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) từ hệ thống Kgara về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả về dữ liệu.",
 }: GarageCaseSyncDrawerProps) {
   const { selectedBranchId } = useGarageStore();
-  const { mutateAsync: syncCases, isPending: isSyncing } = useSyncGarageCases();
+  const { mutateAsync: syncCases, isPending: isSyncingCases } =
+    useSyncGarageCases();
+  const { mutateAsync: syncGrossProfit, isPending: isSyncingGrossProfit } =
+    useSyncGarageGrossProfit();
+
+  const isSyncing = isSyncingCases || isSyncingGrossProfit;
 
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
@@ -35,11 +49,16 @@ export function GarageCaseSyncDrawer({
   const handleSync = async () => {
     if (!selectedBranchId) return;
     try {
-      await syncCases({
+      const payload = {
         branchId: selectedBranchId,
         from: dateFrom ? dateFrom : undefined,
         to: dateTo ? dateTo : undefined,
-      });
+      };
+      if (mode === "gross-profit") {
+        await syncGrossProfit(payload);
+      } else {
+        await syncCases(payload);
+      }
       if (onSuccess) {
         onSuccess();
       }
@@ -53,7 +72,7 @@ export function GarageCaseSyncDrawer({
     <DrawerModal
       open={open}
       onClose={onClose}
-      title="Đồng bộ Cases từ Kgara"
+      title={title}
       icon={<RefreshCw className="w-5 h-5" />}
       panelClassName="min-[1024px]:w-[640px]"
       actions={[
@@ -73,11 +92,7 @@ export function GarageCaseSyncDrawer({
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-6">
-            <div className="text-sm text-muted-foreground">
-              Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) từ hệ thống
-              Kgara về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả
-              về dữ liệu.
-            </div>
+            <div className="text-sm text-muted-foreground">{description}</div>
             <div className="flex flex-col gap-4">
               <div className="flex gap-3">
                 <DatePicker
