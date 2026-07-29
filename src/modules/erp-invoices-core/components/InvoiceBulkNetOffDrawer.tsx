@@ -4,7 +4,6 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { type DrawerAction } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import {
   AlertCircle,
@@ -21,7 +20,8 @@ import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { money, formatGMT7 } from "@/shared/utils/format";
 import { VoucherNetoffSelectionModal } from "@/modules/erp-invoices-core/components/VoucherNetoffSelectionModal";
-import { Combobox, type ComboboxOption } from "@/shared/components/Combobox";
+import { type ComboboxOption } from "@/shared/components/Combobox";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 
 const SUGGESTION_FILTER_OPTIONS: ComboboxOption[] = [
   { value: "ALL", label: "Tất cả HĐ" },
@@ -163,8 +163,6 @@ export function InvoiceBulkNetOffDrawer({
     () => invoices.filter((inv) => selectedInvoiceIds.includes(inv.id)),
     [invoices, selectedInvoiceIds],
   );
-  const [invoiceSearch, setInvoiceSearch] = useState("");
-  const [suggestionFilter, setSuggestionFilter] = useState("ALL"); // ALL, HAS_SUGGESTION, PERFECT_HIGH, NOTICE, NO_SUGGESTION
 
   // Cấu hình kỳ
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -183,6 +181,29 @@ export function InvoiceBulkNetOffDrawer({
     >
   >({});
   const [isDirty, setIsDirty] = useState(false);
+  const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
+
+  // Existing net-offs map fetched from DB
+  const [existingNetOffsMap, setExistingNetOffsMap] = useState<
+    Record<string, any[]>
+  >({});
+
+  // Deleted existing net-offs in this session (invoiceId -> Set of bankTransactionIds)
+  const [deletedNetOffs, setDeletedNetOffs] = useState<
+    Record<string, Set<string>>
+  >({});
+
+  // Updated existing net-offs in this session (invoiceId -> bankTransactionId -> newAmount)
+  const [updatedNetOffs, setUpdatedNetOffs] = useState<
+    Record<string, Record<string, number>>
+  >({});
+  const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
+    {},
+  );
+  const [columnSort, setColumnSort] = useState<{
+    key: string;
+    direction: "asc" | "desc" | "none";
+  }>({ key: "", direction: "none" });
 
   // State for BankTransactionDetailDrawer
   const [detailTxnId, setDetailTxnId] = useState<string | null>(null);
@@ -209,11 +230,37 @@ export function InvoiceBulkNetOffDrawer({
     }
   }, [open, selectedInvoiceIds]); // Notice we don't depend on selectedInvoices to avoid loop
 
+  // Fetch existing net-offs for selected invoices
+  useEffect(() => {
+    if (!open || !selectedInvoiceIds.length) return;
+
+    let isMounted = true;
+    erpInvoicesCoreApi
+      .getBulkNetOffs(selectedInvoiceIds)
+      .then((netOffs) => {
+        if (!isMounted) return;
+        const map: Record<string, any[]> = {};
+        netOffs.forEach((no) => {
+          if (!map[no.invoiceId]) map[no.invoiceId] = [];
+          map[no.invoiceId].push(no);
+        });
+        setExistingNetOffsMap(map);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch bulk net-offs", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, selectedInvoiceIds]);
+
   // Reset when drawer opens/closes or dates change
   useEffect(() => {
     if (!open) {
       setAllTxns([]);
       setNetOffMap({});
+      setExistingNetOffsMap({});
       setActiveInvoiceId(null);
       setIsDirty(false);
       return;
@@ -283,17 +330,54 @@ export function InvoiceBulkNetOffDrawer({
     }
   }, [open, dateFrom, dateTo]);
 
-  const getRemainingAmount = (inv: ErpInvoice) => {
+  const getAmounts = (inv: ErpInvoice) => {
     const total = Number(inv.totalAmount) || 0;
-    const currentNetOff = (inv.voucherNetOffs || []).reduce(
-      (sum, v) => sum + (Number(v.netOffAmount) || 0),
-      0,
-    );
+
+    // Ưu tiên dùng existingNetOffsMap nếu đã tải xong, fallback về inv.netOffAmount
+    const existing = existingNetOffsMap[inv.id];
+    let currentNetOff: number;
+    if (existing) {
+      currentNetOff = existing.reduce((sum, v) => {
+        const txnId = v.bankTransactionId;
+        if (deletedNetOffs[inv.id]?.has(txnId)) return sum; // Ignore deleted
+        const updatedAmount = updatedNetOffs[inv.id]?.[txnId];
+        if (updatedAmount !== undefined) return sum + updatedAmount; // Use updated amount
+        return sum + (Number(v.netOffAmount || v.net_off_amount) || 0); // Use original
+      }, 0);
+    } else {
+      currentNetOff = Number((inv as any).netOffAmount) || 0;
+    }
+
     const pendingNetOff = Object.values(netOffMap[inv.id] || {}).reduce(
       (sum, val) => sum + (val.amount || 0),
       0,
     );
-    return Math.max(0, total - currentNetOff - pendingNetOff);
+    return {
+      total,
+      nettedOff: currentNetOff + pendingNetOff,
+      remaining: total - currentNetOff - pendingNetOff,
+    };
+  };
+
+  // Tính tổng pending đã phân bổ cho mỗi txn trong session
+  const pendingTxnUsage = useMemo(() => {
+    const usage: Record<string, number> = {};
+    for (const invSelections of Object.values(netOffMap)) {
+      for (const [txnId, data] of Object.entries(invSelections)) {
+        usage[txnId] = (usage[txnId] || 0) + (data.amount || 0);
+      }
+    }
+    return usage;
+  }, [netOffMap]);
+
+  const getTxnEffectiveRemaining = (txn: BankTxn): number => {
+    const baseAmt = Math.max(
+      parseFloat(txn.creditAmount as any) || 0,
+      parseFloat(txn.debitAmount as any) || 0,
+    );
+    const dbNetOff = parseFloat((txn as any).netOffAmount) || 0;
+    const pendingUsed = pendingTxnUsage[txn.id] || 0;
+    return Math.max(0, baseAmt - dbNetOff - pendingUsed);
   };
 
   // Thứ tự ưu tiên badge: PERFECT > HIGH > LIKELY > POSSIBLE > NOTICE_STRONG > NOTICE
@@ -311,9 +395,15 @@ export function InvoiceBulkNetOffDrawer({
   const suggestionsMap = useMemo(() => {
     const map: Record<string, { txn: BankTxn; score: MatchResult }> = {};
     for (const inv of selectedInvoices) {
+      const amounts = getAmounts(inv);
+      if (amounts.remaining <= 0) continue; // HĐ đã cấn đủ
+
       let bestTxn: BankTxn | null = null;
       let bestScore: MatchResult | null = null;
       for (const txn of allTxns) {
+        const txnRemaining = getTxnEffectiveRemaining(txn);
+        if (txnRemaining <= 0) continue; // txn hết tiền (DB + pending)
+
         const score = scoreTransaction(txn, inv, direction);
         if (score.badge === "NONE") continue;
         if (
@@ -331,40 +421,131 @@ export function InvoiceBulkNetOffDrawer({
       }
     }
     return map;
-  }, [allTxns, selectedInvoices, direction]);
+  }, [allTxns, selectedInvoices, direction, pendingTxnUsage]);
 
   const displayedInvoices = useMemo(() => {
     let filtered = selectedInvoices;
 
-    // 1. Text Search
-    if (invoiceSearch.trim()) {
-      const lower = invoiceSearch.toLowerCase();
+    // 3. Column Search
+    if (columnSearch.invoiceNo) {
+      const q = columnSearch.invoiceNo.toLowerCase();
       filtered = filtered.filter(
         (inv) =>
-          inv.invoiceNo?.toLowerCase().includes(lower) ||
-          inv.buyerName?.toLowerCase().includes(lower) ||
-          inv.sellerName?.toLowerCase().includes(lower),
+          inv.invoiceNo?.toLowerCase().includes(q) ||
+          inv.serialNo?.toLowerCase().includes(q),
       );
     }
+    if (columnSearch.partner) {
+      const q = columnSearch.partner.toLowerCase();
+      filtered = filtered.filter(
+        (inv) =>
+          inv.sellerName?.toLowerCase().includes(q) ||
+          inv.buyerName?.toLowerCase().includes(q) ||
+          inv.sellerTaxCode?.toLowerCase().includes(q) ||
+          inv.buyerTaxCode?.toLowerCase().includes(q),
+      );
+    }
+    if (columnSearch.amount) {
+      const q = columnSearch.amount;
+      filtered = filtered.filter((inv) => String(inv.totalAmount).includes(q));
+    }
 
-    // 2. Suggestion Filter
-    if (suggestionFilter !== "ALL") {
+    // 4. Column Sort
+    if (columnSort.key && columnSort.direction !== "none") {
+      filtered = [...filtered].sort((a, b) => {
+        let valA: any = "";
+        let valB: any = "";
+        if (columnSort.key === "invoiceNo") {
+          valA = a.invoiceNo || "";
+          valB = b.invoiceNo || "";
+        } else if (columnSort.key === "partner") {
+          valA = (direction === "IN" ? a.sellerName : a.buyerName) || "";
+          valB = (direction === "IN" ? b.sellerName : b.buyerName) || "";
+        } else if (columnSort.key === "amount") {
+          valA = Number(a.totalAmount) || 0;
+          valB = Number(b.totalAmount) || 0;
+        }
+
+        if (valA < valB) return columnSort.direction === "asc" ? -1 : 1;
+        if (valA > valB) return columnSort.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // 5. Column Checkbox Filters
+    if (columnFilters.invoiceNo?.length > 0) {
+      filtered = filtered.filter((inv) =>
+        columnFilters.invoiceNo.includes(inv.invoiceNo || ""),
+      );
+    }
+    if (columnFilters.partner?.length > 0) {
+      filtered = filtered.filter((inv) => {
+        const text = direction === "IN" ? inv.sellerName : inv.buyerName;
+        return columnFilters.partner.includes(text || "");
+      });
+    }
+    if (columnFilters.amount?.length > 0) {
+      filtered = filtered.filter((inv) => {
+        return columnFilters.amount.some((val) => {
+          if (val === "NETTED") return getAmounts(inv).remaining <= 0;
+          if (val === "UNNETTED") return getAmounts(inv).remaining > 0;
+          return String(inv.totalAmount) === val;
+        });
+      });
+    }
+    if (columnFilters.action?.length > 0) {
       filtered = filtered.filter((inv) => {
         const badge = suggestionsMap[inv.id]?.score?.badge;
-        if (suggestionFilter === "HAS_SUGGESTION")
-          return badge && badge !== "NONE";
-        if (suggestionFilter === "PERFECT_HIGH")
-          return badge === "PERFECT" || badge === "HIGH";
-        if (suggestionFilter === "NOTICE")
-          return badge === "NOTICE_STRONG" || badge === "NOTICE";
-        if (suggestionFilter === "NO_SUGGESTION")
-          return !badge || badge === "NONE";
-        return true;
+        return columnFilters.action.some((val) => {
+          if (val === "HAS_SUGGESTION") return badge && badge !== "NONE";
+          if (val === "PERFECT_HIGH")
+            return badge === "PERFECT" || badge === "HIGH";
+          if (val === "NOTICE")
+            return badge === "NOTICE_STRONG" || badge === "NOTICE";
+          if (val === "NO_SUGGESTION") return !badge || badge === "NONE";
+          return false;
+        });
       });
     }
 
     return filtered;
-  }, [selectedInvoices, invoiceSearch, suggestionFilter, suggestionsMap]);
+  }, [
+    selectedInvoices,
+    suggestionsMap,
+    columnSearch,
+    columnSort,
+    columnFilters,
+    direction,
+  ]);
+
+  const invoiceNoOptions = useMemo(() => {
+    const set = new Set<string>();
+    selectedInvoices.forEach((inv) => {
+      if (inv.invoiceNo) set.add(inv.invoiceNo);
+    });
+    return Array.from(set).map((v) => ({ label: v, value: v }));
+  }, [selectedInvoices]);
+
+  const partnerOptions = useMemo(() => {
+    const set = new Set<string>();
+    selectedInvoices.forEach((inv) => {
+      const text = direction === "IN" ? inv.sellerName : inv.buyerName;
+      if (text) set.add(text);
+    });
+    return Array.from(set).map((v) => ({ label: v, value: v }));
+  }, [selectedInvoices, direction]);
+
+  const amountOptions = useMemo(() => {
+    const set = new Set<string>();
+    selectedInvoices.forEach((inv) => {
+      if (inv.totalAmount) set.add(String(inv.totalAmount));
+    });
+    return [
+      { label: "Đã cấn đủ", value: "NETTED" },
+      { label: "Chưa cấn đủ", value: "UNNETTED" },
+      ...Array.from(set).map((v) => ({ label: money(Number(v)), value: v })),
+    ];
+  }, [selectedInvoices]);
 
   const handleQuickAccept = (invId: string, txn: BankTxn, amt: number) => {
     setIsDirty(true);
@@ -373,9 +554,8 @@ export function InvoiceBulkNetOffDrawer({
       const credit = parseFloat(txn.creditAmount as any) || 0;
       const debit = parseFloat(txn.debitAmount as any) || 0;
       const baseAmt = credit > 0 ? credit : debit;
-      const remaining = txn.remainingAmount
-        ? parseFloat(txn.remainingAmount as any)
-        : baseAmt;
+      const dbNetOff = parseFloat((txn as any).netOffAmount) || 0;
+      const remaining = baseAmt - dbNetOff;
       invMap[txn.id] = { amount: amt, maxAmount: remaining, txn };
       return { ...prev, [invId]: invMap };
     });
@@ -385,41 +565,108 @@ export function InvoiceBulkNetOffDrawer({
     () => [
       {
         key: "invoiceNo",
-        header: "Thông tin HĐ",
-        size: 150,
-        cell: (inv) => (
-          <div>
-            <div className="font-medium text-xs text-slate-800">
-              {inv.invoiceNo}
-            </div>
-            <div className="text-[10px] text-slate-500">
-              {inv.serialNo || "---"}
-            </div>
-            <div className="text-[10px] text-slate-500">
-              {inv.invoiceDate?.substring(0, 10)}
-            </div>
-          </div>
+        header: (
+          <TableColumnHeaderFilter
+            title="Thông tin HĐ"
+            sortState={
+              columnSort.key === "invoiceNo" ? columnSort.direction : "none"
+            }
+            onSortChange={(dir) =>
+              setColumnSort({ key: "invoiceNo", direction: dir })
+            }
+            searchValue={columnSearch.invoiceNo || ""}
+            onSearchChange={(val) =>
+              setColumnSearch((prev) => ({ ...prev, invoiceNo: val }))
+            }
+            filterOptions={invoiceNoOptions}
+            selectedFilters={columnFilters.invoiceNo || []}
+            onFilterChange={(vals) =>
+              setColumnFilters((prev) => ({ ...prev, invoiceNo: vals }))
+            }
+            hideFilter={false}
+            align="center"
+          />
         ),
+        headerClassName: "text-center",
+        size: 150,
+        cell: (inv) => {
+          const suggestion = suggestionsMap[inv.id];
+          const hasMatchedInvoiceNo =
+            suggestion && suggestion.score.invoiceNoMatch;
+          return (
+            <div className={getAmounts(inv).remaining <= 0 ? "opacity-60" : ""}>
+              <div className="font-medium text-xs text-slate-800">
+                {hasMatchedInvoiceNo
+                  ? highlightText(inv.invoiceNo, inv.invoiceNo)
+                  : inv.invoiceNo}
+              </div>
+              <div className="text-[10px] text-slate-500">
+                {inv.serialNo || "---"}
+              </div>
+              <div className="text-[10px] text-slate-500">
+                {inv.invoiceDate?.substring(0, 10)}
+              </div>
+            </div>
+          );
+        },
       },
       {
         key: "partner",
-        header: "Đối tác",
-        size: 200,
+        header: (
+          <TableColumnHeaderFilter
+            title="Đối tác"
+            sortState={
+              columnSort.key === "partner" ? columnSort.direction : "none"
+            }
+            onSortChange={(dir) =>
+              setColumnSort({ key: "partner", direction: dir })
+            }
+            searchValue={columnSearch.partner || ""}
+            onSearchChange={(val) =>
+              setColumnSearch((prev) => ({ ...prev, partner: val }))
+            }
+            filterOptions={partnerOptions}
+            selectedFilters={columnFilters.partner || []}
+            onFilterChange={(vals) =>
+              setColumnFilters((prev) => ({ ...prev, partner: vals }))
+            }
+            hideFilter={false}
+            align="center"
+          />
+        ),
+        headerClassName: "text-center",
+        size: 250,
         cell: (inv) => {
           const text = direction === "IN" ? inv.sellerName : inv.buyerName;
           const taxCode =
             direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
+          const suggestion = suggestionsMap[inv.id];
+          const hasMatchedPartner =
+            suggestion && suggestion.score.correspondentMatch;
+          const matchTokens =
+            suggestion && suggestion.txn.description
+              ? suggestion.txn.description.match(/[a-zA-Z0-9_]{4,}/g) || []
+              : [];
           return (
-            <div>
+            <div className={getAmounts(inv).remaining <= 0 ? "opacity-60" : ""}>
               <div
-                className="text-xs text-slate-700 whitespace-normal line-clamp-2"
+                className="text-xs text-slate-700 whitespace-normal break-words"
                 title={text || ""}
               >
-                {text || "---"}
+                {hasMatchedPartner && text
+                  ? highlightText(text, extractKeywords(text))
+                  : text || "---"}
               </div>
               {taxCode && (
                 <div className="text-[10px] text-slate-500 font-mono mt-1">
                   MST: {taxCode}
+                </div>
+              )}
+              {inv.description && (
+                <div className="text-[10px] text-slate-400 italic mt-0.5 whitespace-normal break-words">
+                  {matchTokens.length > 0
+                    ? highlightText(inv.description, matchTokens)
+                    : inv.description}
                 </div>
               )}
             </div>
@@ -428,20 +675,51 @@ export function InvoiceBulkNetOffDrawer({
       },
       {
         key: "amount",
-        header: "Giá trị",
+        header: (
+          <TableColumnHeaderFilter
+            title="Giá trị"
+            sortState={
+              columnSort.key === "amount" ? columnSort.direction : "none"
+            }
+            onSortChange={(dir) =>
+              setColumnSort({ key: "amount", direction: dir })
+            }
+            searchValue={columnSearch.amount || ""}
+            onSearchChange={(val) =>
+              setColumnSearch((prev) => ({ ...prev, amount: val }))
+            }
+            filterOptions={amountOptions}
+            selectedFilters={columnFilters.amount || []}
+            onFilterChange={(vals) =>
+              setColumnFilters((prev) => ({ ...prev, amount: vals }))
+            }
+            hideFilter={false}
+            align="center"
+          />
+        ),
+        headerClassName: "text-center",
         size: 150,
         cell: (inv) => {
-          const remaining = getRemainingAmount(inv);
-          const nettedOff = Number(inv.totalAmount) - remaining;
+          const { remaining, nettedOff } = getAmounts(inv);
+          const suggestion = suggestionsMap[inv.id];
+          const hasMatchedAmount = suggestion && suggestion.score.amountMatch;
           return (
-            <div className="text-right">
+            <div className={`text-right ${remaining <= 0 ? "opacity-60" : ""}`}>
               <div className="font-medium text-xs text-slate-800">
-                {money(Number(inv.totalAmount))}
+                {hasMatchedAmount ? (
+                  <mark className="bg-amber-200 text-amber-900 rounded-sm px-0.5 not-italic">
+                    {money(Number(inv.totalAmount))}
+                  </mark>
+                ) : (
+                  money(Number(inv.totalAmount))
+                )}
               </div>
               <div className="text-[10px] text-slate-500 mt-0.5">
                 Đã cấn: {money(nettedOff)}
               </div>
-              <div className="text-[10px] text-emerald-600 mt-0.5">
+              <div
+                className={`text-[10px] mt-0.5 ${remaining < 0 ? "text-rose-600 font-medium" : "text-emerald-600"}`}
+              >
                 Còn lại: {money(remaining)}
               </div>
             </div>
@@ -449,155 +727,140 @@ export function InvoiceBulkNetOffDrawer({
         },
       },
       {
-        key: "suggestion",
-        header: "Gợi ý thông minh",
-        size: 250,
+        key: "action",
+        header: (
+          <TableColumnHeaderFilter
+            title="Cấn trừ / Gợi ý"
+            sortState="none"
+            onSortChange={() => {}}
+            searchValue=""
+            onSearchChange={() => {}}
+            filterOptions={SUGGESTION_FILTER_OPTIONS.filter(
+              (o) => o.value !== "ALL",
+            )}
+            selectedFilters={columnFilters.action || []}
+            onFilterChange={(vals) =>
+              setColumnFilters((prev) => ({ ...prev, action: vals }))
+            }
+            hideFilter={false}
+            align="center"
+          />
+        ),
+        headerClassName: "text-center",
+        size: 350,
         cell: (inv) => {
+          const currentSelections = Object.entries(netOffMap[inv.id] || {});
           const suggestion = suggestionsMap[inv.id];
-          const hasSelection = Object.keys(netOffMap[inv.id] || {}).length > 0;
-          if (hasSelection) {
+          const invDone = getAmounts(inv).remaining <= 0;
+
+          const existingNetOffs = existingNetOffsMap[inv.id] || [];
+
+          // HĐ đã cấn đủ và không có thay đổi trong session này
+          if (
+            invDone &&
+            currentSelections.length === 0 &&
+            existingNetOffs.length === 0
+          ) {
             return (
-              <div className="text-xs text-slate-500 italic">
-                Đã chọn giao dịch
+              <div className="flex items-center justify-center p-2 rounded text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200">
+                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                Đã cấn đủ
               </div>
             );
           }
-          if (!suggestion) {
-            return <div className="text-xs text-slate-400">Đang quét...</div>;
-          }
 
-          const { txn, score } = suggestion;
+          // Đã có selections hoặc existing net-offs
+          if (currentSelections.length > 0 || existingNetOffs.length > 0) {
+            return (
+              <div className="flex flex-col gap-2">
+                {existingNetOffs.map((netOff, idx) => {
+                  const txnId = netOff.bankTransactionId;
+                  if (deletedNetOffs[inv.id]?.has(txnId)) return null;
 
-          // Badge config — 6 mức, rõ nghĩa ngay khi nhìn
-          const BADGE_CONFIG: Record<
-            Exclude<MatchResult["badge"], "NONE">,
-            {
-              label: string;
-              badgeClasses: string;
-              glowClasses: string;
-              dotClasses: string;
-              noAction?: boolean;
-            }
-          > = {
-            PERFECT: {
-              label: "Tiền + Số HĐ + Đối ứng",
-              badgeClasses:
-                "text-emerald-800 bg-emerald-100 border-emerald-300",
-              glowClasses: "bg-emerald-500",
-              dotClasses: "bg-emerald-600",
-            },
-            HIGH: {
-              label: "Tiền + Số HĐ",
-              badgeClasses: "text-emerald-700 bg-emerald-50 border-emerald-200",
-              glowClasses: "bg-emerald-400",
-              dotClasses: "bg-emerald-500",
-            },
-            LIKELY: {
-              label: "Tiền + Đối ứng",
-              badgeClasses: "text-blue-700 bg-blue-50 border-blue-200",
-              glowClasses: "bg-blue-400",
-              dotClasses: "bg-blue-500",
-            },
-            POSSIBLE: {
-              label: "Chỉ khớp tiền",
-              badgeClasses: "text-amber-700 bg-amber-50 border-amber-200",
-              glowClasses: "bg-amber-400",
-              dotClasses: "bg-amber-500",
-            },
-            NOTICE_STRONG: {
-              label: "Khớp Số HĐ + Đối ứng (khác tiền)",
-              badgeClasses: "text-orange-700 bg-orange-100 border-orange-300",
-              glowClasses: "bg-orange-500",
-              dotClasses: "bg-orange-600",
-              noAction: true,
-            },
-            NOTICE: {
-              label: "Khớp Số HĐ (khác tiền)",
-              badgeClasses: "text-orange-600 bg-orange-50 border-orange-200",
-              glowClasses: "bg-orange-400",
-              dotClasses: "bg-orange-500",
-              noAction: true,
-            },
-          };
+                  const updatedAmount = updatedNetOffs[inv.id]?.[txnId];
+                  const originalAmount =
+                    Number(netOff.netOffAmount || netOff.net_off_amount) || 0;
+                  const currentAmount =
+                    updatedAmount !== undefined
+                      ? updatedAmount
+                      : originalAmount;
 
-          const cfg = score.badge !== "NONE" ? BADGE_CONFIG[score.badge] : null;
-          if (!cfg) return null;
+                  // Calculate max value for this existing net off
+                  const remaining = getAmounts(inv).remaining;
+                  const maxAllowed = currentAmount + remaining;
 
-          const txnAmt =
-            Number(direction === "IN" ? txn.debitAmount : txn.creditAmount) ||
-            0;
-          const remaining = getRemainingAmount(inv);
-          const amtToApply = Math.min(remaining, txnAmt);
-
-          return (
-            <TransactionCard
-              txn={txn}
-              amount={txnAmt}
-              isSuggestion={true}
-              suggestionProps={{
-                badgeLabel: cfg.label,
-                badgeClasses: cfg.badgeClasses,
-                glowClasses: cfg.glowClasses,
-                dotClasses: cfg.dotClasses,
-                // NOTICE group: chỉ hiện badge, không có nút Nhận gợi ý
-                onAccept: cfg.noAction
-                  ? undefined
-                  : () => handleQuickAccept(inv.id, txn, amtToApply),
-              }}
-              onViewDetail={(id) => setDetailTxnId(id)}
-            />
-          );
-        },
-      },
-      {
-        key: "action",
-        header: "Giao dịch cấn trừ",
-        size: 250,
-        cell: (inv) => {
-          const currentSelections = Object.entries(netOffMap[inv.id] || {});
-          return (
-            <div className="flex flex-col gap-2">
-              {currentSelections.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                  {currentSelections.map(([txnId, data]) => (
+                  return (
                     <TransactionCard
-                      key={txnId}
-                      txn={data.txn}
-                      amount={
-                        data.txn
-                          ? Number(
-                              direction === "IN"
-                                ? data.txn.debitAmount
-                                : data.txn.creditAmount,
-                            ) || 0
-                          : data.amount
-                      }
+                      key={`existing-${netOff.id || idx}`}
+                      txn={netOff.bankTransaction}
+                      amount={currentAmount}
                       isSuggestion={false}
                       netOffProps={{
-                        value: data.amount,
-                        maxValue: data.maxAmount,
+                        value: currentAmount,
+                        maxValue: maxAllowed,
                         onChange: (val) => {
-                          setNetOffMap((prev) => {
-                            const newMap = { ...prev };
-                            const invMap = { ...(newMap[inv.id] || {}) };
-                            invMap[txnId] = { ...data, amount: val };
-                            newMap[inv.id] = invMap;
-                            return newMap;
-                          });
+                          setIsDirty(true);
+                          setUpdatedNetOffs((prev) => ({
+                            ...prev,
+                            [inv.id]: {
+                              ...(prev[inv.id] || {}),
+                              [txnId]: val,
+                            },
+                          }));
                         },
                         onRemove: () => {
-                          setNetOffMap((prev) => {
-                            const newMap = { ...prev };
-                            const invMap = { ...newMap[inv.id] };
-                            delete invMap[txnId];
-                            newMap[inv.id] = invMap;
-                            return newMap;
+                          setIsDirty(true);
+                          setDeletedNetOffs((prev) => {
+                            const newSet = new Set(prev[inv.id] || []);
+                            newSet.add(txnId);
+                            return { ...prev, [inv.id]: newSet };
                           });
                         },
                       }}
                       onViewDetail={(id) => setDetailTxnId(id)}
                     />
-                  ))}
+                  );
+                })}
+                {currentSelections.map(([txnId, data]) => (
+                  <TransactionCard
+                    key={txnId}
+                    txn={data.txn}
+                    amount={
+                      data.txn
+                        ? Number(
+                            direction === "IN"
+                              ? data.txn.debitAmount
+                              : data.txn.creditAmount,
+                          ) || 0
+                        : data.amount
+                    }
+                    isSuggestion={false}
+                    netOffProps={{
+                      value: data.amount,
+                      maxValue: data.maxAmount,
+                      onChange: (val) => {
+                        setNetOffMap((prev) => {
+                          const newMap = { ...prev };
+                          const invMap = { ...(newMap[inv.id] || {}) };
+                          invMap[txnId] = { ...data, amount: val };
+                          newMap[inv.id] = invMap;
+                          return newMap;
+                        });
+                      },
+                      onRemove: () => {
+                        setNetOffMap((prev) => {
+                          const newMap = { ...prev };
+                          const invMap = { ...newMap[inv.id] };
+                          delete invMap[txnId];
+                          newMap[inv.id] = invMap;
+                          return newMap;
+                        });
+                      },
+                    }}
+                    onViewDetail={(id) => setDetailTxnId(id)}
+                  />
+                ))}
+                {!invDone && (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -606,38 +869,173 @@ export function InvoiceBulkNetOffDrawer({
                   >
                     Nhấn để chọn thêm giao dịch...
                   </Button>
-                </div>
-              ) : (
-                <div
-                  className="flex items-center justify-center p-2 border border-dashed rounded text-xs text-slate-500 cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                )}
+              </div>
+            );
+          }
+
+          // Có gợi ý
+          if (suggestion) {
+            const { txn, score } = suggestion;
+
+            const BADGE_CONFIG: Record<
+              Exclude<MatchResult["badge"], "NONE">,
+              {
+                label: string;
+                badgeClasses: string;
+                glowClasses: string;
+                dotClasses: string;
+              }
+            > = {
+              PERFECT: {
+                label: "Tiền + Số HĐ + Đối ứng",
+                badgeClasses:
+                  "text-emerald-800 bg-emerald-100 border-emerald-300",
+                glowClasses: "bg-emerald-500",
+                dotClasses: "bg-emerald-600",
+              },
+              HIGH: {
+                label: "Tiền + Số HĐ",
+                badgeClasses:
+                  "text-emerald-700 bg-emerald-50 border-emerald-200",
+                glowClasses: "bg-emerald-400",
+                dotClasses: "bg-emerald-500",
+              },
+              LIKELY: {
+                label: "Tiền + Đối ứng",
+                badgeClasses: "text-blue-700 bg-blue-50 border-blue-200",
+                glowClasses: "bg-blue-400",
+                dotClasses: "bg-blue-500",
+              },
+              POSSIBLE: {
+                label: "Chỉ khớp tiền",
+                badgeClasses: "text-amber-700 bg-amber-50 border-amber-200",
+                glowClasses: "bg-amber-400",
+                dotClasses: "bg-amber-500",
+              },
+              NOTICE_STRONG: {
+                label: "Khớp Số HĐ + Đối ứng (khác tiền)",
+                badgeClasses: "text-orange-700 bg-orange-100 border-orange-300",
+                glowClasses: "bg-orange-500",
+                dotClasses: "bg-orange-600",
+              },
+              NOTICE: {
+                label: "Khớp Số HĐ (khác tiền)",
+                badgeClasses: "text-orange-600 bg-orange-50 border-orange-200",
+                glowClasses: "bg-orange-400",
+                dotClasses: "bg-orange-500",
+              },
+            };
+
+            const cfg =
+              score.badge !== "NONE" ? BADGE_CONFIG[score.badge] : null;
+            if (!cfg) return null;
+
+            const txnAmt =
+              Number(direction === "IN" ? txn.debitAmount : txn.creditAmount) ||
+              0;
+            const txnEffectiveRemaining = getTxnEffectiveRemaining(txn);
+            const remaining = getAmounts(inv).remaining;
+            const amtToApply = Math.min(remaining, txnEffectiveRemaining);
+
+            const partnerName =
+              direction === "IN" ? inv.sellerName : inv.buyerName;
+
+            return (
+              <div className="flex flex-col gap-2">
+                <TransactionCard
+                  txn={txn}
+                  amount={txnAmt}
+                  isSuggestion={true}
+                  matchInfo={{
+                    invoiceNo: inv.invoiceNo,
+                    keywords: extractKeywords(partnerName),
+                  }}
+                  suggestionProps={{
+                    badgeLabel: cfg.label,
+                    badgeClasses: cfg.badgeClasses,
+                    glowClasses: cfg.glowClasses,
+                    dotClasses: cfg.dotClasses,
+                    onAccept: () => handleQuickAccept(inv.id, txn, amtToApply),
+                  }}
+                  onViewDetail={(id) => setDetailTxnId(id)}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 text-[10px] w-full text-slate-500 hover:text-primary hover:bg-primary/5 transition-colors"
                   onClick={() => setActiveInvoiceId(inv.id)}
                 >
                   <Search className="w-3 h-3 mr-1.5" />
-                  Nhấn để chọn giao dịch...
-                </div>
-              )}
+                  Bỏ qua & Chọn thủ công...
+                </Button>
+              </div>
+            );
+          }
+
+          // Không có gợi ý -> fallback
+          return (
+            <div
+              className="flex items-center justify-center p-2 border border-dashed rounded text-xs text-slate-500 cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition-colors"
+              onClick={() => setActiveInvoiceId(inv.id)}
+            >
+              <Search className="w-3 h-3 mr-1.5" />
+              Nhấn để chọn giao dịch...
             </div>
           );
         },
       },
     ],
-    [direction, suggestionsMap, netOffMap, getRemainingAmount],
+    [direction, suggestionsMap, netOffMap, getAmounts],
   );
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      const promises = Object.entries(netOffMap).map(([invId, txns]) => {
-        const payload = Object.entries(txns).map(
-          ([bankTransactionId, data]) => ({
-            bankTransactionId,
-            netOffAmount: data.amount,
-          }),
-        );
-        if (payload.length > 0) {
-          return erpInvoicesCoreApi.linkVouchers(invId, payload);
+      const promises: Promise<any>[] = [];
+
+      // 1. Process deletions
+      for (const [invId, txnIds] of Object.entries(deletedNetOffs)) {
+        for (const txnId of txnIds) {
+          promises.push(erpInvoicesCoreApi.removeVoucherLink(invId, txnId));
         }
-        return Promise.resolve();
-      });
+      }
+
+      // 2. Process new and updated net-offs
+      // Combine netOffMap (new) and updatedNetOffs (existing but edited)
+      const allUpserts: Record<
+        string,
+        { bankTransactionId: string; netOffAmount: number }[]
+      > = {};
+
+      for (const [invId, txns] of Object.entries(netOffMap)) {
+        if (!allUpserts[invId]) allUpserts[invId] = [];
+        for (const [txnId, data] of Object.entries(txns)) {
+          allUpserts[invId].push({
+            bankTransactionId: txnId,
+            netOffAmount: data.amount,
+          });
+        }
+      }
+
+      for (const [invId, txns] of Object.entries(updatedNetOffs)) {
+        if (!allUpserts[invId]) allUpserts[invId] = [];
+        for (const [txnId, amount] of Object.entries(txns)) {
+          // If it's not already in deletedNetOffs, we upsert it
+          if (!deletedNetOffs[invId]?.has(txnId)) {
+            allUpserts[invId].push({
+              bankTransactionId: txnId,
+              netOffAmount: amount,
+            });
+          }
+        }
+      }
+
+      for (const [invId, payload] of Object.entries(allUpserts)) {
+        if (payload.length > 0) {
+          promises.push(erpInvoicesCoreApi.linkVouchers(invId, payload));
+        }
+      }
+
       await Promise.all(promises);
     },
     onSuccess: () => {
@@ -652,13 +1050,92 @@ export function InvoiceBulkNetOffDrawer({
     },
   });
 
+  const validateNetOffMap = (): string | null => {
+    // 1. Check invoice-side: session total <= invoice remaining
+    for (const [invId, txns] of Object.entries(netOffMap)) {
+      const invoice = selectedInvoices.find((i) => i.id === invId);
+      if (!invoice) continue;
+
+      const invoiceTotal = Number(invoice.totalAmount) || 0;
+
+      const existing = existingNetOffsMap[invId];
+      let alreadyNetOff: number;
+      if (existing) {
+        alreadyNetOff = existing.reduce(
+          (sum, v) => sum + (Number(v.netOffAmount || v.net_off_amount) || 0),
+          0,
+        );
+      } else {
+        alreadyNetOff = Number((invoice as any).netOffAmount) || 0;
+      }
+
+      const invoiceRemaining = invoiceTotal - alreadyNetOff;
+
+      const sessionTotal = Object.values(txns).reduce(
+        (sum, data) => sum + (data.amount || 0),
+        0,
+      );
+
+      if (sessionTotal > invoiceRemaining) {
+        return `Hóa đơn ${invoice.invoiceNo || invId}: tổng cấn trừ (${money(sessionTotal)}) vượt quá giá trị còn lại (${money(invoiceRemaining)}).`;
+      }
+    }
+
+    // 2. Check txn-side: cross-invoice total <= txn remaining
+    const txnTotalUsage: Record<
+      string,
+      { total: number; txnRemaining: number; invoiceNos: string[] }
+    > = {};
+
+    for (const [invId, txns] of Object.entries(netOffMap)) {
+      const invoice = selectedInvoices.find((i) => i.id === invId);
+      for (const [txnId, data] of Object.entries(txns)) {
+        if (!txnTotalUsage[txnId]) {
+          const txn = allTxns.find((t) => t.id === txnId) || data.txn;
+          let txnRemaining = Infinity;
+          if (txn) {
+            const baseAmt = Math.max(
+              parseFloat(txn.creditAmount as any) || 0,
+              parseFloat(txn.debitAmount as any) || 0,
+            );
+            const dbNetOff = parseFloat((txn as any).netOffAmount) || 0;
+            txnRemaining = baseAmt - dbNetOff;
+          }
+          txnTotalUsage[txnId] = { total: 0, txnRemaining, invoiceNos: [] };
+        }
+        txnTotalUsage[txnId].total += data.amount || 0;
+        if (invoice?.invoiceNo) {
+          txnTotalUsage[txnId].invoiceNos.push(invoice.invoiceNo);
+        }
+      }
+    }
+
+    for (const [, usage] of Object.entries(txnTotalUsage)) {
+      if (usage.total > usage.txnRemaining) {
+        return `Phiếu sao kê được cấn trừ vượt quá số tiền còn lại (tổng cấn trừ: ${money(usage.total)}, tối đa: ${money(usage.txnRemaining)}). Vui lòng kiểm tra lại các hóa đơn: ${usage.invoiceNos.join(", ")}.`;
+      }
+    }
+
+    return null;
+  };
+
   const actions: DrawerAction[] = [
     {
       label: "Xác nhận cấn trừ",
       primary: true,
-      onClick: () => submitMutation.mutate(),
+      onClick: () => {
+        const errorMsg = validateNetOffMap();
+        if (errorMsg) {
+          toast.error(errorMsg);
+          return;
+        }
+        submitMutation.mutate();
+      },
       loading: submitMutation.isPending,
-      disabled: Object.keys(netOffMap).length === 0,
+      disabled:
+        Object.keys(netOffMap).length === 0 &&
+        Object.keys(deletedNetOffs).length === 0 &&
+        Object.keys(updatedNetOffs).length === 0,
     },
   ];
 
@@ -676,7 +1153,7 @@ export function InvoiceBulkNetOffDrawer({
     }
     totalNetOffAmt += invNetOffAmt;
     if (invNetOffAmt > 0) invoicesWithSelection++;
-    if (getRemainingAmount(inv) <= 0) fullyNettedOff++;
+    if (getAmounts(inv).remaining <= 0) fullyNettedOff++;
   }
 
   return (
@@ -780,32 +1257,14 @@ export function InvoiceBulkNetOffDrawer({
           </div>
         }
         leftPanel={
-          <div className="h-full flex flex-col pr-1 space-y-4 overflow-hidden">
+          <div className="h-[calc(100vh-180px)] flex flex-col pr-1 space-y-4 overflow-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <label className="text-xs font-semibold text-slate-700 shrink-0">
                 Chi tiết theo từng hóa đơn ({invoicesWithSelection}/
                 {totalInvoices})
               </label>
-              <div className="w-full md:w-auto shrink-0 flex items-center gap-2">
-                <Combobox
-                  options={SUGGESTION_FILTER_OPTIONS}
-                  value={suggestionFilter}
-                  onChange={(val) => setSuggestionFilter(val || "ALL")}
-                  allowClear={false}
-                  className="h-8 text-xs w-48 bg-white"
-                />
-                <div className="w-48">
-                  <SearchInput
-                    value={invoiceSearch}
-                    onChange={setInvoiceSearch}
-                    placeholder="Tìm kiếm hóa đơn..."
-                    className="w-full"
-                    inputClassName="h-8 text-xs bg-white"
-                  />
-                </div>
-              </div>
             </div>
-            <div className="flex-1 min-h-0 bg-white flex flex-col overflow-auto">
+            <div className="flex-1 min-h-0 bg-white flex flex-col overflow-hidden">
               <DataTable<ErpInvoice>
                 variant="spreadsheet"
                 items={displayedInvoices}
@@ -830,6 +1289,9 @@ export function InvoiceBulkNetOffDrawer({
           open={!!activeInvoiceId}
           onClose={() => setActiveInvoiceId(null)}
           existingVoucherIds={Object.keys(netOffMap[activeInvoiceId] || {})}
+          excludeTxnIds={allTxns
+            .filter((t) => getTxnEffectiveRemaining(t) <= 0)
+            .map((t) => t.id)}
           onSelect={(selectedVouchers) => {
             setIsDirty(true);
             setNetOffMap((prev) => {
@@ -862,6 +1324,39 @@ export function InvoiceBulkNetOffDrawer({
 }
 
 // ---------------------------------------------------------------------------
+// HELPER FOR TEXT HIGHLIGHT
+// ---------------------------------------------------------------------------
+function highlightText(
+  text: string,
+  pattern?: string | string[],
+): React.ReactNode {
+  if (!text || !pattern) return text;
+  const patterns = Array.isArray(pattern) ? pattern : [pattern];
+  if (patterns.length === 0) return text;
+
+  // Build a regex that matches any of the patterns, case-insensitive
+  const escapedPatterns = patterns.map((p) =>
+    p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  );
+  const regex = new RegExp(`(${escapedPatterns.join("|")})`, "gi");
+
+  const parts = text.split(regex);
+
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <mark
+        key={i}
+        className="bg-amber-200 text-amber-900 rounded-sm px-0.5 not-italic"
+      >
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
 // TRANSACTION CARD COMPONENT
 // ---------------------------------------------------------------------------
 
@@ -871,6 +1366,7 @@ const TransactionCard = ({
   isSuggestion,
   suggestionProps,
   netOffProps,
+  matchInfo,
   onViewDetail,
 }: {
   txn?: BankTxn & { referenceNumber?: string; seqNo?: string };
@@ -881,7 +1377,7 @@ const TransactionCard = ({
     badgeClasses: string;
     glowClasses?: string;
     dotClasses?: string;
-    onAccept?: () => void; // undefined = NOTICE group, chỉ hiện badge, không có nút Nhận
+    onAccept?: () => void;
   };
   netOffProps?: {
     value: number;
@@ -889,6 +1385,7 @@ const TransactionCard = ({
     onChange: (val: number) => void;
     onRemove: () => void;
   };
+  matchInfo?: { invoiceNo?: string; keywords?: string[] };
   onViewDetail: (id: string) => void;
 }) => {
   const [localVal, setLocalVal] = useState<string>(
@@ -917,6 +1414,18 @@ const TransactionCard = ({
 
   const refText =
     txn?.referenceNumber || txn?.seqNo || txn?.id.split("-")[0] || "---";
+
+  const renderDescription = () => {
+    const desc = txn?.description || "—";
+    if (!isSuggestion || !matchInfo) return desc;
+
+    // Highlight invoiceNo and keywords in description
+    const patternsToHighlight = [];
+    if (matchInfo.invoiceNo) patternsToHighlight.push(matchInfo.invoiceNo);
+    if (matchInfo.keywords) patternsToHighlight.push(...matchInfo.keywords);
+
+    return highlightText(desc, patternsToHighlight);
+  };
 
   return (
     <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-white border border-slate-200 shadow-sm relative group">
@@ -968,8 +1477,8 @@ const TransactionCard = ({
       </div>
 
       <Tooltip content={txn?.description || ""}>
-        <div className="text-[10px] text-slate-500 line-clamp-2 mt-0.5 cursor-help">
-          {txn?.description || "—"}
+        <div className="text-[10px] text-slate-500 whitespace-normal break-words mt-0.5 cursor-help">
+          {renderDescription()}
         </div>
       </Tooltip>
 
