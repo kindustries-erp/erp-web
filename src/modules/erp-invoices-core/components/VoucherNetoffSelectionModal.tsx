@@ -110,10 +110,16 @@ export function VoucherNetoffSelectionModal({
     enabled: open,
   });
 
-  const vouchers = (data?.items || []).filter(
-    (v: any) =>
-      !existingVoucherIds.includes(v.id) && !excludeTxnIds.includes(v.id),
-  );
+  const vouchers = (data?.items || []).filter((v: any) => {
+    if (existingVoucherIds.includes(v.id)) return false;
+    if (excludeTxnIds.includes(v.id)) return false;
+    const credit = parseFloat(v.creditAmount) || 0;
+    const debit = parseFloat(v.debitAmount) || 0;
+    const amount = credit > 0 ? credit : debit;
+    const netOff = parseFloat(v.netOffAmount) || 0;
+    const remaining = amount - netOff;
+    return remaining > 0;
+  });
 
   // Clear selections when modal closes or opens
   useEffect(() => {

@@ -257,6 +257,13 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
+  getBulkNetOffs: async (ids: string[]): Promise<any[]> => {
+    const { data } = await axiosInstance.post<any[]>(`${BASE}/bulk-net-offs`, {
+      ids,
+    });
+    return data;
+  },
+
   create: async (payload: CreateErpInvoicePayload): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<{ data: ErpInvoice }>(
       BASE,

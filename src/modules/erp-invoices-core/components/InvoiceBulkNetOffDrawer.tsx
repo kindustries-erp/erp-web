@@ -4,7 +4,6 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { type DrawerAction } from "@/shared/components/DrawerModal";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
-import { SearchInput } from "@/shared/components/SearchInput";
 import { Button } from "@/shared/components/ui/Button";
 import {
   AlertCircle,
@@ -164,7 +163,6 @@ export function InvoiceBulkNetOffDrawer({
     () => invoices.filter((inv) => selectedInvoiceIds.includes(inv.id)),
     [invoices, selectedInvoiceIds],
   );
-  const [invoiceSearch, setInvoiceSearch] = useState("");
 
   // Cấu hình kỳ
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -183,8 +181,22 @@ export function InvoiceBulkNetOffDrawer({
     >
   >({});
   const [isDirty, setIsDirty] = useState(false);
-
   const [columnSearch, setColumnSearch] = useState<Record<string, string>>({});
+
+  // Existing net-offs map fetched from DB
+  const [existingNetOffsMap, setExistingNetOffsMap] = useState<
+    Record<string, any[]>
+  >({});
+
+  // Deleted existing net-offs in this session (invoiceId -> Set of bankTransactionIds)
+  const [deletedNetOffs, setDeletedNetOffs] = useState<
+    Record<string, Set<string>>
+  >({});
+
+  // Updated existing net-offs in this session (invoiceId -> bankTransactionId -> newAmount)
+  const [updatedNetOffs, setUpdatedNetOffs] = useState<
+    Record<string, Record<string, number>>
+  >({});
   const [columnFilters, setColumnFilters] = useState<Record<string, string[]>>(
     {},
   );
@@ -218,11 +230,37 @@ export function InvoiceBulkNetOffDrawer({
     }
   }, [open, selectedInvoiceIds]); // Notice we don't depend on selectedInvoices to avoid loop
 
+  // Fetch existing net-offs for selected invoices
+  useEffect(() => {
+    if (!open || !selectedInvoiceIds.length) return;
+
+    let isMounted = true;
+    erpInvoicesCoreApi
+      .getBulkNetOffs(selectedInvoiceIds)
+      .then((netOffs) => {
+        if (!isMounted) return;
+        const map: Record<string, any[]> = {};
+        netOffs.forEach((no) => {
+          if (!map[no.invoiceId]) map[no.invoiceId] = [];
+          map[no.invoiceId].push(no);
+        });
+        setExistingNetOffsMap(map);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch bulk net-offs", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [open, selectedInvoiceIds]);
+
   // Reset when drawer opens/closes or dates change
   useEffect(() => {
     if (!open) {
       setAllTxns([]);
       setNetOffMap({});
+      setExistingNetOffsMap({});
       setActiveInvoiceId(null);
       setIsDirty(false);
       return;
@@ -292,17 +330,33 @@ export function InvoiceBulkNetOffDrawer({
     }
   }, [open, dateFrom, dateTo]);
 
-  const getRemainingAmount = (inv: ErpInvoice) => {
+  const getAmounts = (inv: ErpInvoice) => {
     const total = Number(inv.totalAmount) || 0;
-    const currentNetOff = (inv.voucherNetOffs || []).reduce(
-      (sum, v) => sum + (Number(v.netOffAmount) || 0),
-      0,
-    );
+
+    // Ưu tiên dùng existingNetOffsMap nếu đã tải xong, fallback về inv.netOffAmount
+    const existing = existingNetOffsMap[inv.id];
+    let currentNetOff: number;
+    if (existing) {
+      currentNetOff = existing.reduce((sum, v) => {
+        const txnId = v.bankTransactionId;
+        if (deletedNetOffs[inv.id]?.has(txnId)) return sum; // Ignore deleted
+        const updatedAmount = updatedNetOffs[inv.id]?.[txnId];
+        if (updatedAmount !== undefined) return sum + updatedAmount; // Use updated amount
+        return sum + (Number(v.netOffAmount || v.net_off_amount) || 0); // Use original
+      }, 0);
+    } else {
+      currentNetOff = Number((inv as any).netOffAmount) || 0;
+    }
+
     const pendingNetOff = Object.values(netOffMap[inv.id] || {}).reduce(
       (sum, val) => sum + (val.amount || 0),
       0,
     );
-    return Math.max(0, total - currentNetOff - pendingNetOff);
+    return {
+      total,
+      nettedOff: currentNetOff + pendingNetOff,
+      remaining: total - currentNetOff - pendingNetOff,
+    };
   };
 
   // Tính tổng pending đã phân bổ cho mỗi txn trong session
@@ -341,7 +395,8 @@ export function InvoiceBulkNetOffDrawer({
   const suggestionsMap = useMemo(() => {
     const map: Record<string, { txn: BankTxn; score: MatchResult }> = {};
     for (const inv of selectedInvoices) {
-      if (getRemainingAmount(inv) <= 0) continue; // HĐ đã cấn đủ
+      const amounts = getAmounts(inv);
+      if (amounts.remaining <= 0) continue; // HĐ đã cấn đủ
 
       let bestTxn: BankTxn | null = null;
       let bestScore: MatchResult | null = null;
@@ -370,17 +425,6 @@ export function InvoiceBulkNetOffDrawer({
 
   const displayedInvoices = useMemo(() => {
     let filtered = selectedInvoices;
-
-    // 1. Text Search
-    if (invoiceSearch.trim()) {
-      const lower = invoiceSearch.toLowerCase();
-      filtered = filtered.filter(
-        (inv) =>
-          inv.invoiceNo?.toLowerCase().includes(lower) ||
-          inv.buyerName?.toLowerCase().includes(lower) ||
-          inv.sellerName?.toLowerCase().includes(lower),
-      );
-    }
 
     // 3. Column Search
     if (columnSearch.invoiceNo) {
@@ -441,9 +485,13 @@ export function InvoiceBulkNetOffDrawer({
       });
     }
     if (columnFilters.amount?.length > 0) {
-      filtered = filtered.filter((inv) =>
-        columnFilters.amount.includes(String(inv.totalAmount)),
-      );
+      filtered = filtered.filter((inv) => {
+        return columnFilters.amount.some((val) => {
+          if (val === "NETTED") return getAmounts(inv).remaining <= 0;
+          if (val === "UNNETTED") return getAmounts(inv).remaining > 0;
+          return String(inv.totalAmount) === val;
+        });
+      });
     }
     if (columnFilters.action?.length > 0) {
       filtered = filtered.filter((inv) => {
@@ -463,7 +511,6 @@ export function InvoiceBulkNetOffDrawer({
     return filtered;
   }, [
     selectedInvoices,
-    invoiceSearch,
     suggestionsMap,
     columnSearch,
     columnSort,
@@ -493,7 +540,11 @@ export function InvoiceBulkNetOffDrawer({
     selectedInvoices.forEach((inv) => {
       if (inv.totalAmount) set.add(String(inv.totalAmount));
     });
-    return Array.from(set).map((v) => ({ label: money(Number(v)), value: v }));
+    return [
+      { label: "Đã cấn đủ", value: "NETTED" },
+      { label: "Chưa cấn đủ", value: "UNNETTED" },
+      ...Array.from(set).map((v) => ({ label: money(Number(v)), value: v })),
+    ];
   }, [selectedInvoices]);
 
   const handleQuickAccept = (invId: string, txn: BankTxn, amt: number) => {
@@ -543,7 +594,7 @@ export function InvoiceBulkNetOffDrawer({
           const hasMatchedInvoiceNo =
             suggestion && suggestion.score.invoiceNoMatch;
           return (
-            <div className={getRemainingAmount(inv) <= 0 ? "opacity-60" : ""}>
+            <div className={getAmounts(inv).remaining <= 0 ? "opacity-60" : ""}>
               <div className="font-medium text-xs text-slate-800">
                 {hasMatchedInvoiceNo
                   ? highlightText(inv.invoiceNo, inv.invoiceNo)
@@ -597,7 +648,7 @@ export function InvoiceBulkNetOffDrawer({
               ? suggestion.txn.description.match(/[a-zA-Z0-9_]{4,}/g) || []
               : [];
           return (
-            <div className={getRemainingAmount(inv) <= 0 ? "opacity-60" : ""}>
+            <div className={getAmounts(inv).remaining <= 0 ? "opacity-60" : ""}>
               <div
                 className="text-xs text-slate-700 whitespace-normal break-words"
                 title={text || ""}
@@ -649,8 +700,7 @@ export function InvoiceBulkNetOffDrawer({
         headerClassName: "text-center",
         size: 150,
         cell: (inv) => {
-          const remaining = getRemainingAmount(inv);
-          const nettedOff = Number(inv.totalAmount) - remaining;
+          const { remaining, nettedOff } = getAmounts(inv);
           const suggestion = suggestionsMap[inv.id];
           const hasMatchedAmount = suggestion && suggestion.score.amountMatch;
           return (
@@ -667,7 +717,9 @@ export function InvoiceBulkNetOffDrawer({
               <div className="text-[10px] text-slate-500 mt-0.5">
                 Đã cấn: {money(nettedOff)}
               </div>
-              <div className="text-[10px] text-emerald-600 mt-0.5">
+              <div
+                className={`text-[10px] mt-0.5 ${remaining < 0 ? "text-rose-600 font-medium" : "text-emerald-600"}`}
+              >
                 Còn lại: {money(remaining)}
               </div>
             </div>
@@ -699,10 +751,16 @@ export function InvoiceBulkNetOffDrawer({
         cell: (inv) => {
           const currentSelections = Object.entries(netOffMap[inv.id] || {});
           const suggestion = suggestionsMap[inv.id];
-          const invDone = getRemainingAmount(inv) <= 0;
+          const invDone = getAmounts(inv).remaining <= 0;
+
+          const existingNetOffs = existingNetOffsMap[inv.id] || [];
 
           // HĐ đã cấn đủ và không có thay đổi trong session này
-          if (invDone && currentSelections.length === 0) {
+          if (
+            invDone &&
+            currentSelections.length === 0 &&
+            existingNetOffs.length === 0
+          ) {
             return (
               <div className="flex items-center justify-center p-2 rounded text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200">
                 <CheckCircle2 className="w-4 h-4 mr-1.5" />
@@ -711,10 +769,58 @@ export function InvoiceBulkNetOffDrawer({
             );
           }
 
-          // Đã có selections
-          if (currentSelections.length > 0) {
+          // Đã có selections hoặc existing net-offs
+          if (currentSelections.length > 0 || existingNetOffs.length > 0) {
             return (
               <div className="flex flex-col gap-2">
+                {existingNetOffs.map((netOff, idx) => {
+                  const txnId = netOff.bankTransactionId;
+                  if (deletedNetOffs[inv.id]?.has(txnId)) return null;
+
+                  const updatedAmount = updatedNetOffs[inv.id]?.[txnId];
+                  const originalAmount =
+                    Number(netOff.netOffAmount || netOff.net_off_amount) || 0;
+                  const currentAmount =
+                    updatedAmount !== undefined
+                      ? updatedAmount
+                      : originalAmount;
+
+                  // Calculate max value for this existing net off
+                  const remaining = getAmounts(inv).remaining;
+                  const maxAllowed = currentAmount + remaining;
+
+                  return (
+                    <TransactionCard
+                      key={`existing-${netOff.id || idx}`}
+                      txn={netOff.bankTransaction}
+                      amount={currentAmount}
+                      isSuggestion={false}
+                      netOffProps={{
+                        value: currentAmount,
+                        maxValue: maxAllowed,
+                        onChange: (val) => {
+                          setIsDirty(true);
+                          setUpdatedNetOffs((prev) => ({
+                            ...prev,
+                            [inv.id]: {
+                              ...(prev[inv.id] || {}),
+                              [txnId]: val,
+                            },
+                          }));
+                        },
+                        onRemove: () => {
+                          setIsDirty(true);
+                          setDeletedNetOffs((prev) => {
+                            const newSet = new Set(prev[inv.id] || []);
+                            newSet.add(txnId);
+                            return { ...prev, [inv.id]: newSet };
+                          });
+                        },
+                      }}
+                      onViewDetail={(id) => setDetailTxnId(id)}
+                    />
+                  );
+                })}
                 {currentSelections.map(([txnId, data]) => (
                   <TransactionCard
                     key={txnId}
@@ -829,7 +935,7 @@ export function InvoiceBulkNetOffDrawer({
               Number(direction === "IN" ? txn.debitAmount : txn.creditAmount) ||
               0;
             const txnEffectiveRemaining = getTxnEffectiveRemaining(txn);
-            const remaining = getRemainingAmount(inv);
+            const remaining = getAmounts(inv).remaining;
             const amtToApply = Math.min(remaining, txnEffectiveRemaining);
 
             const partnerName =
@@ -880,23 +986,56 @@ export function InvoiceBulkNetOffDrawer({
         },
       },
     ],
-    [direction, suggestionsMap, netOffMap, getRemainingAmount],
+    [direction, suggestionsMap, netOffMap, getAmounts],
   );
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      const promises = Object.entries(netOffMap).map(([invId, txns]) => {
-        const payload = Object.entries(txns).map(
-          ([bankTransactionId, data]) => ({
-            bankTransactionId,
-            netOffAmount: data.amount,
-          }),
-        );
-        if (payload.length > 0) {
-          return erpInvoicesCoreApi.linkVouchers(invId, payload);
+      const promises: Promise<any>[] = [];
+
+      // 1. Process deletions
+      for (const [invId, txnIds] of Object.entries(deletedNetOffs)) {
+        for (const txnId of txnIds) {
+          promises.push(erpInvoicesCoreApi.removeVoucherLink(invId, txnId));
         }
-        return Promise.resolve();
-      });
+      }
+
+      // 2. Process new and updated net-offs
+      // Combine netOffMap (new) and updatedNetOffs (existing but edited)
+      const allUpserts: Record<
+        string,
+        { bankTransactionId: string; netOffAmount: number }[]
+      > = {};
+
+      for (const [invId, txns] of Object.entries(netOffMap)) {
+        if (!allUpserts[invId]) allUpserts[invId] = [];
+        for (const [txnId, data] of Object.entries(txns)) {
+          allUpserts[invId].push({
+            bankTransactionId: txnId,
+            netOffAmount: data.amount,
+          });
+        }
+      }
+
+      for (const [invId, txns] of Object.entries(updatedNetOffs)) {
+        if (!allUpserts[invId]) allUpserts[invId] = [];
+        for (const [txnId, amount] of Object.entries(txns)) {
+          // If it's not already in deletedNetOffs, we upsert it
+          if (!deletedNetOffs[invId]?.has(txnId)) {
+            allUpserts[invId].push({
+              bankTransactionId: txnId,
+              netOffAmount: amount,
+            });
+          }
+        }
+      }
+
+      for (const [invId, payload] of Object.entries(allUpserts)) {
+        if (payload.length > 0) {
+          promises.push(erpInvoicesCoreApi.linkVouchers(invId, payload));
+        }
+      }
+
       await Promise.all(promises);
     },
     onSuccess: () => {
@@ -911,13 +1050,92 @@ export function InvoiceBulkNetOffDrawer({
     },
   });
 
+  const validateNetOffMap = (): string | null => {
+    // 1. Check invoice-side: session total <= invoice remaining
+    for (const [invId, txns] of Object.entries(netOffMap)) {
+      const invoice = selectedInvoices.find((i) => i.id === invId);
+      if (!invoice) continue;
+
+      const invoiceTotal = Number(invoice.totalAmount) || 0;
+
+      const existing = existingNetOffsMap[invId];
+      let alreadyNetOff: number;
+      if (existing) {
+        alreadyNetOff = existing.reduce(
+          (sum, v) => sum + (Number(v.netOffAmount || v.net_off_amount) || 0),
+          0,
+        );
+      } else {
+        alreadyNetOff = Number((invoice as any).netOffAmount) || 0;
+      }
+
+      const invoiceRemaining = invoiceTotal - alreadyNetOff;
+
+      const sessionTotal = Object.values(txns).reduce(
+        (sum, data) => sum + (data.amount || 0),
+        0,
+      );
+
+      if (sessionTotal > invoiceRemaining) {
+        return `Hóa đơn ${invoice.invoiceNo || invId}: tổng cấn trừ (${money(sessionTotal)}) vượt quá giá trị còn lại (${money(invoiceRemaining)}).`;
+      }
+    }
+
+    // 2. Check txn-side: cross-invoice total <= txn remaining
+    const txnTotalUsage: Record<
+      string,
+      { total: number; txnRemaining: number; invoiceNos: string[] }
+    > = {};
+
+    for (const [invId, txns] of Object.entries(netOffMap)) {
+      const invoice = selectedInvoices.find((i) => i.id === invId);
+      for (const [txnId, data] of Object.entries(txns)) {
+        if (!txnTotalUsage[txnId]) {
+          const txn = allTxns.find((t) => t.id === txnId) || data.txn;
+          let txnRemaining = Infinity;
+          if (txn) {
+            const baseAmt = Math.max(
+              parseFloat(txn.creditAmount as any) || 0,
+              parseFloat(txn.debitAmount as any) || 0,
+            );
+            const dbNetOff = parseFloat((txn as any).netOffAmount) || 0;
+            txnRemaining = baseAmt - dbNetOff;
+          }
+          txnTotalUsage[txnId] = { total: 0, txnRemaining, invoiceNos: [] };
+        }
+        txnTotalUsage[txnId].total += data.amount || 0;
+        if (invoice?.invoiceNo) {
+          txnTotalUsage[txnId].invoiceNos.push(invoice.invoiceNo);
+        }
+      }
+    }
+
+    for (const [, usage] of Object.entries(txnTotalUsage)) {
+      if (usage.total > usage.txnRemaining) {
+        return `Phiếu sao kê được cấn trừ vượt quá số tiền còn lại (tổng cấn trừ: ${money(usage.total)}, tối đa: ${money(usage.txnRemaining)}). Vui lòng kiểm tra lại các hóa đơn: ${usage.invoiceNos.join(", ")}.`;
+      }
+    }
+
+    return null;
+  };
+
   const actions: DrawerAction[] = [
     {
       label: "Xác nhận cấn trừ",
       primary: true,
-      onClick: () => submitMutation.mutate(),
+      onClick: () => {
+        const errorMsg = validateNetOffMap();
+        if (errorMsg) {
+          toast.error(errorMsg);
+          return;
+        }
+        submitMutation.mutate();
+      },
       loading: submitMutation.isPending,
-      disabled: Object.keys(netOffMap).length === 0,
+      disabled:
+        Object.keys(netOffMap).length === 0 &&
+        Object.keys(deletedNetOffs).length === 0 &&
+        Object.keys(updatedNetOffs).length === 0,
     },
   ];
 
@@ -935,7 +1153,7 @@ export function InvoiceBulkNetOffDrawer({
     }
     totalNetOffAmt += invNetOffAmt;
     if (invNetOffAmt > 0) invoicesWithSelection++;
-    if (getRemainingAmount(inv) <= 0) fullyNettedOff++;
+    if (getAmounts(inv).remaining <= 0) fullyNettedOff++;
   }
 
   return (
@@ -1045,17 +1263,6 @@ export function InvoiceBulkNetOffDrawer({
                 Chi tiết theo từng hóa đơn ({invoicesWithSelection}/
                 {totalInvoices})
               </label>
-              <div className="w-full md:w-auto shrink-0 flex items-center gap-2">
-                <div className="w-64">
-                  <SearchInput
-                    value={invoiceSearch}
-                    onChange={setInvoiceSearch}
-                    placeholder="Tìm kiếm hóa đơn..."
-                    className="w-full"
-                    inputClassName="h-8 text-xs bg-white"
-                  />
-                </div>
-              </div>
             </div>
             <div className="flex-1 min-h-0 bg-white flex flex-col overflow-hidden">
               <DataTable<ErpInvoice>
