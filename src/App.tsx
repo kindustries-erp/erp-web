@@ -169,6 +169,11 @@ const VinfastPartsDashboardPage = lazy(() =>
     default: m.VinfastPartsDashboardPage,
   })),
 );
+const VinfastSettlementPage = lazy(() =>
+  import("@/pages/VinfastSettlementPage").then((m) => ({
+    default: m.VinfastSettlementPage,
+  })),
+);
 const ThietLapNganHang = lazy(() =>
   import("@/pages/SettingsBankAccount").then((m) => ({
     default: m.ThietLapNganHang,
@@ -277,6 +282,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "vinfast-parts-xemay": () => (
     <VinfastPartsTrackingPage vehicleType="MOTORBIKE" />
   ),
+  "vinfast-invoice-settlement": VinfastSettlementPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
 

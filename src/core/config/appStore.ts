@@ -141,6 +141,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.vinfastParts",
     group: "accounting",
   },
+  "vinfast-invoice-settlement": {
+    labelKey: "Lệnh quyết toán xưởng Vinfast",
+    group: "manufacturing",
+  },
   "vinfast-parts-dashboard": {
     labelKey: "Tổng quan phụ tùng",
     group: "inventory",
@@ -278,6 +282,10 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
   "vinfast-parts-oto": [["breadcrumb.inventory"], ["Phụ tùng ôtô"]],
   "vinfast-parts-xemay": [["breadcrumb.inventory"], ["Phụ tùng xe máy"]],
+  "vinfast-invoice-settlement": [
+    ["breadcrumb.manufacturing"],
+    ["Lệnh quyết toán xưởng Vinfast"],
+  ],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [
     ["breadcrumb.accounting"],

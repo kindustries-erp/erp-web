@@ -340,6 +340,8 @@ export function SidebarNav({
           canReadGreenwayIntegration ? t("nav.items.garage") : "",
           canReadGreenwayIntegration ? t("nav.items.garageCases") : "",
           canReadGreenwayIntegration ? t("nav.items.garageGrossProfit") : "",
+          "Xưởng Vinfast",
+          "Quyết toán Hóa đơn",
         ]) && (
           <div className="sidebar-nav-section py-2">
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
@@ -364,6 +366,21 @@ export function SidebarNav({
                 onClick={() => navTo("erp-production")}
                 contextPage="erp-production"
               />
+            )}
+            {canReadGreenwayIntegration && (
+              <NavGroup
+                collapsed={c}
+                icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Xưởng Vinfast"
+                active={currentPage === "vinfast-invoice-settlement"}
+              >
+                <NavGroupItem
+                  label="Quyết toán Hóa đơn"
+                  active={currentPage === "vinfast-invoice-settlement"}
+                  onClick={() => navTo("vinfast-invoice-settlement")}
+                  contextPage="vinfast-invoice-settlement"
+                />
+              </NavGroup>
             )}
             {canReadGreenwayIntegration && (
               <NavGroup
