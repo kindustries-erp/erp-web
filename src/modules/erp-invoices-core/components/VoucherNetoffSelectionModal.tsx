@@ -21,6 +21,7 @@ interface Props {
     }[],
   ) => void;
   existingVoucherIds?: string[];
+  excludeTxnIds?: string[];
 }
 
 function NetOffInput({
@@ -62,6 +63,7 @@ export function VoucherNetoffSelectionModal({
   onClose,
   onSelect,
   existingVoucherIds = [],
+  excludeTxnIds = [],
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
@@ -109,7 +111,8 @@ export function VoucherNetoffSelectionModal({
   });
 
   const vouchers = (data?.items || []).filter(
-    (v: any) => !existingVoucherIds.includes(v.id),
+    (v: any) =>
+      !existingVoucherIds.includes(v.id) && !excludeTxnIds.includes(v.id),
   );
 
   // Clear selections when modal closes or opens
