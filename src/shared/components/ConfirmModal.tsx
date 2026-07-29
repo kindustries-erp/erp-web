@@ -47,11 +47,11 @@ export function ConfirmModal({
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-border/50 rounded-2xl shadow-xl p-6 w-full max-w-[340px]">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface border border-border/50 rounded-2xl shadow-xl p-6 w-full max-w-[340px]">
+        <h3 className="text-sm font-semibold text-foreground mb-1.5">
           {title || t("confirmModal.defaultTitle")}
         </h3>
-        <div className="text-xs text-slate-500 mb-6 leading-relaxed">
+        <div className="text-xs text-[color:var(--muted-fg)] mb-6 leading-relaxed">
           {message}
         </div>
         <div className="flex gap-2 justify-end">

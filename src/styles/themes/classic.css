@@ -43,6 +43,8 @@
   --app-shell-border: transparent;
   --sidebar-bg: #f9fbfc;
   --sidebar-border: var(--border);
+  --sidebar-active-bg: rgba(0, 0, 0, 0.05);
+  --sidebar-active-fg: var(--foreground);
   --main-panel-bg: #f9fbfc;
   --main-panel-border: var(--border);
 }

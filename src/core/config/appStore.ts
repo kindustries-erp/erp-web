@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 
-export type AppTheme = "shell" | "classic" | "orcaq";
+export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
 
 function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
@@ -13,6 +13,10 @@ function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
     "theme-orcaq",
     appTheme === "orcaq",
+  );
+  document.documentElement.classList.toggle(
+    "theme-midnight",
+    appTheme === "midnight",
   );
 }
 
@@ -508,7 +512,7 @@ export const useAppStore = create<AppState>()(
       setCompanyProfileOpen: (open) => set({ companyProfileOpen: open }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["classic", "shell", "orcaq"];
+        const order: AppTheme[] = ["classic", "shell", "orcaq", "midnight"];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });
