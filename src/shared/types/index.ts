@@ -66,6 +66,7 @@ export type PageKey =
   | "vinfast-parts-dashboard"
   | "vinfast-parts-oto"
   | "vinfast-parts-xemay"
+  | "vinfast-invoice-settlement"
   | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 
