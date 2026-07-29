@@ -28,9 +28,11 @@ import {
   Loader2,
   RefreshCw,
   PanelRightOpen,
+  Download,
   Copy,
   Check,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
@@ -539,6 +541,53 @@ export function VinfastSettlementPage() {
     }),
     [tableState.columnFilters],
   );
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await api.get(
+        "/api/v1/reports/settlement-orders/export/excel",
+        {
+          params: {
+            search: filterState.search || undefined,
+            dateFrom: filterState.dateFrom || undefined,
+            dateTo: filterState.dateTo || undefined,
+            sortBy:
+              tableState.sorts.length > 0
+                ? tableState.sorts[0].startsWith("-")
+                  ? tableState.sorts[0].substring(1)
+                  : tableState.sorts[0]
+                : undefined,
+            sortDir:
+              tableState.sorts.length > 0
+                ? tableState.sorts[0].startsWith("-")
+                  ? "DESC"
+                  : "ASC"
+                : undefined,
+            columnFilters: tableState.columnFilters
+              ? JSON.stringify(tableState.columnFilters)
+              : undefined,
+          },
+          responseType: "blob",
+        },
+      );
+
+      const blob = res.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Lenh_Quyet_Toan_XUONG_VF_${Date.now()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Có lỗi khi tải bảng kê");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const columns: DataTableColumn<VinfastSettlementRow>[] = [
     {
@@ -772,9 +821,13 @@ export function VinfastSettlementPage() {
         />
       ),
       size: 140,
-      headerClassName: "text-center",
-      className: "text-right font-medium text-amber-600",
-      cell: (row) => money(row.totalNetoff),
+      headerClassName: "text-right bg-blue-50/50 border-l border-blue-200",
+      className: "text-right bg-blue-50/50 border-l border-blue-200",
+      cell: (row) => {
+        const netOff = parseFloat(row.totalNetoff as any) || 0;
+        if (netOff === 0) return "--";
+        return <span className="text-blue-600">{money(row.totalNetoff)}</span>;
+      },
     },
     {
       key: "remaining",
@@ -793,15 +846,12 @@ export function VinfastSettlementPage() {
         />
       ),
       size: 140,
-      headerClassName: "text-center",
-      className: "text-right font-medium",
+      headerClassName: "text-center bg-blue-50/50",
+      className: "text-right font-semibold bg-blue-50/50",
       cell: (row) => {
         const rem = Number(row.remaining) || 0;
-        return (
-          <span className={rem > 0 ? "text-red-600" : "text-slate-700"}>
-            {money(rem)}
-          </span>
-        );
+        if (rem === 0) return <span className="text-emerald-600">0</span>;
+        return <span className="text-slate-700">{money(rem)}</span>;
       },
     },
   ];
@@ -859,11 +909,7 @@ export function VinfastSettlementPage() {
   const tableSummary = useMemo(() => {
     if (!data?.items?.length) return undefined;
     return {
-      period: (
-        <span className="font-semibold text-slate-700 text-sm">
-          Tổng cộng trang này:
-        </span>
-      ),
+      period: null,
       totalPreVat: (
         <span className="font-semibold">{money(totalPreVatAll)}</span>
       ),
@@ -900,6 +946,20 @@ export function VinfastSettlementPage() {
         icon={<FileText className="w-5 h-5 text-slate-600" />}
         tableId="vinfast-settlement-table"
         createActions={[
+          {
+            groupLabel: "TRA CỨU",
+            items: [
+              {
+                label: "Tải bảng kê",
+                icon: exporting ? (
+                  <Loader2 className="w-4 h-4 text-emerald-600 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4 text-emerald-600" />
+                ),
+                onClick: handleExportExcel,
+              },
+            ],
+          },
           {
             groupLabel: "THAO TÁC",
             items: [
