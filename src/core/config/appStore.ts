@@ -189,6 +189,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "bankStatement.cashTitle",
     group: "accounting",
   },
+  "email-inbox": { labelKey: "nav.items.emailInbox", group: "system" },
   "cashflow-dashboard": {
     labelKey: "nav.items.cashflowDashboard",
     group: "accounting",
@@ -315,6 +316,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["nav.items.cashflow"],
     ["bankStatement.cashTitle"],
   ],
+  "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
   "cashflow-dashboard": [
     ["breadcrumb.accounting"],
     ["nav.items.cashflow"],
