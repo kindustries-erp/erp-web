@@ -78,6 +78,7 @@ export function TableText({
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0 flex-shrink-0 text-slate-400 hover:text-primary transition-colors focus:ring-0 focus-visible:ring-0 focus:outline-none"
+            onClick={(e) => e.stopPropagation()}
           >
             {popoverIcon}
           </Button>
