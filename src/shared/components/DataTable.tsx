@@ -687,7 +687,7 @@ export function DataTable<T>({
           <Table
             style={{
               minWidth: enableColumnResizing ? table.getTotalSize() : minWidth,
-              width: enableColumnResizing ? table.getTotalSize() : "100%",
+              width: "100%",
             }}
             className={cn(
               "table-fixed",
@@ -846,12 +846,10 @@ export function DataTable<T>({
                       </TableHead>
                     );
                   })}
-                  {variant !== "spreadsheet" && (
-                    <TableHead
-                      className="w-auto p-0 m-0 border-none"
-                      style={{ width: "auto" }}
-                    />
-                  )}
+                  <TableHead
+                    className="w-auto p-0 m-0 border-none"
+                    style={{ width: "auto" }}
+                  />
                 </TableRow>
               ))}
             </TableHeader>
@@ -902,12 +900,10 @@ export function DataTable<T>({
                         </TableCell>
                       );
                     })}
-                    {variant !== "spreadsheet" && (
-                      <TableCell
-                        className="w-auto p-0 m-0 border-none"
-                        style={{ width: "auto" }}
-                      />
-                    )}
+                    <TableCell
+                      className="w-auto p-0 m-0 border-none"
+                      style={{ width: "auto" }}
+                    />
                   </TableRow>
                 ))}
 
@@ -998,12 +994,10 @@ export function DataTable<T>({
                             </TableCell>
                           );
                         })}
-                        {variant !== "spreadsheet" && (
-                          <TableCell
-                            className="w-auto p-0 m-0 border-none"
-                            style={{ width: "auto" }}
-                          />
-                        )}
+                        <TableCell
+                          className="w-auto p-0 m-0 border-none"
+                          style={{ width: "auto" }}
+                        />
                       </TableRow>
                       {renderSubRow && isExpanded && (
                         <TableRow className="bg-muted/5 hover:bg-muted/5 border-b border-border/60">
