@@ -3,7 +3,6 @@ import { ExternalLink, FileText, Paperclip } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
-import { useT } from "@/core/i18n";
 import { Badge } from "@/shared/components/ui/badge";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { DrawerModal, DrawerRow } from "@/shared/components/DrawerModal";

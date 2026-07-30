@@ -76,7 +76,6 @@ export const en: Dict = {
       activitylog: "Activity Logs",
       attachments: "Attachments",
       emailInbox: "Email inbox",
-      attachments: "Attachments",
       sysTags: "Tags Management",
       users: "Users",
       erpEmployees: "Employees",

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ExternalLink, Mail, Paperclip } from "lucide-react";
 import toast from "react-hot-toast";
@@ -137,10 +137,7 @@ export function EmailInboxPage() {
     return "none";
   };
 
-  const applySortState = (
-    key: string,
-    state: "asc" | "desc" | "none",
-  ) => {
+  const applySortState = (key: string, state: "asc" | "desc" | "none") => {
     if (state === "none") {
       setSortArray([]);
       setPage(1);

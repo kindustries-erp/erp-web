@@ -74,7 +74,6 @@ export const vi = {
       activitylog: "Nhật ký hoạt động",
       attachments: "Quản lý tài liệu",
       emailInbox: "Hộp thư",
-      attachments: "Quản lý tài liệu",
       sysTags: "Quản lý thẻ",
       users: "Quản lý người dùng",
       erpEmployees: "Quản lý nhân viên",
