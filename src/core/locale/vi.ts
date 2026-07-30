@@ -1952,6 +1952,11 @@ export const vi = {
   Reserve: "Reserve",
   Unreserve: "Unreserve",
   "Chỉnh sửa": "Chỉnh sửa",
+  globalSettings: {
+    title: "Cài đặt hệ thống",
+    accountSecurity: "Tài khoản & Bảo mật",
+    eInvoice: "Hóa đơn điện tử",
+  },
 };
 
 export type Dict = typeof vi;

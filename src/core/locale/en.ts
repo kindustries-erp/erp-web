@@ -1962,4 +1962,9 @@ export const en: Dict = {
   Reserve: "Reserve",
   Unreserve: "Unreserve",
   "Chỉnh sửa": "Edit",
+  globalSettings: {
+    title: "System Settings",
+    accountSecurity: "Account & Security",
+    eInvoice: "E-Invoice",
+  },
 };
