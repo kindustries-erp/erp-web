@@ -50,6 +50,7 @@ export interface TableColumnHeaderFilterProps {
     next: number | null;
   }>;
   hideFilter?: boolean;
+  hideFilterList?: boolean;
   hideFooter?: boolean;
   enableSelectAllMatching?: boolean;
   isActive?: boolean;
@@ -78,6 +79,7 @@ export function TableColumnHeaderFilter({
   formatOptionLabel,
   fetchOptions,
   hideFilter,
+  hideFilterList,
   hideFooter,
   enableSelectAllMatching,
   isActive,
@@ -357,80 +359,82 @@ export function TableColumnHeaderFilter({
               </div>
 
               {/* Multi-select Filters */}
-              <div
-                className="p-2 max-h-48 overflow-y-auto flex flex-col"
-                ref={scrollRef}
-                onScroll={handleScroll}
-              >
-                {isOptionsLoading && finalOptions.length === 0 ? (
-                  <div className="p-4 flex justify-center text-muted-foreground">
-                    <Loader2 size={16} className="animate-spin" />
-                  </div>
-                ) : finalOptions.length > 0 ? (
-                  <>
-                    <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
-                      <Checkbox
-                        checked={
-                          enableSelectAllMatching
-                            ? isAllMatchingMode
-                            : pendingFilters.length === finalOptions.length &&
-                              finalOptions.length > 0
-                        }
-                        onCheckedChange={handleSelectAll}
-                      />
-                      <span className="text-xs font-medium">
-                        {enableSelectAllMatching
-                          ? "(Chọn tất cả kết quả tìm kiếm)"
-                          : "(Chọn tất cả đang hiển thị)"}
-                      </span>
-                    </label>
-                    {finalOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
-                      >
+              {!hideFilterList && (
+                <div
+                  className="p-2 max-h-48 overflow-y-auto flex flex-col"
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                >
+                  {isOptionsLoading && finalOptions.length === 0 ? (
+                    <div className="p-4 flex justify-center text-muted-foreground">
+                      <Loader2 size={16} className="animate-spin" />
+                    </div>
+                  ) : finalOptions.length > 0 ? (
+                    <>
+                      <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
                         <Checkbox
                           checked={
-                            isAllMatchingMode ||
-                            pendingFilters.includes(opt.value)
+                            enableSelectAllMatching
+                              ? isAllMatchingMode
+                              : pendingFilters.length === finalOptions.length &&
+                                finalOptions.length > 0
                           }
-                          onCheckedChange={() => {
-                            if (isAllMatchingMode) {
-                              const all = finalOptions.map((o) => o.value);
-                              setPendingFilters(
-                                all.filter((v) => v !== opt.value),
-                              );
-                            } else {
-                              handleToggleFilter(opt.value);
-                            }
-                          }}
+                          onCheckedChange={handleSelectAll}
                         />
-                        <span
-                          className="text-xs truncate"
-                          title={
-                            formatOptionLabel
-                              ? formatOptionLabel(opt.label)
-                              : opt.label
-                          }
-                        >
-                          {formatOptionLabel
-                            ? formatOptionLabel(opt.label)
-                            : opt.label || "(Trống)"}
+                        <span className="text-xs font-medium">
+                          {enableSelectAllMatching
+                            ? "(Chọn tất cả kết quả tìm kiếm)"
+                            : "(Chọn tất cả đang hiển thị)"}
                         </span>
                       </label>
-                    ))}
-                    {isFetchingNextPage && (
-                      <div className="p-2 flex justify-center text-muted-foreground">
-                        <Loader2 size={14} className="animate-spin" />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-2 text-center text-xs text-muted-foreground">
-                    Không có dữ liệu
-                  </div>
-                )}
-              </div>
+                      {finalOptions.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={
+                              isAllMatchingMode ||
+                              pendingFilters.includes(opt.value)
+                            }
+                            onCheckedChange={() => {
+                              if (isAllMatchingMode) {
+                                const all = finalOptions.map((o) => o.value);
+                                setPendingFilters(
+                                  all.filter((v) => v !== opt.value),
+                                );
+                              } else {
+                                handleToggleFilter(opt.value);
+                              }
+                            }}
+                          />
+                          <span
+                            className="text-xs truncate"
+                            title={
+                              formatOptionLabel
+                                ? formatOptionLabel(opt.label)
+                                : opt.label
+                            }
+                          >
+                            {formatOptionLabel
+                              ? formatOptionLabel(opt.label)
+                              : opt.label || "(Trống)"}
+                          </span>
+                        </label>
+                      ))}
+                      {isFetchingNextPage && (
+                        <div className="p-2 flex justify-center text-muted-foreground">
+                          <Loader2 size={14} className="animate-spin" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-2 text-center text-xs text-muted-foreground">
+                      Không có dữ liệu
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 

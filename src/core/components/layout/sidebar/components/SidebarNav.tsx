@@ -19,6 +19,8 @@ import {
   UserSquare2,
   Car,
   WalletCards,
+  Paperclip,
+  Mail,
 } from "lucide-react";
 
 import { useAppStore } from "@/core/config/appStore";
@@ -73,6 +75,7 @@ export function SidebarNav({
   const canReadAdminUsers = useHasPermission("admin_users", "read");
   const canReadActivityLogs = useHasPermission("activity_logs", "read");
   const canReadSysTags = useHasPermission("sys_tags", "read");
+  const canReadEmailInbox = useHasPermission("email_ingest", "read");
   const canReadGreenwayIntegration = useHasPermission(
     "greenway_integration",
     "read",
@@ -83,7 +86,10 @@ export function SidebarNav({
     canReadAdminUsers || canReadSysTags || canReadBankStatements;
   const showSettingsInventory = canReadInventoryItems;
   const showSettings =
-    showSettingsAccess || showSettingsGeneral || showSettingsInventory;
+    showSettingsAccess ||
+    showSettingsGeneral ||
+    showSettingsInventory ||
+    canReadEmailInbox;
 
   const normalize = (text: string) => {
     return text
@@ -467,6 +473,7 @@ export function SidebarNav({
                 active={
                   currentPage === "erp-invoices-in" ||
                   currentPage === "erp-invoices-out" ||
+                  currentPage === "erp-invoices-draft" ||
                   currentPage === "invoice-dashboard"
                 }
               >
@@ -487,6 +494,12 @@ export function SidebarNav({
                   active={currentPage === "erp-invoices-out"}
                   onClick={() => navTo("erp-invoices-out")}
                   contextPage="erp-invoices-out"
+                />
+                <NavGroupItem
+                  label="Hóa đơn nháp"
+                  active={currentPage === "erp-invoices-draft"}
+                  onClick={() => navTo("erp-invoices-draft")}
+                  contextPage="erp-invoices-draft"
                 />
               </NavGroup>
             )}
@@ -543,13 +556,17 @@ export function SidebarNav({
           </div>
         )}
 
-      {/* Human Resources */}
-      {showHR &&
-        hasMatch([t("nav.sections.hr"), t("nav.items.erpEmployees")]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.hr")}
-            </div>
+      {/* Admin */}
+      {hasMatch([
+        t("nav.sections.admin"),
+        t("nav.items.erpEmployees"),
+        t("nav.items.attachments"),
+      ]) && (
+        <div className="sidebar-nav-section py-2">
+          <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+            {t("nav.sections.admin")}
+          </div>
+          {showHR && (
             <NavItem
               collapsed={c}
               icon={
@@ -560,8 +577,17 @@ export function SidebarNav({
               onClick={() => navTo("erp-employees")}
               contextPage="erp-employees"
             />
-          </div>
-        )}
+          )}
+          <NavItem
+            collapsed={c}
+            icon={<Paperclip className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.attachments")}
+            active={currentPage === "attachments"}
+            onClick={() => navTo("attachments" as PageKey)}
+            contextPage={"attachments" as PageKey}
+          />
+        </div>
+      )}
 
       {/* Settings & System */}
       {showSettings &&
@@ -571,6 +597,7 @@ export function SidebarNav({
           canReadAdminUsers ? t("nav.items.users") : "",
           canReadAdminUsers ? t("nav.items.phanquyen") : "",
           canReadActivityLogs ? t("nav.items.activitylog") : "",
+          canReadEmailInbox ? t("nav.items.emailInbox") : "",
           showSettingsGeneral ? t("nav.items.catalog") : "",
           showSettingsGeneral && canReadAdminUsers
             ? t("thietlap.tabs.chi-nhanh")
@@ -593,6 +620,17 @@ export function SidebarNav({
             <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
               {t("nav.sections.settings")}
             </div>
+
+            {canReadEmailInbox && (
+              <NavItem
+                collapsed={c}
+                icon={<Mail className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.emailInbox")}
+                active={currentPage === "email-inbox"}
+                onClick={() => navTo("email-inbox")}
+                contextPage="email-inbox"
+              />
+            )}
 
             {showSettingsAccess && (
               <NavGroup

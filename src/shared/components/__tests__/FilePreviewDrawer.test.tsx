@@ -71,10 +71,12 @@ describe("FilePreviewDrawer", () => {
     render(<FilePreviewDrawer open={true} onClose={() => {}} file={docFile} />);
 
     expect(
-      screen.getByText("Định dạng file không hỗ trợ xem trước"),
+      screen.getByText("Định dạng file không hỗ trợ xem trước trực tiếp"),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Vui lòng tải file "test.docx" về máy để xem nội dung.'),
+      screen.getByText(
+        "Không thể xem trước file cục bộ. Vui lòng tải lên hoặc tải xuống để xem.",
+      ),
     ).toBeInTheDocument();
   });
 

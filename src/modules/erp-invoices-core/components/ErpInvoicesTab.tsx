@@ -651,7 +651,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 <FileCode className="w-4 h-4 text-gray-300" />
               </Tooltip>
             )}
-            {inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0) ? (
+            {inv.pdfFileKey ||
+            (inv.attachments && inv.attachments.length > 0) ? (
               <Popover
                 align="start"
                 open={openPopoverId === inv.id}
@@ -663,8 +664,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                     </div>
                     <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto">
                       {inv.pdfFileKey &&
-                        !inv.pdfFiles?.some(
-                          (p: any) => p.key === inv.pdfFileKey,
+                        !inv.attachments?.some(
+                          (p: any) => p.attachment?.fileKey === inv.pdfFileKey,
                         ) && (
                           <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg mb-2">
                             <div className="flex flex-col min-w-0 flex-1 mr-2">
@@ -698,17 +699,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             </Button>
                           </div>
                         )}
-                      {inv.pdfFiles?.map((pdf: any) => (
+                      {inv.attachments?.map((pdf: any) => (
                         <div
-                          key={pdf.key}
+                          key={pdf.attachment?.fileKey}
                           className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg"
                         >
                           <div className="flex flex-col min-w-0 flex-1 mr-2">
                             <span
                               className="truncate font-medium text-slate-700"
-                              title={pdf.filename}
+                              title={pdf.attachment?.fileName}
                             >
-                              {pdf.filename}
+                              {pdf.attachment?.fileName}
                             </span>
                             <span className="text-xs text-gray-500 mt-0.5">
                               Hóa đơn PDF
@@ -721,7 +722,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenPopoverId(null);
-                              handlePreviewPdf(inv.id, pdf.key, pdf.filename);
+                              handlePreviewPdf(
+                                inv.id,
+                                pdf.attachment?.fileKey,
+                                pdf.attachment?.fileName,
+                              );
                             }}
                           >
                             <Eye className="w-4 h-4" />
@@ -1107,7 +1112,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         headerClassName: "text-center",
         cell: (row) => {
           const popoverContent = (
-            <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
+            <div className="p-3 max-h-[350px] w-[850px] max-w-[90vw] overflow-auto">
               <h4 className="font-semibold text-sm mb-2 text-slate-800">
                 Chi tiết mặt hàng
               </h4>
@@ -1254,7 +1259,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
           return (
             <TableText
-              text={row.description || "—"}
+              text={(row.description || "—").replace(/\\n/g, " ")}
               tooltip={true}
               popoverContent={popoverContent}
               textClassName="line-clamp-2 break-words whitespace-normal text-slate-700"
@@ -1861,13 +1866,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
           const hasPdf =
-            inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0);
+            inv.pdfFileKey || (inv.attachments && inv.attachments.length > 0);
           if (hasPdf) {
             traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
               icon: <Download className="w-3.5 h-3.5" />,
               onClick: async () => {
-                if (inv.pdfFiles && inv.pdfFiles.length > 1) {
+                if (inv.attachments && inv.attachments.length > 1) {
                   try {
                     showToast({
                       title: "Đang nén file PDF...",
@@ -1890,17 +1895,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                       variant: "destructive",
                     });
                   }
-                } else if (inv.pdfFiles && inv.pdfFiles.length === 1) {
-                  const f = inv.pdfFiles[0];
+                } else if (inv.attachments && inv.attachments.length === 1) {
+                  const f = inv.attachments[0];
                   try {
                     const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
                       inv.id,
-                      f.key,
+                      f.attachment?.fileKey,
                       false,
                     );
                     const a = document.createElement("a");
                     a.href = url;
-                    a.download = f.filename || "document.pdf";
+                    a.download = f.attachment?.fileName || "document.pdf";
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -2007,8 +2012,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 pdfSlot={
                   <ErpInvoicePdfUpload
                     invoiceId={formHook.detailInvoice?.id ?? null}
-                    pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                    pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                    attachments={formHook.detailInvoice?.attachments ?? null}
                     editMode={formHook.editMode}
                     pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {
@@ -2018,11 +2022,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                         pendingDeletedPdfs: [...current, key],
                       }));
                     }}
-                    pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                    onPendingAddedPdfsChange={(files) => {
+                    pendingAddedAttachments={
+                      formHook.form.pendingAddedAttachments
+                    }
+                    onPendingAddedAttachmentsChange={(files) => {
                       formHook.setForm((prev) => ({
                         ...prev,
-                        pendingAddedPdfs: files,
+                        pendingAddedAttachments: files,
                       }));
                     }}
                   />

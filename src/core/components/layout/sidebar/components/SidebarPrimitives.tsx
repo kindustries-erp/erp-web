@@ -31,8 +31,9 @@ export function SubItem({
     <div
       className={cn(
         "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden",
-        "text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground",
-        active && "!text-foreground font-medium",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover hover:text-foreground",
+        active &&
+          "!text-[color:var(--sidebar-active-fg)] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
       onClick={onClick}
       onContextMenu={pageKey ? onContextMenu : undefined}
@@ -94,8 +95,9 @@ export function NavItem({
       <div
         className={cn(
           "flex items-center gap-2 px-[14px] py-[7px] cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px]",
-          "text-[color:var(--muted-fg)] hover:bg-surface-hover",
-          active && "bg-[color:var(--muted)] text-foreground font-medium",
+          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover",
+          active &&
+            "bg-[color:var(--sidebar-active-bg)] !text-[color:var(--sidebar-active-fg)] font-semibold opacity-100",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -146,10 +148,11 @@ export function NavGroup({
     <div
       className={cn(
         "flex items-center gap-2 px-[14px] py-[7px] whitespace-nowrap overflow-hidden min-h-[34px]",
-        "text-[color:var(--muted-fg)]",
-        active && "text-foreground font-medium",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100",
         !isMobile &&
           "hover:bg-surface-hover hover:text-foreground cursor-pointer outline-none select-none",
+        active &&
+          "bg-[color:var(--sidebar-active-bg)] !text-[color:var(--sidebar-active-fg)] font-semibold opacity-100",
       )}
     >
       <span className="nav-icon flex-shrink-0">{icon}</span>
@@ -234,9 +237,9 @@ export function NavGroupItem({
       <DropdownMenu.Item
         className={cn(
           "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm cursor-pointer outline-none select-none transition-colors",
-          "text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)] hover:text-foreground data-[highlighted]:text-foreground",
+          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)] hover:text-foreground data-[highlighted]:text-foreground",
           active &&
-            "!text-foreground font-medium bg-[color:var(--muted)] data-[highlighted]:bg-[color:var(--muted)]",
+            "!text-foreground font-semibold opacity-100 bg-black/5 dark:bg-white/10 data-[highlighted]:bg-black/10 dark:data-[highlighted]:bg-white/15",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -258,8 +261,9 @@ export function NavGroupItem({
     <div
       className={cn(
         "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-r-md",
-        "text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground",
-        active && "!text-foreground font-medium bg-[color:var(--muted)]",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover hover:text-foreground",
+        active &&
+          "!text-[color:var(--sidebar-active-fg)] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
       onClick={onClick}
       onContextMenu={contextPage ? onContextMenu : undefined}

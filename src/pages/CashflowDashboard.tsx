@@ -99,9 +99,42 @@ function BranchPartnerStatsTable({
     const options = new Set<string>();
     (partnerStats?.items || []).forEach((row: any) => {
       const name = row.correspondentName || row.correspondentAccount || "Khác";
-      options.add(name);
+      if (name !== "Khác") options.add(name);
     });
     return Array.from(options).map((o) => ({ label: o, value: o }));
+  }, [partnerStats?.items]);
+
+  const countOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    (partnerStats?.items || []).forEach((row: any) => {
+      if (row.transactionCount != null)
+        options.add(row.transactionCount.toString());
+    });
+    return Array.from(options).map((o) => ({ label: o, value: o }));
+  }, [partnerStats?.items]);
+
+  const creditOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    (partnerStats?.items || []).forEach((row: any) => {
+      if (row.totalCredit != null && row.totalCredit > 0)
+        options.add(row.totalCredit.toString());
+    });
+    return Array.from(options).map((o) => ({
+      label: money(Number(o)),
+      value: o,
+    }));
+  }, [partnerStats?.items]);
+
+  const debitOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    (partnerStats?.items || []).forEach((row: any) => {
+      if (row.totalDebit != null && row.totalDebit > 0)
+        options.add(row.totalDebit.toString());
+    });
+    return Array.from(options).map((o) => ({
+      label: money(Number(o)),
+      value: o,
+    }));
   }, [partnerStats?.items]);
 
   const renderHeaderFilter = (
@@ -129,25 +162,47 @@ function BranchPartnerStatsTable({
       cell: (row: any) => {
         const name =
           row.correspondentName || row.correspondentAccount || "Khác";
-
+        return (
+          <div className="flex items-center gap-2">
+            <TableText
+              text={name}
+              className="font-medium text-slate-700 w-full"
+              onDrawerClick={(e: any) => {
+                e.stopPropagation();
+                onPartnerClick(row.correspondentAccount, row.correspondentName);
+              }}
+              tooltip={name !== "Khác"}
+              enableCopy={name !== "Khác"}
+            />
+          </div>
+        );
+      },
+      size: 300,
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "transactionCount",
+      header: renderHeaderFilter(
+        "transactionCount",
+        "Số lượng GD",
+        countOptions,
+      ),
+      cell: (row: any) => {
         return (
           <TableText
-            text={name}
-            onDrawerClick={(e: any) => {
-              e.stopPropagation();
-              onPartnerClick(row.correspondentAccount, row.correspondentName);
-            }}
-            tooltip={name !== "Khác"}
-            enableCopy={name !== "Khác"}
+            text={row.transactionCount?.toString() || "0"}
+            className="text-center font-medium justify-center"
           />
         );
       },
-      className: "text-left w-1/3",
-      headerClassName: "text-left w-1/3",
+      size: 150,
+      className: "text-center",
+      headerClassName: "text-center",
     },
     {
       key: "totalCredit",
-      header: "Tổng thu",
+      header: renderHeaderFilter("totalCredit", "Tổng thu", creditOptions),
       cell: (row: any) => {
         if (row.totalCredit > 0)
           return (
@@ -158,12 +213,12 @@ function BranchPartnerStatsTable({
         return null;
       },
       size: 150,
-      className: "text-right w-1/3",
-      headerClassName: "text-center w-1/3",
+      className: "text-right",
+      headerClassName: "text-center",
     },
     {
       key: "totalDebit",
-      header: "Tổng chi",
+      header: renderHeaderFilter("totalDebit", "Tổng chi", debitOptions),
       cell: (row: any) => {
         if (row.totalDebit > 0)
           return (
@@ -174,8 +229,8 @@ function BranchPartnerStatsTable({
         return null;
       },
       size: 150,
-      className: "text-right w-1/3",
-      headerClassName: "text-center w-1/3",
+      className: "text-right",
+      headerClassName: "text-center",
     },
   ];
 
@@ -194,28 +249,26 @@ function BranchPartnerStatsTable({
   }, [partnerStats?.items]);
 
   return (
-    <div className="mb-8">
-      <h3 className="text-lg font-semibold mb-3">
-        Danh sách đối tác - {branchName}
+    <div className="mb-4">
+      <h3 className="text-lg font-semibold text-slate-800 mb-4 px-2">
+        Danh sách đối tác - {branchName || "Tất cả chi nhánh"}
       </h3>
       <StandardTable
+        tableId="cashflow-dashboard-partners"
         items={partnerStats?.items || []}
         columns={partnerCols}
         getRowKey={(row: any) => row.id}
         loading={isPartnerFetching}
         variant="spreadsheet"
-        minWidth={550}
-        enableColumnResizing={false}
-        containerClassName=""
+        minWidth={700}
+        enableColumnResizing={true}
+        containerClassName="max-h-[400px]"
         total={partnerStats?.total || 0}
         totalPages={partnerStats?.totalPages || 0}
         page={page}
         pageSize={pageSize}
         onPage={setPage}
         onPageSize={setPageSize}
-        onRowClick={(row: any) => {
-          onPartnerClick(row.correspondentAccount, row.correspondentName);
-        }}
         summaryRow={{
           partner: <span className="font-semibold text-right block">Tổng</span>,
           totalCredit: (
@@ -297,16 +350,6 @@ export function CashflowDashboard() {
   const filter = useFilterPanel(filterConfig, () => {});
 
   const queryClient = useQueryClient();
-
-  const activeBranches = React.useMemo(() => {
-    if (filter.state.custom.branchId) {
-      const b = branches.find(
-        (b: any) => b.id === filter.state.custom.branchId,
-      );
-      return b ? [b] : [];
-    }
-    return branches; // If no branch selected, return all branches
-  }, [filter.state.custom.branchId, branches]);
 
   const { data: bankAccounts = [] } = useQuery({
     queryKey: [
@@ -571,30 +614,21 @@ export function CashflowDashboard() {
         )}
       </div>
 
-      <div className="flex flex-col gap-6 mt-8 mb-4 items-start">
-        {activeBranches.length > 0 ? (
-          activeBranches.map((b: any) => (
-            <BranchPartnerStatsTable
-              key={b.id}
-              branchId={b.id}
-              branchName={b.name}
-              filterState={filter.state}
-              onPartnerClick={(account, name) => {
-                setSelectedPartner({ account, name });
-                setPartnerDrawerOpen(true);
-              }}
-            />
-          ))
-        ) : (
-          <BranchPartnerStatsTable
-            branchName="Tất cả chi nhánh"
-            filterState={filter.state}
-            onPartnerClick={(account, name) => {
-              setSelectedPartner({ account, name });
-              setPartnerDrawerOpen(true);
-            }}
-          />
-        )}
+      <div className="flex flex-col gap-6 mt-8 mb-4 items-start w-full">
+        <BranchPartnerStatsTable
+          branchId={filter.state.custom.branchId as string | undefined}
+          branchName={
+            filter.state.custom.branchId
+              ? branches.find((b: any) => b.id === filter.state.custom.branchId)
+                  ?.name || ""
+              : "Tất cả chi nhánh"
+          }
+          filterState={filter.state}
+          onPartnerClick={(account, name) => {
+            setSelectedPartner({ account, name });
+            setPartnerDrawerOpen(true);
+          }}
+        />
       </div>
       <CategoryTransactionsDrawer
         open={drawerOpen}

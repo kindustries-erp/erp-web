@@ -30,7 +30,7 @@ describe("ErpInvoiceInternalMain", () => {
       id: "inv-1",
       postingStatus: "DRAFT",
       pdfFileKey: null,
-      pdfFiles: [],
+      attachments: [],
     } as any,
     postingState: { lines: [], reset: vi.fn() },
     pendingUnpost: false,

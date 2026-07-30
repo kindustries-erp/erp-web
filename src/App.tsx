@@ -121,6 +121,11 @@ const ErpActivityLogsPage = lazy(() =>
     default: m.ErpActivityLogsPage,
   })),
 );
+const EmailInboxPage = lazy(() =>
+  import("@/pages/EmailInboxPage").then((m) => ({
+    default: m.EmailInboxPage,
+  })),
+);
 const ErpPermissionsCorePage = lazy(() =>
   import("@/pages/ErpPermissionsCorePage").then((m) => ({
     default: m.ErpPermissionsCorePage,
@@ -129,6 +134,11 @@ const ErpPermissionsCorePage = lazy(() =>
 const ErpInvoicesInPage = lazy(() =>
   import("@/pages/ErpInvoicesInPage").then((m) => ({
     default: m.ErpInvoicesInPage,
+  })),
+);
+const ErpInvoicesDraftPage = lazy(() =>
+  import("@/pages/ErpInvoicesDraftPage").then((m) => ({
+    default: m.ErpInvoicesDraftPage,
   })),
 );
 const ErpInvoicesOutPage = lazy(() =>
@@ -143,6 +153,9 @@ const InvoiceDashboard = lazy(() =>
 );
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
+);
+const AttachmentsPage = lazy(() =>
+  import("@/pages/Attachments").then((m) => ({ default: m.DinhKemChungTu })),
 );
 const BankStatementPage = lazy(() =>
   import("@/pages/BankStatementPage").then((m) => ({
@@ -258,11 +271,14 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-employees": ErpEmployeesPage,
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
+  "email-inbox": EmailInboxPage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
+  "erp-invoices-draft": ErpInvoicesDraftPage,
   "invoice-dashboard": InvoiceDashboard,
   "sys-tags": SysTagsPage,
+  attachments: AttachmentsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,
   "journal-entry": GeneralJournalPage,

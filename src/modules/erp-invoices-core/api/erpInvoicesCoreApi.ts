@@ -67,6 +67,10 @@ export interface ErpInvoice {
     netOffAmount: number;
     bankTransaction?: any;
   }[];
+  attachments?: {
+    attachmentId: string;
+    attachment: import("@/modules/system/api/attachmentsApi").ErpAttachment;
+  }[];
 }
 
 export interface CreateErpInvoicePayload {
@@ -106,7 +110,7 @@ export interface CreateErpInvoicePayload {
   }[];
   accountingEnabled?: boolean;
   pendingDeletedPdfs?: string[];
-  pendingAddedPdfs?: File[];
+  pendingAddedAttachments?: import("../components/ErpInvoicePdfUpload").PendingAttachment[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -474,12 +478,12 @@ export const erpInvoicesCoreApi = {
   uploadPdfs: async (
     id: string,
     files: File[],
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
     const { data } = await axiosInstance.post<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -567,11 +571,28 @@ export const erpInvoicesCoreApi = {
   deletePdf: async (
     id: string,
     key: string,
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const { data } = await axiosInstance.delete<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
+    return data;
+  },
+
+  linkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/attachments/link`,
+      {
+        attachmentId,
+      },
+    );
+    return data;
+  },
+
+  unlinkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.delete(
+      `${BASE}/${id}/attachments/${attachmentId}`,
+    );
     return data;
   },
 

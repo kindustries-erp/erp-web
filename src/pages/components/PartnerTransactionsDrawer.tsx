@@ -257,7 +257,7 @@ export function PartnerTransactionsDrawer({
         "referenceNumber",
         t("bankStatement.columns.referenceNumber"),
       ),
-      size: 150,
+      size: 200,
       cell: (row: any) => {
         if (!row.referenceNumber) return "—";
         return (
@@ -269,7 +269,7 @@ export function PartnerTransactionsDrawer({
             }}
             tooltip={true}
             enableCopy={true}
-            textClassName="font-medium underline text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
+            textClassName="font-medium text-primary hover:text-primary/80 cursor-pointer break-words whitespace-normal"
           />
         );
       },

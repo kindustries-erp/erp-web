@@ -30,7 +30,13 @@ export interface FilePreviewDrawerProps {
   zIndex?: number;
 }
 
-type FileTypeCategory = "PDF" | "IMAGE" | "EXCEL" | "UNSUPPORTED" | "UNKNOWN";
+type FileTypeCategory =
+  | "PDF"
+  | "IMAGE"
+  | "EXCEL"
+  | "WORD"
+  | "UNSUPPORTED"
+  | "UNKNOWN";
 
 export function FilePreviewDrawer({
   open,
@@ -74,6 +80,15 @@ export function FilePreviewDrawer({
       lowerName.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/)
     ) {
       return "IMAGE";
+    }
+    if (
+      file?.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file?.type === "application/msword" ||
+      lowerName.endsWith(".docx") ||
+      lowerName.endsWith(".doc")
+    ) {
+      return "WORD";
     }
     return "UNSUPPORTED";
   }, [file, lowerName]);
@@ -182,7 +197,11 @@ export function FilePreviewDrawer({
       );
     }
 
-    if (!blobUrl && fileTypeCategory !== "EXCEL") {
+    if (
+      !blobUrl &&
+      fileTypeCategory !== "EXCEL" &&
+      fileTypeCategory !== "WORD"
+    ) {
       return null;
     }
 
@@ -236,6 +255,19 @@ export function FilePreviewDrawer({
           </div>
         );
       case "EXCEL":
+        if (previewUrl) {
+          return (
+            <div className="w-full h-[75vh] bg-[color:var(--muted-bg)] rounded-md overflow-hidden border border-[color:var(--border)]">
+              <iframe
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                title="Excel Preview"
+              />
+            </div>
+          );
+        }
         if (!excelData || excelData.length === 0) {
           return (
             <div className="text-center p-8 text-[color:var(--muted-fg)]">
@@ -295,6 +327,36 @@ export function FilePreviewDrawer({
                 Chỉ hiển thị tối đa 500 dòng để tối ưu hiệu suất.
               </div>
             )}
+          </div>
+        );
+      case "WORD":
+        if (!previewUrl) {
+          return (
+            <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 p-8 bg-[color:var(--muted-bg)] border border-[color:var(--border)] rounded-md">
+              <div className="h-16 w-16 bg-[color:var(--muted-bg)] rounded-full flex items-center justify-center">
+                <FileType className="h-8 w-8 text-[color:var(--muted-fg)]" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-medium text-[color:var(--foreground)] mb-1">
+                  Định dạng file không hỗ trợ xem trước trực tiếp
+                </h3>
+                <p className="text-sm text-[color:var(--muted-fg)]">
+                  Không thể xem trước file cục bộ. Vui lòng tải lên hoặc tải
+                  xuống để xem.
+                </p>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="w-full h-[75vh] bg-[color:var(--muted-bg)] rounded-md overflow-hidden border border-[color:var(--border)]">
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              title="Word Preview"
+            />
           </div>
         );
       default:

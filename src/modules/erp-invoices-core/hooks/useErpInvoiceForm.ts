@@ -171,7 +171,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice | string) {
+  async function openInternal(inv: ErpInvoice | string, skipFetch = false) {
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
@@ -205,11 +205,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInternalDrawerOpen(true);
 
     if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
+      skipFetch ||
+      (detailInvoice?.id === inv.id &&
+        detailInvoice?.items &&
+        detailInvoice.items.length > 0)
     ) {
-      setForm(mapInvoiceToForm(detailInvoice));
+      setForm(mapInvoiceToForm(inv));
       return;
     }
 
@@ -263,7 +264,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       ...mapInvoiceToForm(detailInvoice),
       pendingDocumentChanges: [],
       pendingDeletedPdfs: [],
-      pendingAddedPdfs: [],
+      pendingAddedAttachments: [],
     });
     setFormError(null);
     setPendingUnpost(false);
@@ -277,7 +278,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         ...mapInvoiceToForm(detailInvoice),
         pendingDocumentChanges: [],
         pendingDeletedPdfs: [],
-        pendingAddedPdfs: [],
+        pendingAddedAttachments: [],
       });
     }
     setFormError(null);
@@ -352,7 +353,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       delete payload.pendingDocumentChanges;
       delete (payload as any).accountingEnabled;
       delete payload.pendingDeletedPdfs;
-      delete payload.pendingAddedPdfs;
+      delete payload.pendingAddedAttachments;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -455,16 +456,30 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         }
       }
 
-      const pendingAddedPdfs = form.pendingAddedPdfs || [];
-      if (pendingAddedPdfs.length > 0) {
-        setForm((prev) => ({ ...prev, pendingAddedPdfs: [] }));
+      const pendingAddedAttachments = form.pendingAddedAttachments || [];
+      if (pendingAddedAttachments.length > 0) {
+        setForm((prev) => ({ ...prev, pendingAddedAttachments: [] }));
         try {
-          await erpInvoicesCoreApi.uploadPdfs(
-            invoiceIdToProcess,
-            pendingAddedPdfs,
-          );
+          // We need to upload each attachment or group by type.
+          // For now, let's just upload them one by one or grouped.
+          // The API uploadPdfs (which I'll rename or keep) accepts a file array, but wait...
+          // I will use `uploadAttachmentApi` from `system` instead!
+          // But wait, they are attached to invoice so we can use `uploadPdfs` in erpInvoicesCoreApi if we change it.
+          // Wait, `postInvoice` is for accounting, attachments are uploaded via `erpInvoicesCoreApi.uploadPdfs`.
+          for (const att of pendingAddedAttachments) {
+            const res =
+              await import("@/modules/system/api/attachmentsApi").then((m) =>
+                m.uploadAttachmentApi([att.file], att.documentType, "Hóa đơn"),
+              );
+            if (res.success && res.attachments.length > 0) {
+              await erpInvoicesCoreApi.linkAttachment(
+                invoiceIdToProcess,
+                res.attachments[0].id,
+              );
+            }
+          }
         } catch (err) {
-          console.error("Failed to upload PDFs", err);
+          console.error("Failed to upload attachments", err);
         }
       }
 

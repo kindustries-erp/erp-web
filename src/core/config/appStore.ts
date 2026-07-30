@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 
-export type AppTheme = "shell" | "classic" | "orcaq";
+export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
 
 function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
@@ -13,6 +13,10 @@ function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
     "theme-orcaq",
     appTheme === "orcaq",
+  );
+  document.documentElement.classList.toggle(
+    "theme-midnight",
+    appTheme === "midnight",
   );
 }
 
@@ -125,8 +129,16 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
+  attachments: {
+    labelKey: "nav.items.attachments",
+    group: "settings",
+  },
   "invoice-dashboard": {
     labelKey: "nav.items.invoiceDashboard",
+    group: "accounting",
+  },
+  "erp-invoices-draft": {
+    labelKey: "Hóa đơn nháp",
     group: "accounting",
   },
   "erp-invoices-in": {
@@ -177,6 +189,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "bankStatement.cashTitle",
     group: "accounting",
   },
+  "email-inbox": { labelKey: "nav.items.emailInbox", group: "system" },
   "cashflow-dashboard": {
     labelKey: "nav.items.cashflowDashboard",
     group: "accounting",
@@ -275,9 +288,11 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
   "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
+  attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
   "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
   "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
   "vinfast-parts-oto": [["breadcrumb.inventory"], ["Phụ tùng ôtô"]],
@@ -301,6 +316,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["nav.items.cashflow"],
     ["bankStatement.cashTitle"],
   ],
+  "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
   "cashflow-dashboard": [
     ["breadcrumb.accounting"],
     ["nav.items.cashflow"],
@@ -508,7 +524,7 @@ export const useAppStore = create<AppState>()(
       setCompanyProfileOpen: (open) => set({ companyProfileOpen: open }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["classic", "shell", "orcaq"];
+        const order: AppTheme[] = ["classic", "shell", "orcaq", "midnight"];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });

@@ -106,8 +106,7 @@ export function ErpInvoiceStandaloneDrawer({
                 pdfSlot={
                   <ErpInvoicePdfUpload
                     invoiceId={formHook.detailInvoice?.id ?? null}
-                    pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                    pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                    attachments={formHook.detailInvoice?.attachments ?? null}
                     editMode={formHook.editMode}
                     pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {
@@ -117,11 +116,13 @@ export function ErpInvoiceStandaloneDrawer({
                         pendingDeletedPdfs: [...current, key],
                       }));
                     }}
-                    pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                    onPendingAddedPdfsChange={(files) => {
+                    pendingAddedAttachments={
+                      formHook.form.pendingAddedAttachments
+                    }
+                    onPendingAddedAttachmentsChange={(files) => {
                       formHook.setForm((prev) => ({
                         ...prev,
-                        pendingAddedPdfs: files,
+                        pendingAddedAttachments: files,
                       }));
                     }}
                   />
