@@ -23,9 +23,7 @@ import {
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
-import {
-  erpInvoicesCoreApi,
-} from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 const TYPE_OPTS = [
   { value: "HOP_DONG", label: "Hợp đồng" },
@@ -371,8 +369,6 @@ export function DinhKemChungTu() {
       size: 150,
     },
   ];
-
-  const t = useT();
 
   return (
     <SpreadsheetPageTemplate<ErpAttachment>

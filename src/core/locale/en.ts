@@ -12,6 +12,7 @@ export const en: Dict = {
       purchasing: "PURCHASING",
       inventory: "WAREHOUSE",
       manufacturing: "MANUFACTURING / WORKSHOP",
+      admin: "ADMIN",
       system: "SYSTEM",
       settings: "SYSTEM",
     },
