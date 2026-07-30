@@ -548,7 +548,6 @@ export function PartnerInvoiceDrawer({
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
                   attachments={formHook.detailInvoice?.attachments ?? null}
-                  
                   editMode={formHook.editMode}
                   pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                   onPendingDeletePdf={(key) => {
@@ -558,7 +557,9 @@ export function PartnerInvoiceDrawer({
                       pendingDeletedPdfs: [...current, key],
                     }));
                   }}
-                  pendingAddedAttachments={formHook.form.pendingAddedAttachments}
+                  pendingAddedAttachments={
+                    formHook.form.pendingAddedAttachments
+                  }
                   onPendingAddedAttachmentsChange={(files) => {
                     formHook.setForm((prev) => ({
                       ...prev,

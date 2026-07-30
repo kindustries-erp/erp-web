@@ -208,7 +208,6 @@ export function VinfastPartsDashboardPage() {
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
                   attachments={formHook.detailInvoice?.pdfFiles ?? null}
-                  
                   editMode={formHook.editMode}
                 />
               }

@@ -651,7 +651,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 <FileCode className="w-4 h-4 text-gray-300" />
               </Tooltip>
             )}
-            {inv.pdfFileKey || (inv.attachments && inv.attachments.length > 0) ? (
+            {inv.pdfFileKey ||
+            (inv.attachments && inv.attachments.length > 0) ? (
               <Popover
                 align="start"
                 open={openPopoverId === inv.id}
@@ -721,7 +722,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenPopoverId(null);
-                              handlePreviewPdf(inv.id, pdf.attachment?.fileKey, pdf.attachment?.fileName);
+                              handlePreviewPdf(
+                                inv.id,
+                                pdf.attachment?.fileKey,
+                                pdf.attachment?.fileName,
+                              );
                             }}
                           >
                             <Eye className="w-4 h-4" />
@@ -2008,7 +2013,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   <ErpInvoicePdfUpload
                     invoiceId={formHook.detailInvoice?.id ?? null}
                     attachments={formHook.detailInvoice?.attachments ?? null}
-                    
                     editMode={formHook.editMode}
                     pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {
@@ -2018,7 +2022,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                         pendingDeletedPdfs: [...current, key],
                       }));
                     }}
-                    pendingAddedAttachments={formHook.form.pendingAddedAttachments}
+                    pendingAddedAttachments={
+                      formHook.form.pendingAddedAttachments
+                    }
                     onPendingAddedAttachmentsChange={(files) => {
                       formHook.setForm((prev) => ({
                         ...prev,

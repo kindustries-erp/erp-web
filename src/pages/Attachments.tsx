@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
-import { Eye, ExternalLink, FileText, Paperclip, Upload } from "lucide-react";
+import { ExternalLink, FileText, Paperclip } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
-import { SearchInput } from "@/shared/components/SearchInput";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { useT } from "@/core/i18n";
-import { Combobox } from "@/shared/components/Combobox";
 import { Badge } from "@/shared/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 import { DrawerModal, DrawerRow } from "@/shared/components/DrawerModal";
 import {
   getAttachmentsPagedApi,
   getAttachmentDownloadUrlApi,
   getAttachmentOptionsApi,
-  uploadAttachmentApi,
   type ErpAttachment,
 } from "@/modules/system/api/attachmentsApi";
 import { TableText } from "@/shared/components/DataTable/TableText";
@@ -24,9 +21,11 @@ import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
-import { erpInvoicesCoreApi, type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
+import {
+  erpInvoicesCoreApi,
+} from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 const TYPE_OPTS = [
   { value: "HOP_DONG", label: "Hợp đồng" },
@@ -51,7 +50,7 @@ export function DinhKemChungTu() {
   const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
+  const search = "";
   const invoiceFormHook = useErpInvoiceForm(async () => {});
   const [typeFilter, setTypeFilter] = useState<string | "">("");
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -107,7 +106,8 @@ export function DinhKemChungTu() {
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         sort,
-        filtersStr: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined,
+        filtersStr:
+          Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined,
       });
       setItems(res.items || []);
       setTotal(res.total);
@@ -213,7 +213,9 @@ export function DinhKemChungTu() {
           sortState={getSortState("fileName")}
           onSortChange={(state) => handleSortChange("fileName", state)}
           searchValue={colSearch["fileName"] || ""}
-          onSearchChange={(v) => setColSearch((prev) => ({ ...prev, fileName: v }))}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, fileName: v }))
+          }
           selectedFilters={filters["fileName"] || []}
           onFilterChange={(vals) => {
             setFilters((prev) => ({ ...prev, fileName: vals }));
@@ -244,7 +246,9 @@ export function DinhKemChungTu() {
           sortState={getSortState("module")}
           onSortChange={(state) => handleSortChange("module", state)}
           searchValue={colSearch["module"] || ""}
-          onSearchChange={(v) => setColSearch((prev) => ({ ...prev, module: v }))}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, module: v }))
+          }
           selectedFilters={filters["module"] || []}
           onFilterChange={(vals) => {
             setFilters((prev) => ({ ...prev, module: vals }));
@@ -269,7 +273,9 @@ export function DinhKemChungTu() {
           sortState="none"
           onSortChange={() => {}}
           searchValue={colSearch["relatedDocs"] || ""}
-          onSearchChange={(v) => setColSearch((prev) => ({ ...prev, relatedDocs: v }))}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, relatedDocs: v }))
+          }
           selectedFilters={filters["relatedDocs"] || []}
           onFilterChange={(vals) => {
             setFilters((prev) => ({ ...prev, relatedDocs: vals }));
@@ -298,7 +304,7 @@ export function DinhKemChungTu() {
                   }}
                   className="w-auto"
                 />
-              ) : null
+              ) : null,
             )}
           </div>
         );
@@ -316,7 +322,9 @@ export function DinhKemChungTu() {
           sortState="none"
           onSortChange={() => {}}
           searchValue={colSearch["fileExt"] || ""}
-          onSearchChange={(v) => setColSearch((prev) => ({ ...prev, fileExt: v }))}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, fileExt: v }))
+          }
           selectedFilters={filters["fileExt"] || []}
           onFilterChange={(vals) => {
             setFilters((prev) => ({ ...prev, fileExt: vals }));
@@ -344,7 +352,9 @@ export function DinhKemChungTu() {
           sortState={getSortState("fileSize")}
           onSortChange={(state) => handleSortChange("fileSize", state)}
           searchValue={colSearch["fileSize"] || ""}
-          onSearchChange={(v) => setColSearch((prev) => ({ ...prev, fileSize: v }))}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, fileSize: v }))
+          }
           selectedFilters={filters["fileSize"] || []}
           onFilterChange={(vals) => {
             setFilters((prev) => ({ ...prev, fileSize: vals }));
@@ -353,7 +363,8 @@ export function DinhKemChungTu() {
           align="center"
         />
       ),
-      cell: (a) => (a.fileSize != null ? `${(a.fileSize / 1024).toFixed(1)} KB` : "—"),
+      cell: (a) =>
+        a.fileSize != null ? `${(a.fileSize / 1024).toFixed(1)} KB` : "—",
       className: "text-[color:var(--muted-fg)] whitespace-nowrap text-center",
       headerClassName: "text-center",
       skeletonClassName: "w-20",
@@ -422,23 +433,30 @@ export function DinhKemChungTu() {
                 invoiceId={invoiceFormHook.detailInvoice?.id ?? null}
                 pendingTagIds={invoiceFormHook.pendingTagIds}
                 onPendingTagsChange={invoiceFormHook.setPendingTagIds}
-                direction={invoiceFormHook.detailInvoice.direction as "IN" | "OUT"}
+                direction={
+                  invoiceFormHook.detailInvoice.direction as "IN" | "OUT"
+                }
                 detailInvoice={invoiceFormHook.detailInvoice}
                 onRefreshDetail={invoiceFormHook.handleSyncDetail}
                 pdfSlot={
                   <ErpInvoicePdfUpload
                     invoiceId={invoiceFormHook.detailInvoice?.id ?? null}
-                    attachments={invoiceFormHook.detailInvoice?.attachments ?? null}
+                    attachments={
+                      invoiceFormHook.detailInvoice?.attachments ?? null
+                    }
                     editMode={invoiceFormHook.editMode}
                     pendingDeletedPdfs={invoiceFormHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {
-                      const current = invoiceFormHook.form.pendingDeletedPdfs || [];
+                      const current =
+                        invoiceFormHook.form.pendingDeletedPdfs || [];
                       invoiceFormHook.setForm((prev) => ({
                         ...prev,
                         pendingDeletedPdfs: [...current, key],
                       }));
                     }}
-                    pendingAddedAttachments={invoiceFormHook.form.pendingAddedAttachments}
+                    pendingAddedAttachments={
+                      invoiceFormHook.form.pendingAddedAttachments
+                    }
                     onPendingAddedAttachmentsChange={(files) => {
                       invoiceFormHook.setForm((prev) => ({
                         ...prev,
@@ -471,19 +489,25 @@ export function DinhKemChungTu() {
                 fieldSet={(key: string, value: any) =>
                   invoiceFormHook.setForm((prev) => ({ ...prev, [key]: value }))
                 }
-                direction={invoiceFormHook.detailInvoice?.direction as "IN" | "OUT"}
+                direction={
+                  invoiceFormHook.detailInvoice?.direction as "IN" | "OUT"
+                }
                 detailInvoice={invoiceFormHook.detailInvoice}
                 postingState={invoiceFormHook.postingState}
                 pendingUnpost={invoiceFormHook.pendingUnpost}
                 onUnpost={() => invoiceFormHook.setPendingUnpost(true)}
                 onRefreshDetail={() => {
                   if (invoiceFormHook.detailInvoice?.id) {
-                    invoiceFormHook.openInternal(invoiceFormHook.detailInvoice.id);
+                    invoiceFormHook.openInternal(
+                      invoiceFormHook.detailInvoice.id,
+                    );
                   }
                 }}
                 invoicePreview={
                   invoiceFormHook.detailInvoice ? (
-                    <VietnamInvoiceTemplate invoice={invoiceFormHook.detailInvoice} />
+                    <VietnamInvoiceTemplate
+                      invoice={invoiceFormHook.detailInvoice}
+                    />
                   ) : undefined
                 }
               />
@@ -521,7 +545,7 @@ function AttachmentDetail({
   }, [item]);
 
   const previewType = item?.mimeType ?? "";
-  
+
   return (
     <DrawerModal
       open={!!item}
@@ -545,11 +569,13 @@ function AttachmentDetail({
           <DrawerRow label="Tên file" value={item.fileName} cls="break-all" />
           <DrawerRow
             label="Dung lượng"
-            value={item.fileSize ? `${(item.fileSize / 1024).toFixed(1)} KB` : "—"}
+            value={
+              item.fileSize ? `${(item.fileSize / 1024).toFixed(1)} KB` : "—"
+            }
           />
           <DrawerRow label="Định dạng" value={item.mimeType || "—"} />
           <DrawerRow label="Ngày tải" value={item.createdAt || "—"} />
-          
+
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-[11px] font-medium text-[color:var(--muted-fg)]">
@@ -581,9 +607,11 @@ function AttachmentDetail({
                 />
               )}
               {previewUrl &&
-                (previewType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                (previewType ===
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
                   previewType === "application/msword" ||
-                  previewType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                  previewType ===
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
                   previewType === "application/vnd.ms-excel" ||
                   item.fileName.toLowerCase().endsWith(".docx") ||
                   item.fileName.toLowerCase().endsWith(".doc") ||
@@ -598,16 +626,19 @@ function AttachmentDetail({
               {previewUrl &&
                 !previewType.startsWith("image/") &&
                 previewType !== "application/pdf" &&
-                previewType !== "application/vnd.openxmlformats-officedocument.wordprocessingml.document" &&
+                previewType !==
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document" &&
                 previewType !== "application/msword" &&
-                previewType !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
+                previewType !==
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
                 previewType !== "application/vnd.ms-excel" &&
                 !item.fileName.toLowerCase().endsWith(".docx") &&
                 !item.fileName.toLowerCase().endsWith(".doc") &&
                 !item.fileName.toLowerCase().endsWith(".xlsx") &&
                 !item.fileName.toLowerCase().endsWith(".xls") && (
                   <div className="flex h-full items-center justify-center px-6 text-center text-xs text-[color:var(--muted-fg)]">
-                    Không thể tải preview cho loại file này. Hãy tải xuống để xem.
+                    Không thể tải preview cho loại file này. Hãy tải xuống để
+                    xem.
                   </div>
                 )}
             </div>
@@ -620,12 +651,18 @@ function AttachmentDetail({
 
 function TypeBadge({ type }: { type: string | null }) {
   let colorClass = "bg-[#f1f5f9] text-[#475569] border-transparent"; // KHAC (gray)
-  if (type === "HOP_DONG") colorClass = "bg-[#ecfdf5] text-[#10b981] border-[#10b981]/20"; // green
-  else if (type === "HOA_DON") colorClass = "bg-[#eff6ff] text-[#3b82f6] border-[#3b82f6]/20"; // blue
-  else if (type === "BANG_KE") colorClass = "bg-[#fff7ed] text-[#f97316] border-[#f97316]/20"; // orange
+  if (type === "HOP_DONG")
+    colorClass = "bg-[#ecfdf5] text-[#10b981] border-[#10b981]/20"; // green
+  else if (type === "HOA_DON")
+    colorClass = "bg-[#eff6ff] text-[#3b82f6] border-[#3b82f6]/20"; // blue
+  else if (type === "BANG_KE")
+    colorClass = "bg-[#fff7ed] text-[#f97316] border-[#f97316]/20"; // orange
 
   return (
-    <Badge variant="outline" className={`w-20 inline-flex justify-center ${colorClass}`}>
+    <Badge
+      variant="outline"
+      className={`w-20 inline-flex justify-center ${colorClass}`}
+    >
       {typeLabel(type)}
     </Badge>
   );

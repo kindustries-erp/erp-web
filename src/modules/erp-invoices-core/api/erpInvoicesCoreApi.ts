@@ -580,9 +580,12 @@ export const erpInvoicesCoreApi = {
   },
 
   linkAttachment: async (id: string, attachmentId: string): Promise<any> => {
-    const { data } = await axiosInstance.post(`${BASE}/${id}/attachments/link`, {
-      attachmentId,
-    });
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/attachments/link`,
+      {
+        attachmentId,
+      },
+    );
     return data;
   },
 

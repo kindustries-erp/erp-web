@@ -75,7 +75,9 @@ describe("useErpInvoiceForm", () => {
         invoiceNo: "INV-1",
         invoiceDate: "2026-07-22",
         pendingDeletedPdfs: ["delete-me.pdf"],
-        pendingAddedAttachments: [{ file: new File([], "add-me.pdf"), documentType: "HOA_DON" }],
+        pendingAddedAttachments: [
+          { file: new File([], "add-me.pdf"), documentType: "HOA_DON" },
+        ],
       }));
     });
 

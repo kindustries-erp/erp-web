@@ -30,7 +30,13 @@ export interface FilePreviewDrawerProps {
   zIndex?: number;
 }
 
-type FileTypeCategory = "PDF" | "IMAGE" | "EXCEL" | "WORD" | "UNSUPPORTED" | "UNKNOWN";
+type FileTypeCategory =
+  | "PDF"
+  | "IMAGE"
+  | "EXCEL"
+  | "WORD"
+  | "UNSUPPORTED"
+  | "UNKNOWN";
 
 export function FilePreviewDrawer({
   open,
@@ -76,7 +82,8 @@ export function FilePreviewDrawer({
       return "IMAGE";
     }
     if (
-      file?.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file?.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
       file?.type === "application/msword" ||
       lowerName.endsWith(".docx") ||
       lowerName.endsWith(".doc")
@@ -190,7 +197,11 @@ export function FilePreviewDrawer({
       );
     }
 
-    if (!blobUrl && fileTypeCategory !== "EXCEL" && fileTypeCategory !== "WORD") {
+    if (
+      !blobUrl &&
+      fileTypeCategory !== "EXCEL" &&
+      fileTypeCategory !== "WORD"
+    ) {
       return null;
     }
 
@@ -330,7 +341,8 @@ export function FilePreviewDrawer({
                   Định dạng file không hỗ trợ xem trước trực tiếp
                 </h3>
                 <p className="text-sm text-[color:var(--muted-fg)]">
-                  Không thể xem trước file cục bộ. Vui lòng tải lên hoặc tải xuống để xem.
+                  Không thể xem trước file cục bộ. Vui lòng tải lên hoặc tải
+                  xuống để xem.
                 </p>
               </div>
             </div>

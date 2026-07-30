@@ -53,7 +53,7 @@ export function ErpInvoicePdfUpload({
     fileKey: string;
     mimeType?: string;
   } | null>(null);
-  
+
   const [uploadType, setUploadType] = useState<string>("HOA_DON");
   const [showSelectDrawer, setShowSelectDrawer] = useState(false);
 
@@ -68,20 +68,22 @@ export function ErpInvoicePdfUpload({
 
   const handleFilesChange = (newFiles: File[]) => {
     if (!onPendingAddedAttachmentsChange) return;
-    
+
     // We get the raw array of files. We need to match it with existing pending attachments
     // and append new ones with the currently selected uploadType.
     const newPendingList: PendingAttachment[] = [];
-    
+
     for (const f of newFiles) {
-      const existing = pendingAddedAttachments.find(p => p.file.name === f.name && p.file.size === f.size);
+      const existing = pendingAddedAttachments.find(
+        (p) => p.file.name === f.name && p.file.size === f.size,
+      );
       if (existing) {
         newPendingList.push(existing);
       } else {
         newPendingList.push({ file: f, documentType: uploadType });
       }
     }
-    
+
     onPendingAddedAttachmentsChange(newPendingList);
   };
 
@@ -155,7 +157,9 @@ export function ErpInvoicePdfUpload({
                         id: att.id,
                         filename_download: att.fileName,
                       },
-                      attachment_type: TYPE_OPTS.find(t => t.value === att.documentType)?.label || att.documentType,
+                      attachment_type:
+                        TYPE_OPTS.find((t) => t.value === att.documentType)
+                          ?.label || att.documentType,
                     } as any
                   }
                   onDelete={
@@ -186,7 +190,9 @@ export function ErpInvoicePdfUpload({
         {editMode && onPendingAddedAttachmentsChange && (
           <div className="mt-2 space-y-3">
             <div className="flex items-center gap-3 bg-muted/50 p-2 rounded-md">
-              <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">Loại tài liệu tải lên:</span>
+              <span className="text-sm font-medium whitespace-nowrap text-muted-foreground">
+                Loại tài liệu tải lên:
+              </span>
               <Combobox
                 options={TYPE_OPTS}
                 value={uploadType}
@@ -196,7 +202,7 @@ export function ErpInvoicePdfUpload({
               />
             </div>
             <Attachment
-              files={pendingAddedAttachments.map(p => p.file)}
+              files={pendingAddedAttachments.map((p) => p.file)}
               onFilesChange={handleFilesChange}
               maxFiles={10}
               maxSizeMb={20}
@@ -228,7 +234,7 @@ export function ErpInvoicePdfUpload({
             : undefined
         }
       />
-      
+
       {showSelectDrawer && invoiceId && (
         <ErpAttachmentSelectDrawer
           open={showSelectDrawer}

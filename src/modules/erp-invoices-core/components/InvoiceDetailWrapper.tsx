@@ -68,7 +68,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
               <ErpInvoicePdfUpload
                 invoiceId={formHook.detailInvoice?.id ?? null}
                 attachments={formHook.detailInvoice?.attachments ?? null}
-                
                 editMode={formHook.editMode}
                 pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                 onPendingDeletePdf={(key) => {

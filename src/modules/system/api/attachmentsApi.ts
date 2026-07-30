@@ -9,7 +9,9 @@ export interface ErpAttachment {
   documentType: string;
   module?: string;
   createdAt: string;
-  invoiceLinks?: { invoice?: { id: string; invoiceNo: string; direction: "IN" | "OUT" } }[];
+  invoiceLinks?: {
+    invoice?: { id: string; invoiceNo: string; direction: "IN" | "OUT" };
+  }[];
 }
 
 export interface AttachmentPagedResponse {
@@ -65,15 +67,18 @@ export async function getAttachmentOptionsApi(params: {
   next: number | null;
 }> {
   const pageSize = 50;
-  const { data } = await axiosInstance.get(`/api/v1/erp-attachments/column-options`, {
-    params: {
-      column: params.columnKey,
-      search: params.search,
-      page: params.pageParam,
-      pageSize,
-      column_filters: params.filtersStr,
+  const { data } = await axiosInstance.get(
+    `/api/v1/erp-attachments/column-options`,
+    {
+      params: {
+        column: params.columnKey,
+        search: params.search,
+        page: params.pageParam,
+        pageSize,
+        column_filters: params.filtersStr,
+      },
     },
-  });
+  );
   return {
     items: data.items,
     total: data.total,
@@ -93,9 +98,13 @@ export async function uploadAttachmentApi(
     formData.append("module", module);
   }
 
-  const { data } = await axiosInstance.post("/api/v1/erp-attachments/upload", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const { data } = await axiosInstance.post(
+    "/api/v1/erp-attachments/upload",
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
   return data;
 }
 
@@ -113,7 +122,7 @@ export async function getAttachmentDownloadUrlApi(
 ): Promise<{ url: string }> {
   const { data } = await axiosInstance.get(
     `/api/v1/erp-attachments/${id}/download-url`,
-    { params: { inline: inline ? "true" : undefined } }
+    { params: { inline: inline ? "true" : undefined } },
   );
   return data;
 }

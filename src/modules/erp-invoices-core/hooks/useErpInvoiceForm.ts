@@ -467,10 +467,16 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
           // But wait, they are attached to invoice so we can use `uploadPdfs` in erpInvoicesCoreApi if we change it.
           // Wait, `postInvoice` is for accounting, attachments are uploaded via `erpInvoicesCoreApi.uploadPdfs`.
           for (const att of pendingAddedAttachments) {
-             const res = await import("@/modules/system/api/attachmentsApi").then(m => m.uploadAttachmentApi([att.file], att.documentType, "Hóa đơn"));
-             if (res.success && res.attachments.length > 0) {
-               await erpInvoicesCoreApi.linkAttachment(invoiceIdToProcess, res.attachments[0].id);
-             }
+            const res =
+              await import("@/modules/system/api/attachmentsApi").then((m) =>
+                m.uploadAttachmentApi([att.file], att.documentType, "Hóa đơn"),
+              );
+            if (res.success && res.attachments.length > 0) {
+              await erpInvoicesCoreApi.linkAttachment(
+                invoiceIdToProcess,
+                res.attachments[0].id,
+              );
+            }
           }
         } catch (err) {
           console.error("Failed to upload attachments", err);
