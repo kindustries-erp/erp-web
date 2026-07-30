@@ -133,6 +133,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.invoiceDashboard",
     group: "accounting",
   },
+  "erp-invoices-draft": {
+    labelKey: "Hóa đơn nháp",
+    group: "accounting",
+  },
   "erp-invoices-in": {
     labelKey: "nav.items.erpInvoicesIn",
     group: "accounting",
@@ -282,6 +286,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
   "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
   "vinfast-parts-oto": [["breadcrumb.inventory"], ["Phụ tùng ôtô"]],

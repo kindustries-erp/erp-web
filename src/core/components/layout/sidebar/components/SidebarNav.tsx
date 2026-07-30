@@ -467,6 +467,7 @@ export function SidebarNav({
                 active={
                   currentPage === "erp-invoices-in" ||
                   currentPage === "erp-invoices-out" ||
+                  currentPage === "erp-invoices-draft" ||
                   currentPage === "invoice-dashboard"
                 }
               >
@@ -487,6 +488,12 @@ export function SidebarNav({
                   active={currentPage === "erp-invoices-out"}
                   onClick={() => navTo("erp-invoices-out")}
                   contextPage="erp-invoices-out"
+                />
+                <NavGroupItem
+                  label="Hóa đơn nháp"
+                  active={currentPage === "erp-invoices-draft"}
+                  onClick={() => navTo("erp-invoices-draft")}
+                  contextPage="erp-invoices-draft"
                 />
               </NavGroup>
             )}

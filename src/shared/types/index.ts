@@ -52,6 +52,7 @@ export type PageKey =
   | "sys-tags"
   | "erp-invoices-in"
   | "erp-invoices-out"
+  | "erp-invoices-draft"
   | "invoice-dashboard"
   | "purchasing-report-dashboard"
   | "bank-statement"

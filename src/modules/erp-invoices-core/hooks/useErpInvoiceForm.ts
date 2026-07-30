@@ -171,7 +171,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice | string) {
+  async function openInternal(inv: ErpInvoice | string, skipFetch = false) {
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
@@ -205,11 +205,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInternalDrawerOpen(true);
 
     if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
+      skipFetch ||
+      (detailInvoice?.id === inv.id &&
+        detailInvoice?.items &&
+        detailInvoice.items.length > 0)
     ) {
-      setForm(mapInvoiceToForm(detailInvoice));
+      setForm(mapInvoiceToForm(inv));
       return;
     }
 
