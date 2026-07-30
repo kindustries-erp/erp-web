@@ -1112,7 +1112,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         headerClassName: "text-center",
         cell: (row) => {
           const popoverContent = (
-            <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
+            <div className="p-3 max-h-[350px] w-[850px] max-w-[90vw] overflow-auto">
               <h4 className="font-semibold text-sm mb-2 text-slate-800">
                 Chi tiết mặt hàng
               </h4>
@@ -1259,7 +1259,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
           return (
             <TableText
-              text={row.description || "—"}
+              text={(row.description || "—").replace(/\\n/g, " ")}
               tooltip={true}
               popoverContent={popoverContent}
               textClassName="line-clamp-2 break-words whitespace-normal text-slate-700"

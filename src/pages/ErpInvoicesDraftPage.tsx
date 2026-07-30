@@ -240,8 +240,10 @@ export function ErpInvoicesDraftPage() {
           ) {
             items = (inv as any).lines;
           } else {
-            // 2. Check if items are in requestPayload.itemInfo
-            const lpStr = (inv as any).requestPayload;
+            // 2. Check if items are in listProduct or responsePayload
+            const lpStr =
+              (inv as any).listProduct ||
+              (inv as any).responsePayload?.listProduct;
             const parsedLp = lpStr
               ? typeof lpStr === "string"
                 ? JSON.parse(lpStr)
@@ -253,8 +255,20 @@ export function ErpInvoicesDraftPage() {
           console.error("Lỗi parse dữ liệu mặt hàng:", e);
         }
 
+        const fmtAmt = (val: string | number | null | undefined) => {
+          if (val == null) return "—";
+          const n = Number(val);
+          if (isNaN(n)) return "—";
+          return (
+            n.toLocaleString("vi-VN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }) + " đ"
+          );
+        };
+
         const popoverContent = (
-          <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
+          <div className="p-3 max-h-[350px] w-[850px] max-w-[90vw] overflow-auto">
             <h4 className="font-semibold text-sm mb-2 text-slate-800">
               Chi tiết mặt hàng
             </h4>
@@ -309,21 +323,21 @@ export function ErpInvoicesDraftPage() {
                         {item.unitName || "—"}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {formatMoney(item.unitPrice)}
+                        {fmtAmt(item.unitPrice)}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
-                        {formatMoney(item.itemTotalAmountWithoutVat)}
+                        {fmtAmt(item.itemTotalAmountWithoutVat)}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap">
                         {item.taxPercentage != null
-                          ? `${item.taxPercentage}%`
+                          ? `${Number(item.taxPercentage).toFixed(0)}%`
                           : "—"}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {formatMoney(item.vatAmount)}
+                        {fmtAmt(item.vatAmount)}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                        {formatMoney(item.itemTotalAmountWithVat)}
+                        {fmtAmt(item.itemTotalAmountWithVat)}
                       </td>
                     </tr>
                   ))}
@@ -348,7 +362,7 @@ export function ErpInvoicesDraftPage() {
                     <td className="px-2 py-2"></td>
                     <td className="px-2 py-2"></td>
                     <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                      {formatMoney(
+                      {fmtAmt(
                         items.reduce(
                           (acc: number, item: any) =>
                             acc + (Number(item.itemTotalAmountWithoutVat) || 0),
@@ -358,7 +372,7 @@ export function ErpInvoicesDraftPage() {
                     </td>
                     <td className="px-2 py-2"></td>
                     <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                      {formatMoney(
+                      {fmtAmt(
                         items.reduce(
                           (acc: number, item: any) =>
                             acc + (Number(item.vatAmount) || 0),
@@ -367,7 +381,7 @@ export function ErpInvoicesDraftPage() {
                       )}
                     </td>
                     <td className="px-2 py-2 font-semibold text-right text-slate-800">
-                      {formatMoney(
+                      {fmtAmt(
                         items.reduce(
                           (acc: number, item: any) =>
                             acc + (Number(item.itemTotalAmountWithVat) || 0),
@@ -379,23 +393,18 @@ export function ErpInvoicesDraftPage() {
                 </tfoot>
               </table>
             ) : (
-              <div className="text-sm text-slate-500">
-                Không có dữ liệu mặt hàng.
+              <div className="text-slate-500 text-sm italic">
+                Không có chi tiết mặt hàng.
               </div>
             )}
-            <div className="mt-3 text-sm whitespace-pre-wrap text-slate-600">
-              <span className="font-medium text-slate-700">
-                Diễn giải chung:{" "}
-              </span>
-              {(inv as any).description || "Không có diễn giải."}
-            </div>
           </div>
         );
 
         return (
           <TableText
-            text={(inv as any).description || "-"}
-            textClassName="line-clamp-2 whitespace-normal leading-tight break-words"
+            text={((inv as any).description || "-").replace(/\\n/g, " ")}
+            tooltip={true}
+            textClassName="line-clamp-2 break-words whitespace-normal text-slate-700"
             popoverContent={popoverContent}
           />
         );
