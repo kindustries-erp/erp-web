@@ -21,17 +21,34 @@ vi.mock("react-hot-toast", () => ({
 describe("ErpInvoicePdfUpload", () => {
   const defaultProps = {
     invoiceId: "inv-1",
-    pdfFileKey: "main-pdf.pdf",
-    attachments: [{ key: "sub-pdf.pdf", filename: "sub-pdf.pdf" }],
+    attachments: [
+      {
+        attachmentId: "att-main",
+        attachment: {
+          id: "file-main",
+          fileName: "main-pdf.pdf",
+          documentType: "HOA_DON",
+          mimeType: "application/pdf",
+        },
+      },
+      {
+        attachmentId: "att-sub",
+        attachment: {
+          id: "file-sub",
+          fileName: "sub-pdf.pdf",
+          documentType: "BANG_KE",
+          mimeType: "application/pdf",
+        },
+      },
+    ],
     editMode: false,
     pendingDeletedPdfs: [],
     pendingAddedAttachments: [],
   };
 
-  it("should render both primary pdfFileKey and secondary pdfFiles", () => {
+  it("should render all linked attachments", () => {
     render(<ErpInvoicePdfUpload {...defaultProps} />);
 
-    // Check if both files are displayed
     expect(screen.getByText("main-pdf.pdf")).toBeInTheDocument();
     expect(screen.getByText("sub-pdf.pdf")).toBeInTheDocument();
   });
@@ -40,22 +57,16 @@ describe("ErpInvoicePdfUpload", () => {
     render(
       <ErpInvoicePdfUpload
         {...defaultProps}
-        pendingDeletedPdfs={["main-pdf.pdf"]}
+        pendingDeletedPdfs={["att-main"]}
       />,
     );
 
-    // main-pdf.pdf should be hidden
     expect(screen.queryByText("main-pdf.pdf")).not.toBeInTheDocument();
-    // sub-pdf.pdf should still be visible
     expect(screen.getByText("sub-pdf.pdf")).toBeInTheDocument();
   });
 
   it("should NOT render delete icons when editMode is false", () => {
-    const { container } = render(
-      <ErpInvoicePdfUpload {...defaultProps} editMode={false} />,
-    );
-    // SVG for delete icon usually has a specific class or we can check by querying the DOM
-    const trashIcons = container.querySelectorAll(".lucide-trash2");
-    expect(trashIcons.length).toBe(0);
+    render(<ErpInvoicePdfUpload {...defaultProps} editMode={false} />);
+    expect(screen.queryByTitle("Xóa đính kèm")).not.toBeInTheDocument();
   });
 });
