@@ -166,7 +166,7 @@ function BranchPartnerStatsTable({
           <div className="flex items-center gap-2">
             <TableText
               text={name}
-              className="font-medium text-slate-700 max-w-[200px]"
+              className="font-medium text-slate-700 w-full"
               onDrawerClick={(e: any) => {
                 e.stopPropagation();
                 onPartnerClick(row.correspondentAccount, row.correspondentName);
@@ -193,22 +193,10 @@ function BranchPartnerStatsTable({
           <TableText
             text={row.transactionCount?.toString() || "0"}
             className="text-center font-medium justify-center"
-            popoverContent={
-              <div className="p-3 w-[250px]">
-                <p className="text-sm font-medium mb-1">
-                  Giao dịch của đối tác
-                </p>
-                <p className="text-xs text-slate-500">
-                  Đối tác này có tổng cộng {row.transactionCount || 0} giao
-                  dịch. Bạn có thể mở Drawer ở cột đối tác để xem chi tiết từng
-                  giao dịch.
-                </p>
-              </div>
-            }
           />
         );
       },
-      size: 120,
+      size: 150,
       className: "text-center",
       headerClassName: "text-center",
     },

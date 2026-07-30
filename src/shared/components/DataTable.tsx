@@ -687,6 +687,7 @@ export function DataTable<T>({
           <Table
             style={{
               minWidth: enableColumnResizing ? table.getTotalSize() : minWidth,
+              width: enableColumnResizing ? table.getTotalSize() : "100%",
             }}
             className={cn(
               "table-fixed",
@@ -697,7 +698,7 @@ export function DataTable<T>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
-                  className="hover:bg-transparent border-b border-border"
+                  className="hover:bg-transparent border-b border-border bg-muted"
                 >
                   {headerGroup.headers.map((header, index) => {
                     const meta = header.column.columnDef
