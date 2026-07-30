@@ -7,6 +7,7 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Button } from "@/shared/components/ui/Button";
+import { useUIStore } from "@/core/config/uiStore";
 import { formatMoney } from "@/modules/accounting/utils/journalEntryUtils";
 import {
   syncSinvoiceDraftsApi,
@@ -23,14 +24,18 @@ export function ErpInvoicesDraftPage() {
 
   const [draftOpen, setDraftOpen] = useState(false);
   const [detailDraft, setDetailDraft] = useState<SinvoiceDraft | null>(null);
+  const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
 
   const handleSync = async () => {
     try {
+      setGlobalLoading(true);
       const res = await syncSinvoiceDraftsApi();
       toast.success(`Đồng bộ thành công ${res.synced} hóa đơn nháp mới.`);
       listHook.loadDrafts();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Đồng bộ thất bại");
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
