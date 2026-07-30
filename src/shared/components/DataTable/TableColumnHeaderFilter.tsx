@@ -50,6 +50,7 @@ export interface TableColumnHeaderFilterProps {
     next: number | null;
   }>;
   hideFilter?: boolean;
+  hideFilterList?: boolean;
   hideFooter?: boolean;
   enableSelectAllMatching?: boolean;
   isActive?: boolean;
@@ -78,6 +79,7 @@ export function TableColumnHeaderFilter({
   formatOptionLabel,
   fetchOptions,
   hideFilter,
+  hideFilterList,
   hideFooter,
   enableSelectAllMatching,
   isActive,
@@ -357,18 +359,19 @@ export function TableColumnHeaderFilter({
               </div>
 
               {/* Multi-select Filters */}
-              <div
-                className="p-2 max-h-48 overflow-y-auto flex flex-col"
-                ref={scrollRef}
-                onScroll={handleScroll}
-              >
-                {isOptionsLoading && finalOptions.length === 0 ? (
-                  <div className="p-4 flex justify-center text-muted-foreground">
-                    <Loader2 size={16} className="animate-spin" />
-                  </div>
-                ) : finalOptions.length > 0 ? (
-                  <>
-                    <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
+              {!hideFilterList && (
+                <div
+                  className="p-2 max-h-48 overflow-y-auto flex flex-col"
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                >
+                  {isOptionsLoading && finalOptions.length === 0 ? (
+                    <div className="p-4 flex justify-center text-muted-foreground">
+                      <Loader2 size={16} className="animate-spin" />
+                    </div>
+                  ) : finalOptions.length > 0 ? (
+                    <>
+                      <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
                       <Checkbox
                         checked={
                           enableSelectAllMatching
@@ -431,6 +434,7 @@ export function TableColumnHeaderFilter({
                   </div>
                 )}
               </div>
+              )}
             </>
           )}
 

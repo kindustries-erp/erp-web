@@ -22,10 +22,10 @@ describe("ErpInvoicePdfUpload", () => {
   const defaultProps = {
     invoiceId: "inv-1",
     pdfFileKey: "main-pdf.pdf",
-    pdfFiles: [{ key: "sub-pdf.pdf", filename: "sub-pdf.pdf" }],
+    attachments: [{ key: "sub-pdf.pdf", filename: "sub-pdf.pdf" }],
     editMode: false,
     pendingDeletedPdfs: [],
-    pendingAddedPdfs: [],
+    pendingAddedAttachments: [],
   };
 
   it("should render both primary pdfFileKey and secondary pdfFiles", () => {

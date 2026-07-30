@@ -19,6 +19,7 @@ import {
   UserSquare2,
   Car,
   WalletCards,
+  Paperclip,
 } from "lucide-react";
 
 import { useAppStore } from "@/core/config/appStore";
@@ -550,13 +551,17 @@ export function SidebarNav({
           </div>
         )}
 
-      {/* Human Resources */}
-      {showHR &&
-        hasMatch([t("nav.sections.hr"), t("nav.items.erpEmployees")]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.hr")}
-            </div>
+      {/* Admin */}
+      {hasMatch([
+        t("nav.sections.admin"),
+        t("nav.items.erpEmployees"),
+        t("nav.items.attachments"),
+      ]) && (
+        <div className="sidebar-nav-section py-2">
+          <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
+            {t("nav.sections.admin")}
+          </div>
+          {showHR && (
             <NavItem
               collapsed={c}
               icon={
@@ -567,8 +572,17 @@ export function SidebarNav({
               onClick={() => navTo("erp-employees")}
               contextPage="erp-employees"
             />
-          </div>
-        )}
+          )}
+          <NavItem
+            collapsed={c}
+            icon={<Paperclip className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.attachments")}
+            active={currentPage === "attachments"}
+            onClick={() => navTo("attachments" as PageKey)}
+            contextPage={"attachments" as PageKey}
+          />
+        </div>
+      )}
 
       {/* Settings & System */}
       {showSettings &&
@@ -638,6 +652,7 @@ export function SidebarNav({
                 )}
               </NavGroup>
             )}
+
 
             {showSettingsGeneral && (
               <NavGroup

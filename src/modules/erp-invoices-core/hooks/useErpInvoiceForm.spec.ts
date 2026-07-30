@@ -42,7 +42,7 @@ describe("useErpInvoiceForm", () => {
     expect(result.current.form.pendingDeletedPdfs).toEqual(["test-pdf.pdf"]);
   });
 
-  it("should strip pendingDeletedPdfs and pendingAddedPdfs from payload when saving", async () => {
+  it("should strip pendingDeletedPdfs and pendingAddedAttachments from payload when saving", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(vi.fn()));
 
     // Setup mocks for handleSave
@@ -75,7 +75,7 @@ describe("useErpInvoiceForm", () => {
         invoiceNo: "INV-1",
         invoiceDate: "2026-07-22",
         pendingDeletedPdfs: ["delete-me.pdf"],
-        pendingAddedPdfs: [new File([], "add-me.pdf")],
+        pendingAddedAttachments: [{ file: new File([], "add-me.pdf"), documentType: "HOA_DON" }],
       }));
     });
 
@@ -87,7 +87,7 @@ describe("useErpInvoiceForm", () => {
     expect(erpInvoicesCoreApi.update).toHaveBeenCalledTimes(1);
     const payload = vi.mocked(erpInvoicesCoreApi.update).mock.calls[0][1];
     expect(payload.pendingDeletedPdfs).toBeUndefined();
-    expect(payload.pendingAddedPdfs).toBeUndefined();
+    expect(payload.pendingAddedAttachments).toBeUndefined();
     expect(payload.invoiceNo).toBe("INV-1");
 
     // Assert deletePdf was called with the pending file

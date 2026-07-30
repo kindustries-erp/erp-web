@@ -1245,8 +1245,8 @@ export function VinfastPartsTrackingPage({
               pdfSlot={
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  attachments={formHook.detailInvoice?.pdfFiles ?? null}
+                  
                   editMode={formHook.editMode}
                 />
               }
