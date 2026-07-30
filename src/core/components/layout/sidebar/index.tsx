@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAppStore } from "@/core/config/appStore";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { UserProfileModal } from "@/modules/auth/components/UserProfileModal";
-import { ChangePasswordModal } from "@/modules/auth/components/ChangePasswordModal";
+import { GlobalSettingsDrawer } from "@/core/components/layout/GlobalSettingsDrawer";
 import { CompanyProfileDrawer } from "../../CompanyProfileDrawer";
 import { useCompanyProfile } from "../../../api/companyProfileApi";
 import type { PageKey } from "@/shared/types";
@@ -90,7 +90,7 @@ export function Sidebar() {
         open={profileOpen}
         onClose={() => setProfileOpen(false)}
       />
-      <ChangePasswordModal
+      <GlobalSettingsDrawer
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />

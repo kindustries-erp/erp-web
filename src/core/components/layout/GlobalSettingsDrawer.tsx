@@ -1,21 +1,20 @@
 import React from "react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Settings } from "lucide-react";
-import { useAppStore } from "@/core/config/appStore";
 import { ChangePasswordForm } from "@/modules/auth/components/ChangePasswordForm";
 import { InvoiceSettingsForm } from "@/modules/erp-invoices-core/components/InvoiceSettingsForm";
 
-export function GlobalSettingsDrawer() {
-  const { globalSettingsOpen, setGlobalSettings } = useAppStore();
-
-  const handleClose = () => {
-    setGlobalSettings(false);
-  };
-
+export function GlobalSettingsDrawer({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
   return (
     <DrawerModal
-      open={globalSettingsOpen}
-      onClose={handleClose}
+      open={open}
+      onClose={onClose}
       icon={<Settings className="w-5 h-5" />}
       title="Cài đặt hệ thống"
       panelClassName="min-[1024px]:w-[500px] flex flex-col"
@@ -26,18 +25,14 @@ export function GlobalSettingsDrawer() {
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Tài khoản & Bảo mật
           </h2>
-          <ChangePasswordForm open={true} onClose={handleClose} />
+          <ChangePasswordForm open={open} onClose={onClose} />
         </div>
 
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-4">
             Hóa đơn điện tử
           </h2>
-          <InvoiceSettingsForm
-            open={globalSettingsOpen}
-            onClose={handleClose}
-            defaultTab="gdt"
-          />
+          <InvoiceSettingsForm open={open} onClose={onClose} defaultTab="gdt" />
         </div>
       </div>
     </DrawerModal>

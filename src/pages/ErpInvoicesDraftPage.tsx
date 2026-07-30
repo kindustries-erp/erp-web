@@ -1,12 +1,10 @@
 import { toast } from "react-hot-toast";
 import React, { useState } from "react";
-import { FileText, Eye, DownloadCloud, Plus } from "lucide-react";
+import { FileText, Eye, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { type DataTableColumn } from "@/shared/components/DataTable";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
-import { Button } from "@/shared/components/ui/Button";
 import { useUIStore } from "@/core/config/uiStore";
 import { formatMoney } from "@/modules/accounting/utils/journalEntryUtils";
 import {
@@ -198,11 +196,16 @@ export function ErpInvoicesDraftPage() {
           {...createHeaderProps("buyerName", "Khách hàng")}
         />
       ),
-      className:
-        "max-w-[200px] line-clamp-2 whitespace-normal leading-tight text-left",
+      className: "text-left",
       headerClassName: "text-center",
       size: 250,
-      cell: (inv) => <TableText text={inv.buyerName || "-"} tooltip={true} />,
+      cell: (inv) => (
+        <TableText
+          text={inv.buyerName || "-"}
+          tooltip={true}
+          textClassName="line-clamp-2 whitespace-normal leading-tight break-words"
+        />
+      ),
     },
     {
       key: "buyerTaxCode",
@@ -223,11 +226,180 @@ export function ErpInvoicesDraftPage() {
           {...createHeaderProps("description", "Diễn giải")}
         />
       ),
-      className:
-        "max-w-[230px] line-clamp-2 whitespace-normal leading-tight text-left",
+      className: "text-left",
       headerClassName: "text-center",
       size: 300,
-      cell: (inv) => <TableText text={(inv as any).description || "-"} />,
+      cell: (inv) => {
+        let items: any[] = [];
+        try {
+          // 1. Check if items are in inv.lines
+          if (
+            (inv as any).lines &&
+            Array.isArray((inv as any).lines) &&
+            (inv as any).lines.length > 0
+          ) {
+            items = (inv as any).lines;
+          } else {
+            // 2. Check if items are in requestPayload.itemInfo
+            const lpStr = (inv as any).requestPayload;
+            const parsedLp = lpStr
+              ? typeof lpStr === "string"
+                ? JSON.parse(lpStr)
+                : lpStr
+              : null;
+            items = parsedLp?.itemInfo || [];
+          }
+        } catch (e) {
+          console.error("Lỗi parse dữ liệu mặt hàng:", e);
+        }
+
+        const popoverContent = (
+          <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
+            <h4 className="font-semibold text-sm mb-2 text-slate-800">
+              Chi tiết mặt hàng
+            </h4>
+            {items.length > 0 ? (
+              <table className="w-full text-sm text-left border-collapse min-w-[700px]">
+                <thead className="bg-slate-50 sticky top-0">
+                  <tr>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium">
+                      Tên mặt hàng
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                      SL
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
+                      ĐVT
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                      Đơn giá
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                      Thành tiền trước thuế
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                      Thuế suất
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                      Thuế VAT
+                    </th>
+                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                      Thành tiền
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item: any, idx: number) => (
+                    <tr
+                      key={idx}
+                      className="border-b last:border-0 hover:bg-slate-50"
+                    >
+                      <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
+                        {item.itemName || "—"}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap">
+                        {item.quantity != null
+                          ? Number(item.quantity).toLocaleString("vi-VN", {
+                              minimumFractionDigits: 1,
+                              maximumFractionDigits: 1,
+                            })
+                          : "—"}
+                      </td>
+                      <td className="px-2 py-1 text-left whitespace-nowrap">
+                        {item.unitName || "—"}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap">
+                        {formatMoney(item.unitPrice)}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
+                        {formatMoney(item.itemTotalAmountWithoutVat)}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap">
+                        {item.taxPercentage != null
+                          ? `${item.taxPercentage}%`
+                          : "—"}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap">
+                        {formatMoney(item.vatAmount)}
+                      </td>
+                      <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
+                        {formatMoney(item.itemTotalAmountWithVat)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                  <tr>
+                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                      Tổng cộng
+                    </td>
+                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                      {items
+                        .reduce(
+                          (acc: number, item: any) =>
+                            acc + (Number(item.quantity) || 0),
+                          0,
+                        )
+                        .toLocaleString("vi-VN", {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        })}
+                    </td>
+                    <td className="px-2 py-2"></td>
+                    <td className="px-2 py-2"></td>
+                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                      {formatMoney(
+                        items.reduce(
+                          (acc: number, item: any) =>
+                            acc + (Number(item.itemTotalAmountWithoutVat) || 0),
+                          0,
+                        ),
+                      )}
+                    </td>
+                    <td className="px-2 py-2"></td>
+                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                      {formatMoney(
+                        items.reduce(
+                          (acc: number, item: any) =>
+                            acc + (Number(item.vatAmount) || 0),
+                          0,
+                        ),
+                      )}
+                    </td>
+                    <td className="px-2 py-2 font-semibold text-right text-slate-800">
+                      {formatMoney(
+                        items.reduce(
+                          (acc: number, item: any) =>
+                            acc + (Number(item.itemTotalAmountWithVat) || 0),
+                          0,
+                        ),
+                      )}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            ) : (
+              <div className="text-sm text-slate-500">
+                Không có dữ liệu mặt hàng.
+              </div>
+            )}
+            <div className="mt-3 text-sm whitespace-pre-wrap text-slate-600">
+              <span className="font-medium text-slate-700">
+                Diễn giải chung:{" "}
+              </span>
+              {(inv as any).description || "Không có diễn giải."}
+            </div>
+          </div>
+        );
+
+        return (
+          <TableText
+            text={(inv as any).description || "-"}
+            textClassName="line-clamp-2 whitespace-normal leading-tight break-words"
+            popoverContent={popoverContent}
+          />
+        );
+      },
     },
     {
       key: "amountWithoutVAT",
@@ -374,25 +546,32 @@ export function ErpInvoicesDraftPage() {
           listHook.setPage(1);
         }}
         onRefresh={listHook.loadDrafts}
-        customActionsNode={
-          <div className="flex items-center gap-2">
-            <ActionDropdown
-              customTrigger={<Button variant="outline">Thao tác</Button>}
-              items={[
-                {
-                  label: "Tạo HĐ nháp",
-                  icon: <Plus className="w-4 h-4 text-emerald-600" />,
-                  onClick: () => setDraftOpen(true),
+        createLabel="Tạo HĐ nháp"
+        onCreate={() => setDraftOpen(true)}
+        createActions={[
+          {
+            groupLabel: "TRA CỨU",
+            items: [
+              {
+                label: "Xuất Excel",
+                icon: <FileText className="w-4 h-4 text-green-600" />,
+                onClick: () => {
+                  alert("Tính năng đang phát triển");
                 },
-                {
-                  label: "Đồng bộ",
-                  icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
-                  onClick: handleSync,
-                },
-              ]}
-            />
-          </div>
-        }
+              },
+            ],
+          },
+          {
+            groupLabel: "THAO TÁC",
+            items: [
+              {
+                label: "Đồng bộ",
+                icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                onClick: handleSync,
+              },
+            ],
+          },
+        ]}
       />
 
       {draftOpen && (
