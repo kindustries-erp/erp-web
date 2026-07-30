@@ -1,41 +1,27 @@
 import React, { useState } from "react";
-import { Settings, Plus, FileText, Trash2, RefreshCcw } from "lucide-react";
+import { FileText, Eye, DownloadCloud, Plus } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { type DataTableColumn } from "@/shared/components/DataTable";
+import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Button } from "@/shared/components/ui/Button";
 import { formatMoney } from "@/modules/accounting/utils/journalEntryUtils";
 import {
-  deleteSinvoiceDraftApi,
   syncSinvoiceDraftsApi,
   getSinvoiceDraftColumnOptionsApi,
   type SinvoiceDraft,
 } from "@/modules/accounting/api/sinvoiceDraftApi";
-import { SinvoiceConfigDrawer } from "@/modules/accounting/components/SinvoiceConfigDrawer";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { SinvoiceDraftDetailWrapper } from "@/modules/accounting/components/SinvoiceDraftDetailWrapper";
-import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDraftsList";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 export function ErpInvoicesDraftPage() {
   const listHook = useSinvoiceDraftsList();
 
-  const [configOpen, setConfigOpen] = useState(false);
   const [draftOpen, setDraftOpen] = useState(false);
   const [detailDraft, setDetailDraft] = useState<SinvoiceDraft | null>(null);
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Bạn có chắc muốn xóa hóa đơn nháp này?")) return;
-    try {
-      await deleteSinvoiceDraftApi(id);
-      listHook.loadDrafts();
-    } catch (error) {
-      console.error(error);
-      alert("Xóa thất bại");
-    }
-  };
 
   const handleSync = async () => {
     try {
@@ -476,24 +462,6 @@ export function ErpInvoicesDraftPage() {
         />
       ),
     },
-    {
-      key: "__actions",
-      header: "",
-      className: "w-10 pr-4",
-      size: 40,
-      cell: (inv) => (
-        <ActionDropdown
-          items={[
-            {
-              label: "Xóa",
-              icon: <Trash2 className="w-4 h-4 text-red-500" />,
-              onClick: () => handleDelete(inv.id),
-              variant: "danger",
-            },
-          ]}
-        />
-      ),
-    },
   ];
 
   return (
@@ -509,6 +477,21 @@ export function ErpInvoicesDraftPage() {
         loading={listHook.loading}
         emptyLabel="Chưa có hóa đơn nháp nào."
         minWidth={1000}
+        defaultColumnOrder={["__selection", "__actions"]}
+        rowActions={(inv) => {
+          return [
+            {
+              groupLabel: "TRA CỨU",
+              items: [
+                {
+                  label: "Chi tiết",
+                  icon: <Eye className="w-3.5 h-3.5" />,
+                  onClick: () => setDetailDraft(inv as any),
+                },
+              ],
+            },
+          ];
+        }}
         // Sorting / Pagination
         sortArray={listHook.tableState.sorts}
         onSort={(key: string) => {
@@ -532,38 +515,24 @@ export function ErpInvoicesDraftPage() {
         }}
         onRefresh={listHook.loadDrafts}
         customActionsNode={
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="text"
-              placeholder="Tìm theo khách hàng, MST..."
-              className="h-9 px-3 border border-border bg-surface rounded-md text-sm min-w-[250px]"
-              value={listHook.search || ""}
-              onChange={(e) => listHook.setSearch(e.target.value)}
+          <div className="flex items-center gap-2">
+            <ActionDropdown
+              customTrigger={<Button variant="outline">Thao tác</Button>}
+              items={[
+                {
+                  label: "Tạo HĐ nháp",
+                  icon: <Plus className="w-4 h-4 text-emerald-600" />,
+                  onClick: () => setDraftOpen(true),
+                },
+                {
+                  label: "Đồng bộ",
+                  icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+                  onClick: handleSync,
+                },
+              ]}
             />
-            <Button
-              variant="outline"
-              onClick={handleSync}
-              disabled={listHook.loading}
-            >
-              <RefreshCcw className="w-4 h-4 mr-2" />
-              Đồng bộ
-            </Button>
-            <Button variant="outline" onClick={() => setConfigOpen(true)}>
-              <Settings className="w-4 h-4 mr-2" />
-              Cấu hình SInvoice
-            </Button>
-            <Button onClick={() => setDraftOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Tạo HĐ nháp
-            </Button>
           </div>
         }
-      />
-
-      <SinvoiceConfigDrawer
-        open={configOpen}
-        onClose={() => setConfigOpen(false)}
-        onSuccess={listHook.loadDrafts}
       />
 
       {draftOpen && (
