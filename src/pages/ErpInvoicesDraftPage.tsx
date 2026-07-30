@@ -1,3 +1,4 @@
+import { toast } from "react-hot-toast";
 import React, { useState } from "react";
 import { FileText, Eye, DownloadCloud, Plus } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -26,11 +27,10 @@ export function ErpInvoicesDraftPage() {
   const handleSync = async () => {
     try {
       const res = await syncSinvoiceDraftsApi();
-      alert(`Đồng bộ thành công ${res.synced} hóa đơn nháp mới.`);
+      toast.success(`Đồng bộ thành công ${res.synced} hóa đơn nháp mới.`);
       listHook.loadDrafts();
     } catch (error: any) {
-      console.error(error);
-      alert(error.response?.data?.message || "Đồng bộ thất bại");
+      toast.error(error.response?.data?.message || "Đồng bộ thất bại");
     }
   };
 
@@ -160,7 +160,8 @@ export function ErpInvoicesDraftPage() {
         />
       ),
       className: "font-mono text-xs",
-      size: 100,
+      headerClassName: "text-center",
+      size: 120,
       cell: (inv) => (
         <TableText text={inv.responsePayload?.templateCode || "-"} />
       ),
@@ -173,7 +174,8 @@ export function ErpInvoicesDraftPage() {
         />
       ),
       className: "font-mono text-xs",
-      size: 100,
+      headerClassName: "text-center",
+      size: 120,
       cell: (inv) => (
         <TableText
           text={
@@ -191,24 +193,21 @@ export function ErpInvoicesDraftPage() {
           {...createHeaderProps("buyerName", "Khách hàng")}
         />
       ),
-      className: "truncate",
+      className:
+        "max-w-[200px] line-clamp-2 whitespace-normal leading-tight text-left",
+      headerClassName: "text-center",
       size: 250,
-      cell: (inv) => (
-        <TableText
-          text={inv.buyerName || "-"}
-          tooltip={true}
-          className="line-clamp-2 whitespace-normal leading-tight max-w-[230px]"
-        />
-      ),
+      cell: (inv) => <TableText text={inv.buyerName || "-"} tooltip={true} />,
     },
     {
       key: "buyerTaxCode",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("buyerTaxCode", "Mã số thuế")}
+          {...createHeaderProps("buyerTaxCode", "MST")}
         />
       ),
       className: "font-mono",
+      headerClassName: "text-center",
       size: 120,
       cell: (inv) => <TableText text={inv.buyerTaxCode || "-"} />,
     },
@@ -219,156 +218,11 @@ export function ErpInvoicesDraftPage() {
           {...createHeaderProps("description", "Diễn giải")}
         />
       ),
-      className: "max-w-[300px] truncate",
+      className:
+        "max-w-[230px] line-clamp-2 whitespace-normal leading-tight text-left",
+      headerClassName: "text-center",
       size: 300,
-      cell: (inv) => (
-        <TableText
-          text={(inv as any).description || "-"}
-          popoverContent={(() => {
-            try {
-              const lpStr = inv.responsePayload?.listProduct;
-              const parsedLp = lpStr
-                ? typeof lpStr === "string"
-                  ? JSON.parse(lpStr)
-                  : lpStr
-                : null;
-              const items = parsedLp?.itemInfo || [];
-
-              if (items.length > 0) {
-                return (
-                  <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
-                    <h4 className="font-semibold text-sm mb-2 text-slate-800">
-                      Chi tiết mặt hàng
-                    </h4>
-                    <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                      <thead className="bg-slate-50 sticky top-0">
-                        <tr>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium">
-                            Tên mặt hàng
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                            SL
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
-                            ĐVT
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                            Đơn giá
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                            Thành tiền trước thuế
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                            Thuế suất
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                            Thuế VAT
-                          </th>
-                          <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                            Thành tiền
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item: any, idx: number) => (
-                          <tr
-                            key={idx}
-                            className="border-b last:border-0 hover:bg-slate-50"
-                          >
-                            <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
-                              {item.itemName || "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right whitespace-nowrap">
-                              {item.quantity != null
-                                ? formatMoney(item.quantity)
-                                : "-"}
-                            </td>
-                            <td className="px-2 py-1 whitespace-nowrap">
-                              {item.unitName || "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right whitespace-nowrap">
-                              {item.unitPrice != null
-                                ? formatMoney(item.unitPrice)
-                                : "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right whitespace-nowrap">
-                              {item.itemTotalAmountWithoutVat != null
-                                ? formatMoney(item.itemTotalAmountWithoutVat)
-                                : "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right whitespace-nowrap">
-                              {item.vatPercentage != null
-                                ? `${item.vatPercentage}%`
-                                : "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right whitespace-nowrap">
-                              {item.vatAmount != null
-                                ? formatMoney(item.vatAmount)
-                                : "-"}
-                            </td>
-                            <td className="px-2 py-1 text-right whitespace-nowrap">
-                              {item.itemTotalAmountWithVat != null
-                                ? formatMoney(item.itemTotalAmountWithVat)
-                                : "-"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot className="bg-slate-50 sticky bottom-0 font-semibold">
-                        <tr>
-                          <td
-                            className="px-2 py-2 text-right text-slate-800"
-                            colSpan={4}
-                          >
-                            Tổng cộng
-                          </td>
-                          <td className="px-2 py-2 text-right text-slate-800">
-                            {formatMoney(
-                              items.reduce(
-                                (acc: number, item: any) =>
-                                  acc +
-                                  (Number(item.itemTotalAmountWithoutVat) || 0),
-                                0,
-                              ),
-                            )}
-                          </td>
-                          <td className="px-2 py-2 text-right" colSpan={2}>
-                            {formatMoney(
-                              items.reduce(
-                                (acc: number, item: any) =>
-                                  acc + (Number(item.vatAmount) || 0),
-                                0,
-                              ),
-                            )}
-                          </td>
-                          <td className="px-2 py-2 text-right text-slate-800">
-                            {formatMoney(
-                              items.reduce(
-                                (acc: number, item: any) =>
-                                  acc +
-                                  (Number(item.itemTotalAmountWithVat) || 0),
-                                0,
-                              ),
-                            )}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                );
-              }
-            } catch (e) {
-              console.error("Lỗi parse listProduct:", e);
-            }
-
-            return (
-              <div className="p-3 text-sm max-w-[300px] whitespace-pre-wrap">
-                {(inv as any).description || "Không có diễn giải chi tiết"}
-              </div>
-            );
-          })()}
-        />
-      ),
+      cell: (inv) => <TableText text={(inv as any).description || "-"} />,
     },
     {
       key: "amountWithoutVAT",
@@ -390,7 +244,8 @@ export function ErpInvoicesDraftPage() {
         />
       ),
       className: "text-right font-mono",
-      size: 100,
+      headerClassName: "text-center",
+      size: 120,
       cell: (inv) => {
         // Mặc định lấy từ listProduct item đầu tiên nếu có, nếu không thì hiển thị "-"
         try {
