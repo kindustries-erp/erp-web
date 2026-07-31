@@ -95,14 +95,30 @@ function BranchPartnerStatsTable({
       }),
   });
 
-  const partnerOptions = React.useMemo(() => {
+  const fetchPartnerOptions = async ({ search, pageParam }: any) => {
+    const res = await bankStatementApi.getPartnerStats({
+      page: pageParam,
+      pageSize: 20,
+      branchId: branchId || undefined,
+      startDate: filterState.dateFrom || undefined,
+      endDate: filterState.dateTo || undefined,
+      sourceType: (filterState.custom.sourceType as any) || undefined,
+      tagIds: (filterState.custom.tagIds as unknown as string[]) || undefined,
+      column_search: search ? JSON.stringify({ partner: search }) : undefined,
+    });
+
     const options = new Set<string>();
-    (partnerStats?.items || []).forEach((row: any) => {
+    (res.items || []).forEach((row: any) => {
       const name = row.correspondentName || row.correspondentAccount || "Khác";
       if (name !== "Khác") options.add(name);
     });
-    return Array.from(options).map((o) => ({ label: o, value: o }));
-  }, [partnerStats?.items]);
+
+    return {
+      items: Array.from(options).map((o) => ({ label: o, value: o })),
+      total: res.total || 0,
+      next: res.page < (res.totalPages || 1) ? res.page + 1 : null,
+    };
+  };
 
   const countOptions = React.useMemo(() => {
     const options = new Set<string>();
@@ -141,10 +157,12 @@ function BranchPartnerStatsTable({
     key: string,
     title: string,
     options?: { label: string; value: string }[],
+    fetchOptions?: any,
   ) => (
     <TableColumnHeaderFilter
       title={title}
       align="center"
+      columnKey={key}
       sortState={getSortState(key)}
       onSortChange={(state) => handleSortChange(key, state)}
       searchValue={tableState.columnSearch[key] || ""}
@@ -152,13 +170,19 @@ function BranchPartnerStatsTable({
       selectedFilters={tableState.columnFilters[key] || []}
       onFilterChange={(vals) => handleFilterChange(key, vals)}
       filterOptions={options}
+      fetchOptions={fetchOptions}
     />
   );
 
   const partnerCols = [
     {
       key: "partner",
-      header: renderHeaderFilter("partner", "Đối tác", partnerOptions),
+      header: renderHeaderFilter(
+        "partner",
+        "Đối tác",
+        undefined,
+        fetchPartnerOptions,
+      ),
       cell: (row: any) => {
         const name =
           row.correspondentName || row.correspondentAccount || "Khác";

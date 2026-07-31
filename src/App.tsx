@@ -242,9 +242,15 @@ const AfterSalesPage = lazy(() =>
     default: m.AfterSalesPage,
   })),
 );
+const BudgetPage = lazy(() =>
+  import("@/pages/BudgetPage").then((m) => ({
+    default: m.BudgetPage,
+  })),
+);
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  budget: BudgetPage,
   "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,

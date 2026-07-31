@@ -27,6 +27,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
+import { CashflowForecastDashboardWidget } from "@/modules/budget/components/CashflowForecastDashboardWidget";
 
 const formatQty = (v: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -416,6 +417,8 @@ export function Dashboard() {
               )}
             </Panel>
           </div>
+
+          <CashflowForecastDashboardWidget />
         </TabsContent>
       </Tabs>
     </DashboardTemplate>
