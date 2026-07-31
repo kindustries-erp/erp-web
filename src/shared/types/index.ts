@@ -1,4 +1,5 @@
 export type PageKey =
+  | "budget"
   | "dashboard"
   | "cashflow"
   | "cashflow-dashboard"

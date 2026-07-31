@@ -25,6 +25,7 @@ import {
   Car,
   Paperclip,
   Mail,
+  Target,
 } from "lucide-react";
 
 import { useAppStore } from "@/core/config/appStore";
@@ -413,6 +414,7 @@ export function SidebarNav({
           t("nav.sections.accounting"),
           canReadInvoices ? t("nav.items.erpInvoices") : "",
           canReadInvoices ? "Tổng quan hóa đơn" : "",
+          canReadBankStatements ? "Budget" : "",
           canReadInvoices ? t("nav.items.inbound") : "",
           canReadInvoices ? t("nav.items.outbound") : "",
           canReadBankStatements ? t("nav.items.cashflow") : "",
@@ -423,6 +425,16 @@ export function SidebarNav({
           canReadGreenwayIntegration ? t("nav.items.garagePayables") : "",
         ]) && (
           <NavSection collapsed={c} label={t("nav.sections.accounting")}>
+            {canReadBankStatements && (
+              <NavItem
+                collapsed={c}
+                icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Budget"
+                active={currentPage === "budget"}
+                onClick={() => navTo("budget" as PageKey)}
+                contextPage={"budget" as PageKey}
+              />
+            )}
             {canReadBankStatements && (
               <NavGroup
                 collapsed={c}

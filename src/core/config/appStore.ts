@@ -214,10 +214,15 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.garagePayables",
     group: "garage",
   },
+  budget: {
+    labelKey: "budget.pageTitle",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
+  budget: [["nav.items.accounting"], ["budget.pageTitle"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
   "inventory-dashboard": [
