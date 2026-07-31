@@ -18,7 +18,13 @@ export interface PendingAttachment {
 
 interface Props {
   invoiceId: string | null;
-  attachments: any[] | null;
+  attachments: { attachmentId: string; attachment: any }[] | null;
+  pdfFileKey?: string | null;
+  pdfFiles?: Array<{
+    key: string;
+    filename: string;
+    uploadedAt: string;
+  }> | null;
   editMode: boolean;
   pendingDeletedPdfs?: string[];
   onPendingDeletePdf?: (key: string) => void;
@@ -38,6 +44,8 @@ const TYPE_OPTS = [
 export function ErpInvoicePdfUpload({
   invoiceId,
   attachments,
+  pdfFileKey,
+  pdfFiles,
   editMode,
   pendingDeletedPdfs = [],
   onPendingDeletePdf,
@@ -58,19 +66,52 @@ export function ErpInvoicePdfUpload({
   const [showSelectDrawer, setShowSelectDrawer] = useState(false);
 
   const displayFiles = useMemo(() => {
-    const list = [];
+    const list: any[] = [];
     if (attachments && attachments.length > 0) {
       list.push(...attachments);
     }
-    // Filter out files that are pending deletion
-    return list.filter((f) => !pendingDeletedPdfs.includes(f.attachmentId));
-  }, [attachments, pendingDeletedPdfs]);
+
+    if (pdfFileKey && !list.some((f) => f.attachment?.fileKey === pdfFileKey)) {
+      list.push({
+        attachmentId: pdfFileKey,
+        attachment: {
+          id: pdfFileKey,
+          fileKey: pdfFileKey,
+          fileName: pdfFileKey.split("/").pop() || "Hóa đơn PDF",
+          mimeType: "application/pdf",
+          documentType: "HOA_DON",
+        },
+        _isLegacy: true,
+      });
+    }
+
+    if (pdfFiles && pdfFiles.length > 0) {
+      for (const f of pdfFiles) {
+        if (f.key && !list.some((item) => item.attachment?.fileKey === f.key)) {
+          list.push({
+            attachmentId: f.key,
+            attachment: {
+              id: f.key,
+              fileKey: f.key,
+              fileName: f.filename || f.key.split("/").pop() || "Hóa đơn PDF",
+              mimeType: "application/pdf",
+              documentType: "HOA_DON",
+            },
+            _isLegacy: true,
+          });
+        }
+      }
+    }
+
+    return list.filter(
+      (f) =>
+        !pendingDeletedPdfs || !pendingDeletedPdfs.includes(f.attachmentId),
+    );
+  }, [attachments, pdfFileKey, pdfFiles, pendingDeletedPdfs]);
 
   const handleFilesChange = (newFiles: File[]) => {
     if (!onPendingAddedAttachmentsChange) return;
 
-    // We get the raw array of files. We need to match it with existing pending attachments
-    // and append new ones with the currently selected uploadType.
     const newPendingList: PendingAttachment[] = [];
 
     for (const f of newFiles) {
@@ -113,7 +154,7 @@ export function ErpInvoicePdfUpload({
                 try {
                   toast.loading("Đang nén file...", { id: "zip-download" });
                   const blob =
-                    await erpInvoicesCoreApi.downloadPdfsZip(invoiceId); // Wait, this API might need update, let's keep for now
+                    await erpInvoicesCoreApi.downloadPdfsZip(invoiceId);
                   const url = window.URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
@@ -147,7 +188,7 @@ export function ErpInvoicePdfUpload({
           <div className="rounded-lg border border-border overflow-hidden">
             {displayFiles.map((item, i) => {
               const att = item.attachment;
-              if (!att) return null; // safety
+              if (!att) return null;
               return (
                 <AttachmentRow
                   key={att.id || i}
@@ -163,7 +204,7 @@ export function ErpInvoicePdfUpload({
                     } as any
                   }
                   onDelete={
-                    editMode
+                    editMode && !item._isLegacy
                       ? () => {
                           if (onUnlinkAttachment) {
                             onUnlinkAttachment(att.id);
@@ -174,6 +215,15 @@ export function ErpInvoicePdfUpload({
                       : undefined
                   }
                   onPreview={() => {
+                    if (item._isLegacy && att.fileKey) {
+                      erpInvoicesCoreApi
+                        .getPdfDownloadUrl(invoiceId!, att.fileKey)
+                        .then((res) => window.open(res.url, "_blank"))
+                        .catch((err) =>
+                          console.error("Error downloading legacy PDF:", err),
+                        );
+                      return;
+                    }
                     const url = getFileViewUrl(att.id);
                     setPreviewUrl({
                       url,

@@ -127,6 +127,21 @@ export function DinhKemChungTu() {
 
   async function openFile(a: ErpAttachment) {
     try {
+      if (a._isLegacy) {
+        const invId = a.invoiceLinks?.[0]?.invoice?.id;
+        if (!invId) return;
+        if (a.mimeType === "application/pdf") {
+          const res = await erpInvoicesCoreApi.getPdfDownloadUrl(
+            invId,
+            a.fileKey,
+          );
+          window.open(res.url, "_blank", "noopener,noreferrer");
+        } else if (a.mimeType === "application/xml") {
+          const res = await erpInvoicesCoreApi.getDownloadUrl(invId, "xml");
+          window.open(res.url, "_blank", "noopener,noreferrer");
+        }
+        return;
+      }
       const res = await getAttachmentDownloadUrlApi(a.id, true);
       window.open(res.url, "_blank", "noopener,noreferrer");
     } catch (e) {
@@ -439,6 +454,10 @@ export function DinhKemChungTu() {
                     attachments={
                       invoiceFormHook.detailInvoice?.attachments ?? null
                     }
+                    pdfFileKey={
+                      invoiceFormHook.detailInvoice?.pdfFileKey ?? null
+                    }
+                    pdfFiles={invoiceFormHook.detailInvoice?.pdfFiles ?? null}
                     editMode={invoiceFormHook.editMode}
                     pendingDeletedPdfs={invoiceFormHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {
@@ -531,9 +550,27 @@ function AttachmentDetail({
       return;
     }
     let isMounted = true;
-    getAttachmentDownloadUrlApi(item.id, true).then((res) => {
-      if (isMounted) setPreviewUrl(res.url);
-    });
+    if (item._isLegacy) {
+      const invId = item.invoiceLinks?.[0]?.invoice?.id;
+      if (invId) {
+        if (item.mimeType === "application/pdf") {
+          erpInvoicesCoreApi
+            .getPdfDownloadUrl(invId, item.fileKey)
+            .then((res) => {
+              if (isMounted) setPreviewUrl(res.url);
+            })
+            .catch(console.error);
+        } else if (item.mimeType === "application/xml") {
+          // xml preview doesn't exist really, just download
+        }
+      }
+    } else {
+      getAttachmentDownloadUrlApi(item.id, true)
+        .then((res) => {
+          if (isMounted) setPreviewUrl(res.url);
+        })
+        .catch(console.error);
+    }
     return () => {
       isMounted = false;
     };
