@@ -1957,6 +1957,16 @@ export const vi = {
     accountSecurity: "Tài khoản & Bảo mật",
     eInvoice: "Hóa đơn điện tử",
   },
+  attachments: {
+    moduleLabels: {
+      invoices: "Hóa đơn",
+      purchases: "Mua hàng",
+      sales: "Bán hàng",
+      finance: "Kế toán",
+      hr: "Nhân sự",
+      inventory: "Kho",
+    },
+  },
 };
 
 export type Dict = typeof vi;

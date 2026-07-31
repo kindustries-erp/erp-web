@@ -39,6 +39,15 @@ function typeLabel(type: string | null) {
   return type ? (TYPE_LABEL[type] ?? type) : "Khác";
 }
 
+const MODULE_LABELS: Record<string, string> = {
+  invoices: "Hóa đơn",
+  purchases: "Mua hàng",
+  sales: "Bán hàng",
+  finance: "Kế toán",
+  hr: "Nhân sự",
+  inventory: "Kho",
+};
+
 export function DinhKemChungTu() {
   const [items, setItems] = useState<ErpAttachment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -127,21 +136,6 @@ export function DinhKemChungTu() {
 
   async function openFile(a: ErpAttachment) {
     try {
-      if (a._isLegacy) {
-        const invId = a.invoiceLinks?.[0]?.invoice?.id;
-        if (!invId) return;
-        if (a.mimeType === "application/pdf") {
-          const res = await erpInvoicesCoreApi.getPdfDownloadUrl(
-            invId,
-            a.fileKey,
-          );
-          window.open(res.url, "_blank", "noopener,noreferrer");
-        } else if (a.mimeType === "application/xml") {
-          const res = await erpInvoicesCoreApi.getDownloadUrl(invId, "xml");
-          window.open(res.url, "_blank", "noopener,noreferrer");
-        }
-        return;
-      }
       const res = await getAttachmentDownloadUrlApi(a.id, true);
       window.open(res.url, "_blank", "noopener,noreferrer");
     } catch (e) {
@@ -269,9 +263,10 @@ export function DinhKemChungTu() {
           align="center"
           columnKey="module"
           fetchOptions={fetchAttachmentOptions}
+          formatOptionLabel={(label) => MODULE_LABELS[label] ?? label}
         />
       ),
-      cell: (a) => a.module || "—",
+      cell: (a) => MODULE_LABELS[a.module ?? ""] ?? a.module ?? "—",
       className: "text-center text-[color:var(--muted-fg)]",
       headerClassName: "text-center",
       skeletonClassName: "w-32",
@@ -375,8 +370,13 @@ export function DinhKemChungTu() {
           align="center"
         />
       ),
-      cell: (a) =>
-        a.fileSize != null ? `${(a.fileSize / 1024).toFixed(1)} KB` : "—",
+      cell: (a) => {
+        if (a.fileSize == null || a.fileSize === 0) return "—";
+        if (a.fileSize < 1024) return `${a.fileSize} B`;
+        if (a.fileSize < 1024 * 1024)
+          return `${(a.fileSize / 1024).toFixed(1)} KB`;
+        return `${(a.fileSize / (1024 * 1024)).toFixed(1)} MB`;
+      },
       className: "text-[color:var(--muted-fg)] whitespace-nowrap text-center",
       headerClassName: "text-center",
       skeletonClassName: "w-20",
@@ -550,27 +550,11 @@ function AttachmentDetail({
       return;
     }
     let isMounted = true;
-    if (item._isLegacy) {
-      const invId = item.invoiceLinks?.[0]?.invoice?.id;
-      if (invId) {
-        if (item.mimeType === "application/pdf") {
-          erpInvoicesCoreApi
-            .getPdfDownloadUrl(invId, item.fileKey)
-            .then((res) => {
-              if (isMounted) setPreviewUrl(res.url);
-            })
-            .catch(console.error);
-        } else if (item.mimeType === "application/xml") {
-          // xml preview doesn't exist really, just download
-        }
-      }
-    } else {
-      getAttachmentDownloadUrlApi(item.id, true)
-        .then((res) => {
-          if (isMounted) setPreviewUrl(res.url);
-        })
-        .catch(console.error);
-    }
+    getAttachmentDownloadUrlApi(item.id, true)
+      .then((res) => {
+        if (isMounted) setPreviewUrl(res.url);
+      })
+      .catch(console.error);
     return () => {
       isMounted = false;
     };
@@ -601,9 +585,13 @@ function AttachmentDetail({
           <DrawerRow label="Tên file" value={item.fileName} cls="break-all" />
           <DrawerRow
             label="Dung lượng"
-            value={
-              item.fileSize ? `${(item.fileSize / 1024).toFixed(1)} KB` : "—"
-            }
+            value={(() => {
+              if (item.fileSize == null || item.fileSize === 0) return "—";
+              if (item.fileSize < 1024) return `${item.fileSize} B`;
+              if (item.fileSize < 1024 * 1024)
+                return `${(item.fileSize / 1024).toFixed(1)} KB`;
+              return `${(item.fileSize / (1024 * 1024)).toFixed(1)} MB`;
+            })()}
           />
           <DrawerRow label="Định dạng" value={item.mimeType || "—"} />
           <DrawerRow label="Ngày tải" value={item.createdAt || "—"} />
