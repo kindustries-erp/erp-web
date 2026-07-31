@@ -95,6 +95,17 @@ export function GarageCases() {
 
   const columns = [
     {
+      key: "branchName",
+      header: "Chi nhánh Kgara",
+      sortable: false,
+      cell: (item: any) => {
+        const b = branches?.find(
+          (b: any) => b.externalId === item.branchExternalId,
+        );
+        return b?.name || "-";
+      },
+    },
+    {
       key: "caseDate",
       header: t("cases.columns.caseDate"),
       sortable: true,

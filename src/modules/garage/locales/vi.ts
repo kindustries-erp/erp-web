@@ -1,7 +1,7 @@
 export const garageVi = {
   cases: {
     title: "Sổ báo giá",
-    desc: "Quản lý phiếu dịch vụ từ hệ thống Kgara",
+    desc: "Quản lý phiếu dịch vụ từ hệ thống Garage",
     columns: {
       caseDate: "Ngày tiếp nhận",
       caseCode: "Số chứng từ",

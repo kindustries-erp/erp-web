@@ -18,7 +18,6 @@ import {
   Settings,
   UserSquare2,
   Car,
-  WalletCards,
   Paperclip,
   Mail,
 } from "lucide-react";
@@ -503,7 +502,8 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
-            {canReadGreenwayIntegration && (
+            {/* TODO: Tính sau - tạm ẩn
+            canReadGreenwayIntegration && (
               <NavGroup
                 collapsed={c}
                 icon={
@@ -528,7 +528,8 @@ export function SidebarNav({
                   contextPage="garage-payables"
                 />
               </NavGroup>
-            )}
+            )
+            */}
             {showAccounting && (
               <>
                 <NavItem

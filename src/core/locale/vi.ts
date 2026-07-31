@@ -92,7 +92,7 @@ export const vi = {
       catalogRoles: "Vai trò đối tác",
       catalogOpeningBalance: "Số dư đầu kỳ",
       catalogVoucherNumbering: "Số thứ tự CT",
-      garage: "Kgara",
+      garage: "Garage",
       garageDashboard: "Tổng quan Garage",
       garageCases: "Phiếu dịch vụ",
       garageReceivables: "Phải thu từ Garage",
