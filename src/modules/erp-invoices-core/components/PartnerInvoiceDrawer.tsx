@@ -548,6 +548,8 @@ export function PartnerInvoiceDrawer({
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
                   attachments={formHook.detailInvoice?.attachments ?? null}
+                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                   editMode={formHook.editMode}
                   pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                   onPendingDeletePdf={(key) => {

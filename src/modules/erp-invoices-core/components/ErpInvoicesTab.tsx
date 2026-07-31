@@ -652,6 +652,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               </Tooltip>
             )}
             {inv.pdfFileKey ||
+            (inv.pdfFiles && inv.pdfFiles.length > 0) ||
             (inv.attachments && inv.attachments.length > 0) ? (
               <Popover
                 align="start"
@@ -1866,7 +1867,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
           const hasPdf =
-            inv.pdfFileKey || (inv.attachments && inv.attachments.length > 0);
+            inv.pdfFileKey ||
+            (inv.pdfFiles && inv.pdfFiles.length > 0) ||
+            (inv.attachments && inv.attachments.length > 0);
           if (hasPdf) {
             traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
@@ -2013,6 +2016,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   <ErpInvoicePdfUpload
                     invoiceId={formHook.detailInvoice?.id ?? null}
                     attachments={formHook.detailInvoice?.attachments ?? null}
+                    pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                    pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                     editMode={formHook.editMode}
                     pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {

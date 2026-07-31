@@ -1967,4 +1967,14 @@ export const en: Dict = {
     accountSecurity: "Account & Security",
     eInvoice: "E-Invoice",
   },
+  attachments: {
+    moduleLabels: {
+      invoices: "Invoices",
+      purchases: "Purchasing",
+      sales: "Sales",
+      finance: "Accounting",
+      hr: "HR",
+      inventory: "Inventory",
+    },
+  },
 };

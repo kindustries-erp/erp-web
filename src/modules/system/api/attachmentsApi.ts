@@ -12,6 +12,7 @@ export interface ErpAttachment {
   invoiceLinks?: {
     invoice?: { id: string; invoiceNo: string; direction: "IN" | "OUT" };
   }[];
+  _isLegacy?: boolean;
 }
 
 export interface AttachmentPagedResponse {
