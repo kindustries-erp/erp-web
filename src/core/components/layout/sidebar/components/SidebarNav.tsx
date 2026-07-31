@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { useAppStore } from "@/core/config/appStore";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 export function SidebarNav({
   c,
@@ -41,6 +42,8 @@ export function SidebarNav({
 }) {
   const t = useT();
   const searchQuery = useAppStore((s) => s.sidebarSearchQuery) || "";
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
 
   const canReadSalesOrders = useHasPermission("sales_orders", "read");
   const canReadCustomers = useHasPermission("business_partners", "read");
@@ -425,7 +428,7 @@ export function SidebarNav({
           canReadGreenwayIntegration ? t("nav.items.garagePayables") : "",
         ]) && (
           <NavSection collapsed={c} label={t("nav.sections.accounting")}>
-            {canReadBankStatements && (
+            {canReadBankStatements && isAdminEmail && (
               <NavItem
                 collapsed={c}
                 icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
@@ -617,7 +620,7 @@ export function SidebarNav({
             : "",
         ]) && (
           <NavSection collapsed={c} label={t("nav.sections.settings")}>
-            {canReadEmailInbox && (
+            {canReadEmailInbox && isAdminEmail && (
               <NavItem
                 collapsed={c}
                 icon={<Mail className="w-4 h-4 opacity-65 flex-shrink-0" />}
