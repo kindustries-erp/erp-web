@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
@@ -269,6 +269,48 @@ export function NavGroupItem({
       onContextMenu={contextPage ? onContextMenu : undefined}
     >
       {label}
+    </div>
+  );
+}
+
+// ── Nav section ──
+export function NavSection({
+  label,
+  collapsed,
+  children,
+}: {
+  label?: string;
+  collapsed?: boolean;
+  children: ReactNode;
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  if (!label) {
+    return <div className="sidebar-nav-section py-2">{children}</div>;
+  }
+
+  return (
+    <div className="sidebar-nav-section py-2">
+      <div
+        className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap flex items-center justify-between cursor-pointer hover:text-[color:var(--sidebar-active-fg)] transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span>{label}</span>
+        <span
+          className={cn(
+            "nav-arrow-el ml-auto text-[10px] text-[color:var(--sidebar-label)] opacity-70 flex-shrink-0 transition-transform duration-200 hide-on-collapse",
+            isExpanded && "rotate-90",
+          )}
+        >
+          <IconChevronRight />
+        </span>
+      </div>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+        style={{ gridTemplateRows: isExpanded || collapsed ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">{children}</div>
+      </div>
     </div>
   );
 }
