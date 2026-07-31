@@ -28,7 +28,6 @@ import {
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
 import { CashflowForecastDashboardWidget } from "@/modules/budget/components/CashflowForecastDashboardWidget";
-import { useAppStore } from "@/core/config/appStore";
 
 const formatQty = (v: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -419,9 +418,7 @@ export function Dashboard() {
             </Panel>
           </div>
 
-          <CashflowForecastDashboardWidget
-            onNavigate={(page) => useAppStore.getState().navigate(page)}
-          />
+          <CashflowForecastDashboardWidget />
         </TabsContent>
       </Tabs>
     </DashboardTemplate>
