@@ -73,6 +73,19 @@ export function GarageGrossProfit() {
       cell: () => branchName || "-",
     },
     {
+      key: "caseDate",
+      header: "Ngày",
+      sortable: true,
+      cell: (item: any) => {
+        const dateStr =
+          item.caseData?.ngayPhatSinh || item.NgayTiepNhan || item.createdAt;
+        if (!dateStr) return "-";
+        const d = new Date(dateStr);
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      },
+    },
+    {
       key: "caseCode",
       header: "Mã vụ việc",
       sortable: true,
