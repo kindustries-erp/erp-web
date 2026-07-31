@@ -1897,52 +1897,58 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     <>
       <SpreadsheetPageTemplate
         topNode={
-          direction === "OUT" ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-              <KpiCard
-                compact
-                loading={statsLoading}
-                label="Doanh thu Tháng này"
-                value={money(statsData?.monthTotal || 0)}
-                sub={`Trước thuế: ${money(statsData?.monthPreVat || 0)}`}
-                rightNode={
-                  <KpiSparkline
-                    data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
-                    labels={monthLabels}
-                    onClick={handleMonthClick}
-                  />
-                }
-              />
-              <KpiCard
-                compact
-                loading={statsLoading}
-                label="Doanh thu Tuần này"
-                value={money(statsData?.weekTotal || 0)}
-                sub={`Trước thuế: ${money(statsData?.weekPreVat || 0)}`}
-                rightNode={
-                  <KpiSparkline
-                    data={statsData?.weekChart || [0, 0, 0, 0]}
-                    labels={weekLabels}
-                    onClick={handleWeekClick}
-                  />
-                }
-              />
-              <KpiCard
-                compact
-                loading={statsLoading}
-                label="Doanh thu Hôm nay"
-                value={money(statsData?.dayTotal || 0)}
-                sub={`Trước thuế: ${money(statsData?.dayPreVat || 0)}`}
-                rightNode={
-                  <KpiSparkline
-                    data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
-                    labels={dayLabels}
-                    onClick={handleDayClick}
-                  />
-                }
-              />
-            </div>
-          ) : undefined
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            <KpiCard
+              compact
+              loading={statsLoading}
+              label={
+                direction === "OUT"
+                  ? "Doanh thu Tháng này"
+                  : "Chi phí Tháng này"
+              }
+              value={money(statsData?.monthTotal || 0)}
+              sub={`Trước thuế: ${money(statsData?.monthPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
+                  labels={monthLabels}
+                  onClick={handleMonthClick}
+                />
+              }
+            />
+            <KpiCard
+              compact
+              loading={statsLoading}
+              label={
+                direction === "OUT" ? "Doanh thu Tuần này" : "Chi phí Tuần này"
+              }
+              value={money(statsData?.weekTotal || 0)}
+              sub={`Trước thuế: ${money(statsData?.weekPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={statsData?.weekChart || [0, 0, 0, 0]}
+                  labels={weekLabels}
+                  onClick={handleWeekClick}
+                />
+              }
+            />
+            <KpiCard
+              compact
+              loading={statsLoading}
+              label={
+                direction === "OUT" ? "Doanh thu Hôm nay" : "Chi phí Hôm nay"
+              }
+              value={money(statsData?.dayTotal || 0)}
+              sub={`Trước thuế: ${money(statsData?.dayPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
+                  labels={dayLabels}
+                  onClick={handleDayClick}
+                />
+              }
+            />
+          </div>
         }
         defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
