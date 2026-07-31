@@ -49,7 +49,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
       detailInvoice={formHook.detailInvoice}
       saving={formHook.saving}
       handleSave={formHook.handleSave}
-      onDownload={() => {}}
       loadingDetail={isFetching || formHook.loadingDetail}
       startEdit={formHook.startEdit}
       cancelEdit={formHook.cancelEdit}

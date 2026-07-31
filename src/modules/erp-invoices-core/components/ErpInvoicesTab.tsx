@@ -60,6 +60,17 @@ import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
+import {
+  getFileViewUrl,
+  getAttachmentContentBlobApi,
+  getAttachmentDownloadUrlApi,
+} from "@/modules/system/api/attachmentsApi";
+
+function getPdfAttachments(attachments: any[]) {
+  return (attachments ?? []).filter(
+    (a) => a.attachment?.mimeType === "application/pdf",
+  );
+}
 
 function formatTaxInvoiceType(type?: string | null) {
   if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
@@ -134,6 +145,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     filename: string;
     fileKey: string;
     invoiceId: string;
+    isAttachment?: boolean;
   } | null>(null);
 
   const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false);
@@ -653,7 +665,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             )}
             {inv.pdfFileKey ||
             (inv.pdfFiles && inv.pdfFiles.length > 0) ||
-            (inv.attachments && inv.attachments.length > 0) ? (
+            (inv.attachments &&
+              getPdfAttachments(inv.attachments).length > 0) ? (
               <Popover
                 align="start"
                 open={openPopoverId === inv.id}
@@ -700,40 +713,46 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             </Button>
                           </div>
                         )}
-                      {inv.attachments?.map((pdf: any) => (
-                        <div
-                          key={pdf.attachment?.fileKey}
-                          className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg"
-                        >
-                          <div className="flex flex-col min-w-0 flex-1 mr-2">
-                            <span
-                              className="truncate font-medium text-slate-700"
-                              title={pdf.attachment?.fileName}
-                            >
-                              {pdf.attachment?.fileName}
-                            </span>
-                            <span className="text-xs text-gray-500 mt-0.5">
-                              Hóa đơn PDF
-                            </span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              handlePreviewPdf(
-                                inv.id,
-                                pdf.attachment?.fileKey,
-                                pdf.attachment?.fileName,
-                              );
-                            }}
+                      {getPdfAttachments(inv.attachments ?? []).map(
+                        (pdf: any) => (
+                          <div
+                            key={pdf.attachment?.fileKey}
+                            className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                              <span
+                                className="truncate font-medium text-slate-700"
+                                title={pdf.attachment?.fileName}
+                              >
+                                {pdf.attachment?.fileName}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-0.5">
+                                Hóa đơn PDF
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPopoverId(null);
+                                const url = getFileViewUrl(pdf.attachment?.id);
+                                setPreviewPdf({
+                                  url,
+                                  filename:
+                                    pdf.attachment?.fileName || "document.pdf",
+                                  fileKey: pdf.attachment?.id,
+                                  invoiceId: inv.id,
+                                  isAttachment: true,
+                                });
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 }
@@ -1869,7 +1888,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           const hasPdf =
             inv.pdfFileKey ||
             (inv.pdfFiles && inv.pdfFiles.length > 0) ||
-            (inv.attachments && inv.attachments.length > 0);
+            (inv.attachments && getPdfAttachments(inv.attachments).length > 0);
           if (hasPdf) {
             traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
@@ -1991,7 +2010,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         cancelEdit={formHook.cancelEdit}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
-        onDownload={handleDownload}
         rightPanel={
           <div className="flex flex-col gap-5">
             {formHook.loadingDetail ? (
@@ -2126,21 +2144,28 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         fetchBlobFn={
           previewPdf
             ? () =>
-                erpInvoicesCoreApi.getPdfBlob(
-                  previewPdf.invoiceId,
-                  previewPdf.fileKey,
-                )
+                previewPdf.isAttachment
+                  ? getAttachmentContentBlobApi(previewPdf.fileKey)
+                  : erpInvoicesCoreApi.getPdfBlob(
+                      previewPdf.invoiceId,
+                      previewPdf.fileKey,
+                    )
             : undefined
         }
         onDownload={
           previewPdf
             ? async () => {
                 try {
-                  const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-                    previewPdf.invoiceId,
-                    previewPdf.fileKey,
-                    false,
-                  );
+                  const url = previewPdf.isAttachment
+                    ? (await getAttachmentDownloadUrlApi(previewPdf.fileKey))
+                        .url
+                    : (
+                        await erpInvoicesCoreApi.getPdfDownloadUrl(
+                          previewPdf.invoiceId,
+                          previewPdf.fileKey,
+                          false,
+                        )
+                      ).url;
                   const a = document.createElement("a");
                   a.href = url;
                   a.download = previewPdf.filename || "document.pdf";

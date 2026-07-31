@@ -40,14 +40,17 @@ describe("FilePreviewDrawer", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders a PDF in react-pdf", () => {
+  it("renders a PDF in an iframe", () => {
     const file = new File(["dummy pdf content"], "test.pdf", {
       type: "application/pdf",
     });
-    render(<FilePreviewDrawer open={true} onClose={vi.fn()} file={file} />);
+    const { baseElement } = render(
+      <FilePreviewDrawer open={true} onClose={vi.fn()} file={file} />,
+    );
 
-    const pdfDoc = screen.getByTestId("pdf-document");
-    expect(pdfDoc).toBeInTheDocument();
+    const iframe = baseElement.querySelector("iframe");
+    expect(iframe).toBeInTheDocument();
+    expect(iframe).toHaveAttribute("title", "PDF Preview");
   });
 
   it("renders an image in an img tag", async () => {

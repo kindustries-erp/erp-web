@@ -117,6 +117,16 @@ export function getFileViewUrl(attachmentId: string): string {
   return `${API_BASE_URL}/api/v1/erp-attachments/${encodeURIComponent(attachmentId)}/content`;
 }
 
+export async function getAttachmentContentBlobApi(
+  attachmentId: string,
+): Promise<Blob> {
+  const { data } = await axiosInstance.get(
+    `/api/v1/erp-attachments/${encodeURIComponent(attachmentId)}/content`,
+    { responseType: "blob" },
+  );
+  return data;
+}
+
 export async function getAttachmentDownloadUrlApi(
   id: string,
   inline?: boolean,

@@ -3,7 +3,7 @@ import {
   type PaymentVoucherAttachment,
 } from "@/modules/finance/api/financeApi";
 import { IconPaperclip } from "@/shared/components/icons";
-import { Eye, X } from "lucide-react";
+import { Eye, X, Download } from "lucide-react";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -26,6 +26,7 @@ interface AttachmentRowProps {
   item: PaymentVoucherAttachment;
   onDelete?: (item: PaymentVoucherAttachment) => void;
   onPreview?: (url: string, fileName: string) => void;
+  onDownload?: (item: PaymentVoucherAttachment) => void;
 }
 
 /**
@@ -35,6 +36,7 @@ export function AttachmentRow({
   item,
   onDelete,
   onPreview,
+  onDownload,
 }: AttachmentRowProps) {
   const fileId = attachmentFileId(item);
   return (
@@ -48,22 +50,38 @@ export function AttachmentRow({
           {item.note ? ` · ${item.note}` : ""}
         </div>
       </div>
-      <button
-        type="button"
-        disabled={!fileId}
-        onClick={() => {
-          const url = getFileViewUrl(fileId);
-          if (onPreview) {
-            onPreview(url, attachmentFileName(item));
-          } else {
-            window.open(url, "_blank", "noopener,noreferrer");
-          }
-        }}
-        title="Xem tài liệu"
-        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      >
-        <Eye className="w-4 h-4" />
-      </button>
+      {!(
+        attachmentFileName(item).toLowerCase().endsWith(".zip") ||
+        attachmentFileName(item).toLowerCase().endsWith(".xml")
+      ) && (
+        <button
+          type="button"
+          disabled={!fileId}
+          onClick={() => {
+            const url = getFileViewUrl(fileId);
+            if (onPreview) {
+              onPreview(url, attachmentFileName(item));
+            } else {
+              window.open(url, "_blank", "noopener,noreferrer");
+            }
+          }}
+          title="Xem tài liệu"
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      )}
+      {onDownload && (
+        <button
+          type="button"
+          disabled={!fileId}
+          title="Tải tài liệu"
+          onClick={() => onDownload(item)}
+          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+      )}
       {onDelete && (
         <button
           type="button"
