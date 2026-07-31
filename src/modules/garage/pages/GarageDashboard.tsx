@@ -38,7 +38,7 @@ export function GarageDashboard() {
   return (
     <DashboardTemplate
       title="Garage Dashboard"
-      desc="Overview of Kgara data"
+      desc="Overview of Garage data"
       icon={<Car className="h-4 w-4 text-blue-600" />}
       filterConfig={filterConfig}
       filter={filter}

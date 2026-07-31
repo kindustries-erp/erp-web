@@ -2,8 +2,8 @@ import React, { useEffect } from "react";
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
 import { useErpInvoiceForm } from "../hooks/useErpInvoiceForm";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
-import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
-import { useUIStore } from "@/core/config/uiStore";
+import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
+
 import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
@@ -24,8 +24,6 @@ export function ErpInvoiceStandaloneDrawer({
   onClose,
   onSuccess,
 }: ErpInvoiceStandaloneDrawerProps) {
-  const showToast = useUIStore((s) => s.showToast);
-
   // Pass a callback to trigger onSuccess (e.g. to refetch a list if needed)
   const formHook = useErpInvoiceForm(async () => {
     if (onSuccess) onSuccess();
@@ -46,29 +44,6 @@ export function ErpInvoiceStandaloneDrawer({
     onClose();
   };
 
-  async function handleDownload(id: string, type: "pdf" | "xml") {
-    try {
-      showToast({
-        title: `Đang tải file ${type.toUpperCase()}...`,
-        variant: "default",
-      });
-      const { url } = await erpInvoicesCoreApi.getDownloadUrl(id, type);
-      if (url) {
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }
-    } catch {
-      showToast({
-        title: `Không thể tải ${type.toUpperCase()}`,
-        variant: "destructive",
-      });
-    }
-  }
-
   return (
     <>
       <ErpInvoiceInternalDrawer
@@ -82,7 +57,6 @@ export function ErpInvoiceStandaloneDrawer({
         cancelEdit={formHook.cancelEdit}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
-        onDownload={handleDownload}
         rightPanel={
           <div className="flex flex-col gap-5">
             {formHook.loadingDetail ? (

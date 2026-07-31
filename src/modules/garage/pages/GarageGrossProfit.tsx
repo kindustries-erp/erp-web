@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { useGarageGrossProfit } from "../hooks/useGarage";
+import { useGarageGrossProfit, useGarageBranches } from "../hooks/useGarage";
 import { Car, DownloadCloud, MoreHorizontal } from "lucide-react";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
@@ -12,6 +12,10 @@ import { KpiCard } from "@/shared/components/KpiCard";
 
 export function GarageGrossProfit() {
   const { selectedBranchId } = useGarageStore();
+  const { data: branches } = useGarageBranches();
+  const branchName = branches?.find(
+    (b: any) => b.externalId === selectedBranchId,
+  )?.name;
 
   const filterConfig = useMemo(() => {
     return {
@@ -62,6 +66,25 @@ export function GarageGrossProfit() {
   );
 
   const columns = [
+    {
+      key: "branchName",
+      header: "Chi nhánh Kgara",
+      sortable: false,
+      cell: () => branchName || "-",
+    },
+    {
+      key: "caseDate",
+      header: "Ngày",
+      sortable: true,
+      cell: (item: any) => {
+        const dateStr =
+          item.caseData?.ngayPhatSinh || item.NgayTiepNhan || item.createdAt;
+        if (!dateStr) return "-";
+        const d = new Date(dateStr);
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      },
+    },
     {
       key: "caseCode",
       header: "Mã vụ việc",
@@ -161,7 +184,7 @@ export function GarageGrossProfit() {
           </div>
         }
         title="Báo cáo lợi nhuận gộp"
-        desc="Phân tích doanh thu và chi phí theo từng vụ việc Kgara"
+        desc="Phân tích doanh thu và chi phí theo từng vụ việc Garage"
         icon={<Car className="w-5 h-5 text-slate-700" />}
         tableId="garage-gross-profit-table"
         items={cases}
@@ -199,7 +222,7 @@ export function GarageGrossProfit() {
         onSuccess={() => refetch()}
         mode="gross-profit"
         title="Đồng bộ Lợi nhuận gộp"
-        description="Chọn khoảng thời gian để đồng bộ Lợi nhuận gộp từ hệ thống Kgara về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả về dữ liệu."
+        description="Chọn khoảng thời gian để đồng bộ Lợi nhuận gộp từ hệ thống Garage về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả về dữ liệu."
       />
       <GarageGrossProfitDetailDrawer
         grossProfitData={selectedGrossProfitData}

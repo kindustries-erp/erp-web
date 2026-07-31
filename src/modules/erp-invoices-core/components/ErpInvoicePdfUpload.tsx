@@ -8,7 +8,11 @@ import { AttachmentRow } from "@/shared/components/AttachmentComponents";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { Combobox } from "@/shared/components/Combobox";
 import { Attachment } from "@/shared/components/ui/Attachment";
-import { getFileViewUrl } from "@/modules/system/api/attachmentsApi";
+import {
+  getFileViewUrl,
+  getAttachmentDownloadUrlApi,
+  getAttachmentContentBlobApi,
+} from "@/modules/system/api/attachmentsApi";
 import { ErpAttachmentSelectDrawer } from "./ErpAttachmentSelectDrawer";
 
 export interface PendingAttachment {
@@ -232,6 +236,34 @@ export function ErpInvoicePdfUpload({
                       mimeType: att.mimeType,
                     });
                   }}
+                  onDownload={() => {
+                    if (item._isLegacy && att.fileKey) {
+                      erpInvoicesCoreApi
+                        .getPdfDownloadUrl(invoiceId!, att.fileKey)
+                        .then((res) => {
+                          const a = document.createElement("a");
+                          a.href = res.url;
+                          a.target = "_blank";
+                          a.download = att.fileName;
+                          a.click();
+                        })
+                        .catch((err) =>
+                          console.error("Error downloading legacy PDF:", err),
+                        );
+                      return;
+                    }
+                    getAttachmentDownloadUrlApi(att.id)
+                      .then((res) => {
+                        const a = document.createElement("a");
+                        a.href = res.url;
+                        a.target = "_blank";
+                        a.download = att.fileName;
+                        a.click();
+                      })
+                      .catch((err) => {
+                        console.error("Error downloading attachment:", err);
+                      });
+                  }}
                 />
               );
             })}
@@ -281,6 +313,11 @@ export function ErpInvoicePdfUpload({
                 a.click();
                 document.body.removeChild(a);
               }
+            : undefined
+        }
+        fetchBlobFn={
+          previewUrl?.fileKey
+            ? () => getAttachmentContentBlobApi(previewUrl.fileKey!)
             : undefined
         }
       />

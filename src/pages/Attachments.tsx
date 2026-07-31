@@ -22,7 +22,6 @@ import {
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
-import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 const TYPE_OPTS = [
   { value: "HOP_DONG", label: "Hợp đồng" },
@@ -422,10 +421,6 @@ export function DinhKemChungTu() {
         cancelEdit={invoiceFormHook.cancelEdit}
         onSyncDetail={invoiceFormHook.handleSyncDetail}
         loadingDetail={invoiceFormHook.loadingDetail}
-        onDownload={async (id, type) => {
-          const res = await erpInvoicesCoreApi.getDownloadUrl(id, type);
-          window.open(res.url, "_blank");
-        }}
         rightPanel={
           <div className="flex flex-col gap-5">
             {invoiceFormHook.loadingDetail ? (

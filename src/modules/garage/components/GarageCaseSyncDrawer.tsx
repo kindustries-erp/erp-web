@@ -24,8 +24,8 @@ export function GarageCaseSyncDrawer({
   onClose,
   onSuccess,
   mode,
-  title = "Đồng bộ Cases từ Kgara",
-  description = "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) từ hệ thống Kgara về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả về dữ liệu.",
+  title = "Đồng bộ Cases từ Garage",
+  description = "Chọn khoảng thời gian để đồng bộ phiếu dịch vụ (Cases) từ hệ thống Garage về ERP. Lưu ý: Nếu không chọn ngày, API có thể sẽ không trả về dữ liệu.",
 }: GarageCaseSyncDrawerProps) {
   const { selectedBranchId } = useGarageStore();
   const { mutateAsync: syncCases, isPending: isSyncingCases } =
