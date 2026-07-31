@@ -23,25 +23,57 @@ export function CashflowForecastDashboardWidget({
 
   // Calculate total unpaid
   const totalUnpaid = presentLiabilities.reduce(
-    (acc: number, item: any) => acc + (item.total_amount || 0),
+    (acc: number, item: any) => acc + (Number(item.totalAmount) || 0),
     0,
   );
 
-  // A simple chart projection
-  const labels = ["Tháng Này", "Tháng Sau", "Tháng Tới"];
+  // Generate 6 month labels
+  const labels = Array.from({ length: 6 }).map((_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + i);
+    return i === 0 ? "Tháng Này" : `Tháng ${d.getMonth() + 1}`;
+  });
 
-  // We'll just mock the projection data from the recurring config for now
-  const projectedAmount = futureProjections.reduce(
-    (acc: number, item: any) => acc + (item.total_amount || 0),
-    0,
-  );
+  const inData = [0, 0, 0, 0, 0, 0];
+  const outData = [0, 0, 0, 0, 0, 0];
 
-  const inData = [0, 0, 0];
-  const outData = [
-    totalUnpaid + projectedAmount,
-    projectedAmount,
-    projectedAmount,
-  ];
+  outData[0] += totalUnpaid;
+
+  futureProjections.forEach((item: any) => {
+    const amount = Number(item.totalAmount) || 0;
+    const interval = Number(item.recurrenceInterval) || 1;
+
+    let startMonthOffset = 0;
+    if (item.nextDueDate) {
+      const nextD = new Date(item.nextDueDate);
+      const currD = new Date();
+      const monthDiff =
+        (nextD.getFullYear() - currD.getFullYear()) * 12 +
+        (nextD.getMonth() - currD.getMonth());
+      if (monthDiff > 0) {
+        startMonthOffset = monthDiff;
+      }
+    }
+
+    for (let i = startMonthOffset; i < 6; i += interval) {
+      outData[i] += amount;
+    }
+  });
+
+  const translateRecurrence = (type: string) => {
+    switch (type) {
+      case "DAILY":
+        return "Hàng ngày";
+      case "WEEKLY":
+        return "Hàng tuần";
+      case "MONTHLY":
+        return "Hàng tháng";
+      case "YEARLY":
+        return "Hàng năm";
+      default:
+        return type;
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
@@ -84,14 +116,15 @@ export function CashflowForecastDashboardWidget({
                 >
                   <div>
                     <div className="font-medium text-sm">
-                      {item.title || item.expense_no || item.purchase_no}
+                      {item.title || item.expenseNo || item.poNo}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Chu kỳ: {item.recurrence_interval} {item.recurrence_type}
+                      Chu kỳ: {item.recurrenceInterval}{" "}
+                      {translateRecurrence(item.recurrenceType)}
                     </div>
                   </div>
                   <div className="font-semibold text-red-600">
-                    -{money(item.total_amount || 0)}
+                    -{money(Number(item.totalAmount) || 0)}
                   </div>
                 </div>
               ))
