@@ -28,7 +28,13 @@ export function ErpInvoicesDraftPage() {
     try {
       setGlobalLoading(true);
       const res = await syncSinvoiceDraftsApi();
-      toast.success(`Đồng bộ thành công ${res.synced} hóa đơn nháp mới.`);
+      if (!res.changed) {
+        toast("Không có thay đổi mới từ Viettel", { icon: "ℹ️" });
+      } else {
+        toast.success(
+          `Đã cập nhật: +${res.added} mới, -${res.removed} đã xoá. Tổng: ${res.synced}`,
+        );
+      }
       listHook.loadDrafts();
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Đồng bộ thất bại");

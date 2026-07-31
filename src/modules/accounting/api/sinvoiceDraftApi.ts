@@ -71,7 +71,12 @@ export function getSinvoiceDraftColumnOptionsApi(
     );
 }
 
-export function createSinvoiceDraftApi(body: any): Promise<any> {
+export function createSinvoiceDraftApi(body: any): Promise<{
+  ok: boolean;
+  synced: number;
+  changed: boolean;
+  warning?: string;
+}> {
   return axiosInstance
     .post("/api/v1/sinvoice/draft", body)
     .then((res) => res.data);
@@ -86,6 +91,9 @@ export function deleteSinvoiceDraftApi(id: string): Promise<any> {
 export function syncSinvoiceDraftsApi(): Promise<{
   ok: boolean;
   synced: number;
+  changed: boolean;
+  added: number;
+  removed: number;
 }> {
   return axiosInstance
     .post("/api/v1/sinvoice/draft/sync")
