@@ -141,6 +141,18 @@ export interface ErpInvoiceListResponse {
   totalPages: number;
 }
 
+export interface ErpInvoiceStats {
+  monthTotal: number;
+  monthPreVat: number;
+  monthChart: number[];
+  weekTotal: number;
+  weekPreVat: number;
+  weekChart: number[];
+  dayTotal: number;
+  dayPreVat: number;
+  dayChart: number[];
+}
+
 export interface PortalInvoiceDto {
   shdon: string;
   khhdon?: string | null;
@@ -252,6 +264,13 @@ export const erpInvoicesCoreApi = {
       page: number;
       totalPages: number;
     };
+  },
+
+  getStats: async (direction?: "IN" | "OUT"): Promise<ErpInvoiceStats> => {
+    const { data } = await axiosInstance.get<ErpInvoiceStats>(`${BASE}/stats`, {
+      params: { direction },
+    });
+    return data;
   },
 
   get: async (id: string): Promise<ErpInvoice> => {

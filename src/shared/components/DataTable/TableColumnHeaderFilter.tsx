@@ -164,7 +164,15 @@ export function TableColumnHeaderFilter({
 
   const finalOptions = useMemo(() => {
     if (filterOptions && filterOptions.length > 0) {
-      return filterOptions;
+      if (!debouncedLocalSearch) {
+        return filterOptions;
+      }
+      const searchLower = debouncedLocalSearch.toLowerCase();
+      return filterOptions.filter(
+        (opt) =>
+          (opt.label || "").toLowerCase().includes(searchLower) ||
+          (opt.value || "").toLowerCase().includes(searchLower),
+      );
     }
     if (columnKey) {
       const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
