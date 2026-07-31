@@ -1,5 +1,15 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { format, isValid } from "date-fns";
+import {
+  format,
+  isValid,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  subMonths,
+  subWeeks,
+  subDays,
+} from "date-fns";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
@@ -23,6 +33,10 @@ import {
   GitMerge,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { KpiCard } from "@/shared/components/KpiCard";
+import { KpiSparkline } from "@/shared/components/KpiSparkline";
+import { money } from "@/shared/utils/format";
+
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
@@ -131,6 +145,61 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const listHook = useErpInvoicesList(direction);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
   const showToast = useUIStore((s) => s.showToast);
+
+  const handleMonthClick = (index: number) => {
+    const monthsAgo = 5 - index;
+    const date = subMonths(new Date(), monthsAgo);
+    const startStr = format(startOfMonth(date), "yyyy-MM-dd");
+    const endStr = format(endOfMonth(date), "yyyy-MM-dd");
+    listHook.filterPanel.setDateFrom(startStr);
+    listHook.filterPanel.setDateTo(endStr);
+    listHook.setPage(1);
+  };
+
+  const handleWeekClick = (index: number) => {
+    const weeksAgo = 3 - index;
+    const date = subWeeks(new Date(), weeksAgo);
+    const startStr = format(
+      startOfWeek(date, { weekStartsOn: 1 }),
+      "yyyy-MM-dd",
+    );
+    const endStr = format(endOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    listHook.filterPanel.setDateFrom(startStr);
+    listHook.filterPanel.setDateTo(endStr);
+    listHook.setPage(1);
+  };
+
+  const handleDayClick = (index: number) => {
+    const daysAgo = 6 - index;
+    const date = subDays(new Date(), daysAgo);
+    const dateStr = format(date, "yyyy-MM-dd");
+    listHook.filterPanel.setDateFrom(dateStr);
+    listHook.filterPanel.setDateTo(dateStr);
+    listHook.setPage(1);
+  };
+
+  const monthLabels = useMemo(() => {
+    return Array.from({ length: 6 }).map((_, i) => {
+      const d = subMonths(new Date(), 5 - i);
+      return `Tháng ${format(d, "MM/yyyy")}`;
+    });
+  }, []);
+
+  const weekLabels = useMemo(() => {
+    return Array.from({ length: 4 }).map((_, i) => {
+      const d = subWeeks(new Date(), 3 - i);
+      const start = startOfWeek(d, { weekStartsOn: 1 });
+      const end = endOfWeek(d, { weekStartsOn: 1 });
+      return `${format(start, "dd/MM")} - ${format(end, "dd/MM")}`;
+    });
+  }, []);
+
+  const dayLabels = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = subDays(new Date(), 6 - i);
+      return format(d, "dd/MM/yyyy");
+    });
+  }, []);
 
   // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
   useInvoiceSyncProgress(listHook.loadInvoices);
@@ -360,6 +429,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { data: branches = [] } = useQuery({
     queryKey: ["branches-options"],
     queryFn: getBranchOptionsApi,
+  });
+
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ["erp-invoices-stats", direction],
+    queryFn: () => erpInvoicesCoreApi.getStats(direction),
   });
 
   useEffect(() => {
@@ -1822,6 +1896,54 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   return (
     <>
       <SpreadsheetPageTemplate
+        topNode={
+          direction === "OUT" ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+              <KpiCard
+                compact
+                loading={statsLoading}
+                label="Doanh thu Tháng này"
+                value={money(statsData?.monthTotal || 0)}
+                sub={`Trước thuế: ${money(statsData?.monthPreVat || 0)}`}
+                rightNode={
+                  <KpiSparkline
+                    data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
+                    labels={monthLabels}
+                    onClick={handleMonthClick}
+                  />
+                }
+              />
+              <KpiCard
+                compact
+                loading={statsLoading}
+                label="Doanh thu Tuần này"
+                value={money(statsData?.weekTotal || 0)}
+                sub={`Trước thuế: ${money(statsData?.weekPreVat || 0)}`}
+                rightNode={
+                  <KpiSparkline
+                    data={statsData?.weekChart || [0, 0, 0, 0]}
+                    labels={weekLabels}
+                    onClick={handleWeekClick}
+                  />
+                }
+              />
+              <KpiCard
+                compact
+                loading={statsLoading}
+                label="Doanh thu Hôm nay"
+                value={money(statsData?.dayTotal || 0)}
+                sub={`Trước thuế: ${money(statsData?.dayPreVat || 0)}`}
+                rightNode={
+                  <KpiSparkline
+                    data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
+                    labels={dayLabels}
+                    onClick={handleDayClick}
+                  />
+                }
+              />
+            </div>
+          ) : undefined
+        }
         defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
           direction === "IN"

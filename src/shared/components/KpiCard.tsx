@@ -10,6 +10,7 @@ interface KpiCardProps {
   badge?: React.ReactNode;
   warn?: boolean;
   loading?: boolean;
+  rightNode?: React.ReactNode;
 }
 
 export function KpiCard({
@@ -21,6 +22,7 @@ export function KpiCard({
   warn,
   compact,
   loading,
+  rightNode,
 }: KpiCardProps & { compact?: boolean }) {
   return (
     <div
@@ -30,58 +32,67 @@ export function KpiCard({
         warn ? "border-[#f59e0b] border-[1.5px]" : "border-border",
       )}
     >
-      {(icon || badge) && (
-        <div
-          className={cn(
-            "flex items-center justify-between",
-            compact ? "mb-1" : "mb-[10px]",
-          )}
-        >
-          {icon && (
+      <div className="flex flex-row justify-between items-center h-full">
+        <div className="flex-1 min-w-0">
+          {(icon || badge) && (
             <div
               className={cn(
-                "flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]",
-                compact ? "w-5 h-5" : "w-7 h-7",
+                "flex items-center justify-between",
+                compact ? "mb-1" : "mb-[10px]",
               )}
             >
-              {icon}
+              {icon && (
+                <div
+                  className={cn(
+                    "flex items-center justify-center bg-[color:var(--muted)] rounded-[7px]",
+                    compact ? "w-5 h-5" : "w-7 h-7",
+                  )}
+                >
+                  {icon}
+                </div>
+              )}
+              {badge}
             </div>
           )}
-          {badge}
-        </div>
-      )}
-      <div
-        className={cn(
-          "text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-1",
-          compact ? "text-[9px]" : "text-[10px]",
-        )}
-      >
-        {label}
-      </div>
-      <div
-        className={cn(
-          "font-semibold text-foreground",
-          compact
-            ? "text-[16px] max-[480px]:text-[14px]"
-            : "text-[22px] max-[480px]:text-[18px]",
-        )}
-      >
-        {loading ? (
-          <Skeleton
+          <div
             className={cn(
-              "mt-1 mb-1 rounded",
-              compact ? "h-5 w-20" : "h-7 w-28",
+              "text-[color:var(--muted-fg)] font-medium uppercase tracking-[0.05em] mb-1 truncate",
+              compact ? "text-[9px]" : "text-[10px]",
             )}
-          />
-        ) : (
-          value
+          >
+            {label}
+          </div>
+          <div
+            className={cn(
+              "font-semibold text-foreground truncate",
+              compact
+                ? "text-[16px] max-[480px]:text-[14px]"
+                : "text-[22px] max-[480px]:text-[18px]",
+            )}
+          >
+            {loading ? (
+              <Skeleton
+                className={cn(
+                  "mt-1 mb-1 rounded",
+                  compact ? "h-5 w-20" : "h-7 w-28",
+                )}
+              />
+            ) : (
+              value
+            )}
+          </div>
+          {sub && (
+            <div className="text-[11px] text-[color:var(--faint)] mt-[3px] truncate">
+              {sub}
+            </div>
+          )}
+        </div>
+        {rightNode && (
+          <div className="ml-4 w-[100px] h-[60px] flex-shrink-0 flex items-center justify-center relative">
+            {rightNode}
+          </div>
         )}
       </div>
-      {sub && (
-        <div className="text-[11px] text-[color:var(--faint)] mt-[3px]">
-          {sub}
-        </div>
-      )}
     </div>
   );
 }
