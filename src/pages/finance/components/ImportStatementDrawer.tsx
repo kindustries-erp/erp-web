@@ -12,6 +12,7 @@ import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import * as XLSX from "xlsx";
 import { Download } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import { format } from "date-fns";
 
 interface ImportStatementDrawerProps {
   isOpen: boolean;
@@ -109,10 +110,23 @@ export const ImportStatementDrawer = ({
   });
 
   const accountOptions =
-    accounts?.map((acc: any) => ({
-      value: acc.id,
-      label: acc.accountName || acc.name,
-    })) || [];
+    accounts?.map((acc: any) => {
+      let subLabel = undefined;
+      if (acc.lastUploadDate || acc.lastStatementDate) {
+        const uploadStr = acc.lastUploadDate
+          ? format(new Date(acc.lastUploadDate), "dd/MM/yyyy")
+          : "--";
+        const stmtStr = acc.lastStatementDate
+          ? format(new Date(acc.lastStatementDate), "dd/MM/yyyy")
+          : "--";
+        subLabel = `Upload lần cuối: ${uploadStr} - Sao kê tới: ${stmtStr}`;
+      }
+      return {
+        value: acc.id,
+        label: acc.accountName || acc.name,
+        subLabel,
+      };
+    }) || [];
 
   const selectedAccount = accounts?.find((a: any) => a.id === accountId);
   const isAutoSyncBank =
