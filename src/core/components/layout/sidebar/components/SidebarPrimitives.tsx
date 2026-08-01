@@ -94,10 +94,10 @@ export function NavItem({
     <Tooltip content={label} disabled={!collapsed}>
       <div
         className={cn(
-          "flex items-center gap-2 px-[14px] py-[7px] cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px]",
-          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover",
+          "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
+          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
           active &&
-            "bg-[color:var(--sidebar-active-bg)] !text-[color:var(--sidebar-active-fg)] font-semibold opacity-100",
+            "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -147,12 +147,12 @@ export function NavGroup({
   const triggerContent = (
     <div
       className={cn(
-        "flex items-center gap-2 px-[14px] py-[7px] whitespace-nowrap overflow-hidden min-h-[34px]",
+        "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
         "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100",
         !isMobile &&
-          "hover:bg-surface-hover hover:text-foreground cursor-pointer outline-none select-none",
+          "hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none select-none",
         active &&
-          "bg-[color:var(--sidebar-active-bg)] !text-[color:var(--sidebar-active-fg)] font-semibold opacity-100",
+          "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
       )}
     >
       <span className="nav-icon flex-shrink-0">{icon}</span>
@@ -260,10 +260,10 @@ export function NavGroupItem({
   return (
     <div
       className={cn(
-        "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-r-md",
-        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover hover:text-foreground",
+        "py-[6px] mx-2 px-2 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-md transition-colors",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
         active &&
-          "!text-[color:var(--sidebar-active-fg)] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
+          "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
       )}
       onClick={onClick}
       onContextMenu={contextPage ? onContextMenu : undefined}
