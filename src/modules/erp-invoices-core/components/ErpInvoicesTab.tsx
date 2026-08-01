@@ -1568,7 +1568,21 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         : []),
       {
         key: "netOffAmount",
-        header: t("netOffAmount", "Đã cấn trừ"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("netOffAmount", "Đã cấn trừ")}
+            sortState={getSortState("netOffAmount")}
+            onSortChange={(state) => handleSortChange("netOffAmount", state)}
+            searchValue={listHook.tableState.columnSearch["netOffAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("netOffAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["netOffAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("netOffAmount", vals)}
+            align="right"
+            columnKey="netOffAmount"
+          />
+        ),
         size: 150,
         headerClassName: "text-right bg-blue-50/50 border-l border-blue-200",
         className: "text-right bg-blue-50/50 border-l border-blue-200",
@@ -1582,7 +1596,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "remainingAmount",
-        header: t("invoice.columns.remainingAmount", "Còn lại"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoice.columns.remainingAmount", "Còn lại")}
+            sortState={getSortState("remainingAmount")}
+            onSortChange={(state) => handleSortChange("remainingAmount", state)}
+            searchValue={
+              listHook.tableState.columnSearch["remainingAmount"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("remainingAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["remainingAmount"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("remainingAmount", vals)
+            }
+            align="right"
+            columnKey="remainingAmount"
+          />
+        ),
         size: 120,
         headerClassName: "text-center bg-blue-50/50",
         className: "text-right font-semibold bg-blue-50/50",
