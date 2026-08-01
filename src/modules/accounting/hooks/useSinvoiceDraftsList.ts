@@ -46,6 +46,8 @@ export function useSinvoiceDraftsList() {
         page,
         pageSize,
         search: search || undefined,
+        sortKey: sortBy || undefined,
+        sortDirection: sortOrder || undefined,
         filtersStr: Object.keys(tableState.columnFilters).length
           ? JSON.stringify(tableState.columnFilters)
           : undefined,
@@ -53,18 +55,7 @@ export function useSinvoiceDraftsList() {
         dateTo: filterPanel.state.dateTo || undefined,
       });
 
-      let items = res.data;
-      if (sortBy && sortBy !== "createdAt") {
-        items = [...items].sort((a: any, b: any) => {
-          const valA = a[sortBy];
-          const valB = b[sortBy];
-          if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-          if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-          return 0;
-        });
-      }
-
-      setDrafts(items);
+      setDrafts(res.data);
       setTotal(res.meta.total);
       setTotalPages(res.meta.totalPages);
     } catch (err) {
