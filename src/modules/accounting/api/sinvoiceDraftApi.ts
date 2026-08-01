@@ -34,6 +34,8 @@ export function listSinvoiceDraftsApi(params?: {
   filtersStr?: string;
   dateFrom?: string;
   dateTo?: string;
+  sortKey?: string;
+  sortDirection?: "asc" | "desc";
 }): Promise<{
   data: SinvoiceDraft[];
   meta: { total: number; totalPages: number; page: number; pageSize: number };

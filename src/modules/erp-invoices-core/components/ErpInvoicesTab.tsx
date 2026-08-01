@@ -153,6 +153,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     const endStr = format(endOfMonth(date), "yyyy-MM-dd");
     listHook.filterPanel.setDateFrom(startStr);
     listHook.filterPanel.setDateTo(endStr);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
+      "1",
+      "2",
+      "3",
+      "5",
+      "6",
+      "null",
+    ]);
     listHook.setPage(1);
   };
 
@@ -166,6 +174,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     const endStr = format(endOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
     listHook.filterPanel.setDateFrom(startStr);
     listHook.filterPanel.setDateTo(endStr);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
+      "1",
+      "2",
+      "3",
+      "5",
+      "6",
+      "null",
+    ]);
     listHook.setPage(1);
   };
 
@@ -175,6 +191,14 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     const dateStr = format(date, "yyyy-MM-dd");
     listHook.filterPanel.setDateFrom(dateStr);
     listHook.filterPanel.setDateTo(dateStr);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
+      "1",
+      "2",
+      "3",
+      "5",
+      "6",
+      "null",
+    ]);
     listHook.setPage(1);
   };
 
@@ -987,7 +1011,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
           return (
             <Tooltip content={text !== "—" ? text : ""}>
-              <div className="whitespace-normal break-words w-full cursor-pointer">
+              <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
                 {text}
               </div>
             </Tooltip>
@@ -1013,7 +1037,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 120,
+        size: 150,
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
         cell: (inv) =>
@@ -1046,7 +1070,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="taxInvoiceType"
           />
         ),
-        size: 110,
+        size: 150,
         className: "text-center text-xs",
         cell: (inv) => formatTaxInvoiceType(inv.taxInvoiceType),
       },
@@ -1083,7 +1107,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="taxInvoiceStatus"
           />
         ),
-        size: 110,
+        size: 150,
         className: "text-center",
         cell: (inv) => {
           const lbl = formatTaxInvoiceStatus(inv.taxInvoiceStatus);
@@ -1241,49 +1265,52 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {row.items.map((item: any, idx: number) => (
-                      <tr
-                        key={item.id || idx}
-                        className="border-b last:border-0 hover:bg-slate-50"
-                      >
-                        <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
-                          {item.description || "—"}
-                        </td>
-                        <td className="px-2 py-1 text-right whitespace-nowrap">
-                          {item.quantity != null
-                            ? Number(item.quantity).toLocaleString("vi-VN", {
-                                minimumFractionDigits: 1,
-                                maximumFractionDigits: 1,
-                              })
-                            : "—"}
-                        </td>
-                        <td className="px-2 py-1 text-left whitespace-nowrap">
-                          {item.unit || "—"}
-                        </td>
-                        <td className="px-2 py-1 text-right whitespace-nowrap">
-                          {fmtAmt(item.unitPrice?.toString())}
-                        </td>
-                        <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
-                          {fmtAmt(item.preVatAmount?.toString())}
-                        </td>
-                        <td className="px-2 py-1 text-right whitespace-nowrap">
-                          {item.vatRate != null
-                            ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
-                            : "—"}
-                        </td>
-                        <td className="px-2 py-1 text-right whitespace-nowrap">
-                          {fmtAmt(item.vatAmount?.toString())}
-                        </td>
-                        <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                          {fmtAmt(
-                            (
-                              (Number(item.preVatAmount) || 0) +
-                              (Number(item.vatAmount) || 0)
-                            ).toString(),
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {row.items.map((item: any, idx: number) => {
+                      const compVatAmt =
+                        Number(item.vatAmount) ||
+                        (Number(item.preVatAmount) || 0) *
+                          (Number(item.vatRate) || 0);
+                      const compTotalAmt =
+                        (Number(item.preVatAmount) || 0) + compVatAmt;
+                      return (
+                        <tr
+                          key={item.id || idx}
+                          className="border-b last:border-0 hover:bg-slate-50"
+                        >
+                          <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
+                            {item.description || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {item.quantity != null
+                              ? Number(item.quantity).toLocaleString("vi-VN", {
+                                  minimumFractionDigits: 1,
+                                  maximumFractionDigits: 1,
+                                })
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-1 text-left whitespace-nowrap">
+                            {item.unit || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {fmtAmt(item.unitPrice?.toString())}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
+                            {fmtAmt(item.preVatAmount?.toString())}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {item.vatRate != null
+                              ? `${(Number(item.vatRate) * 100).toFixed(0)}%`
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {fmtAmt(compVatAmt.toString())}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
+                            {fmtAmt(compTotalAmt.toString())}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                   <tfoot className="bg-slate-50 sticky bottom-0 border-t">
                     <tr>
@@ -1319,24 +1346,30 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                       <td className="px-2 py-2 font-semibold text-right text-slate-700">
                         {fmtAmt(
                           row.items
-                            .reduce(
-                              (acc: number, item: any) =>
-                                acc + (Number(item.vatAmount) || 0),
-                              0,
-                            )
+                            .reduce((acc: number, item: any) => {
+                              const compVatAmt =
+                                Number(item.vatAmount) ||
+                                (Number(item.preVatAmount) || 0) *
+                                  (Number(item.vatRate) || 0);
+                              return acc + compVatAmt;
+                            }, 0)
                             .toString(),
                         )}
                       </td>
                       <td className="px-2 py-2 font-semibold text-right text-slate-800">
                         {fmtAmt(
                           row.items
-                            .reduce(
-                              (acc: number, item: any) =>
+                            .reduce((acc: number, item: any) => {
+                              const compVatAmt =
+                                Number(item.vatAmount) ||
+                                (Number(item.preVatAmount) || 0) *
+                                  (Number(item.vatRate) || 0);
+                              return (
                                 acc +
                                 (Number(item.preVatAmount) || 0) +
-                                (Number(item.vatAmount) || 0),
-                              0,
-                            )
+                                compVatAmt
+                              );
+                            }, 0)
                             .toString(),
                         )}
                       </td>
@@ -1360,6 +1393,37 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             />
           );
         },
+      },
+      {
+        key: "discountAmount",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("discountAmount", "Chiết khấu")}
+            sortState={getSortState("discountAmount")}
+            onSortChange={(state) => handleSortChange("discountAmount", state)}
+            searchValue={
+              listHook.tableState.columnSearch["discountAmount"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("discountAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["discountAmount"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("discountAmount", vals)
+            }
+            align="center"
+            columnKey="discountAmount"
+            requireSearchToFetchOptions={true}
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
+          />
+        ),
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
+        cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
         key: "preVatAmount",
@@ -1439,37 +1503,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         headerClassName: "text-center",
         className: "text-right",
         cell: (inv) => fmtAmt(inv.vatAmount),
-      },
-      {
-        key: "discountAmount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("discountAmount", "Chiết khấu")}
-            sortState={getSortState("discountAmount")}
-            onSortChange={(state) => handleSortChange("discountAmount", state)}
-            searchValue={
-              listHook.tableState.columnSearch["discountAmount"] || ""
-            }
-            onSearchChange={(val) => handleSearchChange("discountAmount", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["discountAmount"] || []
-            }
-            onFilterChange={(vals) =>
-              handleFilterChange("discountAmount", vals)
-            }
-            align="center"
-            columnKey="discountAmount"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-            formatOptionLabel={formatAmtOption}
-          />
-        ),
-        size: 120,
-        headerClassName: "text-center",
-        className: "text-right",
-        cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
         key: "totalAmount",
@@ -1568,7 +1601,21 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         : []),
       {
         key: "netOffAmount",
-        header: t("netOffAmount", "Đã cấn trừ"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("netOffAmount", "Đã cấn trừ")}
+            sortState={getSortState("netOffAmount")}
+            onSortChange={(state) => handleSortChange("netOffAmount", state)}
+            searchValue={listHook.tableState.columnSearch["netOffAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("netOffAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["netOffAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("netOffAmount", vals)}
+            align="right"
+            columnKey="netOffAmount"
+          />
+        ),
         size: 150,
         headerClassName: "text-right bg-blue-50/50 border-l border-blue-200",
         className: "text-right bg-blue-50/50 border-l border-blue-200",
@@ -1582,7 +1629,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "remainingAmount",
-        header: t("invoice.columns.remainingAmount", "Còn lại"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoice.columns.remainingAmount", "Còn lại")}
+            sortState={getSortState("remainingAmount")}
+            onSortChange={(state) => handleSortChange("remainingAmount", state)}
+            searchValue={
+              listHook.tableState.columnSearch["remainingAmount"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("remainingAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["remainingAmount"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("remainingAmount", vals)
+            }
+            align="right"
+            columnKey="remainingAmount"
+          />
+        ),
         size: 120,
         headerClassName: "text-center bg-blue-50/50",
         className: "text-right font-semibold bg-blue-50/50",
@@ -1911,6 +1976,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               rightNode={
                 <KpiSparkline
                   data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
+                  preVatData={statsData?.monthPreVatChart || [0, 0, 0, 0, 0, 0]}
                   labels={monthLabels}
                   onClick={handleMonthClick}
                 />
@@ -1927,6 +1993,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               rightNode={
                 <KpiSparkline
                   data={statsData?.weekChart || [0, 0, 0, 0]}
+                  preVatData={statsData?.weekPreVatChart || [0, 0, 0, 0]}
                   labels={weekLabels}
                   onClick={handleWeekClick}
                 />
@@ -1943,6 +2010,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               rightNode={
                 <KpiSparkline
                   data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
+                  preVatData={
+                    statsData?.dayPreVatChart || [0, 0, 0, 0, 0, 0, 0]
+                  }
                   labels={dayLabels}
                   onClick={handleDayClick}
                 />

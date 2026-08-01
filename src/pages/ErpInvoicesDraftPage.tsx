@@ -51,16 +51,28 @@ export function ErpInvoicesDraftPage() {
     return "none";
   };
 
-  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
-    listHook.tableState.setSort(key, state);
+  const handleSortChange = (
+    key: string,
+    direction: "asc" | "desc" | "none",
+  ) => {
+    listHook.tableState.setSort(key, direction);
   };
 
-  const handleSearchChange = (key: string, val: string) => {
-    listHook.tableState.setColumnSearch(key, val);
+  const handleSearchChange = (key: string, search: string) => {
+    listHook.tableState.setColumnSearch(key, search);
   };
 
   const handleFilterChange = (key: string, filters: string[]) => {
     listHook.tableState.setColumnFilter(key, filters);
+  };
+
+  const formatAmtOption = (val: string | number) => {
+    const n = Number(val || 0);
+    if (isNaN(n)) return String(val);
+    return n.toLocaleString("vi-VN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
   const createHeaderProps = (
@@ -86,9 +98,20 @@ export function ErpInvoicesDraftPage() {
       const filtersStr = Object.keys(listHook.tableState.columnFilters).length
         ? JSON.stringify(listHook.tableState.columnFilters)
         : undefined;
+
+      const isMoney = [
+        "amountWithoutVAT",
+        "vatAmount",
+        "discountAmount",
+        "totalAmount",
+      ].includes(key);
+      const searchStr = isMoney
+        ? params.search.replace(/[,.]/g, "")
+        : params.search;
+
       const res = await getSinvoiceDraftColumnOptionsApi(
         params.columnKey,
-        params.search,
+        searchStr,
         params.pageParam,
         20,
         filtersStr,
@@ -134,16 +157,29 @@ export function ErpInvoicesDraftPage() {
       className: "pl-6 text-[color:var(--muted-fg)] text-center",
       headerClassName: "text-center",
       size: 120,
-      cell: (inv) =>
-        inv.createdAt
-          ? new Date(inv.createdAt).toLocaleDateString("vi-VN")
-          : "-",
+      cell: (inv) => {
+        const dStr = inv.responsePayload?.createdDate || inv.createdAt;
+        if (!dStr) return "-";
+        const d = new Date(dStr);
+        return (
+          <div className="flex flex-col">
+            <span>{d.toLocaleDateString("vi-VN")}</span>
+            <span className="text-[10px]">
+              {d.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "documentNo",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("documentNo", "Mã chứng từ")}
+          {...createHeaderProps("documentNo", "Mã chứng từ", "center")}
         />
       ),
       className: "font-medium text-primary text-left",
@@ -165,7 +201,7 @@ export function ErpInvoicesDraftPage() {
       key: "templateCode",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("templateCode", "Mẫu HĐ")}
+          {...createHeaderProps("templateCode", "Mẫu HĐ", "center")}
         />
       ),
       className: "font-mono text-xs",
@@ -179,7 +215,7 @@ export function ErpInvoicesDraftPage() {
       key: "invoiceSeri",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("invoiceSeri", "Ký hiệu HĐ")}
+          {...createHeaderProps("invoiceSeri", "Ký hiệu HĐ", "center")}
         />
       ),
       className: "font-mono text-xs",
@@ -196,10 +232,28 @@ export function ErpInvoicesDraftPage() {
       ),
     },
     {
+      key: "buyerPersonName",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("buyerPersonName", "Tên người mua", "center")}
+        />
+      ),
+      className: "text-left text-xs",
+      headerClassName: "text-center",
+      size: 150,
+      cell: (inv) => (
+        <TableText
+          text={inv.responsePayload?.buyerName || "-"}
+          tooltip={true}
+          textClassName="line-clamp-2 whitespace-normal break-words"
+        />
+      ),
+    },
+    {
       key: "buyerName",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("buyerName", "Khách hàng")}
+          {...createHeaderProps("buyerName", "Tên đơn vị", "center")}
         />
       ),
       className: "text-left",
@@ -217,7 +271,7 @@ export function ErpInvoicesDraftPage() {
       key: "buyerTaxCode",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("buyerTaxCode", "MST")}
+          {...createHeaderProps("buyerTaxCode", "MST", "center")}
         />
       ),
       className: "font-mono",
@@ -229,7 +283,7 @@ export function ErpInvoicesDraftPage() {
       key: "description",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("description", "Diễn giải")}
+          {...createHeaderProps("description", "Diễn giải", "center")}
         />
       ),
       className: "text-left",
@@ -238,7 +292,6 @@ export function ErpInvoicesDraftPage() {
       cell: (inv) => {
         let items: any[] = [];
         try {
-          // 1. Check if items are in inv.lines
           if (
             (inv as any).lines &&
             Array.isArray((inv as any).lines) &&
@@ -246,7 +299,6 @@ export function ErpInvoicesDraftPage() {
           ) {
             items = (inv as any).lines;
           } else {
-            // 2. Check if items are in listProduct or responsePayload
             const lpStr =
               (inv as any).listProduct ||
               (inv as any).responsePayload?.listProduct;
@@ -335,8 +387,8 @@ export function ErpInvoicesDraftPage() {
                         {fmtAmt(item.itemTotalAmountWithoutVat)}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {item.taxPercentage != null
-                          ? `${Number(item.taxPercentage).toFixed(0)}%`
+                        {item.vatPercentage != null
+                          ? `${Number(item.vatPercentage).toFixed(0)}%`
                           : "—"}
                       </td>
                       <td className="px-2 py-1 text-right whitespace-nowrap">
@@ -417,13 +469,28 @@ export function ErpInvoicesDraftPage() {
       },
     },
     {
-      key: "amountWithoutVAT",
+      key: "discountAmount",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("amountWithoutVAT", "TRƯỚC GTGT", "right")}
+          {...createHeaderProps("discountAmount", "CHIẾT KHẤU", "center")}
+          formatOptionLabel={formatAmtOption}
         />
       ),
       className: "text-right font-mono",
+      headerClassName: "text-center",
+      size: 130,
+      cell: (inv) => formatMoney(Number(inv.discountAmount || 0)),
+    },
+    {
+      key: "amountWithoutVAT",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("amountWithoutVAT", "TRƯỚC GTGT", "center")}
+          formatOptionLabel={formatAmtOption}
+        />
+      ),
+      className: "text-right font-mono",
+      headerClassName: "text-center",
       size: 130,
       cell: (inv) =>
         formatMoney(Number(inv.totalAmount || 0) - Number(inv.vatAmount || 0)),
@@ -432,14 +499,13 @@ export function ErpInvoicesDraftPage() {
       key: "vatRate",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("vatRate", "THUẾ SUẤT", "right")}
+          {...createHeaderProps("vatRate", "THUẾ SUẤT", "center")}
         />
       ),
       className: "text-right font-mono",
       headerClassName: "text-center",
       size: 120,
       cell: (inv) => {
-        // Mặc định lấy từ listProduct item đầu tiên nếu có, nếu không thì hiển thị "-"
         try {
           const lpStr = inv.responsePayload?.listProduct;
           const parsedLp = lpStr
@@ -455,7 +521,7 @@ export function ErpInvoicesDraftPage() {
             return `${validItem.vatPercentage}%`;
           }
         } catch {
-          // ignore
+          // ignore parsing error
         }
         return "—";
       },
@@ -464,43 +530,37 @@ export function ErpInvoicesDraftPage() {
       key: "vatAmount",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("vatAmount", "THUẾ GTGT", "right")}
+          {...createHeaderProps("vatAmount", "THUẾ GTGT", "center")}
+          formatOptionLabel={formatAmtOption}
         />
       ),
       className: "text-right font-mono",
+      headerClassName: "text-center",
       size: 130,
-      cell: (inv) => formatMoney(inv.vatAmount),
-    },
-    {
-      key: "discountAmount",
-      header: (
-        <TableColumnHeaderFilter
-          {...createHeaderProps("discountAmount", "CHIẾT KHẤU", "right")}
-        />
-      ),
-      className: "text-right font-mono",
-      size: 120,
-      cell: () => "—",
+      cell: (inv) => formatMoney(Number(inv.vatAmount || 0)),
     },
     {
       key: "totalAmount",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("totalAmount", "THÀNH TIỀN", "right")}
+          {...createHeaderProps("totalAmount", "THÀNH TIỀN", "center")}
+          formatOptionLabel={formatAmtOption}
         />
       ),
-      className: "text-right font-mono font-semibold",
+      className: "text-right font-mono text-slate-800 font-semibold",
+      headerClassName: "text-center",
       size: 130,
-      cell: (inv) => formatMoney(inv.totalAmount),
+      cell: (inv) => formatMoney(Number(inv.totalAmount || 0)),
     },
     {
       key: "currency",
       header: (
         <TableColumnHeaderFilter
-          {...createHeaderProps("currency", "Loại tiền", "center")}
+          {...createHeaderProps("currency", "Loại tiền", "center", true)}
         />
       ),
       className: "text-center",
+      headerClassName: "text-center",
       size: 100,
       cell: (inv) => (
         <TableText

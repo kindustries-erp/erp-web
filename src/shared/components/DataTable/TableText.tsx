@@ -52,9 +52,7 @@ export function TableText({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const textNode = (
-    <span className={cn("truncate", textClassName)}>{text}</span>
-  );
+  const textNode = <div className={cn("truncate", textClassName)}>{text}</div>;
 
   const wrappedText = tooltip ? (
     <Tooltip content={typeof tooltip === "string" ? tooltip : text}>

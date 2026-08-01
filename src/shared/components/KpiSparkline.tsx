@@ -21,6 +21,7 @@ ChartJS.register(
 
 interface KpiSparklineProps {
   data: number[];
+  preVatData?: number[];
   labels?: string[];
   onClick?: (index: number) => void;
 }
@@ -43,6 +44,7 @@ const externalTooltipHandler = (context: any) => {
     tooltipEl.style.padding = "8px 12px";
     tooltipEl.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
     tooltipEl.style.textAlign = "center";
+    tooltipEl.style.whiteSpace = "nowrap";
     document.body.appendChild(tooltipEl);
   }
 
@@ -53,27 +55,50 @@ const externalTooltipHandler = (context: any) => {
 
   if (tooltip.body) {
     const titleLines = tooltip.title || [];
-    const bodyLines = tooltip.body.map((b: any) => b.lines);
+    const bodyLines = tooltip.body.map((b: any) => b.lines).flat();
 
     let innerHtml = "";
     titleLines.forEach((title: string) => {
-      innerHtml += `<div style="font-weight: 500; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">${title}</div>`;
+      innerHtml += `<div style="font-weight: 500; font-size: 12px; color: #94a3b8; margin-bottom: 8px; text-align: left; border-bottom: 1px solid #334155; padding-bottom: 4px;">${title}</div>`;
     });
     bodyLines.forEach((body: string) => {
-      innerHtml += `<div style="font-weight: 700; font-size: 14px; color: #f8fafc;">${body}</div>`;
+      const parts = body.split(": ");
+      if (parts.length === 2) {
+        innerHtml += `<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 4px;">
+          <span style="font-weight: 400; font-size: 13px; color: #cbd5e1;">${parts[0]}</span>
+          <span style="font-weight: 700; font-size: 14px; color: #f8fafc;">${parts[1]}</span>
+        </div>`;
+      } else {
+        innerHtml += `<div style="font-weight: 700; font-size: 14px; color: #f8fafc; margin-top: 2px; text-align: left;">${body}</div>`;
+      }
     });
 
     tooltipEl.innerHTML = innerHtml;
   }
 
   const position = chart.canvas.getBoundingClientRect();
+
+  // Calculate left position
+  let leftPos = position.left + tooltip.caretX;
+
+  // Adjust if too close to the right edge (assume max tooltip width ~250px)
+  const estimatedWidth = 250;
+  if (leftPos + estimatedWidth / 2 > window.innerWidth) {
+    leftPos = window.innerWidth - estimatedWidth / 2 - 16;
+  }
+
   tooltipEl.style.opacity = "1";
-  tooltipEl.style.left = position.left + tooltip.caretX + "px";
+  tooltipEl.style.left = leftPos + "px";
   tooltipEl.style.top = position.top + tooltip.caretY - 12 + "px";
   tooltipEl.style.transform = "translate(-50%, -100%)";
 };
 
-export function KpiSparkline({ data, labels, onClick }: KpiSparklineProps) {
+export function KpiSparkline({
+  data,
+  preVatData,
+  labels,
+  onClick,
+}: KpiSparklineProps) {
   const chartRef = useRef<ChartJS<"line">>(null);
   const [gradient, setGradient] = useState<any>(null);
 
@@ -137,11 +162,22 @@ export function KpiSparkline({ data, labels, onClick }: KpiSparklineProps) {
         callbacks: {
           title: (context: any) => context[0].label,
           label: (context: any) => {
+            const index = context.dataIndex;
             const val = context.parsed.y;
-            return new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
-            }).format(val);
+            const format = (n: number) =>
+              new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(n);
+
+            if (preVatData) {
+              const preVat = preVatData[index];
+              return [
+                `Doanh thu: ${format(preVat)}`,
+                `Doanh thu + VAT: ${format(val)}`,
+              ];
+            }
+            return format(val);
           },
         },
       },
