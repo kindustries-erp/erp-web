@@ -987,7 +987,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
           return (
             <Tooltip content={text !== "—" ? text : ""}>
-              <div className="whitespace-normal break-words w-full cursor-pointer">
+              <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
                 {text}
               </div>
             </Tooltip>
@@ -1013,7 +1013,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             fetchOptions={fetchInvoiceOptions}
           />
         ),
-        size: 120,
+        size: 150,
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
         cell: (inv) =>
@@ -1046,7 +1046,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="taxInvoiceType"
           />
         ),
-        size: 110,
+        size: 150,
         className: "text-center text-xs",
         cell: (inv) => formatTaxInvoiceType(inv.taxInvoiceType),
       },
@@ -1083,7 +1083,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="taxInvoiceStatus"
           />
         ),
-        size: 110,
+        size: 150,
         className: "text-center",
         cell: (inv) => {
           const lbl = formatTaxInvoiceStatus(inv.taxInvoiceStatus);
