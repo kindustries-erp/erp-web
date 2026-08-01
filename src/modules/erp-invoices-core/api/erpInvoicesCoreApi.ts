@@ -145,12 +145,15 @@ export interface ErpInvoiceStats {
   monthTotal: number;
   monthPreVat: number;
   monthChart: number[];
+  monthPreVatChart: number[];
   weekTotal: number;
   weekPreVat: number;
   weekChart: number[];
+  weekPreVatChart: number[];
   dayTotal: number;
   dayPreVat: number;
   dayChart: number[];
+  dayPreVatChart: number[];
 }
 
 export interface PortalInvoiceDto {
