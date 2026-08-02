@@ -11,6 +11,7 @@ interface KpiCardProps {
   warn?: boolean;
   loading?: boolean;
   rightNode?: React.ReactNode;
+  bottomNode?: React.ReactNode;
 }
 
 export function KpiCard({
@@ -23,6 +24,7 @@ export function KpiCard({
   compact,
   loading,
   rightNode,
+  bottomNode,
 }: KpiCardProps & { compact?: boolean }) {
   return (
     <div
@@ -93,6 +95,7 @@ export function KpiCard({
           </div>
         )}
       </div>
+      {bottomNode && <div className="mt-2">{bottomNode}</div>}
     </div>
   );
 }

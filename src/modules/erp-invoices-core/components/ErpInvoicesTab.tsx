@@ -1981,6 +1981,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onClick={handleMonthClick}
                 />
               }
+              bottomNode={
+                statsData?.byBranch && statsData.byBranch.length > 0 ? (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5">
+                    {statsData.byBranch
+                      .filter((b) => b.monthTotal > 0)
+                      .map((b) => (
+                        <div
+                          key={b.branchName}
+                          className="flex justify-between text-[11px] text-muted-foreground"
+                        >
+                          <span className="truncate">{b.branchName}</span>
+                          <span className="font-medium text-foreground ml-2">
+                            {money(b.monthTotal)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : null
+              }
             />
             <KpiCard
               compact
@@ -1997,6 +2016,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   labels={weekLabels}
                   onClick={handleWeekClick}
                 />
+              }
+              bottomNode={
+                statsData?.byBranch && statsData.byBranch.length > 0 ? (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5">
+                    {statsData.byBranch
+                      .filter((b) => b.weekTotal > 0)
+                      .map((b) => (
+                        <div
+                          key={b.branchName}
+                          className="flex justify-between text-[11px] text-muted-foreground"
+                        >
+                          <span className="truncate">{b.branchName}</span>
+                          <span className="font-medium text-foreground ml-2">
+                            {money(b.weekTotal)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : null
               }
             />
             <KpiCard
@@ -2016,6 +2054,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   labels={dayLabels}
                   onClick={handleDayClick}
                 />
+              }
+              bottomNode={
+                statsData?.byBranch && statsData.byBranch.length > 0 ? (
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5">
+                    {statsData.byBranch
+                      .filter((b) => b.dayTotal > 0)
+                      .map((b) => (
+                        <div
+                          key={b.branchName}
+                          className="flex justify-between text-[11px] text-muted-foreground"
+                        >
+                          <span className="truncate">{b.branchName}</span>
+                          <span className="font-medium text-foreground ml-2">
+                            {money(b.dayTotal)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : null
               }
             />
           </div>
