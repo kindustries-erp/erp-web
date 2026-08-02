@@ -29,12 +29,12 @@ export function KpiCard({
   return (
     <div
       className={cn(
-        "bg-surface border rounded-xl card-shadow",
+        "bg-surface border rounded-xl card-shadow flex flex-col",
         compact ? "p-3 max-[480px]:p-2" : "p-4 max-[480px]:p-3",
         warn ? "border-[#f59e0b] border-[1.5px]" : "border-border",
       )}
     >
-      <div className="flex flex-row justify-between items-center h-full">
+      <div className="flex flex-row justify-between items-center flex-1">
         <div className="flex-1 min-w-0">
           {(icon || badge) && (
             <div
@@ -95,7 +95,7 @@ export function KpiCard({
           </div>
         )}
       </div>
-      {bottomNode && <div className="mt-2">{bottomNode}</div>}
+      {bottomNode && <div className="mt-3 w-full">{bottomNode}</div>}
     </div>
   );
 }

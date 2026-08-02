@@ -1983,20 +1983,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               }
               bottomNode={
                 statsData?.byBranch && statsData.byBranch.length > 0 ? (
-                  <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5">
-                    {statsData.byBranch
-                      .filter((b) => b.monthTotal > 0)
-                      .map((b) => (
-                        <div
-                          key={b.branchName}
-                          className="flex justify-between text-[11px] text-muted-foreground"
-                        >
-                          <span className="truncate">{b.branchName}</span>
-                          <span className="font-medium text-foreground ml-2">
-                            {money(b.monthTotal)}
-                          </span>
-                        </div>
-                      ))}
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {statsData.byBranch.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.monthTotal)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 ) : null
               }
@@ -2019,20 +2016,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               }
               bottomNode={
                 statsData?.byBranch && statsData.byBranch.length > 0 ? (
-                  <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5">
-                    {statsData.byBranch
-                      .filter((b) => b.weekTotal > 0)
-                      .map((b) => (
-                        <div
-                          key={b.branchName}
-                          className="flex justify-between text-[11px] text-muted-foreground"
-                        >
-                          <span className="truncate">{b.branchName}</span>
-                          <span className="font-medium text-foreground ml-2">
-                            {money(b.weekTotal)}
-                          </span>
-                        </div>
-                      ))}
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {statsData.byBranch.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.weekTotal)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 ) : null
               }
@@ -2057,20 +2051,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               }
               bottomNode={
                 statsData?.byBranch && statsData.byBranch.length > 0 ? (
-                  <div className="mt-2 pt-2 border-t border-border/50 space-y-0.5">
-                    {statsData.byBranch
-                      .filter((b) => b.dayTotal > 0)
-                      .map((b) => (
-                        <div
-                          key={b.branchName}
-                          className="flex justify-between text-[11px] text-muted-foreground"
-                        >
-                          <span className="truncate">{b.branchName}</span>
-                          <span className="font-medium text-foreground ml-2">
-                            {money(b.dayTotal)}
-                          </span>
-                        </div>
-                      ))}
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {statsData.byBranch.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.dayTotal)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 ) : null
               }
