@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { parseISO, isValid, isBefore, differenceInDays } from "date-fns";
 import {
   erpInvoicesCoreApi,
   type PortalSyncResult,
@@ -44,6 +45,25 @@ export function usePortalSync() {
         toast.error("Vui lòng chọn từ ngày và đến ngày");
         return;
       }
+
+      const dFrom = parseISO(dateFrom);
+      const dTo = parseISO(dateTo);
+
+      if (isValid(dFrom) && isValid(dTo)) {
+        if (isBefore(dTo, dFrom)) {
+          toast.error("Ngày đến không được nhỏ hơn ngày từ");
+          return;
+        }
+        const diff = differenceInDays(dTo, dFrom);
+        if (diff > 30) {
+          toast.error("Chỉ được chọn khoảng thời gian tối đa 30 ngày");
+          return;
+        }
+      } else {
+        toast.error("Ngày không hợp lệ");
+        return;
+      }
+
       setLoading(true);
       setResult(null);
       try {

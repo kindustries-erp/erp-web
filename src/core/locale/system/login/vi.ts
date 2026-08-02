@@ -1,0 +1,15 @@
+export const loginVi = {
+  title: "Đăng nhập",
+  subtitle: "Đăng nhập vào hệ thống ERP",
+  email: "Email",
+  emailPlaceholder: "Nhập email của bạn",
+  password: "Mật khẩu",
+  passwordPlaceholder: "Nhập mật khẩu",
+  submit: "Đăng nhập",
+  loading: "Đang đăng nhập...",
+  errorInvalid: "Email hoặc mật khẩu không đúng.",
+  errorEmailRequired: "Vui lòng nhập email.",
+  errorEmailFormat: "Email không hợp lệ.",
+  errorPasswordRequired: "Vui lòng nhập mật khẩu.",
+  quickLoginAdmin: "Đăng nhập nhanh (Admin)",
+};

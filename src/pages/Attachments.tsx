@@ -1,119 +1,122 @@
 import { useEffect, useState } from "react";
-import { Eye, ExternalLink, FileText, Paperclip } from "lucide-react";
+import { ExternalLink, FileText, Paperclip } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
-import { Panel, PanelMore } from "@/shared/components/Panel";
-import { PageLayout } from "@/shared/components/PageLayout";
-import { SearchInput } from "@/shared/components/SearchInput";
-import { useT } from "@/core/i18n";
-import { Combobox } from "@/shared/components/Combobox";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
+import { Badge } from "@/shared/components/ui/badge";
+import type { DataTableColumn } from "@/shared/components/DataTable";
 import { DrawerModal, DrawerRow } from "@/shared/components/DrawerModal";
 import {
-  getFileViewUrl,
-  getPaymentVoucherApi,
-  getPaymentVoucherAttachmentsPagedApi,
-  type AttachmentType,
-  type PaymentVoucher,
-  type PaymentVoucherAttachment,
-} from "@/modules/finance/api/financeApi";
+  getAttachmentsPagedApi,
+  getAttachmentDownloadUrlApi,
+  getAttachmentOptionsApi,
+  type ErpAttachment,
+} from "@/modules/system/api/attachmentsApi";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
+import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
+import {
+  ErpInvoiceInternalMain,
+  ErpInvoiceInternalSidebar,
+} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
+import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 
-const TYPE_OPTS: { value: AttachmentType; label: string }[] = [
-  { value: "INVOICE", label: "Hóa đơn" },
-  { value: "RECEIPT", label: "Biên lai" },
-  { value: "CONTRACT", label: "Hợp đồng" },
-  { value: "PAYMENT_REQUEST", label: "Đề nghị thanh toán" },
-  { value: "BANK_STATEMENT", label: "Sao kê ngân hàng" },
-  { value: "OTHER", label: "Khác" },
+const TYPE_OPTS = [
+  { value: "HOP_DONG", label: "Hợp đồng" },
+  { value: "HOA_DON", label: "Hóa đơn" },
+  { value: "BANG_KE", label: "Bảng kê" },
+  { value: "KHAC", label: "Khác" },
 ];
 
-const TYPE_LABEL: Record<AttachmentType, string> = Object.fromEntries(
+const TYPE_LABEL: Record<string, string> = Object.fromEntries(
   TYPE_OPTS.map((x) => [x.value, x.label]),
-) as Record<AttachmentType, string>;
+);
 
-function getVoucher(a: PaymentVoucherAttachment): PaymentVoucher | null {
-  return typeof a.payment_voucher_id === "object" ? a.payment_voucher_id : null;
-}
-
-function voucherId(a: PaymentVoucherAttachment) {
-  if (!a.payment_voucher_id) return "";
-  return typeof a.payment_voucher_id === "object"
-    ? a.payment_voucher_id.id
-    : a.payment_voucher_id;
-}
-
-function fileId(a: PaymentVoucherAttachment) {
-  if (!a.file) return "";
-  return typeof a.file === "object" ? a.file.id : a.file;
-}
-
-function fileName(a: PaymentVoucherAttachment) {
-  if (!a.file) return "File không còn tồn tại";
-  if (typeof a.file === "object") {
-    return a.file.filename_download ?? a.file.filename_disk ?? a.file.id;
-  }
-  return `File ${a.file.slice(0, 8)}`;
-}
-
-function fileType(a: PaymentVoucherAttachment) {
-  return a.file && typeof a.file === "object" ? (a.file.type ?? "") : "";
-}
-
-function channelLabel(v: PaymentVoucher | null) {
-  if (!v) return "Chưa phân loại";
-  return v.voucher_channel === "BANK" ? "Tiền gửi / UNT-UNC" : "Tiền mặt";
-}
-
-function typeLabel(type: AttachmentType | null) {
+function typeLabel(type: string | null) {
   return type ? (TYPE_LABEL[type] ?? type) : "Khác";
 }
 
+const MODULE_LABELS: Record<string, string> = {
+  invoices: "Hóa đơn",
+  purchases: "Mua hàng",
+  sales: "Bán hàng",
+  finance: "Kế toán",
+  hr: "Nhân sự",
+  inventory: "Kho",
+};
+
 export function DinhKemChungTu() {
-  const [items, setItems] = useState<PaymentVoucherAttachment[]>([]);
-  const [voucherMap, setVoucherMap] = useState<Record<string, PaymentVoucher>>(
-    {},
-  );
+  const [items, setItems] = useState<ErpAttachment[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<AttachmentType | "">("");
-  const [selected, setSelected] = useState<PaymentVoucherAttachment | null>(
-    null,
-  );
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [previewType, setPreviewType] = useState("");
+  const search = "";
+  const invoiceFormHook = useErpInvoiceForm(async () => {});
+  const [typeFilter, setTypeFilter] = useState<string | "">("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [sort, setSort] = useState<string[]>([]);
+
+  const getSortState = (key: string) => {
+    if (sort.includes(key)) return "asc";
+    if (sort.includes(`-${key}`)) return "desc";
+    return "none";
+  };
+
+  const fetchAttachmentOptions = async ({
+    columnKey,
+    search: querySearch,
+    pageParam = 1,
+    filtersStr,
+  }: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    return getAttachmentOptionsApi({
+      columnKey,
+      search: querySearch,
+      pageParam,
+      filtersStr,
+    });
+  };
+
+  const handleSortChange = (key: string, state: "asc" | "desc" | "none") => {
+    if (state === "none") {
+      setSort(["-createdAt"]);
+    } else {
+      setSort([state === "desc" ? `-${key}` : key]);
+    }
+    setPage(1);
+  };
+  const [selected, setSelected] = useState<ErpAttachment | null>(null);
+  const [filters, setFilters] = useState<Record<string, string[]>>({});
+  const [colSearch, setColSearch] = useState<Record<string, string>>({});
 
   const loadData = async () => {
     setLoading(true);
     setFetchError(null);
     try {
-      const res = await getPaymentVoucherAttachmentsPagedApi({
+      const res = await getAttachmentsPagedApi({
         page,
         pageSize,
         search: search || undefined,
-        attachment_type: typeFilter,
-        sort: ["-uploaded_at"],
+        documentType: typeFilter || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        sort,
+        filtersStr:
+          Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined,
       });
-      setItems(res.items);
+      setItems(res.items || []);
       setTotal(res.total);
       setTotalPages(res.totalPages);
-      const ids = Array.from(
-        new Set(res.items.map(voucherId).filter((id) => id && !voucherMap[id])),
-      );
-      if (ids.length) {
-        const vouchers = await Promise.all(
-          ids.map((id) => getPaymentVoucherApi(id).catch(() => null)),
-        );
-        setVoucherMap((prev) => ({
-          ...prev,
-          ...Object.fromEntries(
-            vouchers.filter(Boolean).map((v) => [v!.id, v as PaymentVoucher]),
-          ),
-        }));
-      }
     } catch {
       setFetchError("Không thể tải danh sách tài liệu đính kèm.");
     } finally {
@@ -123,194 +126,443 @@ export function DinhKemChungTu() {
 
   useEffect(() => {
     void loadData();
-  }, [page, pageSize, typeFilter, search]);
+  }, [page, pageSize, typeFilter, search, dateFrom, dateTo, filters]);
 
   function handlePageSize(size: number) {
     setPageSize(size);
     setPage(1);
   }
 
-  function openFile(a: PaymentVoucherAttachment) {
-    const id = fileId(a);
-    if (!id) return;
-    window.open(getFileViewUrl(id), "_blank", "noopener,noreferrer");
+  async function openFile(a: ErpAttachment) {
+    try {
+      const res = await getAttachmentDownloadUrlApi(a.id, true);
+      window.open(res.url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  function selectAttachment(a: PaymentVoucherAttachment) {
-    const id = fileId(a);
+  function selectAttachment(a: ErpAttachment) {
     setSelected(a);
-    setPreviewType(fileType(a));
-    setPreviewUrl(id ? getFileViewUrl(id) : "");
   }
 
-  const columns: DataTableColumn<PaymentVoucherAttachment>[] = [
+  const columns: DataTableColumn<ErpAttachment>[] = [
     {
-      key: "uploaded_at",
-      header: "Ngày tải",
-      cell: (a) => a.uploaded_at?.slice(0, 10) || "—",
-      className: "text-[color:var(--muted-fg)] whitespace-nowrap text-right",
+      key: "createdAt",
+      header: (
+        <TableColumnHeaderFilter
+          title="Ngày tải"
+          sortState={getSortState("createdAt")}
+          onSortChange={(state) => handleSortChange("createdAt", state)}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          hideFilter
+          hideFooter
+          align="center"
+          isActive={!!(dateFrom || dateTo)}
+          dateRangeSlot={({ close }) => (
+            <InvoiceDateRangeSlot
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onChange={(from: string, to: string) => {
+                setDateFrom(from);
+                setDateTo(to);
+                setPage(1);
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      cell: (a) => a.createdAt?.slice(0, 10) || "—",
+      className: "text-[color:var(--muted-fg)] whitespace-nowrap text-center",
       headerClassName: "text-center",
       skeletonClassName: "w-20",
+      size: 150,
     },
     {
-      key: "attachment_type",
-      header: "Loại",
+      key: "documentType",
+      header: (
+        <TableColumnHeaderFilter
+          title="Loại"
+          sortState={getSortState("documentType")}
+          onSortChange={(state) => handleSortChange("documentType", state)}
+          searchValue=""
+          onSearchChange={() => {}}
+          filterOptions={TYPE_OPTS}
+          selectedFilters={typeFilter ? [typeFilter] : []}
+          onFilterChange={(vals) => {
+            setTypeFilter(vals.length ? vals[0] : "");
+            setPage(1);
+          }}
+          align="center"
+        />
+      ),
       className: "text-center",
       headerClassName: "text-center",
       cell: (a) => (
         <div className="flex justify-center w-full">
-          <TypeBadge type={a.attachment_type} />
+          <TypeBadge type={a.documentType} />
         </div>
       ),
       skeletonClassName: "w-24",
+      size: 150,
     },
     {
-      key: "channel",
-      header: "Phân hệ",
-      cell: (a) => {
-        const voucher = getVoucher(a) ?? voucherMap[voucherId(a)];
-        return channelLabel(voucher);
-      },
-      className: "whitespace-nowrap text-left",
+      key: "fileName",
+      header: (
+        <TableColumnHeaderFilter
+          title="Tên file"
+          sortState={getSortState("fileName")}
+          onSortChange={(state) => handleSortChange("fileName", state)}
+          searchValue={colSearch["fileName"] || ""}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, fileName: v }))
+          }
+          selectedFilters={filters["fileName"] || []}
+          onFilterChange={(vals) => {
+            setFilters((prev) => ({ ...prev, fileName: vals }));
+            setPage(1);
+          }}
+          align="center"
+          columnKey="fileName"
+          fetchOptions={fetchAttachmentOptions}
+        />
+      ),
+      cell: (a) => (
+        <TableText
+          text={a.fileName}
+          onDrawerClick={() => selectAttachment(a)}
+          tooltip={true}
+        />
+      ),
+      className: "max-w-[400px] truncate text-left font-medium",
       headerClassName: "text-center",
-      skeletonClassName: "w-28",
+      skeletonClassName: "w-64",
+      size: 250,
     },
     {
-      key: "voucher_no",
-      header: "Số CT",
+      key: "module",
+      header: (
+        <TableColumnHeaderFilter
+          title="Phân hệ"
+          sortState={getSortState("module")}
+          onSortChange={(state) => handleSortChange("module", state)}
+          searchValue={colSearch["module"] || ""}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, module: v }))
+          }
+          selectedFilters={filters["module"] || []}
+          onFilterChange={(vals) => {
+            setFilters((prev) => ({ ...prev, module: vals }));
+            setPage(1);
+          }}
+          align="center"
+          columnKey="module"
+          fetchOptions={fetchAttachmentOptions}
+          formatOptionLabel={(label) => MODULE_LABELS[label] ?? label}
+        />
+      ),
+      cell: (a) => MODULE_LABELS[a.module ?? ""] ?? a.module ?? "—",
+      className: "text-center text-[color:var(--muted-fg)]",
+      headerClassName: "text-center",
+      skeletonClassName: "w-32",
+      size: 200,
+    },
+    {
+      key: "relatedDocs",
+      header: (
+        <TableColumnHeaderFilter
+          title="Chứng từ liên quan"
+          sortState="none"
+          onSortChange={() => {}}
+          searchValue={colSearch["relatedDocs"] || ""}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, relatedDocs: v }))
+          }
+          selectedFilters={filters["relatedDocs"] || []}
+          onFilterChange={(vals) => {
+            setFilters((prev) => ({ ...prev, relatedDocs: vals }));
+            setPage(1);
+          }}
+          columnKey="relatedDocs"
+          fetchOptions={fetchAttachmentOptions}
+          align="center"
+        />
+      ),
       cell: (a) => {
-        const voucher = getVoucher(a) ?? voucherMap[voucherId(a)];
-        return voucher?.voucher_no ?? voucherId(a).slice(0, 8);
+        if (!a.invoiceLinks || a.invoiceLinks.length === 0) {
+          return <span>—</span>;
+        }
+        return (
+          <div className="flex flex-col gap-1 items-start justify-center">
+            {a.invoiceLinks.map((link, idx) =>
+              link.invoice?.invoiceNo ? (
+                <TableText
+                  key={idx}
+                  text={link.invoice.invoiceNo}
+                  onDrawerClick={() => {
+                    if (link.invoice?.id) {
+                      invoiceFormHook.openInternal(link.invoice.id);
+                    }
+                  }}
+                  className="w-auto"
+                />
+              ) : null,
+            )}
+          </div>
+        );
       },
-      className: "font-mono font-semibold text-left",
+      className: "text-left pl-4",
+      headerClassName: "text-center",
+      skeletonClassName: "w-32",
+      size: 200,
+    },
+    {
+      key: "fileExt",
+      header: (
+        <TableColumnHeaderFilter
+          title="Loại file"
+          sortState="none"
+          onSortChange={() => {}}
+          searchValue={colSearch["fileExt"] || ""}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, fileExt: v }))
+          }
+          selectedFilters={filters["fileExt"] || []}
+          onFilterChange={(vals) => {
+            setFilters((prev) => ({ ...prev, fileExt: vals }));
+            setPage(1);
+          }}
+          align="center"
+          columnKey="fileExt"
+          fetchOptions={fetchAttachmentOptions}
+        />
+      ),
+      cell: (a) => {
+        const ext = a.fileName.split(".").pop()?.toUpperCase() || "—";
+        return <span className="text-xs font-semibold">{ext}</span>;
+      },
+      className: "text-center",
+      headerClassName: "text-center",
+      skeletonClassName: "w-16",
+      size: 150,
+    },
+    {
+      key: "fileSize",
+      header: (
+        <TableColumnHeaderFilter
+          title="Dung lượng"
+          sortState={getSortState("fileSize")}
+          onSortChange={(state) => handleSortChange("fileSize", state)}
+          searchValue={colSearch["fileSize"] || ""}
+          onSearchChange={(v) =>
+            setColSearch((prev) => ({ ...prev, fileSize: v }))
+          }
+          selectedFilters={filters["fileSize"] || []}
+          onFilterChange={(vals) => {
+            setFilters((prev) => ({ ...prev, fileSize: vals }));
+            setPage(1);
+          }}
+          align="center"
+        />
+      ),
+      cell: (a) => {
+        if (a.fileSize == null || a.fileSize === 0) return "—";
+        if (a.fileSize < 1024) return `${a.fileSize} B`;
+        if (a.fileSize < 1024 * 1024)
+          return `${(a.fileSize / 1024).toFixed(1)} KB`;
+        return `${(a.fileSize / (1024 * 1024)).toFixed(1)} MB`;
+      },
+      className: "text-[color:var(--muted-fg)] whitespace-nowrap text-center",
       headerClassName: "text-center",
       skeletonClassName: "w-20",
-    },
-    {
-      key: "file",
-      header: "Tên file",
-      cell: fileName,
-      className: "max-w-[280px] truncate text-left",
-      headerClassName: "text-center",
-      skeletonClassName: "w-44",
-    },
-    {
-      key: "note",
-      header: "Ghi chú",
-      cell: (a) => a.note || "—",
-      className:
-        "text-[color:var(--muted-fg)] max-w-[240px] truncate text-left",
-      headerClassName: "text-center",
-      skeletonClassName: "w-36",
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (a) => (
-        <div className="flex justify-center w-full">
-          <Button
-            title="Xem chi tiết"
-            onClick={() => selectAttachment(a)}
-            variant="ghost"
-            size="icon-sm"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
-      className: "text-center",
-      headerClassName: "w-[56px] text-center",
-      skeletonClassName: "",
+      size: 150,
     },
   ];
 
-  const t = useT();
-
   return (
-    <PageLayout
-      title={t("dinhkem.title")}
-      desc={t("dinhkem.desc")}
+    <SpreadsheetPageTemplate<ErpAttachment>
+      title="Quản lý tài liệu"
+      desc="Quản lý tài liệu upload tập trung trong hệ thống"
       icon={<Paperclip className="h-4 w-4" />}
+      tableId="attachments-table"
+      items={items}
+      columns={columns}
+      getRowKey={(a) => a.id}
+      loading={loading}
+      error={fetchError}
+      emptyLabel="Chưa có tài liệu đính kèm."
+      minWidth={900}
+      page={page}
+      pageSize={pageSize}
+      total={total}
+      totalPages={totalPages}
+      onPage={setPage}
+      onPageSize={handlePageSize}
+      onRefresh={loadData}
     >
-      <Panel title="Danh sách tài liệu" extra={<PanelMore />}>
-        <DataTable
-          items={items}
-          columns={columns}
-          getRowKey={(a) => a.id}
-          loading={loading}
-          error={fetchError}
-          emptyLabel="Chưa có tài liệu đính kèm."
-          minWidth={900}
-          elevated={false}
-          filters={
-            <>
-              <SearchInput
-                placeholder="Tìm file, số CT, ghi chú..."
-                value={search}
-                onChange={(v) => {
-                  setSearch(v);
-                  setPage(1);
-                }}
-                className="max-w-[260px]"
-              />
-              <Combobox
-                options={TYPE_OPTS}
-                value={typeFilter}
-                onChange={(v) => {
-                  setTypeFilter((v as AttachmentType | "") ?? "");
-                  setPage(1);
-                }}
-                placeholder="Tất cả loại tài liệu"
-                className="w-[200px]"
-              />
-            </>
-          }
-          page={page}
-          pageSize={pageSize}
-          total={total}
-          totalPages={totalPages}
-          onPage={setPage}
-          onPageSize={handlePageSize}
-        />
-      </Panel>
-
       <AttachmentDetail
         item={selected}
-        voucher={
-          selected
-            ? (getVoucher(selected) ?? voucherMap[voucherId(selected)])
-            : null
-        }
-        previewUrl={previewUrl}
-        previewType={previewType}
         onOpenFile={selected ? () => openFile(selected) : undefined}
         onClose={() => setSelected(null)}
       />
-    </PageLayout>
+
+      <ErpInvoiceInternalDrawer
+        open={invoiceFormHook.internalDrawerOpen}
+        onClose={() => invoiceFormHook.setInternalDrawerOpen(false)}
+        editMode={invoiceFormHook.editMode}
+        detailInvoice={invoiceFormHook.detailInvoice}
+        startEdit={invoiceFormHook.startEdit}
+        saving={invoiceFormHook.saving}
+        handleSave={invoiceFormHook.handleSave}
+        cancelEdit={invoiceFormHook.cancelEdit}
+        onSyncDetail={invoiceFormHook.handleSyncDetail}
+        loadingDetail={invoiceFormHook.loadingDetail}
+        rightPanel={
+          <div className="flex flex-col gap-5">
+            {invoiceFormHook.loadingDetail ? (
+              <div className="space-y-6">
+                <div className="h-[200px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+                <div className="h-[300px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+              </div>
+            ) : invoiceFormHook.detailInvoice ? (
+              <ErpInvoiceInternalSidebar
+                form={invoiceFormHook.form}
+                editMode={invoiceFormHook.editMode}
+                fieldSet={(key: string, value: any) =>
+                  invoiceFormHook.setForm((prev) => ({ ...prev, [key]: value }))
+                }
+                invoiceId={invoiceFormHook.detailInvoice?.id ?? null}
+                pendingTagIds={invoiceFormHook.pendingTagIds}
+                onPendingTagsChange={invoiceFormHook.setPendingTagIds}
+                direction={
+                  invoiceFormHook.detailInvoice.direction as "IN" | "OUT"
+                }
+                detailInvoice={invoiceFormHook.detailInvoice}
+                onRefreshDetail={invoiceFormHook.handleSyncDetail}
+                pdfSlot={
+                  <ErpInvoicePdfUpload
+                    invoiceId={invoiceFormHook.detailInvoice?.id ?? null}
+                    attachments={
+                      invoiceFormHook.detailInvoice?.attachments ?? null
+                    }
+                    pdfFileKey={
+                      invoiceFormHook.detailInvoice?.pdfFileKey ?? null
+                    }
+                    pdfFiles={invoiceFormHook.detailInvoice?.pdfFiles ?? null}
+                    editMode={invoiceFormHook.editMode}
+                    pendingDeletedPdfs={invoiceFormHook.form.pendingDeletedPdfs}
+                    onPendingDeletePdf={(key) => {
+                      const current =
+                        invoiceFormHook.form.pendingDeletedPdfs || [];
+                      invoiceFormHook.setForm((prev) => ({
+                        ...prev,
+                        pendingDeletedPdfs: [...current, key],
+                      }));
+                    }}
+                    pendingAddedAttachments={
+                      invoiceFormHook.form.pendingAddedAttachments
+                    }
+                    onPendingAddedAttachmentsChange={(files) => {
+                      invoiceFormHook.setForm((prev) => ({
+                        ...prev,
+                        pendingAddedAttachments: files,
+                      }));
+                    }}
+                  />
+                }
+              />
+            ) : null}
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-5">
+          {invoiceFormHook.loadingDetail ? (
+            <div className="space-y-6">
+              <div className="h-[250px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+              <div className="h-[400px] bg-slate-100 animate-pulse rounded-lg border border-slate-200" />
+            </div>
+          ) : (
+            <>
+              {invoiceFormHook.formError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm">
+                  {invoiceFormHook.formError}
+                </div>
+              )}
+              <ErpInvoiceInternalMain
+                form={invoiceFormHook.form}
+                editMode={invoiceFormHook.editMode}
+                fieldSet={(key: string, value: any) =>
+                  invoiceFormHook.setForm((prev) => ({ ...prev, [key]: value }))
+                }
+                direction={
+                  invoiceFormHook.detailInvoice?.direction as "IN" | "OUT"
+                }
+                detailInvoice={invoiceFormHook.detailInvoice}
+                postingState={invoiceFormHook.postingState}
+                pendingUnpost={invoiceFormHook.pendingUnpost}
+                onUnpost={() => invoiceFormHook.setPendingUnpost(true)}
+                onRefreshDetail={() => {
+                  if (invoiceFormHook.detailInvoice?.id) {
+                    invoiceFormHook.openInternal(
+                      invoiceFormHook.detailInvoice.id,
+                    );
+                  }
+                }}
+                invoicePreview={
+                  invoiceFormHook.detailInvoice ? (
+                    <VietnamInvoiceTemplate
+                      invoice={invoiceFormHook.detailInvoice}
+                    />
+                  ) : undefined
+                }
+              />
+            </>
+          )}
+        </div>
+      </ErpInvoiceInternalDrawer>
+    </SpreadsheetPageTemplate>
   );
 }
 
 function AttachmentDetail({
   item,
-  voucher,
-  previewUrl,
-  previewType,
   onOpenFile,
   onClose,
 }: {
-  item: PaymentVoucherAttachment | null;
-  voucher: PaymentVoucher | null;
-  previewUrl: string;
-  previewType: string;
+  item: ErpAttachment | null;
   onOpenFile?: () => void;
   onClose: () => void;
 }) {
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (!item) {
+      setPreviewUrl("");
+      return;
+    }
+    let isMounted = true;
+    getAttachmentDownloadUrlApi(item.id, true)
+      .then((res) => {
+        if (isMounted) setPreviewUrl(res.url);
+      })
+      .catch(console.error);
+    return () => {
+      isMounted = false;
+    };
+  }, [item]);
+
+  const previewType = item?.mimeType ?? "";
+
   return (
     <DrawerModal
       open={!!item}
       onClose={onClose}
       title="Chi tiết đính kèm"
-      subtitle={item ? fileName(item) : ""}
+      subtitle={item ? item.fileName : ""}
       icon={<FileText className="w-4 h-4" />}
       panelClassName="w-[520px]"
     >
@@ -318,22 +570,27 @@ function AttachmentDetail({
         <div>
           <DrawerRow
             label="Loại tài liệu"
-            value={typeLabel(item.attachment_type)}
-          />
-          <DrawerRow label="Phân hệ" value={channelLabel(voucher)} />
-          <DrawerRow label="Số chứng từ" value={voucher?.voucher_no ?? "—"} />
-          <DrawerRow
-            label="Ngày chứng từ"
-            value={voucher?.document_date ?? "—"}
+            value={typeLabel(item.documentType)}
           />
           <DrawerRow
-            label="File ID"
-            value={fileId(item)}
+            label="ID file"
+            value={item.id}
             cls="font-mono break-all"
           />
-          <DrawerRow label="Tên file" value={fileName(item)} cls="break-all" />
-          <DrawerRow label="Ghi chú" value={item.note || "—"} />
-          <DrawerRow label="Ngày tải" value={item.uploaded_at || "—"} />
+          <DrawerRow label="Tên file" value={item.fileName} cls="break-all" />
+          <DrawerRow
+            label="Dung lượng"
+            value={(() => {
+              if (item.fileSize == null || item.fileSize === 0) return "—";
+              if (item.fileSize < 1024) return `${item.fileSize} B`;
+              if (item.fileSize < 1024 * 1024)
+                return `${(item.fileSize / 1024).toFixed(1)} KB`;
+              return `${(item.fileSize / (1024 * 1024)).toFixed(1)} MB`;
+            })()}
+          />
+          <DrawerRow label="Định dạng" value={item.mimeType || "—"} />
+          <DrawerRow label="Ngày tải" value={item.createdAt || "—"} />
+
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between">
               <div className="text-[11px] font-medium text-[color:var(--muted-fg)]">
@@ -341,7 +598,6 @@ function AttachmentDetail({
               </div>
               <Button
                 type="button"
-                disabled={!fileId(item)}
                 onClick={onOpenFile}
                 variant="secondary"
                 size="sm"
@@ -354,23 +610,52 @@ function AttachmentDetail({
               {previewUrl && previewType.startsWith("image/") && (
                 <img
                   src={previewUrl}
-                  alt={fileName(item)}
+                  alt={item.fileName}
                   className="h-full w-full object-contain"
                 />
               )}
-              {previewUrl && !previewType.startsWith("image/") && (
+              {previewUrl && previewType === "application/pdf" && (
                 <iframe
-                  title={fileName(item)}
+                  title={item.fileName}
                   src={previewUrl}
                   className="h-full w-full bg-white"
                 />
               )}
-              {!previewUrl && (
-                <div className="flex h-full items-center justify-center px-6 text-center text-xs text-[color:var(--muted-fg)]">
-                  Không thể tải preview. Hãy kiểm tra endpoint xem file ở
-                  backend.
-                </div>
-              )}
+              {previewUrl &&
+                (previewType ===
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                  previewType === "application/msword" ||
+                  previewType ===
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                  previewType === "application/vnd.ms-excel" ||
+                  item.fileName.toLowerCase().endsWith(".docx") ||
+                  item.fileName.toLowerCase().endsWith(".doc") ||
+                  item.fileName.toLowerCase().endsWith(".xlsx") ||
+                  item.fileName.toLowerCase().endsWith(".xls")) && (
+                  <iframe
+                    title={item.fileName}
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+                    className="h-full w-full bg-white"
+                  />
+                )}
+              {previewUrl &&
+                !previewType.startsWith("image/") &&
+                previewType !== "application/pdf" &&
+                previewType !==
+                  "application/vnd.openxmlformats-officedocument.wordprocessingml.document" &&
+                previewType !== "application/msword" &&
+                previewType !==
+                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
+                previewType !== "application/vnd.ms-excel" &&
+                !item.fileName.toLowerCase().endsWith(".docx") &&
+                !item.fileName.toLowerCase().endsWith(".doc") &&
+                !item.fileName.toLowerCase().endsWith(".xlsx") &&
+                !item.fileName.toLowerCase().endsWith(".xls") && (
+                  <div className="flex h-full items-center justify-center px-6 text-center text-xs text-[color:var(--muted-fg)]">
+                    Không thể tải preview cho loại file này. Hãy tải xuống để
+                    xem.
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -379,10 +664,21 @@ function AttachmentDetail({
   );
 }
 
-function TypeBadge({ type }: { type: AttachmentType | null }) {
+function TypeBadge({ type }: { type: string | null }) {
+  let colorClass = "bg-[#f1f5f9] text-[#475569] border-transparent"; // KHAC (gray)
+  if (type === "HOP_DONG")
+    colorClass = "bg-[#ecfdf5] text-[#10b981] border-[#10b981]/20"; // green
+  else if (type === "HOA_DON")
+    colorClass = "bg-[#eff6ff] text-[#3b82f6] border-[#3b82f6]/20"; // blue
+  else if (type === "BANG_KE")
+    colorClass = "bg-[#fff7ed] text-[#f97316] border-[#f97316]/20"; // orange
+
   return (
-    <span className="inline-flex whitespace-nowrap text-[10px] px-[7px] py-[2px] rounded-[20px] font-medium bg-[#e8f0fd] text-[#2a6dd9]">
+    <Badge
+      variant="outline"
+      className={`w-20 inline-flex justify-center ${colorClass}`}
+    >
       {typeLabel(type)}
-    </span>
+    </Badge>
   );
 }

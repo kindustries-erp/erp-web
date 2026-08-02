@@ -8,6 +8,7 @@ export interface ComboboxOption {
   value: string;
   label: string;
   searchText?: string;
+  subLabel?: string;
 }
 
 interface ComboboxProps {
@@ -113,12 +114,19 @@ export function Combobox({
               className,
             )}
           >
-            <span className="truncate flex-1 text-left">
-              {selected
-                ? selected.label
-                : value && fallbackLabel
-                  ? fallbackLabel
-                  : placeholder}
+            <span className="truncate flex-1 text-left flex flex-col justify-center">
+              <span className="truncate">
+                {selected
+                  ? selected.label
+                  : value && fallbackLabel
+                    ? fallbackLabel
+                    : placeholder}
+              </span>
+              {selected?.subLabel && (
+                <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                  {selected.subLabel}
+                </span>
+              )}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>
@@ -210,7 +218,14 @@ export function Combobox({
                         o.value === value ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    <span className="truncate">{o.label}</span>
+                    <div className="flex-1 truncate flex flex-col justify-center">
+                      <span className="truncate">{o.label}</span>
+                      {o.subLabel && (
+                        <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                          {o.subLabel}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 </Tooltip>
               ))

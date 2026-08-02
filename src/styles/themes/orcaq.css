@@ -44,6 +44,8 @@
   --app-shell-border: transparent;
   --sidebar-bg: #18181b;
   --sidebar-border: #27272a;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-active-fg: #ffffff;
   --main-panel-bg: var(--background);
   --main-panel-border: #e4e4e7;
 

@@ -238,7 +238,7 @@ export function ErpInvoiceInternalMain({
         <DrawerSection
           title={t("accountingSection", "HẠCH TOÁN KẾ TOÁN")}
           titleExtra={
-            detailInvoice?.branchId ? (
+            form.branchId ? (
               <Button
                 type="button"
                 variant={
@@ -261,7 +261,7 @@ export function ErpInvoiceInternalMain({
           }
         >
           <div className="space-y-4 pt-2">
-            {!detailInvoice?.branchId ? (
+            {!form.branchId ? (
               <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
                 Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch toán
                 kế toán.

@@ -47,6 +47,10 @@ vi.mock("@/shared/components/ContextMenu", () => ({
   AppContextMenu: () => <div>contextmenu</div>,
 }));
 
+vi.mock("@/core/components/GlobalErpDocumentOpener", () => ({
+  GlobalErpDocumentOpener: () => <div>global-opener</div>,
+}));
+
 vi.mock("@/ReloadPrompt", () => ({
   ReloadPrompt: () => <div>reloadprompt</div>,
 }));

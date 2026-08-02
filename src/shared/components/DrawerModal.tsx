@@ -246,7 +246,7 @@ export function DrawerModal({
           <div
             className="mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 flex-shrink-0"
             style={{
-              background: "rgba(249,251,255,0.82)",
+              background: "var(--drawer-footer-bg, rgba(249,251,255,0.82))",
               backdropFilter: "blur(16px)",
               WebkitBackdropFilter: "blur(16px)",
             }}

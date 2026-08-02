@@ -1,24 +1,44 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { useGarageStore } from "../store/garageStore";
+import { garageApi } from "../api/garageApi";
+import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
+import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
+import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import {
   useGarageCases,
-  useSyncGarageCases,
-  useGarageCaseServices,
-  useGarageCasePayments,
+  useGarageBranches,
   useSyncGarageCaseDetail,
+  useGarageGrossProfit,
 } from "../hooks/useGarage";
-import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { RefreshCw, Car } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
-import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { useGarageStore } from "../store/garageStore";
-import { GarageBranchSelector } from "../components/GarageBranchSelector";
+import {
+  RefreshCw,
+  DownloadCloud,
+  MoreHorizontal,
+  FileText,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
-  const { selectedBranchId } = useGarageStore();
+  const { selectedBranchId, setSelectedBranchId } = useGarageStore();
+  const { data: branches } = useGarageBranches();
+  const tableState = useTableColumnState("garage-cases-table");
+  const [dateRanges, setDateRanges] = useState<
+    Record<string, { from: string; to: string }>
+  >({});
+
+  useEffect(() => {
+    if (branches && branches.length > 0 && !selectedBranchId) {
+      setSelectedBranchId(branches[0].externalId);
+    }
+  }, [branches, selectedBranchId, setSelectedBranchId]);
 
   const filterConfig = useMemo(() => {
     return {
@@ -34,6 +54,123 @@ export function GarageCases() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
+  const getSortState = useCallback(
+    (key: string): "asc" | "desc" | "none" => {
+      if (tableState.sorts.includes(key)) return "asc";
+      if (tableState.sorts.includes(`-${key}`)) return "desc";
+      return "none";
+    },
+    [tableState.sorts],
+  );
+
+  const handleSortChange = useCallback(
+    (key: string, state: "asc" | "desc" | "none") => {
+      tableState.setSort(key, state);
+    },
+    [tableState],
+  );
+
+  const handleSearchChange = useCallback(
+    (key: string, search: string) => {
+      tableState.setColumnSearch(key, search);
+    },
+    [tableState],
+  );
+
+  const handleFilterChange = useCallback(
+    (key: string, filters: string[]) => {
+      tableState.setColumnFilter(key, filters);
+    },
+    [tableState],
+  );
+
+  const getDateRange = useCallback(
+    (key: string) => dateRanges[key] || { from: "", to: "" },
+    [dateRanges],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (key: string, from?: string, to?: string) => {
+      setDateRanges((prev) => ({
+        ...prev,
+        [key]: { from: from || "", to: to || "" },
+      }));
+    },
+    [],
+  );
+
+  const serverFiltersStr = useMemo(() => {
+    return Object.keys(tableState.columnFilters).length > 0
+      ? JSON.stringify(tableState.columnFilters)
+      : undefined;
+  }, [tableState.columnFilters]);
+
+  const fetchCaseColumnOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      const res = await garageApi.getCaseColumnOptions(
+        selectedBranchId || "",
+        columnKey,
+        search,
+        pageParam,
+        20,
+        filtersStr,
+      );
+      return {
+        items: res.items.map((item: string) => ({ label: item, value: item })),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [selectedBranchId],
+  );
+
+  const commonOptionProps = {
+    queryKeyPrefix: "garage-case-column-options",
+    fetchOptions: fetchCaseColumnOptions,
+    allFilters: tableState.columnFilters,
+    enableSelectAllMatching: true,
+  };
+
+  const createHeaderProps = (
+    key: string,
+    title: string,
+    align: "left" | "center" | "right" = "left",
+    hideFilter = false,
+  ) => ({
+    title,
+    columnKey: key,
+    sortState: getSortState(key),
+    onSortChange: (state: "asc" | "desc" | "none") =>
+      handleSortChange(key, state),
+    searchValue: tableState.columnSearch[key] || "",
+    onSearchChange: (val: string) => handleSearchChange(key, val),
+    selectedFilters: tableState.columnFilters[key] || [],
+    onFilterChange: (vals: string[]) => handleFilterChange(key, vals),
+    align,
+    hideFilter,
+  });
+
+  const { data: profitData } = useGarageGrossProfit(
+    selectedBranchId,
+    filter.state.dateFrom || undefined,
+    filter.state.dateTo || undefined,
+  );
+
+  const profitCases = useMemo(() => {
+    const groups = profitData?.results?.Groups || profitData?.Groups || [];
+    return groups.flatMap((g: any) => g.Items || []);
+  }, [profitData]);
+
   const {
     data: casesData,
     isLoading,
@@ -43,78 +180,307 @@ export function GarageCases() {
     page,
     pageSize,
     filter.state.search || "",
+    filter.state.dateFrom || undefined,
+    filter.state.dateTo || undefined,
+    serverFiltersStr,
   );
   const cases = casesData?.data || [];
+  const visibleCases = useMemo(
+    () =>
+      applyGarageCasesTableState(
+        cases,
+        tableState,
+        filter.state.search || "",
+        dateRanges,
+      ),
+    [cases, tableState, filter.state.search, dateRanges],
+  );
   const totalCases = casesData?.pagination?.total || 0;
 
-  const { mutate: syncCases, isPending: isSyncing } = useSyncGarageCases();
-  const { mutate: syncCaseDetail, isPending: isSyncingDetail } =
-    useSyncGarageCaseDetail();
+  const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
+
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
 
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
-  const selectedCase = useMemo(
-    () => cases.find((c: any) => c.id === selectedCaseId) || null,
-    [cases, selectedCaseId],
-  );
 
-  const { isLoading: isLoadingServices } = useGarageCaseServices(
-    selectedCase?.hdPhieuDichVuId,
+  const createActions = useMemo(
+    () => [
+      {
+        groupLabel: "Thao tác",
+        items: [
+          {
+            label: t("cases.actions.syncCases", "Đồng bộ Sổ báo giá"),
+            icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
+            onClick: () => setSyncDrawerOpen(true),
+          },
+        ],
+      },
+    ],
+    [t],
   );
-  const { data: payments, isLoading: isLoadingPayments } =
-    useGarageCasePayments(selectedCase?.hdPhieuDichVuId);
 
   const columns = [
     {
+      key: "updatedAt",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "updatedAt",
+            t("cases.columns.updatedAt"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("updatedAt").from || getDateRange("updatedAt").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("updatedAt").from}
+              dateTo={getDateRange("updatedAt").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("updatedAt", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        if (!item.updatedAt) return "-";
+        return new Date(item.updatedAt).toLocaleString();
+      },
+    },
+    {
       key: "caseDate",
-      header: t("cases.columns.caseDate"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseDate",
+            t("cases.columns.caseDate"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("caseDate").from}
+              dateTo={getDateRange("caseDate").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("caseDate", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         if (!item.ngayPhatSinh) return "-";
-        // format ISO date string to DD/MM/YYYY HH:mm without changing timezone
         const d = new Date(item.ngayPhatSinh);
         const pad = (n: number) => n.toString().padStart(2, "0");
         return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       },
     },
     {
-      key: "caseCode",
-      header: t("cases.columns.caseCode"),
-      sortable: true,
+      key: "statusName",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "statusName",
+            t("cases.columns.status"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => (
-        <span className="font-medium text-blue-600">{item.soChungTu}</span>
+        <KgaraCaseStatusBadge
+          status={item.tenTinhTrangDichVu || t("cases.common.unknown")}
+        />
+      ),
+    },
+    {
+      key: "caseCode",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseCode",
+            t("cases.columns.caseCode"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      size: 200,
+      cell: (item: any) => (
+        <TableText
+          text={item.soChungTu}
+          textClassName="font-medium text-primary text-left"
+          enableCopy={true}
+          onDrawerClick={() => setSelectedCaseId(item.soChungTu)}
+        />
       ),
     },
     {
       key: "licensePlate",
-      header: t("cases.columns.licensePlate"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "licensePlate",
+            t("cases.columns.licensePlate"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => item.bienSoXe || "-",
     },
     {
       key: "customerCode",
-      header: t("cases.columns.customerCode"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "customerCode",
+            t("cases.columns.customerCode"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => item.khachHangCode || "-",
     },
     {
       key: "customerName",
-      header: t("cases.columns.customerName"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "customerName",
+            t("cases.columns.customerName"),
+            "left",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => item.khachHangName || "-",
     },
     {
       key: "isInsuranceClaim",
-      header: t("cases.columns.insurance"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "isInsuranceClaim",
+            t("cases.columns.insurance"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) =>
         item.rawData?.XeLamBaoHiem
           ? t("cases.common.yes")
           : t("cases.common.no"),
     },
     {
+      key: "doanhThu",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("doanhThu", "Doanh thu", "right")}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const val = pItem?.DoanhThu ?? item.doanhThu ?? item.rawData?.DoanhThu;
+        if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(val) || 0);
+      },
+    },
+    {
+      key: "chiPhi",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("chiPhi", "Chi phí", "right")}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const val = pItem?.ChiPhi ?? item.chiPhi ?? item.rawData?.ChiPhi;
+        if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(val) || 0);
+      },
+    },
+    {
+      key: "loiNhuan",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("loiNhuan", "Lợi nhuận", "right")}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        const pItem = profitCases.find(
+          (p: any) => p.VuViecCode === item.soChungTu,
+        );
+        const val = pItem?.LoiNhuan ?? item.loiNhuan ?? item.rawData?.LoiNhuan;
+        if (item.tenTinhTrangDichVu === "Kết thúc" && val == null) {
+          return (
+            <span className="text-red-500 text-xs italic">Chưa đồng bộ</span>
+          );
+        }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(Number(val) || 0);
+      },
+    },
+    {
       key: "totalAmount",
-      header: t("cases.columns.totalAmount"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "totalAmount",
+            t("cases.columns.totalAmount"),
+            "right",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) =>
         new Intl.NumberFormat("vi-VN", {
           style: "currency",
@@ -123,8 +489,17 @@ export function GarageCases() {
     },
     {
       key: "balanceAmount",
-      header: t("cases.columns.balanceAmount"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "balanceAmount",
+            t("cases.columns.balanceAmount"),
+            "right",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) =>
         new Intl.NumberFormat("vi-VN", {
           style: "currency",
@@ -132,9 +507,49 @@ export function GarageCases() {
         }).format(Number(item.tienConPhaiThanhToan) || 0),
     },
     {
+      key: "branchName",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("branchName", "Chi nhánh Kgara", "left", true)}
+          hideFooter={true}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        const b = branches?.find(
+          (b: any) => b.externalId === item.branchExternalId,
+        );
+        return b?.name || "-";
+      },
+    },
+    {
       key: "dataAsOf",
-      header: t("cases.columns.dataAsOf"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "dataAsOf",
+            t("cases.columns.dataAsOf"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("dataAsOf").from || getDateRange("dataAsOf").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("dataAsOf").from}
+              dateTo={getDateRange("dataAsOf").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("dataAsOf", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         if (!item.dataAsOf) return "-";
         return new Date(item.dataAsOf).toLocaleString();
@@ -142,77 +557,74 @@ export function GarageCases() {
     },
     {
       key: "createdAt",
-      header: t("cases.columns.createdAt"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "createdAt",
+            t("cases.columns.createdAt"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("createdAt").from || getDateRange("createdAt").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("createdAt").from}
+              dateTo={getDateRange("createdAt").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("createdAt", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         if (!item.createdAt) return "-";
         return new Date(item.createdAt).toLocaleString();
       },
     },
-    {
-      key: "updatedAt",
-      header: t("cases.columns.updatedAt"),
-      sortable: true,
-      cell: (item: any) => {
-        if (!item.updatedAt) return "-";
-        return new Date(item.updatedAt).toLocaleString();
-      },
-    },
-    {
-      key: "statusName",
-      header: t("cases.columns.status"),
-      sortable: true,
-      cell: (item: any) => (
-        <span className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700">
-          {item.tenTinhTrangDichVu || t("cases.common.unknown")}
-        </span>
-      ),
-    },
   ];
-
-  const handleSync = () => {
-    if (!selectedBranchId) return;
-    syncCases({
-      branchId: selectedBranchId,
-      from: filter.state.dateFrom || undefined,
-      to: filter.state.dateTo || undefined,
-    });
-  };
 
   return (
     <>
       <SpreadsheetPageTemplate
         title={t("cases.title")}
         desc={t("cases.desc")}
-        icon={<Car className="w-5 h-5 text-blue-600" />}
+        icon={<FileText className="w-5 h-5 text-slate-700" />}
         tableId="garage-cases-table"
-        items={cases}
+        items={visibleCases}
         columns={columns}
         getRowKey={(item: any) => item.id}
         loading={isLoading}
         onRefresh={() => refetch()}
         filterConfig={filterConfig}
         filter={filter}
-        customActionsNode={<GarageBranchSelector />}
-        extraActions={
-          <Button
-            onClick={handleSync}
-            disabled={!selectedBranchId || isSyncing}
-            variant="primary"
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isSyncing ? "animate-spin" : ""}`}
-            />
-            {t("cases.actions.syncCases")}
-          </Button>
-        }
-        onRowClick={(item) => {
-          setSelectedCaseId(item.id);
-          syncCaseDetail({
-            branchId: selectedBranchId!,
-            caseId: item.hdPhieuDichVuId,
-          });
-        }}
+        createLabel="Tạo phiếu dịch vụ"
+        createActions={createActions}
+        rowActions={(item: any) => [
+          {
+            label: "Xem chi tiết",
+            icon: <MoreHorizontal className="w-4 h-4" />,
+            onClick: () => {
+              setSelectedCaseId(item.id);
+            },
+          },
+          {
+            label: t("cases.actions.syncDetails"),
+            icon: <RefreshCw className="w-4 h-4" />,
+            onClick: () => {
+              syncCaseDetail({
+                branchId: selectedBranchId!,
+                caseId: item.hdPhieuDichVuId,
+              });
+            },
+          },
+        ]}
         page={page}
         pageSize={pageSize}
         total={totalCases}
@@ -224,418 +636,17 @@ export function GarageCases() {
         }}
       />
 
-      <StandardFormDrawer
-        open={!!selectedCase}
-        mode="view"
+      <GarageCaseStandaloneDrawer
+        isOpen={!!selectedCaseId}
+        caseCode={selectedCaseId}
         onClose={() => setSelectedCaseId(null)}
-        title={`${t("cases.drawer.caseDetails")} ${selectedCase?.soChungTu || ""}`}
-        rightPanelTitle={t("cases.drawer.overview")}
-        actions={[
-          {
-            label: t("cases.actions.syncDetails"),
-            onClick: () =>
-              syncCaseDetail({
-                branchId: selectedBranchId!,
-                caseId: selectedCase?.hdPhieuDichVuId,
-              }),
-            variant: "outline",
-            loading: isSyncingDetail,
-            disabled: isSyncingDetail,
-          },
-        ]}
-        leftPanel={
-          selectedCase &&
-          (isSyncingDetail || isLoadingServices || isLoadingPayments) ? (
-            <div className="space-y-4 animate-pulse pt-2">
-              <div className="h-32 bg-gray-200 rounded"></div>
-              <div className="h-32 bg-gray-200 rounded"></div>
-            </div>
-          ) : selectedCase ? (
-            <div className="space-y-4 pt-2">
-              <DrawerSection title={t("cases.drawer.conditionAndNotes")}>
-                <DrawerRow
-                  label={t("cases.drawer.customerRequest")}
-                  value={selectedCase.rawData?.YeuCauDichVu}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.diagnosis")}
-                  value={selectedCase.rawData?.ChanDoan}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.receptionCondition")}
-                  value={selectedCase.rawData?.TinhTrangTiepNhan}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.vehicleIssues")}
-                  value={selectedCase.rawData?.ThongTinBenhXe}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.consultation")}
-                  value={selectedCase.rawData?.ThongTinTuVan}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.conditionBefore")}
-                  value={selectedCase.rawData?.TinhTrangTruoc}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.conditionAfter")}
-                  value={selectedCase.rawData?.TinhTrangSau}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.notes")}
-                  value={selectedCase.rawData?.GhiChu}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.deliveryNotes")}
-                  value={selectedCase.rawData?.GhiChuGiaoXe}
-                />
-              </DrawerSection>
+        onSuccess={() => refetch()}
+      />
 
-              <DrawerSection title={t("cases.drawer.servicesAndParts")}>
-                {selectedCase.rawData?.ListPhieuDichVuChiTiet?.length ? (
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-xs text-left border-collapse">
-                      <thead className="bg-gray-50 border-y border-gray-200 text-gray-500 uppercase">
-                        <tr>
-                          <th className="px-2 py-2 font-semibold">
-                            {t("cases.drawer.description")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.qty")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.price")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.total")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedCase.rawData.ListPhieuDichVuChiTiet.map(
-                          (s: any) => (
-                            <tr
-                              key={s.HdPhieuDichVuChiTietID}
-                              className="border-b border-gray-100 last:border-b-0"
-                            >
-                              <td className="px-2 py-2">
-                                <div className="font-medium text-gray-900 line-clamp-2">
-                                  {s.NoiDungChiTiet}
-                                </div>
-                                <div className="text-[10px] text-gray-500">
-                                  {s.NhomInName}
-                                </div>
-                              </td>
-                              <td className="px-2 py-2 text-right">
-                                {s.SoLuongHoaDon}
-                              </td>
-                              <td className="px-2 py-2 text-right text-gray-600">
-                                {new Intl.NumberFormat("vi-VN").format(
-                                  s.DonGia || 0,
-                                )}
-                              </td>
-                              <td className="px-2 py-2 text-right font-semibold">
-                                {new Intl.NumberFormat("vi-VN").format(
-                                  s.TienCoThue || 0,
-                                )}
-                              </td>
-                            </tr>
-                          ),
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 py-2">
-                    {t("cases.drawer.noServicesFound")}
-                  </p>
-                )}
-              </DrawerSection>
-
-              <DrawerSection title={t("cases.drawer.payments")}>
-                {payments?.length ? (
-                  <div className="overflow-x-auto mt-2">
-                    <table className="w-full text-xs text-left border-collapse">
-                      <thead className="bg-gray-50 border-y border-gray-200 text-gray-500 uppercase">
-                        <tr>
-                          <th className="px-2 py-2 font-semibold">
-                            {t("cases.drawer.method")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.amount")}
-                          </th>
-                          <th className="px-2 py-2 text-right font-semibold">
-                            {t("cases.drawer.date")}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payments.map((p: any) => (
-                          <tr
-                            key={p.id}
-                            className="border-b border-gray-100 last:border-b-0"
-                          >
-                            <td className="px-2 py-2 font-medium">
-                              {p.paymentMethod}
-                            </td>
-                            <td className="px-2 py-2 text-right font-semibold text-green-600">
-                              {new Intl.NumberFormat("vi-VN").format(
-                                p.amount || 0,
-                              )}
-                            </td>
-                            <td className="px-2 py-2 text-right text-gray-500">
-                              {p.paymentDate
-                                ? new Date(p.paymentDate).toLocaleDateString()
-                                : "-"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 py-2">
-                    {t("cases.drawer.noPaymentsFound")}
-                  </p>
-                )}
-              </DrawerSection>
-            </div>
-          ) : null
-        }
-        rightPanel={
-          selectedCase &&
-          !isSyncingDetail &&
-          !isLoadingServices &&
-          !isLoadingPayments ? (
-            <div className="space-y-4">
-              <DrawerSection
-                title={t("cases.drawer.customerAndVehicle")}
-                collapsible
-              >
-                <DrawerRow
-                  label={t("cases.drawer.customerName")}
-                  value={
-                    selectedCase.rawData?.KhachHangName ||
-                    selectedCase.khachHangName
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.customerCode")}
-                  value={
-                    selectedCase.rawData?.KhachHangCode ||
-                    selectedCase.khachHangCode
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.phone")}
-                  value={selectedCase.rawData?.DienThoaiKhachHang}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.email")}
-                  value={selectedCase.rawData?.EmailKhachHang}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.address")}
-                  value={selectedCase.rawData?.DiaChiKhachHang}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.licensePlate")}
-                  value={selectedCase.bienSoXe}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.mileage")}
-                  value={
-                    selectedCase.rawData?.SoKMTruoc ||
-                    selectedCase.rawData?.SoKM
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.isOwner")}
-                  value={
-                    selectedCase.rawData?.LaChuXe
-                      ? t("cases.common.yes")
-                      : t("cases.common.no")
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.customerSource")}
-                  value={selectedCase.rawData?.NguonGocKhachHangName}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.insuranceClaim")}
-                  value={
-                    selectedCase.rawData?.XeLamBaoHiem
-                      ? t("cases.common.yes")
-                      : t("cases.common.no")
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.insuranceApproved")}
-                  value={
-                    selectedCase.rawData?.DaDuyetBaoHiem
-                      ? t("cases.common.yes")
-                      : t("cases.common.no")
-                  }
-                />
-              </DrawerSection>
-
-              <DrawerSection
-                title={t("cases.drawer.generalAndAdvisor")}
-                collapsible
-              >
-                <DrawerRow
-                  label={t("cases.drawer.serviceAdvisor")}
-                  value={selectedCase.rawData?.NhanVienCoVanDichVuName}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.surveyor")}
-                  value={selectedCase.rawData?.GiamDinhVienName}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.broker")}
-                  value={selectedCase.rawData?.NguoiMoiGioiName}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.warehouse")}
-                  value={selectedCase.rawData?.KhoXuatName}
-                />
-                <DrawerRow
-                  label={t("cases.columns.status")}
-                  value={selectedCase.tenTinhTrangDichVu}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.docType")}
-                  value={selectedCase.rawData?.LoaiChungTuName}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.startDate")}
-                  value={
-                    selectedCase.rawData?.NgayBatDauSuaChua
-                      ? new Date(
-                          selectedCase.rawData.NgayBatDauSuaChua,
-                        ).toLocaleString()
-                      : null
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.completionDate")}
-                  value={
-                    selectedCase.rawData?.NgayHoanThanhCongViec
-                      ? new Date(
-                          selectedCase.rawData.NgayHoanThanhCongViec,
-                        ).toLocaleString()
-                      : null
-                  }
-                />
-                <DrawerRow
-                  label={t("cases.drawer.payer")}
-                  value={selectedCase.rawData?.DoiTuongThanhToanName}
-                />
-              </DrawerSection>
-
-              <DrawerSection
-                title={t("cases.drawer.financialSummary")}
-                collapsible
-              >
-                <DrawerRow
-                  label={t("cases.drawer.totalGoods")}
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.rawData?.TongTienHang || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.amountBeforeTax")}
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.rawData?.TienChuaThue || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.tax")}
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.rawData?.TienThue || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.discount")}
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.rawData?.TienChietKhau || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.insuranceDeductible")}
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(
-                    Number(selectedCase.rawData?.TienKhauTruBaoHiem || 0),
-                  )}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.sanctionCost")}
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(
-                    Number(selectedCase.rawData?.TienChiPhiCheTai || 0),
-                  )}
-                />
-                <div className="my-2 border-t border-gray-100"></div>
-                <DrawerRow
-                  label={t("cases.columns.totalAmount")}
-                  cls="text-blue-600 font-bold"
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(
-                    Number(
-                      selectedCase.rawData?.TongTienThanhToan ||
-                        selectedCase.tienCoThue,
-                    ) || 0,
-                  )}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.paidAmount")}
-                  cls="text-green-600 font-bold"
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(
-                    Number(selectedCase.rawData?.TienThanhToanKH || 0) +
-                      Number(selectedCase.rawData?.TienThanhToanBH || 0),
-                  )}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.paidAmountKH")}
-                  cls="text-gray-600 text-xs italic"
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.rawData?.TienThanhToanKH || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.paidAmountBH")}
-                  cls="text-gray-600 text-xs italic"
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.rawData?.TienThanhToanBH || 0))}
-                />
-                <DrawerRow
-                  label={t("cases.drawer.balance")}
-                  cls="text-red-600 font-bold"
-                  value={new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(Number(selectedCase.tienConPhaiThanhToan) || 0)}
-                />
-              </DrawerSection>
-            </div>
-          ) : null
-        }
+      <GarageCaseSyncDrawer
+        open={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
+        onSuccess={() => refetch()}
       />
     </>
   );

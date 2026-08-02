@@ -49,7 +49,6 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
       detailInvoice={formHook.detailInvoice}
       saving={formHook.saving}
       handleSave={formHook.handleSave}
-      onDownload={() => {}}
       loadingDetail={isFetching || formHook.loadingDetail}
       startEdit={formHook.startEdit}
       cancelEdit={formHook.cancelEdit}
@@ -67,8 +66,9 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
             pdfSlot={
               <ErpInvoicePdfUpload
                 invoiceId={formHook.detailInvoice?.id ?? null}
-                pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                attachments={formHook.detailInvoice?.attachments ?? null}
                 pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                 editMode={formHook.editMode}
                 pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                 onPendingDeletePdf={(key) => {
@@ -78,11 +78,11 @@ export function InvoiceDetailWrapper({ invoiceId, onClose }: Props) {
                     pendingDeletedPdfs: [...current, key],
                   }));
                 }}
-                pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                onPendingAddedPdfsChange={(files) => {
+                pendingAddedAttachments={formHook.form.pendingAddedAttachments}
+                onPendingAddedAttachmentsChange={(files) => {
                   formHook.setForm((prev) => ({
                     ...prev,
-                    pendingAddedPdfs: files,
+                    pendingAddedAttachments: files,
                   }));
                 }}
               />

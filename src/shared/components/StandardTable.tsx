@@ -30,6 +30,7 @@ export interface StandardTableProps<T> {
   loading?: boolean;
   error?: string | null;
   actions?: (row: T) => ActionDropdownItem[];
+  actionColumnSize?: number;
   renderSubRow?: (row: T) => React.ReactNode;
   onRowClick?: (row: T) => void;
   enableColumnVisibility?: boolean;
@@ -65,6 +66,7 @@ export function StandardTable<T>({
   loading = false,
   error = null,
   actions,
+  actionColumnSize,
   renderSubRow,
   onRowClick,
   enableColumnVisibility = true,
@@ -128,6 +130,9 @@ export function StandardTable<T>({
                 ""
               ),
               cell: (row) => <ActionDropdown items={actions(row)} />,
+              size: actionColumnSize,
+              minSize: actionColumnSize,
+              maxSize: actionColumnSize,
             }
           : undefined
       }

@@ -12,6 +12,7 @@ import { DocumentDependencyModal } from "@/core/components/DocumentDependencyMod
 import { ReloadPrompt } from "@/ReloadPrompt";
 import { pathToPage } from "@/shared/utils/pageUrl";
 import { EnvStamp } from "@/core/components/EnvStamp";
+import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpener";
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
@@ -120,6 +121,11 @@ const ErpActivityLogsPage = lazy(() =>
     default: m.ErpActivityLogsPage,
   })),
 );
+const EmailInboxPage = lazy(() =>
+  import("@/pages/EmailInboxPage").then((m) => ({
+    default: m.EmailInboxPage,
+  })),
+);
 const ErpPermissionsCorePage = lazy(() =>
   import("@/pages/ErpPermissionsCorePage").then((m) => ({
     default: m.ErpPermissionsCorePage,
@@ -128,6 +134,11 @@ const ErpPermissionsCorePage = lazy(() =>
 const ErpInvoicesInPage = lazy(() =>
   import("@/pages/ErpInvoicesInPage").then((m) => ({
     default: m.ErpInvoicesInPage,
+  })),
+);
+const ErpInvoicesDraftPage = lazy(() =>
+  import("@/pages/ErpInvoicesDraftPage").then((m) => ({
+    default: m.ErpInvoicesDraftPage,
   })),
 );
 const ErpInvoicesOutPage = lazy(() =>
@@ -142,6 +153,9 @@ const InvoiceDashboard = lazy(() =>
 );
 const SysTagsPage = lazy(() =>
   import("@/pages/SysTagsPage").then((m) => ({ default: m.SysTagsPage })),
+);
+const AttachmentsPage = lazy(() =>
+  import("@/pages/Attachments").then((m) => ({ default: m.DinhKemChungTu })),
 );
 const BankStatementPage = lazy(() =>
   import("@/pages/BankStatementPage").then((m) => ({
@@ -166,6 +180,11 @@ const VinfastPartsTrackingPage = lazy(() =>
 const VinfastPartsDashboardPage = lazy(() =>
   import("@/pages/VinfastPartsDashboardPage").then((m) => ({
     default: m.VinfastPartsDashboardPage,
+  })),
+);
+const VinfastSettlementPage = lazy(() =>
+  import("@/pages/VinfastSettlementPage").then((m) => ({
+    default: m.VinfastSettlementPage,
   })),
 );
 const ThietLapNganHang = lazy(() =>
@@ -198,6 +217,11 @@ const GarageDashboard = lazy(() =>
     default: m.GarageDashboard,
   })),
 );
+const GarageGrossProfit = lazy(() =>
+  import("@/modules/garage/pages/GarageGrossProfit").then((m) => ({
+    default: m.GarageGrossProfit,
+  })),
+);
 const GarageCases = lazy(() =>
   import("@/modules/garage/pages/GarageCases").then((m) => ({
     default: m.GarageCases,
@@ -218,9 +242,15 @@ const AfterSalesPage = lazy(() =>
     default: m.AfterSalesPage,
   })),
 );
+const BudgetPage = lazy(() =>
+  import("@/pages/BudgetPage").then((m) => ({
+    default: m.BudgetPage,
+  })),
+);
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
+  budget: BudgetPage,
   "inventory-dashboard": InventoryDashboard,
   "cashflow-dashboard": CashflowDashboard,
   purchasing: MuaHang,
@@ -247,11 +277,14 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-employees": ErpEmployeesPage,
   "erp-users": ErpUsersPage,
   "erp-activity-logs": ErpActivityLogsPage,
+  "email-inbox": EmailInboxPage,
   "erp-permissions-core": ErpPermissionsCorePage,
   "erp-invoices-in": ErpInvoicesInPage,
   "erp-invoices-out": ErpInvoicesOutPage,
+  "erp-invoices-draft": ErpInvoicesDraftPage,
   "invoice-dashboard": InvoiceDashboard,
   "sys-tags": SysTagsPage,
+  attachments: AttachmentsPage,
   "bank-statement": () => <BankStatementPage type="bank" />,
   "cash-statement": () => <BankStatementPage type="cash" />,
   "journal-entry": GeneralJournalPage,
@@ -263,6 +296,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "garage-cases": GarageCases,
   "garage-receivables": GarageReceivables,
   "garage-payables": GaragePayables,
+  "garage-gross-profit": GarageGrossProfit,
   "after-sales": AfterSalesPage,
   "vinfast-parts": VinfastPartsTrackingPage,
   "vinfast-parts-dashboard": VinfastPartsDashboardPage,
@@ -270,6 +304,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "vinfast-parts-xemay": () => (
     <VinfastPartsTrackingPage vehicleType="MOTORBIKE" />
   ),
+  "vinfast-invoice-settlement": VinfastSettlementPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
 
@@ -413,6 +448,7 @@ export default function App() {
         <ReloadPrompt />
         <AppContextMenu />
         <DocumentDependencyModal />
+        <GlobalErpDocumentOpener />
       </div>
     </TooltipProvider>
   );

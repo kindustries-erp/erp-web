@@ -11,6 +11,7 @@ import { normalizeDateTime } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
 import { Button } from "@/shared/components/ui/Button";
 import type { DataTableColumn } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import {
   operationalApi,
   type OperationalDocument,
@@ -235,17 +236,14 @@ export function usePurchaseColumns({
         headerClassName: "text-center",
         cell: (row) => {
           return (
-            <div className="flex items-center gap-1.5 text-left text-sm w-full">
-              <Tooltip content={<PoTooltipContent row={row} />}>
-                <Button
-                  variant="link"
-                  onClick={() => onOpenDetail?.(row)}
-                  className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
-                >
-                  {row.purchase_no || "—"}
-                </Button>
-              </Tooltip>
-            </div>
+            <TableText
+              text={row.purchase_no || "—"}
+              tooltip={<PoTooltipContent row={row} />}
+              enableCopy={Boolean(row.purchase_no)}
+              onDrawerClick={
+                row.purchase_no ? () => onOpenDetail?.(row) : undefined
+              }
+            />
           );
         },
       },

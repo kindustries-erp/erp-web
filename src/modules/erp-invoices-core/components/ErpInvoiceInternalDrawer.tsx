@@ -1,7 +1,7 @@
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useTranslation } from "react-i18next";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
-import { RefreshCw, Download } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -15,7 +15,6 @@ interface Props {
   rightPanel?: React.ReactNode;
   children: React.ReactNode;
   onSyncDetail?: () => void;
-  onDownload?: (id: string, type: "pdf" | "xml") => void;
   loadingDetail?: boolean;
 }
 
@@ -31,7 +30,6 @@ export function ErpInvoiceInternalDrawer({
   rightPanel,
   children,
   onSyncDetail,
-  onDownload,
   loadingDetail,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
@@ -51,16 +49,6 @@ export function ErpInvoiceInternalDrawer({
               className={`w-3.5 h-3.5 ${loadingDetail ? "animate-spin" : ""}`}
             />
             {t("syncFromGdt", "Đồng bộ từ GĐT")}
-          </button>
-        )}
-        {onDownload && (
-          <button
-            type="button"
-            onClick={() => onDownload(detailInvoice.id, "xml")}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            XML
           </button>
         )}
       </div>

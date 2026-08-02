@@ -1,7 +1,12 @@
 import type { PageKey } from "@/shared/types";
 import { useT } from "@/core/i18n";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
-import { NavItem, NavGroup, NavGroupItem } from "./SidebarPrimitives";
+import {
+  NavItem,
+  NavGroup,
+  NavGroupItem,
+  NavSection,
+} from "./SidebarPrimitives";
 import {
   Boxes,
   Users,
@@ -18,10 +23,13 @@ import {
   Settings,
   UserSquare2,
   Car,
-  WalletCards,
+  Paperclip,
+  Mail,
+  Target,
 } from "lucide-react";
 
 import { useAppStore } from "@/core/config/appStore";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 export function SidebarNav({
   c,
@@ -34,6 +42,8 @@ export function SidebarNav({
 }) {
   const t = useT();
   const searchQuery = useAppStore((s) => s.sidebarSearchQuery) || "";
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
 
   const canReadSalesOrders = useHasPermission("sales_orders", "read");
   const canReadCustomers = useHasPermission("business_partners", "read");
@@ -73,6 +83,7 @@ export function SidebarNav({
   const canReadAdminUsers = useHasPermission("admin_users", "read");
   const canReadActivityLogs = useHasPermission("activity_logs", "read");
   const canReadSysTags = useHasPermission("sys_tags", "read");
+  const canReadEmailInbox = useHasPermission("email_ingest", "read");
   const canReadGreenwayIntegration = useHasPermission(
     "greenway_integration",
     "read",
@@ -83,7 +94,10 @@ export function SidebarNav({
     canReadAdminUsers || canReadSysTags || canReadBankStatements;
   const showSettingsInventory = canReadInventoryItems;
   const showSettings =
-    showSettingsAccess || showSettingsGeneral || showSettingsInventory;
+    showSettingsAccess ||
+    showSettingsGeneral ||
+    showSettingsInventory ||
+    canReadEmailInbox;
 
   const normalize = (text: string) => {
     return text
@@ -102,7 +116,7 @@ export function SidebarNav({
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
       {/* Dashboard */}
       {hasMatch([t("nav.items.dashboard")]) && (
-        <div className="sidebar-nav-section py-2">
+        <NavSection collapsed={c}>
           <NavItem
             collapsed={c}
             icon={
@@ -113,62 +127,8 @@ export function SidebarNav({
             onClick={() => navTo("dashboard")}
             contextPage="dashboard"
           />
-        </div>
+        </NavSection>
       )}
-
-      {/* Garage */}
-      {canReadGreenwayIntegration &&
-        hasMatch([
-          t("nav.items.garage"),
-          t("nav.items.garageDashboard"),
-          t("nav.items.garageCases"),
-          t("nav.items.garageReceivables"),
-          t("nav.items.garagePayables"),
-        ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.items.garage")}
-            </div>
-            <NavItem
-              collapsed={c}
-              icon={
-                <LayoutDashboard className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.garageDashboard")}
-              active={currentPage === "garage-dashboard"}
-              onClick={() => navTo("garage-dashboard")}
-              contextPage="garage-dashboard"
-            />
-            <NavItem
-              collapsed={c}
-              icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
-              label={t("nav.items.garageCases")}
-              active={currentPage === "garage-cases"}
-              onClick={() => navTo("garage-cases")}
-              contextPage="garage-cases"
-            />
-            <NavItem
-              collapsed={c}
-              icon={
-                <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.garageReceivables")}
-              active={currentPage === "garage-receivables"}
-              onClick={() => navTo("garage-receivables")}
-              contextPage="garage-receivables"
-            />
-            <NavItem
-              collapsed={c}
-              icon={
-                <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
-              }
-              label={t("nav.items.garagePayables")}
-              active={currentPage === "garage-payables"}
-              onClick={() => navTo("garage-payables")}
-              contextPage="garage-payables"
-            />
-          </div>
-        )}
 
       {/* Sales */}
       {showSales &&
@@ -179,10 +139,7 @@ export function SidebarNav({
           canReadSalesOrders ? t("nav.items.afterSales") : "",
           canReadSalesReports ? t("nav.items.salesReportDashboard") : "",
         ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.sales")}
-            </div>
+          <NavSection collapsed={c} label={t("nav.sections.sales")}>
             {canReadSalesReports && (
               <NavItem
                 collapsed={c}
@@ -225,7 +182,7 @@ export function SidebarNav({
                 contextPage="after-sales"
               />
             )}
-          </div>
+          </NavSection>
         )}
 
       {/* Purchasing */}
@@ -238,10 +195,7 @@ export function SidebarNav({
             ? t("nav.items.purchasingReportDashboard")
             : "",
         ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.purchasing")}
-            </div>
+          <NavSection collapsed={c} label={t("nav.sections.purchasing")}>
             {canReadPurchasingReports && (
               <NavItem
                 collapsed={c}
@@ -276,7 +230,7 @@ export function SidebarNav({
                 contextPage="erp-suppliers"
               />
             )}
-          </div>
+          </NavSection>
         )}
 
       {/* Kho (Inventory) */}
@@ -290,10 +244,7 @@ export function SidebarNav({
           canReadInventoryItems ? t("nav.items.erpInventoryTracking") : "",
           canReadInventoryItems ? t("nav.items.erpInventoryTrackingParts") : "",
         ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.inventory")}
-            </div>
+          <NavSection collapsed={c} label={t("nav.sections.inventory")}>
             {canReadInventoryItems && (
               <NavItem
                 collapsed={c}
@@ -382,7 +333,7 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
-          </div>
+          </NavSection>
         )}
 
       {/* Manufacturing / BOM / Production */}
@@ -391,11 +342,13 @@ export function SidebarNav({
           t("nav.sections.manufacturing"),
           canReadBom ? t("nav.items.erpBom") : "",
           canReadProduction ? t("nav.items.erpProduction") : "",
+          canReadGreenwayIntegration ? t("nav.items.garage") : "",
+          canReadGreenwayIntegration ? t("nav.items.garageCases") : "",
+          canReadGreenwayIntegration ? t("nav.items.garageGrossProfit") : "",
+          "Xưởng Vinfast",
+          "Quyết toán Hóa đơn",
         ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.manufacturing")}
-            </div>
+          <NavSection collapsed={c} label={t("nav.sections.manufacturing")}>
             {canReadBom && (
               <NavItem
                 collapsed={c}
@@ -416,7 +369,46 @@ export function SidebarNav({
                 contextPage="erp-production"
               />
             )}
-          </div>
+            {canReadGreenwayIntegration && (
+              <NavGroup
+                collapsed={c}
+                icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Xưởng Vinfast"
+                active={currentPage === "vinfast-invoice-settlement"}
+              >
+                <NavGroupItem
+                  label="Quyết toán Hóa đơn"
+                  active={currentPage === "vinfast-invoice-settlement"}
+                  onClick={() => navTo("vinfast-invoice-settlement")}
+                  contextPage="vinfast-invoice-settlement"
+                />
+              </NavGroup>
+            )}
+            {canReadGreenwayIntegration && (
+              <NavGroup
+                collapsed={c}
+                icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.garage")}
+                active={
+                  currentPage === "garage-cases" ||
+                  currentPage === "garage-gross-profit"
+                }
+              >
+                <NavGroupItem
+                  label={t("nav.items.garageCases")}
+                  active={currentPage === "garage-cases"}
+                  onClick={() => navTo("garage-cases")}
+                  contextPage="garage-cases"
+                />
+                <NavGroupItem
+                  label={t("nav.items.garageGrossProfit")}
+                  active={currentPage === "garage-gross-profit"}
+                  onClick={() => navTo("garage-gross-profit")}
+                  contextPage="garage-gross-profit"
+                />
+              </NavGroup>
+            )}
+          </NavSection>
         )}
 
       {/* Kế toán */}
@@ -425,17 +417,27 @@ export function SidebarNav({
           t("nav.sections.accounting"),
           canReadInvoices ? t("nav.items.erpInvoices") : "",
           canReadInvoices ? "Tổng quan hóa đơn" : "",
+          canReadBankStatements ? "Budget" : "",
           canReadInvoices ? t("nav.items.inbound") : "",
           canReadInvoices ? t("nav.items.outbound") : "",
           canReadBankStatements ? t("nav.items.cashflow") : "",
           canReadBankStatements ? t("nav.items.cashflowDashboard") : "",
           canReadBankStatements ? t("bankStatement.bankTitle") : "",
           canReadBankStatements ? t("bankStatement.cashTitle") : "",
+          canReadGreenwayIntegration ? t("nav.items.garageReceivables") : "",
+          canReadGreenwayIntegration ? t("nav.items.garagePayables") : "",
         ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.accounting")}
-            </div>
+          <NavSection collapsed={c} label={t("nav.sections.accounting")}>
+            {canReadBankStatements && isAdminEmail && (
+              <NavItem
+                collapsed={c}
+                icon={<Target className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label="Budget"
+                active={currentPage === "budget"}
+                onClick={() => navTo("budget" as PageKey)}
+                contextPage={"budget" as PageKey}
+              />
+            )}
             {canReadBankStatements && (
               <NavGroup
                 collapsed={c}
@@ -475,6 +477,7 @@ export function SidebarNav({
                 active={
                   currentPage === "erp-invoices-in" ||
                   currentPage === "erp-invoices-out" ||
+                  currentPage === "erp-invoices-draft" ||
                   currentPage === "invoice-dashboard"
                 }
               >
@@ -496,8 +499,42 @@ export function SidebarNav({
                   onClick={() => navTo("erp-invoices-out")}
                   contextPage="erp-invoices-out"
                 />
+                <NavGroupItem
+                  label="Hóa đơn nháp"
+                  active={currentPage === "erp-invoices-draft"}
+                  onClick={() => navTo("erp-invoices-draft")}
+                  contextPage="erp-invoices-draft"
+                />
               </NavGroup>
             )}
+            {/* TODO: Tính sau - tạm ẩn
+            canReadGreenwayIntegration && (
+              <NavGroup
+                collapsed={c}
+                icon={
+                  <WalletCards className="w-4 h-4 opacity-65 flex-shrink-0" />
+                }
+                label={t("nav.items.garage")}
+                active={
+                  currentPage === "garage-receivables" ||
+                  currentPage === "garage-payables"
+                }
+              >
+                <NavGroupItem
+                  label={t("nav.items.garageReceivables")}
+                  active={currentPage === "garage-receivables"}
+                  onClick={() => navTo("garage-receivables")}
+                  contextPage="garage-receivables"
+                />
+                <NavGroupItem
+                  label={t("nav.items.garagePayables")}
+                  active={currentPage === "garage-payables"}
+                  onClick={() => navTo("garage-payables")}
+                  contextPage="garage-payables"
+                />
+              </NavGroup>
+            )
+            */}
             {showAccounting && (
               <>
                 <NavItem
@@ -522,16 +559,17 @@ export function SidebarNav({
                 />
               </>
             )}
-          </div>
+          </NavSection>
         )}
 
-      {/* Human Resources */}
-      {showHR &&
-        hasMatch([t("nav.sections.hr"), t("nav.items.erpEmployees")]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.hr")}
-            </div>
+      {/* Admin */}
+      {hasMatch([
+        t("nav.sections.admin"),
+        t("nav.items.erpEmployees"),
+        t("nav.items.attachments"),
+      ]) && (
+        <NavSection collapsed={c} label={t("nav.sections.admin")}>
+          {showHR && (
             <NavItem
               collapsed={c}
               icon={
@@ -542,8 +580,17 @@ export function SidebarNav({
               onClick={() => navTo("erp-employees")}
               contextPage="erp-employees"
             />
-          </div>
-        )}
+          )}
+          <NavItem
+            collapsed={c}
+            icon={<Paperclip className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.attachments")}
+            active={currentPage === "attachments"}
+            onClick={() => navTo("attachments" as PageKey)}
+            contextPage={"attachments" as PageKey}
+          />
+        </NavSection>
+      )}
 
       {/* Settings & System */}
       {showSettings &&
@@ -553,6 +600,7 @@ export function SidebarNav({
           canReadAdminUsers ? t("nav.items.users") : "",
           canReadAdminUsers ? t("nav.items.phanquyen") : "",
           canReadActivityLogs ? t("nav.items.activitylog") : "",
+          canReadEmailInbox ? t("nav.items.emailInbox") : "",
           showSettingsGeneral ? t("nav.items.catalog") : "",
           showSettingsGeneral && canReadAdminUsers
             ? t("thietlap.tabs.chi-nhanh")
@@ -571,10 +619,17 @@ export function SidebarNav({
             ? t("nav.items.erpInventoryTrackingCategories")
             : "",
         ]) && (
-          <div className="sidebar-nav-section py-2">
-            <div className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap">
-              {t("nav.sections.settings")}
-            </div>
+          <NavSection collapsed={c} label={t("nav.sections.settings")}>
+            {canReadEmailInbox && isAdminEmail && (
+              <NavItem
+                collapsed={c}
+                icon={<Mail className="w-4 h-4 opacity-65 flex-shrink-0" />}
+                label={t("nav.items.emailInbox")}
+                active={currentPage === "email-inbox"}
+                onClick={() => navTo("email-inbox")}
+                contextPage="email-inbox"
+              />
+            )}
 
             {showSettingsAccess && (
               <NavGroup
@@ -692,7 +747,7 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
-          </div>
+          </NavSection>
         )}
     </div>
   );

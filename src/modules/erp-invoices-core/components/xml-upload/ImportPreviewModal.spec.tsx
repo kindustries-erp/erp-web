@@ -3,6 +3,7 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { ImportPreviewModal } from "./ImportPreviewModal";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import "@testing-library/jest-dom";
+import { TooltipProvider } from "@/core/components/ui/Tooltip";
 import { erpInvoicesCoreApi } from "../../api/erpInvoicesCoreApi";
 import type { FileEntry } from "../../hooks/useInvoiceXmlUpload";
 
@@ -55,7 +56,11 @@ describe("ImportPreviewModal", () => {
       },
     });
 
-    render(<ImportPreviewModal {...defaultProps} />);
+    render(
+      <TooltipProvider>
+        <ImportPreviewModal {...defaultProps} />
+      </TooltipProvider>,
+    );
 
     // Wait for the UI to update with matched info
     await waitFor(() => {
@@ -77,7 +82,11 @@ describe("ImportPreviewModal", () => {
       "1_C26MGN_1234567_abc.pdf": null,
     });
 
-    render(<ImportPreviewModal {...defaultProps} />);
+    render(
+      <TooltipProvider>
+        <ImportPreviewModal {...defaultProps} />
+      </TooltipProvider>,
+    );
 
     // Wait for the state to settle
     await waitFor(() => {

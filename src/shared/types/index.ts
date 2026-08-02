@@ -1,4 +1,5 @@
 export type PageKey =
+  | "budget"
   | "dashboard"
   | "cashflow"
   | "cashflow-dashboard"
@@ -6,6 +7,7 @@ export type PageKey =
   | "cash-fund"
   | "bank-deposit"
   | "attachments"
+  | "email-inbox"
   | "settings-cash-fund"
   | "settings-bank"
   | "settings-accounts"
@@ -52,12 +54,14 @@ export type PageKey =
   | "sys-tags"
   | "erp-invoices-in"
   | "erp-invoices-out"
+  | "erp-invoices-draft"
   | "invoice-dashboard"
   | "purchasing-report-dashboard"
   | "bank-statement"
   | "cash-statement"
   | "garage-dashboard"
   | "garage-cases"
+  | "garage-gross-profit"
   | "garage-receivables"
   | "garage-payables"
   | "after-sales"
@@ -65,6 +69,7 @@ export type PageKey =
   | "vinfast-parts-dashboard"
   | "vinfast-parts-oto"
   | "vinfast-parts-xemay"
+  | "vinfast-invoice-settlement"
   | "inventory-dashboard";
 export type TxSource = "cash-fund" | "bank-deposit";
 

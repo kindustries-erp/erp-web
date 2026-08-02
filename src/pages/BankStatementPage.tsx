@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Wallet, Plus, Upload, PanelRightOpen } from "lucide-react";
+import { Building2, Wallet, Plus, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
-import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { FolderArchive } from "lucide-react";
@@ -19,6 +18,7 @@ import toast from "react-hot-toast";
 
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { PartnerTransactionsDrawer } from "@/pages/components/PartnerTransactionsDrawer";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 
@@ -386,9 +386,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         "transDate",
         t("bankStatement.columns.transDate"),
       ),
-      cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 120,
-      sortable: false,
+      cell: (row: any) => formatGMT7(row.transDate, "datetime"),
+      size: 140,
+      sortable: true,
     },
     {
       key: "referenceNumber",
@@ -400,23 +400,16 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       cell: (row: any) => {
         if (!row.referenceNumber) return "—";
         return (
-          <div className="flex flex-col gap-1 w-full pr-1">
-            <div className="flex items-center gap-2 w-full">
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDetailTransactionId(row.id);
-                }}
-                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-              >
-                <span className="truncate w-full text-left">
-                  {row.referenceNumber}
-                </span>
-                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <TableText
+            text={row.referenceNumber}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              setDetailTransactionId(row.id);
+            }}
+            tooltip={true}
+            enableCopy={true}
+            textClassName="text-primary"
+          />
         );
       },
     },
@@ -539,35 +532,20 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       cell: (row: any) => {
         if (!row.correspondentName) return null;
         return (
-          <div className="flex flex-col gap-1 w-full pr-1">
-            <div className="flex items-center gap-2 w-full">
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedPartner({
-                    account: row.correspondentAccount,
-                    name: row.correspondentName,
-                  });
-                  setPartnerDrawerOpen(true);
-                }}
-                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-              >
-                <Tooltip
-                  content={
-                    <div className="whitespace-pre-wrap">
-                      {row.correspondentName}
-                    </div>
-                  }
-                >
-                  <span className="truncate w-full text-left">
-                    {row.correspondentName}
-                  </span>
-                </Tooltip>
-                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <TableText
+            text={row.correspondentName}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              setSelectedPartner({
+                account: row.correspondentAccount,
+                name: row.correspondentName,
+              });
+              setPartnerDrawerOpen(true);
+            }}
+            tooltip={row.correspondentName}
+            enableCopy={true}
+            textClassName="text-primary"
+          />
         );
       },
     },
@@ -581,35 +559,20 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       cell: (row: any) => {
         if (!row.correspondentAccount) return null;
         return (
-          <div className="flex flex-col gap-1 w-full pr-1">
-            <div className="flex items-center gap-2 w-full">
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedPartner({
-                    account: row.correspondentAccount,
-                    name: row.correspondentName,
-                  });
-                  setPartnerDrawerOpen(true);
-                }}
-                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-              >
-                <Tooltip
-                  content={
-                    <div className="whitespace-pre-wrap">
-                      {row.correspondentAccount}
-                    </div>
-                  }
-                >
-                  <span className="truncate w-full text-left">
-                    {row.correspondentAccount}
-                  </span>
-                </Tooltip>
-                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <TableText
+            text={row.correspondentAccount}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              setSelectedPartner({
+                account: row.correspondentAccount,
+                name: row.correspondentName,
+              });
+              setPartnerDrawerOpen(true);
+            }}
+            tooltip={row.correspondentAccount}
+            enableCopy={true}
+            textClassName="text-primary"
+          />
         );
       },
     },

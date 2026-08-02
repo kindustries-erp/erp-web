@@ -18,6 +18,10 @@ import {
 import { erpInvoicesCoreApi } from "../../api/erpInvoicesCoreApi";
 import { Eye } from "lucide-react";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
+import { StandardTable } from "@/shared/components/StandardTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
+import { type DataTableColumn } from "@/shared/components/DataTable";
 
 interface Props {
   open: boolean;
@@ -83,7 +87,7 @@ function ManualMatchSelect({
       placeholder="Chọn ghép thủ công..."
       searchPlaceholder="Tìm số HĐ, ký hiệu..."
       emptyLabel="Không tìm thấy hóa đơn"
-      className="w-full min-w-[240px]"
+      className="w-full min-w-[150px]"
       fallbackLabel="Đã chọn hóa đơn"
     />
   );
@@ -142,8 +146,12 @@ export function ImportPreviewModal({
   onCancel,
 }: Props) {
   // Init all files as selected
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(files.map((f) => f.id)),
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>(
+    () => {
+      const init: Record<string, boolean> = {};
+      files.forEach((f) => (init[f.id] = true));
+      return init;
+    },
   );
 
   const [matchedInvoices, setMatchedInvoices] = useState<
@@ -167,14 +175,15 @@ export function ImportPreviewModal({
   >([]);
 
   // Re-sync when files list changes (e.g. modal reopened with new files)
-  const allIds = useMemo(() => files.map((f) => f.id), [files]);
-  const selectedCount = allIds.filter((id) => selectedIds.has(id)).length;
+  const selectedCount = Object.values(rowSelection).filter(Boolean).length;
 
   // Reset selection when modal opens with new files
   const [prevFiles, setPrevFiles] = useState(files);
   if (prevFiles !== files) {
     setPrevFiles(files);
-    setSelectedIds(new Set(files.map((f) => f.id)));
+    const init: Record<string, boolean> = {};
+    files.forEach((f) => (init[f.id] = true));
+    setRowSelection(init);
     setManualMatches({});
   }
 
@@ -216,26 +225,204 @@ export function ImportPreviewModal({
     );
   }, [files]);
 
-  function toggleFile(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
+  const columns: DataTableColumn<FileEntry>[] = useMemo(
+    () => [
+      {
+        key: "type",
+        header: "Loại",
+        size: 120,
+        minSize: 120,
+        maxSize: 120,
+        cell: (entry) => {
+          return (
+            <div className="flex items-center gap-1.5">
+              <FileTypeIcon type={entry.type} />
+              <FileBadge type={entry.type} />
+            </div>
+          );
+        },
+      },
+      {
+        key: "name",
+        header: "Tên file",
+        size: 200,
+        minSize: 200,
+        cell: (entry) => {
+          return (
+            <div className="flex items-center gap-2">
+              <TableText
+                text={entry.file.name}
+                tooltip
+                className="max-w-[160px]"
+                textClassName="font-medium text-foreground"
+              />
+              {entry.type === "pdf" && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewFile(entry.file);
+                  }}
+                  className="text-primary hover:text-primary/80 shrink-0"
+                  title="Xem trước file"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        key: "size",
+        header: <div className="text-right">Kích thước</div>,
+        size: 120,
+        minSize: 120,
+        maxSize: 120,
+        cell: (entry) => (
+          <div className="text-right text-muted-foreground tabular-nums">
+            {(entry.file.size / 1024).toFixed(0)} KB
+          </div>
+        ),
+      },
+      {
+        key: "note",
+        header: "Ghi chú",
+        size: 200,
+        cell: (entry) => {
+          if (entry.type === "xml" && entry.pairedPdf) {
+            return (
+              <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                <CheckCircle2 className="w-3 h-3" />
+                Đã ghép PDF
+              </span>
+            );
+          }
+          if (entry.type === "pdf") {
+            if (manualMatches[entry.id]) {
+              return (
+                <TableText
+                  text="Đã chọn ghép thủ công (chờ import)"
+                  tooltip
+                  textClassName="text-blue-700 font-medium text-[11px]"
+                />
+              );
+            }
+            if (matchedInvoices[entry.file.name]) {
+              const matched = matchedInvoices[entry.file.name]!;
+              const text = `Tự động: HĐ ${matched.invoiceNo} (KH: ${matched.serialNo || "N/A"}) - ${Number(matched.totalAmount).toLocaleString("vi-VN")}đ`;
+              return (
+                <div className="flex items-center gap-2">
+                  <TableText
+                    text={text}
+                    tooltip
+                    textClassName="text-emerald-700 font-medium text-[11px]"
+                  />
+                </div>
+              );
+            }
+            return (
+              <TableText
+                text="File mồ côi"
+                tooltip
+                textClassName="text-muted-foreground text-[11px]"
+              />
+            );
+          }
+          if (entry.type === "zip") {
+            return (
+              <TableText
+                text="Server sẽ extract"
+                tooltip
+                textClassName="text-muted-foreground text-[11px]"
+              />
+            );
+          }
+          return null;
+        },
+      },
+      {
+        key: "manual",
+        header: "Ghép HĐ (Thủ công)",
+        size: 200,
+        minSize: 200,
+        cell: (entry) => {
+          if (entry.type === "pdf" && !entry.pairedPdf) {
+            return (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ManualMatchSelect
+                  direction={direction}
+                  initialOptions={candidateInvoices}
+                  value={manualMatches[entry.id] || ""}
+                  onChange={(val) => {
+                    setManualMatches((prev) => ({
+                      ...prev,
+                      [entry.id]: val,
+                    }));
+                    if (val && !rowSelection[entry.id]) {
+                      setRowSelection((prev) => ({
+                        ...prev,
+                        [entry.id]: true,
+                      }));
+                    }
+                  }}
+                />
+              </div>
+            );
+          }
+          return null;
+        },
+      },
+      {
+        key: "status",
+        header: "Trạng thái",
+        size: 144,
+        cell: (entry) => {
+          const status = getFilePreviewStatus(entry);
+          const cfg = STATUS_CONFIG[status];
 
-  function toggleAll() {
-    if (selectedCount === files.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(files.map((f) => f.id)));
-    }
-  }
+          let variant: "outline" | "secondary" | "destructive" | "default" =
+            "outline";
+          let label: string = cfg.label;
+          let iconCls: string = cfg.iconCls;
+          let containerCls: string = cfg.className;
+
+          // Orphan PDF logic
+          if (entry.type === "pdf" && !entry.pairedPdf) {
+            const hasManual = !!manualMatches[entry.id];
+            const hasAuto = !!matchedInvoices[entry.file.name];
+            if (!hasManual && !hasAuto) {
+              variant = "secondary";
+              label = "Cần chọn HĐ";
+              iconCls = "text-amber-600";
+              containerCls = "bg-amber-100/50 text-amber-700 border-amber-200";
+            }
+          }
+
+          return (
+            <Badge
+              variant={variant}
+              className={`gap-1 rounded-full ${containerCls || ""}`}
+            >
+              <cfg.Icon className={`w-3 h-3 ${iconCls}`} />
+              {label}
+            </Badge>
+          );
+        },
+      },
+    ],
+    [
+      direction,
+      candidateInvoices,
+      manualMatches,
+      matchedInvoices,
+      rowSelection,
+    ],
+  );
 
   if (!open) return null;
 
-  const selectedFiles = files.filter((f) => selectedIds.has(f.id));
+  const selectedFiles = files.filter((f) => rowSelection[f.id]);
 
   return createPortal(
     <>
@@ -249,7 +436,7 @@ export function ImportPreviewModal({
         <div
           className="bg-surface rounded-2xl shadow-2xl border border-border flex flex-col"
           style={{
-            width: "min(860px, calc(100vw - 32px))",
+            width: "min(1100px, calc(100vw - 32px))",
             maxHeight: "calc(100vh - 48px)",
           }}
         >
@@ -273,7 +460,7 @@ export function ImportPreviewModal({
           </div>
 
           {/* Summary bar */}
-          <div className="px-5 py-2.5 bg-muted/30 border-b border-border shrink-0 flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="px-5 py-2.5 bg-muted/30 shrink-0 flex items-center gap-4 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">
               {selectedCount}/{files.length} file được chọn
             </span>
@@ -298,194 +485,36 @@ export function ImportPreviewModal({
           </div>
 
           {/* Table */}
-          <div className="flex-1 overflow-auto min-h-0">
-            <table className="w-full text-xs border-collapse">
-              <thead className="sticky top-0 bg-muted/60 backdrop-blur-sm z-10">
-                <tr className="border-b border-border">
-                  {/* Select-all checkbox */}
-                  <th className="w-8 px-3 py-2.5 text-center font-medium text-muted-foreground">
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedCount === files.length && files.length > 0
-                      }
-                      ref={(el) => {
-                        if (el)
-                          el.indeterminate =
-                            selectedCount > 0 && selectedCount < files.length;
-                      }}
-                      onChange={toggleAll}
-                      className="w-3.5 h-3.5 accent-primary cursor-pointer"
-                    />
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-20">
-                    Loại
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground">
-                    Tên file
-                  </th>
-                  <th className="px-3 py-2.5 text-right font-medium text-muted-foreground w-20">
-                    Kích thước
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-44">
-                    Ghi chú
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground min-w-[260px]">
-                    Ghép HĐ (Thủ công)
-                  </th>
-                  <th className="px-3 py-2.5 text-left font-medium text-muted-foreground w-36">
-                    Trạng thái
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {files.map((entry) => {
-                  const isChecked = selectedIds.has(entry.id);
-                  const status = getFilePreviewStatus(entry);
-                  const cfg = STATUS_CONFIG[status];
-                  return (
-                    <tr
-                      key={entry.id}
-                      className={`transition-colors cursor-pointer ${
-                        isChecked
-                          ? "hover:bg-muted/20"
-                          : "opacity-40 bg-muted/10"
-                      }`}
-                      onClick={() => toggleFile(entry.id)}
-                    >
-                      {/* Per-row checkbox */}
-                      <td
-                        className="px-3 py-2 text-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => toggleFile(entry.id)}
-                          className="w-3.5 h-3.5 accent-primary cursor-pointer"
-                        />
-                      </td>
-
-                      {/* Type */}
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-1.5">
-                          <FileTypeIcon type={entry.type} />
-                          <FileBadge type={entry.type} />
-                        </div>
-                      </td>
-
-                      {/* Filename */}
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="truncate block max-w-[260px] font-medium text-foreground"
-                            title={entry.file.name}
-                          >
-                            {entry.file.name}
-                          </span>
-                          {entry.type === "pdf" && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setPreviewFile(entry.file);
-                              }}
-                              className="text-primary hover:text-primary/80 shrink-0"
-                              title="Xem trước file"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Size */}
-                      <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
-                        {(entry.file.size / 1024).toFixed(0)} KB
-                      </td>
-
-                      {/* Note */}
-                      <td className="px-3 py-2">
-                        {entry.type === "xml" && entry.pairedPdf && (
-                          <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Đã ghép PDF
-                          </span>
-                        )}
-                        {entry.type === "pdf" && (
-                          <>
-                            {matchedInvoices[entry.file.name] ? (
-                              <div className="flex items-center gap-2">
-                                <span className="text-emerald-700 font-medium text-[11px]">
-                                  Tự động: HĐ{" "}
-                                  {matchedInvoices[entry.file.name]?.invoiceNo}{" "}
-                                  (KH:{" "}
-                                  {matchedInvoices[entry.file.name]?.serialNo ||
-                                    "N/A"}
-                                  ) -{" "}
-                                  {Number(
-                                    matchedInvoices[entry.file.name]
-                                      ?.totalAmount,
-                                  ).toLocaleString("vi-VN")}
-                                  đ
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-[11px]">
-                                File mồ côi
-                              </span>
-                            )}
-                          </>
-                        )}
-                        {entry.type === "zip" && (
-                          <span className="text-muted-foreground text-[11px]">
-                            Server sẽ extract
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Manual Match Dropdown */}
-                      <td
-                        className="px-3 py-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {entry.type === "pdf" && !entry.pairedPdf && (
-                          <ManualMatchSelect
-                            direction={direction}
-                            initialOptions={candidateInvoices}
-                            value={manualMatches[entry.id] || ""}
-                            onChange={(val) => {
-                              setManualMatches((prev) => ({
-                                ...prev,
-                                [entry.id]: val,
-                              }));
-                              if (val && !selectedIds.has(entry.id)) {
-                                toggleFile(entry.id);
-                              }
-                            }}
-                          />
-                        )}
-                      </td>
-
-                      {/* Status badge */}
-                      <td className="px-3 py-2">
-                        <span
-                          className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full border ${cfg.className}`}
-                        >
-                          <cfg.Icon className={`w-3 h-3 ${cfg.iconCls}`} />
-                          {cfg.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="flex-1 overflow-hidden min-h-0 bg-surface rounded-b-2xl">
+            <StandardTable
+              items={files}
+              columns={columns}
+              getRowKey={(f) => f.id}
+              variant="spreadsheet"
+              minWidth={1050}
+              containerClassName="border-0 shadow-none mx-5 rounded-none"
+              enableColumnResizing={true}
+              enableRowSelection={true}
+              rowSelection={rowSelection}
+              onRowSelectionChange={(updater) => {
+                if (typeof updater === "function") {
+                  setRowSelection(updater(rowSelection));
+                } else {
+                  setRowSelection(updater);
+                }
+              }}
+              onRowClick={(f) => {
+                setRowSelection((prev) => ({
+                  ...prev,
+                  [f.id]: !prev[f.id],
+                }));
+              }}
+            />
           </div>
 
           {/* Footer */}
           <div
-            className="px-5 py-3 border-t border-border flex items-center justify-between shrink-0"
+            className="px-5 py-3 flex items-center justify-between shrink-0"
             style={{
               background: "rgba(249,251,255,0.9)",
               backdropFilter: "blur(12px)",

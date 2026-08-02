@@ -3,11 +3,6 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { useT } from "@/core/i18n";
 import * as XLSX from "xlsx";
 import { AlertCircle, FileType, Loader2 } from "lucide-react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
-// Using unpkg CDN to avoid MIME type issues with .mjs on production servers
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export interface FilePreviewDrawerProps {
   open: boolean;
@@ -30,7 +25,13 @@ export interface FilePreviewDrawerProps {
   zIndex?: number;
 }
 
-type FileTypeCategory = "PDF" | "IMAGE" | "EXCEL" | "UNSUPPORTED" | "UNKNOWN";
+type FileTypeCategory =
+  | "PDF"
+  | "IMAGE"
+  | "EXCEL"
+  | "WORD"
+  | "UNSUPPORTED"
+  | "UNKNOWN";
 
 export function FilePreviewDrawer({
   open,
@@ -47,9 +48,6 @@ export function FilePreviewDrawer({
   const [excelData, setExcelData] = useState<any[][] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(600);
-  const containerRef = React.useRef<HTMLDivElement>(null);
 
   // Derived properties
   const actualFileName = file?.name || fileName || "Document";
@@ -75,19 +73,17 @@ export function FilePreviewDrawer({
     ) {
       return "IMAGE";
     }
+    if (
+      file?.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file?.type === "application/msword" ||
+      lowerName.endsWith(".docx") ||
+      lowerName.endsWith(".doc")
+    ) {
+      return "WORD";
+    }
     return "UNSUPPORTED";
   }, [file, lowerName]);
-
-  // Track container width for responsive PDF page rendering
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new ResizeObserver((entries) => {
-      const width = entries[0]?.contentRect.width;
-      if (width) setContainerWidth(width);
-    });
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   // Manage Blob URL lifecycle and parse Excel
   useEffect(() => {
@@ -95,7 +91,6 @@ export function FilePreviewDrawer({
       setBlobUrl(null);
       setExcelData(null);
       setError(null);
-      setNumPages(null);
       return;
     }
 
@@ -104,7 +99,6 @@ export function FilePreviewDrawer({
     const processFile = async () => {
       setLoading(true);
       setError(null);
-      setNumPages(null);
       try {
         let currentBlob: Blob | null = null;
 
@@ -182,7 +176,11 @@ export function FilePreviewDrawer({
       );
     }
 
-    if (!blobUrl && fileTypeCategory !== "EXCEL") {
+    if (
+      !blobUrl &&
+      fileTypeCategory !== "EXCEL" &&
+      fileTypeCategory !== "WORD"
+    ) {
       return null;
     }
 
@@ -190,39 +188,14 @@ export function FilePreviewDrawer({
       case "PDF":
         return (
           <div
-            ref={containerRef}
-            className="w-full overflow-y-auto overflow-x-hidden bg-[#525659] rounded-md"
-            style={{ maxHeight: "75vh" }}
+            className="w-full rounded-md overflow-hidden bg-slate-50"
+            style={{ height: "75vh" }}
           >
-            <Document
-              file={blobUrl || ""}
-              onLoadSuccess={({ numPages: n }) => setNumPages(n)}
-              loading={
-                <div className="flex h-64 items-center justify-center flex-col text-white gap-2">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                  <p>Đang tải PDF...</p>
-                </div>
-              }
-              error={
-                <div className="flex h-64 items-center justify-center flex-col text-red-300 gap-2 p-8">
-                  <AlertCircle className="w-8 h-8" />
-                  <p>Không thể hiển thị file PDF. Vui lòng tải xuống để xem.</p>
-                </div>
-              }
-              className="flex flex-col items-center gap-4 py-4"
-            >
-              {numPages &&
-                Array.from(new Array(numPages), (_, index) => (
-                  <Page
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    width={Math.max(containerWidth - 32, 200)}
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}
-                    className="shadow-xl"
-                  />
-                ))}
-            </Document>
+            <iframe
+              src={blobUrl || ""}
+              className="w-full h-full border-0"
+              title="PDF Preview"
+            />
           </div>
         );
       case "IMAGE":
@@ -236,6 +209,19 @@ export function FilePreviewDrawer({
           </div>
         );
       case "EXCEL":
+        if (previewUrl) {
+          return (
+            <div className="w-full h-[75vh] bg-[color:var(--muted-bg)] rounded-md overflow-hidden border border-[color:var(--border)]">
+              <iframe
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                title="Excel Preview"
+              />
+            </div>
+          );
+        }
         if (!excelData || excelData.length === 0) {
           return (
             <div className="text-center p-8 text-[color:var(--muted-fg)]">
@@ -295,6 +281,36 @@ export function FilePreviewDrawer({
                 Chỉ hiển thị tối đa 500 dòng để tối ưu hiệu suất.
               </div>
             )}
+          </div>
+        );
+      case "WORD":
+        if (!previewUrl) {
+          return (
+            <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 p-8 bg-[color:var(--muted-bg)] border border-[color:var(--border)] rounded-md">
+              <div className="h-16 w-16 bg-[color:var(--muted-bg)] rounded-full flex items-center justify-center">
+                <FileType className="h-8 w-8 text-[color:var(--muted-fg)]" />
+              </div>
+              <div className="text-center">
+                <h3 className="font-medium text-[color:var(--foreground)] mb-1">
+                  Định dạng file không hỗ trợ xem trước trực tiếp
+                </h3>
+                <p className="text-sm text-[color:var(--muted-fg)]">
+                  Không thể xem trước file cục bộ. Vui lòng tải lên hoặc tải
+                  xuống để xem.
+                </p>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="w-full h-[75vh] bg-[color:var(--muted-bg)] rounded-md overflow-hidden border border-[color:var(--border)]">
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(previewUrl)}`}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              title="Word Preview"
+            />
           </div>
         );
       default:

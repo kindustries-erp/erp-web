@@ -25,6 +25,7 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
     discountAmount,
     totalAmount,
     items,
+    description,
   } = invoice;
 
   const dateParts = useMemo(() => {
@@ -101,6 +102,20 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
           </p>
           <p>Mã số thuế: {norm(buyerTaxCode)}</p>
           <p>Địa chỉ: {norm(buyerAddress)}</p>
+          {description && (
+            <div>
+              <p>Diễn giải chung:</p>
+              <ul className="list-disc pl-8 mt-1 space-y-0.5">
+                {description
+                  .split(/\\n|\n/)
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .map((line, idx) => (
+                    <li key={idx}>{norm(line)}</li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Table */}

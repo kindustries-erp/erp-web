@@ -67,6 +67,10 @@ export interface ErpInvoice {
     netOffAmount: number;
     bankTransaction?: any;
   }[];
+  attachments?: {
+    attachmentId: string;
+    attachment: import("@/modules/system/api/attachmentsApi").ErpAttachment;
+  }[];
 }
 
 export interface CreateErpInvoicePayload {
@@ -106,7 +110,7 @@ export interface CreateErpInvoicePayload {
   }[];
   accountingEnabled?: boolean;
   pendingDeletedPdfs?: string[];
-  pendingAddedPdfs?: File[];
+  pendingAddedAttachments?: import("../components/ErpInvoicePdfUpload").PendingAttachment[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -135,6 +139,33 @@ export interface ErpInvoiceListResponse {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface BranchStatEntry {
+  branchId: string | null;
+  branchName: string;
+  monthTotal: number;
+  monthPreVat: number;
+  weekTotal: number;
+  weekPreVat: number;
+  dayTotal: number;
+  dayPreVat: number;
+}
+
+export interface ErpInvoiceStats {
+  monthTotal: number;
+  monthPreVat: number;
+  monthChart: number[];
+  monthPreVatChart: number[];
+  weekTotal: number;
+  weekPreVat: number;
+  weekChart: number[];
+  weekPreVatChart: number[];
+  dayTotal: number;
+  dayPreVat: number;
+  dayChart: number[];
+  dayPreVatChart: number[];
+  byBranch?: BranchStatEntry[];
 }
 
 export interface PortalInvoiceDto {
@@ -250,11 +281,29 @@ export const erpInvoicesCoreApi = {
     };
   },
 
+  getStats: async (
+    direction?: "IN" | "OUT",
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<ErpInvoiceStats> => {
+    const { data } = await axiosInstance.get<ErpInvoiceStats>(`${BASE}/stats`, {
+      params: { direction, dateFrom, dateTo },
+    });
+    return data;
+  },
+
   get: async (id: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.get<{ data: ErpInvoice }>(
       `${BASE}/${id}`,
     );
     return data.data;
+  },
+
+  getBulkNetOffs: async (ids: string[]): Promise<any[]> => {
+    const { data } = await axiosInstance.post<any[]>(`${BASE}/bulk-net-offs`, {
+      ids,
+    });
+    return data;
   },
 
   create: async (payload: CreateErpInvoicePayload): Promise<ErpInvoice> => {
@@ -301,6 +350,13 @@ export const erpInvoicesCoreApi = {
       `${BASE}/${id}/cancel`,
     );
     return data.data;
+  },
+
+  getLinkedCases: async (invoiceId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/greenway/invoices/${invoiceId}/linked-cases`,
+    );
+    return res.data;
   },
 
   reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
@@ -460,12 +516,12 @@ export const erpInvoicesCoreApi = {
   uploadPdfs: async (
     id: string,
     files: File[],
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
     const { data } = await axiosInstance.post<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -553,11 +609,28 @@ export const erpInvoicesCoreApi = {
   deletePdf: async (
     id: string,
     key: string,
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const { data } = await axiosInstance.delete<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
+    return data;
+  },
+
+  linkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/attachments/link`,
+      {
+        attachmentId,
+      },
+    );
+    return data;
+  },
+
+  unlinkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.delete(
+      `${BASE}/${id}/attachments/${attachmentId}`,
+    );
     return data;
   },
 

@@ -20,6 +20,7 @@ export type SelectableUser = SystemUserOption;
 
 export function useCoreRoleUsers() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [initialSelectedIds, setInitialSelectedIds] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<SelectableUser[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -32,6 +33,7 @@ export function useCoreRoleUsers() {
       ]);
       const roleUserIds = roleUsers.map((u) => u.id);
       setSelectedIds(roleUserIds);
+      setInitialSelectedIds([...roleUserIds]);
       setAllUsers(
         systemUsersRes.data.map((u: CoreUserAdmin) => ({
           id: u.id,
@@ -58,10 +60,12 @@ export function useCoreRoleUsers() {
       // ignore
     }
     setSelectedIds([]);
+    setInitialSelectedIds([]);
   }
 
   function reset() {
     setSelectedIds([]);
+    setInitialSelectedIds([]);
     setAllUsers([]);
   }
 
@@ -70,6 +74,7 @@ export function useCoreRoleUsers() {
   }
 
   return {
+    initialSelectedIds,
     selectedIds,
     setSelectedIds,
     allUsers,

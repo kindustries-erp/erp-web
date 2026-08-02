@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
-import { PanelRightOpen } from "lucide-react";
 import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
@@ -13,7 +13,6 @@ import { money } from "@/shared/utils/format";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
@@ -270,23 +269,15 @@ export function PartnerInvoiceDrawer({
         size: 100,
         className: "text-primary text-left",
         cell: (inv: any) => (
-          <div className="flex items-center gap-1.5 group w-full">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                formHook.openInternal(inv);
-              }}
-              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
-              title="Mở chi tiết"
-            >
-              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
-            </Button>
-            <span className="truncate" title={inv.invoiceNo}>
-              {inv.invoiceNo}
-            </span>
-          </div>
+          <TableText
+            text={inv.invoiceNo || ""}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              formHook.openInternal(inv);
+            }}
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {
@@ -556,8 +547,9 @@ export function PartnerInvoiceDrawer({
               pdfSlot={
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                  attachments={formHook.detailInvoice?.attachments ?? null}
                   pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                   editMode={formHook.editMode}
                   pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                   onPendingDeletePdf={(key) => {
@@ -567,11 +559,13 @@ export function PartnerInvoiceDrawer({
                       pendingDeletedPdfs: [...current, key],
                     }));
                   }}
-                  pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                  onPendingAddedPdfsChange={(files) => {
+                  pendingAddedAttachments={
+                    formHook.form.pendingAddedAttachments
+                  }
+                  onPendingAddedAttachmentsChange={(files) => {
                     formHook.setForm((prev) => ({
                       ...prev,
-                      pendingAddedPdfs: files,
+                      pendingAddedAttachments: files,
                     }));
                   }}
                 />
