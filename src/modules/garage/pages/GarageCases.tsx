@@ -1,5 +1,15 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { useGarageStore } from "../store/garageStore";
+import { garageApi } from "../api/garageApi";
+import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
+import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
+import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import {
   useGarageCases,
   useGarageBranches,
@@ -12,18 +22,17 @@ import {
   MoreHorizontal,
   FileText,
 } from "lucide-react";
-import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
-import { TableText } from "@/shared/components/DataTable/TableText";
-import { useGarageStore } from "../store/garageStore";
-import { GarageCaseSyncDrawer } from "../components/GarageCaseSyncDrawer";
-import { GarageCaseStandaloneDrawer } from "../components/GarageCaseStandaloneDrawer";
-import { KgaraCaseStatusBadge } from "../components/KgaraCaseStatusBadge";
 import { useTranslation } from "react-i18next";
+import { applyGarageCasesTableState } from "../utils/garageCasesTable";
 
 export function GarageCases() {
   const { t } = useTranslation("garage");
   const { selectedBranchId, setSelectedBranchId } = useGarageStore();
   const { data: branches } = useGarageBranches();
+  const tableState = useTableColumnState("garage-cases-table");
+  const [dateRanges, setDateRanges] = useState<
+    Record<string, { from: string; to: string }>
+  >({});
 
   useEffect(() => {
     if (branches && branches.length > 0 && !selectedBranchId) {
@@ -44,6 +53,112 @@ export function GarageCases() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  const getSortState = useCallback(
+    (key: string): "asc" | "desc" | "none" => {
+      if (tableState.sorts.includes(key)) return "asc";
+      if (tableState.sorts.includes(`-${key}`)) return "desc";
+      return "none";
+    },
+    [tableState.sorts],
+  );
+
+  const handleSortChange = useCallback(
+    (key: string, state: "asc" | "desc" | "none") => {
+      tableState.setSort(key, state);
+    },
+    [tableState],
+  );
+
+  const handleSearchChange = useCallback(
+    (key: string, search: string) => {
+      tableState.setColumnSearch(key, search);
+    },
+    [tableState],
+  );
+
+  const handleFilterChange = useCallback(
+    (key: string, filters: string[]) => {
+      tableState.setColumnFilter(key, filters);
+    },
+    [tableState],
+  );
+
+  const getDateRange = useCallback(
+    (key: string) => dateRanges[key] || { from: "", to: "" },
+    [dateRanges],
+  );
+
+  const handleDateRangeChange = useCallback(
+    (key: string, from?: string, to?: string) => {
+      setDateRanges((prev) => ({
+        ...prev,
+        [key]: { from: from || "", to: to || "" },
+      }));
+    },
+    [],
+  );
+
+  const serverFiltersStr = useMemo(() => {
+    return Object.keys(tableState.columnFilters).length > 0
+      ? JSON.stringify(tableState.columnFilters)
+      : undefined;
+  }, [tableState.columnFilters]);
+
+  const fetchCaseColumnOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      const res = await garageApi.getCaseColumnOptions(
+        selectedBranchId || "",
+        columnKey,
+        search,
+        pageParam,
+        20,
+        filtersStr,
+      );
+      return {
+        items: res.items.map((item: string) => ({ label: item, value: item })),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
+    [selectedBranchId],
+  );
+
+  const commonOptionProps = {
+    queryKeyPrefix: "garage-case-column-options",
+    fetchOptions: fetchCaseColumnOptions,
+    allFilters: tableState.columnFilters,
+    enableSelectAllMatching: true,
+  };
+
+  const createHeaderProps = (
+    key: string,
+    title: string,
+    align: "left" | "center" | "right" = "left",
+    hideFilter = false,
+  ) => ({
+    title,
+    columnKey: key,
+    sortState: getSortState(key),
+    onSortChange: (state: "asc" | "desc" | "none") =>
+      handleSortChange(key, state),
+    searchValue: tableState.columnSearch[key] || "",
+    onSearchChange: (val: string) => handleSearchChange(key, val),
+    selectedFilters: tableState.columnFilters[key] || [],
+    onFilterChange: (vals: string[]) => handleFilterChange(key, vals),
+    align,
+    hideFilter,
+  });
 
   const { data: profitData } = useGarageGrossProfit(
     selectedBranchId,
@@ -67,8 +182,19 @@ export function GarageCases() {
     filter.state.search || "",
     filter.state.dateFrom || undefined,
     filter.state.dateTo || undefined,
+    serverFiltersStr,
   );
   const cases = casesData?.data || [];
+  const visibleCases = useMemo(
+    () =>
+      applyGarageCasesTableState(
+        cases,
+        tableState,
+        filter.state.search || "",
+        dateRanges,
+      ),
+    [cases, tableState, filter.state.search, dateRanges],
+  );
   const totalCases = casesData?.pagination?.total || 0;
 
   const { mutate: syncCaseDetail } = useSyncGarageCaseDetail();
@@ -95,41 +221,86 @@ export function GarageCases() {
 
   const columns = [
     {
-      key: "branchName",
-      header: "Chi nhánh Kgara",
-      sortable: false,
-      cell: (item: any) => {
-        const b = branches?.find(
-          (b: any) => b.externalId === item.branchExternalId,
-        );
-        return b?.name || "-";
-      },
-    },
-    {
-      key: "caseDate",
-      header: t("cases.columns.caseDate"),
-      sortable: true,
-      cell: (item: any) => {
-        if (!item.ngayPhatSinh) return "-";
-        // format ISO date string to DD/MM/YYYY HH:mm without changing timezone
-        const d = new Date(item.ngayPhatSinh);
-        const pad = (n: number) => n.toString().padStart(2, "0");
-        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      },
-    },
-    {
       key: "updatedAt",
-      header: t("cases.columns.updatedAt"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "updatedAt",
+            t("cases.columns.updatedAt"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("updatedAt").from || getDateRange("updatedAt").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("updatedAt").from}
+              dateTo={getDateRange("updatedAt").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("updatedAt", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         if (!item.updatedAt) return "-";
         return new Date(item.updatedAt).toLocaleString();
       },
     },
     {
+      key: "caseDate",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseDate",
+            t("cases.columns.caseDate"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("caseDate").from || getDateRange("caseDate").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("caseDate").from}
+              dateTo={getDateRange("caseDate").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("caseDate", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        if (!item.ngayPhatSinh) return "-";
+        const d = new Date(item.ngayPhatSinh);
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      },
+    },
+    {
       key: "statusName",
-      header: t("cases.columns.status"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "statusName",
+            t("cases.columns.status"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => (
         <KgaraCaseStatusBadge
           status={item.tenTinhTrangDichVu || t("cases.common.unknown")}
@@ -138,8 +309,17 @@ export function GarageCases() {
     },
     {
       key: "caseCode",
-      header: t("cases.columns.caseCode"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "caseCode",
+            t("cases.columns.caseCode"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       size: 200,
       cell: (item: any) => (
         <TableText
@@ -152,26 +332,62 @@ export function GarageCases() {
     },
     {
       key: "licensePlate",
-      header: t("cases.columns.licensePlate"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "licensePlate",
+            t("cases.columns.licensePlate"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => item.bienSoXe || "-",
     },
     {
       key: "customerCode",
-      header: t("cases.columns.customerCode"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "customerCode",
+            t("cases.columns.customerCode"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => item.khachHangCode || "-",
     },
     {
       key: "customerName",
-      header: t("cases.columns.customerName"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "customerName",
+            t("cases.columns.customerName"),
+            "left",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => item.khachHangName || "-",
     },
     {
       key: "isInsuranceClaim",
-      header: t("cases.columns.insurance"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "isInsuranceClaim",
+            t("cases.columns.insurance"),
+            "center",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) =>
         item.rawData?.XeLamBaoHiem
           ? t("cases.common.yes")
@@ -179,8 +395,13 @@ export function GarageCases() {
     },
     {
       key: "doanhThu",
-      header: "Doanh thu",
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("doanhThu", "Doanh thu", "right")}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -199,8 +420,13 @@ export function GarageCases() {
     },
     {
       key: "chiPhi",
-      header: "Chi phí",
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("chiPhi", "Chi phí", "right")}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -219,8 +445,13 @@ export function GarageCases() {
     },
     {
       key: "loiNhuan",
-      header: "Lợi nhuận",
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("loiNhuan", "Lợi nhuận", "right")}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         const pItem = profitCases.find(
           (p: any) => p.VuViecCode === item.soChungTu,
@@ -239,8 +470,17 @@ export function GarageCases() {
     },
     {
       key: "totalAmount",
-      header: t("cases.columns.totalAmount"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "totalAmount",
+            t("cases.columns.totalAmount"),
+            "right",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) =>
         new Intl.NumberFormat("vi-VN", {
           style: "currency",
@@ -249,8 +489,17 @@ export function GarageCases() {
     },
     {
       key: "balanceAmount",
-      header: t("cases.columns.balanceAmount"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "balanceAmount",
+            t("cases.columns.balanceAmount"),
+            "right",
+          )}
+          {...commonOptionProps}
+        />
+      ),
+      sortable: false,
       cell: (item: any) =>
         new Intl.NumberFormat("vi-VN", {
           style: "currency",
@@ -258,9 +507,49 @@ export function GarageCases() {
         }).format(Number(item.tienConPhaiThanhToan) || 0),
     },
     {
+      key: "branchName",
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps("branchName", "Chi nhánh Kgara", "left", true)}
+          hideFooter={true}
+        />
+      ),
+      sortable: false,
+      cell: (item: any) => {
+        const b = branches?.find(
+          (b: any) => b.externalId === item.branchExternalId,
+        );
+        return b?.name || "-";
+      },
+    },
+    {
       key: "dataAsOf",
-      header: t("cases.columns.dataAsOf"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "dataAsOf",
+            t("cases.columns.dataAsOf"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("dataAsOf").from || getDateRange("dataAsOf").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("dataAsOf").from}
+              dateTo={getDateRange("dataAsOf").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("dataAsOf", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         if (!item.dataAsOf) return "-";
         return new Date(item.dataAsOf).toLocaleString();
@@ -268,8 +557,32 @@ export function GarageCases() {
     },
     {
       key: "createdAt",
-      header: t("cases.columns.createdAt"),
-      sortable: true,
+      header: (
+        <TableColumnHeaderFilter
+          {...createHeaderProps(
+            "createdAt",
+            t("cases.columns.createdAt"),
+            "center",
+            true,
+          )}
+          isActive={
+            !!(getDateRange("createdAt").from || getDateRange("createdAt").to)
+          }
+          hideFooter={true}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={getDateRange("createdAt").from}
+              dateTo={getDateRange("createdAt").to}
+              onChange={(from, to) => {
+                handleDateRangeChange("createdAt", from, to);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
       cell: (item: any) => {
         if (!item.createdAt) return "-";
         return new Date(item.createdAt).toLocaleString();
@@ -284,7 +597,7 @@ export function GarageCases() {
         desc={t("cases.desc")}
         icon={<FileText className="w-5 h-5 text-slate-700" />}
         tableId="garage-cases-table"
-        items={cases}
+        items={visibleCases}
         columns={columns}
         getRowKey={(item: any) => item.id}
         loading={isLoading}

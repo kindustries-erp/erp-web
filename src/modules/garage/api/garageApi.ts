@@ -15,6 +15,7 @@ export const garageApi = {
     q: string = "",
     from?: string,
     to?: string,
+    filtersStr?: string,
   ) => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -23,6 +24,7 @@ export const garageApi = {
     });
     if (from) params.append("from", from);
     if (to) params.append("to", to);
+    if (filtersStr) params.append("filtersStr", filtersStr);
 
     const res = await axiosInstance.get(`${BASE}/cases?${params.toString()}`, {
       headers: {
@@ -30,6 +32,34 @@ export const garageApi = {
       },
     });
     return res.data;
+  },
+
+  getCaseColumnOptions: async (
+    branchId: string,
+    column: string,
+    search: string = "",
+    page: number = 1,
+    pageSize: number = 20,
+    filtersStr?: string,
+  ) => {
+    const res = await axiosInstance.get(`${BASE}/cases/column-options`, {
+      params: {
+        column,
+        search,
+        page,
+        pageSize,
+        filtersStr,
+      },
+      headers: {
+        "x-greenway-branch-id": branchId || "",
+      },
+    });
+    return res.data as {
+      items: string[];
+      total: number;
+      page: number;
+      totalPages: number;
+    };
   },
 
   getCaseById: async (id: string) => {

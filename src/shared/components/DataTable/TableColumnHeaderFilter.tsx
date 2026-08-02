@@ -253,13 +253,6 @@ export function TableColumnHeaderFilter({
       setOpen(true);
     } else {
       setOpen(false);
-      const isDifferent =
-        pendingFilters.length !== selectedFilters.length ||
-        !pendingFilters.every((f) => selectedFilters.includes(f));
-      if (isDifferent) {
-        onSearchChange("");
-        onFilterChange(pendingFilters);
-      }
     }
   };
 
@@ -313,7 +306,10 @@ export function TableColumnHeaderFilter({
                 "justify-start w-full text-left font-normal",
                 sortState === "asc" && "bg-muted text-primary",
               )}
-              onClick={() => onSortChange(sortState === "asc" ? "none" : "asc")}
+              onClick={() => {
+                onSortChange(sortState === "asc" ? "none" : "asc");
+                setOpen(false);
+              }}
             >
               <ArrowDownAZ size={14} className="mr-2" />
               Sắp xếp tăng dần
@@ -326,9 +322,10 @@ export function TableColumnHeaderFilter({
                 "justify-start w-full text-left font-normal",
                 sortState === "desc" && "bg-muted text-primary",
               )}
-              onClick={() =>
-                onSortChange(sortState === "desc" ? "none" : "desc")
-              }
+              onClick={() => {
+                onSortChange(sortState === "desc" ? "none" : "desc");
+                setOpen(false);
+              }}
             >
               <ArrowUpAZ size={14} className="mr-2" />
               Sắp xếp giảm dần
