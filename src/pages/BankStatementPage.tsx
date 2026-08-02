@@ -386,9 +386,9 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         "transDate",
         t("bankStatement.columns.transDate"),
       ),
-      cell: (row: any) => formatGMT7(row.transDate, "date"),
-      size: 120,
-      sortable: false,
+      cell: (row: any) => formatGMT7(row.transDate, "datetime"),
+      size: 140,
+      sortable: true,
     },
     {
       key: "referenceNumber",
