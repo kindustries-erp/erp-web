@@ -11,6 +11,9 @@ interface KpiCardProps {
   warn?: boolean;
   loading?: boolean;
   rightNode?: React.ReactNode;
+  bottomNode?: React.ReactNode;
+  active?: boolean;
+  onClear?: () => void;
 }
 
 export function KpiCard({
@@ -23,16 +26,48 @@ export function KpiCard({
   compact,
   loading,
   rightNode,
+  bottomNode,
+  active,
+  onClear,
 }: KpiCardProps & { compact?: boolean }) {
   return (
     <div
       className={cn(
-        "bg-surface border rounded-xl card-shadow",
+        "bg-surface border rounded-xl card-shadow flex flex-col relative transition-all duration-200",
         compact ? "p-3 max-[480px]:p-2" : "p-4 max-[480px]:p-3",
-        warn ? "border-[#f59e0b] border-[1.5px]" : "border-border",
+        warn
+          ? "border-[#f59e0b] border-[1.5px]"
+          : active
+            ? "border-primary border-[1.5px] bg-primary/5"
+            : "border-border",
       )}
     >
-      <div className="flex flex-row justify-between items-center h-full">
+      {active && onClear && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+          className="absolute top-2 right-2 p-1 rounded-full bg-background border shadow-sm hover:bg-muted text-muted-foreground hover:text-foreground z-10 transition-colors"
+          title="Clear selection"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      )}
+      <div className="flex flex-row justify-between items-center flex-1">
         <div className="flex-1 min-w-0">
           {(icon || badge) && (
             <div
@@ -93,6 +128,7 @@ export function KpiCard({
           </div>
         )}
       </div>
+      {bottomNode && <div className="mt-3 w-full">{bottomNode}</div>}
     </div>
   );
 }

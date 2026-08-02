@@ -16,10 +16,22 @@ export function useGarageCases(
   q: string = "",
   from?: string,
   to?: string,
+  filtersStr?: string,
 ) {
   return useQuery({
-    queryKey: ["garage", "cases", branchId, page, pageSize, q, from, to],
-    queryFn: () => garageApi.getCases(branchId!, page, pageSize, q, from, to),
+    queryKey: [
+      "garage",
+      "cases",
+      branchId,
+      page,
+      pageSize,
+      q,
+      from,
+      to,
+      filtersStr,
+    ],
+    queryFn: () =>
+      garageApi.getCases(branchId!, page, pageSize, q, from, to, filtersStr),
     enabled: !!branchId,
     staleTime: 1000 * 60,
   });

@@ -146,6 +146,16 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
   const showToast = useUIStore((s) => s.showToast);
 
+  type SelectedPeriod = {
+    type: "month" | "week" | "day";
+    index: number;
+    label: string;
+    dateFrom: string;
+    dateTo: string;
+  } | null;
+
+  const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(null);
+
   const handleMonthClick = (index: number) => {
     const monthsAgo = 5 - index;
     const date = subMonths(new Date(), monthsAgo);
@@ -162,6 +172,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       "null",
     ]);
     listHook.setPage(1);
+
+    if (selectedPeriod?.type === "month" && selectedPeriod.index === index) {
+      setSelectedPeriod(null);
+    } else {
+      setSelectedPeriod({
+        type: "month",
+        index,
+        label: `Tháng ${format(date, "MM/yyyy")}`,
+        dateFrom: startStr,
+        dateTo: endStr,
+      });
+    }
   };
 
   const handleWeekClick = (index: number) => {
@@ -183,6 +205,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       "null",
     ]);
     listHook.setPage(1);
+
+    if (selectedPeriod?.type === "week" && selectedPeriod.index === index) {
+      setSelectedPeriod(null);
+    } else {
+      setSelectedPeriod({
+        type: "week",
+        index,
+        label: `Tuần ${format(startOfWeek(date, { weekStartsOn: 1 }), "dd/MM")} - ${format(endOfWeek(date, { weekStartsOn: 1 }), "dd/MM")}`,
+        dateFrom: startStr,
+        dateTo: endStr,
+      });
+    }
   };
 
   const handleDayClick = (index: number) => {
@@ -200,6 +234,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       "null",
     ]);
     listHook.setPage(1);
+
+    if (selectedPeriod?.type === "day" && selectedPeriod.index === index) {
+      setSelectedPeriod(null);
+    } else {
+      setSelectedPeriod({
+        type: "day",
+        index,
+        label: `${format(date, "dd/MM/yyyy")}`,
+        dateFrom: dateStr,
+        dateTo: dateStr,
+      });
+    }
   };
 
   const monthLabels = useMemo(() => {
@@ -458,6 +504,22 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ["erp-invoices-stats", direction],
     queryFn: () => erpInvoicesCoreApi.getStats(direction),
+  });
+
+  const { data: periodStats, isLoading: periodLoading } = useQuery({
+    queryKey: [
+      "erp-invoices-stats",
+      direction,
+      selectedPeriod?.dateFrom,
+      selectedPeriod?.dateTo,
+    ],
+    queryFn: () =>
+      erpInvoicesCoreApi.getStats(
+        direction,
+        selectedPeriod!.dateFrom,
+        selectedPeriod!.dateTo,
+      ),
+    enabled: !!selectedPeriod,
   });
 
   useEffect(() => {
@@ -1965,14 +2027,29 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
             <KpiCard
               compact
-              loading={statsLoading}
-              label={
-                direction === "OUT"
-                  ? "Doanh thu Tháng này"
-                  : "Chi phí Tháng này"
+              loading={
+                statsLoading ||
+                (selectedPeriod?.type === "month" && periodLoading)
               }
-              value={money(statsData?.monthTotal || 0)}
-              sub={`Trước thuế: ${money(statsData?.monthPreVat || 0)}`}
+              label={
+                selectedPeriod?.type === "month"
+                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
+                  : direction === "OUT"
+                    ? "Doanh thu Tháng này"
+                    : "Chi phí Tháng này"
+              }
+              value={money(
+                selectedPeriod?.type === "month" && periodStats
+                  ? periodStats.monthTotal
+                  : statsData?.monthTotal || 0,
+              )}
+              sub={`Trước thuế: ${money(
+                selectedPeriod?.type === "month" && periodStats
+                  ? periodStats.monthPreVat
+                  : statsData?.monthPreVat || 0,
+              )}`}
+              active={selectedPeriod?.type === "month"}
+              onClear={() => setSelectedPeriod(null)}
               rightNode={
                 <KpiSparkline
                   data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
@@ -1981,15 +2058,52 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onClick={handleMonthClick}
                 />
               }
+              bottomNode={(() => {
+                const branches =
+                  selectedPeriod?.type === "month" && periodStats
+                    ? periodStats.byBranch
+                    : statsData?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.monthTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
             />
             <KpiCard
               compact
-              loading={statsLoading}
-              label={
-                direction === "OUT" ? "Doanh thu Tuần này" : "Chi phí Tuần này"
+              loading={
+                statsLoading ||
+                (selectedPeriod?.type === "week" && periodLoading)
               }
-              value={money(statsData?.weekTotal || 0)}
-              sub={`Trước thuế: ${money(statsData?.weekPreVat || 0)}`}
+              label={
+                selectedPeriod?.type === "week"
+                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
+                  : direction === "OUT"
+                    ? "Doanh thu Tuần này"
+                    : "Chi phí Tuần này"
+              }
+              value={money(
+                selectedPeriod?.type === "week" && periodStats
+                  ? periodStats.weekTotal
+                  : statsData?.weekTotal || 0,
+              )}
+              sub={`Trước thuế: ${money(
+                selectedPeriod?.type === "week" && periodStats
+                  ? periodStats.weekPreVat
+                  : statsData?.weekPreVat || 0,
+              )}`}
+              active={selectedPeriod?.type === "week"}
+              onClear={() => setSelectedPeriod(null)}
               rightNode={
                 <KpiSparkline
                   data={statsData?.weekChart || [0, 0, 0, 0]}
@@ -1998,15 +2112,52 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onClick={handleWeekClick}
                 />
               }
+              bottomNode={(() => {
+                const branches =
+                  selectedPeriod?.type === "week" && periodStats
+                    ? periodStats.byBranch
+                    : statsData?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.weekTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
             />
             <KpiCard
               compact
-              loading={statsLoading}
-              label={
-                direction === "OUT" ? "Doanh thu Hôm nay" : "Chi phí Hôm nay"
+              loading={
+                statsLoading ||
+                (selectedPeriod?.type === "day" && periodLoading)
               }
-              value={money(statsData?.dayTotal || 0)}
-              sub={`Trước thuế: ${money(statsData?.dayPreVat || 0)}`}
+              label={
+                selectedPeriod?.type === "day"
+                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
+                  : direction === "OUT"
+                    ? "Doanh thu Hôm nay"
+                    : "Chi phí Hôm nay"
+              }
+              value={money(
+                selectedPeriod?.type === "day" && periodStats
+                  ? periodStats.dayTotal
+                  : statsData?.dayTotal || 0,
+              )}
+              sub={`Trước thuế: ${money(
+                selectedPeriod?.type === "day" && periodStats
+                  ? periodStats.dayPreVat
+                  : statsData?.dayPreVat || 0,
+              )}`}
+              active={selectedPeriod?.type === "day"}
+              onClear={() => setSelectedPeriod(null)}
               rightNode={
                 <KpiSparkline
                   data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
@@ -2017,6 +2168,26 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onClick={handleDayClick}
                 />
               }
+              bottomNode={(() => {
+                const branches =
+                  selectedPeriod?.type === "day" && periodStats
+                    ? periodStats.byBranch
+                    : statsData?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.dayTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
             />
           </div>
         }

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Shield, PlusCircle, Eye, EyeOff } from "lucide-react";
+import {
+  Shield,
+  PlusCircle,
+  Eye,
+  EyeOff,
+  LogIn,
+  Ban,
+  CheckCircle,
+} from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -111,6 +119,7 @@ export function ErpUsersPage() {
   }
 
   const impersonateAction = useAuthStore((s) => s.impersonateAction);
+  const canImpersonate = useAuthStore((s) => s.canImpersonate);
 
   const filterConfig: FilterPanelConfig = useMemo(
     () => ({
@@ -269,6 +278,18 @@ export function ErpUsersPage() {
     }
   }
 
+  async function handleActivate(user: CoreUserAdmin) {
+    await usersAdminApi.activate(user.id);
+    showToast({ title: t("Đã kích hoạt user"), description: user.email });
+    await loadUsers();
+  }
+
+  async function handleDeactivate(user: CoreUserAdmin) {
+    await usersAdminApi.deactivate(user.id);
+    showToast({ title: t("Đã ngưng user"), description: user.email });
+    await loadUsers();
+  }
+
   const columns: DataTableColumn<CoreUserAdmin>[] = useMemo(
     () => [
       {
@@ -396,6 +417,39 @@ export function ErpUsersPage() {
                 icon: <Eye className="w-3.5 h-3.5" />,
                 onClick: () => void openViewDrawer(item),
               },
+            ],
+          },
+          {
+            groupLabel: t("Hành động"),
+            items: [
+              ...(canImpersonate &&
+              item.email !== "admin@liouni.com" &&
+              item.status === "ACTIVE"
+                ? [
+                    {
+                      label: t("Đăng nhập dưới quyền"),
+                      icon: <LogIn className="w-3.5 h-3.5" />,
+                      onClick: () => setImpersonateTarget(item),
+                    },
+                  ]
+                : []),
+              ...(item.status === "ACTIVE"
+                ? [
+                    {
+                      label: t("Ngưng hoạt động"),
+                      icon: <Ban className="w-3.5 h-3.5 text-destructive" />,
+                      onClick: () => void handleDeactivate(item),
+                    },
+                  ]
+                : [
+                    {
+                      label: t("Kích hoạt"),
+                      icon: (
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      ),
+                      onClick: () => void handleActivate(item),
+                    },
+                  ]),
             ],
           },
         ]}
