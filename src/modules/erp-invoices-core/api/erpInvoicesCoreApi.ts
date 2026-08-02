@@ -281,9 +281,13 @@ export const erpInvoicesCoreApi = {
     };
   },
 
-  getStats: async (direction?: "IN" | "OUT"): Promise<ErpInvoiceStats> => {
+  getStats: async (
+    direction?: "IN" | "OUT",
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<ErpInvoiceStats> => {
     const { data } = await axiosInstance.get<ErpInvoiceStats>(`${BASE}/stats`, {
-      params: { direction },
+      params: { direction, dateFrom, dateTo },
     });
     return data;
   },
