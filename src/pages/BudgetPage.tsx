@@ -7,15 +7,17 @@ import { Target, Eye } from "lucide-react";
 import { BudgetDrawer } from "../modules/budget/components/BudgetDrawer";
 import { useT } from "@/core/i18n";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
+import { useTranslation } from "react-i18next";
 
 export function BudgetPage() {
-  const t = useT();
+  const tGlobal = useT();
+  const { t } = useTranslation("budget");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
 
   const filterPanel = useFilterPanel({
     search: {
-      placeholder: t(
+      placeholder: tGlobal(
         "nav.searchPlaceholder",
         "Tìm kiếm mã chứng từ, nội dung...",
       ),
@@ -41,21 +43,18 @@ export function BudgetPage() {
   return (
     <>
       <SpreadsheetPageTemplate
-        title={t("budget.pageTitle", "Ngân sách định kỳ (Budget)")}
-        desc={t(
-          "budget.pageDesc",
-          "Quản lý các khoản chi định kỳ, dự báo dòng tiền",
-        )}
+        title={t("pageTitle")}
+        desc={t("pageDesc")}
         icon={<Target className="w-4 h-4" />}
         tableId="budget-list"
         items={filtered}
         loading={isLoading}
-        emptyLabel={t("budget.emptyList", "Không có khoản chi định kỳ nào.")}
+        emptyLabel={t("emptyList")}
         getRowKey={(item: any) => item.id || Math.random().toString()}
         columns={[
           {
             key: "doc_no",
-            header: t("budget.colDocNo", "Mã CT"),
+            header: t("colDocNo"),
             cell: (item: any) => {
               const docNo = item.poNo || item.expenseNo;
               return <span>{docNo}</span>;
@@ -63,36 +62,34 @@ export function BudgetPage() {
           },
           {
             key: "title",
-            header: t("budget.colTitle", "Nội dung"),
+            header: t("colTitle"),
             cell: (item: any) => item.title || "(Không có tiêu đề)",
           },
           {
             key: "collection",
-            header: t("budget.colType", "Loại khoản chi"),
+            header: t("colType"),
             cell: (item: any) => {
               const isPO = item.collection === "purchase_orders";
               return (
                 <Badge variant={isPO ? "default" : "secondary"}>
-                  {isPO
-                    ? t("budget.typeInvoice", "Hóa đơn NCC")
-                    : t("budget.typeExpense", "Chi phí nội bộ")}
+                  {isPO ? t("typeInvoice") : t("typeExpense")}
                 </Badge>
               );
             },
           },
           {
             key: "recurrence",
-            header: t("budget.colCycle", "Chu kỳ"),
+            header: t("colCycle"),
             cell: (item: any) => {
               return (
                 <div className="text-sm">
                   {item.recurrenceInterval}{" "}
                   {item.recurrenceType === "MONTHLY"
-                    ? t("budget.cycleMonthly")
+                    ? t("cycleMonthly")
                     : item.recurrenceType === "QUARTERLY"
-                      ? t("budget.cycleQuarterly")
+                      ? t("cycleQuarterly")
                       : item.recurrenceType === "YEARLY"
-                        ? t("budget.cycleYearly")
+                        ? t("cycleYearly")
                         : item.recurrenceType}
                 </div>
               );
@@ -100,7 +97,7 @@ export function BudgetPage() {
           },
           {
             key: "amount",
-            header: t("budget.colAmount", "Số tiền"),
+            header: t("colAmount"),
             className: "text-right align-middle",
             headerClassName: "text-right",
             cell: (item: any) => {
@@ -119,10 +116,10 @@ export function BudgetPage() {
           setSelectedExpense(null);
           setIsDrawerOpen(true);
         }}
-        createLabel={t("budget.drawerTitle", "Tạo khoản chi")}
+        createLabel={t("drawerTitle")}
         rowActions={(row: any) => [
           {
-            label: t("action.view", "Xem chi tiết"),
+            label: tGlobal("action.view", "Xem chi tiết"),
             icon: <Eye className="w-4 h-4" />,
             onClick: () => {
               setSelectedExpense(row);
@@ -133,7 +130,7 @@ export function BudgetPage() {
         actionColumnSize={40}
         filterConfig={{
           search: {
-            placeholder: t("nav.searchPlaceholder", "Tìm kiếm..."),
+            placeholder: tGlobal("nav.searchPlaceholder", "Tìm kiếm..."),
           },
         }}
         filter={filterPanel}

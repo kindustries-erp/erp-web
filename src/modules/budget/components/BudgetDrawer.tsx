@@ -9,8 +9,8 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
-import { useT } from "@/core/i18n";
 import axiosInstance from "@/core/api/axiosInstance";
+import { useTranslation } from "react-i18next";
 
 export function BudgetDrawer({
   open,
@@ -21,7 +21,7 @@ export function BudgetDrawer({
   onClose: () => void;
   expenseData?: any;
 }) {
-  const t = useT();
+  const { t } = useTranslation("budget");
   const queryClient = useQueryClient();
 
   const isExisting = Boolean(expenseData);
@@ -134,9 +134,9 @@ export function BudgetDrawer({
   const isReadOnly = mode === "view";
 
   const getCycleLabel = (type: string) => {
-    if (type === "MONTHLY") return t("budget.cycleMonthly", "Hàng tháng");
-    if (type === "QUARTERLY") return t("budget.cycleQuarterly", "Hàng quý");
-    if (type === "YEARLY") return t("budget.cycleYearly", "Hàng năm");
+    if (type === "MONTHLY") return t("cycleMonthly");
+    if (type === "QUARTERLY") return t("cycleQuarterly");
+    if (type === "YEARLY") return t("cycleYearly");
     return type;
   };
 
@@ -144,18 +144,18 @@ export function BudgetDrawer({
     mode === "view"
       ? [
           {
-            label: t("budget.actionEdit", "Chỉnh sửa"),
+            label: t("actionEdit"),
             primary: true,
             onClick: () => setMode("edit"),
           },
         ]
       : [
           {
-            label: t("budget.actionCancel", "Hủy"),
+            label: t("actionCancel"),
             onClick: mode === "edit" ? () => setMode("view") : onClose,
           },
           {
-            label: t("budget.actionSave", "Lưu khoản chi"),
+            label: t("actionSave"),
             primary: true,
             loading: isSubmitting,
             disabled: !title,
@@ -169,11 +169,7 @@ export function BudgetDrawer({
       mode={mode}
       onClose={onClose}
       onToggleEdit={() => setMode("edit")}
-      title={
-        isExisting
-          ? t("budget.drawerDetailTitle", "Chi tiết khoản chi")
-          : t("budget.drawerTitle", "Thêm khoản chi định kỳ")
-      }
+      title={isExisting ? t("drawerDetailTitle") : t("drawerTitle")}
       layout="1-column"
       size="sm"
       actions={actionsConfig}
@@ -186,14 +182,14 @@ export function BudgetDrawer({
                 className={`pb-2 font-medium ${activeTab === "suggestions" ? "text-[color:var(--primary)] border-b-2 border-[color:var(--primary)]" : "text-[color:var(--muted-fg)]"}`}
                 onClick={() => setActiveTab("suggestions")}
               >
-                {t("budget.tabSuggestions", "Gợi ý thông minh")}
+                {t("tabSuggestions")}
               </button>
               <button
                 type="button"
                 className={`pb-2 font-medium ${activeTab === "manual" ? "text-[color:var(--primary)] border-b-2 border-[color:var(--primary)]" : "text-[color:var(--muted-fg)]"}`}
                 onClick={() => setActiveTab("manual")}
               >
-                {t("budget.tabManual", "Tạo thủ công")}
+                {t("tabManual")}
               </button>
             </div>
           )}
@@ -209,7 +205,7 @@ export function BudgetDrawer({
                   suggestions.map((group: any, idx: number) => (
                     <div key={idx} className="mb-6">
                       <h3 className="font-semibold mb-3">
-                        {t(`budget.${group.type}Title`, group.title)}
+                        {t(`${group.type}Title`, { defaultValue: group.title })}
                       </h3>
                       {group.items && group.items.length > 0 ? (
                         group.items.map((item: any, i: number) => (
@@ -230,27 +226,21 @@ export function BudgetDrawer({
                                 onClick={() => handleAddSuggestion(item)}
                               >
                                 <Plus className="w-4 h-4 mr-2" />
-                                {t("budget.actionAdd", "Thêm")}
+                                {t("actionAdd")}
                               </Button>
                             </div>
                           </Card>
                         ))
                       ) : (
                         <div className="text-sm text-[color:var(--muted-fg)] p-4 border rounded-md border-dashed text-center">
-                          {t(
-                            "budget.noSuggestions",
-                            "Không tìm thấy gợi ý nào từ hệ thống.",
-                          )}
+                          {t("noSuggestions")}
                         </div>
                       )}
                     </div>
                   ))
                 ) : (
                   <div className="text-sm text-[color:var(--muted-fg)] p-4 border rounded-md border-dashed text-center">
-                    {t(
-                      "budget.noSuggestions",
-                      "Không tìm thấy gợi ý nào từ hệ thống.",
-                    )}
+                    {t("noSuggestions")}
                   </div>
                 )}
               </div>
@@ -260,7 +250,7 @@ export function BudgetDrawer({
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">
-                    {t("budget.formName", "Tên khoản chi")}{" "}
+                    {t("formName")}{" "}
                     {mode !== "view" && <span className="text-red-500">*</span>}
                   </label>
                   {isReadOnly ? (
@@ -279,7 +269,7 @@ export function BudgetDrawer({
 
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">
-                    {t("budget.formCategory", "Loại khoản chi")}
+                    {t("formCategory")}
                   </label>
                   {isReadOnly ? (
                     <div className="p-2 bg-gray-50 rounded-md text-sm border min-h-[38px] flex items-center">
@@ -296,7 +286,7 @@ export function BudgetDrawer({
 
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">
-                    {t("budget.formAmount", "Số tiền dự kiến")} (VND)
+                    {t("formAmount")} (VND)
                   </label>
                   {isReadOnly ? (
                     <div className="p-2 bg-gray-50 rounded-md text-sm border min-h-[38px] flex items-center">
@@ -319,7 +309,7 @@ export function BudgetDrawer({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium">
-                      {t("budget.formCycle", "Chu kỳ")}
+                      {t("formCycle")}
                     </label>
                     {isReadOnly ? (
                       <div className="p-2 bg-gray-50 rounded-md text-sm border min-h-[38px] flex items-center">
@@ -331,15 +321,15 @@ export function BudgetDrawer({
                         onChange={(val) => setRecurrenceType(val || "MONTHLY")}
                         options={[
                           {
-                            label: t("budget.cycleMonthly", "Hàng tháng"),
+                            label: t("cycleMonthly"),
                             value: "MONTHLY",
                           },
                           {
-                            label: t("budget.cycleQuarterly", "Hàng quý"),
+                            label: t("cycleQuarterly"),
                             value: "QUARTERLY",
                           },
                           {
-                            label: t("budget.cycleYearly", "Hàng năm"),
+                            label: t("cycleYearly"),
                             value: "YEARLY",
                           },
                         ]}
@@ -367,7 +357,7 @@ export function BudgetDrawer({
 
                 <div className="space-y-1.5 flex flex-col">
                   <label className="text-sm font-medium">
-                    {t("budget.formNextDue", "Ngày đến hạn tiếp theo")}
+                    {t("formNextDue")}
                   </label>
                   {isReadOnly ? (
                     <div className="p-2 bg-gray-50 rounded-md text-sm border min-h-[38px] flex items-center">
@@ -383,7 +373,7 @@ export function BudgetDrawer({
 
                 <div className="space-y-1.5 flex flex-col">
                   <label className="text-sm font-medium">
-                    {t("budget.formNotes", "Ghi chú")}
+                    {t("formNotes")}
                   </label>
                   {isReadOnly ? (
                     <div className="p-2 bg-gray-50 rounded-md text-sm border min-h-[80px] whitespace-pre-wrap">
