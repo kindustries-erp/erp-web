@@ -1670,7 +1670,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             }
             onFilterChange={(vals) => handleFilterChange("netOffAmount", vals)}
             align="right"
-            columnKey="netOffAmount"
+            filterOptions={[
+              { value: "settled_full", label: "✅ Đã cấn trừ hết" },
+              { value: "settled_partial", label: "🔶 Đã cấn trừ 1 phần" },
+              { value: "unsettled", label: "⬜ Chưa cấn trừ" },
+            ]}
           />
         ),
         size: 150,
@@ -1702,7 +1706,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               handleFilterChange("remainingAmount", vals)
             }
             align="right"
-            columnKey="remainingAmount"
+            filterOptions={[
+              { value: "settled_full", label: "✅ Đã cấn trừ hết" },
+              { value: "settled_partial", label: "🔶 Đã cấn trừ 1 phần" },
+              { value: "unsettled", label: "⬜ Chưa cấn trừ" },
+            ]}
           />
         ),
         size: 120,
