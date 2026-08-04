@@ -53,6 +53,7 @@ export interface TableColumnHeaderFilterProps {
   hideFooter?: boolean;
   enableSelectAllMatching?: boolean;
   isActive?: boolean;
+  showBlankOption?: boolean;
   /** Optional slot rendered between Sort buttons and Search input (e.g. a date range picker). Can be a function that receives a close function. */
   dateRangeSlot?:
     | React.ReactNode
@@ -83,6 +84,7 @@ export function TableColumnHeaderFilter({
   enableSelectAllMatching,
   isActive,
   dateRangeSlot,
+  showBlankOption,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -162,30 +164,44 @@ export function TableColumnHeaderFilter({
   });
 
   const finalOptions = useMemo(() => {
+    let opts: { label: string; value: string }[];
     if (filterOptions && filterOptions.length > 0) {
       if (!debouncedLocalSearch) {
-        return filterOptions;
+        opts = filterOptions;
+      } else {
+        const searchLower = debouncedLocalSearch.toLowerCase();
+        opts = filterOptions.filter(
+          (opt) =>
+            (opt.label || "").toLowerCase().includes(searchLower) ||
+            (opt.value || "").toLowerCase().includes(searchLower),
+        );
       }
-      const searchLower = debouncedLocalSearch.toLowerCase();
-      return filterOptions.filter(
-        (opt) =>
-          (opt.label || "").toLowerCase().includes(searchLower) ||
-          (opt.value || "").toLowerCase().includes(searchLower),
-      );
-    }
-    if (columnKey) {
+    } else if (columnKey) {
       const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
       const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
       const missingSelected = isAllMatchingActive
         ? []
         : selectedFilters
-            .filter((v) => !apiValues.has(v))
+            .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
             .map((v) => ({ label: v, value: v }));
-      return [...missingSelected, ...apiOptions];
+      opts = [...missingSelected, ...apiOptions];
+    } else {
+      opts = filterOptions || [];
     }
-    return filterOptions || [];
-  }, [optionsData, filterOptions, columnKey, selectedFilters]);
+
+    if (showBlankOption) {
+      opts = [{ label: "(blank)", value: "__BLANK__" }, ...opts];
+    }
+    return opts;
+  }, [
+    optionsData,
+    filterOptions,
+    columnKey,
+    selectedFilters,
+    debouncedLocalSearch,
+    showBlankOption,
+  ]);
 
   // Sync local search to global map
   useEffect(() => {

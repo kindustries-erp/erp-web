@@ -1060,6 +1060,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 250,
@@ -1093,6 +1094,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 150,
@@ -1280,6 +1282,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 300,
@@ -1848,6 +1851,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 120,
@@ -1877,6 +1881,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 200,
