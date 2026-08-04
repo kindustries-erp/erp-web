@@ -5,6 +5,7 @@ import { Sidebar } from "@/core/components/layout/sidebar";
 import { Topbar } from "@/core/components/layout/Topbar";
 import { TabBar } from "@/core/components/layout/TabBar";
 import { SlidePanel } from "@/shared/components/SlidePanel";
+import { SerialGenerationProgress } from "@/shared/components/SerialGenerationProgress";
 import { Toast } from "@/shared/components/Toast";
 import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
@@ -47,11 +48,16 @@ const loadInventoryStockPage = () =>
   }));
 const InventoryStockPage = lazy(loadInventoryStockPage);
 
-const loadInventoryTrackingPage = () =>
+const InventoryTrackingPage = lazy(() =>
   import("@/pages/inventory/InventoryTrackingPage").then((m) => ({
     default: m.InventoryTrackingPage,
-  }));
-const InventoryTrackingPage = lazy(loadInventoryTrackingPage);
+  })),
+);
+const InventoryTrackingPartsPage = lazy(() =>
+  import("@/pages/inventory/InventoryTrackingPartsPage").then((m) => ({
+    default: m.InventoryTrackingPartsPage,
+  })),
+);
 
 const loadInventoryVouchersPage = () =>
   import("@/pages/inventory/InventoryVouchersPage").then((m) => ({
@@ -256,11 +262,7 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   purchasing: MuaHang,
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
-  "erp-inventory-tracking-parts": () => (
-    <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
-      Tính năng Quản lý Serial Phụ tùng đang được phát triển...
-    </div>
-  ),
+  "erp-inventory-tracking-parts": InventoryTrackingPartsPage,
   "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,
@@ -313,7 +315,10 @@ const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   "inventory-dashboard": loadInventoryDashboard,
   purchasing: loadMuaHang,
   "erp-inventory-stock": loadInventoryStockPage,
-  "erp-inventory-tracking": loadInventoryTrackingPage,
+  "erp-inventory-tracking": () =>
+    import("@/pages/inventory/InventoryTrackingPage"),
+  "erp-inventory-tracking-parts": () =>
+    import("@/pages/inventory/InventoryTrackingPartsPage"),
   "erp-inventory-vouchers": loadInventoryVouchersPage,
   "erp-sales-orders": loadErpSalesOrdersPage,
   "erp-goods-issues": loadErpGoodsIssuesPage,
@@ -433,6 +438,7 @@ export default function App() {
                   >
                     <Suspense fallback={PAGE_FALLBACK}>
                       <Component />
+                      <SerialGenerationProgress />
                     </Suspense>
                   </div>
                 );

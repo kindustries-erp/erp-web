@@ -22,7 +22,11 @@ import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPrevie
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
-export function TrackedGoodsPage() {
+export function TrackedGoodsPage({
+  fixedTrackingPolicy,
+}: {
+  fixedTrackingPolicy?: string;
+} = {}) {
   const t = useT();
 
   const [page, setPage] = useState(1);
@@ -57,7 +61,7 @@ export function TrackedGoodsPage() {
     pageSize,
     search: search || undefined,
     itemType: itemTypeFilter || undefined,
-    trackingPolicy: trackingPolicyFilter || undefined,
+    trackingPolicy: fixedTrackingPolicy || trackingPolicyFilter || undefined,
     status: statusFilter || undefined,
     missingSerial: missingSerialFilter || undefined,
     sort: [sortField],
@@ -338,38 +342,44 @@ export function TrackedGoodsPage() {
           </div>
         ),
       },
-      {
-        key: "trackingPolicyName",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Chính sách Tracking")}
-            sortState={getSortState("trackingPolicyName")}
-            onSortChange={(state) =>
-              handleSortChange("trackingPolicyName", state)
-            }
-            searchValue={tableState.columnSearch["trackingPolicyName"] || ""}
-            onSearchChange={(val) =>
-              handleSearchChange("trackingPolicyName", val)
-            }
-            selectedFilters={
-              tableState.columnFilters["trackingPolicyName"] || []
-            }
-            onFilterChange={(vals) =>
-              handleFilterChange("trackingPolicyName", vals)
-            }
-            align="center"
-            columnKey="trackingPolicyName"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 180,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => row.item?.trackingPolicyName || "—",
-      },
+      ...(fixedTrackingPolicy
+        ? []
+        : [
+            {
+              key: "trackingPolicyName",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Chính sách Tracking")}
+                  sortState={getSortState("trackingPolicyName")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("trackingPolicyName", state)
+                  }
+                  searchValue={
+                    tableState.columnSearch["trackingPolicyName"] || ""
+                  }
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("trackingPolicyName", val)
+                  }
+                  selectedFilters={
+                    tableState.columnFilters["trackingPolicyName"] || []
+                  }
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("trackingPolicyName", vals)
+                  }
+                  align="center"
+                  columnKey="trackingPolicyName"
+                  requireSearchToFetchOptions={true}
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 180,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) => row.item?.trackingPolicyName || "—",
+            },
+          ]),
       {
         key: "status",
         header: (
