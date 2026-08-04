@@ -999,6 +999,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,

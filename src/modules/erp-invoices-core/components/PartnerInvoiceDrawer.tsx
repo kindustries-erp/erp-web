@@ -264,6 +264,7 @@ export function PartnerInvoiceDrawer({
             requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
           />
         ),
         size: 100,
