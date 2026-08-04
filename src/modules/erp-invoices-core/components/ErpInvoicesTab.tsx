@@ -1481,6 +1481,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
@@ -1508,6 +1509,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
@@ -1560,6 +1562,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
@@ -1587,6 +1590,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
