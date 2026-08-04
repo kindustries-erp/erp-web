@@ -130,7 +130,7 @@ export function VinfastPartDashboardTable({
         next: d.page < d.totalPages ? d.page + 1 : null,
       };
     },
-    [filterState?.dateFrom, filterState?.dateTo, vehicleType],
+    [filterState, vehicleType],
   );
 
   const renderTextHeaderFilter = (key: string, title: string) => (
