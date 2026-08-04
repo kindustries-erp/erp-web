@@ -257,6 +257,15 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       formatOptionLabel = formatAmtOption as any;
     }
 
+    let filterOptions: any = undefined;
+    if (key === "netOffAmount" || key === "remainingAmount") {
+      filterOptions = [
+        { value: "settled_full", label: "Đã cấn trừ hết" },
+        { value: "settled_partial", label: "Đã cấn trừ một phần" },
+        { value: "unsettled", label: "Chưa cấn trừ" },
+      ];
+    }
+
     return (
       <TableColumnHeaderFilter
         title={label}
@@ -272,6 +281,7 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         allFilters={tableState.columnFilters}
         fetchOptions={fetchColumnOptions}
         formatOptionLabel={formatOptionLabel}
+        filterOptions={filterOptions}
         queryKeyPrefix={`bank-statement-${type}-column-options`}
       />
     );
