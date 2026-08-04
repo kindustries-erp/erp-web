@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { PanelRightOpen, Check, Copy } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { money } from "@/shared/utils/format";
+import api from "@/core/api/axiosInstance";
 import {
   VinfastPartDashboardTableRow,
   useVinfastPartsDashboardTable,
@@ -75,11 +76,46 @@ export function VinfastPartDashboardTable({
     tableState.setColumnFilter(columnKey, values);
   };
 
-  const renderHeaderFilter = (
-    key: string,
-    title: string,
-    options?: { label: string; value: string }[],
-  ) => (
+  const fetchDashboardTableOptions = useCallback(
+    async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }: {
+      columnKey: string;
+      search: string;
+      pageParam: number;
+      filtersStr?: string;
+    }) => {
+      const params = new URLSearchParams();
+      params.set("columnKey", columnKey);
+      params.set("search", search || "");
+      params.set("page", String(pageParam || 1));
+      params.set("limit", "20");
+      if (filtersStr) params.set("filters", filtersStr);
+      if (filterState?.dateFrom) params.set("dateFrom", filterState.dateFrom);
+      if (filterState?.dateTo) params.set("dateTo", filterState.dateTo);
+      if (vehicleType) params.set("vehicleType", vehicleType);
+      const res = await api.get(
+        `/api/v1/reports/vinfast-parts-dashboard-table/column-options?${params}`,
+      );
+      const d = res.data as {
+        items: { value: string; label: string }[];
+        total: number;
+        page: number;
+        totalPages: number;
+      };
+      return {
+        items: d.items,
+        total: d.total,
+        next: d.page < d.totalPages ? d.page + 1 : null,
+      };
+    },
+    [filterState?.dateFrom, filterState?.dateTo, vehicleType],
+  );
+
+  const renderTextHeaderFilter = (key: string, title: string) => (
     <TableColumnHeaderFilter
       title={title}
       align="center"
@@ -89,7 +125,23 @@ export function VinfastPartDashboardTable({
       onSearchChange={(val) => handleSearchChange(key, val)}
       selectedFilters={tableState.columnFilters[key] || []}
       onFilterChange={(vals) => handleFilterChange(key, vals)}
-      filterOptions={options}
+      columnKey={key}
+      queryKeyPrefix={`vinfast-dashboard-options-${vehicleType}`}
+      fetchOptions={fetchDashboardTableOptions}
+      allFilters={tableState.columnFilters}
+    />
+  );
+
+  const renderNumericHeaderFilter = (key: string, title: string) => (
+    <TableColumnHeaderFilter
+      title={title}
+      align="center"
+      sortState={getSortState(key)}
+      onSortChange={(state) => handleSortChange(key, state)}
+      searchValue={tableState.columnSearch[key] || ""}
+      onSearchChange={(val) => handleSearchChange(key, val)}
+      selectedFilters={tableState.columnFilters[key] || []}
+      onFilterChange={(vals) => handleFilterChange(key, vals)}
     />
   );
 
@@ -101,27 +153,11 @@ export function VinfastPartDashboardTable({
     tableState,
   );
 
-  const itemCodeOptions = useMemo(() => {
-    const options = new Set<string>();
-    (data?.items || []).forEach((row: any) => {
-      if (row.itemCode) options.add(row.itemCode);
-    });
-    return Array.from(options).map((o) => ({ label: o, value: o }));
-  }, [data?.items]);
-
-  const itemNameOptions = useMemo(() => {
-    const options = new Set<string>();
-    (data?.items || []).forEach((row: any) => {
-      if (row.itemName) options.add(row.itemName);
-    });
-    return Array.from(options).map((o) => ({ label: o, value: o }));
-  }, [data?.items]);
-
   const columns: any[] = useMemo(
     () => [
       {
         key: "itemCode",
-        header: renderHeaderFilter("itemCode", "Mã phụ tùng", itemCodeOptions),
+        header: renderTextHeaderFilter("itemCode", "Mã phụ tùng"),
         className: "w-[150px] text-left",
         headerClassName: "w-[150px] text-left",
         cell: (row: any) => (
@@ -149,7 +185,7 @@ export function VinfastPartDashboardTable({
       },
       {
         key: "itemName",
-        header: renderHeaderFilter("itemName", "Tên phụ tùng", itemNameOptions),
+        header: renderTextHeaderFilter("itemName", "Tên phụ tùng"),
         className: "text-left w-full",
         headerClassName: "w-full text-left",
         cell: (row: any) => (
@@ -160,14 +196,14 @@ export function VinfastPartDashboardTable({
       },
       {
         key: "qtyBought",
-        header: renderHeaderFilter("qtyBought", "SL Mua"),
+        header: renderNumericHeaderFilter("qtyBought", "SL Mua"),
         className: "w-[100px] text-right",
         headerClassName: "w-[100px] text-right",
         cell: (row: any) => <div className="text-right">{row.qtyBought}</div>,
       },
       {
         key: "amountBought",
-        header: renderHeaderFilter("amountBought", "Tiền Mua"),
+        header: renderNumericHeaderFilter("amountBought", "Tiền Mua"),
         className: "w-[150px] text-right",
         headerClassName: "w-[150px] text-right",
         cell: (row: any) => (
@@ -178,14 +214,14 @@ export function VinfastPartDashboardTable({
       },
       {
         key: "qtySold",
-        header: renderHeaderFilter("qtySold", "SL Bán"),
+        header: renderNumericHeaderFilter("qtySold", "SL Bán"),
         className: "w-[100px] text-right",
         headerClassName: "w-[100px] text-right",
         cell: (row: any) => <div className="text-right">{row.qtySold}</div>,
       },
       {
         key: "amountSold",
-        header: renderHeaderFilter("amountSold", "Tiền Bán"),
+        header: renderNumericHeaderFilter("amountSold", "Tiền Bán"),
         className: "w-[150px] text-right",
         headerClassName: "w-[150px] text-right",
         cell: (row: any) => (
@@ -196,7 +232,7 @@ export function VinfastPartDashboardTable({
       },
       {
         key: "profit",
-        header: renderHeaderFilter("profit", "Lợi nhuận"),
+        header: renderNumericHeaderFilter("profit", "Lợi nhuận"),
         className: "w-[150px] text-right",
         headerClassName: "w-[150px] text-right",
         cell: (row: any) => {
@@ -211,7 +247,7 @@ export function VinfastPartDashboardTable({
         },
       },
     ],
-    [itemCodeOptions, itemNameOptions, renderHeaderFilter],
+    [renderTextHeaderFilter, renderNumericHeaderFilter, onRowClick],
   );
 
   const subTotalQtyBought = useMemo(() => {
