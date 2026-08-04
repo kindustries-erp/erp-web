@@ -29,6 +29,7 @@ export interface InventorySerialRow {
   id: string;
   serialNo: string;
   itemId: string;
+  receiptDate?: string | null;
   vinId?: string | null;
   vinNo?: string | null;
   engineNo?: string | null;

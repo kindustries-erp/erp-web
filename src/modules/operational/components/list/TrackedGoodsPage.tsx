@@ -170,7 +170,7 @@ export function TrackedGoodsPage({
         key: "createdAt",
         header: (
           <TableColumnHeaderFilter
-            title={t("Ngày")}
+            title={t("Ngày nhập")}
             sortState={getSortState("createdAt")}
             onSortChange={(state) => handleSortChange("createdAt", state)}
             searchValue={tableState.columnSearch["createdAt"] || ""}
@@ -200,10 +200,22 @@ export function TrackedGoodsPage({
             }}
           />
         ),
-        size: 120,
+        size: 140,
         className: "align-middle text-right",
         headerClassName: "text-center",
-        cell: (row) => formatGMT7(row.createdAt, "date"),
+        cell: (row) => {
+          const dateTime = formatGMT7(row.createdAt, "datetime");
+          const [datePart = "", timePart = ""] = dateTime.split(" ");
+
+          return (
+            <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")}>
+              <div className="cursor-help inline-flex flex-col items-end leading-tight">
+                <span className="text-sm font-medium">{datePart}</span>
+                <span className="text-xs text-gray-500">{timePart}</span>
+              </div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "itemCode",

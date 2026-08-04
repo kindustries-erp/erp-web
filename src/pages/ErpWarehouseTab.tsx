@@ -509,7 +509,7 @@ export function ErpWarehouseTab() {
       {
         key: "date",
         header: renderHeaderFilter("date", t("Ngày")),
-        size: 100,
+        size: 130,
         className: "text-right",
         headerClassName: "p-0 h-full",
         cell: (row) => (
@@ -517,9 +517,17 @@ export function ErpWarehouseTab() {
             content={formatGMT7(row.createdAt, "datetime-sec")}
             side="top"
           >
-            <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.date || row.createdAt, "datetime")}
-            </span>
+            {(() => {
+              const dateTime = formatGMT7(row.createdAt, "datetime");
+              const [datePart = "", timePart = ""] = dateTime.split(" ");
+
+              return (
+                <div className="cursor-help inline-flex flex-col items-end leading-tight">
+                  <span className="text-sm font-medium">{datePart}</span>
+                  <span className="text-xs text-gray-500">{timePart}</span>
+                </div>
+              );
+            })()}
           </Tooltip>
         ),
       },
