@@ -106,8 +106,26 @@ export function VinfastPartDashboardTable({
         page: number;
         totalPages: number;
       };
+      const NUMERIC_QTY_COLS = new Set(["qtyBought", "qtySold"]);
+      const NUMERIC_AMOUNT_COLS = new Set([
+        "amountBought",
+        "amountSold",
+        "profit",
+      ]);
+      const formatOptionLabel = (raw: string, col: string): string => {
+        const n = parseFloat(raw);
+        if (isNaN(n)) return raw;
+        if (NUMERIC_QTY_COLS.has(col))
+          return Math.round(n).toLocaleString("vi-VN");
+        if (NUMERIC_AMOUNT_COLS.has(col))
+          return n.toLocaleString("vi-VN", { maximumFractionDigits: 0 });
+        return raw;
+      };
       return {
-        items: d.items,
+        items: d.items.map((item) => ({
+          value: item.value,
+          label: formatOptionLabel(item.value, columnKey),
+        })),
         total: d.total,
         next: d.page < d.totalPages ? d.page + 1 : null,
       };
