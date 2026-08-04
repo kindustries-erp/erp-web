@@ -104,7 +104,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("item_code", vals)}
             align="center"
             columnKey="item_code"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
           />
         ),
@@ -139,7 +138,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("item_name", vals)}
             align="center"
             columnKey="item_name"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
           />
         ),
@@ -165,7 +163,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("received_qty", vals)}
             align="right"
             columnKey="received_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -194,7 +191,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("issued_qty", vals)}
             align="right"
             columnKey="issued_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -223,7 +219,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("adjusted_qty", vals)}
             align="right"
             columnKey="adjusted_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -252,7 +247,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("on_hand_qty", vals)}
             align="right"
             columnKey="on_hand_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -281,7 +275,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("reserved_qty", vals)}
             align="right"
             columnKey="reserved_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -337,7 +330,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("last", vals)}
             align="right"
             columnKey="last"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
           />
         ),

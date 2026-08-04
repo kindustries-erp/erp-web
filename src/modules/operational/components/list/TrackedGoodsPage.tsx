@@ -218,7 +218,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("itemCode", vals)}
             align="center"
             columnKey="itemCode"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -242,7 +241,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("itemName", vals)}
             align="center"
             columnKey="itemName"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -268,7 +266,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
             align="center"
             columnKey="serialNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -297,7 +294,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("vinNo", vals)}
             align="center"
             columnKey="vinNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -326,7 +322,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("engineNo", vals)}
             align="center"
             columnKey="engineNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -368,7 +363,6 @@ export function TrackedGoodsPage({
                   }
                   align="center"
                   columnKey="trackingPolicyName"
-                  requireSearchToFetchOptions={true}
                   queryKeyPrefix="inventory-serial-options"
                   allFilters={tableState.columnFilters}
                   fetchOptions={fetchSerialOptions}
@@ -393,7 +387,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("status", vals)}
             align="center"
             columnKey="status"
-            requireSearchToFetchOptions={false}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={async () => {
@@ -468,7 +461,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("goodsIssueNo", vals)}
             align="center"
             columnKey="goodsIssueNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -559,7 +551,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("soNo", vals)}
             align="center"
             columnKey="soNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -649,7 +640,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("color", vals)}
             align="center"
             columnKey="color"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -673,7 +663,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("dealer_code", vals)}
             align="center"
             columnKey="dealer_code"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
@@ -697,7 +686,6 @@ export function TrackedGoodsPage({
             onFilterChange={(vals) => handleFilterChange("dealer_name", vals)}
             align="center"
             columnKey="dealer_name"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}

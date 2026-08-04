@@ -641,7 +641,6 @@ export function VinfastPartsTrackingPage({
   const commonFilterProps = useMemo(
     () => ({
       enableSelectAllMatching: true,
-      requireSearchToFetchOptions: false,
       queryKeyPrefix: `vinfast-parts-options-${vehicleType || "all"}`,
       allFilters: tableState.columnFilters,
       fetchOptions: fetchColumnOptions,

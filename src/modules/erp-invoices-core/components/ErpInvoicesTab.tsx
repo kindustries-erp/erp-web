@@ -780,7 +780,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("attachments", vals)}
             align="center"
             columnKey="attachments"
-            requireSearchToFetchOptions={false}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async ({ search }) => {
@@ -995,7 +994,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
             align="center"
             columnKey="invoiceNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1032,7 +1030,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
             align="center"
             columnKey="serialNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1060,7 +1057,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("partner", vals)}
             align="center"
             columnKey="partner"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1094,7 +1090,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("taxCode", vals)}
             align="center"
             columnKey="taxCode"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1282,7 +1277,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("description", vals)}
             align="center"
             columnKey="description"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1476,7 +1470,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             }
             align="center"
             columnKey="discountAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1504,7 +1497,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
             align="center"
             columnKey="preVatAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1530,7 +1522,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("vatRate", vals)}
             align="center"
             columnKey="vatRate"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1557,7 +1548,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
             align="center"
             columnKey="vatAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1585,7 +1575,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
             align="center"
             columnKey="totalAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1623,7 +1612,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   }
                   align="center"
                   columnKey="settlementOrder"
-                  requireSearchToFetchOptions={true}
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={fetchInvoiceOptions}
                 />
@@ -1655,7 +1643,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   }
                   align="center"
                   columnKey="licensePlate"
-                  requireSearchToFetchOptions={true}
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={fetchInvoiceOptions}
                 />
@@ -1793,7 +1780,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onFilterChange={(vals) => handleFilterChange("isValid", vals)}
                   align="center"
                   columnKey="isValid"
-                  requireSearchToFetchOptions={false}
                   queryKeyPrefix="erp-invoice-options"
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={async ({ search }: { search: string }) => {
@@ -1859,7 +1845,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("branchId", vals)}
             align="center"
             columnKey="branchId"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1889,7 +1874,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("notes", vals)}
             align="center"
             columnKey="notes"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}

@@ -236,7 +236,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="serialNo"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -261,7 +260,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="invoiceNo"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             enableSelectAllMatching={true}
@@ -297,7 +295,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="preVatAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -323,7 +320,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="vatAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -349,7 +345,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="totalAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -373,7 +368,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="status"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={false}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async () => ({
               items: [
@@ -422,7 +416,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="description"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />

@@ -36,7 +36,6 @@ export interface TableColumnHeaderFilterProps {
   className?: string;
   columnKey?: string;
   queryKeyPrefix?: string;
-  requireSearchToFetchOptions?: boolean;
   allFilters?: Record<string, string[]>;
   formatOptionLabel?: (label: string) => string;
   fetchOptions?: (params: {
