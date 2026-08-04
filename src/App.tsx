@@ -6,6 +6,7 @@ import { Topbar } from "@/core/components/layout/Topbar";
 import { TabBar } from "@/core/components/layout/TabBar";
 import { SlidePanel } from "@/shared/components/SlidePanel";
 import { SerialGenerationProgress } from "@/shared/components/SerialGenerationProgress";
+import { useSerialGenerationProgress } from "@/modules/goods-receipts-core/hooks/useSerialGenerationProgress";
 import { Toast } from "@/shared/components/Toast";
 import { TopProgressBar } from "@/shared/components/TopProgressBar";
 import { AppContextMenu } from "@/shared/components/ContextMenu";
@@ -362,6 +363,8 @@ export default function App() {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const openTabsKey = openTabs.join("|");
 
+  useSerialGenerationProgress();
+
   useEffect(() => {
     bootstrapAction();
   }, []);
@@ -438,12 +441,12 @@ export default function App() {
                   >
                     <Suspense fallback={PAGE_FALLBACK}>
                       <Component />
-                      <SerialGenerationProgress />
                     </Suspense>
                   </div>
                 );
               })}
               {!PAGE_COMPONENTS[currentPage as PageKey] && <NotFound />}
+              <SerialGenerationProgress />
             </>
           </div>
           <TabBar />

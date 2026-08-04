@@ -518,7 +518,7 @@ export function ErpWarehouseTab() {
             side="top"
           >
             <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.date || row.createdAt, "date")}
+              {formatGMT7(row.date || row.createdAt, "datetime")}
             </span>
           </Tooltip>
         ),

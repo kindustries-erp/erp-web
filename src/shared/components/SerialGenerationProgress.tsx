@@ -1,46 +1,115 @@
-import React, { useEffect, useState } from "react";
-import axiosInstance from "@/core/api/axiosInstance";
+import React, { useEffect, useRef, useState } from "react";
+import { useSerialProgressStore } from "@/shared/stores/useSerialProgressStore";
+
+const BUBBLE_SIZE = 48;
+const MARGIN = 16;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
 
 export function SerialGenerationProgress() {
-  const [progress, setProgress] = useState({
-    pendingLines: 0,
-    pendingSerials: 0,
-    isRunning: false,
-  });
+  const progress = useSerialProgressStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const dragState = useRef({
+    isDragging: false,
+    hasMoved: false,
+    startX: 0,
+    startY: 0,
+    initialX: 0,
+    initialY: 0,
+  });
 
   useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout>;
+    // Initialize to bottom-right but above pagination area
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    setPosition({
+      x: viewportWidth - BUBBLE_SIZE - MARGIN,
+      y: viewportHeight - BUBBLE_SIZE - MARGIN - 80,
+    });
 
-    const fetchProgress = async () => {
-      try {
-        const { data } = await axiosInstance.get(
-          "/api/v1/goods-receipts/serial-generation/progress",
-        );
-        setProgress(data);
-      } catch (err) {
-        console.error("Failed to fetch serial generation progress", err);
-      }
-
-      timeoutId = setTimeout(fetchProgress, 10000); // Poll every 10 seconds
+    const handleResize = () => {
+      setPosition((prev) => ({
+        x: clamp(prev.x, MARGIN, window.innerWidth - BUBBLE_SIZE - MARGIN),
+        y: clamp(prev.y, MARGIN, window.innerHeight - BUBBLE_SIZE - MARGIN),
+      }));
     };
 
-    fetchProgress();
-
-    return () => clearTimeout(timeoutId);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragState.current = {
+      isDragging: true,
+      hasMoved: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: position.x,
+      initialY: position.y,
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!dragState.current.isDragging) return;
+
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      dragState.current.hasMoved = true;
+    }
+
+    setPosition({
+      x: clamp(
+        dragState.current.initialX + dx,
+        MARGIN,
+        window.innerWidth - BUBBLE_SIZE - MARGIN,
+      ),
+      y: clamp(
+        dragState.current.initialY + dy,
+        MARGIN,
+        window.innerHeight - BUBBLE_SIZE - MARGIN,
+      ),
+    });
+  };
+
+  const handleMouseUp = () => {
+    dragState.current.isDragging = false;
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleClick = () => {
+    if (!dragState.current.hasMoved) {
+      setIsOpen((prev) => !prev);
+    }
+  };
 
   if (progress.pendingSerials === 0 && !progress.isRunning) {
     return null; // Ẩn hoàn toàn nếu không có việc gì
   }
 
   return (
-    <div className="fixed bottom-20 right-8 z-[9999]">
+    <div
+      className="fixed z-[9999]"
+      style={{
+        left: position.x,
+        top: position.y,
+        width: BUBBLE_SIZE,
+        height: BUBBLE_SIZE,
+      }}
+    >
       <div className="relative">
         {/* Bubble */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="bg-slate-800 text-white rounded-full h-12 w-12 flex items-center justify-center shadow-lg hover:bg-slate-900 transition-colors relative border border-slate-700"
+          onMouseDown={handleMouseDown}
+          onClick={handleClick}
+          className="bg-slate-800 text-white rounded-full h-12 w-12 flex items-center justify-center shadow-lg hover:bg-slate-900 transition-colors relative border border-slate-700 cursor-move"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
