@@ -18,7 +18,9 @@ import {
 } from "@/shared/components/DrawerModal";
 import type { UseGrDrawerReturn } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
-import { useRef, useEffect, useState } from "react";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
 import { useReactToPrint } from "react-to-print";
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { useUIStore } from "@/core/config/uiStore";
@@ -80,6 +82,139 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   });
   const { data: companyProfile } = useCompanyProfile();
   const [isImportOpen, setIsImportOpen] = useState(false);
+
+  const listHook = useTableColumnState("gr-details-table");
+
+  // Filtering & sorting logic for both PO and OTHER lines
+  const buildProcessedLines = useCallback(
+    (lines: any[]) => {
+      if (!lines) return [];
+      let result = [...lines];
+
+      const searchItemCode =
+        listHook.columnSearch["itemCode"]?.toLowerCase() || "";
+      const searchItemName =
+        listHook.columnSearch["itemName"]?.toLowerCase() || "";
+      const filterItemCode = listHook.columnFilters["itemCode"] || [];
+      const filterItemName = listHook.columnFilters["itemName"] || [];
+
+      result = result.filter((line) => {
+        const code =
+          (line.itemId && itemsDict[line.itemId]
+            ? itemsDict[line.itemId].sku
+            : line.itemCode) || "";
+        const name =
+          line.itemName ||
+          (line.itemId && itemsDict[line.itemId]
+            ? itemsDict[line.itemId].itemName
+            : "") ||
+          line.description ||
+          "";
+
+        if (searchItemCode && !code.toLowerCase().includes(searchItemCode))
+          return false;
+        if (searchItemName && !name.toLowerCase().includes(searchItemName))
+          return false;
+        if (filterItemCode.length > 0 && !filterItemCode.includes(code))
+          return false;
+        if (filterItemName.length > 0 && !filterItemName.includes(name))
+          return false;
+        return true;
+      });
+
+      if (listHook.sorts.length > 0) {
+        const sort = listHook.sorts[0];
+        const isDesc = sort.startsWith("-");
+        const field = sort.replace("-", "");
+
+        result.sort((a, b) => {
+          let valA = "";
+          let valB = "";
+          if (field === "itemCode") {
+            valA =
+              (a.itemId && itemsDict[a.itemId]
+                ? itemsDict[a.itemId].sku
+                : a.itemCode) || "";
+            valB =
+              (b.itemId && itemsDict[b.itemId]
+                ? itemsDict[b.itemId].sku
+                : b.itemCode) || "";
+          } else if (field === "itemName") {
+            valA =
+              a.itemName ||
+              (a.itemId && itemsDict[a.itemId]
+                ? itemsDict[a.itemId].itemName
+                : "") ||
+              a.description ||
+              "";
+            valB =
+              b.itemName ||
+              (b.itemId && itemsDict[b.itemId]
+                ? itemsDict[b.itemId].itemName
+                : "") ||
+              b.description ||
+              "";
+          } else if (field === "ordered") {
+            return isDesc
+              ? Number(b.qtyOrdered ?? 0) - Number(a.qtyOrdered ?? 0)
+              : Number(a.qtyOrdered ?? 0) - Number(b.qtyOrdered ?? 0);
+          } else if (field === "remaining") {
+            const remA = Math.max(
+              0,
+              Number(a.qtyOrdered ?? 0) - Number(a.qtyReceived ?? 0),
+            );
+            const remB = Math.max(
+              0,
+              Number(b.qtyOrdered ?? 0) - Number(b.qtyReceived ?? 0),
+            );
+            return isDesc ? remB - remA : remA - remB;
+          }
+
+          return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        });
+      }
+
+      return result;
+    },
+    [itemsDict, listHook.columnFilters, listHook.columnSearch, listHook.sorts],
+  );
+
+  const poLinesProcessed = useMemo(
+    () => buildProcessedLines(poDetail?.lines || []),
+    [poDetail?.lines, buildProcessedLines],
+  );
+  const formLinesProcessed = useMemo(
+    () => buildProcessedLines(form.lines),
+    [form.lines, buildProcessedLines],
+  );
+
+  const buildFilterOptions = useCallback(
+    (field: "itemCode" | "itemName", source: any[]) => {
+      const unique = new Set<string>();
+      source.forEach((line) => {
+        if (field === "itemCode") {
+          const code =
+            (line.itemId && itemsDict[line.itemId]
+              ? itemsDict[line.itemId].sku
+              : line.itemCode) || "";
+          if (code) unique.add(code);
+        } else {
+          const name =
+            line.itemName ||
+            (line.itemId && itemsDict[line.itemId]
+              ? itemsDict[line.itemId].itemName
+              : "") ||
+            "";
+          if (name) unique.add(name);
+        }
+      });
+      const items = Array.from(unique)
+        .filter(Boolean)
+        .map((val) => ({ label: val, value: val }));
+      return async () => ({ items, total: items.length, next: null });
+    },
+    [itemsDict],
+  );
 
   const actions =
     viewOnly || loading
@@ -245,7 +380,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               >
                 {poDetail ? (
                   <DataTable
-                    items={poDetail.lines || []}
+                    items={poLinesProcessed}
                     getRowKey={(line: any) => line.id || String(Math.random())}
                     variant="spreadsheet"
                     emptyLabel={t("Không có dữ liệu")}
@@ -287,7 +422,41 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "itemCode",
-                        header: t("Mã linh kiện"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Mã linh kiện")}
+                            sortState={
+                              listHook.sorts.includes("itemCode")
+                                ? "asc"
+                                : listHook.sorts.includes("-itemCode")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("itemCode", state)
+                            }
+                            searchValue={
+                              listHook.columnSearch["itemCode"] || ""
+                            }
+                            onSearchChange={(val) =>
+                              listHook.setColumnSearch("itemCode", val)
+                            }
+                            selectedFilters={
+                              listHook.columnFilters["itemCode"] || []
+                            }
+                            onFilterChange={(vals) =>
+                              listHook.setColumnFilter("itemCode", vals)
+                            }
+                            align="center"
+                            columnKey="itemCode"
+                            queryKeyPrefix={`gr-form-po-itemcode`}
+                            allFilters={listHook.columnFilters}
+                            fetchOptions={buildFilterOptions(
+                              "itemCode",
+                              poDetail.lines || [],
+                            )}
+                          />
+                        ),
                         minSize: 140,
                         headerClassName: "w-[140px] min-w-[140px]",
                         className: "w-[140px] min-w-[140px]",
@@ -301,7 +470,41 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "itemName",
-                        header: t("Tên linh kiện"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Tên linh kiện")}
+                            sortState={
+                              listHook.sorts.includes("itemName")
+                                ? "asc"
+                                : listHook.sorts.includes("-itemName")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("itemName", state)
+                            }
+                            searchValue={
+                              listHook.columnSearch["itemName"] || ""
+                            }
+                            onSearchChange={(val) =>
+                              listHook.setColumnSearch("itemName", val)
+                            }
+                            selectedFilters={
+                              listHook.columnFilters["itemName"] || []
+                            }
+                            onFilterChange={(vals) =>
+                              listHook.setColumnFilter("itemName", vals)
+                            }
+                            align="center"
+                            columnKey="itemName"
+                            queryKeyPrefix={`gr-form-po-itemname`}
+                            allFilters={listHook.columnFilters}
+                            fetchOptions={buildFilterOptions(
+                              "itemName",
+                              poDetail.lines || [],
+                            )}
+                          />
+                        ),
                         minSize: 260,
                         headerClassName: "w-[260px] min-w-[260px]",
                         className: "w-[260px] min-w-[260px]",
@@ -326,7 +529,28 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "ordered",
-                        header: t("Đã đặt"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Đã đặt")}
+                            sortState={
+                              listHook.sorts.includes("ordered")
+                                ? "asc"
+                                : listHook.sorts.includes("-ordered")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("ordered", state)
+                            }
+                            align="center"
+                            columnKey="ordered"
+                            hideFilter
+                            searchValue=""
+                            onSearchChange={() => {}}
+                            selectedFilters={[]}
+                            onFilterChange={() => {}}
+                          />
+                        ),
                         minSize: 100,
                         headerClassName: "text-center w-[100px] min-w-[100px]",
                         className: "text-center w-[100px] min-w-[100px]",
@@ -338,29 +562,65 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                           </div>
                         ),
                       },
-                      {
-                        key: "remaining",
-                        header: t("Còn lại"),
-                        minSize: 100,
-                        headerClassName: "text-center w-[100px] min-w-[100px]",
-                        className: "text-center w-[100px] min-w-[100px]",
-                        cell: (poLine: any) => {
-                          const ordered = Number(poLine.qtyOrdered ?? 0);
-                          const received = Number(poLine.qtyReceived ?? 0);
-                          const remaining = Math.max(0, ordered - received);
-                          return (
-                            <div className="font-medium text-amber-600">
-                              {remaining.toLocaleString("vi-VN")}
-                            </div>
-                          );
-                        },
-                      },
+                      ...(!viewOnly || editing?.status === "DRAFT"
+                        ? [
+                            {
+                              key: "remaining",
+                              header: (
+                                <TableColumnHeaderFilter
+                                  title={t("Còn lại")}
+                                  sortState={
+                                    listHook.sorts.includes("remaining")
+                                      ? "asc"
+                                      : listHook.sorts.includes("-remaining")
+                                        ? "desc"
+                                        : "none"
+                                  }
+                                  onSortChange={(state) =>
+                                    listHook.setSort("remaining", state)
+                                  }
+                                  align="center"
+                                  columnKey="remaining"
+                                  hideFilter
+                                  searchValue=""
+                                  onSearchChange={() => {}}
+                                  selectedFilters={[]}
+                                  onFilterChange={() => {}}
+                                />
+                              ),
+                              minSize: 100,
+                              headerClassName:
+                                "text-center w-[100px] min-w-[100px]",
+                              className: "text-center w-[100px] min-w-[100px]",
+                              cell: (poLine: any) => {
+                                const ordered = Number(poLine.qtyOrdered ?? 0);
+                                const received = Number(
+                                  poLine.qtyReceived ?? 0,
+                                );
+                                const remaining = Math.max(
+                                  0,
+                                  ordered - received,
+                                );
+                                return (
+                                  <div className="font-medium text-amber-600">
+                                    {remaining.toLocaleString("vi-VN")}
+                                  </div>
+                                );
+                              },
+                            },
+                          ]
+                        : []),
                       {
                         key: "qtyInput",
-                        header: t("SL Nhập"),
+                        header: (
+                          <div className="w-full text-center">
+                            {t("SL Nhập")}
+                          </div>
+                        ),
                         minSize: 140,
                         headerClassName: "text-center w-[140px] min-w-[140px]",
-                        className: "text-center w-[140px] min-w-[140px]",
+                        className:
+                          "text-center w-[140px] min-w-[140px] p-0 align-middle",
                         cell: (poLine: any) => {
                           const lineIdx = form.lines.findIndex(
                             (l) => l.purchaseOrderLineId === poLine.id,
@@ -378,8 +638,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                 min={0}
                                 max={remaining}
                                 className={cn(
-                                  inputCls,
-                                  "w-28 flex-shrink-0 text-right mx-auto",
+                                  "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none font-medium text-emerald-700 placeholder:text-muted-foreground/50 transition-all hover:bg-slate-50 focus:bg-white px-3",
                                 )}
                                 placeholder={`Max ${remaining}`}
                                 value={currentLine?.qtyReceived ?? ""}
@@ -414,7 +673,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                           }
                           return currentLine &&
                             Number(currentLine.qtyReceived) > 0 ? (
-                            <div className="font-medium text-emerald-600">
+                            <div className="font-medium text-emerald-600 px-3 py-2">
                               +{fmtQty(currentLine.qtyReceived)}
                             </div>
                           ) : null;
@@ -424,7 +683,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                   />
                 ) : form.receiptType === "OTHER" && !viewOnly ? (
                   <DataTable
-                    items={form.lines}
+                    items={formLinesProcessed}
                     getRowKey={(line: any) => String(form.lines.indexOf(line))}
                     variant="spreadsheet"
                     emptyLabel={t("Không có dữ liệu")}
@@ -461,7 +720,41 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "itemCode",
-                        header: t("Mã linh kiện"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Mã linh kiện")}
+                            sortState={
+                              listHook.sorts.includes("itemCode")
+                                ? "asc"
+                                : listHook.sorts.includes("-itemCode")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("itemCode", state)
+                            }
+                            searchValue={
+                              listHook.columnSearch["itemCode"] || ""
+                            }
+                            onSearchChange={(val) =>
+                              listHook.setColumnSearch("itemCode", val)
+                            }
+                            selectedFilters={
+                              listHook.columnFilters["itemCode"] || []
+                            }
+                            onFilterChange={(vals) =>
+                              listHook.setColumnFilter("itemCode", vals)
+                            }
+                            align="center"
+                            columnKey="itemCode"
+                            queryKeyPrefix={`gr-form-other-itemcode`}
+                            allFilters={listHook.columnFilters}
+                            fetchOptions={buildFilterOptions(
+                              "itemCode",
+                              form.lines,
+                            )}
+                          />
+                        ),
                         minSize: 140,
                         headerClassName: "w-[140px] min-w-[140px]",
                         className: "w-[140px] min-w-[140px]",
@@ -476,16 +769,52 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "itemName",
-                        header: t("Tên linh kiện"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Tên linh kiện")}
+                            sortState={
+                              listHook.sorts.includes("itemName")
+                                ? "asc"
+                                : listHook.sorts.includes("-itemName")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("itemName", state)
+                            }
+                            searchValue={
+                              listHook.columnSearch["itemName"] || ""
+                            }
+                            onSearchChange={(val) =>
+                              listHook.setColumnSearch("itemName", val)
+                            }
+                            selectedFilters={
+                              listHook.columnFilters["itemName"] || []
+                            }
+                            onFilterChange={(vals) =>
+                              listHook.setColumnFilter("itemName", vals)
+                            }
+                            align="center"
+                            columnKey="itemName"
+                            queryKeyPrefix={`gr-form-other-itemname`}
+                            allFilters={listHook.columnFilters}
+                            fetchOptions={buildFilterOptions(
+                              "itemName",
+                              form.lines,
+                            )}
+                          />
+                        ),
                         minSize: 260,
                         headerClassName: "w-[260px] min-w-[260px]",
-                        className: "w-[260px] min-w-[260px]",
+                        className: "w-[260px] min-w-[260px] p-0 align-middle",
                         cell: (line: any) => {
                           const i = form.lines.indexOf(line);
                           return (
                             <input
                               type="text"
-                              className={inputCls}
+                              className={cn(
+                                "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none font-medium placeholder:text-muted-foreground/50 transition-all hover:bg-slate-50 focus:bg-white px-3",
+                              )}
                               placeholder={t("Nhập tên linh kiện")}
                               value={line.itemName}
                               disabled={
@@ -506,10 +835,15 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "qtyInput",
-                        header: t("SL Nhập"),
+                        header: (
+                          <div className="w-full text-center">
+                            {t("SL Nhập")}
+                          </div>
+                        ),
                         minSize: 140,
                         headerClassName: "text-center w-[140px] min-w-[140px]",
-                        className: "text-center w-[140px] min-w-[140px]",
+                        className:
+                          "text-center w-[140px] min-w-[140px] p-0 align-middle",
                         cell: (line: any) => {
                           const i = form.lines.indexOf(line);
                           return (
@@ -517,8 +851,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                               type="number"
                               min={0}
                               className={cn(
-                                inputCls,
-                                "w-28 flex-shrink-0 text-right mx-auto",
+                                "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none font-medium text-emerald-700 placeholder:text-muted-foreground/50 transition-all hover:bg-slate-50 focus:bg-white px-3",
                               )}
                               placeholder={`Nhập SL`}
                               value={line.qtyReceived ?? ""}
@@ -563,7 +896,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                   />
                 ) : viewOnly ? (
                   <DataTable
-                    items={form.lines.filter((l) => Number(l.qtyReceived) > 0)}
+                    items={formLinesProcessed.filter(
+                      (l) => Number(l.qtyReceived) > 0,
+                    )}
                     getRowKey={(line: any) => String(form.lines.indexOf(line))}
                     variant="spreadsheet"
                     emptyLabel={t("Không có dữ liệu")}
@@ -601,7 +936,43 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "itemCode",
-                        header: t("Mã linh kiện"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Mã linh kiện")}
+                            sortState={
+                              listHook.sorts.includes("itemCode")
+                                ? "asc"
+                                : listHook.sorts.includes("-itemCode")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("itemCode", state)
+                            }
+                            searchValue={
+                              listHook.columnSearch["itemCode"] || ""
+                            }
+                            onSearchChange={(val) =>
+                              listHook.setColumnSearch("itemCode", val)
+                            }
+                            selectedFilters={
+                              listHook.columnFilters["itemCode"] || []
+                            }
+                            onFilterChange={(vals) =>
+                              listHook.setColumnFilter("itemCode", vals)
+                            }
+                            align="center"
+                            columnKey="itemCode"
+                            queryKeyPrefix={`gr-form-view-itemcode`}
+                            allFilters={listHook.columnFilters}
+                            fetchOptions={buildFilterOptions(
+                              "itemCode",
+                              form.lines.filter(
+                                (l) => Number(l.qtyReceived) > 0,
+                              ),
+                            )}
+                          />
+                        ),
                         minSize: 140,
                         headerClassName: "w-[140px] min-w-[140px]",
                         className: "w-[140px] min-w-[140px]",
@@ -615,7 +986,43 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                       },
                       {
                         key: "itemName",
-                        header: t("Tên linh kiện"),
+                        header: (
+                          <TableColumnHeaderFilter
+                            title={t("Tên linh kiện")}
+                            sortState={
+                              listHook.sorts.includes("itemName")
+                                ? "asc"
+                                : listHook.sorts.includes("-itemName")
+                                  ? "desc"
+                                  : "none"
+                            }
+                            onSortChange={(state) =>
+                              listHook.setSort("itemName", state)
+                            }
+                            searchValue={
+                              listHook.columnSearch["itemName"] || ""
+                            }
+                            onSearchChange={(val) =>
+                              listHook.setColumnSearch("itemName", val)
+                            }
+                            selectedFilters={
+                              listHook.columnFilters["itemName"] || []
+                            }
+                            onFilterChange={(vals) =>
+                              listHook.setColumnFilter("itemName", vals)
+                            }
+                            align="center"
+                            columnKey="itemName"
+                            queryKeyPrefix={`gr-form-view-itemname`}
+                            allFilters={listHook.columnFilters}
+                            fetchOptions={buildFilterOptions(
+                              "itemName",
+                              form.lines.filter(
+                                (l) => Number(l.qtyReceived) > 0,
+                              ),
+                            )}
+                          />
+                        ),
                         minSize: 260,
                         headerClassName: "w-[260px] min-w-[260px]",
                         className: "w-[260px] min-w-[260px]",
@@ -641,27 +1048,80 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         ? [
                             {
                               key: "ordered",
-                              header: t("Đã đặt"),
+                              header: (
+                                <TableColumnHeaderFilter
+                                  title={t("Đã đặt")}
+                                  sortState={
+                                    listHook.sorts.includes("ordered")
+                                      ? "asc"
+                                      : listHook.sorts.includes("-ordered")
+                                        ? "desc"
+                                        : "none"
+                                  }
+                                  onSortChange={(state) =>
+                                    listHook.setSort("ordered", state)
+                                  }
+                                  align="center"
+                                  columnKey="ordered"
+                                  hideFilter
+                                  searchValue=""
+                                  onSearchChange={() => {}}
+                                  selectedFilters={[]}
+                                  onFilterChange={() => {}}
+                                />
+                              ),
                               minSize: 100,
                               headerClassName:
                                 "text-center w-[100px] min-w-[100px]",
                               className: "text-center w-[100px] min-w-[100px]",
                               cell: () => "—",
                             },
-                            {
-                              key: "remaining",
-                              header: t("Còn lại"),
-                              minSize: 100,
-                              headerClassName:
-                                "text-center w-[100px] min-w-[100px]",
-                              className: "text-center w-[100px] min-w-[100px]",
-                              cell: () => "—",
-                            },
+                            ...(!viewOnly || editing?.status === "DRAFT"
+                              ? [
+                                  {
+                                    key: "remaining",
+                                    header: (
+                                      <TableColumnHeaderFilter
+                                        title={t("Còn lại")}
+                                        sortState={
+                                          listHook.sorts.includes("remaining")
+                                            ? "asc"
+                                            : listHook.sorts.includes(
+                                                  "-remaining",
+                                                )
+                                              ? "desc"
+                                              : "none"
+                                        }
+                                        onSortChange={(state) =>
+                                          listHook.setSort("remaining", state)
+                                        }
+                                        align="center"
+                                        columnKey="remaining"
+                                        hideFilter
+                                        searchValue=""
+                                        onSearchChange={() => {}}
+                                        selectedFilters={[]}
+                                        onFilterChange={() => {}}
+                                      />
+                                    ),
+                                    minSize: 100,
+                                    headerClassName:
+                                      "text-center w-[100px] min-w-[100px]",
+                                    className:
+                                      "text-center w-[100px] min-w-[100px]",
+                                    cell: () => "—",
+                                  },
+                                ]
+                              : []),
                           ]
                         : []),
                       {
                         key: "qtyReceived",
-                        header: t("SL Nhập"),
+                        header: (
+                          <div className="w-full text-center">
+                            {t("SL Nhập")}
+                          </div>
+                        ),
                         minSize: 140,
                         headerClassName: "text-center w-[140px] min-w-[140px]",
                         className: "text-center w-[140px] min-w-[140px]",
@@ -746,6 +1206,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               <DrawerField label={t("Loại nhập")}>
                 <Combobox
                   options={[
+                    { label: t("Chọn loại nhập..."), value: "" },
                     { label: t("Đơn mua hàng"), value: "PO" },
                     { label: t("Nhập khác"), value: "OTHER" },
                   ]}

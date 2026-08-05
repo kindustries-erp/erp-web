@@ -105,6 +105,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   const { data: companyProfile } = useCompanyProfile();
 
   const ISSUE_TYPE_OPTIONS = [
+    { value: "", label: t("Chọn loại xuất...") },
     { value: "SALE", label: t("Xuất bán") },
     { value: "OTHER", label: t("Xuất khác") },
   ];
@@ -604,7 +605,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   disabled={viewOnly || editing !== null}
                   allowClear={false}
                   onChange={(v) =>
-                    setForm((f) => ({ ...f, issueType: v || "SALE" }))
+                    setForm((f) => ({ ...f, issueType: v || "" }))
                   }
                 />
               </DrawerField>
