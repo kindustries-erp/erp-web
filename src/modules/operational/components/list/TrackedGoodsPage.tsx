@@ -15,7 +15,8 @@ import {
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { Barcode, Eye, Copy, Check, PanelRightOpen } from "lucide-react";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Barcode, Eye, PanelRightOpen } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
@@ -100,28 +101,6 @@ export function TrackedGoodsPage({
     !!statusFilter,
     missingSerialFilter,
   ].filter(Boolean).length;
-
-  const CopyIconBtn = ({ text }: { text: string }) => {
-    const [copied, setCopied] = useState(false);
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-        className="opacity-0 group-hover:opacity-100 hover:text-gray-900 transition-opacity p-1"
-        title="Copy"
-      >
-        {copied ? (
-          <Check className="w-4 h-4 text-green-600" />
-        ) : (
-          <Copy className="w-4 h-4 text-gray-400" />
-        )}
-      </button>
-    );
-  };
 
   const fetchSerialOptions = useCallback(
     async ({
@@ -217,8 +196,8 @@ export function TrackedGoodsPage({
 
           return (
             <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")}>
-              <div className="cursor-help inline-flex flex-col items-end leading-tight">
-                <span className="text-sm font-medium">{datePart}</span>
+              <div className="cursor-help inline-flex flex-row items-baseline gap-1.5 whitespace-nowrap leading-tight">
+                <span className="text-sm">{datePart}</span>
                 <span className="text-xs text-gray-500">{timePart}</span>
               </div>
             </Tooltip>
@@ -243,10 +222,19 @@ export function TrackedGoodsPage({
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 100,
+        size: 150,
         className: "align-middle text-left",
         headerClassName: "text-center",
-        cell: (row) => row.item?.sku || "—",
+        cell: (row) => (
+          <TableText
+            text={row.item?.sku || "—"}
+            enableCopy
+            onDrawerClick={() => {
+              setSelectedItem(row);
+              setDrawerOpen(true);
+            }}
+          />
+        ),
       },
       {
         key: "itemName",
@@ -266,18 +254,23 @@ export function TrackedGoodsPage({
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 150,
+        size: 200,
         className: "align-middle text-left",
         headerClassName: "text-center",
-        cell: (row) => (
-          <div className="font-medium">{row.item?.itemName || "—"}</div>
-        ),
+        cell: (row) => {
+          const name = row.item?.itemName || "—";
+          return (
+            <Tooltip content={name} side="top">
+              <div className="truncate w-full">{name}</div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "serialNo",
         header: (
           <TableColumnHeaderFilter
-            title={t("SerialNo")}
+            title={t("Số Seri")}
             sortState={getSortState("serialNo")}
             onSortChange={(state) => handleSortChange("serialNo", state)}
             searchValue={tableState.columnSearch["serialNo"] || ""}
@@ -291,14 +284,19 @@ export function TrackedGoodsPage({
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="flex items-center gap-1.5 group font-medium">
-            <span className="flex-1 truncate">{row.serialNo || "—"}</span>
-            {row.serialNo && <CopyIconBtn text={row.serialNo} />}
-          </div>
+          <TableText
+            text={row.serialNo || "—"}
+            enableCopy
+            tooltip={true}
+            onDrawerClick={() => {
+              setSelectedItem(row);
+              setDrawerOpen(true);
+            }}
+          />
         ),
       },
       {
@@ -319,14 +317,15 @@ export function TrackedGoodsPage({
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="flex items-center gap-1.5 group font-medium">
-            <span className="flex-1 truncate">{row.vinNo || "—"}</span>
-            {row.vinNo && <CopyIconBtn text={row.vinNo} />}
-          </div>
+          <TableText
+            text={row.vinNo || "—"}
+            enableCopy={!!row.vinNo}
+            tooltip={!!row.vinNo}
+          />
         ),
       },
       {
@@ -347,14 +346,15 @@ export function TrackedGoodsPage({
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="flex items-center gap-1.5 group font-medium">
-            <span className="flex-1 truncate">{row.engineNo || "—"}</span>
-            {row.engineNo && <CopyIconBtn text={row.engineNo} />}
-          </div>
+          <TableText
+            text={row.engineNo || "—"}
+            enableCopy={!!row.engineNo}
+            tooltip={!!row.engineNo}
+          />
         ),
       },
       ...(fixedTrackingPolicy

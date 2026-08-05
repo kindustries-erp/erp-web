@@ -516,8 +516,8 @@ export function ErpWarehouseTab() {
               const [datePart = "", timePart = ""] = dateTime.split(" ");
 
               return (
-                <div className="cursor-help inline-flex flex-col items-end leading-tight">
-                  <span className="text-sm font-medium">{datePart}</span>
+                <div className="cursor-help inline-flex flex-row items-baseline gap-1.5 whitespace-nowrap leading-tight">
+                  <span className="text-sm">{datePart}</span>
                   <span className="text-xs text-gray-500">{timePart}</span>
                 </div>
               );
