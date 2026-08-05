@@ -42,6 +42,14 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.erpInventoryTrackingParts",
     group: "inventory",
   },
+  "erp-inventory-tracking-lot": {
+    labelKey: "nav.items.erpInventoryTrackingLot",
+    group: "inventory",
+  },
+  "erp-inventory-tracking-custom": {
+    labelKey: "nav.items.erpInventoryTrackingCustom",
+    group: "inventory",
+  },
   "erp-inventory-vouchers": {
     labelKey: "nav.items.erpInventoryVouchers",
     group: "inventory",
@@ -240,6 +248,14 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-inventory-tracking-parts": [
     ["breadcrumb.inventory"],
     ["nav.items.erpInventoryTrackingParts"],
+  ],
+  "erp-inventory-tracking-lot": [
+    ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingLot"],
+  ],
+  "erp-inventory-tracking-custom": [
+    ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingCustom"],
   ],
   "erp-inventory-vouchers": [
     ["breadcrumb.inventory"],

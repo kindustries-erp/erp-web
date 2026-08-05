@@ -59,6 +59,16 @@ const InventoryTrackingPartsPage = lazy(() =>
     default: m.InventoryTrackingPartsPage,
   })),
 );
+const InventoryTrackingLotPage = lazy(() =>
+  import("@/pages/inventory/InventoryTrackingLotPage").then((m) => ({
+    default: m.InventoryTrackingLotPage,
+  })),
+);
+const InventoryTrackingCustomPage = lazy(() =>
+  import("@/pages/inventory/InventoryTrackingCustomPage").then((m) => ({
+    default: m.InventoryTrackingCustomPage,
+  })),
+);
 
 const loadInventoryVouchersPage = () =>
   import("@/pages/inventory/InventoryVouchersPage").then((m) => ({
@@ -264,6 +274,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "erp-inventory-stock": InventoryStockPage,
   "erp-inventory-tracking": InventoryTrackingPage,
   "erp-inventory-tracking-parts": InventoryTrackingPartsPage,
+  "erp-inventory-tracking-lot": InventoryTrackingLotPage,
+  "erp-inventory-tracking-custom": InventoryTrackingCustomPage,
   "erp-inventory-vouchers": InventoryVouchersPage,
   "mfg-items": MfgItems,
   "mfg-vehicles": MfgVehicles,

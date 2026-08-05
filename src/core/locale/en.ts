@@ -45,6 +45,8 @@ import { accountsEn } from "@/core/locale/accounting/accounts/en";
 import { globalSettingsEn } from "@/core/locale/system/globalSettings/en";
 import { attachmentsEn } from "@/core/locale/system/attachments/en";
 import { legacyStringsEn } from "@/core/locale/system/legacyStrings/en";
+import { inventoryTrackingLotEn } from "@/core/locale/inventory/inventoryTrackingLot/en";
+import { inventoryTrackingCustomEn } from "@/core/locale/inventory/inventoryTrackingCustom/en";
 
 export const en: Dict = {
   nav: navEn,
@@ -139,6 +141,7 @@ export const en: Dict = {
   "Ngày bắt đầu (kế hoạch)": legacyStringsEn["Ngày bắt đầu (kế hoạch)"],
   "Ngày hoàn thành (kế hoạch)": legacyStringsEn["Ngày hoàn thành (kế hoạch)"],
   "Tự động nếu để trống": legacyStringsEn["Tự động nếu để trống"],
+
   "Thông tin quản lý": legacyStringsEn["Thông tin quản lý"],
   "Tiến trình sản xuất": legacyStringsEn["Tiến trình sản xuất"],
   "Chọn thành phẩm": legacyStringsEn["Chọn thành phẩm"],
@@ -223,4 +226,6 @@ export const en: Dict = {
   "Chỉnh sửa": legacyStringsEn["Chỉnh sửa"],
   globalSettings: globalSettingsEn,
   attachments: attachmentsEn,
+  inventoryTrackingLot: inventoryTrackingLotEn,
+  inventoryTrackingCustom: inventoryTrackingCustomEn,
 };

@@ -46,7 +46,11 @@ export function TrackedGoodsPage({
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
   const giDrawer = useGiDrawer();
 
-  const tableState = useTableColumnState("inventory-tracked-goods-table");
+  const tableState = useTableColumnState(
+    fixedTrackingPolicy
+      ? `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`
+      : "inventory-tracked-goods-table",
+  );
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -550,173 +554,210 @@ export function TrackedGoodsPage({
             ? formatGMT7(row.lifecycle.goodsIssueDate, "date")
             : "—",
       },
-      {
-        key: "soNo",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Đơn hàng")}
-            sortState={getSortState("soNo")}
-            onSortChange={(state) => handleSortChange("soNo", state)}
-            searchValue={tableState.columnSearch["soNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("soNo", val)}
-            selectedFilters={tableState.columnFilters["soNo"] || []}
-            onFilterChange={(vals) => handleFilterChange("soNo", vals)}
-            align="center"
-            columnKey="soNo"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 200,
-        className: "align-middle text-center",
-        headerClassName: "text-center",
-        cell: (row) => {
-          if (!row.soNo) return "—";
-          return (
-            <div className="flex flex-col gap-1 w-full pr-1">
-              <div className="flex items-center justify-between gap-2 w-full">
-                <span className="truncate text-primary font-normal">
-                  {row.soNo}
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPreviewSoNo(row.soNo || null);
-                  }}
-                  className="shrink-0 p-1 flex items-center justify-center outline-none"
-                >
-                  <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
-                </button>
-              </div>
-            </div>
-          );
-        },
-      },
-
-      {
-        key: "delivery",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Ngày giao")}
-            sortState={getSortState("delivery")}
-            onSortChange={(state) => handleSortChange("delivery", state)}
-            searchValue={tableState.columnSearch["delivery"] || ""}
-            onSearchChange={(val) => handleSearchChange("delivery", val)}
-            selectedFilters={tableState.columnFilters["delivery"] || []}
-            onFilterChange={(vals) => handleFilterChange("delivery", vals)}
-            align="center"
-            columnKey="delivery"
-            hideFilter={true}
-            hideFooter={true}
-            isActive={!!tableState.columnSearch["delivery"]}
-            dateRangeSlot={({ close }) => {
-              const val = tableState.columnSearch["delivery"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    tableState.setColumnSearch("delivery", next);
-                    setPage(1);
-                  }}
-                  onClose={close}
+      ...(fixedTrackingPolicy === "SERIAL"
+        ? []
+        : [
+            {
+              key: "soNo",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Đơn hàng")}
+                  sortState={getSortState("soNo")}
+                  onSortChange={(state: any) => handleSortChange("soNo", state)}
+                  searchValue={tableState.columnSearch["soNo"] || ""}
+                  onSearchChange={(val: any) => handleSearchChange("soNo", val)}
+                  selectedFilters={tableState.columnFilters["soNo"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("soNo", vals)
+                  }
+                  align="center"
+                  columnKey="soNo"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
                 />
-              );
-            }}
-          />
-        ),
-        size: 120,
-        className: "align-middle text-right",
-        headerClassName: "text-center",
-        cell: (row) => {
-          return row.lifecycle?.deliveryDate
-            ? formatGMT7(row.lifecycle.deliveryDate, "date")
-            : "—";
-        },
-      },
+              ),
+              size: 200,
+              className: "align-middle text-center",
+              headerClassName: "text-center",
+              cell: (row: any) => {
+                if (!row.soNo) return "—";
+                return (
+                  <div className="flex flex-col gap-1 w-full pr-1">
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <span className="truncate text-primary font-normal">
+                        {row.soNo}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewSoNo(row.soNo || null);
+                        }}
+                        className="shrink-0 p-1 flex items-center justify-center outline-none"
+                      >
+                        <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              },
+            },
+            {
+              key: "delivery",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Ngày giao")}
+                  sortState={getSortState("delivery")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("delivery", state)
+                  }
+                  searchValue={tableState.columnSearch["delivery"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("delivery", val)
+                  }
+                  selectedFilters={tableState.columnFilters["delivery"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("delivery", vals)
+                  }
+                  align="center"
+                  columnKey="delivery"
+                  hideFilter={true}
+                  hideFooter={true}
+                  isActive={!!tableState.columnSearch["delivery"]}
+                  dateRangeSlot={({ close }) => {
+                    const val = tableState.columnSearch["delivery"] || "";
+                    const [from = "", to = ""] = val.split("|");
+                    return (
+                      <DateRangeColumnSlot
+                        dateFrom={from}
+                        dateTo={to}
+                        onChange={(f, t) => {
+                          const next = f || t ? `${f}|${t}` : "";
+                          tableState.setColumnSearch("delivery", next);
+                          setPage(1);
+                        }}
+                        onClose={close}
+                      />
+                    );
+                  }}
+                />
+              ),
+              size: 120,
+              className: "align-middle text-right",
+              headerClassName: "text-center",
+              cell: (row: any) => {
+                return row.lifecycle?.deliveryDate
+                  ? formatGMT7(row.lifecycle.deliveryDate, "date")
+                  : "—";
+              },
+            },
+          ]),
 
-      {
-        key: "color",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Màu sắc")}
-            sortState={getSortState("color")}
-            onSortChange={(state) => handleSortChange("color", state)}
-            searchValue={tableState.columnSearch["color"] || ""}
-            onSearchChange={(val) => handleSearchChange("color", val)}
-            selectedFilters={tableState.columnFilters["color"] || []}
-            onFilterChange={(vals) => handleFilterChange("color", vals)}
-            align="center"
-            columnKey="color"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 100,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => row.attributes?.color || "—",
-      },
-      {
-        key: "dealerCode",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Mã đại lý")}
-            sortState={getSortState("dealer_code")}
-            onSortChange={(state) => handleSortChange("dealer_code", state)}
-            searchValue={tableState.columnSearch["dealer_code"] || ""}
-            onSearchChange={(val) => handleSearchChange("dealer_code", val)}
-            selectedFilters={tableState.columnFilters["dealer_code"] || []}
-            onFilterChange={(vals) => handleFilterChange("dealer_code", vals)}
-            align="center"
-            columnKey="dealer_code"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 120,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => row.attributes?.dealer_code || "—",
-      },
-      {
-        key: "dealerName",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Tên đại lý")}
-            sortState={getSortState("dealer_name")}
-            onSortChange={(state) => handleSortChange("dealer_name", state)}
-            searchValue={tableState.columnSearch["dealer_name"] || ""}
-            onSearchChange={(val) => handleSearchChange("dealer_name", val)}
-            selectedFilters={tableState.columnFilters["dealer_name"] || []}
-            onFilterChange={(vals) => handleFilterChange("dealer_name", vals)}
-            align="center"
-            columnKey="dealer_name"
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 250,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) =>
-          row.attributes?.dealer_name ? (
-            <Tooltip content={row.attributes.dealer_name} side="top">
-              <span className="truncate block max-w-full cursor-help">
-                {row.attributes.dealer_name}
-              </span>
-            </Tooltip>
-          ) : (
-            "—"
-          ),
-      },
+      ...(fixedTrackingPolicy === "SERIAL"
+        ? []
+        : [
+            {
+              key: "color",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Màu sắc")}
+                  sortState={getSortState("color")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("color", state)
+                  }
+                  searchValue={tableState.columnSearch["color"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("color", val)
+                  }
+                  selectedFilters={tableState.columnFilters["color"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("color", vals)
+                  }
+                  align="center"
+                  columnKey="color"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 100,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) => row.attributes?.color || "—",
+            },
+            {
+              key: "dealerCode",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Mã đại lý")}
+                  sortState={getSortState("dealer_code")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("dealer_code", state)
+                  }
+                  searchValue={tableState.columnSearch["dealer_code"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("dealer_code", val)
+                  }
+                  selectedFilters={
+                    tableState.columnFilters["dealer_code"] || []
+                  }
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("dealer_code", vals)
+                  }
+                  align="center"
+                  columnKey="dealer_code"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 120,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) => row.attributes?.dealer_code || "—",
+            },
+            {
+              key: "dealerName",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Tên đại lý")}
+                  sortState={getSortState("dealer_name")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("dealer_name", state)
+                  }
+                  searchValue={tableState.columnSearch["dealer_name"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("dealer_name", val)
+                  }
+                  selectedFilters={
+                    tableState.columnFilters["dealer_name"] || []
+                  }
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("dealer_name", vals)
+                  }
+                  align="center"
+                  columnKey="dealer_name"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 250,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) =>
+                row.attributes?.dealer_name ? (
+                  <Tooltip content={row.attributes.dealer_name} side="top">
+                    <span className="truncate block max-w-full cursor-help">
+                      {row.attributes.dealer_name}
+                    </span>
+                  </Tooltip>
+                ) : (
+                  "—"
+                ),
+            },
+          ]),
     ],
     [t, tableState, fetchSerialOptions],
   );
@@ -777,7 +818,11 @@ export function TrackedGoodsPage({
         title={t("Serial / Tracking")}
         desc={t("Danh sách sản phẩm / vật tư có tracking")}
         icon={<Barcode className="h-5 w-5" />}
-        tableId="inventory-tracked-goods-table"
+        tableId={
+          fixedTrackingPolicy
+            ? `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`
+            : "inventory-tracked-goods-table"
+        }
         items={items}
         columns={columns}
         getRowKey={(row) => row.id}
