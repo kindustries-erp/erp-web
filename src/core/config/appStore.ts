@@ -243,18 +243,22 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-inventory-tracking": [
     ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
     ["nav.items.erpInventoryTracking"],
   ],
   "erp-inventory-tracking-parts": [
     ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
     ["nav.items.erpInventoryTrackingParts"],
   ],
   "erp-inventory-tracking-lot": [
     ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
     ["nav.items.erpInventoryTrackingLot"],
   ],
   "erp-inventory-tracking-custom": [
     ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
     ["nav.items.erpInventoryTrackingCustom"],
   ],
   "erp-inventory-vouchers": [

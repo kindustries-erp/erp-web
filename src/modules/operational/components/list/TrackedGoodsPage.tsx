@@ -24,8 +24,12 @@ import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
 export function TrackedGoodsPage({
   fixedTrackingPolicy,
+  title,
+  desc,
 }: {
   fixedTrackingPolicy?: string;
+  title?: string;
+  desc?: string;
 } = {}) {
   const t = useT();
 
@@ -815,8 +819,8 @@ export function TrackedGoodsPage({
         </div>
       )}
       <SpreadsheetPageTemplate
-        title={t("Serial / Tracking")}
-        desc={t("Danh sách sản phẩm / vật tư có tracking")}
+        title={title || t("Serial / Tracking")}
+        desc={desc || t("Danh sách sản phẩm / vật tư có tracking")}
         icon={<Barcode className="h-5 w-5" />}
         tableId={
           fixedTrackingPolicy
