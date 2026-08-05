@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { DataTable } from "@/shared/components/DataTable";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { useT } from "@/core/i18n";
 import {
@@ -9,6 +9,7 @@ import {
   DrawerRow,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { CellInput } from "@/shared/components/CellInput";
 import { Combobox } from "@/shared/components/Combobox";
 import type { ErpProductionOrder } from "@/modules/production-core/api/productionCoreApi";
 import { Skeleton } from "@/shared/components/Skeleton";
@@ -181,15 +182,210 @@ export function ProductionOrderDrawer({
     return matchSearch && requiredQty > availableQty;
   });
 
-  const aggregatedRequired = useMemo(() => {
-    const map: Record<string, number> = {};
-    bomLines?.forEach((line: BomLikeLine) => {
-      const effId =
-        alternativeItems[line.path || line.itemId || ""] || line.itemId || "";
-      map[effId] = (map[effId] || 0) + Number(line.qtyRequired || 0);
-    });
-    return map;
-  }, [bomLines, alternativeItems]);
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: "index",
+        header: "#",
+        size: 40,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: BomLikeLine, idx: number) => (
+          <span className="text-muted-foreground">{idx}</span>
+        ),
+      },
+      {
+        key: "itemCode",
+        header: t("Mã Linh Kiện"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px]",
+        cell: (line: BomLikeLine) => (
+          <div
+            className="truncate text-xs font-medium"
+            style={{ paddingLeft: `${(line.level || 0) * 16}px` }}
+          >
+            {(line.level || 0) > 0 && (
+              <span className="text-muted-foreground mr-1">└─</span>
+            )}
+            {line.itemCode || "—"}
+          </div>
+        ),
+      },
+      {
+        key: "itemName",
+        header: t("Tên Linh Kiện"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px]",
+        cell: (line: BomLikeLine) => (
+          <Tooltip content={line.itemName || ""}>
+            <div className="truncate max-w-[200px] xl:max-w-[300px]">
+              {line.itemName || "—"}
+            </div>
+          </Tooltip>
+        ),
+      },
+      {
+        key: "altItem",
+        header: t("NVL thay thế"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-top",
+        cell: (line: BomLikeLine, _: number, meta: any) => {
+          const {
+            saving,
+            viewOnly,
+            isCompleted,
+            isConfirmed,
+            alternativeItems,
+            altItemOptions,
+            setAlternativeItem,
+            clearAlternativeItem,
+            setAltItemSearch,
+            fetchNextAltItems,
+            loadingAltItems,
+          } = meta;
+          const linePath = line.path || line.itemId || "";
+          const selectedAltItemId = alternativeItems[linePath] ?? "";
+          const altOption = altItemOptions.find(
+            (o: any) => o.value === selectedAltItemId,
+          );
+
+          const isDisabled = !!(
+            saving ||
+            viewOnly ||
+            isCompleted ||
+            isConfirmed ||
+            line.isLeaf === false
+          );
+
+          if (isDisabled && !selectedAltItemId) {
+            return (
+              <div className="flex items-center min-h-[38px] px-3">
+                <span className="text-muted-foreground">—</span>
+              </div>
+            );
+          }
+
+          const displayLabel =
+            altOption?.label || line.alternativeItemName || selectedAltItemId;
+
+          return (
+            <div className="flex flex-col min-w-[150px] min-h-[38px] w-full h-full">
+              {!isDisabled && (
+                <Combobox
+                  variant="spreadsheet"
+                  value={selectedAltItemId}
+                  onChange={(value) => {
+                    if (!value) {
+                      clearAlternativeItem(linePath);
+                      return;
+                    }
+                    setAlternativeItem(linePath, value);
+                  }}
+                  options={altItemOptions}
+                  placeholder={t("Chọn NVL thay thế")}
+                  searchPlaceholder={t("Tìm SKU / tên NVL")}
+                  onSearch={setAltItemSearch}
+                  onScrollBottom={fetchNextAltItems}
+                  loading={loadingAltItems}
+                  disabled={isDisabled}
+                />
+              )}
+              {selectedAltItemId ? (
+                <div className="flex flex-wrap items-center gap-2 px-2 pb-2 pt-1">
+                  <Tooltip content={displayLabel}>
+                    <span className="inline-block truncate max-w-[150px] xl:max-w-[250px] rounded-md bg-blue-50 text-blue-700 font-medium px-2 py-0.5 italic">
+                      {displayLabel}
+                    </span>
+                  </Tooltip>
+                </div>
+              ) : null}
+            </div>
+          );
+        },
+      },
+      {
+        key: "required",
+        header: t("Cần Dùng"),
+        minSize: 150,
+        headerClassName: "min-w-[150px] text-right",
+        className: "min-w-[150px] text-right",
+        cell: (line: BomLikeLine) => {
+          const requiredQty = Number(line.qtyRequired || 0);
+          const displayRequired = requiredQty;
+          return (
+            <span className="text-amber-700 font-semibold">
+              {fmtQty(displayRequired.toString())}
+            </span>
+          );
+        },
+      },
+      {
+        key: "available",
+        header: t("Khả Dụng"),
+        minSize: 150,
+        headerClassName: "min-w-[150px] text-right",
+        className: "min-w-[150px] text-right",
+        cell: (line: BomLikeLine, _: number, meta: any) => {
+          const { alternativeItems, balances } = meta;
+          const requiredQty = Number(line.qtyRequired || 0);
+          const displayRequired = requiredQty;
+          const linePath = line.path || line.itemId || "";
+          const effectiveItemId =
+            alternativeItems[linePath] || line.itemId || "";
+
+          if (line.itemTypeCode === "SERVICE") {
+            return <span className="text-muted-foreground">—</span>;
+          }
+
+          const availableQty = (
+            balances[effectiveItemId] || { availableQty: 0 }
+          ).availableQty;
+          const isLacking = displayRequired > availableQty;
+          return (
+            <span
+              className={cn(
+                "font-semibold",
+                isLacking ? "text-red-600" : "text-emerald-700",
+              )}
+            >
+              {fmtQty(availableQty.toString())}
+            </span>
+          );
+        },
+      },
+      {
+        key: "note",
+        header: t("Ghi chú"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLikeLine, _: number, meta: any) => {
+          const { saving, viewOnly, lineNotes, setLineNote } = meta;
+          const linePath = line.path || line.itemId || "";
+          const isDisabled = !!(saving || viewOnly || line.isLeaf === false);
+          if (isDisabled && !lineNotes[linePath]) {
+            return (
+              <div className="flex items-center min-h-[38px] px-3">
+                <span className="text-muted-foreground">—</span>
+              </div>
+            );
+          }
+          return (
+            <CellInput
+              value={lineNotes[linePath] || ""}
+              onValueChange={(val) => setLineNote(linePath, val)}
+              disabled={isDisabled}
+              placeholder={t("Nhập ghi chú")}
+            />
+          );
+        },
+      },
+    ],
+    [t],
+  );
 
   const leftPanel = (
     <div className="flex h-full flex-col space-y-6">
@@ -251,197 +447,32 @@ export function ProductionOrderDrawer({
           </div>
         ) : filteredBomLines && filteredBomLines.length > 0 ? (
           <div className="w-full">
-            <DocumentLineTable
-              tableContainerClassName="max-h-[calc(100vh-350px)] overflow-y-auto"
-              data={filteredBomLines}
-              getRowKey={(line: BomLikeLine, idx: number) =>
-                line.id ? `${line.id}-${idx}` : String(idx)
+            <DataTable
+              variant="spreadsheet"
+              containerClassName="max-h-[calc(100vh-350px)] overflow-auto"
+              enableColumnResizing={true}
+              items={filteredBomLines}
+              emptyLabel={t("Không có dữ liệu")}
+              getRowKey={(line: BomLikeLine) =>
+                line.id ? `${line.id}` : String(filteredBomLines.indexOf(line))
               }
-              viewOnly={true}
-              rowClassName={(line: BomLikeLine) => {
-                if (
-                  (line as Record<string, unknown>).itemTypeCode === "SERVICE"
-                )
-                  return "";
-                const linePath = line.path || line.itemId || "";
-                const effectiveItemId =
-                  alternativeItems[linePath] || line.itemId || "";
-                const availableQty = (
-                  balances[effectiveItemId] || { availableQty: 0 }
-                ).availableQty;
-
-                const displayRequired =
-                  aggregatedRequired[effectiveItemId] || 0;
-                const isLacking = displayRequired > availableQty;
-                return (!editing || isDraft) && isLacking ? "bg-red-50" : "";
+              tableMeta={{
+                saving,
+                viewOnly,
+                isCompleted,
+                isConfirmed,
+                alternativeItems,
+                altItemOptions,
+                balances,
+                lineNotes,
+                setAlternativeItem,
+                clearAlternativeItem,
+                setAltItemSearch,
+                fetchNextAltItems,
+                loadingAltItems,
+                setLineNote,
               }}
-              columns={[
-                {
-                  key: "itemCode",
-                  header: t("Mã Linh Kiện"),
-                  width: "15%",
-                  minWidth: "100px",
-                  fixed: "left",
-                  cell: (line: BomLikeLine) => (
-                    <div
-                      className="truncate text-xs font-medium"
-                      style={{ paddingLeft: `${(line.level || 0) * 16}px` }}
-                    >
-                      {(line.level || 0) > 0 && (
-                        <span className="text-muted-foreground mr-1">└─</span>
-                      )}
-                      {line.itemCode || "—"}
-                    </div>
-                  ),
-                },
-                {
-                  key: "itemName",
-                  header: t("Tên Linh Kiện"),
-                  width: "25%",
-                  minWidth: "200px",
-                  cell: (line: BomLikeLine) => (
-                    <Tooltip content={line.itemName || ""}>
-                      <div className="truncate max-w-[200px] xl:max-w-[300px]">
-                        {line.itemName || "—"}
-                      </div>
-                    </Tooltip>
-                  ),
-                },
-                {
-                  key: "altItem",
-                  header: t("NVL thay thế"),
-                  width: "30%",
-                  minWidth: "200px",
-                  cell: (line: BomLikeLine) => {
-                    const linePath = line.path || line.itemId || "";
-                    const selectedAltItemId = alternativeItems[linePath] ?? "";
-                    const altOption = altItemOptions.find(
-                      (o) => o.value === selectedAltItemId,
-                    );
-
-                    const isDisabled = !!(
-                      saving ||
-                      viewOnly ||
-                      isCompleted ||
-                      isConfirmed ||
-                      line.isLeaf === false
-                    );
-
-                    if (isDisabled && !selectedAltItemId) {
-                      return <span className="text-muted-foreground">—</span>;
-                    }
-
-                    const displayLabel =
-                      altOption?.label ||
-                      line.alternativeItemName ||
-                      selectedAltItemId;
-
-                    return (
-                      <div className="space-y-2 min-w-[200px]">
-                        {!isDisabled && (
-                          <Combobox
-                            value={selectedAltItemId}
-                            onChange={(value) => {
-                              if (!value) {
-                                clearAlternativeItem(linePath);
-                                return;
-                              }
-                              setAlternativeItem(linePath, value);
-                            }}
-                            options={altItemOptions}
-                            placeholder={t("Chọn NVL thay thế")}
-                            searchPlaceholder={t("Tìm SKU / tên NVL")}
-                            onSearch={setAltItemSearch}
-                            onScrollBottom={fetchNextAltItems}
-                            loading={loadingAltItems}
-                            disabled={isDisabled}
-                          />
-                        )}
-                        {selectedAltItemId ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Tooltip content={displayLabel}>
-                              <span className="inline-block truncate max-w-[200px] xl:max-w-[300px] rounded-md bg-blue-50 text-blue-700 font-medium px-2 py-0.5 italic">
-                                {displayLabel}
-                              </span>
-                            </Tooltip>
-                          </div>
-                        ) : null}
-                      </div>
-                    );
-                  },
-                },
-                {
-                  key: "required",
-                  header: t("Cần Dùng"),
-                  align: "right",
-                  minWidth: "100px",
-                  cell: (line: BomLikeLine) => {
-                    const requiredQty = Number(line.qtyRequired || 0);
-                    const displayRequired = requiredQty;
-                    return (
-                      <span className="text-amber-700 font-semibold">
-                        {fmtQty(displayRequired.toString())}
-                      </span>
-                    );
-                  },
-                },
-                {
-                  key: "available",
-                  header: t("Khả Dụng"),
-                  align: "right",
-                  minWidth: "100px",
-                  cell: (line: BomLikeLine) => {
-                    const requiredQty = Number(line.qtyRequired || 0);
-                    const displayRequired = requiredQty;
-                    const linePath = line.path || line.itemId || "";
-                    const effectiveItemId =
-                      alternativeItems[linePath] || line.itemId || "";
-
-                    if (line.itemTypeCode === "SERVICE") {
-                      return <span className="text-muted-foreground">—</span>;
-                    }
-
-                    const availableQty = (
-                      balances[effectiveItemId] || { availableQty: 0 }
-                    ).availableQty;
-                    const isLacking = displayRequired > availableQty;
-                    return (
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          isLacking ? "text-red-600" : "text-emerald-700",
-                        )}
-                      >
-                        {fmtQty(availableQty.toString())}
-                      </span>
-                    );
-                  },
-                },
-                {
-                  key: "note",
-                  header: t("Ghi chú"),
-                  cell: (line: BomLikeLine) => {
-                    const linePath = line.path || line.itemId || "";
-                    const isDisabled = !!(
-                      saving ||
-                      viewOnly ||
-                      line.isLeaf === false
-                    );
-                    if (isDisabled && !lineNotes[linePath]) {
-                      return <span className="text-muted-foreground">—</span>;
-                    }
-                    return (
-                      <input
-                        value={lineNotes[linePath] || ""}
-                        onChange={(e) => setLineNote(linePath, e.target.value)}
-                        disabled={isDisabled}
-                        className={cn(inputCls, "min-w-[150px] text-xs h-8")}
-                        placeholder={t("Nhập ghi chú")}
-                      />
-                    );
-                  },
-                },
-              ]}
+              columns={tableColumns}
             />
           </div>
         ) : (

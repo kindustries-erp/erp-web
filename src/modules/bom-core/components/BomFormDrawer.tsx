@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useT } from "@/core/i18n";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
+import { DataTable } from "@/shared/components/DataTable";
+import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { SearchInput } from "@/shared/components/SearchInput";
@@ -10,6 +11,7 @@ import {
   DrawerSection,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { CellInput } from "@/shared/components/CellInput";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
@@ -323,6 +325,198 @@ export function BomFormDrawer({
             },
           ];
 
+  const tableColumns = useMemo(
+    () => [
+      {
+        key: "index",
+        header: "#",
+        size: 40,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: any, idx: number) => (
+          <span className="text-muted-foreground">{idx}</span>
+        ),
+      },
+      {
+        key: "component",
+        header: t("Mã linh kiện"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const {
+            viewOnly,
+            editing,
+            form,
+            updateLine,
+            mergedItemOptions,
+            itemUomMap,
+            setItemSearch,
+            fetchNextItems,
+            loadingItems,
+          } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <Combobox
+              variant="spreadsheet"
+              value={line.componentItemId}
+              readOnly={viewOnly || !!editing}
+              onChange={(value) => {
+                const patch: Partial<BomLineForm> = {
+                  componentItemId: value || "",
+                };
+                if (value && itemUomMap && itemUomMap.has(value)) {
+                  patch.uomId = itemUomMap.get(value)!;
+                }
+                updateLine(trueIdx, patch);
+              }}
+              options={mergedItemOptions}
+              placeholder={t("Chọn linh kiện")}
+              searchPlaceholder={t("Tìm SKU / tên linh kiện")}
+              onSearch={setItemSearch}
+              onScrollBottom={fetchNextItems}
+              loading={loadingItems}
+            />
+          );
+        },
+      },
+      {
+        key: "componentName",
+        header: t("Tên linh kiện"),
+        minSize: 250,
+        headerClassName: "min-w-[250px]",
+        className: "min-w-[250px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { mergedItemOptions } = meta;
+          const opt = mergedItemOptions.find(
+            (o: any) => o.value === line.componentItemId,
+          );
+          return (
+            <div className="px-3 truncate text-sm">
+              {opt?.label?.split(" — ")[1] || opt?.label || "—"}
+            </div>
+          );
+        },
+      },
+      {
+        key: "qty",
+        header: t("Số lượng"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, editing, form, updateLine } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <CellInput
+              type="number"
+              step="0.1"
+              value={line.qtyRequired}
+              disabled={viewOnly || !!editing}
+              onBlur={(e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val)) {
+                  updateLine(trueIdx, { qtyRequired: val.toFixed(1) });
+                }
+              }}
+              onValueChange={(val) => updateLine(trueIdx, { qtyRequired: val })}
+              className="text-right"
+            />
+          );
+        },
+      },
+      {
+        key: "uom",
+        header: t("ĐVT"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, editing, form, updateLine, uomOptions } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <Combobox
+              variant="spreadsheet"
+              value={line.uomId}
+              readOnly={viewOnly || !!editing}
+              onChange={(value) => updateLine(trueIdx, { uomId: value || "" })}
+              options={uomOptions || []}
+              placeholder={t("Chọn ĐVT")}
+              allowClear={false}
+            />
+          );
+        },
+      },
+      {
+        key: "scrap",
+        header: t("Tỷ lệ hao hụt (%)"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, editing, form, updateLine } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <CellInput
+              type="number"
+              step="0.01"
+              value={line.scrapRate}
+              disabled={viewOnly || !!editing}
+              onBlur={(e) => {
+                const val = parseFloat(e.target.value);
+                if (!isNaN(val)) {
+                  updateLine(trueIdx, { scrapRate: val.toFixed(2) });
+                }
+              }}
+              onValueChange={(val) => updateLine(trueIdx, { scrapRate: val })}
+              className="text-right"
+            />
+          );
+        },
+      },
+      {
+        key: "notes",
+        header: t("Ghi chú dòng"),
+        minSize: 150,
+        headerClassName: "min-w-[150px]",
+        className: "min-w-[150px] p-0 align-middle",
+        cell: (line: BomLineForm, _: number, meta: any) => {
+          const { viewOnly, form, updateLine } = meta;
+          const trueIdx = form.lines.indexOf(line);
+          return (
+            <CellInput
+              value={line.notes}
+              disabled={viewOnly}
+              onValueChange={(val) => updateLine(trueIdx, { notes: val })}
+            />
+          );
+        },
+      },
+    ],
+    [t],
+  );
+
+  const actionColumnDef = useMemo(() => {
+    if (viewOnly || isEditing) return undefined;
+    return {
+      header: "",
+      cell: (line: BomLineForm, _: number, meta: any) => {
+        const { form, removeLine } = meta;
+        const trueIdx = form.lines.indexOf(line);
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-red-500"
+            onClick={() => removeLine(trueIdx)}
+          >
+            ✕
+          </Button>
+        );
+      },
+    };
+  }, [viewOnly, isEditing]);
+
   return (
     <StandardFormDrawer
       open={open}
@@ -435,116 +629,37 @@ export function BomFormDrawer({
             </div>
           }
         >
-          <DocumentLineTable
-            tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-            data={filteredLines}
-            getRowKey={(_, idx) => String(idx)}
-            viewOnly={viewOnly}
-            onAddLine={isEditing ? undefined : addLine}
-            onRemoveLine={isEditing ? undefined : removeLine}
-            columns={[
-              {
-                key: "component",
-                header: t("Linh kiện"),
-                minWidth: 240,
-                cell: (line, idx) => (
-                  <Combobox
-                    value={line.componentItemId}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(value) => {
-                      const patch: Partial<BomLineForm> = {
-                        componentItemId: value,
-                      };
-                      if (itemUomMap && itemUomMap.has(value)) {
-                        patch.uomId = itemUomMap.get(value)!;
-                      }
-                      updateLine(idx, patch);
-                    }}
-                    options={mergedItemOptions}
-                    placeholder={t("Chọn linh kiện")}
-                    searchPlaceholder={t("Tìm SKU / tên linh kiện")}
-                    onSearch={setItemSearch}
-                    onScrollBottom={fetchNextItems}
-                    loading={loadingItems}
-                  />
-                ),
-              },
-              {
-                key: "qty",
-                header: t("Số lượng"),
-                minWidth: 90,
-                cell: (line, idx) => (
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={line.qtyRequired}
-                    readOnly={viewOnly || !!editing}
-                    onBlur={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val)) {
-                        updateLine(idx, { qtyRequired: val.toFixed(1) });
-                      }
-                    }}
-                    onChange={(e) =>
-                      updateLine(idx, { qtyRequired: e.target.value })
-                    }
-                    className={inputCls}
-                  />
-                ),
-              },
-              {
-                key: "uom",
-                header: t("ĐVT"),
-                minWidth: 120,
-                cell: (line, idx) => (
-                  <Combobox
-                    value={line.uomId}
-                    readOnly={viewOnly || !!editing}
-                    onChange={(value) => updateLine(idx, { uomId: value })}
-                    options={uomOptions || []}
-                    placeholder={t("Chọn ĐVT")}
-                    allowClear={false}
-                  />
-                ),
-              },
-              {
-                key: "scrap",
-                header: t("Tỷ lệ hao hụt (%)"),
-                minWidth: 95,
-                cell: (line, idx) => (
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={line.scrapRate}
-                    readOnly={viewOnly || !!editing}
-                    onBlur={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val)) {
-                        updateLine(idx, { scrapRate: val.toFixed(2) });
-                      }
-                    }}
-                    onChange={(e) =>
-                      updateLine(idx, { scrapRate: e.target.value })
-                    }
-                    className={inputCls}
-                  />
-                ),
-              },
-              {
-                key: "notes",
-                header: t("Ghi chú dòng"),
-                minWidth: 150,
-                cell: (line, idx) => (
-                  <input
-                    value={line.notes}
-                    readOnly={viewOnly}
-                    onChange={(e) => updateLine(idx, { notes: e.target.value })}
-                    className={inputCls}
-                  />
-                ),
-              },
-            ]}
+          <DataTable
+            variant="spreadsheet"
+            containerClassName="max-h-[calc(100vh-280px)] overflow-auto"
+            enableColumnResizing={true}
+            items={filteredLines}
+            getRowKey={(item) => String(form.lines.indexOf(item))}
+            emptyLabel={t("Không có dữ liệu")}
+            columns={tableColumns}
+            tableMeta={{
+              viewOnly,
+              editing,
+              isEditing,
+              form,
+              updateLine,
+              removeLine,
+              mergedItemOptions,
+              itemUomMap,
+              uomOptions,
+              setItemSearch,
+              fetchNextItems,
+              loadingItems,
+            }}
+            actionsColumn={actionColumnDef}
           />
+          {!(viewOnly || isEditing) && (
+            <div className="mt-4 flex justify-center gap-3">
+              <Button variant="outline" onClick={addLine}>
+                + {t("Thêm dòng")}
+              </Button>
+            </div>
+          )}
         </DrawerSection>
       }
       rightPanel={
