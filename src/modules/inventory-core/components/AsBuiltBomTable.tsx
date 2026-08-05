@@ -25,7 +25,7 @@ export function AsBuiltBomTable({ items, loading }: AsBuiltBomTableProps) {
           headerClassName: "text-center w-[40px] min-w-[40px]",
           className: "text-center w-[40px] min-w-[40px]",
           cell: (_, idx) => (
-            <span className="text-muted-foreground">{idx + 1}</span>
+            <span className="text-muted-foreground">{idx}</span>
           ),
         },
         {

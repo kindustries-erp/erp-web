@@ -51,6 +51,7 @@ import { cn } from "@/shared/utils";
 import { format as formatDate, isValid } from "date-fns";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
+import { EmptyState } from "@/shared/components/EmptyState";
 
 function getNestedValue(obj: any, path: string | number | symbol) {
   if (typeof path !== "string") return obj[path];
@@ -922,9 +923,9 @@ export function DataTable<T>({
                 <TableRow className="hover:bg-transparent">
                   <TableCell
                     colSpan={tableColumns.length + 1}
-                    className="text-center text-[color:var(--faint)] py-10"
+                    className="p-0 border-none"
                   >
-                    {emptyLabel}
+                    <EmptyState message={emptyLabel} />
                   </TableCell>
                 </TableRow>
               )}

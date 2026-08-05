@@ -21,6 +21,7 @@ import {
   type AsBuiltBomItem,
 } from "@/modules/manufacturing/api/manufacturingApi";
 import { AsBuiltBomTable } from "@/modules/inventory-core/components";
+import { EmptyState } from "@/shared/components/EmptyState";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface AttributeEntry {
@@ -315,9 +316,10 @@ export function TrackedGoodsDrawer({
         </DrawerSection>
       ) : (
         <DrawerSection title={t("Linh kiện (As-Built BOM)")}>
-          <p className="text-xs text-muted-foreground">
-            {t("Chưa có linh kiện nào được lắp ráp.")}
-          </p>
+          <EmptyState
+            message={t("Chưa có linh kiện nào được lắp ráp.")}
+            className="py-6"
+          />
         </DrawerSection>
       )}
 
@@ -360,9 +362,10 @@ export function TrackedGoodsDrawer({
               />
             </>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              {t("Không tìm thấy thông tin xe lắp ráp.")}
-            </p>
+            <EmptyState
+              message={t("Không tìm thấy thông tin xe lắp ráp.")}
+              className="py-6"
+            />
           )}
         </DrawerSection>
       )}
@@ -374,50 +377,55 @@ export function TrackedGoodsDrawer({
   const rightPanel = (
     <div className="flex flex-col gap-4">
       {/* Core info — always read-only */}
-      <DrawerRow label={t("Mã vật tư")} value={detailItem?.item?.sku ?? "—"} />
-      <DrawerRow
-        label={t("Tên vật tư")}
-        value={detailItem?.item?.itemName ?? "—"}
-      />
-      <DrawerRow
-        label={t("Chính sách Tracking")}
-        value={detailItem?.item?.trackingPolicyName ?? "—"}
-      />
-      <DrawerRow label={t("Số Serial")} value={detailItem?.serialNo ?? "—"} />
-      {detailItem?.vinNo && (
-        <DrawerRow label={t("Số VIN")} value={detailItem.vinNo} />
-      )}
-      {detailItem?.engineNo && (
-        <DrawerRow label={t("Số máy")} value={detailItem.engineNo} />
-      )}
-      {detailItem?.lotNo && (
-        <DrawerRow label={t("Số lô")} value={detailItem.lotNo} />
-      )}
-      <DrawerRow
-        label={t("Ngày ghi nhận")}
-        value={
-          detailItem?.createdAt
-            ? formatGMT7(detailItem.createdAt, "datetime-sec")
-            : "—"
-        }
-      />
-      <DrawerRow
-        label={t("Trạng thái")}
-        value={detailItem?.status ?? "Tồn kho"}
-      />
-      {detailItem?.soNo && (
+      <DrawerSection title={t("THÔNG TIN ĐỊNH DANH")}>
         <DrawerRow
-          label={t("Đơn hàng")}
+          label={t("Mã vật tư")}
+          value={detailItem?.item?.sku ?? "—"}
+        />
+        <DrawerRow
+          label={t("Tên vật tư")}
+          value={detailItem?.item?.itemName ?? "—"}
+        />
+        <DrawerRow
+          label={t("Chính sách Tracking")}
+          value={detailItem?.item?.trackingPolicyName ?? "—"}
+        />
+        <DrawerRow label={t("Số Serial")} value={detailItem?.serialNo ?? "—"} />
+        {detailItem?.vinNo && (
+          <DrawerRow label={t("Số VIN")} value={detailItem.vinNo} />
+        )}
+        {detailItem?.engineNo && (
+          <DrawerRow label={t("Số máy")} value={detailItem.engineNo} />
+        )}
+        {detailItem?.lotNo && (
+          <DrawerRow label={t("Số lô")} value={detailItem.lotNo} />
+        )}
+        <DrawerRow
+          label={t("Ngày ghi nhận")}
           value={
-            <button
-              onClick={() => setPreviewSoNo(detailItem.soNo || null)}
-              className="text-primary hover:underline"
-            >
-              {detailItem.soNo}
-            </button>
+            detailItem?.createdAt
+              ? formatGMT7(detailItem.createdAt, "datetime-sec")
+              : "—"
           }
         />
-      )}
+        <DrawerRow
+          label={t("Trạng thái")}
+          value={detailItem?.status ?? "Tồn kho"}
+        />
+        {detailItem?.soNo && (
+          <DrawerRow
+            label={t("Đơn hàng")}
+            value={
+              <button
+                onClick={() => setPreviewSoNo(detailItem.soNo || null)}
+                className="text-primary hover:underline"
+              >
+                {detailItem.soNo}
+              </button>
+            }
+          />
+        )}
+      </DrawerSection>
 
       {detailItem?.lifecycle && (
         <DrawerSection title={t("Lý lịch & Bảo hành")}>
@@ -508,8 +516,7 @@ export function TrackedGoodsDrawer({
         title={detailItem?.serialNo ?? t("Chi tiết tracking")}
         subtitle={detailItem?.item?.itemName}
         layout="2-columns"
-        size="lg"
-        rightPanelTitle={t("Thông tin định danh")}
+        size="xl"
         confirmOnClose={mode === "edit"}
         loading={loading}
         leftPanel={detailItem ? leftPanel : null}
