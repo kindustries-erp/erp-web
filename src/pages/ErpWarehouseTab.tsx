@@ -517,7 +517,7 @@ export function ErpWarehouseTab() {
 
               return (
                 <div className="cursor-help inline-flex flex-row items-baseline gap-1.5 whitespace-nowrap leading-tight">
-                  <span className="text-sm">{datePart}</span>
+                  <span className="text-sm text-gray-900">{datePart}</span>
                   <span className="text-xs text-gray-500">{timePart}</span>
                 </div>
               );
