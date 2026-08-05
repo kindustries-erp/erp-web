@@ -169,6 +169,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       <StandardFormDrawer
         open={open}
         mode={viewOnly ? "view" : editing ? "edit" : "create"}
+        collapsibleRightPanel={true}
         onClose={close}
         onToggleEdit={
           viewOnly &&

@@ -94,6 +94,7 @@ export function ErpInvoiceInternalDrawer({
       titleExtra={titleExtra}
       size="xl"
       layout={rightPanel ? "2-columns" : "1-column"}
+      collapsibleRightPanel={true}
       confirmOnClose={editMode}
       actions={editMode ? editActions : viewActions}
       leftPanel={children}

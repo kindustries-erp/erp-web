@@ -136,6 +136,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
       <StandardFormDrawer
         open={open}
         mode={viewOnly ? "view" : editing ? "edit" : "create"}
+        collapsibleRightPanel={true}
         onClose={close}
         onToggleEdit={
           viewOnly &&

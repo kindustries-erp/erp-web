@@ -501,6 +501,7 @@ export function TrackedGoodsDrawer({
       <StandardFormDrawer
         open={open}
         mode={mode}
+        collapsibleRightPanel={true}
         onClose={handleClose}
         onToggleEdit={canUpdate ? handleToggleEdit : undefined}
         icon={<Barcode className="h-5 w-5" />}

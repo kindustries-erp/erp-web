@@ -45,6 +45,7 @@ export function PartnerDrawer({
       open={drawerOpen}
       onClose={closeDrawer}
       mode={mode}
+      collapsibleRightPanel={true}
       title={editing ? "Chỉnh sửa đối tác" : "Thêm đối tác mới"}
       subtitle={editing ? editing.name : "Điền thông tin bên dưới"}
       size="xl"
