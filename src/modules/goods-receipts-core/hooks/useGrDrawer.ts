@@ -46,7 +46,7 @@ export interface GrForm {
 
 export function emptyGrForm(): GrForm {
   return {
-    receiptType: "OTHER",
+    receiptType: "" as GrReceiptType,
     receiptNo: "",
     purchaseOrderId: "",
     productionOrderId: "",
@@ -336,4 +336,10 @@ export function useGrDrawer({
   };
 }
 
-export type UseGrDrawerReturn = ReturnType<typeof useGrDrawer>;
+export type UseGrDrawerReturn = ReturnType<typeof useGrDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

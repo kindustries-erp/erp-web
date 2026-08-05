@@ -262,6 +262,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   return (
     <>
       <StandardFormDrawer
+        noAnimation={!!drawer.unifiedContext}
         open={open}
         mode={viewOnly ? "view" : editing ? "edit" : "create"}
         collapsibleRightPanel={true}
@@ -1186,6 +1187,25 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
             </>
           ) : (
             <>
+              {drawer.unifiedContext &&
+                drawer.unifiedContext.mode === "create" && (
+                  <DrawerField label={t("Loại chứng từ")}>
+                    <Combobox
+                      options={[
+                        { value: "receipt", label: t("Phiếu nhập kho") },
+                        { value: "issue", label: t("Phiếu xuất kho") },
+                        { value: "adjustment", label: t("Điều chỉnh kho") },
+                      ]}
+                      value={drawer.unifiedContext.type}
+                      onChange={(v) =>
+                        drawer.unifiedContext!.setType(
+                          v as "receipt" | "issue" | "adjustment",
+                        )
+                      }
+                      allowClear={false}
+                    />
+                  </DrawerField>
+                )}
               <DrawerField label={t("Số phiếu")}>
                 <input
                   className={inputCls}
@@ -1207,7 +1227,6 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               <DrawerField label={t("Loại nhập")}>
                 <Combobox
                   options={[
-                    { label: t("Chọn loại nhập..."), value: "" },
                     { label: t("Đơn mua hàng"), value: "PO" },
                     { label: t("Nhập khác"), value: "OTHER" },
                   ]}
@@ -1225,6 +1244,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                     }
                   }}
                   disabled={viewOnly || editing !== null}
+                  placeholder={t("— Chọn —")}
                   allowClear={false}
                 />
               </DrawerField>

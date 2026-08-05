@@ -134,6 +134,7 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
   return (
     <>
       <StandardFormDrawer
+        noAnimation={!!drawer.unifiedContext}
         open={open}
         mode={viewOnly ? "view" : editing ? "edit" : "create"}
         collapsibleRightPanel={true}
@@ -518,6 +519,25 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
             </>
           ) : (
             <>
+              {drawer.unifiedContext &&
+                drawer.unifiedContext.mode === "create" && (
+                  <DrawerField label={t("Loại chứng từ")}>
+                    <Combobox
+                      options={[
+                        { value: "receipt", label: t("Phiếu nhập kho") },
+                        { value: "issue", label: t("Phiếu xuất kho") },
+                        { value: "adjustment", label: t("Điều chỉnh kho") },
+                      ]}
+                      value={drawer.unifiedContext.type}
+                      onChange={(v) =>
+                        drawer.unifiedContext!.setType(
+                          v as "receipt" | "issue" | "adjustment",
+                        )
+                      }
+                      allowClear={false}
+                    />
+                  </DrawerField>
+                )}
               <DrawerField label={t("Số phiếu")}>
                 <input
                   className={inputCls}

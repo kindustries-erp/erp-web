@@ -4,6 +4,8 @@
  * Filter tabs: Tất cả / Nhập kho / Xuất kho
  */
 
+import { useInventoryVoucherDrawer } from "@/modules/inventory-core/hooks/useInventoryVoucherDrawer";
+import { InventoryVoucherDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherDrawer";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -42,12 +44,7 @@ import {
   warehouseVouchersCoreApi,
   type WarehouseRow,
 } from "@/modules/inventory-core/api/warehouseVouchersCoreApi";
-import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
-import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
-import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
-import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
-import { IaFormDrawer } from "@/modules/inventory-adjustments/components/IaFormDrawer";
-import { useIaDrawer } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
+
 import { inventoryAdjustmentsApi } from "@/modules/inventory-adjustments/api/inventoryAdjustmentsApi";
 import { useReactToPrint } from "react-to-print";
 import {
@@ -102,18 +99,15 @@ export function ErpWarehouseTab() {
   const [pageSize, setPageSize] = useState(50);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // ── GR drawer — delegated to useGrDrawer
-  const grDrawer = useGrDrawer({ invalidateWarehouseQuery: true });
+  // ── Unified Drawer
+  const unifiedDrawer = useInventoryVoucherDrawer({
+    invalidateWarehouseQuery: true,
+  });
+  const { grDrawer, giDrawer, iaDrawer } = unifiedDrawer;
   const grCancelId = grDrawer.cancelId;
   const [deleteTarget, setDeleteTarget] = useState<WarehouseRow | null>(null);
   const [cancelTarget, setCancelTarget] = useState<WarehouseRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  // ── GI drawer — delegated to useGiDrawer
-  const giDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
-
-  // ── IA drawer
-  const iaDrawer = useIaDrawer({ invalidateWarehouseQuery: true });
 
   // ── Background Print Setup
   const { data: companyProfile } = useCompanyProfile();
@@ -790,6 +784,8 @@ export function ErpWarehouseTab() {
             ],
           },
         ]}
+        onCreate={() => unifiedDrawer.openUnifiedCreate("receipt")}
+        createLabel={t("Tạo mới")}
         createActions={[
           {
             groupLabel: t("groupThemMoi", "Thêm mới"),
@@ -877,14 +873,8 @@ export function ErpWarehouseTab() {
         danger
       />
 
-      {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
-      <GrFormDrawer drawer={grDrawer} />
-
-      {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
-      <GiFormDrawer drawer={giDrawer} />
-
-      {/* ─── IA Drawer ──────────────────────────────────────────────────────── */}
-      <IaFormDrawer drawer={iaDrawer} />
+      {/* ─── Unified Inventory Drawer ─────────────────────────────────────────── */}
+      <InventoryVoucherDrawer unifiedDrawer={unifiedDrawer} />
 
       <div style={{ display: "none" }}>
         {printGrData && (

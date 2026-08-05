@@ -77,6 +77,8 @@ export interface StandardFormDrawerProps {
 
   /** Whether the right panel should be collapsible. Defaults to true if rightPanelTitle is provided. */
   collapsibleRightPanel?: boolean;
+  noAnimation?: boolean;
+  asContent?: boolean;
 }
 
 export function StandardFormDrawer({
@@ -103,6 +105,8 @@ export function StandardFormDrawer({
   stickyRightPanel = false,
   collapsibleRightPanel = false,
   zIndex,
+  asContent = false,
+  noAnimation = false,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -161,20 +165,8 @@ export function StandardFormDrawer({
   const resolvedSize = size ?? (layout === "1-column" ? "sm" : "xl");
   const defaultPanelClassName = SIZE_CLASS[resolvedSize];
 
-  return (
-    <DrawerModal
-      open={open}
-      onClose={onClose}
-      icon={icon}
-      confirmOnClose={confirmOnClose}
-      headerExtra={headerExtra}
-      panelClassName={cn(defaultPanelClassName, panelClassName)}
-      title={title}
-      titleExtra={titleExtra}
-      subtitle={subtitle}
-      actions={actions}
-      zIndex={zIndex}
-    >
+  const innerContent = (
+    <>
       {loading ? (
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
@@ -261,6 +253,31 @@ export function StandardFormDrawer({
           {error}
         </div>
       )}
+    </>
+  );
+
+  if (asContent) {
+    return (
+      <div className="h-full w-full flex flex-col relative">{innerContent}</div>
+    );
+  }
+
+  return (
+    <DrawerModal
+      open={open}
+      onClose={onClose}
+      icon={icon}
+      confirmOnClose={confirmOnClose}
+      headerExtra={headerExtra}
+      panelClassName={cn(defaultPanelClassName, panelClassName)}
+      title={title}
+      titleExtra={titleExtra}
+      subtitle={subtitle}
+      actions={actions}
+      zIndex={zIndex}
+      noAnimation={noAnimation}
+    >
+      {innerContent}
     </DrawerModal>
   );
 }
