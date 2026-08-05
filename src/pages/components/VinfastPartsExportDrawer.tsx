@@ -21,19 +21,20 @@ import {
   initPeriod,
 } from "@/modules/finance/utils/financeHelpers";
 import {
-  erpInvoicesCoreApi,
-  type ErpInvoiceListParams,
-  type InvoiceExportHistoryItem,
-} from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
-import { useInvoiceExportProgress } from "@/modules/erp-invoices-core/hooks/useInvoiceExportProgress";
-import { useInvoiceExportProgressStore } from "@/shared/stores/useInvoiceExportProgressStore";
+  vinfastPartsExportApi,
+  type VinfastPartsExportHistoryItem,
+  type VinfastPartsExportQuery,
+} from "@/pages/api/vinfastPartsExportApi";
+import { useVinfastPartsExportProgress } from "@/pages/hooks/useVinfastPartsExportProgress";
+import { useVinfastPartsExportProgressStore } from "@/shared/stores/useVinfastPartsExportProgressStore";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 
-interface InvoiceExportDrawerProps {
+interface VinfastPartsExportDrawerProps {
   open: boolean;
   onClose: () => void;
-  direction: "IN" | "OUT";
-  buildBaseQuery: () => Partial<ErpInvoiceListParams>;
+  buildBaseQuery: () => Partial<VinfastPartsExportQuery>;
+  initialDateFrom?: string;
+  initialDateTo?: string;
 }
 
 function toDisplayDate(iso?: string) {
@@ -50,12 +51,13 @@ function toDisplayRange(dateFrom?: string, dateTo?: string) {
   return `${from} - ${to}`;
 }
 
-export function InvoiceExportDrawer({
+export function VinfastPartsExportDrawer({
   open,
   onClose,
-  direction,
   buildBaseQuery,
-}: InvoiceExportDrawerProps) {
+  initialDateFrom,
+  initialDateTo,
+}: VinfastPartsExportDrawerProps) {
   const { t } = useTranslation("erpInvoices");
   const [period, setPeriod] = useState(initPeriod());
   const [dateFrom, setDateFrom] = useState(periodFirstDay(period));
@@ -66,13 +68,19 @@ export function InvoiceExportDrawer({
   const [downloadingJobId, setDownloadingJobId] = useState<string | null>(null);
   const terminalRefreshGuardRef = useRef<string | null>(null);
 
-  const progress = useInvoiceExportProgressStore();
-  const { downloadReadyFile } = useInvoiceExportProgress();
+  const progress = useVinfastPartsExportProgressStore();
+  const { downloadReadyFile } = useVinfastPartsExportProgress();
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (initialDateFrom) setDateFrom(initialDateFrom);
+    if (initialDateTo) setDateTo(initialDateTo);
+  }, [initialDateFrom, initialDateTo, open]);
 
   const historyQuery = useQuery({
-    queryKey: ["invoice-export-history", page, pageSize, direction],
-    queryFn: () =>
-      erpInvoicesCoreApi.listExportExcelBackgroundHistory(page, pageSize),
+    queryKey: ["vinfast-parts-export-history", page, pageSize],
+    queryFn: () => vinfastPartsExportApi.listBackgroundHistory(page, pageSize),
     enabled: open,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
@@ -95,7 +103,6 @@ export function InvoiceExportDrawer({
         : Infinity;
       const sseHealthy = progress.sseConnected && eventAgeMs < 20_000;
 
-      // SSE-first: only fallback poll when stream is stale/disconnected during active jobs.
       if (sseHealthy) return false;
 
       return 10_000;
@@ -190,14 +197,13 @@ export function InvoiceExportDrawer({
 
     try {
       setStarting(true);
-      const payload: ErpInvoiceListParams = {
+      const payload: VinfastPartsExportQuery = {
         ...buildBaseQuery(),
-        direction,
-        date_from: `${dateFrom}T00:00:00`,
-        date_to: `${dateTo}T23:59:59`,
+        dateFrom,
+        dateTo,
       };
-      const result =
-        await erpInvoicesCoreApi.startExportExcelBackground(payload);
+
+      const result = await vinfastPartsExportApi.startBackgroundExport(payload);
       if (result.reused) {
         toast.success(
           result.message ||
@@ -215,6 +221,7 @@ export function InvoiceExportDrawer({
             ),
         );
       }
+
       await historyQuery.refetch();
     } catch (error: any) {
       toast.error(
@@ -229,7 +236,7 @@ export function InvoiceExportDrawer({
     }
   };
 
-  const handleDownload = async (row: InvoiceExportHistoryItem) => {
+  const handleDownload = async (row: VinfastPartsExportHistoryItem) => {
     if (!row.canDownload || downloadingJobId) return;
 
     try {
@@ -252,7 +259,7 @@ export function InvoiceExportDrawer({
     }
   };
 
-  const columns = useMemo<DataTableColumn<InvoiceExportHistoryItem>[]>(
+  const columns = useMemo<DataTableColumn<VinfastPartsExportHistoryItem>[]>(
     () => [
       {
         key: "action",
@@ -260,7 +267,7 @@ export function InvoiceExportDrawer({
           <Tooltip
             content={t(
               "erpInvoices:exportDrawer.resetColumnWidth",
-              "Khôi phục độ rộng cột",
+              "Khoi phuc do rong cot",
             )}
           >
             <Button
@@ -270,7 +277,7 @@ export function InvoiceExportDrawer({
               onClick={(e) => {
                 e.stopPropagation();
                 const event = new CustomEvent(
-                  "reset-column-sizing-invoice-export-history",
+                  "reset-column-sizing-vinfast-parts-export-history",
                 );
                 window.dispatchEvent(event);
               }}
@@ -286,10 +293,10 @@ export function InvoiceExportDrawer({
               {
                 label:
                   downloadingJobId === row.jobId
-                    ? t("erpInvoices:exportDrawer.downloading", "Đang tải...")
+                    ? t("erpInvoices:exportDrawer.downloading", "Dang tai...")
                     : t(
                         "erpInvoices:exportDrawer.downloadAgain",
-                        "Tải lại file",
+                        "Tai lai file",
                       ),
                 icon: <Download className="w-3.5 h-3.5" />,
                 onClick: () => {
@@ -304,41 +311,41 @@ export function InvoiceExportDrawer({
       },
       {
         key: "createdAt",
-        header: t("erpInvoices:exportDrawer.table.createdAt", "Tạo lúc"),
+        header: t("erpInvoices:exportDrawer.table.createdAt", "Tao luc"),
         size: 160,
         cell: (row) => toDisplayDate(row.createdAt),
       },
       {
         key: "periodRange",
-        header: t("erpInvoices:exportDrawer.table.period", "Kỳ / Khoảng ngày"),
+        header: t("erpInvoices:exportDrawer.table.period", "Ky / Khoang ngay"),
         size: 170,
         cell: (row) =>
           row.dateFrom || row.dateTo
             ? toDisplayRange(row.dateFrom, row.dateTo)
-            : t("erpInvoices:exportDrawer.allRange", "Tất cả"),
+            : t("erpInvoices:exportDrawer.allRange", "Tat ca"),
       },
       {
         key: "fileName",
-        header: t("erpInvoices:exportDrawer.table.fileName", "Tên file"),
+        header: t("erpInvoices:exportDrawer.table.fileName", "Ten file"),
         size: 240,
         cell: (row) => renderOverflowText(row.fileName),
       },
       {
         key: "status",
-        header: t("erpInvoices:exportDrawer.table.status", "Trạng thái"),
+        header: t("erpInvoices:exportDrawer.table.status", "Trang thai"),
         size: 140,
         cell: (row) => {
           if (row.status === "COMPLETED") {
             return (
               <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                {t("erpInvoices:exportDrawer.status.ready", "Sẵn sàng tải")}
+                {t("erpInvoices:exportDrawer.status.ready", "San sang tai")}
               </Badge>
             );
           }
           if (row.status === "FAILED") {
             return (
               <Badge variant="destructive">
-                {t("erpInvoices:exportDrawer.status.failed", "Thất bại")}
+                {t("erpInvoices:exportDrawer.status.failed", "That bai")}
               </Badge>
             );
           }
@@ -355,7 +362,7 @@ export function InvoiceExportDrawer({
 
           return (
             <Badge className="bg-sky-50 text-sky-700 border-sky-200">
-              {t("erpInvoices:exportDrawer.status.running", "Đang tạo")}{" "}
+              {t("erpInvoices:exportDrawer.status.running", "Dang tao")}{" "}
               {percent}%
             </Badge>
           );
@@ -363,13 +370,13 @@ export function InvoiceExportDrawer({
       },
       {
         key: "expiresAt",
-        header: t("erpInvoices:exportDrawer.table.expiresAt", "Hết hạn"),
+        header: t("erpInvoices:exportDrawer.table.expiresAt", "Het han"),
         size: 150,
         cell: (row) => toDisplayDate(row.expiresAt),
       },
       {
         key: "message",
-        header: t("erpInvoices:exportDrawer.table.message", "Thông tin"),
+        header: t("erpInvoices:exportDrawer.table.message", "Thong tin"),
         size: 200,
         cell: (row) => renderOverflowText(row.message),
       },
@@ -382,10 +389,13 @@ export function InvoiceExportDrawer({
       open={open}
       mode="view"
       onClose={onClose}
-      title={t("erpInvoices:exportDrawer.title", "Xuất Excel hóa đơn")}
+      title={t(
+        "erpInvoices:exportDrawer.partsTitle",
+        "Xuat Excel bang ke phu tung",
+      )}
       subtitle={t(
         "erpInvoices:exportDrawer.subtitle",
-        "Tạo file theo kỳ và tải lại file đã tạo trong 24 tiếng",
+        "Tao file theo ky va tai lai file da tao trong 24 tieng",
       )}
       icon={<FileSpreadsheet className="w-4 h-4" />}
       layout="1-column"
@@ -395,7 +405,7 @@ export function InvoiceExportDrawer({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.period", "Kỳ")}
+                {t("erpInvoices:exportDrawer.period", "Ky")}
               </label>
               <Combobox
                 options={periodOptions}
@@ -403,13 +413,13 @@ export function InvoiceExportDrawer({
                 onChange={(v) => handlePeriodChange(v ?? "")}
                 placeholder={t(
                   "erpInvoices:exportDrawer.selectPeriod",
-                  "Chọn kỳ...",
+                  "Chon ky...",
                 )}
               />
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.dateFrom", "Từ ngày")}
+                {t("erpInvoices:exportDrawer.dateFrom", "Tu ngay")}
               </label>
               <DatePicker
                 value={dateFrom}
@@ -421,7 +431,7 @@ export function InvoiceExportDrawer({
             </div>
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1">
-                {t("erpInvoices:exportDrawer.dateTo", "Đến ngày")}
+                {t("erpInvoices:exportDrawer.dateTo", "Den ngay")}
               </label>
               <DatePicker
                 value={dateTo}
@@ -437,17 +447,17 @@ export function InvoiceExportDrawer({
             <Button onClick={handleStartExport} disabled={starting}>
               <Play className="w-4 h-4" />
               {starting
-                ? t("erpInvoices:exportDrawer.starting", "Đang khởi tạo...")
-                : t("erpInvoices:exportDrawer.start", "Xuất Excel")}
+                ? t("erpInvoices:exportDrawer.starting", "Dang khoi tao...")
+                : t("erpInvoices:exportDrawer.start", "Xuat Excel")}
             </Button>
           </div>
 
           <div className="text-sm font-semibold">
-            {t("erpInvoices:exportDrawer.historyTitle", "Lịch sử xuất file")}
+            {t("erpInvoices:exportDrawer.historyTitle", "Lich su xuat file")}
           </div>
 
           <StandardTable
-            tableId="invoice-export-history"
+            tableId="vinfast-parts-export-history"
             variant="spreadsheet"
             enableColumnResizing={true}
             items={historyQuery.data?.items || []}
@@ -462,7 +472,7 @@ export function InvoiceExportDrawer({
             onPageSize={setPageSize}
             emptyLabel={t(
               "erpInvoices:exportDrawer.emptyHistory",
-              "Chưa có file xuất nào",
+              "Chua co file xuat nao",
             )}
           />
         </div>

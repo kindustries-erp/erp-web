@@ -43,6 +43,7 @@ import {
 
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { VinfastPartsExportDrawer } from "@/pages/components/VinfastPartsExportDrawer";
 
 interface VinfastPartTrackingRow {
   itemCode: string;
@@ -550,6 +551,7 @@ export function VinfastPartsTrackingPage({
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
   const [detailRow, setDetailRow] = useState<VinfastPartTrackingRow | null>(
     null,
   );
@@ -747,6 +749,37 @@ export function VinfastPartsTrackingPage({
       ),
     };
   }, [data]);
+
+  const buildExportBaseQuery = useCallback(() => {
+    const payload: Record<string, string> = {};
+
+    if (filterState.search) payload.search = filterState.search;
+    if (sortBy) payload.sortBy = sortBy;
+    if (sortOrder) payload.sortDir = sortOrder;
+    if (tableState.sorts.length > 0)
+      payload.sorts = JSON.stringify(tableState.sorts);
+    if (Object.keys(tableState.columnSearch).length > 0) {
+      payload.columnSearch = JSON.stringify(tableState.columnSearch);
+    }
+
+    const finalExportFilters = { ...tableState.columnFilters };
+    if (vehicleType) {
+      finalExportFilters["vehicleType"] = [vehicleType];
+    }
+    if (Object.keys(finalExportFilters).length > 0) {
+      payload.columnFilters = JSON.stringify(finalExportFilters);
+    }
+
+    return payload;
+  }, [
+    filterState.search,
+    sortBy,
+    sortOrder,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+    vehicleType,
+  ]);
 
   const columns: DataTableColumn<VinfastPartTrackingRow>[] = [
     {
@@ -1121,51 +1154,7 @@ export function VinfastPartsTrackingPage({
                 label: "Tải bảng kê",
                 icon: <Download className="w-4 h-4 text-green-600" />,
                 onClick: () => {
-                  const params = new URLSearchParams();
-                  if (filterState.dateFrom)
-                    params.append("dateFrom", filterState.dateFrom);
-                  if (filterState.dateTo)
-                    params.append("dateTo", filterState.dateTo);
-                  if (filterState.search)
-                    params.append("search", filterState.search);
-                  if (sortBy) params.append("sortBy", sortBy);
-                  if (sortOrder) params.append("sortDir", sortOrder);
-                  if (tableState.sorts.length > 0)
-                    params.append("sorts", JSON.stringify(tableState.sorts));
-                  if (Object.keys(tableState.columnSearch).length > 0)
-                    params.append(
-                      "column_search",
-                      JSON.stringify(tableState.columnSearch),
-                    );
-                  const finalExportFilters = { ...tableState.columnFilters };
-                  if (vehicleType) {
-                    finalExportFilters["vehicleType"] = [vehicleType];
-                  }
-                  if (Object.keys(finalExportFilters).length > 0)
-                    params.append(
-                      "column_filters",
-                      JSON.stringify(finalExportFilters),
-                    );
-
-                  // Logic to trigger download
-                  const url = `/api/v1/reports/vinfast-parts/export/excel?${params.toString()}`;
-                  api.get(url, { responseType: "blob" }).then((res) => {
-                    const fileUrl = window.URL.createObjectURL(res.data);
-                    const a = document.createElement("a");
-                    a.href = fileUrl;
-                    const timeStr = format(new Date(), "yyyyMMdd_HHmmss");
-                    const prefix =
-                      vehicleType === "CAR"
-                        ? "O_to_"
-                        : vehicleType === "MOTORBIKE"
-                          ? "Xe_may_"
-                          : "";
-                    a.download = `Bao_cao_phu_tung_${prefix}VINFAST_${timeStr}.xlsx`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(fileUrl);
-                    document.body.removeChild(a);
-                  });
+                  setExportDrawerOpen(true);
                 },
               },
             ],
@@ -1279,6 +1268,14 @@ export function VinfastPartsTrackingPage({
           />
         </div>
       </ErpInvoiceInternalDrawer>
+
+      <VinfastPartsExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        buildBaseQuery={buildExportBaseQuery}
+        initialDateFrom={filterState.dateFrom}
+        initialDateTo={filterState.dateTo}
+      />
 
       <VinfastPartDetailDrawer
         open={!!detailRow}
