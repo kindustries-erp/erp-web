@@ -159,4 +159,14 @@ export const erpInvoicesVi = {
     "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.",
   "exportDrawer.error.startFailed": "Không thể bắt đầu xuất Excel.",
   "exportDrawer.error.downloadFailed": "Không thể tải lại file XLSX.",
+
+  // Invoice Preview / Stamp
+  "invoiceTemplate.buyerSigner": "NGƯỜI MUA HÀNG",
+  "invoiceTemplate.sellerSigner": "NGƯỜI BÁN HÀNG",
+  "invoiceTemplate.signerHint": "(Ký, ghi rõ họ tên)",
+  "invoiceTemplate.stamp.valid": "ĐÃ KÝ SỐ HỢP LỆ",
+  "invoiceTemplate.stamp.brand": "Hóa đơn điện tử",
+  "invoiceTemplate.stamp.signedDate": "Ký ngày",
+  "invoiceTemplate.stamp.invoiceNo": "Số hóa đơn",
+  "invoiceTemplate.stamp.serialNo": "Ký hiệu",
 };

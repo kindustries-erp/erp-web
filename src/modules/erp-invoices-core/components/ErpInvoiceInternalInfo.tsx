@@ -34,6 +34,7 @@ export function ErpInvoiceInternalSidebar({
   detailInvoice,
   pdfSlot,
   onRefreshDetail,
+  hideAccountingSection = false,
 }: {
   form: CreateErpInvoicePayload;
   editMode: boolean;
@@ -45,6 +46,7 @@ export function ErpInvoiceInternalSidebar({
   detailInvoice: ErpInvoice | null;
   pdfSlot?: React.ReactNode;
   onRefreshDetail?: () => void;
+  hideAccountingSection?: boolean;
 }) {
   const { t } = useTranslation("erpInvoices");
   const [branchOptions, setBranchOptions] = useState<
@@ -166,7 +168,7 @@ export function ErpInvoiceInternalSidebar({
 
       {pdfSlot && <div className="mt-0">{pdfSlot}</div>}
 
-      {!editMode && (
+      {!editMode && !hideAccountingSection && (
         <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
           <PostedAccountingSummary
             isPosted={detailInvoice?.postingStatus === "POSTED"}
@@ -190,6 +192,7 @@ export function ErpInvoiceInternalMain({
   onUnpost,
   onRefreshDetail,
   invoicePreview,
+  hideLinkedDocuments = false,
 }: {
   form: CreateErpInvoicePayload;
   editMode: boolean;
@@ -201,6 +204,7 @@ export function ErpInvoiceInternalMain({
   onUnpost?: () => void;
   onRefreshDetail?: () => void;
   invoicePreview?: React.ReactNode;
+  hideLinkedDocuments?: boolean;
 }) {
   const { t } = useTranslation("erpInvoices");
   const isPosted = detailInvoice?.postingStatus === "POSTED" && !pendingUnpost;
@@ -371,7 +375,7 @@ export function ErpInvoiceInternalMain({
         </DrawerSection>
       )}
 
-      {detailInvoice?.id && (
+      {!hideLinkedDocuments && detailInvoice?.id && (
         <ErpInvoiceLinkedDocuments
           form={form}
           fieldSet={fieldSet}
@@ -386,7 +390,7 @@ export function ErpInvoiceInternalMain({
 
       {/* Invoice preview — rendered below linked docs in view mode */}
       {!editMode && (pdfKey || invoicePreview) && (
-        <div className="bg-slate-50 rounded-lg overflow-hidden">
+        <div className="rounded-2xl mb-24">
           {isPdfLoading ? (
             <div className="w-full min-h-[800px] flex items-center justify-center bg-gray-100 animate-pulse">
               <div className="text-gray-400 font-medium">Đang tải PDF...</div>
@@ -398,7 +402,7 @@ export function ErpInvoiceInternalMain({
               title="PDF Preview"
             />
           ) : (
-            invoicePreview
+            <div className="w-full">{invoicePreview}</div>
           )}
         </div>
       )}
