@@ -22,6 +22,8 @@ import * as Popover from "@radix-ui/react-popover";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import React from "react";
 
 import type { UseProductionOrderDrawerReturn } from "../hooks/useProductionOrderDrawer";
 import type { BomLikeLine } from "../hooks/useProductionOrderDrawer";
@@ -165,22 +167,263 @@ export function ProductionOrderDrawer({
             ]),
       ];
 
-  const filteredBomLines = bomLines?.filter((line: BomLikeLine) => {
-    const s = localSearch.toLowerCase();
-    const name = (line.itemName || "").toLowerCase();
-    const sku = (line.itemId || "").toLowerCase();
-    const matchSearch = name.includes(s) || sku.includes(s);
-    if (!showLackingOnly) return matchSearch;
+  const [colSortConfig, setColSortConfig] = React.useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [colFilters, setColFilters] = React.useState<Record<string, string>>(
+    {},
+  );
+  const [colSelectedFilters, setColSelectedFilters] = React.useState<
+    Record<string, string[]>
+  >({});
 
-    const requiredQty = Number(line.qtyRequired || 0);
-    const effectiveItemId =
-      alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
-      line.itemId ||
-      "";
-    const availableQty = (balances[effectiveItemId] || { availableQty: 0 })
-      .availableQty;
-    return matchSearch && requiredQty > availableQty;
-  });
+  const getFilteredLinesForCol = React.useCallback(
+    (excludeCol: string) => {
+      return (
+        bomLines?.filter((line: BomLikeLine) => {
+          const s = localSearch.toLowerCase();
+          const name = (line.itemName || "").toLowerCase();
+          const sku = (line.itemCode || line.itemId || "").toLowerCase();
+          const matchSearch = name.includes(s) || sku.includes(s);
+
+          const requiredQty = Number(line.qtyRequired || 0);
+          const effectiveItemId =
+            alternativeItems[line.originalItemId ?? line.itemId ?? ""] ||
+            line.itemId ||
+            "";
+          const availableQty = (
+            balances[effectiveItemId] || { availableQty: 0 }
+          ).availableQty;
+
+          if (showLackingOnly && requiredQty <= availableQty) return false;
+          if (!matchSearch) return false;
+
+          if (excludeCol !== "itemCode") {
+            if (
+              colFilters.itemCode &&
+              !(line.itemCode || "")
+                .toLowerCase()
+                .includes(colFilters.itemCode.toLowerCase())
+            )
+              return false;
+            if (
+              colSelectedFilters.itemCode?.length &&
+              !colSelectedFilters.itemCode.includes(line.itemCode || "")
+            )
+              return false;
+          }
+
+          if (excludeCol !== "itemName") {
+            if (
+              colFilters.itemName &&
+              !(line.itemName || "")
+                .toLowerCase()
+                .includes(colFilters.itemName.toLowerCase())
+            )
+              return false;
+            if (
+              colSelectedFilters.itemName?.length &&
+              !colSelectedFilters.itemName.includes(line.itemName || "")
+            )
+              return false;
+          }
+
+          if (excludeCol !== "required") {
+            if (
+              colFilters.required &&
+              !requiredQty.toString().includes(colFilters.required)
+            )
+              return false;
+            if (
+              colSelectedFilters.required?.length &&
+              !colSelectedFilters.required.includes(requiredQty.toString())
+            )
+              return false;
+          }
+
+          if (excludeCol !== "available") {
+            if (
+              colFilters.available &&
+              !availableQty.toString().includes(colFilters.available)
+            )
+              return false;
+            if (
+              colSelectedFilters.available?.length &&
+              !colSelectedFilters.available.includes(availableQty.toString())
+            )
+              return false;
+          }
+
+          if (excludeCol !== "note") {
+            if (colFilters.note || colSelectedFilters.note?.length) {
+              const linePath = line.path || line.itemId || "";
+              const note = lineNotes[linePath] || "";
+              if (
+                colFilters.note &&
+                !note.toLowerCase().includes(colFilters.note.toLowerCase())
+              )
+                return false;
+              if (
+                colSelectedFilters.note?.length &&
+                !colSelectedFilters.note.includes(note)
+              )
+                return false;
+            }
+          }
+
+          return true;
+        }) || []
+      );
+    },
+    [
+      bomLines,
+      localSearch,
+      showLackingOnly,
+      alternativeItems,
+      balances,
+      colFilters,
+      colSelectedFilters,
+      lineNotes,
+    ],
+  );
+
+  const filteredBomLines = useMemo(() => {
+    let arr = getFilteredLinesForCol("none");
+
+    if (colSortConfig) {
+      const { key, direction } = colSortConfig;
+      arr = [...arr].sort((a, b) => {
+        let aVal: any = "";
+        let bVal: any = "";
+        if (key === "itemCode") {
+          aVal = a.itemCode || "";
+          bVal = b.itemCode || "";
+        } else if (key === "itemName") {
+          aVal = a.itemName || "";
+          bVal = b.itemName || "";
+        } else if (key === "required") {
+          aVal = Number(a.qtyRequired || 0);
+          bVal = Number(b.qtyRequired || 0);
+        } else if (key === "available") {
+          const aEffId =
+            alternativeItems[a.originalItemId ?? a.itemId ?? ""] ||
+            a.itemId ||
+            "";
+          aVal = (balances[aEffId] || { availableQty: 0 }).availableQty;
+          const bEffId =
+            alternativeItems[b.originalItemId ?? b.itemId ?? ""] ||
+            b.itemId ||
+            "";
+          bVal = (balances[bEffId] || { availableQty: 0 }).availableQty;
+        } else if (key === "note") {
+          aVal = lineNotes[a.path || a.itemId || ""] || "";
+          bVal = lineNotes[b.path || b.itemId || ""] || "";
+        }
+
+        if (aVal < bVal) return direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return arr;
+  }, [
+    getFilteredLinesForCol,
+    colSortConfig,
+    alternativeItems,
+    balances,
+    lineNotes,
+  ]);
+
+  const handleColSort = (key: string, state: "asc" | "desc" | "none") => {
+    if (state === "none") setColSortConfig(null);
+    else setColSortConfig({ key, direction: state });
+  };
+
+  const handleColSearch = (key: string, val: string) => {
+    setColFilters((prev) => ({ ...prev, [key]: val }));
+  };
+
+  const handleColFilterChange = (key: string, vals: string[]) => {
+    setColSelectedFilters((prev) => ({ ...prev, [key]: vals }));
+  };
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (showLackingOnly) count++;
+    if (localSearch) count++;
+    Object.values(colFilters).forEach((v) => {
+      if (v) count++;
+    });
+    Object.values(colSelectedFilters).forEach((arr) => {
+      if (arr && arr.length > 0) count++;
+    });
+    return count;
+  }, [showLackingOnly, localSearch, colFilters, colSelectedFilters]);
+
+  const clearAllFilters = React.useCallback(() => {
+    setColFilters({});
+    setColSelectedFilters({});
+    setShowLackingOnly(false);
+    setLocalSearch("");
+  }, [setShowLackingOnly, setLocalSearch]);
+
+  const itemCodeOptions = useMemo(() => {
+    const lines = getFilteredLinesForCol("itemCode");
+    const vals = new Set(lines.map((l: BomLikeLine) => l.itemCode || ""));
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol]);
+
+  const itemNameOptions = useMemo(() => {
+    const lines = getFilteredLinesForCol("itemName");
+    const vals = new Set(lines.map((l: BomLikeLine) => l.itemName || ""));
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol]);
+
+  const requiredOptions = useMemo(() => {
+    const lines = getFilteredLinesForCol("required");
+    const vals = new Set(
+      lines.map((l: BomLikeLine) => Number(l.qtyRequired || 0).toString()),
+    );
+    return Array.from(vals)
+      .filter((v) => v !== "0")
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol]);
+
+  const availableOptions = useMemo(() => {
+    const lines = getFilteredLinesForCol("available");
+    const vals = new Set(
+      lines.map((l: BomLikeLine) => {
+        const effectiveItemId =
+          alternativeItems[l.originalItemId ?? l.itemId ?? ""] ||
+          l.itemId ||
+          "";
+        return (
+          balances[effectiveItemId] || { availableQty: 0 }
+        ).availableQty.toString();
+      }),
+    );
+    return Array.from(vals)
+      .filter((v) => v !== "0")
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol, alternativeItems, balances]);
+
+  const noteOptions = useMemo(() => {
+    const lines = getFilteredLinesForCol("note");
+    const vals = new Set(
+      lines.map((l: BomLikeLine) => {
+        const linePath = l.path || l.itemId || "";
+        return lineNotes[linePath] || "";
+      }),
+    );
+    return Array.from(vals)
+      .filter(Boolean)
+      .map((v) => ({ label: v, value: v }));
+  }, [getFilteredLinesForCol, lineNotes]);
 
   const tableColumns = useMemo(
     () => [
@@ -188,6 +431,7 @@ export function ProductionOrderDrawer({
         key: "index",
         header: "#",
         size: 40,
+        enableResizing: false,
         headerClassName: "text-center w-[40px] min-w-[40px]",
         className: "text-center w-[40px] min-w-[40px]",
         cell: (_: BomLikeLine, idx: number) => (
@@ -196,8 +440,25 @@ export function ProductionOrderDrawer({
       },
       {
         key: "itemCode",
-        header: t("Mã Linh Kiện"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Mã Linh Kiện")}
+            sortState={
+              colSortConfig?.key === "itemCode"
+                ? colSortConfig.direction
+                : "none"
+            }
+            onSortChange={(state) => handleColSort("itemCode", state)}
+            searchValue={colFilters.itemCode || ""}
+            onSearchChange={(val) => handleColSearch("itemCode", val)}
+            selectedFilters={colSelectedFilters.itemCode || []}
+            onFilterChange={(vals) => handleColFilterChange("itemCode", vals)}
+            filterOptions={itemCodeOptions}
+            align="center"
+          />
+        ),
         minSize: 150,
+        enableResizing: true,
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px]",
         cell: (line: BomLikeLine) => (
@@ -214,8 +475,25 @@ export function ProductionOrderDrawer({
       },
       {
         key: "itemName",
-        header: t("Tên Linh Kiện"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Tên Linh Kiện")}
+            sortState={
+              colSortConfig?.key === "itemName"
+                ? colSortConfig.direction
+                : "none"
+            }
+            onSortChange={(state) => handleColSort("itemName", state)}
+            searchValue={colFilters.itemName || ""}
+            onSearchChange={(val) => handleColSearch("itemName", val)}
+            selectedFilters={colSelectedFilters.itemName || []}
+            onFilterChange={(vals) => handleColFilterChange("itemName", vals)}
+            filterOptions={itemNameOptions}
+            align="center"
+          />
+        ),
         minSize: 150,
+        enableResizing: true,
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px]",
         cell: (line: BomLikeLine) => (
@@ -230,6 +508,7 @@ export function ProductionOrderDrawer({
         key: "altItem",
         header: t("NVL thay thế"),
         minSize: 150,
+        enableResizing: true,
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px] p-0 align-top",
         cell: (line: BomLikeLine, _: number, meta: any) => {
@@ -308,10 +587,27 @@ export function ProductionOrderDrawer({
       },
       {
         key: "required",
-        header: t("Cần Dùng"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Cần Dùng")}
+            sortState={
+              colSortConfig?.key === "required"
+                ? colSortConfig.direction
+                : "none"
+            }
+            onSortChange={(state) => handleColSort("required", state)}
+            searchValue={colFilters.required || ""}
+            onSearchChange={(val) => handleColSearch("required", val)}
+            selectedFilters={colSelectedFilters.required || []}
+            onFilterChange={(vals) => handleColFilterChange("required", vals)}
+            filterOptions={requiredOptions}
+            align="center"
+          />
+        ),
         minSize: 150,
+        enableResizing: true,
         headerClassName: "min-w-[150px] text-right",
-        className: "min-w-[150px] text-right",
+        className: "min-w-[150px] text-right tabular-nums",
         cell: (line: BomLikeLine) => {
           const requiredQty = Number(line.qtyRequired || 0);
           const displayRequired = requiredQty;
@@ -324,10 +620,27 @@ export function ProductionOrderDrawer({
       },
       {
         key: "available",
-        header: t("Khả Dụng"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Khả Dụng")}
+            sortState={
+              colSortConfig?.key === "available"
+                ? colSortConfig.direction
+                : "none"
+            }
+            onSortChange={(state) => handleColSort("available", state)}
+            searchValue={colFilters.available || ""}
+            onSearchChange={(val) => handleColSearch("available", val)}
+            selectedFilters={colSelectedFilters.available || []}
+            onFilterChange={(vals) => handleColFilterChange("available", vals)}
+            filterOptions={availableOptions}
+            align="center"
+          />
+        ),
         minSize: 150,
+        enableResizing: true,
         headerClassName: "min-w-[150px] text-right",
-        className: "min-w-[150px] text-right",
+        className: "min-w-[150px] text-right tabular-nums",
         cell: (line: BomLikeLine, _: number, meta: any) => {
           const { alternativeItems, balances } = meta;
           const requiredQty = Number(line.qtyRequired || 0);
@@ -358,8 +671,23 @@ export function ProductionOrderDrawer({
       },
       {
         key: "note",
-        header: t("Ghi chú"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ghi chú")}
+            sortState={
+              colSortConfig?.key === "note" ? colSortConfig.direction : "none"
+            }
+            onSortChange={(state) => handleColSort("note", state)}
+            searchValue={colFilters.note || ""}
+            onSearchChange={(val) => handleColSearch("note", val)}
+            selectedFilters={colSelectedFilters.note || []}
+            onFilterChange={(vals) => handleColFilterChange("note", vals)}
+            filterOptions={noteOptions}
+            align="center"
+          />
+        ),
         minSize: 150,
+        enableResizing: true,
         headerClassName: "min-w-[150px]",
         className: "min-w-[150px] p-0 align-middle",
         cell: (line: BomLikeLine, _: number, meta: any) => {
@@ -384,7 +712,17 @@ export function ProductionOrderDrawer({
         },
       },
     ],
-    [t],
+    [
+      t,
+      colSortConfig,
+      colFilters,
+      colSelectedFilters,
+      itemCodeOptions,
+      itemNameOptions,
+      requiredOptions,
+      availableOptions,
+      noteOptions,
+    ],
   );
 
   const leftPanel = (
@@ -397,9 +735,8 @@ export function ProductionOrderDrawer({
               <div>
                 <FilterButton
                   onClick={() => {}}
-                  activeCount={
-                    (showLackingOnly ? 1 : 0) + (localSearch ? 1 : 0)
-                  }
+                  activeCount={activeFilterCount}
+                  onClear={clearAllFilters}
                 />
               </div>
             </Popover.Trigger>

@@ -18,6 +18,11 @@ import { Forbidden } from "@/pages/Forbidden";
 import { useT } from "@/core/i18n";
 import { useUIStore } from "@/core/config/uiStore";
 import { Progress } from "@/shared/components/ui/progress";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 
 import {
   productionCoreApi,
@@ -141,9 +146,7 @@ export function ProductionOrderListPage() {
   const filterDateTo = filter.state.dateTo;
   const filterFinishedGood = filter.state.custom.finishedGoodItemId;
 
-  const [sortBy, setSortBy] = useState<string | undefined>(
-    "planned_start_date",
-  );
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const loadData = useCallback(async () => {
@@ -338,64 +341,197 @@ export function ProductionOrderListPage() {
   const columns = useMemo(
     () => [
       {
+        key: "referenceNo",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Mã lệnh")}
+            sortState={sortBy === "reference_no" ? sortOrder : "none"}
+            onSortChange={() => handleSort("reference_no")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="reference_no"
+            align="center"
+          />
+        ),
+        sortable: false,
+        size: 200,
+        enableResizing: true,
+        cell: (item: ErpProductionOrder) => (
+          <div className="flex items-center gap-2 w-full">
+            <TableText
+              text={item.referenceNo || item.id.split("-")[0]}
+              enableCopy={true}
+              tooltip={true}
+              onDrawerClick={(e) => {
+                e?.stopPropagation();
+                handleEdit(item.id, !canUpdate);
+              }}
+            />
+            {(item.status === "DRAFT" || item.status === "CANCELLED") && (
+              <Badge
+                variant={
+                  item.status === "CANCELLED" ? "destructive" : "secondary"
+                }
+                className="text-[10px] px-1 py-0 h-4 flex-shrink-0"
+              >
+                {item.status === "CANCELLED" ? t("Hủy") : t("Nháp")}
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+      {
         key: "plannedStartDate",
-        header: t("Ngày bắt đầu"),
-        sortable: true,
-        sortKey: "planned_start_date",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ngày bắt đầu")}
+            sortState={sortBy === "planned_start_date" ? sortOrder : "none"}
+            onSortChange={() => handleSort("planned_start_date")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="planned_start_date"
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={filterDateFrom}
+                dateTo={filterDateTo}
+                onChange={(from, to) => {
+                  filter.setDateFrom(from);
+                  filter.setDateTo(to);
+                  setPage(1);
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">{fmtDate(item.plannedStartDate)}</div>
         ),
       },
       {
         key: "plannedEndDate",
-        header: t("Ngày kết thúc"),
-        sortable: true,
-        sortKey: "planned_end_date",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ngày kết thúc")}
+            sortState={sortBy === "planned_end_date" ? sortOrder : "none"}
+            onSortChange={() => handleSort("planned_end_date")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="planned_end_date"
+            hideFilter={true}
+            hideFooter={true}
+            align="center"
+            dateRangeSlot={({ close }) => (
+              <DateRangeColumnSlot
+                dateFrom={filterDateFrom}
+                dateTo={filterDateTo}
+                onChange={(from, to) => {
+                  filter.setDateFrom(from);
+                  filter.setDateTo(to);
+                  setPage(1);
+                  close();
+                }}
+                onClose={close}
+              />
+            )}
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">{fmtDate(item.plannedEndDate)}</div>
         ),
       },
       {
-        key: "referenceNo",
-        header: t("Mã lệnh"),
-        sortable: true,
-        sortKey: "reference_no",
-        cell: (item: ErpProductionOrder) => (
-          <div className="w-full">
-            <span
-              className="cursor-pointer font-medium text-emerald-600 hover:underline"
-              onClick={() => handleEdit(item.id, !canUpdate)}
-            >
-              {item.referenceNo || item.id.split("-")[0]}
-            </span>
-          </div>
-        ),
-      },
-      {
         key: "finishedGoodItemName",
-        header: t("Thành phẩm"),
-        sortable: true,
-        sortKey: "finished_good_item_name",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Thành phẩm")}
+            sortState={
+              sortBy === "finished_good_item_name" ? sortOrder : "none"
+            }
+            onSortChange={() => handleSort("finished_good_item_name")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="finished_good_item_name"
+            align="center"
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">
-            {item.finishedGoodItemName || item.finishedGoodItemId || "—"}
+            <Tooltip
+              content={
+                item.finishedGoodItemName || item.finishedGoodItemId || "—"
+              }
+            >
+              <span className="block truncate max-w-[200px]">
+                {item.finishedGoodItemName || item.finishedGoodItemId || "—"}
+              </span>
+            </Tooltip>
           </div>
         ),
       },
       {
         key: "bomVersion",
-        header: t("Phiên bản BOM"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Phiên bản BOM")}
+            sortState={sortBy === "bomVersion" ? sortOrder : "none"}
+            onSortChange={() => handleSort("bomVersion")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="bomVersion"
+            align="center"
+          />
+        ),
         sortable: false,
-        size: 200,
+        size: 150,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => (
           <div className="w-full">{item.bomVersion || "—"}</div>
         ),
       },
       {
         key: "qtyProduced",
-        header: t("Tiến độ"),
-        sortable: true,
-        sortKey: "qty_produced",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Tiến độ")}
+            sortState={sortBy === "qty_produced" ? sortOrder : "none"}
+            onSortChange={() => handleSort("qty_produced")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="qty_produced"
+            align="center"
+          />
+        ),
+        sortable: false,
+        enableResizing: true,
         cell: (item: ErpProductionOrder) => {
           const produced = Number(item.qtyProduced) || 0;
           const target = Number(item.qtyToProduce) || 0;
@@ -425,29 +561,68 @@ export function ProductionOrderListPage() {
       },
       {
         key: "status",
-        header: t("Trạng thái"),
-        sortable: true,
-        sortKey: "status",
-        cell: (item: ErpProductionOrder) => (
-          <div className="w-full">
-            <span
-              className={`rounded-md px-2 py-0.5 text-[11px] font-semibold border ${
-                item.status === "COMPLETED"
-                  ? "bg-emerald-100 text-emerald-800 border-emerald-200"
-                  : item.status === "IN_PROGRESS"
-                    ? "bg-blue-100 text-blue-800 border-blue-200"
-                    : item.status === "CANCELLED"
-                      ? "bg-red-100 text-red-800 border-red-200"
-                      : "bg-amber-100 text-amber-800 border-amber-200"
-              }`}
-            >
-              {item.status || "—"}
-            </span>
-          </div>
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Trạng thái")}
+            sortState={sortBy === "status" ? sortOrder : "none"}
+            onSortChange={() => handleSort("status")}
+            searchValue=""
+            onSearchChange={() => {}}
+            selectedFilters={[]}
+            onFilterChange={() => {}}
+            fetchOptions={productionCoreApi.getProductionOrderColumnOptions}
+            columnKey="status"
+            filterOptions={[
+              { value: "DRAFT", label: t("Nháp") },
+              { value: "IN_PROGRESS", label: t("Đang thực hiện") },
+              { value: "COMPLETED", label: t("Hoàn thành") },
+              { value: "CANCELLED", label: t("Hủy") },
+            ]}
+            align="center"
+          />
         ),
+        sortable: false,
+        enableResizing: true,
+        cell: (item: ErpProductionOrder) => {
+          let variant:
+            | "default"
+            | "secondary"
+            | "destructive"
+            | "outline"
+            | "ghost";
+          const label = item.status || "—";
+          if (item.status === "COMPLETED") {
+            variant = "default";
+          } else if (item.status === "IN_PROGRESS") {
+            variant = "secondary";
+          } else if (item.status === "CANCELLED") {
+            variant = "destructive";
+          } else {
+            variant = "outline";
+          }
+
+          return (
+            <div className="w-full">
+              <Badge
+                variant={variant}
+                className={
+                  item.status === "COMPLETED"
+                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200"
+                    : item.status === "IN_PROGRESS"
+                      ? "bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200"
+                      : item.status === "CANCELLED"
+                        ? "bg-red-100 text-red-800 hover:bg-red-100 border-red-200"
+                        : "bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-200"
+                }
+              >
+                {label}
+              </Badge>
+            </div>
+          );
+        },
       },
     ],
-    [t, canUpdate],
+    [t, canUpdate, sortBy, sortOrder],
   );
 
   if (!canRead) return <Forbidden />;
@@ -470,7 +645,6 @@ export function ProductionOrderListPage() {
       totalPages={Math.ceil(total / pageSize)}
       onPage={setPage}
       onPageSize={setPageSize}
-      onRowClick={(item) => handleEdit(item.id, true)}
       onRefresh={loadData}
       createActions={
         canCreate

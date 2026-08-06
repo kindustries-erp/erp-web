@@ -19,6 +19,9 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** cho header để tích hợp sẵn Filter và Sorting.
 
 - Cần truyền thêm prop `align="center"` cho `<TableColumnHeaderFilter>` để header luôn được canh giữa một cách chuẩn xác.
+- **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options (column options) trong popover.
+- **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `DateRangeColumnSlot` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ lọc Date Range, và set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
+- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**. Nghĩa là khi user chọn filter ở một cột A (ví dụ Mã linh kiện), thì filter options ở cột B (ví dụ Tên linh kiện) chỉ được hiển thị các giá trị tương ứng còn lại trong bảng.
 
 ### Client-side vs Server-side Logic
 
@@ -209,6 +212,11 @@ cell: (row) => (
   `containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"`.
 - Style bảng dạng Excel (nếu cần edit): `variant="spreadsheet"`.
 
+## 10. Default Sort (Sắp xếp mặc định)
+
+- UI **KHÔNG ĐƯỢC** set state `sortBy` mặc định (vd: `const [sortBy, setSortBy] = useState<string | undefined>(undefined);`) nếu muốn bảng sắp xếp mặc định theo ngày tạo/ngày chứng từ.
+- Backend **PHẢI** tự động apply sort mặc định (thường là `createdAt` DESC hoặc theo ngày chứng từ) khi UI truyền lên `sort` rỗng. Việc này đảm bảo khi vừa vào trang, bảng dữ liệu đã được sort mới nhất lên đầu nhưng trên Header UI không bị khoá cứng icon "đang sort" tại bất kỳ cột nào cho đến khi User click.
+
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc `ActionDropdown` chưa?
@@ -216,6 +224,8 @@ cell: (row) => (
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
 - [ ] Cột đầu tiên (Checkbox/Action/#) rộng đúng `40px` chưa?
 - [ ] Header có `<TableColumnHeaderFilter align="center">` chưa?
+- [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
+- [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
 - [ ] Drawer thì client-side filter, Page thì server-side chưa?
 - [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Badge status (nếu Nháp/Hủy) chưa?
 - [ ] Cột thời gian có format 2 dòng (Ngày to, Giờ nhỏ xám) chưa?
@@ -223,3 +233,4 @@ cell: (row) => (
 - [ ] Cột trạng thái (status/state) độc lập có dùng `<Badge>` không?
 - [ ] Các cột số tiền / số lượng có `summaryRow` tổng không?
 - [ ] Text đã có namespace i18n (`t(...)`) chưa?
+- [ ] Đã bỏ default state `sortBy` ở UI và dùng default sort ở Backend chưa?
