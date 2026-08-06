@@ -16,6 +16,7 @@ interface Props {
   children: React.ReactNode;
   onSyncDetail?: () => void;
   loadingDetail?: boolean;
+  hideEditToggle?: boolean;
 }
 
 export function ErpInvoiceInternalDrawer({
@@ -31,6 +32,7 @@ export function ErpInvoiceInternalDrawer({
   children,
   onSyncDetail,
   loadingDetail,
+  hideEditToggle = false,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
@@ -89,11 +91,12 @@ export function ErpInvoiceInternalDrawer({
       open={open}
       mode={editMode ? "edit" : "view"}
       onClose={onClose}
-      onToggleEdit={!editMode ? startEdit : undefined}
+      onToggleEdit={!editMode && !hideEditToggle ? startEdit : undefined}
       title={drawerTitle}
       titleExtra={titleExtra}
       size="xl"
       layout={rightPanel ? "2-columns" : "1-column"}
+      collapsibleRightPanel={true}
       confirmOnClose={editMode}
       actions={editMode ? editActions : viewActions}
       leftPanel={children}

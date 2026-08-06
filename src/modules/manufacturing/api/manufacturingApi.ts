@@ -60,6 +60,25 @@ export interface ErpVehicle {
   created_at?: string;
 }
 
+export interface AsBuiltBomItem {
+  id: string;
+  vehicle_id: string;
+  production_order_id: string | null;
+  bom_line_id: string | null;
+  assigned_at: string;
+  assignment_source: "AUTO_FIFO" | "QR_SCAN" | "MANUAL_SCAN";
+  checkpoint_id?: string | null;
+  checkpoint_name?: string | null;
+  worker_id?: string | null;
+  serial: {
+    id: string;
+    serial_no: string;
+    item_id: string;
+    item_name: string | null;
+    sku: string | null;
+  } | null;
+}
+
 export interface CreateVehicleDto {
   vin?: string | null;
   frame_no: string;
@@ -318,6 +337,24 @@ export const manufacturingApi = {
 
   createVehicle: async (payload: CreateVehicleDto): Promise<ErpVehicle> => {
     const { data } = await axiosInstance.post(`${BASE}/vehicles`, payload);
+    return data;
+  },
+
+  getAsBuiltBom: async (
+    vehicleId: string,
+  ): Promise<{ data: AsBuiltBomItem[] }> => {
+    const { data } = await axiosInstance.get(
+      `${BASE}/items/vehicles/${vehicleId}/as-built-bom`,
+    );
+    return data;
+  },
+
+  getAssignedVehicleBySerial: async (
+    serialId: string,
+  ): Promise<ErpVehicle | null> => {
+    const { data } = await axiosInstance.get(
+      `${BASE}/items/serials/${serialId}/assigned-vehicle`,
+    );
     return data;
   },
 };

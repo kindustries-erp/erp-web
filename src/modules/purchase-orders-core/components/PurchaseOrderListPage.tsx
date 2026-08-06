@@ -147,14 +147,25 @@ export function PurchaseOrderListPage() {
     onToggleExpand: toggleExpandRow,
     onOpenDetail: openDetail,
     tableState,
-    fetchColumnOptions: ({ columnKey, search, pageParam, filtersStr }) =>
-      operationalApi.getPurchaseOrderColumnOptions(
+    fetchColumnOptions: async ({
+      columnKey,
+      search,
+      pageParam,
+      filtersStr,
+    }) => {
+      const res = await operationalApi.getPurchaseOrderColumnOptions(
         columnKey,
         search,
         pageParam,
         20,
         filtersStr,
-      ),
+      );
+      return {
+        items: res.items.map((i) => ({ label: i, value: i })),
+        total: res.total,
+        next: res.page < res.totalPages ? res.page + 1 : null,
+      };
+    },
   });
 
   return (

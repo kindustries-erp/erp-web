@@ -62,7 +62,7 @@ export const emptyGiLine = (): GiLineForm => ({
 export const emptyGiForm = (): GiForm => ({
   issueNo: "",
   issueDate: new Date().toISOString().slice(0, 10),
-  issueType: "SALE",
+  issueType: "",
   salesOrderId: "",
   productionOrderId: "",
   status: "DRAFT",
@@ -407,4 +407,10 @@ export function useGiDrawer({
   };
 }
 
-export type UseGiDrawerReturn = ReturnType<typeof useGiDrawer>;
+export type UseGiDrawerReturn = ReturnType<typeof useGiDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

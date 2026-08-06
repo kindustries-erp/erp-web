@@ -7,6 +7,8 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "erp-inventory-stock",
   "erp-inventory-tracking",
   "erp-inventory-tracking-parts",
+  "erp-inventory-tracking-lot",
+  "erp-inventory-tracking-custom",
   "erp-inventory-vouchers",
   "mfg-items",
   "mfg-purchase-orders",

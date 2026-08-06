@@ -272,4 +272,10 @@ export function useIaDrawer({
   };
 }
 
-export type UseIaDrawerReturn = ReturnType<typeof useIaDrawer>;
+export type UseIaDrawerReturn = ReturnType<typeof useIaDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

@@ -166,8 +166,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
   return (
     <>
       <StandardFormDrawer
+        noAnimation={!!drawer.unifiedContext}
         open={open}
         mode={viewOnly ? "view" : editing ? "edit" : "create"}
+        collapsibleRightPanel={true}
         onClose={close}
         onToggleEdit={
           viewOnly &&
@@ -579,6 +581,25 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
             </>
           ) : (
             <>
+              {drawer.unifiedContext &&
+                drawer.unifiedContext.mode === "create" && (
+                  <DrawerField label={t("Loại chứng từ")}>
+                    <Combobox
+                      options={[
+                        { value: "receipt", label: t("Phiếu nhập kho") },
+                        { value: "issue", label: t("Phiếu xuất kho") },
+                        { value: "adjustment", label: t("Điều chỉnh kho") },
+                      ]}
+                      value={drawer.unifiedContext.type}
+                      onChange={(v) =>
+                        drawer.unifiedContext!.setType(
+                          v as "receipt" | "issue" | "adjustment",
+                        )
+                      }
+                      allowClear={false}
+                    />
+                  </DrawerField>
+                )}
               <DrawerField label={t("Số phiếu xuất")} required>
                 <input
                   className={inputCls}
@@ -602,9 +623,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                   options={ISSUE_TYPE_OPTIONS}
                   value={form.issueType}
                   disabled={viewOnly || editing !== null}
+                  placeholder={t("— Chọn —")}
                   allowClear={false}
                   onChange={(v) =>
-                    setForm((f) => ({ ...f, issueType: v || "SALE" }))
+                    setForm((f) => ({ ...f, issueType: v || "" }))
                   }
                 />
               </DrawerField>

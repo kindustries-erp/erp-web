@@ -11,13 +11,20 @@ import {
   type ErpInvoiceItem,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
+import {
+  useCompanyProfile,
+  type CompanyProfile,
+} from "@/core/api/companyProfileApi";
 
 interface Props {
   draft: SinvoiceDraft | null;
   onClose: () => void;
 }
 
-function mapDraftToErpInvoice(draft: SinvoiceDraft): ErpInvoice {
+function mapDraftToErpInvoice(
+  draft: SinvoiceDraft,
+  companyProfile?: CompanyProfile,
+): ErpInvoice {
   const d = draft as any;
   const lpStr = d.listProduct || draft.responsePayload?.listProduct;
   let items: ErpInvoiceItem[] = [];
@@ -50,6 +57,17 @@ function mapDraftToErpInvoice(draft: SinvoiceDraft): ErpInvoice {
   const payload = draft.responsePayload || {};
   const preVatAmount =
     Number(draft.totalAmount || 0) - Number(draft.vatAmount || 0);
+  const sellerName =
+    companyProfile?.company_name ||
+    payload.companyName ||
+    payload.sellerName ||
+    "";
+  const sellerTaxCode = companyProfile?.tax_code || payload.sellerTaxCode || "";
+  const sellerAddress =
+    companyProfile?.address ||
+    payload.sellerAddress ||
+    payload.sellerAddressLine ||
+    "";
 
   return {
     id: draft.id,
@@ -58,9 +76,9 @@ function mapDraftToErpInvoice(draft: SinvoiceDraft): ErpInvoice {
     invoiceDate: draft.createdAt || new Date().toISOString(),
     direction: "OUT",
     status: draft.status || "DRAFT",
-    sellerName: "Công ty Cổ phần Nền Tảng Liouni",
-    sellerTaxCode: "0318334886",
-    sellerAddress: "123 Đường Liouni, HCM",
+    sellerName,
+    sellerTaxCode,
+    sellerAddress,
     buyerName: draft.buyerName || "",
     buyerTaxCode: draft.buyerTaxCode || "",
     buyerAddress: draft.buyerAddress || "",
@@ -78,10 +96,11 @@ function mapDraftToErpInvoice(draft: SinvoiceDraft): ErpInvoice {
 export function SinvoiceDraftDetailWrapper({ draft, onClose }: Props) {
   const formHook = useErpInvoiceForm(() => {});
   const [detailInvoice, setDetailInvoice] = useState<ErpInvoice | null>(null);
+  const { data: companyProfile } = useCompanyProfile();
 
   useEffect(() => {
     if (draft) {
-      const mapped = mapDraftToErpInvoice(draft);
+      const mapped = mapDraftToErpInvoice(draft, companyProfile);
       setDetailInvoice(mapped);
       // We manually populate the form hook's detail and skip fetch
       formHook.openInternal(mapped, true);
@@ -89,7 +108,7 @@ export function SinvoiceDraftDetailWrapper({ draft, onClose }: Props) {
       formHook.closeDrawer();
       setDetailInvoice(null);
     }
-  }, [draft]);
+  }, [draft, companyProfile]);
 
   const handleClose = () => {
     formHook.closeDrawer();
@@ -108,6 +127,7 @@ export function SinvoiceDraftDetailWrapper({ draft, onClose }: Props) {
       onClose={handleClose}
       editMode={false}
       detailInvoice={detailInvoice}
+      hideEditToggle={true}
       saving={false}
       handleSave={() => {}}
       startEdit={() => {}}
@@ -121,6 +141,7 @@ export function SinvoiceDraftDetailWrapper({ draft, onClose }: Props) {
             invoiceId={null}
             direction="OUT"
             detailInvoice={detailInvoice}
+            hideAccountingSection={true}
           />
         </div>
       }
@@ -136,6 +157,7 @@ export function SinvoiceDraftDetailWrapper({ draft, onClose }: Props) {
           pendingUnpost={false}
           onUnpost={() => {}}
           onRefreshDetail={() => {}}
+          hideLinkedDocuments={true}
           invoicePreview={
             detailInvoice ? (
               <VietnamInvoiceTemplate invoice={detailInvoice} />

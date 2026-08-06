@@ -54,6 +54,9 @@ export interface DrawerModalProps {
   /** Optional classes for special drawer layouts */
   panelClassName?: string;
   bodyClassName?: string;
+
+  /** When true, skip slide-in/out animation (instant show/hide). Useful for inline type switching. */
+  noAnimation?: boolean;
 }
 
 // ── Btn helper ─────────────────────────────────────────────────────────────
@@ -110,6 +113,7 @@ export function DrawerModal({
   stackOffset,
   panelClassName,
   bodyClassName,
+  noAnimation = false,
 }: DrawerModalProps) {
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -122,19 +126,27 @@ export function DrawerModal({
   useEffect(() => {
     if (open) {
       setMounted(true);
-      // Trigger enter animation on next frame after portal is in DOM
-      requestAnimationFrame(() => {
+      if (noAnimation) {
+        setVisible(true);
+      } else {
+        // Trigger enter animation on next frame after portal is in DOM
         requestAnimationFrame(() => {
-          setVisible(true);
+          requestAnimationFrame(() => {
+            setVisible(true);
+          });
         });
-      });
+      }
     } else {
       setVisible(false);
-      // Wait for exit animation before unmounting
-      const timer = setTimeout(() => setMounted(false), 280);
-      return () => clearTimeout(timer);
+      if (noAnimation) {
+        setMounted(false);
+      } else {
+        // Wait for exit animation before unmounting
+        const timer = setTimeout(() => setMounted(false), 280);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [open]);
+  }, [open, noAnimation]);
 
   const [instanceId] = useState(() => {
     drawerStackSeq += 1;

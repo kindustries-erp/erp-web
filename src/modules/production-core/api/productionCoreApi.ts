@@ -302,6 +302,34 @@ export const productionCoreApi = {
       : ((data as unknown as { data?: string }).data ?? "");
   },
 
+  getProductionOrderColumnOptions: async (params: {
+    columnKey: string;
+    search: string;
+    pageParam: number;
+    filtersStr?: string;
+  }) => {
+    const { data } = await axiosInstance.get<{
+      items: string[];
+      total: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    }>("/api/v1/production/orders/column-options", {
+      params: {
+        column: params.columnKey,
+        search: params.search,
+        page: params.pageParam,
+        pageSize: 20,
+        filters: params.filtersStr,
+      },
+    });
+    return {
+      items: data.items.map((i) => ({ label: i, value: i })),
+      total: data.total,
+      next: data.page < data.totalPages ? data.page + 1 : null,
+    };
+  },
+
   listMasterOptions: async (
     params?: ListParams,
   ): Promise<ProductionOrderMasterOption[]> => {

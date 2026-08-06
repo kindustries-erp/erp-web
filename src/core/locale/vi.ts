@@ -44,6 +44,8 @@ import { accountsVi } from "@/core/locale/accounting/accounts/vi";
 import { globalSettingsVi } from "@/core/locale/system/globalSettings/vi";
 import { attachmentsVi } from "@/core/locale/system/attachments/vi";
 import { legacyStringsVi } from "@/core/locale/system/legacyStrings/vi";
+import { inventoryTrackingLotVi } from "@/core/locale/inventory/inventoryTrackingLot/vi";
+import { inventoryTrackingCustomVi } from "@/core/locale/inventory/inventoryTrackingCustom/vi";
 
 export const vi = {
   nav: navVi,
@@ -222,6 +224,8 @@ export const vi = {
   "Chỉnh sửa": legacyStringsVi["Chỉnh sửa"],
   globalSettings: globalSettingsVi,
   attachments: attachmentsVi,
+  inventoryTrackingLot: inventoryTrackingLotVi,
+  inventoryTrackingCustom: inventoryTrackingCustomVi,
 };
 
 export type Dict = typeof vi;
