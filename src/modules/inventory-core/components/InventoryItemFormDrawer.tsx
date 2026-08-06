@@ -18,7 +18,9 @@ import {
   type CreateInventoryItemPayload,
   type ErpInventoryItem,
   type InventoryMasterOption,
+  type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 
 interface ItemForm {
   sku: string;
@@ -91,6 +93,7 @@ export function InventoryItemFormDrawer({
   onSuccess,
   viewOnly: initialViewOnly = false,
   onToggleEdit,
+  onOpenDocument,
 }: {
   open: boolean;
   onClose: () => void;
@@ -98,6 +101,7 @@ export function InventoryItemFormDrawer({
   onSuccess?: () => void;
   viewOnly?: boolean;
   onToggleEdit?: () => void;
+  onOpenDocument?: (docId: string, docType: string) => void;
 }) {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
@@ -108,6 +112,11 @@ export function InventoryItemFormDrawer({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [movData, setMovData] = useState<InventoryMovementsPayload | undefined>(
+    undefined,
+  );
+  const [movLoading, setMovLoading] = useState(false);
+  const [movError, setMovError] = useState<string | null>(null);
 
   const [uomOptions, setUomOptions] = useState<
     Array<{ value: string; label: string }>
@@ -164,6 +173,8 @@ export function InventoryItemFormDrawer({
       setEditing(null);
       setForm(emptyForm());
       setSaveError(null);
+      setMovData(undefined);
+      setMovError(null);
       return;
     }
     setViewOnly(initialViewOnly);
@@ -186,7 +197,22 @@ export function InventoryItemFormDrawer({
     } else {
       setEditing(null);
       setForm(emptyForm());
+      setMovData(undefined);
+      setMovError(null);
     }
+  }, [open, itemId]);
+
+  useEffect(() => {
+    if (!open || !itemId) return;
+    setMovLoading(true);
+    setMovError(null);
+    inventoryCoreApi
+      .movements(itemId)
+      .then((data) => setMovData(data))
+      .catch((e) =>
+        setMovError(e instanceof Error ? e.message : "Lỗi tải lịch sử"),
+      )
+      .finally(() => setMovLoading(false));
   }, [open, itemId]);
 
   async function handleSave() {
@@ -251,8 +277,28 @@ export function InventoryItemFormDrawer({
       }
       subtitle={editing ? editing.sku : "Danh mục item kho dùng chung"}
       actions={drawerActions}
-      layout="1-column"
+      layout="2-columns"
+      size="xl"
+      collapsibleRightPanel={true}
       leftPanel={
+        viewOnly && itemId ? (
+          <div className="flex flex-col h-full rounded-lg overflow-hidden">
+            <InventoryTimelineBlock
+              itemId={itemId}
+              loadingId={movLoading ? itemId : null}
+              error={movError}
+              data={movData}
+              onOpenDocument={onOpenDocument}
+              containerClassName="max-h-[calc(100vh-140px)] overflow-y-auto"
+            />
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-sm text-muted-foreground p-8 text-center bg-slate-50 dark:bg-zinc-950/50 rounded-lg border border-dashed">
+            Lịch sử xuất nhập kho sẽ hiển thị sau khi tạo item.
+          </div>
+        )
+      }
+      rightPanel={
         <>
           {saveError && (
             <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
