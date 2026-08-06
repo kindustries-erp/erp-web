@@ -93,6 +93,7 @@ export function AfterSalesDrawer({
     <StandardFormDrawer
       open={open}
       mode={mode}
+      collapsibleRightPanel={true}
       onClose={onClose}
       onToggleEdit={onToggleEdit}
       title={

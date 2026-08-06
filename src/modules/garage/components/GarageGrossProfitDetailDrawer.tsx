@@ -66,6 +66,7 @@ export function GarageGrossProfitDetailDrawer({
     <StandardFormDrawer
       open={isOpen}
       mode={drawerMode}
+      collapsibleRightPanel={true}
       onToggleEdit={() =>
         setDrawerMode(drawerMode === "view" ? "edit" : "view")
       }

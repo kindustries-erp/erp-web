@@ -5,10 +5,6 @@ import { useOperationalListStore } from "@/modules/operational/hooks/useOperatio
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { useOperationalListQuery } from "@/modules/operational/hooks/useOperationalListQuery";
 import { OperationalInventoryPage } from "@/modules/operational/components/list/OperationalInventoryPage";
-import {
-  inventoryCoreApi,
-  type InventoryMovementsPayload,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
 import { Button } from "@/shared/components/ui/Button";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ChevronDown, Download, Trash, CheckSquare } from "lucide-react";
@@ -26,8 +22,6 @@ export function InventoryListPage() {
     page,
     setPage,
     pageSize,
-    expandedStockItemIds,
-    toggleExpandStockItem,
     itemTypeFilter,
   } = listStore;
 
@@ -35,11 +29,6 @@ export function InventoryListPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [movLoadingId, setMovLoadingId] = useState<string | null>(null);
-  const [movError, setMovError] = useState<string | null>(null);
-  const [movMap, setMovMap] = useState<
-    Record<string, InventoryMovementsPayload>
-  >({});
   const [viewingItemId, setViewingItemId] = useState<string | null>(null);
   const [creatingItem, setCreatingItem] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
@@ -76,25 +65,6 @@ export function InventoryListPage() {
   const stockItems = (listQuery.data?.items || []) as InventoryStockRow[];
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
-
-  async function handleToggleInventoryExpand(row: InventoryStockRow) {
-    const isExpanded = expandedStockItemIds[row.inventory_item_id];
-    toggleExpandStockItem(row.inventory_item_id);
-    if (isExpanded) return;
-    setMovError(null);
-    if (movMap[row.inventory_item_id]) return;
-    setMovLoadingId(row.inventory_item_id);
-    try {
-      const data = await inventoryCoreApi.movements(row.inventory_item_id);
-      setMovMap((prev) => ({ ...prev, [row.inventory_item_id]: data }));
-    } catch (e) {
-      setMovError(
-        e instanceof Error ? e.message : "Không thể tải lịch sử xuất nhập kho",
-      );
-    } finally {
-      setMovLoadingId(null);
-    }
-  }
 
   const selectedCount = Object.keys(rowSelection).filter(
     (key) => rowSelection[key],
@@ -151,10 +121,6 @@ export function InventoryListPage() {
         totalPages={totalPages}
         viewingItemId={viewingItemId}
         creatingItem={creatingItem}
-        movLoadingId={movLoadingId}
-        movError={movError}
-        movMap={movMap}
-        onToggleInventoryExpand={handleToggleInventoryExpand}
         onViewItem={(id) => setViewingItemId(id)}
         onCloseViewItem={() => setViewingItemId(null)}
         onOpenCreateItem={() => setCreatingItem(true)}
@@ -168,19 +134,7 @@ export function InventoryListPage() {
             listQuery.refetch(),
             new Promise((resolve) => setTimeout(resolve, 500)),
           ]).finally(() => setIsReloading(false));
-
-          const expandedIds = Object.keys(expandedStockItemIds).filter(
-            (key) => expandedStockItemIds[key],
-          );
-          expandedIds.forEach((id) => {
-            inventoryCoreApi
-              .movements(id)
-              .then((data) => {
-                setMovMap((prev) => ({ ...prev, [id]: data }));
-              })
-              .catch(() => {});
-          });
-        }, [listQuery.refetch, expandedStockItemIds, setMovMap])}
+        }, [listQuery.refetch])}
       />
     </>
   );

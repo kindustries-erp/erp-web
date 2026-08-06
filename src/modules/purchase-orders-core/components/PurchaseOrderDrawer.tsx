@@ -117,6 +117,7 @@ export function PurchaseOrderDrawer({
     <StandardFormDrawer
       open={open}
       mode={mode}
+      collapsibleRightPanel={true}
       onClose={onClose}
       onToggleEdit={onToggleEdit}
       title={

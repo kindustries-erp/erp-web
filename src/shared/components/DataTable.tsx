@@ -1,4 +1,4 @@
-import React, { type ReactNode, useState, useEffect } from "react";
+import React, { type ReactNode, useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import * as Popover from "@radix-ui/react-popover";
 import { Settings2, GripVertical } from "lucide-react";
@@ -51,6 +51,7 @@ import { cn } from "@/shared/utils";
 import { format as formatDate, isValid } from "date-fns";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Badge } from "@/shared/components/ui/badge";
+import { EmptyState } from "@/shared/components/EmptyState";
 
 function getNestedValue(obj: any, path: string | number | symbol) {
   if (typeof path !== "string") return obj[path];
@@ -60,7 +61,7 @@ function getNestedValue(obj: any, path: string | number | symbol) {
 export interface DataTableColumn<T> {
   key: string;
   header: ReactNode;
-  cell?: (item: T, index: number) => ReactNode;
+  cell?: (item: T, index: number, meta: any) => ReactNode;
   dataIndex?: keyof T | string;
   valueType?: "text" | "number" | "date" | "status";
   dateFormat?: string;
@@ -78,7 +79,7 @@ export interface DataTableColumn<T> {
 }
 
 export interface ActionsColumnConfig<T> {
-  cell: (item: T, index: number) => ReactNode;
+  cell: (item: T, index: number, meta?: any) => ReactNode;
   header?: ReactNode;
   className?: string;
   headerClassName?: string;
@@ -100,7 +101,8 @@ interface DataTableRowMeta {
 interface DataTableProps<T> {
   items: T[];
   columns: DataTableColumn<T>[];
-  getRowKey: (item: T) => string;
+  getRowKey?: (item: T) => string;
+  tableMeta?: any;
   loading?: boolean;
   error?: string | null;
   emptyLabel: string;
@@ -336,6 +338,7 @@ export function DataTable<T>({
   summaryRow,
   defaultColumnOrder,
   sidePanel,
+  tableMeta,
 }: DataTableProps<T>) {
   const { getTablePreference, setTablePreferences } = useUserPreferences();
 
@@ -462,12 +465,14 @@ export function DataTable<T>({
     !!onPage &&
     !!onPageSize;
 
-  const effectiveColumns = actionsColumn
-    ? columns.filter((col) => col.key !== "actions")
-    : columns;
+  const effectiveColumns = useMemo(
+    () =>
+      actionsColumn ? columns.filter((col) => col.key !== "actions") : columns,
+    [columns, actionsColumn],
+  );
 
-  const tableColumns: ColumnDef<T, unknown>[] = effectiveColumns.map(
-    (column) => {
+  const tableColumns: ColumnDef<T, unknown>[] = useMemo(() => {
+    const cols: ColumnDef<T, unknown>[] = effectiveColumns.map((column) => {
       let cellClass = column.className;
       let headerClass = column.headerClassName;
       if (column.valueType === "number" || column.valueType === "date") {
@@ -477,7 +482,7 @@ export function DataTable<T>({
       return {
         id: column.key,
         header: () => column.header,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
           let value: any;
           if (column.cell) {
             value = column.cell(
@@ -485,6 +490,7 @@ export function DataTable<T>({
               page && pageSize
                 ? (page - 1) * pageSize + row.index + 1
                 : row.index + 1,
+              table.options.meta,
             );
           } else if (column.dataIndex) {
             value = getNestedValue(row.original, column.dataIndex);
@@ -551,89 +557,101 @@ export function DataTable<T>({
           label: column.label || column.header || column.key,
         } satisfies DataTableRowMeta,
       };
-    },
-  );
-
-  if (actionsColumn) {
-    const actionColSize = actionsColumn.size ?? 40;
-    const actionColMinSize = actionsColumn.minSize ?? actionColSize;
-    const actionColMaxSize = actionsColumn.maxSize ?? actionColSize;
-
-    tableColumns.push({
-      id: "__actions",
-      header: () => actionsColumn.header ?? "",
-      cell: ({ row }) =>
-        actionsColumn.cell(
-          row.original,
-          page && pageSize
-            ? (page - 1) * pageSize + row.index + 1
-            : row.index + 1,
-        ),
-      enableResizing: false,
-      size: actionColSize,
-      minSize: actionColMinSize,
-      maxSize: actionColMaxSize,
-      meta: {
-        className: cn(
-          "px-0 text-center",
-          variant !== "spreadsheet" &&
-            "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
-          actionsColumn.className,
-        ),
-        headerClassName: cn(
-          "px-0 text-center",
-          variant !== "spreadsheet" &&
-            "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
-          actionsColumn.headerClassName,
-        ),
-        skeletonClassName: "",
-        hideable: false,
-      } satisfies DataTableRowMeta,
     });
-  }
 
-  if (enableRowSelection) {
-    tableColumns.unshift({
-      id: "__selection",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-          className="translate-y-[2px]"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-          className="translate-y-[2px]"
-          onClick={(e) => e.stopPropagation()}
-        />
-      ),
-      enableResizing: false,
-      size: 40,
-      meta: {
-        className: cn(
-          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-          variant !== "spreadsheet" &&
-            "bg-surface sticky left-0 z-20 shadow-[1px_0_0_0_var(--border-light)]",
+    if (actionsColumn) {
+      const actionColSize = actionsColumn.size ?? 40;
+      const actionColMinSize = actionsColumn.minSize ?? actionColSize;
+      const actionColMaxSize = actionsColumn.maxSize ?? actionColSize;
+
+      cols.push({
+        id: "__actions",
+        header: () => actionsColumn.header ?? "",
+        cell: ({ row, table }) =>
+          actionsColumn.cell(
+            row.original,
+            page && pageSize
+              ? (page - 1) * pageSize + row.index + 1
+              : row.index + 1,
+            table.options.meta,
+          ),
+        enableResizing: false,
+        size: actionColSize,
+        minSize: actionColMinSize,
+        maxSize: actionColMaxSize,
+        meta: {
+          className: cn(
+            "px-0 text-center",
+            variant !== "spreadsheet" &&
+              "bg-surface group-hover:bg-surface-hover sticky right-0 shadow-[-1px_0_0_0_var(--border-light)] z-10",
+            actionsColumn.className,
+          ),
+          headerClassName: cn(
+            "px-0 text-center",
+            variant !== "spreadsheet" &&
+              "bg-muted sticky right-0 top-0 shadow-[-1px_1px_0_0_var(--border-light)] z-30",
+            actionsColumn.headerClassName,
+          ),
+          skeletonClassName: "",
+          hideable: false,
+        } satisfies DataTableRowMeta,
+      });
+    }
+
+    if (enableRowSelection) {
+      cols.unshift({
+        id: "__selection",
+        header: ({ table }) => (
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) =>
+              table.toggleAllPageRowsSelected(!!value)
+            }
+            aria-label="Select all"
+            className="translate-y-[2px]"
+          />
         ),
-        headerClassName: cn(
-          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-          variant !== "spreadsheet"
-            ? "bg-muted sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
-            : "bg-muted sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+            className="translate-y-[2px]"
+            onClick={(e) => e.stopPropagation()}
+          />
         ),
-        skeletonClassName: "",
-        hideable: false,
-      } satisfies DataTableRowMeta,
-    });
-  }
+        enableResizing: false,
+        size: 40,
+        meta: {
+          className: cn(
+            "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
+            variant !== "spreadsheet" &&
+              "bg-surface sticky left-0 z-20 shadow-[1px_0_0_0_var(--border-light)]",
+          ),
+          headerClassName: cn(
+            "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
+            variant !== "spreadsheet"
+              ? "bg-muted sticky left-0 top-0 z-40 shadow-[1px_1px_0_0_var(--border-light)]"
+              : "bg-muted sticky top-0 z-20 shadow-[0_1px_0_0_var(--border-light)] border-r border-border h-auto",
+          ),
+          skeletonClassName: "",
+          hideable: false,
+        } satisfies DataTableRowMeta,
+      });
+    }
+
+    return cols;
+  }, [
+    effectiveColumns,
+    actionsColumn,
+    enableRowSelection,
+    page,
+    pageSize,
+    variant,
+  ]);
 
   const table = useReactTable({
     data: items,
@@ -643,6 +661,7 @@ export function DataTable<T>({
     manualPagination: true,
     manualSorting: true,
     columnResizeMode: "onChange",
+    meta: tableMeta,
     state: {
       columnVisibility: internalVisibility,
       columnOrder: internalColumnOrder,
@@ -922,9 +941,9 @@ export function DataTable<T>({
                 <TableRow className="hover:bg-transparent">
                   <TableCell
                     colSpan={tableColumns.length + 1}
-                    className="text-center text-[color:var(--faint)] py-10"
+                    className="p-0 border-none"
                   >
-                    {emptyLabel}
+                    <EmptyState message={emptyLabel} />
                   </TableCell>
                 </TableRow>
               )}
@@ -933,7 +952,7 @@ export function DataTable<T>({
                 !error &&
                 table.getRowModel().rows.map((row) => {
                   const isExpanded = expandedRowKeys?.includes(
-                    getRowKey(row.original),
+                    getRowKey ? getRowKey(row.original) : row.id,
                   );
                   return (
                     <React.Fragment key={row.id}>

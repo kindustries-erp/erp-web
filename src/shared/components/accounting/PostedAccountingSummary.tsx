@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { money } from "@/shared/utils/format";
+import { BookOpen } from "lucide-react";
 
 interface PostedAccountingSummaryProps {
   isPosted: boolean;
@@ -72,8 +73,42 @@ export function PostedAccountingSummary({
 
   if (!isPosted) {
     return (
-      <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
-        {emptyLabel}
+      <div className="flex flex-col items-center justify-center py-6 px-4 select-none">
+        <div className="relative flex flex-col items-center mb-3">
+          <BookOpen
+            className="w-12 h-12"
+            strokeWidth={1.8}
+            style={{
+              color: "#94a3b8",
+              animation: "emptyFloat 3.5s ease-in-out infinite",
+            }}
+          />
+          {/* Ground shadow — shrinks when icon floats up */}
+          <div
+            style={{
+              width: 48,
+              height: 7,
+              marginTop: 4,
+              borderRadius: "50%",
+              background: "rgba(148,163,184,0.28)",
+              filter: "blur(4px)",
+              animation: "emptyShadow 3.5s ease-in-out infinite",
+            }}
+          />
+        </div>
+        <style>{`
+          @keyframes emptyFloat {
+            0%, 100% { transform: translateY(0px); }
+            50%       { transform: translateY(-8px); }
+          }
+          @keyframes emptyShadow {
+            0%, 100% { transform: scaleX(1);    opacity: 0.9; }
+            50%       { transform: scaleX(0.5);  opacity: 0.4; }
+          }
+        `}</style>
+        <p className="text-[13px] font-medium text-slate-400 text-center">
+          {emptyLabel}
+        </p>
       </div>
     );
   }

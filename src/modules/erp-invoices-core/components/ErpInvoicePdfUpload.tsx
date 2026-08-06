@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { Download, Search } from "lucide-react";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
 import { AttachmentRow } from "@/shared/components/AttachmentComponents";
@@ -184,9 +185,7 @@ export function ErpInvoicePdfUpload({
     >
       <div className="flex flex-col gap-3">
         {displayFiles.length === 0 && pendingAddedAttachments.length === 0 && (
-          <div className="text-sm text-gray-500 italic">
-            Chưa có tài liệu đính kèm.
-          </div>
+          <EmptyState size="md" message="Chưa có tài liệu đính kèm." />
         )}
         {displayFiles.length > 0 && (
           <div className="rounded-lg border border-border overflow-hidden">

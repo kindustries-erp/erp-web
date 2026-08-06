@@ -46,7 +46,19 @@ export function TableText({
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(text);
+    e.preventDefault();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.style.position = "absolute";
+      el.style.left = "-9999px";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
     setCopied(true);
     toast.success("Đã copy", { id: "table-text-copy" });
     setTimeout(() => setCopied(false), 2000);
@@ -101,6 +113,7 @@ export function TableText({
 
         {enableCopy && (
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             className={cn(

@@ -27,6 +27,9 @@
   --approve-fg: #15803d;
 
   --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --panel-shadow:
+    2px 8px 18px -10px rgba(24, 24, 27, 0.16),
+    1px 3px 8px -6px rgba(24, 24, 27, 0.1);
 
   /* ── Glass chrome — disabled for flat look ── */
   --glass-chrome: #ffffff;

@@ -522,6 +522,7 @@ export function BankTransactionDetailDrawer({
       open={isOpen}
       onClose={onClose}
       mode={editMode ? "edit" : "view"}
+      collapsibleRightPanel={true}
       onToggleEdit={!isLoading && transaction ? startEdit : undefined}
       title="Chi tiết giao dịch"
       size="xl"

@@ -25,6 +25,8 @@ export type PageKey =
   | "erp-inventory-stock"
   | "erp-inventory-tracking"
   | "erp-inventory-tracking-parts"
+  | "erp-inventory-tracking-lot"
+  | "erp-inventory-tracking-custom"
   | "erp-inventory-vouchers"
   | "suppliers"
   | "activity-log"

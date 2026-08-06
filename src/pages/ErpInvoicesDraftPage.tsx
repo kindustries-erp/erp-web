@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { FileText, Eye, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { Tooltip } from "@/core/components/ui/Tooltip";
+import { formatGMT7 } from "@/shared/utils/format";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { useUIStore } from "@/core/config/uiStore";
@@ -154,24 +156,26 @@ export function ErpInvoicesDraftPage() {
           )}
         />
       ),
-      className: "pl-6 text-[color:var(--muted-fg)] text-center",
+      className: "pl-6 text-center",
       headerClassName: "text-center",
-      size: 120,
+      size: 140,
       cell: (inv) => {
         const dStr = inv.responsePayload?.createdDate || inv.createdAt;
         if (!dStr) return "-";
         const d = new Date(dStr);
+        const datePart = d.toLocaleDateString("vi-VN");
+        const timePart = d.toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
         return (
-          <div className="flex flex-col">
-            <span>{d.toLocaleDateString("vi-VN")}</span>
-            <span className="text-[10px]">
-              {d.toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })}
-            </span>
-          </div>
+          <Tooltip content={formatGMT7(dStr, "datetime-sec")}>
+            <div className="cursor-help inline-flex flex-row items-baseline gap-1.5 whitespace-nowrap leading-tight">
+              <span className="text-sm text-gray-900">{datePart}</span>
+              <span className="text-xs text-gray-500">{timePart}</span>
+            </div>
+          </Tooltip>
         );
       },
     },

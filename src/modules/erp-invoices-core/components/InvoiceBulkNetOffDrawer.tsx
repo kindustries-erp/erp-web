@@ -1162,6 +1162,7 @@ export function InvoiceBulkNetOffDrawer({
         open={open}
         onClose={onClose}
         mode="create"
+        collapsibleRightPanel={true}
         title="Chỉnh sửa hàng loạt hóa đơn" // Matching the requested UI title pattern
         subtitle={`${selectedInvoices.length} hóa đơn được chọn`}
         layout="2-columns"

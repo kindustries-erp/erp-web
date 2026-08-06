@@ -35,6 +35,10 @@ import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import { extractItemCodeAndName } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
@@ -964,16 +968,42 @@ export function ErpBomPage() {
   const columns: DataTableColumn<ErpBom>[] = [
     {
       key: "bomCode",
-      header: t("Mã BOM"),
-      sortable: true,
-      sortKey: "bomCode",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Mã BOM")}
+          sortState={sortBy === "bomCode" ? sortOrder : "none"}
+          onSortChange={() => handleSort("bomCode")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="bom_code"
+          align="center"
+        />
+      ),
+      sortable: false,
+      size: 200,
+      enableResizing: true,
       cell: (item) => (
-        <div className="w-full">
-          <Tooltip content={item.bomCode}>
-            <span className="font-semibold text-primary block truncate max-w-[120px]">
-              {item.bomCode}
-            </span>
-          </Tooltip>
+        <div className="flex items-center gap-2 w-full">
+          <TableText
+            text={item.bomCode}
+            enableCopy={true}
+            tooltip={true}
+            onDrawerClick={(e) => {
+              e?.stopPropagation();
+              void openView(item);
+            }}
+          />
+          {item.status === "DRAFT" && (
+            <Badge
+              variant="secondary"
+              className="text-[10px] px-1 py-0 h-4 flex-shrink-0"
+            >
+              {t("Nháp")}
+            </Badge>
+          )}
         </div>
       ),
       skeletonClassName: "w-24",
@@ -1009,9 +1039,22 @@ export function ErpBomPage() {
     },
     {
       key: "bomName",
-      header: t("Tên BOM"),
-      sortable: true,
-      sortKey: "bomName",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Tên BOM")}
+          sortState={sortBy === "bomName" ? sortOrder : "none"}
+          onSortChange={() => handleSort("bomName")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="bom_name"
+          align="center"
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
       cell: (item) => (
         <div className="w-full overflow-hidden flex">
           <Tooltip content={item.bomName}>
@@ -1023,9 +1066,22 @@ export function ErpBomPage() {
     },
     {
       key: "finishedGoodItemName",
-      header: t("Thành phẩm"),
-      sortable: true,
-      sortKey: "finishedGoodItemName",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Thành phẩm")}
+          sortState={sortBy === "finishedGoodItemName" ? sortOrder : "none"}
+          onSortChange={() => handleSort("finishedGoodItemName")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="finished_good_item_name"
+          align="center"
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
       cell: (item) => {
         const name =
           item.finishedGoodItemName ||
@@ -1051,59 +1107,147 @@ export function ErpBomPage() {
     },
     {
       key: "version",
-      header: "Version",
-      sortable: true,
-      sortKey: "version",
+      header: (
+        <TableColumnHeaderFilter
+          title="Version"
+          sortState={sortBy === "version" ? sortOrder : "none"}
+          onSortChange={() => handleSort("version")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="version"
+          align="center"
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
       cell: (item) => <div className="w-full">{item.version || "—"}</div>,
       skeletonClassName: "w-16",
     },
     {
       key: "status",
-      header: t("Trạng thái"),
-      sortable: true,
-      sortKey: "status",
-      cell: (item) => {
-        const statusMap = {
-          ACTIVE: {
-            label: t("Đang áp dụng"),
-            cls: "bg-green-100 text-green-700",
-          },
-          INACTIVE: {
-            label: t("Ngừng áp dụng"),
-            cls: "bg-red-100 text-red-700",
-          },
-          DRAFT: { label: t("Bản nháp"), cls: "bg-gray-100 text-gray-700" },
-        };
-        const s =
-          statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
-        return (
-          <div className="w-full">
-            <span
-              className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap inline-block ${s.cls}`}
-            >
-              {s.label}
-            </span>
-          </div>
-        );
-      },
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Trạng thái")}
+          sortState={sortBy === "status" ? sortOrder : "none"}
+          onSortChange={() => handleSort("status")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="status"
+          filterOptions={[
+            { value: "DRAFT", label: t("Nháp") },
+            { value: "ACTIVE", label: t("Đang áp dụng") },
+            { value: "INACTIVE", label: t("Ngừng áp dụng") },
+          ]}
+          align="center"
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
+      cell: (item) => (
+        <div className="w-full">
+          <Badge
+            variant={
+              item.status === "ACTIVE"
+                ? "default"
+                : item.status === "INACTIVE"
+                  ? "destructive"
+                  : "secondary"
+            }
+          >
+            {item.status === "ACTIVE"
+              ? t("Đang áp dụng")
+              : item.status === "INACTIVE"
+                ? t("Ngừng áp dụng")
+                : t("Bản nháp")}
+          </Badge>
+        </div>
+      ),
       skeletonClassName: "w-20",
     },
     {
       key: "effectiveFrom",
-      header: t("Hiệu lực từ"),
-      sortable: true,
-      sortKey: "effectiveFrom",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Hiệu lực từ")}
+          sortState={sortBy === "effectiveFrom" ? sortOrder : "none"}
+          onSortChange={() => handleSort("effectiveFrom")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          hideFilter={true}
+          hideFooter={true}
+          align="center"
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={filter.state.dateFrom}
+              dateTo={filter.state.dateTo}
+              onChange={(from, to) => {
+                filter.setDateFrom(from);
+                filter.setDateTo(to);
+                setPage(1);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
       cell: (item) => (
-        <div className="w-full">{fmtDate(item.effectiveFrom)}</div>
+        <div className="flex flex-col text-center w-full">
+          <span className="text-sm text-gray-900">
+            {fmtDate(item.effectiveFrom)}
+          </span>
+        </div>
       ),
       skeletonClassName: "w-20",
     },
     {
       key: "effectiveTo",
-      header: t("Hiệu lực đến"),
-      sortable: true,
-      sortKey: "effectiveTo",
-      cell: (item) => <div className="w-full">{fmtDate(item.effectiveTo)}</div>,
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Hiệu lực đến")}
+          sortState={sortBy === "effectiveTo" ? sortOrder : "none"}
+          onSortChange={() => handleSort("effectiveTo")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          hideFilter={true}
+          hideFooter={true}
+          align="center"
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={filter.state.dateFrom}
+              dateTo={filter.state.dateTo}
+              onChange={(from, to) => {
+                filter.setDateFrom(from);
+                filter.setDateTo(to);
+                setPage(1);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
+      cell: (item) => (
+        <div className="flex flex-col text-center w-full">
+          <span className="text-sm text-gray-900">
+            {fmtDate(item.effectiveTo)}
+          </span>
+        </div>
+      ),
       skeletonClassName: "w-20",
     },
   ];

@@ -593,6 +593,7 @@ export function InvoiceBulkPostingDrawer({
       open={open}
       onClose={onClose}
       mode="create"
+      collapsibleRightPanel={true}
       title="Hạch toán hàng loạt"
       subtitle={`Áp dụng cho ${selectedInvoices.length} hóa đơn`}
       layout="2-columns"

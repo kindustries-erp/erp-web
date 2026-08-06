@@ -284,7 +284,9 @@ export function SidebarNav({
                 label={t("nav.items.erpInventoryTrackingGroup")}
                 active={
                   currentPage === "erp-inventory-tracking" ||
-                  currentPage === "erp-inventory-tracking-parts"
+                  currentPage === "erp-inventory-tracking-parts" ||
+                  currentPage === "erp-inventory-tracking-lot" ||
+                  currentPage === "erp-inventory-tracking-custom"
                 }
               >
                 <NavGroupItem
@@ -298,6 +300,18 @@ export function SidebarNav({
                   active={currentPage === "erp-inventory-tracking-parts"}
                   onClick={() => navTo("erp-inventory-tracking-parts")}
                   contextPage="erp-inventory-tracking-parts"
+                />
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTrackingLot")}
+                  active={currentPage === "erp-inventory-tracking-lot"}
+                  onClick={() => navTo("erp-inventory-tracking-lot")}
+                  contextPage="erp-inventory-tracking-lot"
+                />
+                <NavGroupItem
+                  label={t("nav.items.erpInventoryTrackingCustom")}
+                  active={currentPage === "erp-inventory-tracking-custom"}
+                  onClick={() => navTo("erp-inventory-tracking-custom")}
+                  contextPage="erp-inventory-tracking-custom"
                 />
               </NavGroup>
             )}

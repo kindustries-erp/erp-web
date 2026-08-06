@@ -199,6 +199,48 @@ export interface PortalSyncResult {
   note?: string;
 }
 
+export interface InvoiceExportBackgroundStartResult {
+  jobId: string;
+  message: string;
+  reused?: boolean;
+}
+
+export interface InvoiceExportHistoryItem {
+  jobId: string;
+  fileName: string;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  current: number;
+  total: number;
+  message: string;
+  createdAt: string;
+  finishedAt?: string;
+  expiresAt?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  canDownload: boolean;
+}
+
+export interface InvoiceExportHistoryResponse {
+  items: InvoiceExportHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface InvoiceExportProgressEvent {
+  processId: "invoice-xlsx-export" | "ping";
+  jobId?: string;
+  current: number;
+  total: number;
+  isRunning: boolean;
+  completed: boolean;
+  ready: boolean;
+  failed: boolean;
+  message?: string;
+  fileName?: string;
+}
+
 const BASE = "/api/v1/erp-invoices";
 
 function extractErrorMessageFromPayload(payload: any): string | null {
@@ -646,6 +688,49 @@ export const erpInvoicesCoreApi = {
         await resolveBlobErrorMessage(error, "Xuất Excel thất bại"),
       );
     }
+  },
+
+  startExportExcelBackground: async (
+    params: ErpInvoiceListParams,
+  ): Promise<InvoiceExportBackgroundStartResult> => {
+    const { data } =
+      await axiosInstance.post<InvoiceExportBackgroundStartResult>(
+        `${BASE}/export/excel/background`,
+        params,
+      );
+    return data;
+  },
+
+  downloadExportExcelBackground: async (jobId: string): Promise<Blob> => {
+    try {
+      const { data } = await axiosInstance.get<Blob>(
+        `${BASE}/export/excel/background/${jobId}/download`,
+        {
+          responseType: "blob",
+        },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Tai file Excel that bai"),
+      );
+    }
+  },
+
+  listExportExcelBackgroundHistory: async (
+    page = 1,
+    pageSize = 10,
+  ): Promise<InvoiceExportHistoryResponse> => {
+    const { data } = await axiosInstance.get<InvoiceExportHistoryResponse>(
+      `${BASE}/export/excel/background/history`,
+      {
+        params: {
+          page,
+          pageSize,
+        },
+      },
+    );
+    return data;
   },
 
   postInvoice: async (
