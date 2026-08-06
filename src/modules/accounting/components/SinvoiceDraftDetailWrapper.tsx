@@ -62,8 +62,7 @@ function mapDraftToErpInvoice(
     payload.companyName ||
     payload.sellerName ||
     "";
-  const sellerTaxCode =
-    companyProfile?.tax_code || payload.sellerTaxCode || "";
+  const sellerTaxCode = companyProfile?.tax_code || payload.sellerTaxCode || "";
   const sellerAddress =
     companyProfile?.address ||
     payload.sellerAddress ||

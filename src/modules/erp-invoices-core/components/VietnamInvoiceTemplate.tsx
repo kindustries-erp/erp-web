@@ -130,22 +130,26 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
             <table className="w-full border-collapse border-0 text-sm">
               <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
                 <tr className="text-center font-bold text-slate-700">
-                <th className="border border-slate-300 p-2.5 w-12">STT</th>
-                <th className="border border-slate-300 p-2.5">
-                  Tên hàng hóa, dịch vụ
-                </th>
-                <th className="border border-slate-300 p-2.5 w-20">ĐVT</th>
-                <th className="border border-slate-300 p-2.5 w-20">Số lượng</th>
-                <th className="border border-slate-300 p-2.5 w-28">Đơn giá</th>
-                <th className="border border-slate-300 p-2.5 w-20">
-                  Chiết khấu
-                </th>
-                <th className="border border-slate-300 p-2.5 w-20">
-                  Thuế suất
-                </th>
-                <th className="border border-slate-300 p-2.5 w-32">
-                  Thành tiền chưa có thuế GTGT
-                </th>
+                  <th className="border border-slate-300 p-2.5 w-12">STT</th>
+                  <th className="border border-slate-300 p-2.5">
+                    Tên hàng hóa, dịch vụ
+                  </th>
+                  <th className="border border-slate-300 p-2.5 w-20">ĐVT</th>
+                  <th className="border border-slate-300 p-2.5 w-20">
+                    Số lượng
+                  </th>
+                  <th className="border border-slate-300 p-2.5 w-28">
+                    Đơn giá
+                  </th>
+                  <th className="border border-slate-300 p-2.5 w-20">
+                    Chiết khấu
+                  </th>
+                  <th className="border border-slate-300 p-2.5 w-20">
+                    Thuế suất
+                  </th>
+                  <th className="border border-slate-300 p-2.5 w-32">
+                    Thành tiền chưa có thuế GTGT
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -158,7 +162,9 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                       {index + 1}
                     </td>
                     <td className="border border-slate-300 p-2.5">
-                      {item.description ? item.description.normalize("NFC") : ""}
+                      {item.description
+                        ? item.description.normalize("NFC")
+                        : ""}
                     </td>
                     <td className="border border-slate-300 p-2.5 text-center">
                       {item.unit ? item.unit.normalize("NFC") : ""}
@@ -276,13 +282,16 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
 
               <div className="space-y-0.5 text-[11px] text-slate-600">
                 <p>
-                  {t("invoiceTemplate.stamp.signedDate", "Ký ngày")}: {dateParts.day}/{dateParts.month}/{dateParts.year}
+                  {t("invoiceTemplate.stamp.signedDate", "Ký ngày")}:{" "}
+                  {dateParts.day}/{dateParts.month}/{dateParts.year}
                 </p>
                 <p>
-                  {t("invoiceTemplate.stamp.invoiceNo", "Số hóa đơn")}: {invoiceNo || "---"}
+                  {t("invoiceTemplate.stamp.invoiceNo", "Số hóa đơn")}:{" "}
+                  {invoiceNo || "---"}
                 </p>
                 <p>
-                  {t("invoiceTemplate.stamp.serialNo", "Ký hiệu")}: {serialNo || "---"}
+                  {t("invoiceTemplate.stamp.serialNo", "Ký hiệu")}:{" "}
+                  {serialNo || "---"}
                 </p>
               </div>
 
