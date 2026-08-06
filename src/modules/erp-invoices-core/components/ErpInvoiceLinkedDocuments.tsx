@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { Plus, Trash2, ExternalLink } from "lucide-react";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { money } from "@/shared/utils/format";
 import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
@@ -262,9 +263,7 @@ export function ErpInvoiceLinkedDocuments({
           )}
 
           {rows.length === 0 ? (
-            <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
-              Chưa có chứng từ liên kết nào.
-            </div>
+            <EmptyState size="md" message="Chưa có chứng từ liên kết nào." />
           ) : (
             <div className="border rounded-md overflow-x-auto bg-white shadow-sm">
               <table className="w-full text-sm text-left">
