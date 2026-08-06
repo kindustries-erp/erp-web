@@ -12,11 +12,13 @@ Khi tạo mới hoặc chỉnh sửa Drawer trong hệ thống, bạn **BẮT BU
 - `open`: boolean để mở/đóng.
 - `mode`: `"view"` hoặc `"edit"`.
 - `onClose`: Hàm đóng drawer.
-- `onToggleEdit`: (Tùy chọn) Hàm chuyển sang chế độ edit nếu ở chế độ view.
+- **`onToggleEdit`**: **Bắt buộc** nếu Drawer hỗ trợ cập nhật dữ liệu. Phải truyền hàm chuyển sang chế độ edit (ví dụ: `() => setMode("edit")`) để hiển thị icon Edit góc trên bên phải.
 - `title`, `subtitle`: Tiêu đề chính và phụ.
+- **`titleExtra`**: Nếu dữ liệu có trạng thái (status/state), **bắt buộc** dùng `titleExtra` truyền vào component `<Badge>` (từ `@/shared/components/ui/badge`) để hiển thị kế bên tiêu đề.
 - `actions`: Mảng các nút bấm (Save, Cancel, Close...).
 - `confirmOnClose`: Bật `true` nếu đang ở mode `edit` để tránh user vô tình đóng mất data đang nhập.
 - `leftPanel`: Nội dung chính của Drawer.
+- **Đa ngôn ngữ (i18n)**: Tất cả text (title, label, placeholder, button...) **bắt buộc** dùng `t(...)` từ `useTranslation("namespace")`.
 
 ## 2. Quy tắc cho 1-Column Drawer (Profile, Cấu hình đơn giản)
 
@@ -31,20 +33,24 @@ Dành cho các form đơn giản (như Company Profile, User Profile):
 
 ```tsx
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { Badge } from "@/shared/components/ui/badge";
 import {
   DrawerSection,
   DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { useTranslation } from "react-i18next";
 
-export function UserProfileDrawer({ open, onClose, mode, setMode }) {
+export function UserProfileDrawer({ open, onClose, mode, setMode, data }) {
+  const { t } = useTranslation("users");
+
   const actions =
     mode === "edit"
       ? [
-          { label: "Lưu", primary: true, onClick: onSave },
-          { label: "Hủy", onClick: onCancel },
+          { label: t("Hủy", "Cancel"), onClick: onCancel },
+          { label: t("Lưu", "Save"), primary: true, onClick: onSave },
         ]
-      : [{ label: "Đóng", onClick: onClose }];
+      : [{ label: t("Đóng", "Close"), onClick: onClose }];
 
   return (
     <StandardFormDrawer
@@ -52,18 +58,23 @@ export function UserProfileDrawer({ open, onClose, mode, setMode }) {
       mode={mode}
       onClose={onClose}
       onToggleEdit={() => setMode("edit")}
-      title="Hồ sơ người dùng"
+      title={t("Hồ sơ người dùng", "User Profile")}
+      titleExtra={
+        <Badge variant={data.status === "ACTIVE" ? "default" : "secondary"}>
+          {t(data.status)}
+        </Badge>
+      }
       layout="1-column"
       size="sm"
       confirmOnClose={mode === "edit"}
       actions={actions}
       leftPanel={
         <div className="flex flex-col gap-4">
-          <DrawerSection title="Thông tin chung">
-            <DrawerField label="Họ tên">
+          <DrawerSection title={t("Thông tin chung", "General Info")}>
+            <DrawerField label={t("Họ tên", "Full Name")}>
               <input className={inputCls} />
             </DrawerField>
-            <DrawerField label="Email">
+            <DrawerField label={t("Email", "Email")}>
               <input className={inputCls} />
             </DrawerField>
           </DrawerSection>
@@ -82,46 +93,60 @@ Dành cho các màn hình nghiệp vụ phức tạp có chứng từ (như Hóa
 - Bắt buộc set `size="xl"` (hoặc `"lg"` nếu form vừa phải).
 - Nên truyền `collapsibleRightPanel={true}` để user có thể ẩn/hiện cột bên phải (nếu áp dụng).
 - **`leftPanel`**: Chứa thông tin chi tiết chứng từ (ví dụ: Thông tin chung, Bảng danh sách hàng hóa/dịch vụ).
-- **`rightPanel`**: Chứa các thông tin meta, trạng thái, tham chiếu, file đính kèm (Metadata, Status, Logs).
+- **`rightPanel`**: Chứa các thông tin meta, tham chiếu, file đính kèm (Metadata, Logs). (Không cần Status ở đây nếu đã dùng `titleExtra` trên Header).
 
 **Mẫu code 2-Columns Drawer**:
 
 ```tsx
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
+import { Badge } from "@/shared/components/ui/badge";
 import {
   DrawerSection,
   DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
+import { useTranslation } from "react-i18next";
 
-export function VoucherDrawer({ open, onClose, mode }) {
+export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
+  const { t } = useTranslation("vouchers");
+
   return (
     <StandardFormDrawer
       open={open}
       mode={mode}
       onClose={onClose}
-      title="Phiếu nhập kho: PNK-001"
+      onToggleEdit={() => setMode("edit")}
+      title={t("Phiếu nhập kho: PNK-001", "Receipt Voucher: PNK-001")}
+      titleExtra={
+        <Badge variant={data.status === "DONE" ? "default" : "secondary"}>
+          {t(data.status)}
+        </Badge>
+      }
       layout="2-columns"
       size="xl"
       collapsibleRightPanel={true}
-      actions={[{ label: "Đóng", onClick: onClose }]}
+      actions={[{ label: t("Đóng", "Close"), onClick: onClose }]}
       leftPanel={
         <div className="flex flex-col gap-4">
-          <DrawerSection title="Thông tin chung">
-            <DrawerField label="Nhà cung cấp">...</DrawerField>
+          <DrawerSection title={t("Thông tin chung", "General Info")}>
+            <DrawerField label={t("Nhà cung cấp", "Vendor")}>...</DrawerField>
           </DrawerSection>
-          <DrawerSection title="Hàng hóa">
+          <DrawerSection title={t("Hàng hóa", "Items")}>
             {/* Table hàng hóa ở đây */}
           </DrawerSection>
         </div>
       }
       rightPanel={
         <div className="flex flex-col gap-4">
-          <DrawerSection title="Trạng thái">
-            <DrawerField label="Ngày tạo">10/10/2026</DrawerField>
-            <DrawerField label="Người tạo">Admin</DrawerField>
+          <DrawerSection title={t("Siêu dữ liệu", "Metadata")}>
+            <DrawerField label={t("Ngày tạo", "Created At")}>
+              10/10/2026
+            </DrawerField>
+            <DrawerField label={t("Người tạo", "Created By")}>
+              Admin
+            </DrawerField>
           </DrawerSection>
-          <DrawerSection title="Chứng từ liên quan">
+          <DrawerSection title={t("Chứng từ liên quan", "Related Docs")}>
             {/* Danh sách link đính kèm */}
           </DrawerSection>
         </div>
@@ -134,6 +159,9 @@ export function VoucherDrawer({ open, onClose, mode }) {
 ## Summary Checklist trước khi hoàn thành:
 
 - [ ] Drawer đã sử dụng `<StandardFormDrawer>` chưa?
+- [ ] Nếu Drawer cho phép cập nhật, đã truyền `onToggleEdit` chưa?
+- [ ] Nếu record có trạng thái (status), đã dùng `<Badge>` truyền vào `titleExtra` chưa?
+- [ ] Tất cả text tĩnh đã được dùng hook `useTranslation` (i18n) để wrap bằng `t(...)` chưa?
 - [ ] Drawer đơn giản (1 cột) đã set `layout="1-column"` và `size="sm"`/`"md"` chưa?
 - [ ] Drawer chứng từ (2 cột) đã set `layout="2-columns"` và `size="xl"`/`"lg"` chưa?
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
