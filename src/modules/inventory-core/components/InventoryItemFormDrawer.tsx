@@ -417,64 +417,57 @@ export function InventoryItemFormDrawer({
                       placeholder="Chọn nhóm tracking"
                     />
                   </DrawerField>
+                </div>
+              </DrawerSection>
 
-                  <div className="md:col-span-2">
-                    <DrawerField
-                      label={t(
-                        "inventoryMasters.attributes.label",
-                        "Thuộc tính",
-                      )}
+              <DrawerSection
+                title={t("inventoryMasters.attributes.label", "Thuộc tính")}
+              >
+                <div className="flex flex-wrap gap-4 mt-2">
+                  {[
+                    {
+                      value: "CAN_BE_SOLD",
+                      label: t(
+                        "inventoryMasters.attributes.CAN_BE_SOLD",
+                        "Có thể bán",
+                      ),
+                    },
+                    {
+                      value: "CAN_BE_PURCHASED",
+                      label: t(
+                        "inventoryMasters.attributes.CAN_BE_PURCHASED",
+                        "Có thể mua",
+                      ),
+                    },
+                    {
+                      value: "CAN_BE_MANUFACTURED",
+                      label: t(
+                        "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
+                        "Có thể sản xuất",
+                      ),
+                    },
+                  ].map((attr) => (
+                    <label
+                      key={attr.value}
+                      className="flex items-center space-x-2 cursor-pointer"
                     >
-                      <div className="flex flex-wrap gap-4 mt-2">
-                        {[
-                          {
-                            value: "CAN_BE_SOLD",
-                            label: t(
-                              "inventoryMasters.attributes.CAN_BE_SOLD",
-                              "Có thể bán",
-                            ),
-                          },
-                          {
-                            value: "CAN_BE_PURCHASED",
-                            label: t(
-                              "inventoryMasters.attributes.CAN_BE_PURCHASED",
-                              "Có thể mua",
-                            ),
-                          },
-                          {
-                            value: "CAN_BE_MANUFACTURED",
-                            label: t(
-                              "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
-                              "Có thể sản xuất",
-                            ),
-                          },
-                        ].map((attr) => (
-                          <label
-                            key={attr.value}
-                            className="flex items-center space-x-2 cursor-pointer"
-                          >
-                            <Checkbox
-                              checked={form.attributes.includes(attr.value)}
-                              disabled={viewOnly}
-                              onCheckedChange={(checked) => {
-                                setForm((prev) => ({
-                                  ...prev,
-                                  attributes: checked
-                                    ? [...prev.attributes, attr.value]
-                                    : prev.attributes.filter(
-                                        (a) => a !== attr.value,
-                                      ),
-                                }));
-                              }}
-                            />
-                            <span className="text-sm font-medium text-foreground">
-                              {attr.label}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    </DrawerField>
-                  </div>
+                      <Checkbox
+                        checked={form.attributes.includes(attr.value)}
+                        disabled={viewOnly}
+                        onCheckedChange={(checked) => {
+                          setForm((prev) => ({
+                            ...prev,
+                            attributes: checked
+                              ? [...prev.attributes, attr.value]
+                              : prev.attributes.filter((a) => a !== attr.value),
+                          }));
+                        }}
+                      />
+                      <span className="text-sm font-medium text-foreground">
+                        {attr.label}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </DrawerSection>
 
