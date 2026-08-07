@@ -308,13 +308,13 @@ export function InventoryItemFormDrawer({
 
           {loading ? (
             <DrawerSection title="Thông tin item kho">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="flex flex-col gap-3">
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
-                <div className="md:col-span-2">
+                <div className="w-full">
                   <Skeleton className="h-20 w-full" />
                 </div>
               </div>
@@ -322,7 +322,7 @@ export function InventoryItemFormDrawer({
           ) : (
             <>
               <DrawerSection title="Thông tin item kho">
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="flex flex-col gap-3">
                   <DrawerField label="SKU" required>
                     <input
                       value={form.sku}
