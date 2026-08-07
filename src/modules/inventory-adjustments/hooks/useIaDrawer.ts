@@ -117,7 +117,9 @@ export function useIaDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i: any) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) || []
     );
