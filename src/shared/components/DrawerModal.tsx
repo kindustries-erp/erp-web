@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
+import { X } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { ConfirmModal } from "./ConfirmModal";
 
@@ -236,9 +237,9 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
-            className="ml-1 text-[color:var(--faint)] text-xl leading-none"
+            className="text-[color:var(--faint)]"
           >
-            ×
+            <X className="w-4 h-4" />
           </Button>
         </div>
 

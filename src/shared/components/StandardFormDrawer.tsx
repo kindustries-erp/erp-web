@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import type { DrawerMode } from "../stores/useDrawerStore";
 import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
@@ -140,10 +141,12 @@ export function StandardFormDrawer({
               "border-l pl-2 ml-1 border-border/60",
           )}
         >
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => setRightPanelCollapsed((s) => !s)}
-            className="p-1 rounded hover:bg-muted text-muted-foreground transition-colors"
+            className="text-[color:var(--faint)]"
             title={
               rightPanelCollapsed
                 ? t("Mở rộng cột phải")
@@ -155,7 +158,7 @@ export function StandardFormDrawer({
             ) : (
               <ChevronRight className="w-4 h-4" />
             )}
-          </button>
+          </Button>
         </div>
       )}
     </div>

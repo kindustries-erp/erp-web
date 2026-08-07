@@ -19,6 +19,8 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { FilterButton } from "@/shared/components/FilterPanel";
+import { DrawerSection } from "@/shared/components/DrawerModal";
 
 interface InventoryTimelineBlockProps {
   itemId: string;
@@ -140,7 +142,12 @@ export function InventoryTimelineBlock({
       list.reverse();
     }
     return list;
-  }, [movements, tableState.columnSearch, tableState.sorts]);
+  }, [
+    movements,
+    tableState.columnSearch,
+    tableState.columnFilters,
+    tableState.sorts,
+  ]);
 
   const getSortState = (field: string) =>
     tableState.sorts.includes(field)
@@ -188,6 +195,17 @@ export function InventoryTimelineBlock({
 
   const timelineColumns: DataTableColumn<InventoryMovement>[] = useMemo(
     () => [
+      {
+        key: "index",
+        header: "#",
+        size: 40,
+        enableResizing: false,
+        headerClassName: "text-center w-[40px] min-w-[40px]",
+        className: "text-center w-[40px] min-w-[40px]",
+        cell: (_: InventoryMovement, idx: number) => (
+          <span className="text-muted-foreground text-xs">{idx}</span>
+        ),
+      },
       {
         key: "time",
         header: (
@@ -248,6 +266,10 @@ export function InventoryTimelineBlock({
             onSearchChange={(v) => tableState.setColumnSearch("type", v)}
             selectedFilters={tableState.columnFilters["type"] || []}
             onFilterChange={(v) => tableState.setColumnFilter("type", v)}
+            isActive={
+              (tableState.columnFilters["type"]?.length ?? 0) > 0 ||
+              !!tableState.columnSearch["type"]
+            }
             filterOptions={[
               { label: "Nhập kho", value: "IN" },
               { label: "Xuất kho", value: "OUT" },
@@ -297,6 +319,10 @@ export function InventoryTimelineBlock({
             onSearchChange={(v) => tableState.setColumnSearch("documentNo", v)}
             selectedFilters={tableState.columnFilters["documentNo"] || []}
             onFilterChange={(v) => tableState.setColumnFilter("documentNo", v)}
+            isActive={
+              (tableState.columnFilters["documentNo"]?.length ?? 0) > 0 ||
+              !!tableState.columnSearch["documentNo"]
+            }
             filterOptions={docOptions}
           />
         ),
@@ -335,6 +361,10 @@ export function InventoryTimelineBlock({
             onSearchChange={(v) => tableState.setColumnSearch("notes", v)}
             selectedFilters={tableState.columnFilters["notes"] || []}
             onFilterChange={(v) => tableState.setColumnFilter("notes", v)}
+            isActive={
+              (tableState.columnFilters["notes"]?.length ?? 0) > 0 ||
+              !!tableState.columnSearch["notes"]
+            }
             filterOptions={noteOptions}
           />
         ),
@@ -365,6 +395,10 @@ export function InventoryTimelineBlock({
             onSearchChange={(v) => tableState.setColumnSearch("change", v)}
             selectedFilters={tableState.columnFilters["change"] || []}
             onFilterChange={(v) => tableState.setColumnFilter("change", v)}
+            isActive={
+              (tableState.columnFilters["change"]?.length ?? 0) > 0 ||
+              !!tableState.columnSearch["change"]
+            }
             filterOptions={changeOptions}
           />
         ),
@@ -400,6 +434,10 @@ export function InventoryTimelineBlock({
             onSearchChange={(v) => tableState.setColumnSearch("balance", v)}
             selectedFilters={tableState.columnFilters["balance"] || []}
             onFilterChange={(v) => tableState.setColumnFilter("balance", v)}
+            isActive={
+              (tableState.columnFilters["balance"]?.length ?? 0) > 0 ||
+              !!tableState.columnSearch["balance"]
+            }
             filterOptions={balanceOptions}
           />
         ),
@@ -413,7 +451,16 @@ export function InventoryTimelineBlock({
         ),
       },
     ],
-    [t],
+    [
+      t,
+      tableState.columnFilters,
+      tableState.columnSearch,
+      tableState.sorts,
+      docOptions,
+      noteOptions,
+      changeOptions,
+      balanceOptions,
+    ],
   );
 
   if (isLoading) {
@@ -437,18 +484,43 @@ export function InventoryTimelineBlock({
   if (!data) return null;
 
   return (
-    <StandardTable
-      tableId={`timeline-table-${itemId}`}
-      items={sortedMovements}
-      columns={timelineColumns}
-      getRowKey={(row) => row.id}
-      variant="spreadsheet"
-      enableColumnResizing={true}
-      enableRowSelection={false}
-      enableColumnVisibility={false}
-      emptyLabel={t("inventory.history.empty")}
-      minWidth={600}
-      containerClassName={containerClassName}
-    />
+    <DrawerSection
+      title={
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full justify-between pr-4 mt-2 sm:mt-0">
+          <div className="flex items-center gap-3">
+            <span className="shrink-0 mb-2 sm:mb-0">
+              {t("Lịch sử xuất nhập kho")} (
+              {sortedMovements.length < (movements?.length || 0)
+                ? `${sortedMovements.length}/${movements?.length || 0}`
+                : movements?.length || 0}
+              )
+            </span>
+          </div>
+        </div>
+      }
+      titleExtra={
+        <div className="flex items-center gap-2">
+          <FilterButton
+            onClick={() => {}}
+            activeCount={tableState.activeFilterCount}
+            onClear={() => tableState.resetFilters()}
+          />
+        </div>
+      }
+    >
+      <StandardTable
+        tableId={`timeline-table-${itemId}`}
+        items={sortedMovements}
+        columns={timelineColumns}
+        getRowKey={(row) => row.id}
+        variant="spreadsheet"
+        enableColumnResizing={true}
+        enableRowSelection={false}
+        enableColumnVisibility={false}
+        emptyLabel={t("inventory.history.empty")}
+        minWidth={600}
+        containerClassName={containerClassName}
+      />
+    </DrawerSection>
   );
 }

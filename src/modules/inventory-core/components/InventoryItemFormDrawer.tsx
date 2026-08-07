@@ -281,7 +281,7 @@ export function InventoryItemFormDrawer({
       size="xl"
       collapsibleRightPanel={true}
       leftPanel={
-        viewOnly && itemId ? (
+        itemId ? (
           <div className="flex flex-col h-full rounded-lg overflow-hidden">
             <InventoryTimelineBlock
               itemId={itemId}
@@ -320,157 +320,179 @@ export function InventoryItemFormDrawer({
               </div>
             </DrawerSection>
           ) : (
-            <DrawerSection title="Thông tin item kho">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <DrawerField label="SKU" required>
-                  <input
-                    value={form.sku}
-                    disabled={viewOnly || !!editing}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, sku: e.target.value }))
-                    }
-                    className={inputCls}
-                    placeholder="VD: FG-001"
-                  />
-                </DrawerField>
-
-                <DrawerField label="Tên item kho" required>
-                  <input
-                    value={form.itemName}
-                    disabled={viewOnly}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, itemName: e.target.value }))
-                    }
-                    className={inputCls}
-                    placeholder="Tên đầy đủ của item kho"
-                  />
-                </DrawerField>
-
-                <DrawerField label="Đơn vị tính (ĐVT)" required>
-                  <Combobox
-                    value={form.uomId}
-                    disabled={viewOnly}
-                    allowClear={false}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        uomId: value || form.uomId,
-                      }))
-                    }
-                    options={uomOptions}
-                    placeholder="Chọn ĐVT"
-                  />
-                </DrawerField>
-
-                <DrawerField label="Loại item">
-                  <Combobox
-                    value={form.itemTypeId}
-                    disabled={viewOnly}
-                    allowClear={false}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        itemTypeId: value || form.itemTypeId,
-                      }))
-                    }
-                    options={itemTypeOptions}
-                    placeholder="Chọn loại"
-                  />
-                </DrawerField>
-
-                <DrawerField label="Tracking policy">
-                  <Combobox
-                    value={form.trackingPolicyId}
-                    disabled={viewOnly}
-                    allowClear
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        trackingPolicyId: value || "",
-                        // Clear category when policy changes
-                        trackingCategoryId: value
-                          ? prev.trackingCategoryId
-                          : "",
-                      }))
-                    }
-                    options={trackingPolicyOptions}
-                    placeholder="Chọn chính sách tracking"
-                  />
-                </DrawerField>
-
-                <DrawerField label="Tracking category">
-                  <Combobox
-                    value={form.trackingCategoryId}
-                    disabled={viewOnly}
-                    allowClear
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        trackingCategoryId: value || "",
-                      }))
-                    }
-                    options={trackingCategoryOptions}
-                    placeholder="Chọn nhóm tracking"
-                  />
-                </DrawerField>
-
-                <div className="md:col-span-2">
-                  <DrawerField
-                    label={t("inventoryMasters.attributes.label", "Thuộc tính")}
-                  >
-                    <div className="flex flex-wrap gap-4 mt-2">
-                      {[
-                        {
-                          value: "CAN_BE_SOLD",
-                          label: t(
-                            "inventoryMasters.attributes.CAN_BE_SOLD",
-                            "Có thể bán",
-                          ),
-                        },
-                        {
-                          value: "CAN_BE_PURCHASED",
-                          label: t(
-                            "inventoryMasters.attributes.CAN_BE_PURCHASED",
-                            "Có thể mua",
-                          ),
-                        },
-                        {
-                          value: "CAN_BE_MANUFACTURED",
-                          label: t(
-                            "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
-                            "Có thể sản xuất",
-                          ),
-                        },
-                      ].map((attr) => (
-                        <label
-                          key={attr.value}
-                          className="flex items-center space-x-2 cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={form.attributes.includes(attr.value)}
-                            disabled={viewOnly}
-                            onCheckedChange={(checked) => {
-                              setForm((prev) => ({
-                                ...prev,
-                                attributes: checked
-                                  ? [...prev.attributes, attr.value]
-                                  : prev.attributes.filter(
-                                      (a) => a !== attr.value,
-                                    ),
-                              }));
-                            }}
-                          />
-                          <span className="text-sm font-medium text-foreground">
-                            {attr.label}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+            <>
+              <DrawerSection title="Thông tin item kho">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <DrawerField label="SKU" required>
+                    <input
+                      value={form.sku}
+                      disabled={viewOnly || !!editing}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, sku: e.target.value }))
+                      }
+                      className={inputCls}
+                      placeholder="VD: FG-001"
+                    />
                   </DrawerField>
-                </div>
 
-                <div className="md:col-span-2">
-                  <DrawerField label="Ghi chú">
+                  <DrawerField label="Tên item kho" required>
+                    <input
+                      value={form.itemName}
+                      disabled={viewOnly}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          itemName: e.target.value,
+                        }))
+                      }
+                      className={inputCls}
+                      placeholder="Tên đầy đủ của item kho"
+                    />
+                  </DrawerField>
+
+                  <DrawerField label="Đơn vị tính (ĐVT)" required>
+                    <Combobox
+                      value={form.uomId}
+                      disabled={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          uomId: value || form.uomId,
+                        }))
+                      }
+                      options={uomOptions}
+                      placeholder="Chọn ĐVT"
+                    />
+                  </DrawerField>
+
+                  <DrawerField label="Loại item">
+                    <Combobox
+                      value={form.itemTypeId}
+                      disabled={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          itemTypeId: value || form.itemTypeId,
+                        }))
+                      }
+                      options={itemTypeOptions}
+                      placeholder="Chọn loại"
+                    />
+                  </DrawerField>
+
+                  <DrawerField label="Tracking policy">
+                    <Combobox
+                      value={form.trackingPolicyId}
+                      disabled={viewOnly}
+                      allowClear
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          trackingPolicyId: value || "",
+                          // Clear category when policy changes
+                          trackingCategoryId: value
+                            ? prev.trackingCategoryId
+                            : "",
+                        }))
+                      }
+                      options={trackingPolicyOptions}
+                      placeholder="Chọn chính sách tracking"
+                    />
+                  </DrawerField>
+
+                  <DrawerField label="Tracking category">
+                    <Combobox
+                      value={form.trackingCategoryId}
+                      disabled={viewOnly}
+                      allowClear
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          trackingCategoryId: value || "",
+                        }))
+                      }
+                      options={trackingCategoryOptions}
+                      placeholder="Chọn nhóm tracking"
+                    />
+                  </DrawerField>
+
+                  <div className="md:col-span-2">
+                    <DrawerField
+                      label={t(
+                        "inventoryMasters.attributes.label",
+                        "Thuộc tính",
+                      )}
+                    >
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        {[
+                          {
+                            value: "CAN_BE_SOLD",
+                            label: t(
+                              "inventoryMasters.attributes.CAN_BE_SOLD",
+                              "Có thể bán",
+                            ),
+                          },
+                          {
+                            value: "CAN_BE_PURCHASED",
+                            label: t(
+                              "inventoryMasters.attributes.CAN_BE_PURCHASED",
+                              "Có thể mua",
+                            ),
+                          },
+                          {
+                            value: "CAN_BE_MANUFACTURED",
+                            label: t(
+                              "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
+                              "Có thể sản xuất",
+                            ),
+                          },
+                        ].map((attr) => (
+                          <label
+                            key={attr.value}
+                            className="flex items-center space-x-2 cursor-pointer"
+                          >
+                            <Checkbox
+                              checked={form.attributes.includes(attr.value)}
+                              disabled={viewOnly}
+                              onCheckedChange={(checked) => {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  attributes: checked
+                                    ? [...prev.attributes, attr.value]
+                                    : prev.attributes.filter(
+                                        (a) => a !== attr.value,
+                                      ),
+                                }));
+                              }}
+                            />
+                            <span className="text-sm font-medium text-foreground">
+                              {attr.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </DrawerField>
+                  </div>
+                </div>
+              </DrawerSection>
+
+              {viewOnly ? (
+                <DrawerSection title="Ghi chú">
+                  {form.note ? (
+                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                      {form.note}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Không có ghi chú.
+                    </p>
+                  )}
+                </DrawerSection>
+              ) : (
+                <DrawerSection title="Ghi chú">
+                  <div className="mt-1">
                     <textarea
                       value={form.note}
                       disabled={viewOnly}
@@ -480,10 +502,10 @@ export function InventoryItemFormDrawer({
                       className={`${inputCls} min-h-[80px] resize-y`}
                       placeholder="Ghi chú thêm về item kho này..."
                     />
-                  </DrawerField>
-                </div>
-              </div>
-            </DrawerSection>
+                  </div>
+                </DrawerSection>
+              )}
+            </>
           )}
         </>
       }
