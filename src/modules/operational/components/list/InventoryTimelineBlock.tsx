@@ -7,7 +7,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { useT } from "@/core/i18n";
-import { fmtQty, formatGMT7 } from "@/shared/utils/format";
+import { fmtQty } from "@/shared/utils/format";
 import type {
   InventoryMovementsPayload,
   InventoryMovement,
@@ -16,6 +16,7 @@ import { StandardTable } from "@/shared/components/StandardTable";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -242,17 +243,12 @@ export function InventoryTimelineBlock({
         className: "text-center",
         headerClassName: "text-center",
         size: 200,
-        cell: (m) => {
-          if (!m.transactionDate) return "—";
-          const dateTime = formatGMT7(m.transactionDate, "datetime-sec");
-          const [datePart = "", timePart = ""] = dateTime.split(" ");
-          return (
-            <div className="flex flex-col text-center">
-              <span className="text-sm text-gray-900">{datePart}</span>
-              <span className="text-xs text-gray-500">{timePart}</span>
-            </div>
-          );
-        },
+        cell: (m) => (
+          <TableDateCell
+            date={m.transactionDate}
+            className="w-full justify-center"
+          />
+        ),
       },
       {
         key: "type",
