@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { normalizeOutInvoiceLineDisplay } from "../utils/outInvoiceDisplay";
 
 interface Props {
   invoice: ErpInvoice;
@@ -23,6 +24,7 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
     buyerCccd,
     buyerTaxCode,
     buyerAddress,
+    direction,
     preVatAmount,
     vatAmount,
     discountAmount,
@@ -44,6 +46,26 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
       return { day: "...", month: "...", year: "..." };
     }
   }, [invoiceDate]);
+
+  const displayItems = useMemo(() => {
+    const descriptionLineCount = String(description || "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean).length;
+    const invoiceLineCount = Math.max(
+      (items || []).length,
+      descriptionLineCount,
+      1,
+    );
+    return (items || []).map((item) =>
+      normalizeOutInvoiceLineDisplay(
+        item as any,
+        buyerTaxCode,
+        direction,
+        invoiceLineCount,
+      ),
+    );
+  }, [buyerTaxCode, description, direction, items]);
 
   const formatNumber = (val: string | number | null | undefined) => {
     if (val == null) return "0";
@@ -153,7 +175,7 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {(items || []).map((item, index) => (
+                {displayItems.map((item, index) => (
                   <tr
                     key={item.id || index}
                     className="even:bg-slate-50/50 hover:bg-slate-50 transition-colors"
@@ -219,7 +241,12 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                     Tổng chiết khấu:
                   </td>
                   <td className="border border-slate-300 p-2.5 text-right">
-                    {formatNumber(discountAmount)}
+                    {formatNumber(
+                      displayItems.reduce(
+                        (acc, item) => acc + (Number(item.discountAmount) || 0),
+                        0,
+                      ) || discountAmount,
+                    )}
                   </td>
                 </tr>
                 <tr className="font-bold bg-slate-50/80">

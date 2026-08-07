@@ -9,6 +9,7 @@ import { TableText } from "@/shared/components/DataTable/TableText";
 import { type DataTableColumn } from "@/shared/components/DataTable";
 import { useUIStore } from "@/core/config/uiStore";
 import { formatMoney } from "@/modules/accounting/utils/journalEntryUtils";
+import { normalizeOutInvoiceLineDisplay } from "@/modules/erp-invoices-core/utils/outInvoiceDisplay";
 import {
   syncSinvoiceDraftsApi,
   getSinvoiceDraftColumnOptionsApi,
@@ -335,125 +336,147 @@ export function ErpInvoicesDraftPage() {
               Chi tiết mặt hàng
             </h4>
             {items.length > 0 ? (
-              <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                <thead className="bg-slate-50 sticky top-0">
-                  <tr>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium">
-                      Tên mặt hàng
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                      SL
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
-                      ĐVT
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                      Đơn giá
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                      Thành tiền trước thuế
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                      Thuế suất
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                      Thuế VAT
-                    </th>
-                    <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                      Thành tiền
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item: any, idx: number) => (
-                    <tr
-                      key={idx}
-                      className="border-b last:border-0 hover:bg-slate-50"
-                    >
-                      <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
-                        {item.itemName || "—"}
-                      </td>
-                      <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {item.quantity != null
-                          ? Number(item.quantity).toLocaleString("vi-VN", {
+              (() => {
+                const descriptionLineCount = String(inv.description || "")
+                  .split(/\r?\n/)
+                  .map((line) => line.trim())
+                  .filter(Boolean).length;
+                const invoiceLineCount = Math.max(
+                  items.length,
+                  descriptionLineCount,
+                  1,
+                );
+                const displayItems = items.map((item: any) =>
+                  normalizeOutInvoiceLineDisplay(
+                    item,
+                    inv.buyerTaxCode,
+                    "OUT",
+                    invoiceLineCount,
+                  ),
+                );
+
+                return (
+                  <table className="w-full text-sm text-left border-collapse min-w-[700px]">
+                    <thead className="bg-slate-50 sticky top-0">
+                      <tr>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium">
+                          Tên mặt hàng
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          SL
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
+                          ĐVT
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Đơn giá
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thành tiền trước thuế
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thuế suất
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thuế VAT
+                        </th>
+                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                          Thành tiền
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {displayItems.map((item: any, idx: number) => (
+                        <tr
+                          key={idx}
+                          className="border-b last:border-0 hover:bg-slate-50"
+                        >
+                          <td className="px-2 py-1 whitespace-normal break-words max-w-[200px]">
+                            {item.description || item.itemName || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {item.quantity != null
+                              ? Number(item.quantity).toLocaleString("vi-VN", {
+                                  minimumFractionDigits: 1,
+                                  maximumFractionDigits: 1,
+                                })
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-1 text-left whitespace-nowrap">
+                            {item.unit || item.unitName || "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {fmtAmt(item.unitPrice)}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
+                            {fmtAmt(item.preVatAmount)}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {item.vatPercentage != null
+                              ? `${Number(item.vatPercentage).toFixed(0)}%`
+                              : "—"}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap">
+                            {fmtAmt(item.vatAmount)}
+                          </td>
+                          <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
+                            {fmtAmt(item.totalAmount)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                      <tr>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          Tổng cộng
+                        </td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          {displayItems
+                            .reduce(
+                              (acc: number, item: any) =>
+                                acc + (Number(item.quantity) || 0),
+                              0,
+                            )
+                            .toLocaleString("vi-VN", {
                               minimumFractionDigits: 1,
                               maximumFractionDigits: 1,
-                            })
-                          : "—"}
-                      </td>
-                      <td className="px-2 py-1 text-left whitespace-nowrap">
-                        {item.unitName || "—"}
-                      </td>
-                      <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {fmtAmt(item.unitPrice)}
-                      </td>
-                      <td className="px-2 py-1 text-right whitespace-nowrap font-medium">
-                        {fmtAmt(item.itemTotalAmountWithoutVat)}
-                      </td>
-                      <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {item.vatPercentage != null
-                          ? `${Number(item.vatPercentage).toFixed(0)}%`
-                          : "—"}
-                      </td>
-                      <td className="px-2 py-1 text-right whitespace-nowrap">
-                        {fmtAmt(item.vatAmount)}
-                      </td>
-                      <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                        {fmtAmt(item.itemTotalAmountWithVat)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-slate-50 sticky bottom-0 border-t">
-                  <tr>
-                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                      Tổng cộng
-                    </td>
-                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                      {items
-                        .reduce(
-                          (acc: number, item: any) =>
-                            acc + (Number(item.quantity) || 0),
-                          0,
-                        )
-                        .toLocaleString("vi-VN", {
-                          minimumFractionDigits: 1,
-                          maximumFractionDigits: 1,
-                        })}
-                    </td>
-                    <td className="px-2 py-2"></td>
-                    <td className="px-2 py-2"></td>
-                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                      {fmtAmt(
-                        items.reduce(
-                          (acc: number, item: any) =>
-                            acc + (Number(item.itemTotalAmountWithoutVat) || 0),
-                          0,
-                        ),
-                      )}
-                    </td>
-                    <td className="px-2 py-2"></td>
-                    <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                      {fmtAmt(
-                        items.reduce(
-                          (acc: number, item: any) =>
-                            acc + (Number(item.vatAmount) || 0),
-                          0,
-                        ),
-                      )}
-                    </td>
-                    <td className="px-2 py-2 font-semibold text-right text-slate-800">
-                      {fmtAmt(
-                        items.reduce(
-                          (acc: number, item: any) =>
-                            acc + (Number(item.itemTotalAmountWithVat) || 0),
-                          0,
-                        ),
-                      )}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+                            })}
+                        </td>
+                        <td className="px-2 py-2"></td>
+                        <td className="px-2 py-2"></td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          {fmtAmt(
+                            displayItems.reduce(
+                              (acc: number, item: any) =>
+                                acc + (Number(item.preVatAmount) || 0),
+                              0,
+                            ),
+                          )}
+                        </td>
+                        <td className="px-2 py-2"></td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                          {fmtAmt(
+                            displayItems.reduce(
+                              (acc: number, item: any) =>
+                                acc + (Number(item.vatAmount) || 0),
+                              0,
+                            ),
+                          )}
+                        </td>
+                        <td className="px-2 py-2 font-semibold text-right text-slate-800">
+                          {fmtAmt(
+                            displayItems.reduce(
+                              (acc: number, item: any) =>
+                                acc + (Number(item.totalAmount) || 0),
+                              0,
+                            ),
+                          )}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                );
+              })()
             ) : (
               <div className="text-slate-500 text-sm italic">
                 Không có chi tiết mặt hàng.

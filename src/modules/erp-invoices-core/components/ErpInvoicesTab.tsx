@@ -1054,8 +1054,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         headerClassName: "text-center",
         className: "text-left",
         cell: (inv) => {
+          const buyerDisplayName =
+            inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "—";
           const text =
-            direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
+            direction === "IN" ? inv.sellerName || "—" : buyerDisplayName;
           return (
             <Tooltip content={text !== "—" ? text : ""}>
               <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
