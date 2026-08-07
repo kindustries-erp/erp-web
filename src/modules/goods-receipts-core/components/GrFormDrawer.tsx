@@ -11,6 +11,8 @@ import { Skeleton } from "@/shared/components/Skeleton";
 import { Combobox } from "@/shared/components/Combobox";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DataTable } from "@/shared/components/DataTable";
+import { CellInput } from "@/shared/components/CellInput";
+import { CellTextarea } from "@/shared/components/CellTextarea";
 import {
   DrawerField,
   DrawerSection,
@@ -633,7 +635,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                             const received = Number(poLine.qtyReceived ?? 0);
                             const remaining = Math.max(0, ordered - received);
                             return (
-                              <input
+                              <CellInput
                                 type="number"
                                 min={0}
                                 max={remaining}
@@ -645,14 +647,13 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                 disabled={
                                   viewOnly || editing?.status === "POSTED"
                                 }
-                                onChange={(e) => {
-                                  const qty = e.target.value;
+                                onValueChange={(v) => {
                                   setForm((f) => {
                                     const lines = [...f.lines];
                                     if (lineIdx >= 0) {
                                       lines[lineIdx] = {
                                         ...lines[lineIdx],
-                                        qtyReceived: qty,
+                                        qtyReceived: v,
                                       };
                                     } else {
                                       lines.push({
@@ -661,7 +662,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                                         itemId: poLine.itemId ?? "",
                                         itemCode: "",
                                         itemName: poLine.itemName ?? "",
-                                        qtyReceived: qty,
+                                        qtyReceived: v,
                                         unitCost: poLine.unitPrice ?? "",
                                       });
                                     }
@@ -847,7 +848,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                         cell: (line: any) => {
                           const i = form.lines.indexOf(line);
                           return (
-                            <input
+                            <CellInput
                               type="number"
                               min={0}
                               className={cn(
@@ -855,14 +856,16 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                               )}
                               placeholder={`Nhập SL`}
                               value={line.qtyReceived ?? ""}
-                              onChange={(e) => {
-                                const qty = e.target.value;
+                              disabled={
+                                viewOnly || editing?.status === "POSTED"
+                              }
+                              onValueChange={(v) => {
                                 setForm((f) => {
                                   const lines = [...f.lines];
                                   if (i > -1)
                                     lines[i] = {
                                       ...lines[i],
-                                      qtyReceived: qty,
+                                      qtyReceived: v,
                                     };
                                   return { ...f, lines };
                                 });
@@ -1261,13 +1264,14 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 </DrawerField>
               )}
               <DrawerField label={t("Ghi chú")}>
-                <textarea
+                <CellTextarea
                   className={`${inputCls} min-h-[60px] resize-y`}
                   value={form.remarks}
-                  disabled={viewOnly}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, remarks: e.target.value }))
+                  disabled={viewOnly || editing?.status === "POSTED"}
+                  onValueChange={(val) =>
+                    setForm((f) => ({ ...f, remarks: val }))
                   }
+                  placeholder={t("Nhập ghi chú chung nếu có...")}
                 />
               </DrawerField>
             </>

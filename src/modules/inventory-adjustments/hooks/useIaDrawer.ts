@@ -30,12 +30,16 @@ export interface IaForm {
   lines: IaLineForm[];
 }
 
+export function emptyIaLine(): IaLineForm {
+  return { itemId: "", qtyAdjusted: "", unitCost: "" };
+}
+
 export function emptyIaForm(): IaForm {
   return {
     adjustmentNo: "",
     adjustmentDate: new Date().toISOString().slice(0, 10),
     remarks: "",
-    lines: [],
+    lines: [emptyIaLine()],
   };
 }
 

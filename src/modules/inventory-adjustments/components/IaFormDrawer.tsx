@@ -4,6 +4,8 @@ import { Skeleton } from "@/shared/components/Skeleton";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DataTable } from "@/shared/components/DataTable";
 import { Combobox } from "@/shared/components/Combobox";
+import { CellInput } from "@/shared/components/CellInput";
+import { CellTextarea } from "@/shared/components/CellTextarea";
 import {
   DrawerField,
   DrawerSection,
@@ -363,16 +365,15 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                           );
                         }
                         return (
-                          <input
+                          <CellInput
                             type="number"
                             className={cn(
-                              inputCls,
-                              "w-28 flex-shrink-0 text-right mx-auto",
+                              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
                             )}
-                            placeholder={`(+/-) SL`}
+                            placeholder="SL thực"
                             value={line.qtyAdjusted ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
+                            disabled={viewOnly || editing?.status === "POSTED"}
+                            onValueChange={(v) => {
                               setForm((f) => {
                                 const lines = [...f.lines];
                                 const actualIndex = form.lines.findIndex(
@@ -406,17 +407,16 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                           );
                         }
                         return (
-                          <input
+                          <CellInput
                             type="number"
                             min={0}
                             className={cn(
-                              inputCls,
-                              "w-28 flex-shrink-0 text-right mx-auto",
+                              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
                             )}
                             placeholder={`Đơn giá`}
                             value={line.unitCost ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
+                            disabled={viewOnly || editing?.status === "POSTED"}
+                            onValueChange={(v) => {
                               setForm((f) => {
                                 const lines = [...f.lines];
                                 const actualIndex = form.lines.findIndex(
@@ -561,13 +561,14 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
                 />
               </DrawerField>
               <DrawerField label={t("Ghi chú")}>
-                <textarea
+                <CellTextarea
                   className={`${inputCls} min-h-[60px] resize-y`}
                   value={form.remarks}
-                  disabled={viewOnly}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, remarks: e.target.value }))
+                  disabled={viewOnly || editing?.status === "POSTED"}
+                  onValueChange={(val) =>
+                    setForm((f) => ({ ...f, remarks: val }))
                   }
+                  placeholder={t("Nhập ghi chú chung nếu có...")}
                 />
               </DrawerField>
             </>

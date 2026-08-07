@@ -5,6 +5,8 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Skeleton } from "@/shared/components/Skeleton";
 import { DataTable } from "@/shared/components/DataTable";
 import { Combobox } from "@/shared/components/Combobox";
+import { CellInput } from "@/shared/components/CellInput";
+import { CellTextarea } from "@/shared/components/CellTextarea";
 import {
   DrawerField,
   DrawerSection,
@@ -434,11 +436,10 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                           );
                         }
                         return (
-                          <input
+                          <CellInput
                             type="number"
                             className={cn(
-                              inputCls,
-                              "w-full text-right",
+                              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
                               !line.itemId && "bg-muted text-muted-foreground",
                             )}
                             value={qty}
@@ -447,8 +448,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                               editing?.status === "POSTED" ||
                               !line.itemId
                             }
-                            onChange={(e) => {
-                              const v = e.target.value;
+                            onValueChange={(v) => {
                               setForm((f) => {
                                 const lines = [...f.lines];
                                 const currentLine = form.lines.find(
@@ -456,7 +456,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                                 );
                                 const actualIdx = currentLine
                                   ? form.lines.indexOf(currentLine)
-                                  : idx - 1;
+                                  : idx;
                                 lines[actualIdx] = {
                                   ...lines[actualIdx],
                                   qtyIssued: v,
@@ -489,16 +489,17 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                           );
                         }
                         return (
-                          <input
+                          <CellInput
                             type="number"
-                            className={cn(inputCls, "w-full text-right")}
+                            className={cn(
+                              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
+                            )}
                             value={line.unitCost}
                             disabled={
                               isLineViewOnly || editing?.status === "POSTED"
                             }
                             placeholder={t("Tùy chọn")}
-                            onChange={(e) => {
-                              const v = e.target.value;
+                            onValueChange={(v) => {
                               setForm((f) => {
                                 const lines = [...f.lines];
                                 const currentLine = form.lines.find(
@@ -506,7 +507,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
                                 );
                                 const actualIdx = currentLine
                                   ? form.lines.indexOf(currentLine)
-                                  : idx - 1;
+                                  : idx;
                                 lines[actualIdx] = {
                                   ...lines[actualIdx],
                                   unitCost: v,
@@ -661,13 +662,14 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
               )}
 
               <DrawerField label={t("Ghi chú")}>
-                <textarea
+                <CellTextarea
                   className={`${inputCls} min-h-[60px] resize-y`}
                   value={form.remarks}
-                  disabled={viewOnly}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, remarks: e.target.value }))
+                  disabled={viewOnly || editing?.status === "POSTED"}
+                  onValueChange={(val) =>
+                    setForm((f) => ({ ...f, remarks: val }))
                   }
+                  placeholder={t("Nhập ghi chú chung nếu có...")}
                 />
               </DrawerField>
             </>
