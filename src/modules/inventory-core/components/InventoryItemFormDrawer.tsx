@@ -281,22 +281,24 @@ export function InventoryItemFormDrawer({
       size="xl"
       collapsibleRightPanel={true}
       leftPanel={
-        itemId ? (
-          <div className="flex flex-col h-full rounded-lg overflow-hidden">
-            <InventoryTimelineBlock
-              itemId={itemId}
-              loadingId={movLoading ? itemId : null}
-              error={movError}
-              data={movData}
-              onOpenDocument={onOpenDocument}
-              containerClassName="max-h-[calc(100vh-140px)] overflow-y-auto"
-            />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground p-8 text-center bg-slate-50 dark:bg-zinc-950/50 rounded-lg border border-dashed">
-            Lịch sử xuất nhập kho sẽ hiển thị sau khi tạo item.
-          </div>
-        )
+        <div className="flex flex-col h-full rounded-lg overflow-hidden">
+          <InventoryTimelineBlock
+            itemId={itemId || "new"}
+            loadingId={movLoading && itemId ? itemId : null}
+            error={movError}
+            data={
+              itemId
+                ? movData
+                : {
+                    item: {} as any,
+                    currentOnHand: 0,
+                    movements: [],
+                  }
+            }
+            onOpenDocument={onOpenDocument}
+            containerClassName="max-h-[calc(100vh-140px)] overflow-y-auto"
+          />
+        </div>
       }
       rightPanel={
         <>
