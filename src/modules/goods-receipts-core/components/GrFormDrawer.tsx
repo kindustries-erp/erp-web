@@ -823,7 +823,7 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
     <CellTextarea
       className={`${inputCls} min-h-[60px] resize-y`}
       value={form.remarks}
-      disabled={viewOnly || editing?.status === "POSTED"}
+      disabled={viewOnly}
       onValueChange={(val) => setForm((f) => ({ ...f, remarks: val }))}
       placeholder={t("Nhập ghi chú chung nếu có...")}
     />

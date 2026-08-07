@@ -539,12 +539,12 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
           onChange={(v) => setForm((f) => ({ ...f, issueType: v || "" }))}
         />
       </DrawerField>
-      {form.issueType !== "PRODUCTION" && (
+      {form.issueType === "SALE" && (
         <DrawerField label={t("Đơn bán hàng")}>
           <Combobox
             options={soOptions}
             value={form.salesOrderId}
-            disabled={viewOnly || editing?.status === "POSTED" || !!editing}
+            disabled={viewOnly || !!editing}
             placeholder={t("Chọn đơn bán hàng")}
             searchPlaceholder={t("Tìm Đơn bán hàng")}
             allowClear={true}
@@ -575,7 +575,7 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
     <CellTextarea
       className={`${inputCls} min-h-[60px] resize-y`}
       value={form.remarks}
-      disabled={viewOnly || editing?.status === "POSTED"}
+      disabled={viewOnly}
       onValueChange={(val) => setForm((f) => ({ ...f, remarks: val }))}
       placeholder={t("Nhập ghi chú chung nếu có...")}
     />
