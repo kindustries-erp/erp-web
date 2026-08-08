@@ -6,7 +6,6 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import {
   DrawerSection,
   DrawerRow,
-  DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
@@ -465,7 +464,7 @@ export function TrackedGoodsDrawer({
         </DrawerSection>
       ) : (
         <DrawerSection title={t("Ghi chú")}>
-          <DrawerField label={t("Ghi chú")}>
+          <div className="mt-1">
             <textarea
               className={`${inputCls} resize-none`}
               rows={4}
@@ -474,7 +473,7 @@ export function TrackedGoodsDrawer({
               disabled={saving}
               onChange={(e) => setNotes(e.target.value)}
             />
-          </DrawerField>
+          </div>
         </DrawerSection>
       )}
 

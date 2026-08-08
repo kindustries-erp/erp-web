@@ -19,7 +19,7 @@ import {
   Eye,
   FileSpreadsheet,
 } from "lucide-react";
-import { formatGMT7 } from "@/shared/utils/format";
+
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
@@ -58,6 +58,7 @@ import {
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -505,25 +506,7 @@ export function ErpWarehouseTab() {
         header: renderHeaderFilter("date", t("Ngày")),
         size: 130,
         className: "text-right",
-        headerClassName: "p-0 h-full",
-        cell: (row) => (
-          <Tooltip
-            content={formatGMT7(row.createdAt, "datetime-sec")}
-            side="top"
-          >
-            {(() => {
-              const dateTime = formatGMT7(row.createdAt, "datetime");
-              const [datePart = "", timePart = ""] = dateTime.split(" ");
-
-              return (
-                <div className="cursor-help inline-flex flex-row items-baseline gap-1.5 whitespace-nowrap leading-tight">
-                  <span className="text-sm text-gray-900">{datePart}</span>
-                  <span className="text-xs text-gray-500">{timePart}</span>
-                </div>
-              );
-            })()}
-          </Tooltip>
-        ),
+        cell: (row) => <TableDateCell date={row.createdAt} />,
       },
       {
         key: "voucherNo",

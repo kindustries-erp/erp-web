@@ -73,6 +73,18 @@ import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+
+const INVOICE_TYPE_MAP: Record<string, string> = {
+  CHI_NHANH: "Hóa đơn chi nhánh",
+  CHIET_KHAU: "Hóa đơn chiết khấu",
+  DICH_VU_CUU_HO: "Hóa đơn cứu hộ",
+  HANG_HOA: "Hàng hóa / Vật tư",
+  DICH_VU: "Dịch vụ",
+  PHI_THUE: "Phí & Thuế",
+  CUU_HO: "Cứu hộ",
+  KHAC: "Khác",
+};
+
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { InvoiceExportDrawer } from "@/modules/erp-invoices-core/components/InvoiceExportDrawer";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
@@ -1054,8 +1066,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         headerClassName: "text-center",
         className: "text-left",
         cell: (inv) => {
+          const buyerDisplayName =
+            inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "—";
           const text =
-            direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
+            direction === "IN" ? inv.sellerName || "—" : buyerDisplayName;
           return (
             <Tooltip content={text !== "—" ? text : ""}>
               <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
@@ -1858,6 +1872,40 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           if (!branch) return inv.branchId;
           const parts = branch.label.split(" — ");
           return parts.length > 1 ? parts[1] : branch.label;
+        },
+      },
+
+      {
+        key: "invoiceCategory",
+        header: (
+          <TableColumnHeaderFilter
+            title="Phân loại HĐ"
+            sortState={getSortState("invoiceCategory")}
+            onSortChange={(state) => handleSortChange("invoiceCategory", state)}
+            searchValue={
+              listHook.tableState.columnSearch["invoiceCategory"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("invoiceCategory", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["invoiceCategory"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("invoiceCategory", vals)
+            }
+            align="center"
+            columnKey="invoiceCategory"
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
+          />
+        ),
+        size: 140,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv: any) => {
+          if (!inv.invoiceCategory) return "—";
+          return INVOICE_TYPE_MAP[inv.invoiceCategory] || inv.invoiceCategory;
         },
       },
       {

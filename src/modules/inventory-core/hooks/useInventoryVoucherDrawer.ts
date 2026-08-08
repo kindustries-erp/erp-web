@@ -20,14 +20,14 @@ export function useInventoryVoucherDrawer(options?: {
     (initialType: "receipt" | "issue" | "adjustment" = "receipt") => {
       setType(initialType);
 
-      // Khởi tạo lại trạng thái của tất cả các form thành Tạo mới (clear data cũ nếu có)
-      grDrawer.openCreate();
-      giDrawer.openCreate();
-      iaDrawer.openCreate();
+      // Khởi tạo lại trạng thái của form và chỉ open form hiện tại
+      if (initialType === "receipt") grDrawer.openCreate();
+      if (initialType === "issue") giDrawer.openCreate();
+      if (initialType === "adjustment") iaDrawer.openCreate();
 
       setUnifiedOpen(true);
     },
-    [grDrawer.openCreate, giDrawer.openCreate, iaDrawer.openCreate],
+    [grDrawer, giDrawer, iaDrawer],
   );
 
   /** Đóng drawer hợp nhất */
@@ -48,15 +48,20 @@ export function useInventoryVoucherDrawer(options?: {
   }, [unifiedOpen, type, grDrawer.open, giDrawer.open, iaDrawer.open]);
 
   /**
-   * Đổi loại chứng từ — chỉ cập nhật state, KHÔNG đóng/mở lại drawer.
-   * Drawer giữ nguyên trạng thái mở, chỉ re-render nội dung bên trong.
+   * Đổi loại chứng từ — cập nhật state và mở form tương ứng nếu unified đang mở.
    */
   const handleSwitchType = useCallback(
     (newType: "receipt" | "issue" | "adjustment") => {
       if (newType === type) return;
       setType(newType);
+
+      if (unifiedOpen) {
+        if (newType === "receipt") grDrawer.openCreate();
+        if (newType === "issue") giDrawer.openCreate();
+        if (newType === "adjustment") iaDrawer.openCreate();
+      }
     },
-    [type],
+    [type, unifiedOpen, grDrawer, giDrawer, iaDrawer],
   );
 
   return {

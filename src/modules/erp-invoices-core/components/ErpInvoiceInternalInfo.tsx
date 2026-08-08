@@ -9,8 +9,8 @@ import { ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
-import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
+import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { Button } from "@/shared/components/ui/Button";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -77,7 +77,21 @@ export function ErpInvoiceInternalSidebar({
               </div>
             )}
           </DrawerField>
-
+          <DrawerField label="Phân loại hóa đơn">
+            {editMode ? (
+              <Combobox
+                options={[]}
+                value={(form as any).invoiceCategory || ""}
+                onChange={(val) => fieldSet("invoiceCategory", val || null)}
+                placeholder="-- Chọn phân loại --"
+                allowClear={true}
+              />
+            ) : (
+              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
+                {(form as any).invoiceCategory || "—"}
+              </div>
+            )}
+          </DrawerField>
           <DrawerField label={t("notes", "Ghi chú")}>
             {editMode ? (
               <Textarea

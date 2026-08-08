@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { useMemo } from "react";
+import { clearAllDropdownSearchStates } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 
 interface TableColumnState {
   sorts: string[];
@@ -115,6 +116,7 @@ export const useTableColumnStore = create<TableColumnStore>((set, get) => ({
   },
 
   resetFilters: (tableId) => {
+    clearAllDropdownSearchStates();
     set((state) => ({
       tables: {
         ...state.tables,
