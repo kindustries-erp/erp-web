@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { format } from "date-fns";
-import { useTranslation } from "react-i18next";
 import { type ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { normalizeOutInvoiceLineDisplay } from "../utils/outInvoiceDisplay";
 
@@ -9,8 +8,6 @@ interface Props {
 }
 
 export function VietnamInvoiceTemplate({ invoice }: Props) {
-  const { t } = useTranslation("erpInvoices");
-
   const {
     invoiceDate,
     invoiceNo,
@@ -262,81 +259,6 @@ export function VietnamInvoiceTemplate({ invoice }: Props) {
                 </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-between items-start pt-8 pb-20 font-bold text-center">
-          <div className="flex-1">
-            <p>{t("invoiceTemplate.buyerSigner", "NGƯỜI MUA HÀNG")}</p>
-            <p className="font-normal text-sm italic mt-1 text-slate-600">
-              {t("invoiceTemplate.signerHint", "(Ký, ghi rõ họ tên)")}
-            </p>
-          </div>
-          <div className="flex-1 relative">
-            <p>{t("invoiceTemplate.sellerSigner", "NGƯỜI BÁN HÀNG")}</p>
-            <p className="font-normal text-sm italic mt-1 text-slate-600">
-              {t("invoiceTemplate.signerHint", "(Ký, ghi rõ họ tên)")}
-            </p>
-
-            <div className="mt-8 mx-auto w-[320px] rounded-xl border border-emerald-300/70 bg-gradient-to-br from-white via-emerald-50/40 to-white p-3.5 text-slate-700 text-left shadow-[4px_10px_24px_-12px_rgba(5,150,105,0.45)] relative z-10">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-semibold tracking-[0.08em] text-white">
-                  <svg
-                    className="h-3.5 w-3.5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                  {t("invoiceTemplate.stamp.valid", "ĐÃ KÝ SỐ HỢP LỆ")}
-                </div>
-                <div className="text-[10px] font-semibold text-emerald-700 uppercase tracking-[0.06em]">
-                  {t("invoiceTemplate.stamp.brand", "Hóa đơn điện tử")}
-                </div>
-              </div>
-
-              <p
-                className="font-bold text-sm uppercase mb-1.5 line-clamp-2 text-slate-800"
-                title={norm(sellerName)}
-              >
-                {norm(sellerName)}
-              </p>
-
-              <div className="space-y-0.5 text-[11px] text-slate-600">
-                <p>
-                  {t("invoiceTemplate.stamp.signedDate", "Ký ngày")}:{" "}
-                  {dateParts.day}/{dateParts.month}/{dateParts.year}
-                </p>
-                <p>
-                  {t("invoiceTemplate.stamp.invoiceNo", "Số hóa đơn")}:{" "}
-                  {invoiceNo || "---"}
-                </p>
-                <p>
-                  {t("invoiceTemplate.stamp.serialNo", "Ký hiệu")}:{" "}
-                  {serialNo || "---"}
-                </p>
-              </div>
-
-              <div className="pointer-events-none absolute right-2 bottom-2 inline-flex items-center justify-center rounded-full border border-emerald-300 bg-white/90 p-1.5 shadow-sm">
-                <svg
-                  className="h-3.5 w-3.5 text-emerald-600"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </div>
-            </div>
           </div>
         </div>
       </div>
