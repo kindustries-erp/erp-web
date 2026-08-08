@@ -94,6 +94,7 @@ Dành cho các màn hình nghiệp vụ phức tạp có chứng từ (như Hóa
 - Nên truyền `collapsibleRightPanel={true}` để user có thể ẩn/hiện cột bên phải (nếu áp dụng).
 - **`leftPanel`**: Chứa thông tin chi tiết chứng từ (ví dụ: Thông tin chung, Bảng danh sách hàng hóa/dịch vụ).
 - **`rightPanel`**: Chứa các thông tin meta, tham chiếu, file đính kèm (Metadata, Logs). (Không cần Status ở đây nếu đã dùng `titleExtra` trên Header).
+- **Bắt buộc**: Các nhóm nội dung (content group) độc lập (ví dụ: Thông tin chung, Thuộc tính, Ghi chú, Lịch sử...) phải được đặt trong một `<DrawerSection>` riêng biệt. Component này sẽ tự động tạo một thẻ (card) có tiêu đề và đường phân cách theo đúng chuẩn UI.
 
 **Mẫu code 2-Columns Drawer**:
 

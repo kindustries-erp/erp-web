@@ -30,12 +30,16 @@ export interface IaForm {
   lines: IaLineForm[];
 }
 
+export function emptyIaLine(): IaLineForm {
+  return { itemId: "", qtyAdjusted: "", unitCost: "" };
+}
+
 export function emptyIaForm(): IaForm {
   return {
     adjustmentNo: "",
     adjustmentDate: new Date().toISOString().slice(0, 10),
     remarks: "",
-    lines: [],
+    lines: [emptyIaLine()],
   };
 }
 
@@ -113,7 +117,9 @@ export function useIaDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i: any) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) || []
     );

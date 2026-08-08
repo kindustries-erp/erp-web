@@ -9,8 +9,9 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 
 ## 1. Cấu trúc cột (Columns Structure)
 
-- **Cột đầu tiên (First Column)**: Phải là cột `Checkbox` hoặc `Action` (nếu có action theo dòng), với `width: 40px`.
+- **Cột đầu tiên (First Column)**: Thường là cột **Index (STT)**, **Checkbox** hoặc **Action** (nếu có action theo dòng), với `width: 40px`.
   - Cần set `size: 40`, `headerClassName: "text-center w-[40px] min-w-[40px]"`, `className: "text-center w-[40px] min-w-[40px]"`.
+  - **Lưu ý với cột Index (STT)**: Khi dùng cell renderer mặc định của framework, CHỈ SỬ DỤNG `{idx}` (VD: `cell: (_, idx) => <span>{idx}</span>`), **KHÔNG CỘNG THÊM 1** (`idx + 1`). Lý do: Core `DataTable` đã tự động xử lý pagination offset và trả về `idx` hệ 1-based.
 - **Enable Resizing**: Luôn bật tính năng resize cho các cột dữ liệu bằng cách thêm `enableResizing: true` vào config của từng cột.
 - **Đa ngôn ngữ (i18n)**: Tất cả các text trong table (header, empty state, action tooltip...) phải được bọc trong hàm `t` từ `useTranslation("namespace")`. KHÔNG hardcode tiếng Việt/Anh trực tiếp mà không qua hook translation.
 
@@ -27,6 +28,7 @@ Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải
 
 - **Trong Page**: Filter và Sorting thường thực hiện ở **Server-side** thông qua query params hoặc hook call API (như `useErpInvoicesList`).
 - **Trong Drawer**: Filter và Sorting thường thực hiện ở **Client-side** (trừ trường hợp dataset quá lớn cần paginate từ server).
+  - **Lưu ý quan trọng**: Khi filter/sort ở client-side bằng hook `useMemo`, **bắt buộc** phải truyền đủ các object filter vào array dependencies (VD: `tableState.columnFilters`, `tableState.sorts`, `tableState.columnSearch`), nếu không UI sẽ không update khi user chọn filter.
 
 **Mẫu code cho `<TableColumnHeaderFilter>`**:
 
@@ -45,6 +47,7 @@ header: <TableColumnHeaderFilter
   onSearchChange={(val) => listHook.setColumnSearch("itemCode", val)}
   selectedFilters={listHook.columnFilters["itemCode"] || []}
   onFilterChange={(vals) => listHook.setColumnFilter("itemCode", vals)}
+  isActive={!!listHook.columnFilters["itemCode"]?.length}
   align="center"
 />;
 ```
@@ -137,16 +140,9 @@ Nếu cột thời gian bao gồm cả ngày tháng năm và thời gian, **bắ
 **Mẫu code cho cột Date/Time**:
 
 ```tsx
-cell: (row) => {
-  const dateTime = formatGMT7(row.createdAt, "datetime");
-  const [datePart = "", timePart = ""] = dateTime.split(" ");
-  return (
-    <div className="flex flex-col text-center">
-      <span className="text-sm text-gray-900">{datePart}</span>
-      <span className="text-xs text-gray-500">{timePart}</span>
-    </div>
-  );
-};
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
+
+cell: (row) => <TableDateCell date={row.createdAt} />;
 ```
 
 ## 6. Cột Số và Tiền Tệ (Numbers & Currencies)
@@ -222,11 +218,11 @@ cell: (row) => (
 - [ ] TUYỆT ĐỐI không dùng `onRowClick` mở detail, chỉ mở từ `<TableText>` hoặc `ActionDropdown` chưa?
 - [ ] `<ActionDropdown>` đã phân nhóm menu bằng `groupLabel` (TRA CỨU, THAO TÁC, ...) chưa?
 - [ ] Các cột dữ liệu đã có `enableResizing: true` chưa?
-- [ ] Cột đầu tiên (Checkbox/Action/#) rộng đúng `40px` chưa?
-- [ ] Header có `<TableColumnHeaderFilter align="center">` chưa?
+- [ ] Cột đầu tiên (STT/Checkbox/Action) rộng đúng `40px` chưa? (STT dùng `{idx}` thay vì `idx + 1` chưa?)
+- [ ] Header có `<TableColumnHeaderFilter align="center">` và truyền prop `isActive` chưa?
 - [ ] Các cột thường KHÔNG set `hideFilter={true}` để hiện search box & options chưa?
 - [ ] Cột ngày tháng (Date) đã dùng `dateRangeSlot` và `hideFilter={true}` chưa?
-- [ ] Drawer thì client-side filter, Page thì server-side chưa?
+- [ ] Drawer thì client-side filter, Page thì server-side chưa? Nếu client-side filter thì `useMemo` đã có đủ dependency chưa?
 - [ ] Các cột mã/code (size: 200px) đã dùng `<TableText>` bật `enableCopy`, `tooltip`, `onDrawerClick` và Badge status (nếu Nháp/Hủy) chưa?
 - [ ] Cột thời gian có format 2 dòng (Ngày to, Giờ nhỏ xám) chưa?
 - [ ] Cột số lượng có class `tabular-nums`, cột tiền tệ có class `font-semibold` chưa?

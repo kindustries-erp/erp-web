@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Wallet, Plus, Upload } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { useT } from "@/core/i18n";
 import { bankStatementApi } from "@/modules/bank-statements/api/bankStatementApi";
 import { FolderArchive } from "lucide-react";
@@ -10,7 +11,7 @@ import { ImportStatementDrawer } from "@/pages/finance/components/ImportStatemen
 import { OriginalStatementFilesDrawer } from "@/pages/finance/components/OriginalStatementFilesDrawer";
 import { CreateCashTransactionDrawer } from "@/pages/finance/components/CreateCashTransactionDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
-import { money, formatGMT7 } from "@/shared/utils/format";
+import { money } from "@/shared/utils/format";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -396,9 +397,8 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
         "transDate",
         t("bankStatement.columns.transDate"),
       ),
-      cell: (row: any) => formatGMT7(row.transDate, "datetime"),
+      cell: (row: any) => <TableDateCell date={row.transDate} />,
       size: 140,
-      sortable: true,
     },
     {
       key: "referenceNumber",

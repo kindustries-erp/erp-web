@@ -7,6 +7,7 @@ export interface ErpInvoiceItem {
   unit?: string;
   quantity?: number;
   unitPrice?: number;
+  invoiceSubcategory?: string;
   preVatAmount: number | string;
   vatRate?: number | string | null;
   vatAmount: number | string;
@@ -39,6 +40,7 @@ export interface ErpInvoice {
   description?: string | null;
   licensePlate?: string | null;
   settlementOrder?: string | null;
+  invoiceCategory?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;

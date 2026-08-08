@@ -167,6 +167,18 @@ export function useGrDrawer({
       .get(form.purchaseOrderId)
       .then((po) => {
         setPoDetail(po);
+        setPoOptions((prev) => {
+          if (!prev.find((p) => p.value === po.id)) {
+            return [
+              ...prev,
+              {
+                value: po.id,
+                label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
+              },
+            ];
+          }
+          return prev;
+        });
         if (po.lines) {
           void fetchItemsDict(po.lines.map((l) => l.itemId || ""));
         }
@@ -249,7 +261,7 @@ export function useGrDrawer({
         }
         if (editing) {
           await goodsReceiptsCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsReceiptsCoreApi.post(editing.id);
           }
           showToast({

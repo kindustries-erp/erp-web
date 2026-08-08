@@ -165,7 +165,9 @@ export function useGiDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) ?? [],
     [itemsData],
@@ -343,7 +345,7 @@ export function useGiDrawer({
         }
         if (editing) {
           await goodsIssuesCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsIssuesCoreApi.post(editing.id);
           }
           showToast({

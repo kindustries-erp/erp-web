@@ -3,6 +3,7 @@ import { Panel, PanelMore } from "@/shared/components/Panel";
 import { SearchInput } from "@/shared/components/SearchInput";
 import { Combobox } from "@/shared/components/Combobox";
 import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { StatusBadge, VoucherTypeBadge } from "@/shared/components/badges";
 import { AttachmentCell } from "@/shared/components/AttachmentComponents";
@@ -18,7 +19,6 @@ import type {
   VoucherStatus,
 } from "@/modules/finance/api/financeApi";
 import { useT } from "@/core/i18n";
-import { formatGMT7 } from "@/shared/utils/format";
 
 interface VoucherTableProps {
   title: string;
@@ -122,7 +122,7 @@ export function VoucherTable({
           {t("voucher.table.colDate")}
         </SortHeader>
       ),
-      cell: (v) => formatGMT7(v.document_date, "datetime"),
+      cell: (v) => <TableDateCell date={v.document_date} />,
       className: "text-[color:var(--muted-fg)] text-right",
       headerClassName: "text-center",
       skeletonClassName: "w-20",
