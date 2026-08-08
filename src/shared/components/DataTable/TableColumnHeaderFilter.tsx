@@ -218,11 +218,10 @@ export function TableColumnHeaderFilter({
     }
   }, [open, searchValue, columnKey]);
 
-  const hasActiveFilters =
-    isActive ||
-    searchValue ||
-    selectedFilters.length > 0 ||
-    sortState !== "none";
+  const isFilterActive =
+    isActive || !!searchValue || selectedFilters.length > 0;
+  const isSortActive = sortState !== "none";
+  const hasActiveModifiers = isFilterActive || isSortActive;
 
   const handleToggleFilter = (value: string) => {
     const next = pendingFilters.includes(value)
@@ -282,17 +281,25 @@ export function TableColumnHeaderFilter({
           {title}
           <div
             className={cn(
-              "flex items-center justify-center w-5 h-5 rounded-md transition-colors relative",
-              hasActiveFilters
+              "flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5",
+              hasActiveModifiers
                 ? "text-primary"
                 : "text-muted-foreground/30 opacity-0 group-hover:opacity-100",
               open && "opacity-100 bg-muted",
             )}
           >
-            <ListFilter size={14} />
-            {(selectedFilters.length > 0 || isActive || !!searchValue) && (
+            {(!hasActiveModifiers || isFilterActive) && (
+              <ListFilter size={14} />
+            )}
+            {isSortActive &&
+              (sortState === "asc" ? (
+                <ArrowDownAZ size={14} />
+              ) : (
+                <ArrowUpAZ size={14} />
+              ))}
+            {hasActiveModifiers && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-primary"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
               </span>
             )}

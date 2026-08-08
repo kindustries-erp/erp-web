@@ -399,7 +399,6 @@ export const BankStatementPage = ({ type }: { type: "bank" | "cash" }) => {
       ),
       cell: (row: any) => <TableDateCell date={row.transDate} />,
       size: 140,
-      sortable: true,
     },
     {
       key: "referenceNumber",
