@@ -14,10 +14,6 @@ function toNumber(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function hasRescueKeyword(text: string): boolean {
-  return /cứu\s*hộ/i.test(text);
-}
-
 function hasDiscountKeyword(text: string): boolean {
   return /(chiết\s*khấu|giảm\s*trừ|khấu\s*trừ)/i.test(text);
 }
@@ -77,30 +73,24 @@ export function normalizeOutInvoiceLineDisplay(
   const shouldApplyOutRule = direction !== "IN";
   const isDaoTri =
     shouldApplyOutRule && isDaoTriOutInvoiceTaxCode(buyerTaxCode);
-  const isRescue = hasRescueKeyword(description);
   const hasDiscountToken = hasDiscountKeyword(description);
   const isDiscountLine = isDaoTri && hasDiscountToken && invoiceLineCount > 1;
 
-  let unit = baseUnit;
-  if (isRescue) {
-    unit = "Cứu hộ";
-  } else if (isDiscountLine) {
-    unit = "Chiết khấu";
-  }
+  const unit = baseUnit;
 
   const displayQuantity = isDiscountLine ? 1 : quantity;
   const displayUnitPrice = isDiscountLine
-    ? Math.abs(preVatAmount || discountAmount || totalAmount)
+    ? Math.abs(preVatAmount || discountAmount || totalAmount || 0)
     : unitPrice;
   const displayPreVatAmount = isDiscountLine
-    ? -Math.abs(preVatAmount || discountAmount || totalAmount)
+    ? -(preVatAmount || discountAmount || totalAmount || 0)
     : preVatAmount;
-  const displayVatAmount = isDiscountLine ? -Math.abs(vatAmount) : vatAmount;
+  const displayVatAmount = isDiscountLine ? -(vatAmount || 0) : vatAmount;
   const displayTotalAmount = isDiscountLine
-    ? -Math.abs(totalAmount || preVatAmount || discountAmount)
+    ? -(totalAmount || preVatAmount || discountAmount || 0)
     : totalAmount;
   const displayDiscountAmount = isDiscountLine
-    ? -Math.abs(discountAmount || preVatAmount || totalAmount)
+    ? -(discountAmount || preVatAmount || totalAmount || 0)
     : discountAmount;
 
   return {
