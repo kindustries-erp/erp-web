@@ -9,25 +9,11 @@ import { ErpInvoice } from "../api/erpInvoicesCoreApi";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
-import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
+import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { Button } from "@/shared/components/ui/Button";
 import { Textarea } from "@/shared/components/ui/textarea";
-
-const INVOICE_TYPE_OPTIONS_OUT = [
-  { value: "CHIET_KHAU", label: "Hóa đơn chiết khấu" },
-  { value: "DICH_VU_CUU_HO", label: "Hóa đơn cứu hộ" },
-  { value: "KHAC", label: "Khác" },
-];
-
-const INVOICE_TYPE_OPTIONS_IN = [
-  { value: "HANG_HOA", label: "Hàng hóa / Vật tư" },
-  { value: "DICH_VU", label: "Dịch vụ" },
-  { value: "PHI_THUE", label: "Phí & Thuế" },
-  { value: "CUU_HO", label: "Cứu hộ" },
-  { value: "KHAC", label: "Khác" },
-];
 
 function createClientId() {
   const maybeCrypto = (globalThis as any)?.crypto;
@@ -91,15 +77,10 @@ export function ErpInvoiceInternalSidebar({
               </div>
             )}
           </DrawerField>
-
           <DrawerField label="Phân loại hóa đơn">
             {editMode ? (
               <Combobox
-                options={
-                  direction === "OUT"
-                    ? INVOICE_TYPE_OPTIONS_OUT
-                    : INVOICE_TYPE_OPTIONS_IN
-                }
+                options={[]}
                 value={(form as any).invoiceCategory || ""}
                 onChange={(val) => fieldSet("invoiceCategory", val || null)}
                 placeholder="-- Chọn phân loại --"
@@ -107,13 +88,10 @@ export function ErpInvoiceInternalSidebar({
               />
             ) : (
               <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
-                {[...INVOICE_TYPE_OPTIONS_OUT, ...INVOICE_TYPE_OPTIONS_IN].find(
-                  (o) => o.value === (detailInvoice as any)?.invoiceCategory,
-                )?.label || "—"}
+                {(form as any).invoiceCategory || "—"}
               </div>
             )}
           </DrawerField>
-
           <DrawerField label={t("notes", "Ghi chú")}>
             {editMode ? (
               <Textarea

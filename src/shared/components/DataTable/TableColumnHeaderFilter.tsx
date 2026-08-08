@@ -62,6 +62,10 @@ export interface TableColumnHeaderFilterProps {
 
 const dropdownSearchState = new Map<string, string>();
 
+export function clearAllDropdownSearchStates() {
+  dropdownSearchState.clear();
+}
+
 export function TableColumnHeaderFilter({
   title,
   sortState,
@@ -102,7 +106,7 @@ export function TableColumnHeaderFilter({
 
   useEffect(() => {
     if (isAllMatchingMode) {
-      setPendingFilters([]);
+      setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
     }
   }, [debouncedLocalSearch]);
 
@@ -203,13 +207,6 @@ export function TableColumnHeaderFilter({
     showBlankOption,
   ]);
 
-  // Sync local search to global map
-  useEffect(() => {
-    if (columnKey) {
-      dropdownSearchState.set(columnKey, localSearch);
-    }
-  }, [localSearch, columnKey]);
-
   // Restore local search when popover opens
   useEffect(() => {
     if (open) {
@@ -239,7 +236,7 @@ export function TableColumnHeaderFilter({
       if (isAllMatchingMode) {
         setPendingFilters([]);
       } else {
-        setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
+        setPendingFilters(["__ALL_MATCHING__", localSearch]);
       }
     } else {
       if (pendingFilters.length === finalOptions.length) {
@@ -363,13 +360,18 @@ export function TableColumnHeaderFilter({
                     placeholder="Tìm trong bảng..."
                     className="pl-8 pr-8 h-8 text-xs"
                     value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
+                    onChange={(e) => {
+                      setLocalSearch(e.target.value);
+                      if (columnKey)
+                        dropdownSearchState.set(columnKey, e.target.value);
+                    }}
                   />
                   {localSearch && (
                     <button
                       className="absolute right-2 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setLocalSearch("");
+                        if (columnKey) dropdownSearchState.set(columnKey, "");
                       }}
                     >
                       <X size={14} />
@@ -468,6 +470,7 @@ export function TableColumnHeaderFilter({
                 onClick={() => {
                   setPendingFilters([]);
                   setLocalSearch("");
+                  if (columnKey) dropdownSearchState.set(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
                   setOpen(false);
@@ -481,7 +484,11 @@ export function TableColumnHeaderFilter({
                 className="text-xs h-7 px-3"
                 onClick={() => {
                   onSearchChange(localSearch);
-                  onFilterChange(pendingFilters);
+                  let finalFilters = pendingFilters;
+                  if (pendingFilters[0] === "__ALL_MATCHING__") {
+                    finalFilters = ["__ALL_MATCHING__", localSearch];
+                  }
+                  onFilterChange(finalFilters);
                   setOpen(false);
                 }}
               >

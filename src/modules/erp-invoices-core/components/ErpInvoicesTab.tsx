@@ -1874,40 +1874,12 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           return parts.length > 1 ? parts[1] : branch.label;
         },
       },
-      {
-        key: "invoiceType",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("invoice.columns.invoiceType", "Loại hóa đơn")}
-            sortState={getSortState("invoiceType")}
-            onSortChange={(state) => handleSortChange("invoiceType", state)}
-            searchValue={listHook.tableState.columnSearch["invoiceType"] || ""}
-            onSearchChange={(val) => handleSearchChange("invoiceType", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["invoiceType"] || []
-            }
-            onFilterChange={(vals) => handleFilterChange("invoiceType", vals)}
-            align="center"
-            columnKey="invoiceType"
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-            showBlankOption={true}
-          />
-        ),
-        size: 140,
-        headerClassName: "text-center",
-        className: "text-center",
-        cell: (inv: any) => {
-          if (!inv.invoiceType) return "—";
-          return INVOICE_TYPE_MAP[inv.invoiceType] || inv.invoiceType;
-        },
-      },
+
       {
         key: "invoiceCategory",
         header: (
           <TableColumnHeaderFilter
-            title="Phân loại hóa đơn"
+            title="Phân loại HĐ"
             sortState={getSortState("invoiceCategory")}
             onSortChange={(state) => handleSortChange("invoiceCategory", state)}
             searchValue={
