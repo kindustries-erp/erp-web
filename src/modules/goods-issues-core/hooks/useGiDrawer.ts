@@ -345,7 +345,7 @@ export function useGiDrawer({
         }
         if (editing) {
           await goodsIssuesCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsIssuesCoreApi.post(editing.id);
           }
           showToast({

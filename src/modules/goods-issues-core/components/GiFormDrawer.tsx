@@ -4,6 +4,8 @@
  * to the unified InventoryVoucherFormDrawer shell.
  */
 import { useRef, useEffect, useState } from "react";
+import { ExternalLink } from "lucide-react";
+import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
 import { fmtQty } from "@/shared/utils/format";
 import { Button } from "@/shared/components/ui/Button";
@@ -541,15 +543,48 @@ export function GiFormDrawer({ drawer }: GiFormDrawerProps) {
       </DrawerField>
       {form.issueType === "SALE" && (
         <DrawerField label={t("Đơn bán hàng")}>
-          <Combobox
-            options={soOptions}
-            value={form.salesOrderId}
-            disabled={viewOnly || !!editing}
-            placeholder={t("Chọn đơn bán hàng")}
-            searchPlaceholder={t("Tìm Đơn bán hàng")}
-            allowClear={true}
-            onChange={(v) => handleSoChange(v || "")}
-          />
+          {(viewOnly || !!editing) && form.salesOrderId ? (
+            <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-md w-full overflow-hidden">
+              <TooltipProvider>
+                <Tooltip
+                  content={
+                    soOptions.find((o) => o.value === form.salesOrderId)
+                      ?.label || form.salesOrderId
+                  }
+                >
+                  <span
+                    className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-full"
+                    onClick={() => {
+                      window.dispatchEvent(
+                        new CustomEvent("open_erp_document", {
+                          detail: {
+                            type: "erp_sales_order",
+                            id: form.salesOrderId,
+                          },
+                        }),
+                      );
+                    }}
+                  >
+                    <span className="group-hover/link:underline underline-offset-4 truncate">
+                      {soOptions.find((o) => o.value === form.salesOrderId)
+                        ?.label || form.salesOrderId}
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
+                  </span>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ) : (
+            <Combobox
+              options={soOptions}
+              value={form.salesOrderId}
+              disabled={viewOnly || !!editing}
+              placeholder={t("Chọn đơn bán hàng")}
+              searchPlaceholder={t("Tìm Đơn bán hàng")}
+              allowClear={true}
+              onChange={(v) => handleSoChange(v || "")}
+            />
+          )}
         </DrawerField>
       )}
       {form.issueType === "PRODUCTION" && (

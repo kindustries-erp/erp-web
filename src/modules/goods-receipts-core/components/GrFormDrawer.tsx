@@ -4,6 +4,8 @@
  * to the unified InventoryVoucherFormDrawer shell.
  */
 import { useRef, useEffect, useState } from "react";
+import { ExternalLink } from "lucide-react";
+import { Tooltip, TooltipProvider } from "@/core/components/ui/Tooltip";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
@@ -35,8 +37,8 @@ function fmtQty(value?: string | null) {
   const n = Number(value);
   if (Number.isNaN(n)) return value ?? "0";
   return new Intl.NumberFormat("vi-VN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 3,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(n);
 }
 
@@ -251,11 +253,14 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       className: "text-center w-[100px] min-w-[100px]",
       cell: (poLine: any) => (
         <div className="font-medium text-foreground">
-          {Number(poLine.qtyOrdered ?? 0).toLocaleString("vi-VN")}
+          {Number(poLine.qtyOrdered ?? 0).toLocaleString("vi-VN", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </div>
       ),
     },
-    ...(!viewOnly || editing?.status === "DRAFT"
+    ...(!viewOnly && (!editing || editing.status === "DRAFT")
       ? [
           {
             key: "remaining",
@@ -273,7 +278,10 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
               const remaining = Math.max(0, ordered - received);
               return (
                 <div className="font-medium text-amber-600">
-                  {remaining.toLocaleString("vi-VN")}
+                  {remaining.toLocaleString("vi-VN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </div>
               );
             },
@@ -527,8 +535,17 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   const summaryRow =
     tableMode === "po"
       ? {
-          remaining: (
+          itemName: (
             <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
+          ),
+          ordered: (
+            <div className="text-center font-semibold text-foreground">
+              {fmtQty(
+                poDetail?.lines
+                  ?.reduce((sum, l) => sum + Number(l.qtyOrdered || 0), 0)
+                  .toString(),
+              )}
+            </div>
           ),
           qtyInput: (
             <div className="text-center font-semibold text-emerald-600">
@@ -803,15 +820,48 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
       </DrawerField>
       {form.receiptType === "PO" && (
         <DrawerField label={t("Đơn mua hàng (PO)")}>
-          <Combobox
-            options={poOptions}
-            value={form.purchaseOrderId}
-            disabled={viewOnly || editing !== null}
-            placeholder={t("Chọn PO...")}
-            onChange={(v) =>
-              setForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
-            }
-          />
+          {(viewOnly || editing !== null) && form.purchaseOrderId ? (
+            <div className="px-3 py-2 bg-slate-50 border border-slate-100 rounded-md w-full overflow-hidden">
+              <TooltipProvider>
+                <Tooltip
+                  content={
+                    poOptions.find((o) => o.value === form.purchaseOrderId)
+                      ?.label || form.purchaseOrderId
+                  }
+                >
+                  <span
+                    className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-full"
+                    onClick={() => {
+                      window.dispatchEvent(
+                        new CustomEvent("open_erp_document", {
+                          detail: {
+                            type: "erp_purchase_order",
+                            id: form.purchaseOrderId,
+                          },
+                        }),
+                      );
+                    }}
+                  >
+                    <span className="group-hover/link:underline underline-offset-4 truncate">
+                      {poOptions.find((o) => o.value === form.purchaseOrderId)
+                        ?.label || form.purchaseOrderId}
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover/link:opacity-100 transition-all flex-shrink-0" />
+                  </span>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          ) : (
+            <Combobox
+              options={poOptions}
+              value={form.purchaseOrderId}
+              disabled={viewOnly || editing !== null}
+              placeholder={t("Chọn PO...")}
+              onChange={(v) =>
+                setForm((f) => ({ ...f, purchaseOrderId: v, lines: [] }))
+              }
+            />
+          )}
         </DrawerField>
       )}
     </>

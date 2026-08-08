@@ -123,8 +123,16 @@ export function InventoryTimelineBlock({
         let valB = b[field];
 
         if (field === "time") {
-          valA = a.transactionDate ? new Date(a.transactionDate).getTime() : 0;
-          valB = b.transactionDate ? new Date(b.transactionDate).getTime() : 0;
+          valA = a.createdAt
+            ? new Date(a.createdAt).getTime()
+            : a.transactionDate
+              ? new Date(a.transactionDate).getTime()
+              : 0;
+          valB = b.createdAt
+            ? new Date(b.createdAt).getTime()
+            : b.transactionDate
+              ? new Date(b.transactionDate).getTime()
+              : 0;
         } else if (field === "change") {
           valA =
             Number(a.qtyIn || 0) > 0 ? Number(a.qtyIn) : -Number(a.qtyOut || 0);
@@ -245,7 +253,7 @@ export function InventoryTimelineBlock({
         size: 200,
         cell: (m) => (
           <TableDateCell
-            date={m.transactionDate}
+            date={m.createdAt || m.transactionDate}
             className="w-full justify-center"
           />
         ),

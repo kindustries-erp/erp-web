@@ -170,6 +170,11 @@ export function StandardFormDrawer({
 
   const innerContent = (
     <>
+      {error && (
+        <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mb-4 flex-shrink-0">
+          {error}
+        </div>
+      )}
       {loading ? (
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
@@ -248,12 +253,6 @@ export function StandardFormDrawer({
                 {rightPanel}
               </div>
             ))}
-        </div>
-      )}
-
-      {error && (
-        <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mt-3 flex-shrink-0">
-          {error}
         </div>
       )}
     </>
