@@ -12,7 +12,6 @@ export const legacyStringsEn = {
   "Tải lại": "Refresh",
   "Bộ lọc": "Filter",
   "Chi tiết": "Details",
-  "Liên kết tiền": "Settle Payment",
   "Nhập kho": "Receipt",
   Xóa: "Delete",
   Hủy: "Cancel",

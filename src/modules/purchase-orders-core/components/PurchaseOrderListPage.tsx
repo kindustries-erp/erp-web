@@ -1,13 +1,12 @@
 import { FileText, PackagePlus, Network } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate";
 
-import { Link2, Trash2, XCircle, Eye } from "lucide-react";
+import { Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
-import { SettlementDrawer } from "@/modules/operational/components/list/SettlementDrawer";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
 import { useT } from "@/core/i18n";
@@ -15,7 +14,7 @@ import {
   operationalApi,
   type OperationalDocument,
 } from "@/modules/operational/api/operationalApi";
-import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
+
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { canReceiveInventory } from "@/modules/operational/utils/operationalHelpers";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -51,10 +50,6 @@ export function PurchaseOrderListPage() {
     poReceipts,
     pageError,
     openDetail,
-    openSettlement,
-    closeSettlement,
-    saveSettlement,
-    removePaymentLink,
     handleCreateNew,
     handleCloseForm,
     handleToggleEdit,
@@ -96,7 +91,6 @@ export function PurchaseOrderListPage() {
 
   const total = listQuery.data?.total || 0;
   const totalPages = listQuery.data?.totalPages || 0;
-  const { activeStep } = useOperationalFlowStore();
 
   const summaryRow = useMemo(() => {
     const totalQty = items.reduce(
@@ -217,12 +211,6 @@ export function PurchaseOrderListPage() {
               onClick: () => void openConnectionGraph(row),
               hidden: !isAdmin,
             },
-            {
-              label: t("Liên kết tiền"),
-              icon: <Link2 className="h-[13px] w-[13px]" />,
-              onClick: () => openSettlement(row),
-              hidden: Number(row.open_amount || 0) <= 0,
-            },
           ],
         },
         {
@@ -267,13 +255,6 @@ export function PurchaseOrderListPage() {
         isAdminEmail={isAdminEmail}
         pendingTagIds={pendingTagIds}
         onPendingTagsChange={setPendingTagIds}
-      />
-
-      <SettlementDrawer
-        open={activeStep === "settlement"}
-        onClose={closeSettlement}
-        onSave={saveSettlement}
-        onRemoveLink={removePaymentLink}
       />
 
       <GrFormDrawer drawer={grDrawer} />

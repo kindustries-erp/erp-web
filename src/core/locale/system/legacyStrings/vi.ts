@@ -12,7 +12,6 @@ export const legacyStringsVi = {
   "Tải lại": "Tải lại",
   "Bộ lọc": "Bộ lọc",
   "Chi tiết": "Chi tiết",
-  "Liên kết tiền": "Liên kết tiền",
   "Nhập kho": "Nhập kho",
   Xóa: "Xóa",
   Hủy: "Hủy",

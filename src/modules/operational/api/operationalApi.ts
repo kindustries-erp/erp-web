@@ -14,17 +14,6 @@ export type OperationalDocumentType =
   | "purchase_orders"
   | "operating_expenses";
 
-export interface OperationalDocumentPaymentLink {
-  id: string;
-  document_type: OperationalDocumentType;
-  document_id: string;
-  payment_voucher_id: string;
-  applied_amount: number;
-  applied_date?: string | null;
-  notes?: string | null;
-  created_at?: string;
-}
-
 export interface OperationalDocument {
   id: string;
   order_no?: string;
@@ -53,7 +42,6 @@ export interface OperationalDocument {
   next_due_date?: string | null;
   notes?: string | null;
   lines?: OperationalLine[];
-  payments?: OperationalDocumentPaymentLink[];
 }
 
 export interface OperationalLine {
@@ -121,15 +109,6 @@ export interface InventoryStockRow {
 
 export interface CreateOperationalPayload extends Partial<OperationalDocument> {
   lines?: OperationalLine[];
-}
-
-export interface CreateOperationalPaymentLinkPayload {
-  document_type: OperationalDocumentType;
-  document_id: string;
-  payment_voucher_id: string;
-  applied_amount: number;
-  applied_date?: string;
-  notes?: string;
 }
 
 function normalizePurchaseRow(row: any): OperationalDocument {
@@ -444,31 +423,6 @@ export const operationalApi = {
     return documentType === "purchase_orders"
       ? normalizePurchaseRow(data.data)
       : data.data;
-  },
-  listPaymentLinks: async (
-    documentType: OperationalDocumentType,
-    id: string,
-  ) => {
-    const { data } = await axiosInstance.get<{
-      items: OperationalDocumentPaymentLink[];
-    }>(`/api/v1/${resolvePath(documentType)}/${id}/payment-links`);
-    return data.items ?? [];
-  },
-  createPaymentLink: async (payload: CreateOperationalPaymentLinkPayload) => {
-    const { data } = await axiosInstance.post<{
-      message: string;
-      data: OperationalDocumentPaymentLink;
-    }>("/api/v1/document-payment-links", payload);
-    return data.data;
-  },
-  deletePaymentLink: async (
-    documentType: OperationalDocumentType,
-    id: string,
-    linkId: string,
-  ) => {
-    await axiosInstance.delete(
-      `/api/v1/${resolvePath(documentType)}/${id}/payment-links/${linkId}`,
-    );
   },
   postPurchaseReceipt: async (
     id: string,
