@@ -16,6 +16,8 @@ import type {
   FormVariant,
   LineDraft,
 } from "@/modules/operational/utils/operationalHelpers";
+import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
 
 interface FormLineDetailPanelProps {
   variant: FormVariant;
@@ -33,6 +35,7 @@ interface FormLineDetailPanelProps {
     note?: string;
     searchText?: string;
   }>;
+  poReceipts?: ErpPoReceipt[];
 }
 
 export function FormLineDetailPanel({
@@ -41,6 +44,7 @@ export function FormLineDetailPanel({
   purchaseFieldLocked,
   viewOnly,
   purchaseInventoryOptions,
+  poReceipts,
 }: FormLineDetailPanelProps) {
   const t = useT();
   const { lines, setLine, setLines, addLine, removeLine } =
@@ -380,54 +384,59 @@ export function FormLineDetailPanel({
     ) : null;
 
   return (
-    <DrawerSection
-      title={
-        <span>
-          {t("Chi tiết")} ({displayLines.length}/{lines.length})
-        </span>
-      }
-      titleExtra={
-        <div className="flex items-center gap-2">
-          {clearFilterBtn}
-          {!viewOnly && !isPurchaseLocked && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => addLine(variant)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {t("Thêm dòng")}
-            </Button>
-          )}
-        </div>
-      }
-    >
-      <DataTable
-        items={displayLines}
-        getRowKey={(line) => line.tempId}
-        variant="spreadsheet"
-        emptyLabel={t("Không có dữ liệu")}
-        containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-        columns={columns}
-        summaryRow={{
-          item_name: (
-            <div className="text-right w-full font-semibold px-3">
-              {t("Tổng cộng")}:
-            </div>
-          ),
-          qty: (
-            <div className="text-right font-bold text-primary tabular-nums px-3">
-              {Number(totalQty).toLocaleString("vi-VN")}
-            </div>
-          ),
-          amount: (
-            <div className="text-right font-bold text-primary tabular-nums px-3">
-              {Number(totalAmount).toLocaleString("vi-VN")}
-            </div>
-          ),
-        }}
-        actionsColumn={actionsColumn}
-      />
-    </DrawerSection>
+    <div className="flex flex-col gap-4">
+      {variant === "purchase" && poReceipts !== undefined && (
+        <PurchaseReceiptHistory receipts={poReceipts} />
+      )}
+      <DrawerSection
+        title={
+          <span>
+            {t("Chi tiết")} ({displayLines.length}/{lines.length})
+          </span>
+        }
+        titleExtra={
+          <div className="flex items-center gap-2">
+            {clearFilterBtn}
+            {!viewOnly && !isPurchaseLocked && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => addLine(variant)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t("Thêm dòng")}
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <DataTable
+          items={displayLines}
+          getRowKey={(line) => line.tempId}
+          variant="spreadsheet"
+          emptyLabel={t("Không có dữ liệu")}
+          containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
+          columns={columns}
+          summaryRow={{
+            item_name: (
+              <div className="text-right w-full font-semibold px-3">
+                {t("Tổng cộng")}:
+              </div>
+            ),
+            qty: (
+              <div className="text-right font-bold text-primary tabular-nums px-3">
+                {Number(totalQty).toLocaleString("vi-VN")}
+              </div>
+            ),
+            amount: (
+              <div className="text-right font-bold text-primary tabular-nums px-3">
+                {Number(totalAmount).toLocaleString("vi-VN")}
+              </div>
+            ),
+          }}
+          actionsColumn={actionsColumn}
+        />
+      </DrawerSection>
+    </div>
   );
 }

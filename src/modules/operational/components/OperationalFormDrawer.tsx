@@ -9,7 +9,6 @@ import {
   type OperationalVariant,
 } from "@/modules/operational/api/operationalApi";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { getBusinessPartnersPagedApi } from "@/modules/partners/api/partnerApi";
 import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
@@ -38,7 +37,6 @@ interface Props {
   loading?: boolean;
   editing: OperationalDocument | null;
   viewOnly?: boolean;
-  poReceipts?: ErpPoReceipt[];
   onClose: () => void;
   onSaved: () => Promise<void> | void;
   onToggleEdit?: () => void;
@@ -53,7 +51,6 @@ export function OperationalFormDrawer({
   loading,
   editing,
   viewOnly,
-  poReceipts,
   onClose,
   onSaved,
   onToggleEdit,
@@ -525,7 +522,6 @@ export function OperationalFormDrawer({
           viewOnly={viewOnly}
           branchOptions={branchOptions}
           partnerOptions={partnerOptions}
-          poReceipts={poReceipts}
         />
       }
     />

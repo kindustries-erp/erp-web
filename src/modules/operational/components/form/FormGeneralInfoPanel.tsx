@@ -19,9 +19,7 @@ import {
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
 import { SalesFields } from "@/modules/operational/components/form/SalesFields";
 import { ExpenseFields } from "@/modules/operational/components/form/ExpenseFields";
-import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
 import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
-import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 
 interface FormGeneralInfoPanelProps {
@@ -34,7 +32,6 @@ interface FormGeneralInfoPanelProps {
   viewOnly?: boolean;
   branchOptions: Array<{ value: string; label: string }>;
   partnerOptions: Array<{ value: string; label: string }>;
-  poReceipts?: ErpPoReceipt[];
   /** ID of the existing document (null when creating) */
   entityId?: string | null;
   /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' */
@@ -58,7 +55,6 @@ export function FormGeneralInfoPanel({
   viewOnly,
   branchOptions,
   partnerOptions,
-  poReceipts,
   entityId,
   entityType,
   pendingTagIds = [],
@@ -351,23 +347,6 @@ export function FormGeneralInfoPanel({
                 />
               )}
 
-              {/* Ghi chú */}
-              <DrawerField label={t("Ghi chú")}>
-                <textarea
-                  className={`${inputCls} min-h-[84px]`}
-                  value={notes}
-                  disabled={viewOnly || isPurchaseFullyLocked}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </DrawerField>
-
-              {/* Lịch sử nhập kho — chỉ purchase viewOnly */}
-              {variant === "purchase" && viewOnly && poReceipts && (
-                <div className="mt-2 border-t border-border pt-4">
-                  <PurchaseReceiptHistory receipts={poReceipts} />
-                </div>
-              )}
-
               {/* Tags — purchase & sales only */}
               {isAdminEmail &&
                 (variant === "purchase" || variant === "sales") &&
@@ -392,6 +371,39 @@ export function FormGeneralInfoPanel({
                   </DrawerField>
                 )}
             </div>
+          </div>
+        </div>
+      </DrawerSection>
+
+      <DrawerSection
+        title={
+          <span
+            className={cn(
+              "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
+              showGeneralInfo
+                ? "max-w-[200px] opacity-100"
+                : "max-w-0 opacity-0",
+            )}
+          >
+            {t("Ghi chú")}
+          </span>
+        }
+      >
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            showGeneralInfo ? "opacity-100" : "opacity-0",
+          )}
+          style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
+        >
+          <div className="overflow-hidden">
+            <textarea
+              className={`${inputCls} min-h-[84px] w-full mt-1 mb-2`}
+              value={notes}
+              disabled={viewOnly || isPurchaseFullyLocked}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("Nhập ghi chú...")}
+            />
           </div>
         </div>
       </DrawerSection>

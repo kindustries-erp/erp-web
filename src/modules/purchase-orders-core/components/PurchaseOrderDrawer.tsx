@@ -149,6 +149,7 @@ export function PurchaseOrderDrawer({
           purchaseFieldLocked={purchaseFieldLocked}
           viewOnly={viewOnly}
           purchaseInventoryOptions={purchaseInventoryOptions}
+          poReceipts={poReceipts}
         />
       }
       rightPanel={
@@ -160,7 +161,6 @@ export function PurchaseOrderDrawer({
           viewOnly={viewOnly}
           branchOptions={branchOptions}
           partnerOptions={partnerOptions}
-          poReceipts={poReceipts}
           entityId={editing?.id ?? null}
           entityType="erp_purchase_order"
           pendingTagIds={pendingTagIds}

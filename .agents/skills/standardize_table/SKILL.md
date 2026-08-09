@@ -139,17 +139,25 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
 
 Nếu cột thời gian bao gồm cả ngày tháng năm và thời gian, **bắt buộc** format làm 2 dòng với font style chuẩn như trong `erp-inventory-vouchers`:
 
+- Cột ngày phải hiển thị full `dd/MM/yyyy HH:mm` nếu có đủ data, còn không thì chỉ hiển thị `dd/MM/yyyy` (component `TableDateCell` đã tự động xử lý việc này).
+- **Canh lề**: Nội dung cột (content) của ngày tháng phải được canh phải (`className: "text-right"` cho cột và truyền `className="justify-end w-full"` cho `TableDateCell`). Tuy nhiên header vẫn có thể giữ nguyên canh giữa theo chuẩn `TableColumnHeaderFilter`.
+
 **Mẫu code cho cột Date/Time**:
 
 ```tsx
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
-cell: (row) => <TableDateCell date={row.createdAt} />;
+{
+  key: "date",
+  className: "text-right",
+  // ...
+  cell: (row) => <TableDateCell date={row.createdAt} className="justify-end w-full" />;
+}
 ```
 
 ## 6. Cột Số và Tiền Tệ (Numbers & Currencies)
 
-- **Cột Số lượng (Quantity, Xuất/Nhập)**:
+- **Cột Số lượng / Tiền tệ**: Nội dung cột (số) **BẮT BUỘC** phải được canh phải (align right) bằng class `className: "text-right"` và dùng class `tabular-nums` để các con số thẳng hàng nhau. Tiền tệ cần thêm class `font-semibold`.
 
 ## 7. Cột Trạng Thái (Status/State)
 
