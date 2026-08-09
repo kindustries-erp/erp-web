@@ -3,6 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { DataTable } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
 import { Combobox } from "@/shared/components/Combobox";
 import { FilterButton } from "@/shared/components/FilterPanel";
@@ -18,6 +19,40 @@ import type {
 } from "@/modules/operational/utils/operationalHelpers";
 import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
+const LineColumnHeaderFilter = ({
+  table,
+  columnKey,
+  title,
+  hideFilter,
+  queryPrefix,
+}: any) => {
+  const { listHook, lines, buildFilterOptions } = table.options.meta;
+  return (
+    <TableColumnHeaderFilter
+      title={title}
+      sortState={
+        listHook.sorts.includes(columnKey)
+          ? "asc"
+          : listHook.sorts.includes(`-${columnKey}`)
+            ? "desc"
+            : "none"
+      }
+      onSortChange={(state: any) => listHook.setSort(columnKey, state)}
+      searchValue={listHook.columnSearch[columnKey] || ""}
+      onSearchChange={(val: any) => listHook.setColumnSearch(columnKey, val)}
+      selectedFilters={listHook.columnFilters[columnKey] || []}
+      onFilterChange={(vals: any) => listHook.setColumnFilter(columnKey, vals)}
+      align="center"
+      columnKey={columnKey}
+      queryKeyPrefix={queryPrefix ?? `line-${columnKey}`}
+      allFilters={listHook.columnFilters}
+      hideFilter={hideFilter}
+      fetchOptions={
+        hideFilter ? undefined : buildFilterOptions(columnKey, lines)
+      }
+    />
+  );
+};
 
 interface FormLineDetailPanelProps {
   variant: FormVariant;
@@ -82,33 +117,18 @@ export function FormLineDetailPanel({
   const makeFilterHeader = (
     key: string,
     title: string,
-    source: any[],
     opts?: { hideFilter?: boolean; queryPrefix?: string },
-  ) => (
-    <TableColumnHeaderFilter
-      title={title}
-      sortState={
-        listHook.sorts.includes(key)
-          ? "asc"
-          : listHook.sorts.includes(`-${key}`)
-            ? "desc"
-            : "none"
-      }
-      onSortChange={(state) => listHook.setSort(key, state)}
-      searchValue={listHook.columnSearch[key] || ""}
-      onSearchChange={(val) => listHook.setColumnSearch(key, val)}
-      selectedFilters={listHook.columnFilters[key] || []}
-      onFilterChange={(vals) => listHook.setColumnFilter(key, vals)}
-      align="center"
-      columnKey={key}
-      queryKeyPrefix={opts?.queryPrefix ?? `line-${key}`}
-      allFilters={listHook.columnFilters}
-      hideFilter={opts?.hideFilter}
-      fetchOptions={
-        opts?.hideFilter ? undefined : buildFilterOptions(key as any, source)
-      }
-    />
-  );
+  ) => {
+    return ({ table }: any) => (
+      <LineColumnHeaderFilter
+        table={table}
+        columnKey={key}
+        title={title}
+        hideFilter={opts?.hideFilter}
+        queryPrefix={opts?.queryPrefix}
+      />
+    );
+  };
 
   const indexCol = {
     key: "index",
@@ -121,238 +141,254 @@ export function FormLineDetailPanel({
     ),
   };
 
-  const columns = [
-    indexCol,
-    ...(variant === "purchase"
-      ? [
-          {
-            key: "item_code",
-            header: makeFilterHeader("itemCode", t("Mã linh kiện"), lines, {
-              queryPrefix: "item_code",
-            }),
-            minSize: 140,
-            enableResizing: true,
-            headerClassName: "w-[140px] min-w-[140px]",
-            className: "w-[140px] min-w-[140px] align-middle px-3",
-            cell: (line: LineDraft) => line.item_code || "—",
-          },
-        ]
-      : []),
-    {
-      key: "item_name",
-      header:
-        variant === "purchase"
-          ? makeFilterHeader("itemName", t("Linh kiện / Tên hàng"), lines, {
-              queryPrefix: "item_name",
-            })
-          : t("Linh kiện / Tên hàng"),
-      minSize: 160,
-      size: 180,
-      enableResizing: true,
-      headerClassName: "w-[180px] min-w-[180px]",
-      className: "w-[180px] min-w-[180px] align-middle p-0",
-      cell: (line: LineDraft) => {
-        return variant === "purchase" ? (
-          viewOnly ? (
-            <div className="font-medium px-3 py-2">
-              {line.item_name || line.description || "—"}
+  const columns = useMemo(
+    () => [
+      indexCol,
+      ...(variant === "purchase"
+        ? [
+            {
+              key: "item_code",
+              header: makeFilterHeader("itemCode", t("Mã linh kiện"), {
+                queryPrefix: "item_code",
+              }),
+              minSize: 140,
+              enableResizing: true,
+              headerClassName: "w-[140px] min-w-[140px]",
+              className: "w-[140px] min-w-[140px] align-middle px-3",
+              cell: (line: LineDraft) => line.item_code || "—",
+            },
+          ]
+        : []),
+      {
+        key: "item_name",
+        header:
+          variant === "purchase"
+            ? makeFilterHeader("itemName", t("Linh kiện / Tên hàng"), {
+                queryPrefix: "item_name",
+              })
+            : t("Linh kiện / Tên hàng"),
+        minSize: 160,
+        size: 180,
+        enableResizing: true,
+        headerClassName: "w-[180px] min-w-[180px]",
+        className: "w-[180px] min-w-[180px] align-middle p-0",
+        cell: (line: LineDraft) => {
+          const text = line.item_name || line.description || "—";
+          return variant === "purchase" ? (
+            viewOnly ? (
+              <Tooltip content={text}>
+                <div className="font-medium px-3 py-2 block truncate w-full cursor-pointer">
+                  {text}
+                </div>
+              </Tooltip>
+            ) : (
+              <Combobox
+                variant="spreadsheet"
+                options={purchaseInventoryOptions}
+                value={line.inventory_item_id}
+                readOnly={isPurchaseLocked}
+                onChange={(v) => {
+                  const selected = purchaseInventoryOptions.find(
+                    (item) => item.value === (v || ""),
+                  );
+                  setLines(
+                    lines.map((draft) =>
+                      draft.tempId !== line.tempId
+                        ? draft
+                        : {
+                            ...draft,
+                            inventory_item_id: v || "",
+                            item_code: selected?.sku || "",
+                            item_name: selected?.itemName || "",
+                            description: selected
+                              ? selected.note || ""
+                              : draft.description,
+                            line_type: selected
+                              ? selected.itemType === "GOODS"
+                                ? "PRODUCT"
+                                : "PART"
+                              : draft.line_type,
+                          },
+                    ),
+                  );
+                }}
+                placeholder={t("Chọn linh kiện từ danh mục")}
+                searchPlaceholder={t("Tìm SKU / tên linh kiện...")}
+                emptyLabel={t("Không có linh kiện phù hợp")}
+                allowClear={false}
+              />
+            )
+          ) : viewOnly ? (
+            <div className="space-y-1 px-3 py-2">
+              <div className="text-xs text-muted-foreground">
+                {line.line_type}
+              </div>
+              <div className="font-medium">{line.item_code}</div>
+              <div>{line.item_name}</div>
             </div>
           ) : (
-            <Combobox
-              variant="spreadsheet"
-              options={purchaseInventoryOptions}
-              value={line.inventory_item_id}
-              readOnly={isPurchaseLocked}
-              onChange={(v) => {
-                const selected = purchaseInventoryOptions.find(
-                  (item) => item.value === (v || ""),
-                );
-                setLines(
-                  lines.map((draft) =>
-                    draft.tempId !== line.tempId
-                      ? draft
-                      : {
-                          ...draft,
-                          inventory_item_id: v || "",
-                          item_code: selected?.sku || "",
-                          item_name: selected?.itemName || "",
-                          description: selected
-                            ? selected.note || ""
-                            : draft.description,
-                          line_type: selected
-                            ? selected.itemType === "GOODS"
-                              ? "PRODUCT"
-                              : "PART"
-                            : draft.line_type,
-                        },
-                  ),
-                );
-              }}
-              placeholder={t("Chọn linh kiện từ danh mục")}
-              searchPlaceholder={t("Tìm SKU / tên linh kiện...")}
-              emptyLabel={t("Không có linh kiện phù hợp")}
-              allowClear={false}
-            />
-          )
-        ) : viewOnly ? (
-          <div className="space-y-1 px-3 py-2">
-            <div className="text-xs text-muted-foreground">
-              {line.line_type}
+            <div className="flex flex-col h-full min-h-[38px]">
+              <Combobox
+                variant="spreadsheet"
+                options={lineTypeOptions}
+                value={line.line_type}
+                disabled={isPurchaseLocked}
+                onChange={(v) =>
+                  setLine(line.tempId, "line_type", v || "SERVICE")
+                }
+                allowClear={false}
+              />
+              <div className="h-[1px] bg-border/50" />
+              <CellInput
+                className={cn(
+                  "w-full h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50",
+                )}
+                placeholder={t("Mã hàng/SKU")}
+                value={line.item_code}
+                disabled={isPurchaseLocked}
+                onValueChange={(v) => setLine(line.tempId, "item_code", v)}
+              />
+              <div className="h-[1px] bg-border/50" />
+              <CellInput
+                className={cn(
+                  "w-full h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50 font-medium",
+                )}
+                placeholder={t("Tên hàng/dịch vụ")}
+                value={line.item_name}
+                disabled={isPurchaseLocked}
+                onValueChange={(v) => setLine(line.tempId, "item_name", v)}
+              />
             </div>
-            <div className="font-medium">{line.item_code}</div>
-            <div>{line.item_name}</div>
-          </div>
-        ) : (
-          <div className="flex flex-col h-full min-h-[38px]">
-            <Combobox
-              variant="spreadsheet"
-              options={lineTypeOptions}
-              value={line.line_type}
-              disabled={isPurchaseLocked}
-              onChange={(v) =>
-                setLine(line.tempId, "line_type", v || "SERVICE")
-              }
-              allowClear={false}
-            />
-            <div className="h-[1px] bg-border/50" />
-            <CellInput
-              className={cn(
-                "w-full h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50",
-              )}
-              placeholder={t("Mã hàng/SKU")}
-              value={line.item_code}
-              disabled={isPurchaseLocked}
-              onValueChange={(v) => setLine(line.tempId, "item_code", v)}
-            />
-            <div className="h-[1px] bg-border/50" />
-            <CellInput
-              className={cn(
-                "w-full h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50 font-medium",
-              )}
-              placeholder={t("Tên hàng/dịch vụ")}
-              value={line.item_name}
-              disabled={isPurchaseLocked}
-              onValueChange={(v) => setLine(line.tempId, "item_name", v)}
-            />
-          </div>
-        );
+          );
+        },
       },
-    },
-    {
-      key: "qty",
-      header:
-        variant === "purchase"
-          ? makeFilterHeader("qty", t("Số lượng"), lines)
-          : t("Số lượng"),
-      minSize: 140,
-      enableResizing: true,
-      headerClassName: "text-right w-[140px] min-w-[140px]",
-      className: "text-right w-[140px] min-w-[140px] align-middle p-0",
-      cell: (line: LineDraft) =>
-        viewOnly ? (
-          <span className="inline-block w-full text-right text-sm tabular-nums px-3 py-2">
-            {Number(line.qty || 0).toLocaleString("vi-VN")}
-          </span>
-        ) : (
-          <CellInput
-            type="number"
-            min={0}
-            step="0.01"
-            className={cn(
-              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium text-emerald-700",
-            )}
-            value={line.qty}
-            disabled={purchaseFieldLocked("qty")}
-            onValueChange={(v) => setLine(line.tempId, "qty", v)}
-          />
-        ),
-    },
-    {
-      key: "unit_price",
-      header:
-        variant === "purchase"
-          ? makeFilterHeader("unit_price", t("Đơn giá"), lines)
-          : t("Đơn giá"),
-      minSize: 180,
-      enableResizing: true,
-      headerClassName: "text-right w-[180px] min-w-[180px]",
-      className: "text-right w-[180px] min-w-[180px] align-middle p-0",
-      cell: (line: LineDraft) =>
-        viewOnly ? (
-          <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
-            {Number(line.unit_price || 0).toLocaleString("vi-VN")}
-          </span>
-        ) : (
-          <CellInput
-            type="number"
-            min={0}
-            step="0.01"
-            className={cn(
-              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium",
-            )}
-            value={line.unit_price}
-            disabled={isPurchaseLocked}
-            onValueChange={(v) => setLine(line.tempId, "unit_price", v)}
-          />
-        ),
-    },
-    {
-      key: "amount",
-      header:
-        variant === "purchase"
-          ? makeFilterHeader("amount", t("Thành tiền"), lines)
-          : t("Thành tiền"),
-      minSize: 180,
-      enableResizing: true,
-      headerClassName: "text-right w-[180px] min-w-[180px]",
-      className: "text-right w-[180px] min-w-[180px] align-middle p-0",
-      cell: (line: LineDraft) =>
-        viewOnly ? (
-          <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
-            {Number(line.amount || 0).toLocaleString("vi-VN")}
-          </span>
-        ) : (
-          <CellInput
-            type="number"
-            min={0}
-            step="0.01"
-            className={cn(
-              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-semibold",
-            )}
-            value={line.amount}
-            disabled={isPurchaseLocked}
-            onValueChange={(v) => setLine(line.tempId, "amount", v)}
-          />
-        ),
-    },
-    {
-      key: "description",
-      header:
-        variant === "purchase"
-          ? makeFilterHeader("description", t("Mô tả"), lines)
-          : t("Mô tả"),
-      minSize: 240,
-      enableResizing: true,
-      headerClassName: "w-[240px] min-w-[240px]",
-      className: "w-[240px] min-w-[240px] align-middle p-0",
-      cell: (line: LineDraft) =>
-        viewOnly ? (
-          <span className="inline-block w-full px-3 py-2">
-            {line.description || "—"}
-          </span>
-        ) : (
-          <CellInput
-            className={cn(
-              "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50",
-            )}
-            value={line.description}
-            disabled={purchaseFieldLocked("description")}
-            onValueChange={(v) => setLine(line.tempId, "description", v)}
-            placeholder={t("Nhập mô tả")}
-          />
-        ),
-    },
-  ];
+      {
+        key: "qty",
+        header:
+          variant === "purchase"
+            ? makeFilterHeader("qty", t("Số lượng"))
+            : t("Số lượng"),
+        minSize: 140,
+        enableResizing: true,
+        headerClassName: "text-right w-[140px] min-w-[140px]",
+        className: "text-right w-[140px] min-w-[140px] align-middle p-0",
+        cell: (line: LineDraft) =>
+          viewOnly ? (
+            <span className="inline-block w-full text-right text-sm tabular-nums px-3 py-2">
+              {Number(line.qty || 0).toLocaleString("vi-VN")}
+            </span>
+          ) : (
+            <CellInput
+              type="number"
+              min={0}
+              step="0.01"
+              className={cn(
+                "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium text-emerald-700",
+              )}
+              value={line.qty}
+              disabled={purchaseFieldLocked("qty")}
+              onValueChange={(v) => setLine(line.tempId, "qty", v)}
+            />
+          ),
+      },
+      {
+        key: "unit_price",
+        header:
+          variant === "purchase"
+            ? makeFilterHeader("unit_price", t("Đơn giá"))
+            : t("Đơn giá"),
+        minSize: 180,
+        enableResizing: true,
+        headerClassName: "text-right w-[180px] min-w-[180px]",
+        className: "text-right w-[180px] min-w-[180px] align-middle p-0",
+        cell: (line: LineDraft) =>
+          viewOnly ? (
+            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
+              {Number(line.unit_price || 0).toLocaleString("vi-VN")}
+            </span>
+          ) : (
+            <CellInput
+              type="number"
+              min={0}
+              step="0.01"
+              className={cn(
+                "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-medium",
+              )}
+              value={line.unit_price}
+              disabled={isPurchaseLocked}
+              onValueChange={(v) => setLine(line.tempId, "unit_price", v)}
+            />
+          ),
+      },
+      {
+        key: "amount",
+        header:
+          variant === "purchase"
+            ? makeFilterHeader("amount", t("Thành tiền"))
+            : t("Thành tiền"),
+        minSize: 180,
+        enableResizing: true,
+        headerClassName: "text-right w-[180px] min-w-[180px]",
+        className: "text-right w-[180px] min-w-[180px] align-middle p-0",
+        cell: (line: LineDraft) =>
+          viewOnly ? (
+            <span className="inline-block w-full text-right font-semibold tabular-nums px-3 py-2">
+              {Number(line.amount || 0).toLocaleString("vi-VN")}
+            </span>
+          ) : (
+            <CellInput
+              type="number"
+              min={0}
+              step="0.01"
+              className={cn(
+                "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all font-semibold",
+              )}
+              value={line.amount}
+              disabled={isPurchaseLocked}
+              onValueChange={(v) => setLine(line.tempId, "amount", v)}
+            />
+          ),
+      },
+      {
+        key: "description",
+        header:
+          variant === "purchase"
+            ? makeFilterHeader("description", t("Mô tả"))
+            : t("Mô tả"),
+        minSize: 240,
+        enableResizing: true,
+        headerClassName: "w-[240px] min-w-[240px]",
+        className: "w-[240px] min-w-[240px] align-middle p-0",
+        cell: (line: LineDraft) =>
+          viewOnly ? (
+            <span className="inline-block w-full px-3 py-2">
+              {line.description || "—"}
+            </span>
+          ) : (
+            <CellInput
+              className={cn(
+                "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all placeholder:text-muted-foreground/50",
+              )}
+              value={line.description}
+              disabled={purchaseFieldLocked("description")}
+              onValueChange={(v) => setLine(line.tempId, "description", v)}
+              placeholder={t("Nhập mô tả")}
+            />
+          ),
+      },
+    ],
+    [
+      variant,
+      t,
+      isPurchaseLocked,
+      viewOnly,
+      purchaseInventoryOptions,
+      lineTypeOptions,
+      setLine,
+      setLines,
+      purchaseFieldLocked,
+    ],
+  );
 
   const actionsColumn =
     !viewOnly && displayLines.length > 1 && !isPurchaseLocked
@@ -411,12 +447,13 @@ export function FormLineDetailPanel({
         }
       >
         <DataTable
+          tableMeta={{ listHook, lines, buildFilterOptions }}
           items={displayLines}
           getRowKey={(line) => line.tempId}
           variant="spreadsheet"
           emptyLabel={t("Không có dữ liệu")}
           containerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-          columns={columns}
+          columns={columns as any}
           summaryRow={{
             item_name: (
               <div className="text-right w-full font-semibold px-3">

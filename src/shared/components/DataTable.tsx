@@ -60,7 +60,7 @@ function getNestedValue(obj: any, path: string | number | symbol) {
 
 export interface DataTableColumn<T> {
   key: string;
-  header: ReactNode;
+  header: ReactNode | ((props: any) => ReactNode);
   cell?: (item: T, index: number, meta: any) => ReactNode;
   dataIndex?: keyof T | string;
   valueType?: "text" | "number" | "date" | "status";
@@ -80,7 +80,7 @@ export interface DataTableColumn<T> {
 
 export interface ActionsColumnConfig<T> {
   cell: (item: T, index: number, meta?: any) => ReactNode;
-  header?: ReactNode;
+  header?: ReactNode | ((props: any) => ReactNode);
   className?: string;
   headerClassName?: string;
   size?: number;
@@ -481,7 +481,10 @@ export function DataTable<T>({
       }
       return {
         id: column.key,
-        header: () => column.header,
+        header:
+          typeof column.header === "function"
+            ? (column.header as any)
+            : () => column.header,
         cell: ({ row, table }) => {
           let value: any;
           if (column.cell) {
@@ -554,7 +557,12 @@ export function DataTable<T>({
           sortable: column.sortable,
           sortKey: column.sortKey || column.key,
           hideable: column.hideable !== false,
-          label: column.label || column.header || column.key,
+          label:
+            column.label ||
+            (typeof column.header === "function"
+              ? column.key
+              : column.header) ||
+            column.key,
         } satisfies DataTableRowMeta,
       };
     });
@@ -566,7 +574,10 @@ export function DataTable<T>({
 
       cols.push({
         id: "__actions",
-        header: () => actionsColumn.header ?? "",
+        header:
+          typeof actionsColumn.header === "function"
+            ? (actionsColumn.header as any)
+            : () => actionsColumn.header ?? "",
         cell: ({ row, table }) =>
           actionsColumn.cell(
             row.original,

@@ -25,7 +25,6 @@ import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 interface FormGeneralInfoPanelProps {
   variant: FormVariant;
   isPurchaseLocked: boolean;
-  isPurchaseFullyLocked: boolean;
   purchaseFieldLocked: (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => boolean;
@@ -50,7 +49,6 @@ interface FormGeneralInfoPanelProps {
 export function FormGeneralInfoPanel({
   variant,
   isPurchaseLocked,
-  isPurchaseFullyLocked,
   purchaseFieldLocked,
   viewOnly,
   branchOptions,
@@ -400,7 +398,7 @@ export function FormGeneralInfoPanel({
             <textarea
               className={`${inputCls} min-h-[84px] w-full mt-1 mb-2`}
               value={notes}
-              disabled={viewOnly || isPurchaseFullyLocked}
+              disabled={viewOnly}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={t("Nhập ghi chú...")}
             />

@@ -75,6 +75,7 @@ export function usePurchaseOrderDrawer({
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => {
     if (field === "poNo" && !!editing) return true;
+    if (field === "description" && !viewOnly) return false;
     if (!isPurchaseLocked) return false;
 
     // User enhancement: if there's receipt history, lock qty
@@ -238,11 +239,11 @@ export function usePurchaseOrderDrawer({
       inventory_item_id: line.inventory_item_id || undefined,
       item_code: line.item_code.trim() || undefined,
       item_name: line.item_name.trim() || undefined,
-      description: line.description.trim() || undefined,
+      description: line.description?.trim() ?? undefined,
       qty: Number(line.qty || 0),
       unit_price: Number(line.unit_price || 0),
       amount: Number(line.amount || 0),
-      notes: line.notes.trim() || undefined,
+      notes: line.notes?.trim() ?? undefined,
     }));
 
     const totalAmount = lines.reduce(
@@ -254,16 +255,17 @@ export function usePurchaseOrderDrawer({
       ? {
           status: overrideStatus || store.status,
           payment_status: store.paymentStatus,
-          notes: store.notes.trim() || undefined,
+          notes: store.notes?.trim() ?? "",
           lines: purchaseEditableLines,
-          supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
+          supplier_invoice_no: store.supplierInvoiceNo?.trim() ?? "",
           expected_receipt_date: store.expectedDate || undefined,
         }
       : isPurchaseFullyLocked
         ? {
             payment_status: store.paymentStatus,
-            notes: store.notes.trim() || undefined,
-            supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
+            notes: store.notes?.trim() ?? "",
+            supplier_invoice_no: store.supplierInvoiceNo?.trim() ?? "",
+            lines: purchaseEditableLines,
           }
         : {
             document_date: store.documentDate,
@@ -273,12 +275,12 @@ export function usePurchaseOrderDrawer({
             status: overrideStatus || store.status,
             payment_status: store.paymentStatus,
             total_amount: totalAmount,
-            notes: store.notes.trim() || undefined,
+            notes: store.notes?.trim() ?? "",
             lines: purchaseEditableLines,
             purchase_no: store.docNo || undefined,
             supplier_id: store.partnerId || undefined,
             supplier_name_snapshot:
-              store.partnerNameSnapshot.trim() || undefined,
+              store.partnerNameSnapshot?.trim() ?? undefined,
             expected_receipt_date: store.expectedDate || undefined,
             recurrence_type: store.recurrenceType,
             recurrence_interval: Number(store.recurrenceInterval || 1),
@@ -286,7 +288,7 @@ export function usePurchaseOrderDrawer({
             recurrence_end_date: store.recurrenceEndDate || undefined,
             next_due_date: store.nextDueDate || undefined,
             auto_generate_next: store.autoGenerateNext,
-            supplier_invoice_no: store.supplierInvoiceNo.trim() || undefined,
+            supplier_invoice_no: store.supplierInvoiceNo?.trim() ?? "",
           };
 
     setSubmittingStatus(overrideStatus || null);

@@ -56,7 +56,6 @@ export function PurchaseOrderDrawer({
     branchOptions,
     partnerOptions,
     isPurchaseLocked,
-    isPurchaseFullyLocked,
     purchaseFieldLocked,
     purchaseInventoryOptions,
     handleSubmit,
@@ -156,7 +155,6 @@ export function PurchaseOrderDrawer({
         <FormGeneralInfoPanel
           variant="purchase"
           isPurchaseLocked={isPurchaseLocked}
-          isPurchaseFullyLocked={isPurchaseFullyLocked}
           purchaseFieldLocked={purchaseFieldLocked}
           viewOnly={viewOnly}
           branchOptions={branchOptions}

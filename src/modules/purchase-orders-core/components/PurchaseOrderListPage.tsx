@@ -4,7 +4,6 @@ import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemp
 import { Link2, Trash2, XCircle, Eye } from "lucide-react";
 import { PurchaseOrderDrawer } from "./PurchaseOrderDrawer";
 import { ConnectionGraphDrawer } from "./ConnectionGraphDrawer";
-import { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 import { usePurchaseColumns } from "@/modules/operational/components/list/columns/purchaseColumns";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { usePurchaseOrderPage } from "../hooks/usePurchaseOrderPage";
@@ -89,8 +88,6 @@ export function PurchaseOrderListPage() {
     setPageSize,
     purchaseSort,
     togglePurchaseSort,
-    expandedRowIds,
-    toggleExpandRow,
     tableState,
   } = listData;
 
@@ -143,8 +140,6 @@ export function PurchaseOrderListPage() {
 
   const columns = usePurchaseColumns({
     variant: "purchase",
-    expandedRowIds,
-    onToggleExpand: toggleExpandRow,
     onOpenDetail: openDetail,
     tableState,
     fetchColumnOptions: async ({
@@ -204,15 +199,9 @@ export function PurchaseOrderListPage() {
       onPageSize={setPageSize}
       sortArray={purchaseSort ? [purchaseSort] : undefined}
       onSort={togglePurchaseSort}
-      expandedRowKeys={
-        expandedRowIds
-          ? Object.keys(expandedRowIds).filter((k) => expandedRowIds[k])
-          : undefined
-      }
-      getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
-      filterConfig={filterConfig}
       filter={filter}
-      renderSubRow={(row) => <PurchaseSubRow rowId={row.id} />}
+      filterConfig={filterConfig}
+      getRowKey={(row) => `${row.document_type || "purchase"}-${row.id}`}
       rowActions={(row) => [
         {
           groupLabel: t("groupTraCuu", "Tra cứu"),

@@ -208,9 +208,12 @@ function toCorePurchasePayload(
     expectedDate:
       (payload as any).expected_receipt_date || payload.due_date || undefined,
     status: payload.status,
-    remarks: payload.notes || undefined,
+    remarks: payload.notes !== undefined ? payload.notes : undefined,
 
-    supplierInvoiceNo: (payload as any).supplier_invoice_no || undefined,
+    supplierInvoiceNo:
+      (payload as any).supplier_invoice_no !== undefined
+        ? (payload as any).supplier_invoice_no
+        : undefined,
   };
 
   if (Array.isArray(payload.lines)) {
@@ -218,7 +221,8 @@ function toCorePurchasePayload(
       itemId: line.inventory_item_id || undefined,
       itemCode: line.item_code || undefined,
       itemName: line.item_name || undefined,
-      description: line.description || undefined,
+      description:
+        line.description !== undefined ? line.description : undefined,
       qtyOrdered: String(line.qty ?? 0),
       unitPrice:
         line.unit_price !== undefined ? String(line.unit_price) : undefined,

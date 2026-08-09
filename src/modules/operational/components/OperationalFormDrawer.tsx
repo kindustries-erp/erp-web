@@ -103,6 +103,7 @@ export function OperationalFormDrawer({
   const purchaseFieldLocked = (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => {
+    if (field === "description" && !viewOnly) return false;
     if (!isPurchaseLocked) return false;
     if (!isPurchaseHeaderEditableAfterConfirm) return true;
     return !["description", "qty", "expectedDate", "status", "poNo"].includes(
@@ -517,7 +518,6 @@ export function OperationalFormDrawer({
         <FormGeneralInfoPanel
           variant={variant as FormVariant}
           isPurchaseLocked={isPurchaseLocked}
-          isPurchaseFullyLocked={isPurchaseFullyLocked}
           purchaseFieldLocked={purchaseFieldLocked}
           viewOnly={viewOnly}
           branchOptions={branchOptions}
