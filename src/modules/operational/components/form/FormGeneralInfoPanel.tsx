@@ -7,7 +7,6 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { MultiSelect } from "@/shared/components/MultiSelect";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useT } from "@/core/i18n";
 import {
@@ -19,8 +18,8 @@ import {
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
 import { SalesFields } from "@/modules/operational/components/form/SalesFields";
 import { ExpenseFields } from "@/modules/operational/components/form/ExpenseFields";
-import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
 
 interface FormGeneralInfoPanelProps {
   variant: FormVariant;
@@ -30,11 +29,11 @@ interface FormGeneralInfoPanelProps {
   ) => boolean;
   viewOnly?: boolean;
   branchOptions: Array<{ value: string; label: string }>;
-  partnerOptions: Array<{ value: string; label: string }>;
+  partnerOptions: Array<{ value: string; label: string; searchText?: string }>;
   /** ID of the existing document (null when creating) */
   entityId?: string | null;
-  /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' */
-  entityType?: string;
+  /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' | 'erp_expense' */
+  entityType?: "erp_purchase_order" | "erp_sales_order" | "erp_expense";
   /** Pending tag IDs for new-create Option B flow */
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
@@ -109,9 +108,6 @@ export function FormGeneralInfoPanel({
     setNextDueDate,
     autoGenerateNext,
     setAutoGenerateNext,
-    supplierInvoiceNo,
-    setSupplierInvoiceNo,
-    supplierInvoiceOptions,
   } = useOperationalFormStore();
 
   const statusOptions =
@@ -240,30 +236,6 @@ export function FormGeneralInfoPanel({
                     value={expectedDate?.slice(0, 10) || ""}
                     disabled={purchaseFieldLocked("expectedDate")}
                     onChange={(v) => setExpectedDate(v)}
-                  />
-                </DrawerField>
-              )}
-
-              {/* Số HĐ nhà cung cấp — chỉ purchase */}
-              {variant === "purchase" && (
-                <DrawerField label={t("Số HĐ nhà cung cấp")}>
-                  <MultiSelect
-                    options={supplierInvoiceOptions}
-                    value={
-                      supplierInvoiceNo
-                        ? supplierInvoiceNo
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean)
-                        : []
-                    }
-                    disabled={
-                      viewOnly || status === "DRAFT" || status === "CANCELLED"
-                    }
-                    placeholder="Chọn hóa đơn..."
-                    onChange={(selectedArr) =>
-                      setSupplierInvoiceNo(selectedArr.join(", "))
-                    }
                   />
                 </DrawerField>
               )}

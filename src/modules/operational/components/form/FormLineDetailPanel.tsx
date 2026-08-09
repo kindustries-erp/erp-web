@@ -76,6 +76,8 @@ interface FormLineDetailPanelProps {
   poReceipts?: ErpPoReceipt[];
   pendingDocumentChanges?: PendingDocChange[];
   fieldSet?: (key: string, value: unknown) => void;
+  purchaseOrderId?: string;
+  open?: boolean;
 }
 
 export function FormLineDetailPanel({
@@ -83,10 +85,12 @@ export function FormLineDetailPanel({
   isPurchaseLocked,
   purchaseFieldLocked,
   viewOnly,
-  purchaseInventoryOptions,
+  purchaseInventoryOptions = [],
   poReceipts,
   pendingDocumentChanges,
   fieldSet,
+  purchaseOrderId,
+  open,
 }: FormLineDetailPanelProps) {
   const t = useT();
   const { lines, setLine, setLines, addLine, removeLine } =
@@ -434,6 +438,8 @@ export function FormLineDetailPanel({
           editMode={!viewOnly}
           pendingDocumentChanges={pendingDocumentChanges}
           fieldSet={fieldSet}
+          purchaseOrderId={purchaseOrderId}
+          open={open}
         />
       )}
       <DrawerSection

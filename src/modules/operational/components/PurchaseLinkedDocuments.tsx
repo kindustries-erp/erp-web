@@ -8,6 +8,10 @@ import { type ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOr
 import { goodsReceiptsCoreApi } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
 import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
 import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
+import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
+import { type ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
+import { PurchaseInvoicePickerDrawer } from "@/modules/purchase-orders-core/components/PurchaseInvoicePickerDrawer";
+import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
 
 function createClientId() {
   const maybeCrypto = (globalThis as any)?.crypto;
@@ -38,63 +42,27 @@ export interface PurchaseLinkedDocumentsProps {
   editMode: boolean;
   pendingDocumentChanges?: PendingDocChange[];
   fieldSet?: (key: string, value: unknown) => void;
+  purchaseOrderId?: string;
+  open?: boolean;
 }
 
 export function PurchaseLinkedDocuments({
-  receipts = [],
+  receipts,
   editMode,
-  pendingDocumentChanges = [],
+  pendingDocumentChanges,
   fieldSet,
+  purchaseOrderId,
+  open,
 }: PurchaseLinkedDocumentsProps) {
   const [rows, setRows] = useState<LinkedDocumentRow[]>([]);
+  const [linkedInvoices, setLinkedInvoices] = useState<ErpInvoice[]>([]);
+  const [invoicePickerOpen, setInvoicePickerOpen] = useState(false);
+  const [invoiceDrawerId, setInvoiceDrawerId] = useState<string | null>(null);
+
   const [grOptions, setGrOptions] = useState<
     { value: string; label: string }[]
   >([]);
   const grDrawer = useGrDrawer();
-
-  // Sync rows from props and pending changes
-  useEffect(() => {
-    const combined: LinkedDocumentRow[] = [];
-    const pending = pendingDocumentChanges || [];
-
-    const removedGrIds = pending
-      .filter((p) => p.action === "REMOVE" && p.type === "GR")
-      .map((p) => p.refId);
-
-    receipts.forEach((r) => {
-      if (removedGrIds.includes(r.id)) return;
-      const totalQty =
-        r.lines?.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0) || 0;
-      combined.push({
-        id: r.id,
-        type: "GR",
-        refId: r.id,
-        refNo: r.receiptNo || "",
-        date: r.createdAt || r.receiptDate,
-        totalQty,
-      });
-    });
-
-    // Add pending adds
-    pending
-      .filter((p) => p.action === "ADD")
-      .forEach((p) => {
-        if (p.type === "GR") {
-          const opt = grOptions.find((o) => o.value === p.refId);
-          combined.push({
-            id: p.refId,
-            type: "GR",
-            refId: p.refId,
-            refNo: opt?.label || "GR đang chờ lưu",
-            isNew: false, // visually looks like an existing row
-          });
-        }
-      });
-
-    // Keep any UI-only empty rows only if in edit mode
-    const uiRows = editMode ? rows.filter((r) => r.isNew) : [];
-    setRows([...combined, ...uiRows]);
-  }, [receipts, pendingDocumentChanges, grOptions, editMode]); // removed rows to prevent loops on edit mode
 
   // Fetch GRs for dropdown
   useEffect(() => {
@@ -110,12 +78,95 @@ export function PurchaseLinkedDocuments({
     }
   }, [editMode]);
 
+  // Fetch linked invoices
+  useEffect(() => {
+    if (purchaseOrderId && open !== false) {
+      purchaseOrdersCoreApi
+        .getLinkedInvoices(purchaseOrderId)
+        .then(setLinkedInvoices)
+        .catch(console.error);
+    } else if (open === false) {
+      setLinkedInvoices([]);
+    }
+  }, [purchaseOrderId, open]);
+
+  // Sync rows from props and pending changes
+  useEffect(() => {
+    const combined: LinkedDocumentRow[] = [];
+    const pending = pendingDocumentChanges || [];
+
+    const removedGrIds = pending
+      .filter((p) => p.action === "REMOVE" && p.type === "GR")
+      .map((p) => p.refId);
+
+    const safeReceipts = receipts || [];
+    safeReceipts.forEach((r) => {
+      if (removedGrIds.includes(r.id)) return;
+      const totalQty =
+        r.lines?.reduce((sum, l) => sum + Number(l.qtyReceived || 0), 0) || 0;
+      combined.push({
+        id: r.id,
+        type: "GR",
+        refId: r.id,
+        refNo: r.receiptNo || "",
+        date: r.createdAt || r.receiptDate,
+        totalQty,
+      });
+    });
+
+    const removedInvoiceIds = pending
+      .filter((p) => p.action === "REMOVE" && p.type === "INVOICE")
+      .map((p) => p.refId);
+
+    linkedInvoices.forEach((inv) => {
+      if (removedInvoiceIds.includes(inv.id)) return;
+      combined.push({
+        id: inv.id,
+        type: "INVOICE",
+        refId: inv.id,
+        refNo: inv.invoiceNo || "",
+        date: inv.invoiceDate || inv.createdAt,
+        totalQty: Number(inv.totalAmount || 0), // Use totalQty field to store amount for INVOICE type
+      });
+    });
+
+    // Add pending adds
+    pending
+      .filter((p) => p.action === "ADD")
+      .forEach((p) => {
+        if (p.type === "GR") {
+          const opt = grOptions.find((o) => o.value === p.refId);
+          combined.push({
+            id: p.refId,
+            type: "GR",
+            refId: p.refId,
+            refNo: opt?.label || "GR đang chờ lưu",
+            isNew: false,
+          });
+        } else if (p.type === "INVOICE") {
+          combined.push({
+            id: p.refId,
+            type: "INVOICE",
+            refId: p.refId,
+            refNo: "HĐ đang chờ lưu",
+            isNew: false,
+          });
+        }
+      });
+
+    // Keep any UI-only empty rows only if in edit mode
+    const uiRows = editMode
+      ? rows.filter((r) => r.isNew && r.type === "GR")
+      : [];
+    setRows([...combined, ...uiRows]);
+  }, [receipts, linkedInvoices, pendingDocumentChanges, grOptions, editMode]); // removed rows to prevent loops on edit mode
+
   const handleAddRow = () => {
     setRows([
       ...rows,
       {
         id: createClientId(),
-        type: "INVOICE",
+        type: "GR",
         refId: "",
         refNo: "",
         isNew: true,
@@ -154,19 +205,26 @@ export function PurchaseLinkedDocuments({
   const openDocument = (type: "GR" | "INVOICE", id: string) => {
     if (type === "GR") {
       void grDrawer.openDetail(id, true);
+    } else if (type === "INVOICE") {
+      setInvoiceDrawerId(id);
     }
   };
 
-  const totalQtySum = rows
-    .filter((r) => !r.isNew)
-    .reduce((sum, r) => sum + (r.totalQty || 0), 0);
+  const handleInvoicesSelected = (invoiceIds: string[]) => {
+    invoiceIds.forEach((id) => {
+      addPendingChange({ action: "ADD", type: "INVOICE", refId: id });
+    });
+    // Remove the temp INVOICE row
+    setRows((prev) => prev.filter((r) => !(r.isNew && r.type === "INVOICE")));
+  };
 
   return (
     <div className="flex-1 min-w-0 w-full space-y-4">
-      <DrawerSection title="CHỨNG TỪ LIÊN KẾT">
-        <div className="flex flex-col gap-3">
-          {editMode && (
-            <div className="flex justify-start">
+      <DrawerSection
+        title="CHỨNG TỪ LIÊN KẾT"
+        titleExtra={
+          editMode ? (
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -177,8 +235,10 @@ export function PurchaseLinkedDocuments({
                 Thêm chứng từ
               </Button>
             </div>
-          )}
-
+          ) : undefined
+        }
+      >
+        <div className="flex flex-col gap-3">
           {rows.length === 0 ? (
             <EmptyState size="md" message="Chưa có chứng từ liên kết nào." />
           ) : (
@@ -207,7 +267,7 @@ export function PurchaseLinkedDocuments({
                             options={[
                               {
                                 value: "INVOICE",
-                                label: "Hóa đơn mua (Sắp ra mắt)",
+                                label: "Hóa đơn mua",
                               },
                             ]}
                             value={row.type}
@@ -233,7 +293,14 @@ export function PurchaseLinkedDocuments({
                               onChange={(val) => handleSelectGR(row.id, val)}
                               placeholder="-- Chọn phiếu nhập --"
                             />
-                          ) : null
+                          ) : (
+                            <div
+                              className="border rounded-md px-3 py-1.5 text-slate-500 cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-colors w-full flex items-center justify-between bg-white"
+                              onClick={() => setInvoicePickerOpen(true)}
+                            >
+                              <span>Nhấn để chọn hóa đơn...</span>
+                            </div>
+                          )
                         ) : (
                           <span
                             className="text-primary font-medium cursor-pointer flex items-center gap-1.5 transition-opacity hover:opacity-80 group/link w-fit"
@@ -251,7 +318,12 @@ export function PurchaseLinkedDocuments({
                           <div className="flex flex-col items-end">
                             {row.totalQty !== undefined ? (
                               <span className="font-medium text-emerald-600">
-                                {row.totalQty.toLocaleString("vi-VN")} SL
+                                {row.type === "GR"
+                                  ? `${row.totalQty.toLocaleString("vi-VN")} SL`
+                                  : new Intl.NumberFormat("vi-VN", {
+                                      style: "currency",
+                                      currency: "VND",
+                                    }).format(row.totalQty)}
                               </span>
                             ) : null}
                             {row.date ? (
@@ -276,20 +348,46 @@ export function PurchaseLinkedDocuments({
                       </td>
                     </tr>
                   ))}
-                  {rows.length > 0 && totalQtySum > 0 && (
+                  {rows.length > 0 && rows.some((r) => r.type === "GR") && (
                     <tr className="bg-slate-50/50">
                       <td
                         className="px-3 py-2 font-semibold text-right"
                         colSpan={2}
                       >
-                        Tổng cộng:
+                        Tổng SL nhập:
                       </td>
                       <td className="px-3 py-2 text-right font-bold text-primary">
-                        {totalQtySum.toLocaleString("vi-VN")} SL
+                        {rows
+                          .filter((r) => r.type === "GR" && !r.isNew)
+                          .reduce((s, r) => s + (r.totalQty || 0), 0)
+                          .toLocaleString("vi-VN")}{" "}
+                        SL
                       </td>
                       <td></td>
                     </tr>
                   )}
+                  {rows.length > 0 &&
+                    rows.some((r) => r.type === "INVOICE") && (
+                      <tr className="bg-slate-50/50">
+                        <td
+                          className="px-3 py-2 font-semibold text-right"
+                          colSpan={2}
+                        >
+                          Tổng tiền hóa đơn:
+                        </td>
+                        <td className="px-3 py-2 text-right font-bold text-primary">
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(
+                            rows
+                              .filter((r) => r.type === "INVOICE" && !r.isNew)
+                              .reduce((s, r) => s + (r.totalQty || 0), 0),
+                          )}
+                        </td>
+                        <td></td>
+                      </tr>
+                    )}
                 </tbody>
               </table>
             </div>
@@ -297,6 +395,25 @@ export function PurchaseLinkedDocuments({
         </div>
       </DrawerSection>
       <GrFormDrawer drawer={grDrawer} />
+
+      <PurchaseInvoicePickerDrawer
+        open={invoicePickerOpen}
+        onClose={() => setInvoicePickerOpen(false)}
+        onConfirm={handleInvoicesSelected}
+        purchaseOrderId={purchaseOrderId || ""}
+        alreadyLinkedIds={[
+          ...linkedInvoices.map((i) => i.id),
+          ...(pendingDocumentChanges || [])
+            .filter((p) => p.type === "INVOICE" && p.action === "ADD")
+            .map((p) => p.refId),
+        ]}
+      />
+
+      <ErpInvoiceStandaloneDrawer
+        isOpen={!!invoiceDrawerId}
+        invoiceId={invoiceDrawerId}
+        onClose={() => setInvoiceDrawerId(null)}
+      />
     </div>
   );
 }

@@ -354,6 +354,17 @@ export function usePurchaseOrderDrawer({
                   ? savedId
                   : null) as any,
               });
+            } else if (change.type === "INVOICE") {
+              if (change.action === "ADD") {
+                await purchaseOrdersCoreApi.linkInvoices(savedId, [
+                  change.refId,
+                ]);
+              } else {
+                await purchaseOrdersCoreApi.unlinkInvoice(
+                  savedId,
+                  change.refId,
+                );
+              }
             }
           } catch (err) {
             console.error("Failed to process document change", change, err);

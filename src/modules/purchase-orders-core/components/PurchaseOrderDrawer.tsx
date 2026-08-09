@@ -153,6 +153,8 @@ export function PurchaseOrderDrawer({
           poReceipts={poReceipts}
           pendingDocumentChanges={pendingDocumentChanges}
           fieldSet={fieldSet}
+          purchaseOrderId={editing?.id}
+          open={open}
         />
       }
       rightPanel={

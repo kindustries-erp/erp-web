@@ -512,6 +512,8 @@ export function OperationalFormDrawer({
           purchaseFieldLocked={purchaseFieldLocked}
           viewOnly={viewOnly}
           purchaseInventoryOptions={purchaseInventoryOptions}
+          purchaseOrderId={editing?.id}
+          open={open}
         />
       }
       rightPanel={

@@ -1,7 +1,12 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PurchaseLinkedDocuments } from "../PurchaseLinkedDocuments";
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
 
 // Mock dependencies
 vi.mock("@/modules/goods-receipts-core/api/goodsReceiptsCoreApi", () => ({
@@ -26,6 +31,15 @@ vi.mock("@/modules/goods-receipts-core/components/GrFormDrawer", () => ({
   GrFormDrawer: () => <div data-testid="mock-gr-drawer" />,
 }));
 
+vi.mock(
+  "@/modules/purchase-orders-core/components/PurchaseInvoicePickerDrawer",
+  () => ({
+    PurchaseInvoicePickerDrawer: () => (
+      <div data-testid="mock-invoice-picker" />
+    ),
+  }),
+);
+
 const mockReceipts = [
   {
     id: "r1",
@@ -41,7 +55,11 @@ describe("PurchaseLinkedDocuments", () => {
   });
 
   it("renders empty state in view mode", () => {
-    render(<PurchaseLinkedDocuments receipts={[]} editMode={false} />);
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PurchaseLinkedDocuments receipts={[]} editMode={false} />
+      </QueryClientProvider>,
+    );
     expect(screen.getByText("CHỨNG TỪ LIÊN KẾT")).toBeInTheDocument();
     expect(
       screen.getByText("Chưa có chứng từ liên kết nào."),
@@ -50,7 +68,11 @@ describe("PurchaseLinkedDocuments", () => {
   });
 
   it("renders Add button in edit mode and shows table when clicked", async () => {
-    render(<PurchaseLinkedDocuments receipts={[]} editMode={true} />);
+    render(
+      <QueryClientProvider client={queryClient}>
+        <PurchaseLinkedDocuments receipts={[]} editMode={true} />
+      </QueryClientProvider>,
+    );
     const addBtn = screen.getByText("Thêm chứng từ");
     expect(addBtn).toBeInTheDocument();
 
@@ -60,23 +82,27 @@ describe("PurchaseLinkedDocuments", () => {
 
   it("renders existing receipts correctly", () => {
     render(
-      <PurchaseLinkedDocuments
-        receipts={mockReceipts as any}
-        editMode={false}
-      />,
+      <QueryClientProvider client={queryClient}>
+        <PurchaseLinkedDocuments
+          receipts={mockReceipts as any}
+          editMode={false}
+        />
+      </QueryClientProvider>,
     );
 
     expect(screen.getByText("Phiếu nhập kho")).toBeInTheDocument();
     expect(screen.getByText("RC-001")).toBeInTheDocument();
-    expect(screen.getByText(/150 SL/)).toBeInTheDocument(); // 100 + 50
+    expect(screen.getAllByText(/150\s*SL/).length).toBeGreaterThan(0); // 100 + 50
   });
 
   it("does not render a remove button for GR rows in edit mode", () => {
     render(
-      <PurchaseLinkedDocuments
-        receipts={mockReceipts as any}
-        editMode={true}
-      />,
+      <QueryClientProvider client={queryClient}>
+        <PurchaseLinkedDocuments
+          receipts={mockReceipts as any}
+          editMode={true}
+        />
+      </QueryClientProvider>,
     );
 
     const removeBtns = screen
