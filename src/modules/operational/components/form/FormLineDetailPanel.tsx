@@ -18,7 +18,10 @@ import type {
   LineDraft,
 } from "@/modules/operational/utils/operationalHelpers";
 import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
+import {
+  PurchaseLinkedDocuments,
+  type PendingDocChange,
+} from "@/modules/operational/components/PurchaseLinkedDocuments";
 const LineColumnHeaderFilter = ({
   table,
   columnKey,
@@ -71,6 +74,8 @@ interface FormLineDetailPanelProps {
     searchText?: string;
   }>;
   poReceipts?: ErpPoReceipt[];
+  pendingDocumentChanges?: PendingDocChange[];
+  fieldSet?: (key: string, value: unknown) => void;
 }
 
 export function FormLineDetailPanel({
@@ -80,6 +85,8 @@ export function FormLineDetailPanel({
   viewOnly,
   purchaseInventoryOptions,
   poReceipts,
+  pendingDocumentChanges,
+  fieldSet,
 }: FormLineDetailPanelProps) {
   const t = useT();
   const { lines, setLine, setLines, addLine, removeLine } =
@@ -422,7 +429,12 @@ export function FormLineDetailPanel({
   return (
     <div className="flex flex-col gap-4">
       {variant === "purchase" && poReceipts !== undefined && (
-        <PurchaseReceiptHistory receipts={poReceipts} />
+        <PurchaseLinkedDocuments
+          receipts={poReceipts}
+          editMode={!viewOnly}
+          pendingDocumentChanges={pendingDocumentChanges}
+          fieldSet={fieldSet}
+        />
       )}
       <DrawerSection
         title={

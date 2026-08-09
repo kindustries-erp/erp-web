@@ -59,6 +59,8 @@ export function PurchaseOrderDrawer({
     purchaseFieldLocked,
     purchaseInventoryOptions,
     handleSubmit,
+    pendingDocumentChanges,
+    fieldSet,
   } = drawerState;
 
   const actions =
@@ -149,6 +151,8 @@ export function PurchaseOrderDrawer({
           viewOnly={viewOnly}
           purchaseInventoryOptions={purchaseInventoryOptions}
           poReceipts={poReceipts}
+          pendingDocumentChanges={pendingDocumentChanges}
+          fieldSet={fieldSet}
         />
       }
       rightPanel={

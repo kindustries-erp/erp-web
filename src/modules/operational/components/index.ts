@@ -5,8 +5,6 @@ export { ExpenseFields } from "@/modules/operational/components/form/ExpenseFiel
 export { FormLineDetailPanel } from "@/modules/operational/components/form/FormLineDetailPanel";
 export { FormGeneralInfoPanel } from "@/modules/operational/components/form/FormGeneralInfoPanel";
 
-// List atoms & organisms
-export { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 export { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 export { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
 export { OperationalDetailDrawer } from "@/modules/operational/components/list/OperationalDetailDrawer";
@@ -20,4 +18,4 @@ export { useStockColumns } from "@/modules/operational/components/list/columns/s
 // Main pages
 export { OperationalFormDrawer } from "@/modules/operational/components/OperationalFormDrawer";
 export { InventoryListPage } from "@/modules/operational/components/InventoryListPage";
-export { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
+export { PurchaseLinkedDocuments } from "@/modules/operational/components/PurchaseLinkedDocuments";

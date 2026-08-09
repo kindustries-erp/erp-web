@@ -1,4 +1,3 @@
-export { PurchaseSubRow } from "@/modules/operational/components/list/PurchaseSubRow";
 export { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 export { OperationalTableActions } from "@/modules/operational/components/list/OperationalTableActions";
 export { OperationalDetailDrawer } from "@/modules/operational/components/list/OperationalDetailDrawer";

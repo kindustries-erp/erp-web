@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   operationalApi,
   type OperationalDocument,
@@ -11,6 +11,8 @@ import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
 import { updateEntityTags } from "@/modules/tags/api/tagsApi";
+import { type PendingDocChange } from "@/modules/operational/components/PurchaseLinkedDocuments";
+import { goodsReceiptsCoreApi } from "@/modules/goods-receipts-core/api/goodsReceiptsCoreApi";
 
 export interface UsePurchaseOrderDrawerProps {
   open: boolean;
@@ -53,6 +55,23 @@ export function usePurchaseOrderDrawer({
     setSubmittingStatus,
     setSupplierInvoiceOptions,
   } = store;
+
+  // -------------------------------------------------------------------------
+  // Local State for Linked Documents
+  // -------------------------------------------------------------------------
+  const [pendingDocumentChanges, setPendingDocumentChanges] = useState<
+    PendingDocChange[]
+  >([]);
+
+  useEffect(() => {
+    if (open) setPendingDocumentChanges([]);
+  }, [open]);
+
+  const fieldSet = (key: string, value: unknown) => {
+    if (key === "pendingDocumentChanges") {
+      setPendingDocumentChanges(value as PendingDocChange[]);
+    }
+  };
 
   // -------------------------------------------------------------------------
   // Lock logic
@@ -295,6 +314,8 @@ export function usePurchaseOrderDrawer({
     setSaving(true);
     setError(null);
     try {
+      let savedId = editing?.id;
+
       if (editing)
         await operationalApi.updatePurchase(
           editing.id,
@@ -304,6 +325,7 @@ export function usePurchaseOrderDrawer({
         const result = await operationalApi.createPurchase(
           payload as CreateOperationalPayload,
         );
+        savedId = result?.id;
         // Option B: apply pending tags after create
         if (pendingTagIds.length > 0) {
           const createdId = result?.id;
@@ -320,6 +342,25 @@ export function usePurchaseOrderDrawer({
           }
         }
       }
+
+      if (pendingDocumentChanges.length > 0 && savedId) {
+        const snapshot = [...pendingDocumentChanges];
+        setPendingDocumentChanges([]);
+        for (const change of snapshot) {
+          try {
+            if (change.type === "GR") {
+              await goodsReceiptsCoreApi.update(change.refId, {
+                purchaseOrderId: (change.action === "ADD"
+                  ? savedId
+                  : null) as any,
+              });
+            }
+          } catch (err) {
+            console.error("Failed to process document change", change, err);
+          }
+        }
+      }
+
       await onSaved();
       onClose();
     } catch (e) {
@@ -344,5 +385,7 @@ export function usePurchaseOrderDrawer({
     purchaseFieldLocked,
     purchaseInventoryOptions,
     handleSubmit,
+    pendingDocumentChanges,
+    fieldSet,
   };
 }
