@@ -580,19 +580,32 @@ export function ErpBomPage() {
     });
   }, [itemsData]);
 
-  // Populate cache from editing BOM when it loads (edit/view mode)
-  useEffect(() => {
-    if (!editing) return;
-    if (editing.finishedGoodItemId && editing.finishedGoodItemName) {
-      cachedItems.current[editing.finishedGoodItemId] =
-        editing.finishedGoodItemName;
+  // Helper to populate cache synchronously when fetching BOM details
+  const updateCacheWithBomDetail = useCallback((detail: ErpBom) => {
+    if (detail.finishedGoodItemId && detail.finishedGoodItemName) {
+      cachedItems.current[detail.finishedGoodItemId] =
+        detail.finishedGoodItemName;
     }
-    editing.lines?.forEach((line) => {
-      if (line.componentItemId && line.componentItemName) {
-        cachedItems.current[line.componentItemId] = line.componentItemName;
+    detail.lines?.forEach((line) => {
+      if (line.componentItemId) {
+        const code = line.componentItemCode || "";
+        const name = line.componentItemName || "";
+        if (code && name) {
+          // If name already contains code, clean it up before building "Code — Name" format
+          let cleanName = name;
+          if (cleanName.startsWith(code)) {
+            cleanName = cleanName
+              .substring(code.length)
+              .replace(/^[\s-–—]+/, "");
+          }
+          cachedItems.current[line.componentItemId] =
+            `${code} — ${cleanName || name}`;
+        } else {
+          cachedItems.current[line.componentItemId] = name || code;
+        }
       }
     });
-  }, [editing]);
+  }, []);
 
   const itemOptions = useMemo(() => {
     // Start with current search-result pages
@@ -743,9 +756,6 @@ export function ErpBomPage() {
     sortOrder,
   ]);
 
-  const [expandedBomIds, setExpandedBomIds] = useState<Record<string, boolean>>(
-    {},
-  );
   const [allBoms, setAllBoms] = useState<ErpBom[]>([]);
 
   const loadAllBoms = useCallback(async () => {
@@ -797,13 +807,6 @@ export function ErpBomPage() {
     setPage(1);
   };
 
-  function toggleExpand(id: string) {
-    setExpandedBomIds((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  }
-
   function resetForm() {
     setForm(emptyForm());
     setEditing(null);
@@ -828,6 +831,7 @@ export function ErpBomPage() {
     setDrawerOpen(true);
     try {
       const detail = await bomCoreApi.get(item.id);
+      updateCacheWithBomDetail(detail);
       setEditing(detail);
       setForm(buildForm(detail));
     } catch (e) {
@@ -847,6 +851,7 @@ export function ErpBomPage() {
     setEditing(null);
     try {
       const detail = await bomCoreApi.get(item.id);
+      updateCacheWithBomDetail(detail);
       const clonedForm = buildForm(detail);
       clonedForm.bomCode = `${clonedForm.bomCode}-COPY`;
       clonedForm.bomName = `${clonedForm.bomName} (Copy)`;
@@ -1008,35 +1013,7 @@ export function ErpBomPage() {
       ),
       skeletonClassName: "w-24",
     },
-    {
-      key: "__expand",
-      header: "",
-      className:
-        "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
-      headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-      size: 40,
-      enableResizing: false,
-      cell: (item) => {
-        const isExpanded = !!expandedBomIds[item.id];
-        return (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleExpand(item.id);
-            }}
-            className="focus:outline-none flex items-center justify-center w-full"
-          >
-            <ChevronRight
-              className={cn(
-                "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
-                isExpanded && "rotate-90",
-              )}
-            />
-          </button>
-        );
-      },
-    },
+
     {
       key: "bomName",
       header: (
@@ -1296,9 +1273,6 @@ export function ErpBomPage() {
       filter={filter}
       renderSubRow={(item) => (
         <BomTree bomId={item.id} fgToBomMap={fgToBomMap} itemsMap={itemsMap} />
-      )}
-      expandedRowKeys={Object.keys(expandedBomIds).filter(
-        (key) => expandedBomIds[key],
       )}
       sortArray={
         sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined

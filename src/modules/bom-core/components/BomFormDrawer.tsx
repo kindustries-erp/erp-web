@@ -874,7 +874,6 @@ export function BomFormDrawer({
       subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
       actions={drawerActions}
       size="xl"
-      rightPanelTitle={t("Thông tin chung")}
       error={saveError}
       loading={drawerLoading}
       leftPanel={
@@ -997,85 +996,92 @@ export function BomFormDrawer({
         </DrawerSection>
       }
       rightPanel={
-        <div className="flex flex-col gap-3">
-          <DrawerField label={t("Mã BOM")} required>
-            <input
-              value={form.bomCode}
-              readOnly={viewOnly || !!editing}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, bomCode: e.target.value }))
-              }
-              className={inputCls}
-            />
-          </DrawerField>
-          <DrawerField label={t("Version")} required>
-            <input
-              value={form.version}
-              readOnly={viewOnly || !!editing}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, version: e.target.value }))
-              }
-              className={inputCls}
-            />
-          </DrawerField>
-          <DrawerField label={t("Tên BOM")} required>
-            <input
-              value={form.bomName}
-              readOnly={viewOnly || !!editing}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, bomName: e.target.value }))
-              }
-              className={inputCls}
-            />
-          </DrawerField>
-          <DrawerField label={t("Thành phẩm")}>
-            <Combobox
-              value={form.finishedGoodItemId}
-              readOnly={viewOnly || !!editing}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
-              }
-              options={mergedItemOptions}
-              placeholder={t("Chọn thành phẩm")}
-              searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-              onSearch={setItemSearch}
-              onScrollBottom={fetchNextItems}
-              loading={loadingItems}
-              allowClear
-            />
-          </DrawerField>
-          <DrawerField label={t("Hiệu lực từ")}>
-            <DatePicker
-              value={form.effectiveFrom}
-              disabled={viewOnly}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, effectiveFrom: value }))
-              }
-              className="w-full"
-              placeholder="DD/MM/YYYY"
-            />
-          </DrawerField>
-          <DrawerField label={t("Hiệu lực đến")}>
-            <DatePicker
-              value={form.effectiveTo}
-              disabled={viewOnly}
-              onChange={(value) =>
-                setForm((prev) => ({ ...prev, effectiveTo: value }))
-              }
-              className="w-full"
-              placeholder="DD/MM/YYYY"
-            />
-          </DrawerField>
-          <DrawerField label={t("Ghi chú")}>
-            <textarea
-              value={form.notes}
-              readOnly={viewOnly}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, notes: e.target.value }))
-              }
-              className={`${inputCls} min-h-[88px] resize-y`}
-            />
-          </DrawerField>
+        <div className="flex flex-col gap-4">
+          <DrawerSection title={t("Thông tin chung")}>
+            <div className="flex flex-col gap-3">
+              <DrawerField label={t("Mã BOM")} required>
+                <input
+                  value={form.bomCode}
+                  readOnly={viewOnly || !!editing}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, bomCode: e.target.value }))
+                  }
+                  className={inputCls}
+                />
+              </DrawerField>
+              <DrawerField label={t("Version")} required>
+                <input
+                  value={form.version}
+                  readOnly={viewOnly || !!editing}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, version: e.target.value }))
+                  }
+                  className={inputCls}
+                />
+              </DrawerField>
+              <DrawerField label={t("Tên BOM")} required>
+                <input
+                  value={form.bomName}
+                  readOnly={viewOnly || !!editing}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, bomName: e.target.value }))
+                  }
+                  className={inputCls}
+                />
+              </DrawerField>
+              <DrawerField label={t("Thành phẩm")}>
+                <Combobox
+                  value={form.finishedGoodItemId}
+                  readOnly={viewOnly || !!editing}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
+                  }
+                  options={mergedItemOptions}
+                  placeholder={t("Chọn thành phẩm")}
+                  searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
+                  onSearch={setItemSearch}
+                  onScrollBottom={fetchNextItems}
+                  loading={loadingItems}
+                  allowClear
+                />
+              </DrawerField>
+              <DrawerField label={t("Hiệu lực từ")}>
+                <DatePicker
+                  value={form.effectiveFrom}
+                  disabled={viewOnly}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, effectiveFrom: value }))
+                  }
+                  className="w-full"
+                  placeholder="DD/MM/YYYY"
+                />
+              </DrawerField>
+              <DrawerField label={t("Hiệu lực đến")}>
+                <DatePicker
+                  value={form.effectiveTo}
+                  disabled={viewOnly}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, effectiveTo: value }))
+                  }
+                  className="w-full"
+                  placeholder="DD/MM/YYYY"
+                />
+              </DrawerField>
+            </div>
+          </DrawerSection>
+
+          <DrawerSection title={t("Ghi chú")}>
+            <div className="flex flex-col gap-3">
+              <textarea
+                value={form.notes}
+                readOnly={viewOnly}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, notes: e.target.value }))
+                }
+                className={`${inputCls} min-h-[88px] resize-y`}
+              />
+            </div>
+          </DrawerSection>
         </div>
       }
     />

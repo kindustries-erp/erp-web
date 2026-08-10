@@ -105,7 +105,6 @@ export const en: Dict = {
   "Tải lại": legacyStringsEn["Tải lại"],
   "Bộ lọc": legacyStringsEn["Bộ lọc"],
   "Chi tiết": legacyStringsEn["Chi tiết"],
-  "Liên kết tiền": legacyStringsEn["Liên kết tiền"],
   "Nhập kho": legacyStringsEn["Nhập kho"],
   Xóa: legacyStringsEn["Xóa"],
   Hủy: legacyStringsEn["Hủy"],

@@ -27,76 +27,78 @@ export function useVoucherClientFilter<T>({
     }
   }, [isOpen]);
 
+  const getValue = useCallback(
+    (line: T, field: string) => {
+      if (field === "itemCode") return getCode(line);
+      if (field === "itemName") return getName(line);
+      return String((line as any)[field] ?? "");
+    },
+    [getCode, getName],
+  );
+
   const buildFilterOptions = useCallback(
-    (field: "itemCode" | "itemName", source: T[]) => {
+    (field: string, source: T[]) => {
       // Cascading filter logic: apply other filters before building options
       let filteredSource = source;
-      const filterItemCode = listHook.columnFilters["itemCode"] || [];
-      const filterItemName = listHook.columnFilters["itemName"] || [];
-      const searchItemCode =
-        listHook.columnSearch["itemCode"]?.toLowerCase() || "";
-      const searchItemName =
-        listHook.columnSearch["itemName"]?.toLowerCase() || "";
 
       filteredSource = filteredSource.filter((line) => {
-        const code = getCode(line);
-        const name = getName(line);
+        // Check exact match filters
+        for (const f in listHook.columnFilters) {
+          if (f === field) continue; // Skip the field we're building options for
+          const filterVals = listHook.columnFilters[f] || [];
+          if (filterVals.length === 0) continue;
 
-        if (field !== "itemCode") {
-          if (searchItemCode && !code.toLowerCase().includes(searchItemCode))
-            return false;
-          if (filterItemCode.length > 0 && !filterItemCode.includes(code))
-            return false;
+          const val = getValue(line, f);
+          if (!filterVals.includes(val)) return false;
         }
-        if (field !== "itemName") {
-          if (searchItemName && !name.toLowerCase().includes(searchItemName))
-            return false;
-          if (filterItemName.length > 0 && !filterItemName.includes(name))
-            return false;
+
+        // Check search filters
+        for (const s in listHook.columnSearch) {
+          if (s === field) continue; // Skip the field we're building options for
+          const searchVal = listHook.columnSearch[s]?.toLowerCase();
+          if (!searchVal) continue;
+
+          const val = getValue(line, s);
+          if (!val.toLowerCase().includes(searchVal)) return false;
         }
+
         return true;
       });
 
       const unique = new Set<string>();
       filteredSource.forEach((line) => {
-        if (field === "itemCode") {
-          const code = getCode(line);
-          if (code) unique.add(code);
-        } else {
-          const name = getName(line);
-          if (name) unique.add(name);
-        }
+        const val = getValue(line, field);
+        if (val) unique.add(val);
       });
+
       const items = Array.from(unique)
         .filter(Boolean)
         .map((val) => ({ label: val, value: val }));
       return async () => ({ items, total: items.length, next: null });
     },
-    [getCode, getName, listHook.columnFilters, listHook.columnSearch],
+    [getValue, listHook.columnFilters, listHook.columnSearch],
   );
 
   const processedLines = useMemo(() => {
     let result = [...lines];
 
-    const searchItemCode =
-      listHook.columnSearch["itemCode"]?.toLowerCase() || "";
-    const searchItemName =
-      listHook.columnSearch["itemName"]?.toLowerCase() || "";
-    const filterItemCode = listHook.columnFilters["itemCode"] || [];
-    const filterItemName = listHook.columnFilters["itemName"] || [];
-
     result = result.filter((line) => {
-      const code = getCode(line);
-      const name = getName(line);
+      // Check search filters
+      for (const s in listHook.columnSearch) {
+        const searchVal = listHook.columnSearch[s]?.toLowerCase();
+        if (!searchVal) continue;
+        const val = getValue(line, s);
+        if (!val.toLowerCase().includes(searchVal)) return false;
+      }
 
-      if (searchItemCode && !code.toLowerCase().includes(searchItemCode))
-        return false;
-      if (searchItemName && !name.toLowerCase().includes(searchItemName))
-        return false;
-      if (filterItemCode.length > 0 && !filterItemCode.includes(code))
-        return false;
-      if (filterItemName.length > 0 && !filterItemName.includes(name))
-        return false;
+      // Check exact match filters
+      for (const f in listHook.columnFilters) {
+        const filterVals = listHook.columnFilters[f] || [];
+        if (filterVals.length === 0) continue;
+        const val = getValue(line, f);
+        if (!filterVals.includes(val)) return false;
+      }
+
       return true;
     });
 
@@ -111,17 +113,9 @@ export function useVoucherClientFilter<T>({
           if (customResult !== null) return customResult;
         }
 
-        if (field === "itemCode") {
-          const valA = getCode(a);
-          const valB = getCode(b);
-          return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
-        }
-        if (field === "itemName") {
-          const valA = getName(a);
-          const valB = getName(b);
-          return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
-        }
-        return 0;
+        const valA = getValue(a, field);
+        const valB = getValue(b, field);
+        return isDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
       });
     }
 
@@ -131,8 +125,7 @@ export function useVoucherClientFilter<T>({
     listHook.columnFilters,
     listHook.columnSearch,
     listHook.sorts,
-    getCode,
-    getName,
+    getValue,
     customSort,
   ]);
 

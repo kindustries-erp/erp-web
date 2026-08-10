@@ -1,21 +1,10 @@
 import { create } from "zustand";
 import type {
   OperationalDocument,
-  OperationalDocumentPaymentLink,
   OperationalDocumentType,
 } from "../api/operationalApi";
-import type { PaymentVoucher } from "@/modules/finance/api/financeApi";
 
-export type { OperationalDocumentPaymentLink };
-
-export type OperationalFlowStep = "detail" | "settlement" | "posting";
-
-export interface SettlementFormState {
-  payment_voucher_id: string;
-  applied_date: string;
-  applied_amount: number;
-  notes: string;
-}
+export type OperationalFlowStep = "detail" | "posting";
 
 export interface InventoryPostingLineForm {
   line_id: string;
@@ -33,13 +22,6 @@ interface OperationalFlowState {
   detailDocument: OperationalDocument | null;
   detailLoading: boolean;
   detailError: string | null;
-
-  settlementLoading: boolean;
-  settlementError: string | null;
-  voucherLoading: boolean;
-  paymentLinks: OperationalDocumentPaymentLink[];
-  voucherOptions: PaymentVoucher[];
-  settlementForm: SettlementFormState;
 
   postingDocument: OperationalDocument | null;
   postingDocumentType: OperationalDocumentType | null;
@@ -62,19 +44,6 @@ interface OperationalFlowState {
       >
     >,
   ) => void;
-  setSettlementState: (
-    payload: Partial<
-      Pick<
-        OperationalFlowState,
-        | "settlementLoading"
-        | "settlementError"
-        | "voucherLoading"
-        | "paymentLinks"
-        | "voucherOptions"
-        | "settlementForm"
-      >
-    >,
-  ) => void;
   setPostingState: (
     payload: Partial<
       Pick<
@@ -90,13 +59,6 @@ interface OperationalFlowState {
   resetFlow: () => void;
 }
 
-const defaultSettlementForm = (): SettlementFormState => ({
-  payment_voucher_id: "",
-  applied_date: "",
-  applied_amount: 0,
-  notes: "",
-});
-
 export const useOperationalFlowStore = create<OperationalFlowState>((set) => ({
   rootDocument: null,
   rootDocumentType: null,
@@ -105,13 +67,6 @@ export const useOperationalFlowStore = create<OperationalFlowState>((set) => ({
   detailDocument: null,
   detailLoading: false,
   detailError: null,
-
-  settlementLoading: false,
-  settlementError: null,
-  voucherLoading: false,
-  paymentLinks: [],
-  voucherOptions: [],
-  settlementForm: defaultSettlementForm(),
 
   postingDocument: null,
   postingDocumentType: null,
@@ -125,7 +80,6 @@ export const useOperationalFlowStore = create<OperationalFlowState>((set) => ({
   setActiveStep: (activeStep) => set({ activeStep }),
 
   setDetailState: (payload) => set(payload),
-  setSettlementState: (payload) => set(payload),
   setPostingState: (payload) => set(payload),
 
   resetFlow: () =>
@@ -136,12 +90,6 @@ export const useOperationalFlowStore = create<OperationalFlowState>((set) => ({
       detailDocument: null,
       detailLoading: false,
       detailError: null,
-      settlementLoading: false,
-      settlementError: null,
-      voucherLoading: false,
-      paymentLinks: [],
-      voucherOptions: [],
-      settlementForm: defaultSettlementForm(),
       postingDocument: null,
       postingDocumentType: null,
       postingLoading: false,

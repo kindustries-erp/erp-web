@@ -133,6 +133,7 @@ export interface ErpInvoiceListParams {
   sort_order?: "asc" | "desc";
   column_search?: string;
   column_filters?: string;
+  unlinked_po_id?: string;
 }
 
 export interface ErpInvoiceListResponse {

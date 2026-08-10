@@ -20,9 +20,11 @@ Khi tạo mới hoặc enhance một `DataTable` trong hệ thống, bạn **B�
 Tất cả các cột dữ liệu (trừ cột Action, Index, Checkbox) **phải sử dụng component `<TableColumnHeaderFilter>`** cho header để tích hợp sẵn Filter và Sorting.
 
 - Cần truyền thêm prop `align="center"` cho `<TableColumnHeaderFilter>` để header luôn được canh giữa một cách chuẩn xác.
-- **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options (column options) trong popover.
+- **Cột thường**: TUYỆT ĐỐI KHÔNG set `hideFilter: true` (hoặc `hideFilter={true}`), để đảm bảo user luôn nhìn thấy search box và danh sách checkbox options (column options) trong popover. Kể cả khi hook filter hiện tại chưa hỗ trợ cột đó, bạn phải chủ động update hook (ví dụ: làm cho `useVoucherClientFilter` trở nên dynamic để support mọi trường) chứ **KHÔNG ĐƯỢC LÁCH LUẬT** bằng cách ẩn filter.
+- **Clear All Filters Button**: Khi bảng có sử dụng TableColumnHeaderFilter, bắt buộc phải bổ sung thêm nút xóa lọc (`FilterButton` từ `@/shared/components/FilterPanel`) hiển thị cạnh tiêu đề bảng (title) nếu `activeFilterCount > 0`. Nút này (cùng với nút Thêm dòng) BẮT BUỘC phải được đặt vào prop `titleExtra` của component `DrawerSection` để chúng hiển thị đồng bộ ở góc trên bên phải, ngang hàng với tiêu đề.
 - **Cột Ngày Tháng (Date)**: Phải sử dụng `dateRangeSlot` (sử dụng component `DateRangeColumnSlot` trong `@/shared/components/DataTable/DateRangeColumnSlot`) để hiển thị bộ lọc Date Range, và set `hideFilter={true}` cùng `hideFooter={true}` để ẩn list checkbox mặc định.
-- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**. Nghĩa là khi user chọn filter ở một cột A (ví dụ Mã linh kiện), thì filter options ở cột B (ví dụ Tên linh kiện) chỉ được hiển thị các giá trị tương ứng còn lại trong bảng.
+- **Cascading Filter Options (Lọc phụ thuộc)**: Đối với các bảng có filter ở client-side, dữ liệu tùy chọn (filter options) của một cột **BẮT BUỘC** phải được tính toán dựa trên danh sách dữ liệu đã bị filter bởi **TẤT CẢ CÁC CỘT KHÁC**. Nghĩa là khi user chọn filter ở một cột A (ví dụ Mã linh kiện), thì filter options ở cột B (ví dụ Tên linh kiện) chỉ được hiển thị các giá trị tương ứng còn lại trong bảng. Khi update hook filter, hãy đảm bảo loop logic filter hỗ trợ dynamic key thay vì hardcode.
+- **Nút Hành Động (Table Action Buttons)**: Đối với các bảng nằm trong `DrawerSection`, các nút thao tác chung của bảng như "Thêm dòng" (`+ Thêm dòng`), "Bộ lọc", "Nhập từ Excel"... TUYỆT ĐỐI KHÔNG ĐƯỢC đặt ở dưới đáy bảng hay thả rông bên ngoài. Bạn BẮT BUỘC phải truyền cụm nút này vào prop `titleExtra` của `DrawerSection` để hệ thống tự động gióng hàng chúng sang góc trên cùng bên phải, ngang hàng với tiêu đề.
 
 ### Client-side vs Server-side Logic
 
@@ -137,25 +139,25 @@ Cột liên quan tới mã hệ thống, số phiếu (voucher code, item code) 
 
 Nếu cột thời gian bao gồm cả ngày tháng năm và thời gian, **bắt buộc** format làm 2 dòng với font style chuẩn như trong `erp-inventory-vouchers`:
 
+- Cột ngày phải hiển thị full `dd/MM/yyyy HH:mm` nếu có đủ data, còn không thì chỉ hiển thị `dd/MM/yyyy` (component `TableDateCell` đã tự động xử lý việc này).
+- **Canh lề**: Nội dung cột (content) của ngày tháng phải được canh phải (`className: "text-right"` cho cột và truyền `className="justify-end w-full"` cho `TableDateCell`). Tuy nhiên header vẫn có thể giữ nguyên canh giữa theo chuẩn `TableColumnHeaderFilter`.
+
 **Mẫu code cho cột Date/Time**:
 
 ```tsx
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
-cell: (row) => <TableDateCell date={row.createdAt} />;
+{
+  key: "date",
+  className: "text-right",
+  // ...
+  cell: (row) => <TableDateCell date={row.createdAt} className="justify-end w-full" />;
+}
 ```
 
 ## 6. Cột Số và Tiền Tệ (Numbers & Currencies)
 
-- **Cột Số lượng (Quantity, Xuất/Nhập)**:
-  - Cần style dạng tabular (đều khoảng cách số) giống trong `erp-inventory-stock`.
-  - Column config: `className: "text-right"`.
-  - Cell render: `<span className="inline-block w-full text-right text-sm tabular-nums">{formatQty(row.qty)}</span>`
-
-- **Cột Tiền tệ (Thành tiền, Amount)**:
-  - Cần style in đậm làm nổi bật giống trong `erp-invoice`.
-  - Column config: `className: "text-right font-semibold"`.
-  - Cell render: Chứa string đã format tiền, VD: `fmtAmt(row.totalAmount)` (có kèm "đ").
+- **Cột Số lượng / Tiền tệ**: Nội dung cột (số) **BẮT BUỘC** phải được canh phải (align right) bằng class `className: "text-right"` và dùng class `tabular-nums` để các con số thẳng hàng nhau. Tiền tệ cần thêm class `font-semibold`.
 
 ## 7. Cột Trạng Thái (Status/State)
 

@@ -104,7 +104,6 @@ export const vi = {
   "Tải lại": legacyStringsVi["Tải lại"],
   "Bộ lọc": legacyStringsVi["Bộ lọc"],
   "Chi tiết": legacyStringsVi["Chi tiết"],
-  "Liên kết tiền": legacyStringsVi["Liên kết tiền"],
   "Nhập kho": legacyStringsVi["Nhập kho"],
   Xóa: legacyStringsVi["Xóa"],
   Hủy: legacyStringsVi["Hủy"],
