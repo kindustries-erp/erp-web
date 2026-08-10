@@ -1,5 +1,6 @@
 import axiosInstance from "@/core/api/axiosInstance";
 import type { PaginatedResponse, ListParams } from "@/shared/types/pagination";
+import type { ErpInvoice } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 export interface ErpPoLine {
   id?: string;
@@ -118,5 +119,17 @@ export const purchaseOrdersCoreApi = {
       `${BASE}/${id}/cancel`,
     );
     return data.data;
+  },
+  getLinkedInvoices: async (id: string): Promise<ErpInvoice[]> => {
+    const { data } = await axiosInstance.get<ErpInvoice[]>(
+      `${BASE}/${id}/invoices`,
+    );
+    return data;
+  },
+  linkInvoices: async (id: string, invoiceIds: string[]): Promise<void> => {
+    await axiosInstance.post(`${BASE}/${id}/link-invoices`, { invoiceIds });
+  },
+  unlinkInvoice: async (id: string, invoiceId: string): Promise<void> => {
+    await axiosInstance.delete(`${BASE}/${id}/invoices/${invoiceId}`);
   },
 };

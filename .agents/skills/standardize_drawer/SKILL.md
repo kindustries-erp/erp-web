@@ -95,6 +95,7 @@ Dành cho các màn hình nghiệp vụ phức tạp có chứng từ (như Hóa
 - **`leftPanel`**: Chứa thông tin chi tiết chứng từ (ví dụ: Thông tin chung, Bảng danh sách hàng hóa/dịch vụ).
 - **`rightPanel`**: Chứa các thông tin meta, tham chiếu, file đính kèm (Metadata, Logs). (Không cần Status ở đây nếu đã dùng `titleExtra` trên Header).
 - **Bắt buộc**: Các nhóm nội dung (content group) độc lập (ví dụ: Thông tin chung, Thuộc tính, Ghi chú, Lịch sử...) phải được đặt trong một `<DrawerSection>` riêng biệt. Component này sẽ tự động tạo một thẻ (card) có tiêu đề và đường phân cách theo đúng chuẩn UI.
+- **Button trong DrawerSection**: Đối với các phần (section) chứa bảng dữ liệu (như table danh sách) hoặc các section cần hành động (Add, Link, Delete All...), **bắt buộc** phải đặt các action button này ở góc trên bên phải của section. Để làm điều này, sử dụng prop `titleExtra` của `<DrawerSection>`. Không được đặt button ở bên trong nội dung dưới title hoặc phía trên table.
 
 **Mẫu code 2-Columns Drawer**:
 
@@ -166,5 +167,6 @@ export function VoucherDrawer({ open, onClose, mode, setMode, data }) {
 - [ ] Drawer đơn giản (1 cột) đã set `layout="1-column"` và `size="sm"`/`"md"` chưa?
 - [ ] Drawer chứng từ (2 cột) đã set `layout="2-columns"` và `size="xl"`/`"lg"` chưa?
 - [ ] Phần nội dung bên trong đã dùng các khối chuẩn như `<DrawerSection>`, `<DrawerField>` để bao bọc các input chưa?
+- [ ] Các action button của một `<DrawerSection>` (như nút Thêm, Xóa, Liên kết cho bảng) đã được đưa lên góc trên bên phải bằng prop `titleExtra` của `DrawerSection` chưa?
 - [ ] Input đã sử dụng CSS class `inputCls` từ `@/shared/components/DrawerModal` (nếu có) chưa?
 - [ ] Chức năng cảnh báo đóng Drawer khi đang Edit (`confirmOnClose={mode === 'edit'}`) đã được cấu hình đúng chưa?

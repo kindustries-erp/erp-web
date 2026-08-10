@@ -1,17 +1,10 @@
 import { useMemo } from "react";
-import {
-  ChevronRight,
-  PackageCheck,
-  PackageOpen,
-  PackageX,
-} from "lucide-react";
-import { cn } from "@/shared/utils";
+import { PackageCheck, PackageOpen, PackageX } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { normalizeDateTime } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
-import { Button } from "@/shared/components/ui/Button";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import {
   operationalApi,
   type OperationalDocument,
@@ -25,8 +18,6 @@ import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColu
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
-  expandedRowIds: Record<string, boolean>;
-  onToggleExpand: (key: string) => void;
   onOpenDetail?: (row: OperationalDocument) => void;
   tableState: ReturnType<typeof useTableColumnState>;
   fetchColumnOptions: (params: {
@@ -99,8 +90,6 @@ function PoTooltipContent({ row }: { row: OperationalDocument }) {
  */
 export function usePurchaseColumns({
   variant,
-  expandedRowIds,
-  onToggleExpand,
   onOpenDetail,
   tableState,
   fetchColumnOptions,
@@ -124,38 +113,6 @@ export function usePurchaseColumns({
 
   return useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
-      {
-        key: "__expand",
-        header: "",
-        className:
-          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
-        headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-        size: 40,
-        enableResizing: false,
-        cell: (row) => {
-          const rowKey = `${row.document_type || variant}-${row.id}`;
-          const isExpanded = !!expandedRowIds[rowKey];
-          return (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleExpand(rowKey);
-              }}
-              className="w-full flex items-center justify-center"
-            >
-              <ChevronRight
-                className={cn(
-                  "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
-                  isExpanded && "rotate-90",
-                )}
-              />
-            </Button>
-          );
-        },
-      },
       {
         key: "order_date",
         header: (
@@ -187,77 +144,25 @@ export function usePurchaseColumns({
                 />
               );
             }}
+            align="center"
           />
         ),
         sortKey: "order_date",
-        size: 120,
+        size: 150,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
         cell: (row) => {
-          const dt = normalizeDateTime(row.document_date);
-          if (!dt || dt === "—") return "—";
-          const [d] = dt.split(" ");
           return (
-            <Tooltip content={dt}>
-              <span className="cursor-default block w-full text-right">
-                {d}
-              </span>
-            </Tooltip>
+            <TableDateCell
+              date={row.document_date}
+              showTooltip={false}
+              className="justify-end w-full"
+            />
           );
         },
       },
-      {
-        key: "expected_date",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="expectedDate"
-            sortState={getSortState("expectedDate")}
-            onSortChange={(state) => handleSortChange("expectedDate", state)}
-            searchValue={tableState.columnSearch["expectedDate"] || ""}
-            onSearchChange={(val) => handleSearchChange("expectedDate", val)}
-            selectedFilters={tableState.columnFilters["expectedDate"] || []}
-            onFilterChange={(vals) => handleFilterChange("expectedDate", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Ngày nhập DK")}
-            fetchOptions={fetchColumnOptions}
-            hideFilter={true}
-            hideFooter={true}
-            dateRangeSlot={({ close }) => {
-              const val = tableState.columnSearch["expectedDate"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    handleSearchChange("expectedDate", next);
-                  }}
-                  onClose={close}
-                />
-              );
-            }}
-          />
-        ),
-        sortKey: "expected_date",
-        size: 120,
-        enableResizing: true,
-        className: "!py-2 align-middle text-right",
-        headerClassName: "text-center",
-        cell: (row) => {
-          const dt = normalizeDateTime(row.due_date);
-          if (!dt || dt === "—") return "—";
-          const [d] = dt.split(" ");
-          return (
-            <Tooltip content={dt}>
-              <span className="cursor-default block w-full text-right">
-                {d}
-              </span>
-            </Tooltip>
-          );
-        },
-      },
+
       {
         key: "po_no",
         header: (
@@ -272,10 +177,11 @@ export function usePurchaseColumns({
             allFilters={tableState.columnFilters}
             title={t("Số PO")}
             fetchOptions={fetchColumnOptions}
+            align="center"
           />
         ),
         sortKey: "purchase_no",
-        size: 150,
+        size: 200,
         enableResizing: true,
         className: "!py-2 align-middle font-medium text-left",
         headerClassName: "text-center",
@@ -314,6 +220,7 @@ export function usePurchaseColumns({
             allFilters={tableState.columnFilters}
             title={t("Nhà cung cấp")}
             fetchOptions={fetchColumnOptions}
+            align="center"
           />
         ),
         sortKey: "supplier_id",
@@ -342,9 +249,10 @@ export function usePurchaseColumns({
             onFilterChange={(vals) => handleFilterChange("totalQty", vals)}
             allFilters={tableState.columnFilters}
             title={t("Số lượng")}
+            align="center"
           />
         ),
-        size: 100,
+        size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -374,9 +282,10 @@ export function usePurchaseColumns({
             allFilters={tableState.columnFilters}
             title={t("common.inventoryStatus")}
             fetchOptions={fetchColumnOptions}
+            align="center"
           />
         ),
-        size: 100,
+        size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
         headerClassName: "text-center",
@@ -414,6 +323,7 @@ export function usePurchaseColumns({
             allFilters={tableState.columnFilters}
             title={t("Trạng thái")}
             fetchOptions={fetchColumnOptions}
+            align="center"
           />
         ),
         size: 140,
@@ -436,6 +346,56 @@ export function usePurchaseColumns({
         },
       },
       {
+        key: "expected_date",
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="expectedDate"
+            sortState={getSortState("expectedDate")}
+            onSortChange={(state) => handleSortChange("expectedDate", state)}
+            searchValue={tableState.columnSearch["expectedDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("expectedDate", val)}
+            selectedFilters={tableState.columnFilters["expectedDate"] || []}
+            onFilterChange={(vals) => handleFilterChange("expectedDate", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Ngày nhập DK")}
+            fetchOptions={fetchColumnOptions}
+            hideFilter={true}
+            hideFooter={true}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["expectedDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    handleSearchChange("expectedDate", next);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
+            align="center"
+          />
+        ),
+        sortKey: "expected_date",
+        size: 150,
+        enableResizing: true,
+        className: "!py-2 align-middle text-right",
+        headerClassName: "text-center",
+        cell: (row) => {
+          return (
+            <TableDateCell
+              date={row.due_date}
+              showTooltip={false}
+              format="date"
+              className="justify-end w-full"
+            />
+          );
+        },
+      },
+      {
         key: "notes",
         header: (
           <TableColumnHeaderFilter
@@ -449,6 +409,7 @@ export function usePurchaseColumns({
             allFilters={tableState.columnFilters}
             title={t("Ghi chú")}
             fetchOptions={fetchColumnOptions}
+            align="center"
           />
         ),
         size: 250,
@@ -464,14 +425,6 @@ export function usePurchaseColumns({
         ),
       },
     ],
-    [
-      expandedRowIds,
-      onToggleExpand,
-      onOpenDetail,
-      t,
-      variant,
-      tableState,
-      fetchColumnOptions,
-    ],
+    [onOpenDetail, t, variant, tableState, fetchColumnOptions],
   );
 }

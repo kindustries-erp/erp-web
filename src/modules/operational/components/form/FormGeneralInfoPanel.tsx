@@ -7,7 +7,6 @@ import {
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
-import { MultiSelect } from "@/shared/components/MultiSelect";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useT } from "@/core/i18n";
 import {
@@ -19,26 +18,22 @@ import {
 import { useOperationalFormStore } from "@/modules/operational/hooks/useOperationalFormStore";
 import { SalesFields } from "@/modules/operational/components/form/SalesFields";
 import { ExpenseFields } from "@/modules/operational/components/form/ExpenseFields";
-import { PurchaseReceiptHistory } from "@/modules/operational/components/PurchaseReceiptHistory";
-import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
-import type { ErpPoReceipt } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
 import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
+import type { FormVariant } from "@/modules/operational/utils/operationalHelpers";
 
 interface FormGeneralInfoPanelProps {
   variant: FormVariant;
   isPurchaseLocked: boolean;
-  isPurchaseFullyLocked: boolean;
   purchaseFieldLocked: (
     field: "description" | "qty" | "expectedDate" | "status" | "poNo",
   ) => boolean;
   viewOnly?: boolean;
   branchOptions: Array<{ value: string; label: string }>;
-  partnerOptions: Array<{ value: string; label: string }>;
-  poReceipts?: ErpPoReceipt[];
+  partnerOptions: Array<{ value: string; label: string; searchText?: string }>;
   /** ID of the existing document (null when creating) */
   entityId?: string | null;
-  /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' */
-  entityType?: string;
+  /** Entity type string for tags: 'erp_purchase_order' | 'erp_sales_order' | 'erp_expense' */
+  entityType?: "erp_purchase_order" | "erp_sales_order" | "erp_expense";
   /** Pending tag IDs for new-create Option B flow */
   pendingTagIds?: string[];
   onPendingTagsChange?: (ids: string[]) => void;
@@ -53,12 +48,10 @@ interface FormGeneralInfoPanelProps {
 export function FormGeneralInfoPanel({
   variant,
   isPurchaseLocked,
-  isPurchaseFullyLocked,
   purchaseFieldLocked,
   viewOnly,
   branchOptions,
   partnerOptions,
-  poReceipts,
   entityId,
   entityType,
   pendingTagIds = [],
@@ -115,9 +108,6 @@ export function FormGeneralInfoPanel({
     setNextDueDate,
     autoGenerateNext,
     setAutoGenerateNext,
-    supplierInvoiceNo,
-    setSupplierInvoiceNo,
-    supplierInvoiceOptions,
   } = useOperationalFormStore();
 
   const statusOptions =
@@ -250,30 +240,6 @@ export function FormGeneralInfoPanel({
                 </DrawerField>
               )}
 
-              {/* Số HĐ nhà cung cấp — chỉ purchase */}
-              {variant === "purchase" && (
-                <DrawerField label={t("Số HĐ nhà cung cấp")}>
-                  <MultiSelect
-                    options={supplierInvoiceOptions}
-                    value={
-                      supplierInvoiceNo
-                        ? supplierInvoiceNo
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean)
-                        : []
-                    }
-                    disabled={
-                      viewOnly || status === "DRAFT" || status === "CANCELLED"
-                    }
-                    placeholder="Chọn hóa đơn..."
-                    onChange={(selectedArr) =>
-                      setSupplierInvoiceNo(selectedArr.join(", "))
-                    }
-                  />
-                </DrawerField>
-              )}
-
               {/* Ngày đến hạn — chỉ sales & expenses */}
               {variant !== "purchase" && (
                 <DrawerField label={t("Ngày đến hạn")}>
@@ -351,23 +317,6 @@ export function FormGeneralInfoPanel({
                 />
               )}
 
-              {/* Ghi chú */}
-              <DrawerField label={t("Ghi chú")}>
-                <textarea
-                  className={`${inputCls} min-h-[84px]`}
-                  value={notes}
-                  disabled={viewOnly || isPurchaseFullyLocked}
-                  onChange={(e) => setNotes(e.target.value)}
-                />
-              </DrawerField>
-
-              {/* Lịch sử nhập kho — chỉ purchase viewOnly */}
-              {variant === "purchase" && viewOnly && poReceipts && (
-                <div className="mt-2 border-t border-border pt-4">
-                  <PurchaseReceiptHistory receipts={poReceipts} />
-                </div>
-              )}
-
               {/* Tags — purchase & sales only */}
               {isAdminEmail &&
                 (variant === "purchase" || variant === "sales") &&
@@ -392,6 +341,39 @@ export function FormGeneralInfoPanel({
                   </DrawerField>
                 )}
             </div>
+          </div>
+        </div>
+      </DrawerSection>
+
+      <DrawerSection
+        title={
+          <span
+            className={cn(
+              "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
+              showGeneralInfo
+                ? "max-w-[200px] opacity-100"
+                : "max-w-0 opacity-0",
+            )}
+          >
+            {t("Ghi chú")}
+          </span>
+        }
+      >
+        <div
+          className={cn(
+            "grid transition-all duration-300 ease-in-out",
+            showGeneralInfo ? "opacity-100" : "opacity-0",
+          )}
+          style={{ gridTemplateRows: showGeneralInfo ? "1fr" : "0fr" }}
+        >
+          <div className="overflow-hidden">
+            <textarea
+              className={`${inputCls} min-h-[84px] w-full mt-1 mb-2`}
+              value={notes}
+              disabled={viewOnly}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t("Nhập ghi chú...")}
+            />
           </div>
         </div>
       </DrawerSection>

@@ -10,16 +10,19 @@ interface CellInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export const CellInput: React.FC<CellInputProps> = ({
   value,
   onValueChange,
-  debounceMs = 300,
+  debounceMs = 500,
   className,
   ...props
 }) => {
   const [localValue, setLocalValue] = useState<string | number>(value ?? "");
+  const [isFocused, setIsFocused] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setLocalValue(value ?? "");
-  }, [value]);
+    if (!isFocused) {
+      setLocalValue(value ?? "");
+    }
+  }, [value, isFocused]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
@@ -34,7 +37,13 @@ export const CellInput: React.FC<CellInputProps> = ({
     }, debounceMs);
   };
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    props.onFocus?.(e);
+  };
+
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(false);
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
@@ -47,6 +56,7 @@ export const CellInput: React.FC<CellInputProps> = ({
       {...props}
       value={localValue}
       onChange={handleChange}
+      onFocus={handleFocus}
       onBlur={handleBlur}
       className={cn(
         "w-full h-full min-h-[38px] bg-transparent border-0 focus:ring-1 focus:ring-primary outline-none transition-all hover:bg-slate-50 focus:bg-white px-3 disabled:opacity-50 disabled:cursor-not-allowed",
