@@ -137,6 +137,10 @@ export function VinfastPartsExportDrawer({
 
   const periodOptions = useMemo(
     () => [
+      {
+        value: "all",
+        label: t("erpInvoices:exportDrawer.allRange", "Tat ca thoi gian"),
+      },
       ...PERIOD_OPTS,
       {
         value: "custom",
@@ -152,11 +156,17 @@ export function VinfastPartsExportDrawer({
   const handlePeriodChange = (next?: string) => {
     const value = next || "";
     if (!value || value === "custom") {
-      setPeriod("");
+      setPeriod("custom");
       return;
     }
 
     setPeriod(value);
+    if (value === "all") {
+      setDateFrom("");
+      setDateTo("");
+      return;
+    }
+
     if (value && value !== "custom") {
       setDateFrom(periodFirstDay(value));
       setDateTo(periodLastDay(value));
@@ -164,7 +174,11 @@ export function VinfastPartsExportDrawer({
   };
 
   useEffect(() => {
-    const nextPeriod = periodFromExactRange(dateFrom, dateTo);
+    if (!dateFrom && !dateTo) {
+      setPeriod((prev) => (prev === "all" ? prev : "all"));
+      return;
+    }
+    const nextPeriod = periodFromExactRange(dateFrom, dateTo) || "custom";
     setPeriod((prev) => (prev === nextPeriod ? prev : nextPeriod));
   }, [dateFrom, dateTo]);
 
@@ -185,7 +199,7 @@ export function VinfastPartsExportDrawer({
   };
 
   const handleStartExport = async () => {
-    if (!dateFrom || !dateTo) {
+    if (period !== "all" && (!dateFrom || !dateTo)) {
       toast.error(
         t(
           "erpInvoices:exportDrawer.error.missingDateRange",
