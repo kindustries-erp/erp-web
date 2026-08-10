@@ -100,6 +100,9 @@ export function VinfastPartsDashboardPage() {
         queryClient.invalidateQueries({
           queryKey: ["vinfast-parts-dashboard"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["vinfast-parts-dashboard-table"],
+        });
       }}
     >
       <div className="flex flex-col gap-8 mb-8">

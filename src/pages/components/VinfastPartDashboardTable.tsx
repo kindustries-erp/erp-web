@@ -127,7 +127,7 @@ export function VinfastPartDashboardTable({
     />
   );
 
-  const { data, isLoading } = useVinfastPartsDashboardTable(
+  const { data, isLoading, isFetching } = useVinfastPartsDashboardTable(
     filterState,
     page,
     limit,
@@ -272,7 +272,7 @@ export function VinfastPartDashboardTable({
           onPageSize={setLimit}
           page={page}
           pageSize={limit}
-          loading={isLoading}
+          loading={isLoading || isFetching}
           minWidth={500}
           enableColumnResizing={false}
           variant="spreadsheet"
