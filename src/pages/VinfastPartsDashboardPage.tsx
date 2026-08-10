@@ -255,12 +255,14 @@ export function VinfastPartTrendChart({
   filterState,
   groupBy,
   itemCode,
+  chartHeight = 300,
 }: {
   title: string;
   vehicleType: string;
   filterState: any;
   groupBy: string;
   itemCode?: string;
+  chartHeight?: number;
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -298,7 +300,7 @@ export function VinfastPartTrendChart({
 
   return (
     <Panel title={title}>
-      <div className="relative h-[300px]">
+      <div className="relative" style={{ height: chartHeight }}>
         {!isLoading && trendLabels.length > 0 ? (
           <BarChart
             labels={trendLabels}
