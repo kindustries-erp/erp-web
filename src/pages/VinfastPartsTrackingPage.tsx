@@ -44,6 +44,7 @@ import {
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
 import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { VinfastPartsExportDrawer } from "@/pages/components/VinfastPartsExportDrawer";
+import { VinfastPartsSyncDrawer } from "@/pages/components/VinfastPartsSyncDrawer";
 
 interface VinfastPartTrackingRow {
   itemCode: string;
@@ -545,13 +546,14 @@ export function VinfastPartsTrackingPage({
 }: {
   vehicleType?: "CAR" | "MOTORBIKE";
 }) {
-  const { t } = useTranslation("erpInvoices");
+  const { t } = useTranslation("vinfast");
   const formHook = useErpInvoiceForm(() => {});
   const showToast = useUIStore((s) => s.showToast);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [detailRow, setDetailRow] = useState<VinfastPartTrackingRow | null>(
     null,
   );
@@ -1148,6 +1150,18 @@ export function VinfastPartsTrackingPage({
         tableId={`vinfast-parts-${vehicleType || "all"}`}
         createActions={[
           {
+            groupLabel: "HỆ THỐNG",
+            items: [
+              {
+                label: "Đồng bộ sổ cái",
+                icon: <RefreshCw className="w-4 h-4 text-blue-600" />,
+                onClick: () => {
+                  setSyncDrawerOpen(true);
+                },
+              },
+            ],
+          },
+          {
             groupLabel: "TRA CỨU",
             items: [
               {
@@ -1275,6 +1289,11 @@ export function VinfastPartsTrackingPage({
         buildBaseQuery={buildExportBaseQuery}
         initialDateFrom={filterState.dateFrom}
         initialDateTo={filterState.dateTo}
+      />
+
+      <VinfastPartsSyncDrawer
+        open={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
       />
 
       <VinfastPartDetailDrawer

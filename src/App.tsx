@@ -18,6 +18,10 @@ import { GlobalErpDocumentOpener } from "@/core/components/GlobalErpDocumentOpen
 import { Login } from "@/pages/Login";
 import { NotFound } from "@/pages/NotFound";
 import { TooltipProvider } from "@/core/components/ui/Tooltip";
+import { VinfastPartsTrackingPage } from "@/pages/VinfastPartsTrackingPage";
+import { VinfastPartsDashboardPage } from "@/pages/VinfastPartsDashboardPage";
+import { VinfastPartsOtoStockPage } from "@/pages/VinfastPartsOtoStockPage";
+import { VinfastPartsMotoStockPage } from "@/pages/VinfastPartsMotoStockPage";
 
 import { PageKey } from "@/shared/types";
 
@@ -189,16 +193,6 @@ const ChartOfAccountsPage = lazy(() =>
     default: m.ChartOfAccountsPage,
   })),
 );
-const VinfastPartsTrackingPage = lazy(() =>
-  import("@/pages/VinfastPartsTrackingPage").then((m) => ({
-    default: m.VinfastPartsTrackingPage,
-  })),
-);
-const VinfastPartsDashboardPage = lazy(() =>
-  import("@/pages/VinfastPartsDashboardPage").then((m) => ({
-    default: m.VinfastPartsDashboardPage,
-  })),
-);
 const VinfastSettlementPage = lazy(() =>
   import("@/pages/VinfastSettlementPage").then((m) => ({
     default: m.VinfastSettlementPage,
@@ -319,6 +313,8 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "vinfast-parts-xemay": () => (
     <VinfastPartsTrackingPage vehicleType="MOTORBIKE" />
   ),
+  "vinfast-parts-oto-stock": VinfastPartsOtoStockPage,
+  "vinfast-parts-xemay-stock": VinfastPartsMotoStockPage,
   "vinfast-invoice-settlement": VinfastSettlementPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
 };
