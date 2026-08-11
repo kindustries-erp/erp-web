@@ -98,7 +98,7 @@ export function VinfastPartsSyncDrawer({
         setSseConnected(false);
       }
     };
-  }, [open, isSyncing, sseConnected]);
+  }, [open, isSyncing]); // removed sseConnected to prevent infinite loop
 
   const startSync = async () => {
     if (isSyncing) return;

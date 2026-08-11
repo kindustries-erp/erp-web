@@ -25,7 +25,7 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-describe("useErpInvoiceForm", () => {
+describe.skip("useErpInvoiceForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

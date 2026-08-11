@@ -1,28 +1,33 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, FileText } from "lucide-react";
+import { Eye, FileText, RefreshCw, DownloadCloud } from "lucide-react";
 import api from "@/core/api/axiosInstance";
 import { DataTableColumn } from "@/shared/components/DataTable";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
+import { FilterButton } from "@/shared/components/FilterPanel";
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { VinfastPartsStockDetailDrawer } from "./VinfastPartsStockDetailDrawer";
+import { VinfastPartsSyncDrawer } from "./VinfastPartsSyncDrawer";
 
 interface VinfastPartsStockTemplateProps {
   vehicleType: "oto" | "xemay";
   title: string;
+  description?: string;
 }
 
 export function VinfastPartsStockTemplate({
   vehicleType,
   title,
+  description,
 }: VinfastPartsStockTemplateProps) {
   const { t } = useTranslation(["reports", "common"]);
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [catalogData, setCatalogData] = useState<any>(null);
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -85,7 +90,10 @@ export function VinfastPartsStockTemplate({
         },
       });
       return {
-        items: res.data.items,
+        items: res.data.items.map((i: any) => ({
+          label: i != null ? String(i) : "(Trống)",
+          value: i != null ? String(i) : "",
+        })),
         total: res.data.total,
         next: res.data.page < res.data.totalPages ? res.data.page + 1 : null,
       };
@@ -149,10 +157,10 @@ export function VinfastPartsStockTemplate({
           <ActionDropdown
             items={[
               {
-                groupLabel: t("TRA CỨU", "VIEW"),
+                groupLabel: t("actionGroup.search", "TRA CỨU"),
                 items: [
                   {
-                    label: t("Chi tiết", "View Details"),
+                    label: t("action.viewDetails", "Chi tiết"),
                     icon: <Eye className="w-3.5 h-3.5" />,
                     onClick: () => {
                       setCatalogData(row);
@@ -253,7 +261,7 @@ export function VinfastPartsStockTemplate({
             onFilterChange={(vals) => handleFilterChange("qtyIn", vals)}
             align="center"
             columnKey="qtyIn"
-            hideFilter={true}
+            {...commonFilterProps}
           />
         ),
         size: 120,
@@ -274,7 +282,7 @@ export function VinfastPartsStockTemplate({
             onFilterChange={(vals) => handleFilterChange("qtyOut", vals)}
             align="center"
             columnKey="qtyOut"
-            hideFilter={true}
+            {...commonFilterProps}
           />
         ),
         size: 120,
@@ -295,7 +303,7 @@ export function VinfastPartsStockTemplate({
             onFilterChange={(vals) => handleFilterChange("qtyBalance", vals)}
             align="center"
             columnKey="qtyBalance"
-            hideFilter={true}
+            {...commonFilterProps}
           />
         ),
         size: 120,
@@ -320,7 +328,46 @@ export function VinfastPartsStockTemplate({
       <SpreadsheetPageTemplate
         tableId={`vinfast-parts-stock-${vehicleType}`}
         title={title}
+        desc={description}
         icon={<FileText className="w-5 h-5 text-gray-500" />}
+        activeFilterCount={tableState.activeFilterCount}
+        onClearAllFilters={() => tableState.resetFilters()}
+        createLabel={t("action.create", "Tạo mới")}
+        createActions={[
+          {
+            groupLabel: t("actionGroup.system", "HỆ THỐNG"),
+            items: [
+              {
+                label: t("action.syncLedger", "Đồng bộ sổ cái"),
+                icon: <RefreshCw className="w-4 h-4 text-blue-600" />,
+                onClick: () => {
+                  setSyncDrawerOpen(true);
+                },
+              },
+            ],
+          },
+          {
+            groupLabel: t("actionGroup.search", "TRA CỨU"),
+            items: [
+              {
+                label: t("action.downloadReport", "Tải bảng kê"),
+                icon: <DownloadCloud className="w-4 h-4 text-green-600" />,
+                onClick: () => {
+                  alert("Tính năng đang phát triển");
+                },
+              },
+            ],
+          },
+        ]}
+        extraActions={
+          tableState.activeFilterCount > 0 ? (
+            <FilterButton
+              onClick={() => {}}
+              activeCount={tableState.activeFilterCount}
+              onClear={() => tableState.resetFilters()}
+            />
+          ) : null
+        }
         items={data?.data || []}
         columns={columns}
         loading={isLoading || isFetching}
@@ -341,6 +388,11 @@ export function VinfastPartsStockTemplate({
         }}
         sku={selectedSku || ""}
         catalogData={catalogData}
+      />
+
+      <VinfastPartsSyncDrawer
+        open={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
       />
     </>
   );

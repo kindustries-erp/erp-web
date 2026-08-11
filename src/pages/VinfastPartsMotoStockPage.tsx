@@ -1,15 +1,13 @@
 import { VinfastPartsStockTemplate } from "./components/VinfastPartsStockTemplate";
-import { useTranslation } from "react-i18next";
+import { useT } from "@/core/i18n";
 
 export function VinfastPartsMotoStockPage() {
-  const { t } = useTranslation();
+  const t = useT();
   return (
     <VinfastPartsStockTemplate
       vehicleType="xemay"
-      title={t(
-        "Tồn kho phụ tùng VinFast - Xe máy",
-        "VinFast Parts Stock - Motorbike",
-      )}
+      title={t("nav.items.vinfastPartsXemayStock")}
+      description={t("nav.items.vinfastPartsXemayStockDesc")}
     />
   );
 }
