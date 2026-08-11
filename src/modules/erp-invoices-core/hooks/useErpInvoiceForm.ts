@@ -153,13 +153,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       // Auto query detail if items are empty
       if (!fullInv.items || fullInv.items.length === 0) {
-        const token = localStorage.getItem("erp_portal_token");
-        if (token) {
-          try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
-          } catch (syncErr) {
-            console.warn("Auto sync detail failed", syncErr);
-          }
+        try {
+          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+        } catch (syncErr) {
+          console.warn("Auto sync detail failed", syncErr);
         }
       }
       setDetailInvoice(fullInv);
@@ -219,13 +216,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       if (!fullInv.items || fullInv.items.length === 0) {
-        const token = localStorage.getItem("erp_portal_token");
-        if (token) {
-          try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
-          } catch (syncErr) {
-            console.warn("Auto sync detail failed", syncErr);
-          }
+        try {
+          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+        } catch (syncErr) {
+          console.warn("Auto sync detail failed", syncErr);
         }
       }
       setDetailInvoice(fullInv);
@@ -239,15 +233,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   async function handleSyncDetail() {
     if (!detailInvoice) return;
-    const token = localStorage.getItem("erp_portal_token");
-    if (!token) return;
 
     setLoadingDetail(true);
     try {
-      const fullInv = await erpInvoicesCoreApi.syncDetail(
-        detailInvoice.id,
-        token,
-      );
+      const fullInv = await erpInvoicesCoreApi.syncDetail(detailInvoice.id);
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
       await onReload();

@@ -404,15 +404,7 @@ export const erpInvoicesCoreApi = {
     return res.data;
   },
 
-  reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
-    const { data } = await axiosInstance.post<ErpInvoice>(
-      `${BASE}/${id}/reparse-xml`,
-      { token },
-    );
-    return data;
-  },
-
-  syncDetail: async (id: string, token: string): Promise<ErpInvoice> => {
+  syncDetail: async (id: string, token?: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<ErpInvoice>(
       `${BASE}/${id}/sync-detail`,
       { token },

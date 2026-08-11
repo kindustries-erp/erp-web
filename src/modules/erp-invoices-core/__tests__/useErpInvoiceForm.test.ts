@@ -62,7 +62,7 @@ describe("useErpInvoiceForm", () => {
     } as unknown as ErpInvoice;
 
     await act(async () => {
-      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValue(mockInvoice);
       await result.current.openDetail(mockInvoice);
     });
 
@@ -87,7 +87,7 @@ describe("useErpInvoiceForm", () => {
     } as unknown as ErpInvoice;
 
     await act(async () => {
-      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValue(mockInvoice);
       await result.current.openDetail(mockInvoice);
     });
 
@@ -160,7 +160,7 @@ describe("useErpInvoiceForm", () => {
     } as unknown as ErpInvoice;
 
     await act(async () => {
-      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValue(mockInvoice);
       await result.current.openDetail(mockInvoice);
     });
 
@@ -182,10 +182,13 @@ describe("useErpInvoiceForm", () => {
 
   it("should delete an invoice", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
-    const mockInvoice = { id: "1" } as unknown as ErpInvoice;
+    const mockInvoice = {
+      id: "1",
+      invoiceNo: "INV-01",
+    } as unknown as ErpInvoice;
 
     await act(async () => {
-      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValue(mockInvoice);
       await result.current.openDetail(mockInvoice);
     });
 
@@ -200,10 +203,13 @@ describe("useErpInvoiceForm", () => {
 
   it("should cancel an invoice", async () => {
     const { result } = renderHook(() => useErpInvoiceForm(mockReload));
-    const mockInvoice = { id: "1" } as unknown as ErpInvoice;
+    const mockInvoice = {
+      id: "1",
+      invoiceNo: "INV-01",
+    } as unknown as ErpInvoice;
 
     await act(async () => {
-      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValueOnce(mockInvoice);
+      vi.mocked(erpInvoicesCoreApi.get).mockResolvedValue(mockInvoice);
       await result.current.openDetail(mockInvoice);
     });
 
