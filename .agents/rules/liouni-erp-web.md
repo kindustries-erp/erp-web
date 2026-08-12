@@ -5,12 +5,14 @@ Apply to all work in this repo.
 ## Git Workflow Mandates
 
 When asked to **commit code**, you MUST execute the following in order:
+
 1. `bun run build`
 2. `bun run check:ci`
 3. `bun run test`
 4. `git commit`
 
 When asked to **push code**, you MUST execute the following in order:
+
 1. `git pull --rebase` (and resolve conflicts if any)
 2. `bun run build`
 3. `bun run check:ci`
