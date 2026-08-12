@@ -10,11 +10,13 @@ import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColu
 import { TableText } from "@/shared/components/DataTable/TableText";
 import { FilterButton } from "@/shared/components/FilterPanel";
 import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { format } from "date-fns";
 import { money } from "@/shared/utils/format";
 import { useMemo, useState } from "react";
+import { VinfastPartTrendChart } from "../VinfastPartsDashboardPage";
 
 interface LedgerEntry {
   id: string;
@@ -63,9 +65,9 @@ export function VinfastPartsStockDetailDrawer({
   const outEntriesAll = entries.filter((e) => e.direction === "OUT");
 
   const [inPage, setInPage] = useState(1);
+  const [inPageSize, setInPageSize] = useState(4);
   const [outPage, setOutPage] = useState(1);
-  const [inPageSize, setInPageSize] = useState(5);
-  const [outPageSize, setOutPageSize] = useState(5);
+  const [outPageSize, setOutPageSize] = useState(4);
   const [invoiceIdToOpen, setInvoiceIdToOpen] = useState<string | null>(null);
 
   const inTableState = useTableColumnState("vinfast-parts-in-history");
@@ -77,24 +79,45 @@ export function VinfastPartsStockDetailDrawer({
   ) => {
     let result = [...data];
     if (tableState.columnSearch["transactionDate"]?.length) {
-      // Implement basic date filter if needed, or skip for now since it's exact match string filter in generic columnSearch.
-      // Usually date uses DateRangeColumnSlot which sets columnFilters
-      const dates = tableState.columnFilters["transactionDate"] as any;
-      if (dates && dates.from && dates.to) {
-        result = result.filter((e) => {
-          const d = new Date(e.transactionDate).getTime();
-          return d >= dates.from && d <= dates.to;
-        });
+      const dateRange = tableState.columnSearch["transactionDate"];
+      if (dateRange) {
+        const [from, to] = dateRange.split("|");
+        if (from || to) {
+          result = result.filter((e) => {
+            if (!e.transactionDate) return false;
+            const rDate = new Date(e.transactionDate).getTime();
+            if (from && rDate < new Date(from).getTime()) return false;
+            if (to && rDate > new Date(to).getTime() + 86400000 - 1)
+              return false;
+            return true;
+          });
+        }
       }
     }
 
-    // search text
-    const searchInvoice = tableState.columnSearch["invoiceNo"];
-    if (searchInvoice) {
-      result = result.filter((e) =>
-        e.invoiceNo?.toLowerCase().includes(searchInvoice.toLowerCase()),
-      );
-    }
+    Object.entries(tableState.columnSearch).forEach(([col, searchVal]) => {
+      if (!searchVal || col === "transactionDate") return;
+      result = result.filter((e) => {
+        const val = e[col as keyof LedgerEntry];
+        if (val === undefined || val === null) return false;
+        return String(val).toLowerCase().includes(searchVal.toLowerCase());
+      });
+    });
+
+    Object.entries(tableState.columnFilters).forEach(([col, selectedVals]) => {
+      if (!selectedVals || !selectedVals.length) return;
+      result = result.filter((e) => {
+        const val = e[col as keyof LedgerEntry];
+        let formattedVal = String(val || "");
+        if (col === "qty") {
+          const prefix = e.isAdjustment && e.adjSign === -1 ? "-" : "";
+          formattedVal = `${prefix}${Number(e.qty || 0).toLocaleString()}`;
+        } else if (col === "unitCost" || col === "calculatedUnitCost") {
+          formattedVal = money(Number(val || 0));
+        }
+        return selectedVals.includes(formattedVal);
+      });
+    });
 
     if (tableState.sorts.length > 0) {
       const sortStr = tableState.sorts[0];
@@ -134,6 +157,66 @@ export function VinfastPartsStockDetailDrawer({
     return outEntries.slice(start, start + outPageSize);
   }, [outEntries, outPage, outPageSize]);
 
+  const totalInQty = useMemo(() => {
+    return inEntries.reduce((sum, item) => {
+      const q = Number(item.qty || 0);
+      const sign = item.isAdjustment && item.adjSign === -1 ? -1 : 1;
+      return sum + q * sign;
+    }, 0);
+  }, [inEntries]);
+
+  const totalOutQty = useMemo(() => {
+    return outEntries.reduce((sum, item) => {
+      const q = Number(item.qty || 0);
+      const sign = item.isAdjustment && item.adjSign === -1 ? -1 : 1;
+      return sum + q * sign;
+    }, 0);
+  }, [outEntries]);
+
+  const inInvoiceOptions = useMemo(() => {
+    const opts = new Set<string>();
+    inEntriesAll.forEach((r) => r.invoiceNo && opts.add(r.invoiceNo));
+    return Array.from(opts).map((v) => ({ label: v, value: v }));
+  }, [inEntriesAll]);
+
+  const inQtyOptions = useMemo(() => {
+    const opts = new Set<string>();
+    inEntriesAll.forEach((r) => {
+      const prefix = r.isAdjustment && r.adjSign === -1 ? "-" : "";
+      opts.add(`${prefix}${Number(r.qty || 0).toLocaleString()}`);
+    });
+    return Array.from(opts).map((v) => ({ label: v, value: v }));
+  }, [inEntriesAll]);
+
+  const inUnitCostOptions = useMemo(() => {
+    const opts = new Set<string>();
+    inEntriesAll.forEach((r) => opts.add(money(Number(r.unitCost || 0))));
+    return Array.from(opts).map((v) => ({ label: v, value: v }));
+  }, [inEntriesAll]);
+
+  const outInvoiceOptions = useMemo(() => {
+    const opts = new Set<string>();
+    outEntriesAll.forEach((r) => r.invoiceNo && opts.add(r.invoiceNo));
+    return Array.from(opts).map((v) => ({ label: v, value: v }));
+  }, [outEntriesAll]);
+
+  const outQtyOptions = useMemo(() => {
+    const opts = new Set<string>();
+    outEntriesAll.forEach((r) => {
+      const prefix = r.isAdjustment && r.adjSign === -1 ? "-" : "";
+      opts.add(`${prefix}${Number(r.qty || 0).toLocaleString()}`);
+    });
+    return Array.from(opts).map((v) => ({ label: v, value: v }));
+  }, [outEntriesAll]);
+
+  const outCalculatedUnitCostOptions = useMemo(() => {
+    const opts = new Set<string>();
+    outEntriesAll.forEach((r) =>
+      opts.add(money(Number(r.calculatedUnitCost || 0))),
+    );
+    return Array.from(opts).map((v) => ({ label: v, value: v }));
+  }, [outEntriesAll]);
+
   const inColumns = useMemo<DataTableColumn<LedgerEntry>[]>(
     () => [
       {
@@ -165,12 +248,28 @@ export function VinfastPartsStockDetailDrawer({
             onFilterChange={(vals) =>
               inTableState.setColumnFilter("transactionDate", vals)
             }
+            dateRangeSlot={({ close }) => {
+              const val = inTableState.columnSearch["transactionDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    inTableState.setColumnSearch("transactionDate", next);
+                    close();
+                  }}
+                />
+              );
+            }}
           />
         ),
         cell: (row: LedgerEntry) =>
           format(new Date(row.transactionDate), "dd/MM/yyyy"),
         align: "center",
-        width: 100,
+        size: 100,
+        enableResizing: true,
       },
       {
         key: "invoiceNo",
@@ -179,7 +278,6 @@ export function VinfastPartsStockDetailDrawer({
             title={t("vinfastParts:INVOICE", "Hóa đơn")}
             align="center"
             isActive={!!inTableState.columnSearch["invoiceNo"]?.length}
-            hideFooter={true}
             sortState={
               inTableState.sorts.includes("invoiceNo")
                 ? "asc"
@@ -192,6 +290,7 @@ export function VinfastPartsStockDetailDrawer({
             onSearchChange={(val) =>
               inTableState.setColumnSearch("invoiceNo", val)
             }
+            filterOptions={inInvoiceOptions}
             selectedFilters={inTableState.columnFilters["invoiceNo"] || []}
             onFilterChange={(vals) =>
               inTableState.setColumnFilter("invoiceNo", vals)
@@ -207,6 +306,8 @@ export function VinfastPartsStockDetailDrawer({
           />
         ),
         align: "center",
+        size: 150,
+        enableResizing: true,
       },
       {
         key: "qty",
@@ -214,8 +315,6 @@ export function VinfastPartsStockDetailDrawer({
           <TableColumnHeaderFilter
             title={t("vinfastParts:QTY", "SL")}
             align="right"
-            hideFilter={true}
-            hideFooter={true}
             sortState={
               inTableState.sorts.includes("qty")
                 ? "asc"
@@ -226,6 +325,7 @@ export function VinfastPartsStockDetailDrawer({
             onSortChange={(state) => inTableState.setSort("qty", state)}
             searchValue={inTableState.columnSearch["qty"] || ""}
             onSearchChange={(val) => inTableState.setColumnSearch("qty", val)}
+            filterOptions={inQtyOptions}
             selectedFilters={inTableState.columnFilters["qty"] || []}
             onFilterChange={(vals) => inTableState.setColumnFilter("qty", vals)}
           />
@@ -233,13 +333,15 @@ export function VinfastPartsStockDetailDrawer({
         cell: (row: LedgerEntry) => {
           const prefix = row.isAdjustment && row.adjSign === -1 ? "-" : "";
           return (
-            <span className="font-medium">
+            <span className="font-medium w-full text-right block pr-1">
               {prefix}
               {Number(row.qty).toLocaleString()}
             </span>
           );
         },
         align: "right",
+        size: 100,
+        enableResizing: true,
       },
       {
         key: "unitCost",
@@ -247,8 +349,6 @@ export function VinfastPartsStockDetailDrawer({
           <TableColumnHeaderFilter
             title={t("vinfastParts:UNIT_COST", "Giá nhập")}
             align="right"
-            hideFilter={true}
-            hideFooter={true}
             sortState={
               inTableState.sorts.includes("unitCost")
                 ? "asc"
@@ -261,13 +361,18 @@ export function VinfastPartsStockDetailDrawer({
             onSearchChange={(val) =>
               inTableState.setColumnSearch("unitCost", val)
             }
+            filterOptions={inUnitCostOptions}
             selectedFilters={inTableState.columnFilters["unitCost"] || []}
             onFilterChange={(vals) =>
               inTableState.setColumnFilter("unitCost", vals)
             }
           />
         ),
-        cell: (row: LedgerEntry) => money(Number(row.unitCost)),
+        cell: (row: LedgerEntry) => (
+          <span className="w-full text-right block pr-1">
+            {money(Number(row.unitCost || 0))}
+          </span>
+        ),
         align: "right",
       },
     ],
@@ -305,12 +410,28 @@ export function VinfastPartsStockDetailDrawer({
             onFilterChange={(vals) =>
               outTableState.setColumnFilter("transactionDate", vals)
             }
+            dateRangeSlot={({ close }) => {
+              const val = outTableState.columnSearch["transactionDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    outTableState.setColumnSearch("transactionDate", next);
+                    close();
+                  }}
+                />
+              );
+            }}
           />
         ),
         cell: (row: LedgerEntry) =>
           format(new Date(row.transactionDate), "dd/MM/yyyy"),
         align: "center",
-        width: 100,
+        size: 100,
+        enableResizing: true,
       },
       {
         key: "invoiceNo",
@@ -319,7 +440,6 @@ export function VinfastPartsStockDetailDrawer({
             title={t("vinfastParts:INVOICE", "Hóa đơn")}
             align="center"
             isActive={!!outTableState.columnSearch["invoiceNo"]?.length}
-            hideFooter={true}
             sortState={
               outTableState.sorts.includes("invoiceNo")
                 ? "asc"
@@ -332,6 +452,7 @@ export function VinfastPartsStockDetailDrawer({
             onSearchChange={(val) =>
               outTableState.setColumnSearch("invoiceNo", val)
             }
+            filterOptions={outInvoiceOptions}
             selectedFilters={outTableState.columnFilters["invoiceNo"] || []}
             onFilterChange={(vals) =>
               outTableState.setColumnFilter("invoiceNo", vals)
@@ -347,6 +468,8 @@ export function VinfastPartsStockDetailDrawer({
           />
         ),
         align: "center",
+        size: 150,
+        enableResizing: true,
       },
       {
         key: "qty",
@@ -354,8 +477,6 @@ export function VinfastPartsStockDetailDrawer({
           <TableColumnHeaderFilter
             title={t("vinfastParts:QTY", "SL")}
             align="right"
-            hideFilter={true}
-            hideFooter={true}
             sortState={
               outTableState.sorts.includes("qty")
                 ? "asc"
@@ -366,6 +487,7 @@ export function VinfastPartsStockDetailDrawer({
             onSortChange={(state) => outTableState.setSort("qty", state)}
             searchValue={outTableState.columnSearch["qty"] || ""}
             onSearchChange={(val) => outTableState.setColumnSearch("qty", val)}
+            filterOptions={outQtyOptions}
             selectedFilters={outTableState.columnFilters["qty"] || []}
             onFilterChange={(vals) =>
               outTableState.setColumnFilter("qty", vals)
@@ -375,13 +497,15 @@ export function VinfastPartsStockDetailDrawer({
         cell: (row: LedgerEntry) => {
           const prefix = row.isAdjustment && row.adjSign === -1 ? "-" : "";
           return (
-            <span className="font-medium">
+            <span className="font-medium w-full text-right block pr-1">
               {prefix}
               {Number(row.qty).toLocaleString()}
             </span>
           );
         },
         align: "right",
+        size: 100,
+        enableResizing: true,
       },
       {
         key: "calculatedUnitCost",
@@ -389,8 +513,6 @@ export function VinfastPartsStockDetailDrawer({
           <TableColumnHeaderFilter
             title={t("vinfastParts:FIFO_COST", "Giá vốn (FIFO)")}
             align="right"
-            hideFilter={true}
-            hideFooter={true}
             sortState={
               outTableState.sorts.includes("calculatedUnitCost")
                 ? "asc"
@@ -405,6 +527,7 @@ export function VinfastPartsStockDetailDrawer({
             onSearchChange={(val) =>
               outTableState.setColumnSearch("calculatedUnitCost", val)
             }
+            filterOptions={outCalculatedUnitCostOptions}
             selectedFilters={
               outTableState.columnFilters["calculatedUnitCost"] || []
             }
@@ -413,7 +536,11 @@ export function VinfastPartsStockDetailDrawer({
             }
           />
         ),
-        cell: (row: LedgerEntry) => money(Number(row.calculatedUnitCost || 0)),
+        cell: (row: LedgerEntry) => (
+          <span className="w-full text-right block pr-1">
+            {money(Number(row.calculatedUnitCost || 0))}
+          </span>
+        ),
         align: "right",
       },
     ],
@@ -448,72 +575,14 @@ export function VinfastPartsStockDetailDrawer({
         actions={[{ label: t("common:close", "Đóng"), onClick: onClose }]}
         leftPanel={
           <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-4">
-              <DrawerSection
-                title={t("vinfastParts:IN_HISTORY", "Lịch sử Nhập (IN)")}
-                titleExtra={
-                  inTableState.activeFilterCount > 0 ? (
-                    <FilterButton
-                      activeCount={inTableState.activeFilterCount}
-                      onClick={() => {}}
-                      onClear={inTableState.resetFilters}
-                    />
-                  ) : null
-                }
-              >
-                <DataTable
-                  variant="spreadsheet"
-                  enableColumnResizing={true}
-                  columns={inColumns as any}
-                  items={paginatedInEntries}
-                  loading={loading}
-                  emptyLabel={t(
-                    "vinfastParts:NO_DATA_IN",
-                    "Không có dữ liệu nhập",
-                  )}
-                  containerClassName="h-auto overflow-y-auto"
-                  page={inPage}
-                  pageSize={inPageSize}
-                  onPage={setInPage}
-                  onPageSize={setInPageSize}
-                  total={inEntries.length}
-                  totalPages={Math.ceil(inEntries.length / inPageSize)}
-                />
-              </DrawerSection>
-
-              <DrawerSection
-                title={t("vinfastParts:OUT_HISTORY", "Lịch sử Xuất (OUT)")}
-                titleExtra={
-                  outTableState.activeFilterCount > 0 ? (
-                    <FilterButton
-                      activeCount={outTableState.activeFilterCount}
-                      onClick={() => {}}
-                      onClear={outTableState.resetFilters}
-                    />
-                  ) : null
-                }
-              >
-                <DataTable
-                  variant="spreadsheet"
-                  enableColumnResizing={true}
-                  columns={outColumns as any}
-                  items={paginatedOutEntries}
-                  loading={loading}
-                  emptyLabel={t(
-                    "vinfastParts:NO_DATA_OUT",
-                    "Không có dữ liệu xuất",
-                  )}
-                  containerClassName="h-auto overflow-y-auto"
-                  page={outPage}
-                  pageSize={outPageSize}
-                  onPage={setOutPage}
-                  onPageSize={setOutPageSize}
-                  total={outEntries.length}
-                  totalPages={Math.ceil(outEntries.length / outPageSize)}
-                />
-              </DrawerSection>
-            </div>
-
+            <VinfastPartTrendChart
+              title={t("vinfastParts:TREND", "Biểu đồ biến động")}
+              vehicleType="all"
+              filterState={{}}
+              groupBy="day"
+              itemCode={sku}
+              chartHeight={270}
+            />
             <FifoUnitLedgerSection sku={sku} />
           </div>
         }
@@ -541,7 +610,7 @@ export function VinfastPartsStockDetailDrawer({
               <DrawerRow
                 label={t("vinfastParts:TOTAL_IN", "Tổng Nhập")}
                 value={
-                  <span className="text-green-600 font-semibold">
+                  <span className="font-semibold">
                     {Number(catalogData?.qtyIn || 0).toLocaleString()}
                   </span>
                 }
@@ -549,7 +618,7 @@ export function VinfastPartsStockDetailDrawer({
               <DrawerRow
                 label={t("vinfastParts:TOTAL_OUT", "Tổng Xuất")}
                 value={
-                  <span className="text-red-600 font-semibold">
+                  <span className="font-semibold">
                     {Number(catalogData?.qtyOut || 0).toLocaleString()}
                   </span>
                 }
@@ -557,10 +626,97 @@ export function VinfastPartsStockDetailDrawer({
               <DrawerRow
                 label={t("vinfastParts:BALANCE", "Tồn cuối")}
                 value={
-                  <span className="text-xl font-bold">
+                  <span className="font-bold underline">
                     {Number(catalogData?.qtyBalance || 0).toLocaleString()}
                   </span>
                 }
+              />
+            </DrawerSection>
+            <DrawerSection
+              title={t("vinfastParts:IN_HISTORY", "Lịch sử Nhập (IN)")}
+              titleExtra={
+                inTableState.activeFilterCount > 0 ? (
+                  <FilterButton
+                    activeCount={inTableState.activeFilterCount}
+                    onClick={() => {}}
+                    onClear={inTableState.resetFilters}
+                  />
+                ) : null
+              }
+            >
+              <DataTable
+                variant="spreadsheet"
+                enableColumnResizing={true}
+                columns={inColumns as any}
+                items={paginatedInEntries}
+                loading={loading}
+                emptyLabel={t(
+                  "vinfastParts:NO_DATA_IN",
+                  "Không có dữ liệu nhập",
+                )}
+                containerClassName="h-auto overflow-y-auto max-h-64"
+                summaryRow={{
+                  invoiceNo: (
+                    <div className="text-right w-full font-semibold pr-2">
+                      {t("vinfastParts:TOTAL", "Tổng cộng")}:
+                    </div>
+                  ),
+                  qty: (
+                    <div className="text-right font-semibold text-emerald-600 tabular-nums">
+                      {totalInQty.toLocaleString()}
+                    </div>
+                  ),
+                }}
+                page={inPage}
+                pageSize={inPageSize}
+                onPage={setInPage}
+                onPageSize={setInPageSize}
+                total={inEntries.length}
+                totalPages={Math.ceil(inEntries.length / inPageSize)}
+              />
+            </DrawerSection>
+
+            <DrawerSection
+              title={t("vinfastParts:OUT_HISTORY", "Lịch sử Xuất (OUT)")}
+              titleExtra={
+                outTableState.activeFilterCount > 0 ? (
+                  <FilterButton
+                    activeCount={outTableState.activeFilterCount}
+                    onClick={() => {}}
+                    onClear={outTableState.resetFilters}
+                  />
+                ) : null
+              }
+            >
+              <DataTable
+                variant="spreadsheet"
+                enableColumnResizing={true}
+                columns={outColumns as any}
+                items={paginatedOutEntries}
+                loading={loading}
+                emptyLabel={t(
+                  "vinfastParts:NO_DATA_OUT",
+                  "Không có dữ liệu xuất",
+                )}
+                containerClassName="h-auto overflow-y-auto max-h-64"
+                summaryRow={{
+                  invoiceNo: (
+                    <div className="text-right w-full font-semibold pr-2">
+                      {t("vinfastParts:TOTAL", "Tổng cộng")}:
+                    </div>
+                  ),
+                  qty: (
+                    <div className="text-right font-semibold text-rose-600 tabular-nums">
+                      {totalOutQty.toLocaleString()}
+                    </div>
+                  ),
+                }}
+                page={outPage}
+                pageSize={outPageSize}
+                onPage={setOutPage}
+                onPageSize={setOutPageSize}
+                total={outEntries.length}
+                totalPages={Math.ceil(outEntries.length / outPageSize)}
               />
             </DrawerSection>
           </div>

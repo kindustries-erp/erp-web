@@ -519,21 +519,12 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
   }, [filteredRows, page, pageSize]);
 
   const summaryRow = useMemo(() => {
-    const totalOutPrice = filteredRows.reduce(
-      (acc, curr: FifoUnitRow) => acc + (curr.outPrice || 0),
-      0,
-    );
     const totalProfit = filteredRows.reduce(
       (acc, curr: FifoUnitRow) => acc + (curr.profit || 0),
       0,
     );
 
     return {
-      outPrice: (
-        <div className="tabular-nums font-semibold text-right text-blue-600 w-full">
-          {money(totalOutPrice)}
-        </div>
-      ),
       profit: (
         <div
           className={`tabular-nums font-semibold text-right ${totalProfit < 0 ? "text-red-500" : "text-emerald-600"}`}
