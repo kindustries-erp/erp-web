@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { FifoUnitLedgerSection } from "./fifo-unit-ledger/FifoUnitLedgerSection";
 import { useTranslation } from "react-i18next";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { DrawerSection, DrawerRow } from "@/shared/components/DrawerModal";
 import { Badge } from "@/shared/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { format } from "date-fns";
 import { money } from "@/shared/utils/format";
@@ -47,22 +49,16 @@ export function VinfastPartsStockDetailDrawer({
   catalogData,
 }: VinfastPartsStockDetailDrawerProps) {
   const { t } = useTranslation(["reports", "common"]);
-  const [loading, setLoading] = useState(false);
-  const [entries, setEntries] = useState<LedgerEntry[]>([]);
+  const { data: entriesData, isLoading: loading } = useQuery({
+    queryKey: ["vinfast-parts", "ledger-history", sku],
+    queryFn: async () => {
+      const res = await api.get(`/api/v1/vinfast-parts/ledger/${sku}`);
+      return res.data as LedgerEntry[];
+    },
+    enabled: open && !!sku,
+  });
 
-  useEffect(() => {
-    if (open && sku) {
-      setLoading(true);
-      api
-        .get(`/api/v1/vinfast-parts/ledger/${sku}`)
-        .then((res) => {
-          setEntries(res.data);
-        })
-        .catch((err) => console.error("Failed to fetch ledger", err))
-        .finally(() => setLoading(false));
-    }
-  }, [open, sku]);
-
+  const entries = entriesData || [];
   const inEntries = entries.filter((e) => e.direction === "IN");
   const outEntries = entries.filter((e) => e.direction === "OUT");
 
@@ -183,6 +179,8 @@ export function VinfastPartsStockDetailDrawer({
               )}
             </DrawerSection>
           </div>
+
+          <FifoUnitLedgerSection sku={sku} />
         </div>
       }
       rightPanel={
