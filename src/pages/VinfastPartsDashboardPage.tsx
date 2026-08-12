@@ -2,7 +2,7 @@ import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
@@ -22,6 +22,9 @@ import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/V
 
 export function VinfastPartsDashboardPage() {
   const queryClient = useQueryClient();
+  const isFetchingCount = useIsFetching({
+    queryKey: ["vinfast-parts-dashboard"],
+  });
 
   const filterConfig = React.useMemo(() => {
     return {
@@ -62,7 +65,7 @@ export function VinfastPartsDashboardPage() {
     [],
   );
 
-  const { data: allData, isLoading: isLoadingAll } = useQuery({
+  const { data: allData } = useQuery({
     queryKey: [
       "vinfast-parts-dashboard",
       "all",
@@ -92,10 +95,13 @@ export function VinfastPartsDashboardPage() {
       icon={<LayoutDashboard className="h-4 w-4" />}
       filterConfig={filterConfig}
       filter={filter}
-      loading={isLoadingAll}
+      loading={isFetchingCount > 0}
       onRefresh={() => {
         queryClient.invalidateQueries({
           queryKey: ["vinfast-parts-dashboard"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["vinfast-parts-dashboard-table"],
         });
       }}
     >
@@ -252,12 +258,14 @@ export function VinfastPartTrendChart({
   filterState,
   groupBy,
   itemCode,
+  chartHeight = 300,
 }: {
   title: string;
   vehicleType: string;
   filterState: any;
   groupBy: string;
   itemCode?: string;
+  chartHeight?: number;
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -295,7 +303,7 @@ export function VinfastPartTrendChart({
 
   return (
     <Panel title={title}>
-      <div className="relative h-[300px]">
+      <div className="relative" style={{ height: chartHeight }}>
         {!isLoading && trendLabels.length > 0 ? (
           <BarChart
             labels={trendLabels}

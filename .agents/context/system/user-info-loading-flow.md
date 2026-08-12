@@ -35,7 +35,7 @@ Tài liệu mô tả cách hệ thống ERP tải thông tin user (profile, role
     "department_id": { "id": "dept-uuid", "department_name": "IT", ... },
     "position_id": { "id": "pos-uuid", "position_name": "Manager", ... },
     "employment_status": "active",
-    "directus_user_id": {
+    "user_id": {
       "role": {
         "id": "role-uuid",
         "name": "Approver",
@@ -215,7 +215,7 @@ bootstrapAction: async () => {
     ...
     "department_id": { nested object },
     "position_id": { nested object },
-    "directus_user_id": { nested object with role info }
+    "user_id": { nested object with role info }
   }
 }
 ```
@@ -236,14 +236,14 @@ bootstrapAction: async () => {
 
 ### Current approach
 
-Roles are extracted from `employee.directus_user_id.role` during login/bootstrap.
+Roles are extracted from `employee.user_id.role` during login/bootstrap.
 
 No dedicated API call to fetch user roles separately; using nested data from Employee object.
 
 ### Related APIs (not currently used)
 
-- **GET** `/api/v1/rbac/users/{directusUserId}/roles` — Returns role IDs for a hệ thống user
-- **PATCH** `/api/v1/rbac/users/{directusUserId}/roles` — Update user's roles
+- **GET** `/api/v1/rbac/users/{userId}/roles` — Returns role IDs for a hệ thống user
+- **PATCH** `/api/v1/rbac/users/{userId}/roles` — Update user's roles
 
 Code prepared but not invoked:
 
@@ -300,13 +300,13 @@ const policyEditor = usePermissionsEditor({
 
 ### Purpose
 
-Convert user IDs (directus_user_id) to display names (full_name or email) for UI rendering.
+Convert user IDs (user_id) to display names (full_name or email) for UI rendering.
 
 ### Data source
 
 **GET** `/api/v1/employees?pageSize=500`
 
-Returns list of all employees with their `directus_user_id` relations.
+Returns list of all employees with their `user_id` relations.
 
 ### Mapping functions
 
@@ -327,18 +327,18 @@ const list = Array.isArray(payload)
   ? payload
   : ((payload.items ?? payload.data ?? []) as UserItem[]);
 
-// Extracts directus_user_id from relation object
-const directusKeys =
-  typeof u.directus_user_id === "string"
-    ? [u.directus_user_id]
-    : Array.isArray(u.directus_user_id?.users)
-      ? u.directus_user_id.users
-      : Array.isArray(u.directus_user_id?.role?.users)
-        ? u.directus_user_id.role.users
+// Extracts user_id from relation object
+const userKeys =
+  typeof u.user_id === "string"
+    ? [u.user_id]
+    : Array.isArray(u.user_id?.users)
+      ? u.user_id.users
+      : Array.isArray(u.user_id?.role?.users)
+        ? u.user_id.role.users
         : [];
 
 // Builds map with fallback
-for (const key of [...directusKeys, u.id].filter(Boolean)) {
+for (const key of [...userKeys, u.id].filter(Boolean)) {
   map[key] = displayName;
 }
 ```

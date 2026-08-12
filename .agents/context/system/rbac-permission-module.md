@@ -140,7 +140,7 @@ File: `src/modules/system/types/rbac.ts`
   - `gw_partner_contacts`
   - `gw_partner_bank_accounts`
 - He thong:
-  - `directus_users`
+  - `users`
 
 `CRUD_ACTIONS` gom:
 

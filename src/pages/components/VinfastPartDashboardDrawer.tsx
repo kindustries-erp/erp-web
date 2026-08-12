@@ -1,16 +1,35 @@
 import { DrawerModal } from "@/shared/components/DrawerModal";
-import { PanelRightOpen } from "lucide-react";
 import { VinfastPartTrendChart } from "../VinfastPartsDashboardPage";
 import { money } from "@/shared/utils/format";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/core/api/axiosInstance";
 import { VinfastPartDashboardTableRow } from "@/shared/hooks/useVinfastPartsDashboardTable";
-import { Button } from "@/shared/components/ui/Button";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StandardTable } from "@/shared/components/StandardTable";
 import type { DataTableColumn } from "@/shared/components/DataTable";
+import { Badge } from "@/shared/components/ui/badge";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { format } from "date-fns";
+
+function formatTaxInvoiceStatus(val?: number | null): string {
+  switch (val) {
+    case 1:
+      return "Mới";
+    case 2:
+      return "Thay thế";
+    case 3:
+      return "Điều chỉnh";
+    case 4:
+      return "Bị thay thế";
+    case 5:
+      return "Bị điều chỉnh";
+    case 6:
+      return "Bị hủy";
+    default:
+      return "—";
+  }
+}
 
 interface Props {
   open: boolean;
@@ -74,7 +93,47 @@ export function VinfastPartDashboardDrawer({
     [data],
   );
 
+  const buyTotals = useMemo(
+    () => ({
+      qty: buyData.reduce((s, r) => s + (Number(r.qty) || 0), 0),
+      preVatAmount: buyData.reduce(
+        (s, r) => s + (Number(r.preVatAmount) || 0),
+        0,
+      ),
+      vatAmount: buyData.reduce((s, r) => s + (Number(r.vatAmount) || 0), 0),
+      totalAmount: buyData.reduce(
+        (s, r) => s + (Number(r.totalAmount) || 0),
+        0,
+      ),
+    }),
+    [buyData],
+  );
+
+  const sellTotals = useMemo(
+    () => ({
+      qty: sellData.reduce((s, r) => s + (Number(r.qty) || 0), 0),
+      preVatAmount: sellData.reduce(
+        (s, r) => s + (Number(r.preVatAmount) || 0),
+        0,
+      ),
+      vatAmount: sellData.reduce((s, r) => s + (Number(r.vatAmount) || 0), 0),
+      totalAmount: sellData.reduce(
+        (s, r) => s + (Number(r.totalAmount) || 0),
+        0,
+      ),
+    }),
+    [sellData],
+  );
+
   const columns: DataTableColumn<any>[] = [
+    {
+      key: "stt",
+      header: "STT",
+      size: 50,
+      headerClassName: "text-center",
+      className: "text-center text-muted-foreground",
+      cell: (row, index) => index,
+    },
     {
       key: "invoiceDate",
       header: "Ngày HĐ",
@@ -94,33 +153,22 @@ export function VinfastPartDashboardDrawer({
     {
       key: "invoiceNo",
       header: "Số HĐ",
-      size: 90,
+      size: 120,
       headerClassName: "text-center",
       cell: (row) => (
         <div className="flex items-center gap-1">
           {onOpenInvoice && row.invoiceId ? (
-            <div className="flex items-center gap-1.5 group w-full">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenInvoice(row.invoiceId);
-                }}
-                className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
-                title="Mở chi tiết"
-              >
-                <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
-              </Button>
-              <span
-                className="truncate text-primary"
-                title={row.invoiceNo || "—"}
-              >
-                {row.invoiceNo || "—"}
-              </span>
-            </div>
+            <TableText
+              text={row.invoiceNo || "—"}
+              enableCopy={true}
+              tooltip={true}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
+                onOpenInvoice(row.invoiceId);
+              }}
+            />
           ) : (
-            <span className="text-primary">{row.invoiceNo || "—"}</span>
+            <TableText text={row.invoiceNo || "—"} enableCopy={true} />
           )}
           {row.status && row.status !== "CONFIRMED" && (
             <span
@@ -139,11 +187,11 @@ export function VinfastPartDashboardDrawer({
     {
       key: "partnerName",
       header: "Đối tác",
-      size: 180,
+      size: 200,
       headerClassName: "text-center",
       cell: (row) => (
         <Tooltip content={row.partnerName || ""}>
-          <div className="truncate max-w-[180px]" title={row.partnerName || ""}>
+          <div className="truncate max-w-[200px]" title={row.partnerName || ""}>
             {row.partnerName || "—"}
           </div>
         </Tooltip>
@@ -158,19 +206,56 @@ export function VinfastPartDashboardDrawer({
       cell: (row) => row.taxCode || "—",
     },
     {
+      key: "taxInvoiceStatus",
+      header: "Trạng thái GDT",
+      size: 130,
+      enableResizing: true,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row) => {
+        const lbl = formatTaxInvoiceStatus(row.taxInvoiceStatus);
+        if (row.taxInvoiceStatus == null)
+          return <span className="text-muted-foreground text-xs">—</span>;
+        let badgeClass = "w-[90px] border-slate-200 bg-slate-50 text-slate-700";
+        switch (row.taxInvoiceStatus) {
+          case 1:
+            badgeClass =
+              "w-[90px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100";
+            break;
+          case 2:
+          case 3:
+          case 5:
+            badgeClass =
+              "w-[90px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
+            break;
+          case 4:
+          case 6:
+            badgeClass =
+              "w-[90px] border-red-200 bg-red-50 text-red-700 hover:bg-red-100";
+            break;
+        }
+        return (
+          <Tooltip content={lbl}>
+            <Badge variant="ghost" className={`border ${badgeClass}`}>
+              <span className="truncate block max-w-full">{lbl}</span>
+            </Badge>
+          </Tooltip>
+        );
+      },
+    },
+    {
       key: "description",
       header: "Diễn giải",
-      size: 220,
+      size: 250,
       headerClassName: "text-center",
       cell: (row) => (
         <Tooltip content={row.description || ""}>
-          <div className="truncate max-w-[220px]" title={row.description || ""}>
+          <div className="truncate max-w-[250px]" title={row.description || ""}>
             {row.description || "—"}
           </div>
         </Tooltip>
       ),
     },
-    { key: "unit", header: "ĐVT", size: 70, headerClassName: "text-center" },
     {
       key: "qty",
       header: "Số lượng",
@@ -247,6 +332,7 @@ export function VinfastPartDashboardDrawer({
               filterState={filterState}
               groupBy={groupBy}
               itemCode={part.itemCode}
+              chartHeight={200}
             />
           )}
         </div>
@@ -264,10 +350,42 @@ export function VinfastPartDashboardDrawer({
               variant="spreadsheet"
               minWidth={1000}
               enableColumnResizing={true}
+              containerClassName="max-h-[216px] overflow-y-auto"
               columns={columns as any}
               items={buyData}
+              loading={isLoading}
               loadingRows={isLoading ? 3 : 0}
               getRowKey={(row: any) => row._rowKey}
+              summaryRow={{
+                partnerName: (
+                  <span className="font-semibold text-right block">
+                    Tổng cộng
+                  </span>
+                ),
+                qty: (
+                  <span className="font-semibold text-right block tabular-nums">
+                    {Number(buyTotals.qty).toLocaleString("vi-VN", {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })}
+                  </span>
+                ),
+                preVatAmount: (
+                  <span className="font-semibold text-right block tabular-nums text-slate-700">
+                    {money(buyTotals.preVatAmount)}
+                  </span>
+                ),
+                vatAmount: (
+                  <span className="font-semibold text-right block tabular-nums text-slate-700">
+                    {money(buyTotals.vatAmount)}
+                  </span>
+                ),
+                totalAmount: (
+                  <span className="font-bold text-right block tabular-nums text-emerald-700">
+                    {money(buyTotals.totalAmount)}
+                  </span>
+                ),
+              }}
             />
           </div>
 
@@ -283,10 +401,42 @@ export function VinfastPartDashboardDrawer({
               variant="spreadsheet"
               minWidth={1000}
               enableColumnResizing={true}
+              containerClassName="max-h-[216px] overflow-y-auto"
               columns={columns as any}
               items={sellData}
+              loading={isLoading}
               loadingRows={isLoading ? 3 : 0}
               getRowKey={(row: any) => row._rowKey}
+              summaryRow={{
+                partnerName: (
+                  <span className="font-semibold text-right block">
+                    Tổng cộng
+                  </span>
+                ),
+                qty: (
+                  <span className="font-semibold text-right block tabular-nums">
+                    {Number(sellTotals.qty).toLocaleString("vi-VN", {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    })}
+                  </span>
+                ),
+                preVatAmount: (
+                  <span className="font-semibold text-right block tabular-nums text-slate-700">
+                    {money(sellTotals.preVatAmount)}
+                  </span>
+                ),
+                vatAmount: (
+                  <span className="font-semibold text-right block tabular-nums text-slate-700">
+                    {money(sellTotals.vatAmount)}
+                  </span>
+                ),
+                totalAmount: (
+                  <span className="font-bold text-right block tabular-nums text-emerald-700">
+                    {money(sellTotals.totalAmount)}
+                  </span>
+                ),
+              }}
             />
           </div>
         </div>

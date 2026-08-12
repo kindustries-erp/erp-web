@@ -1,6 +1,4 @@
 import { useState, useMemo, useCallback } from "react";
-import { PanelRightOpen, Check, Copy } from "lucide-react";
-import { Button } from "@/shared/components/ui/Button";
 import { StandardTable } from "@/shared/components/StandardTable";
 import { money } from "@/shared/utils/format";
 import api from "@/core/api/axiosInstance";
@@ -10,6 +8,7 @@ import {
 } from "@/shared/hooks/useVinfastPartsDashboardTable";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 
 interface Props {
   filterState: any;
@@ -26,28 +25,6 @@ export function VinfastPartDashboardTable({
 }: Props) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-
-  const CopyIconBtn = ({ text }: { text: string }) => {
-    const [copied, setCopied] = useState(false);
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-200 rounded text-slate-500 ml-1"
-        title="Copy"
-      >
-        {copied ? (
-          <Check className="w-3.5 h-3.5 text-green-600" />
-        ) : (
-          <Copy className="w-3.5 h-3.5" />
-        )}
-      </button>
-    );
-  };
 
   const tableState = useTableColumnState(
     `vinfast-parts-dashboard-${vehicleType}`,
@@ -150,7 +127,7 @@ export function VinfastPartDashboardTable({
     />
   );
 
-  const { data, isLoading } = useVinfastPartsDashboardTable(
+  const { data, isLoading, isFetching } = useVinfastPartsDashboardTable(
     filterState,
     page,
     limit,
@@ -163,29 +140,20 @@ export function VinfastPartDashboardTable({
       {
         key: "itemCode",
         header: renderTextHeaderFilter("itemCode", "Mã phụ tùng"),
-        className: "w-[150px] text-left",
-        headerClassName: "w-[150px] text-left",
+        size: 200,
+        enableResizing: true,
+        className: "w-[200px] text-left",
+        headerClassName: "w-[200px] text-left",
         cell: (row: any) => (
-          <div className="flex items-center gap-1.5 group w-full">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e: any) => {
-                e.stopPropagation();
-                onRowClick?.(row);
-              }}
-              className="h-5 w-5 p-0 opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
-              title="Mở chi tiết"
-            >
-              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
-            </Button>
-            <div className="flex items-center text-slate-700 flex-1 min-w-0">
-              <span className="truncate" title={row.itemCode}>
-                {row.itemCode}
-              </span>
-              <CopyIconBtn text={row.itemCode} />
-            </div>
-          </div>
+          <TableText
+            text={row.itemCode}
+            enableCopy={true}
+            tooltip={true}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              onRowClick?.(row);
+            }}
+          />
         ),
       },
       {
@@ -304,7 +272,7 @@ export function VinfastPartDashboardTable({
           onPageSize={setLimit}
           page={page}
           pageSize={limit}
-          loading={isLoading}
+          loading={isLoading || isFetching}
           minWidth={500}
           enableColumnResizing={false}
           variant="spreadsheet"

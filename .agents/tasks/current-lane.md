@@ -79,4 +79,4 @@ Related closure artifact:
 
 ## Historical signal
 
-Những task cũ về AR / voucher / shell experiments / tax-portal / einvoice / Directus-first flow phải được xem là historical/reference trừ khi user mở lại scope đó.
+Những task cũ về AR / voucher / shell experiments / tax-portal / einvoice phải được xem là historical/reference trừ khi user mở lại scope đó.
