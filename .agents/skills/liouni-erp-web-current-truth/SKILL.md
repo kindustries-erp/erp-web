@@ -19,10 +19,7 @@ Use this skill only inside this repository.
 ## Current truth
 
 - Main ERP lane = GitHub + branch `erp-master`
-- Directus = legacy/reference only unless task explicit says legacy scope
-- Gitea = historical only
-- Old dev domains are not default smoke endpoints
-- Removed `liouni-erp-core-*` stacks must not be assumed to exist
+- API contract phải bám schema, constraint, relation, và runtime config đang dùng thật
 
 ## Web responsibilities
 
@@ -38,7 +35,6 @@ Use this skill only inside this repository.
 - Inspect current state before edits
 - Use Bun/Bunx first
 - Be evidence-first
-- Do not let historical Directus/Gitea-era docs drive new implementation by default
 - No code without a task file under `docs/tasks/`
 - Keep task checklist updated in realtime
 - Before commit/push, run `bun run check:ci`, `bun run test`, and `bun run build`

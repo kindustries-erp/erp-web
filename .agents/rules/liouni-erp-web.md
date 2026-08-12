@@ -7,8 +7,6 @@ Apply to all work in this repo.
 - load `@.agents/skills/liouni-erp-web-current-truth/SKILL.md`
 - read `@.agents/context/current-truth.md` first
 - use repo-local context as default guidance
-- treat Directus as legacy/reference unless the task explicitly says legacy scope
-- treat Gitea as historical only
 - MUST use bun/bunx exclusively (do NOT use npm)
 - when debugging and testing API locally, always start dev on port 10010
 - by default, always work on ERP_MASTER_DATABASE_URL unless ERP_KLTOUS_STAGING_DATABASE_URL or ERP_KLTOUS_MASTER_DATABASE_URL is explicitly indicated
@@ -48,11 +46,6 @@ Apply to all work in this repo.
 - Do not let historical docs override repo-local current truth.
 - Do not add domain-heavy logic into shared generic components.
 - Do not report a task DONE from docs alone; verify with code state, build/test evidence, and git state.
-
-## Historical warning
-
-If a file mentions Directus-first flows, Gitea deploys, old dev domains, or `erp-core`, classify it first.
-Only repo-local current-truth docs should drive new implementation by default.
 
 ## SpreadsheetPageTemplate filtering bug
 

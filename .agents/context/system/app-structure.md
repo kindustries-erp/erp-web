@@ -452,7 +452,7 @@ The permission matrix covers these hệ thống collections, grouped by domain:
 | Tài chính | `gw_payment_vouchers`, `gw_payment_voucher_attachments`, `gw_payment_voucher_approval_logs`, `gw_cash_funds`, `gw_company_bank_accounts`, `gw_chart_of_accounts`, `gw_accounting_accounts`, `gw_opening_balances`, `gw_voucher_numbering_configs` |
 | Nhân sự   | `gw_employees`, `gw_departments`, `gw_positions`                                                                                                                                                                                                  |
 | Đối tác   | `gw_business_partners`, `gw_business_partner_roles`, `gw_business_partner_contacts`, `gw_business_partner_bank_accounts`                                                                                                                          |
-| Hệ thống  | `directus_roles`                                                                                                                                                                                                                                  |
+| Hệ thống  | `system_roles`                                                                                                                                                                                                                                    |
 
 ### Employee PATCH payload
 
@@ -461,8 +461,8 @@ The permission matrix covers these hệ thống collections, grouped by domain:
 ```ts
 {
   role_id?:   string | null   // Base hệ thống role (single)
-  policy_id?: string | null   // Custom policy (single; BE manages directus_access)
+  policy_id?: string | null   // Custom policy (single; BE manages system_access)
 }
 ```
 
-Backend handles role assignment (`directus_users.role`) and custom policy (`directus_access`) in one request.
+Backend handles role assignment (`users.role`) and custom policy (`system_access`) in one request.
