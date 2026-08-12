@@ -1,3 +1,4 @@
+import { VinfastPartsStockExportDrawer } from "./VinfastPartsStockExportDrawer";
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,6 +30,7 @@ export function VinfastPartsStockTemplate({
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [catalogData, setCatalogData] = useState<any>(null);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
@@ -359,7 +361,7 @@ export function VinfastPartsStockTemplate({
                 label: t("vinfastParts:DOWNLOAD_REPORT", "Tải bảng kê"),
                 icon: <DownloadCloud className="w-4 h-4 text-green-600" />,
                 onClick: () => {
-                  alert("Tính năng đang phát triển");
+                  setExportOpen(true);
                 },
               },
             ],
@@ -399,6 +401,23 @@ export function VinfastPartsStockTemplate({
       <VinfastPartsSyncDrawer
         open={syncDrawerOpen}
         onClose={() => setSyncDrawerOpen(false)}
+      />
+
+      <VinfastPartsStockExportDrawer
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        buildBaseQuery={() => ({
+          vehicleType,
+          search:
+            tableState.columnSearch["name"] ||
+            tableState.columnSearch["sku"] ||
+            "",
+          sortBy: activeSort ? activeSort.replace("-", "") : undefined,
+          sortDir: sortOrder as any,
+          sorts: JSON.stringify(tableState.sorts),
+          columnSearch: JSON.stringify(tableState.columnSearch),
+          columnFilters: JSON.stringify(tableState.columnFilters),
+        })}
       />
     </>
   );
