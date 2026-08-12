@@ -38,6 +38,7 @@ Format: `Array<[i18nKey, pageKey?]>` — nếu có `pageKey` thì breadcrumb đ�
 ```
 
 Ví dụ thực tế (Kế toán > Dòng tiền > Sao kê ngân hàng):
+
 ```ts
 "bank-statement": [
   ["breadcrumb.accounting"],
@@ -68,25 +69,27 @@ useEffect(() => {
 Tab trên TabBar hiển thị tên trang, được lấy từ `SECTION_ROOTS` trong `appStore.ts`. Khi tạo page mới:
 
 **Bước 1**: Thêm `PageKey` mới vào type `PageKey` trong `src/shared/types/index.ts`:
+
 ```ts
 export type PageKey =
   // ... existing keys
-  | "[module]-dashboard"
-  | "[module]-list";
+  "[module]-dashboard" | "[module]-list";
 ```
 
 **Bước 2**: Đăng ký label cho tab trong `SECTION_ROOTS` tại `appStore.ts`:
+
 ```ts
 export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   // ... existing entries
   "[module]-dashboard": {
-    labelKey: "nav.items.[module]Dashboard",  // key trong nav locale
-    group: "accounting",  // group của sidebar section (accounting, inventory, sales, ...)
+    labelKey: "nav.items.[module]Dashboard", // key trong nav locale
+    group: "accounting", // group của sidebar section (accounting, inventory, sales, ...)
   },
 };
 ```
 
 **Bước 3**: Thêm i18n key cho `labelKey` vào file `src/core/locale/system/nav/vi.ts` và `en.ts`:
+
 ```ts
 // nav/vi.ts
 items: {
@@ -102,12 +105,13 @@ items: {
 ```
 
 **Bước 4**: Thêm key breadcrumb vào `src/core/locale/system/breadcrumb/vi.ts` và `en.ts`:
+
 ```ts
 // breadcrumb/vi.ts
 export const breadcrumbVi = {
   // ... existing
   "[module]Dashboard": "Tổng quan [Tên Module]",
-}
+};
 ```
 
 ## 3. Đa ngôn ngữ (i18n) — BẮT BUỘC
@@ -117,6 +121,7 @@ export const breadcrumbVi = {
 - Tạo file locale đi kèm tại `src/core/locale/[module]/vi.ts` và `src/core/locale/[module]/en.ts`.
 
 **Mẫu đúng:**
+
 ```tsx
 const { t } = useTranslation("exampleDashboard");
 
@@ -131,12 +136,14 @@ const { t } = useTranslation("exampleDashboard");
 ## 4. Các thành phần bên trong Dashboard
 
 ### 3.1. KPI Cards
+
 - Sử dụng component `KpiCard` có sẵn trong app nếu cần hiển thị các chỉ số KPI.
 - **Shadow bắt buộc**: Tất cả card/box phải có `box-shadow` để nổi bật. Dùng class `shadow-sm` hoặc `shadow-md`.
 - **Naming Convention**: Đặt tên rõ ràng theo pattern `[Entity][Metric]KpiCard` (vd: `RevenueSummaryKpiCard`).
 - **Empty State cho KPI**: Nếu data chưa có, hiển thị `<EmptyState>` với `size="sm"`.
 
 ### 3.2. Biểu đồ (Charts)
+
 - Dashboard bắt buộc phải có ít nhất 1 biểu đồ nếu dữ liệu phù hợp (dùng thư viện chart đã có sẵn trong app, như Recharts).
 - **Naming Convention**: Tên component theo pattern `[Entity][Metric]Chart` (vd: `BranchInvoiceChart`, `BranchVatChart`).
 - Tách riêng thành component con trong thư mục `components/` cùng cấp với page (vd: `src/pages/components/`).
@@ -151,16 +158,14 @@ if (!data || data.length === 0) {
   return (
     <div className="rounded-lg border shadow-sm p-4">
       <h4 className="text-sm font-medium mb-2">{title}</h4>
-      <EmptyState
-        message={t("noChartData", "Chưa có dữ liệu")}
-        size="sm"
-      />
+      <EmptyState message={t("noChartData", "Chưa có dữ liệu")} size="sm" />
     </div>
   );
 }
 ```
 
 ### 3.3. Bảng dữ liệu trong Dashboard
+
 - Component bảng nên được tách riêng (vd: `BranchInvoiceTable`).
 - Tuân thủ kỹ năng `standardize-table`.
 - **Empty State bắt buộc**: Bảng trong Dashboard phải truyền `emptyLabel` **và** khi data rỗng sau khi load xong, cũng có thể thay thế bằng `<EmptyState>` nếu muốn giao diện đẹp hơn.
@@ -168,11 +173,13 @@ if (!data || data.length === 0) {
 ## 5. Tạo Hooks kèm theo (BẮT BUỘC)
 
 Khi tạo trang Dashboard, bạn **PHẢI** tự động tạo sẵn các hook đi kèm:
+
 - `use[Module]DashboardStats` — hook lấy dữ liệu thống kê/KPI cho dashboard.
 - Đặt trong thư mục `src/modules/[module-name]/hooks/`.
 - Dù hiện tại chỉ là mock data, vẫn phải tạo file hook với cấu trúc đúng để dev có thể điền API vào sau.
 
 **Mẫu Hook:**
+
 ```ts
 // src/modules/[module]/hooks/use[Module]DashboardStats.ts
 import { useQuery } from "@tanstack/react-query";
@@ -205,13 +212,16 @@ export function ExampleDashboard() {
 
   // const { data, isFetching, refetch } = use[Module]DashboardStats({ dateFrom, dateTo });
 
-  const filterConfig = React.useMemo(() => ({
-    period: true,
-    noDefaultPeriod: true,
-    custom: [
-      // Thêm các filter tuỳ chỉnh ở đây
-    ],
-  }), []);
+  const filterConfig = React.useMemo(
+    () => ({
+      period: true,
+      noDefaultPeriod: true,
+      custom: [
+        // Thêm các filter tuỳ chỉnh ở đây
+      ],
+    }),
+    [],
+  );
 
   const filter = useFilterPanel(filterConfig, () => {});
 
@@ -228,7 +238,6 @@ export function ExampleDashboard() {
       }}
     >
       <div className="flex flex-col gap-8 mb-8">
-
         {/* KPI Cards Section */}
         <div>
           <h3 className="text-lg font-semibold mb-4">
@@ -237,7 +246,9 @@ export function ExampleDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Thay bằng KpiCard hoặc custom card có shadow-sm */}
             <div className="p-4 bg-white rounded-lg shadow-sm border">
-              <p className="text-muted-foreground text-sm">{t("totalRecords", "Tổng số bản ghi")}</p>
+              <p className="text-muted-foreground text-sm">
+                {t("totalRecords", "Tổng số bản ghi")}
+              </p>
               <p className="text-2xl font-bold">0</p>
             </div>
           </div>
@@ -267,10 +278,12 @@ export function ExampleDashboard() {
           {/* <ExampleTable filterState={filter.state} /> */}
           <EmptyState
             message={t("noRecentData", "Chưa có dữ liệu gần đây")}
-            description={t("noRecentDataDesc", "Dữ liệu sẽ hiển thị khi có bản ghi mới")}
+            description={t(
+              "noRecentDataDesc",
+              "Dữ liệu sẽ hiển thị khi có bản ghi mới",
+            )}
           />
         </div>
-
       </div>
     </DashboardTemplate>
   );
@@ -280,6 +293,7 @@ export function ExampleDashboard() {
 ## Summary Checklist trước khi hoàn thành
 
 ### Breadcrumb & TabBar
+
 - [ ] Đã thêm `PageKey` mới vào type trong `src/shared/types/index.ts` chưa?
 - [ ] Đã đăng ký `SECTION_ROOTS` với `labelKey` và `group` trong `appStore.ts` chưa?
 - [ ] Đã đăng ký `BREADCRUMBS` theo đúng level (Module Group > Sub-group > Tên trang) trong `appStore.ts` chưa?
@@ -287,15 +301,18 @@ export function ExampleDashboard() {
 - [ ] Đã thêm breadcrumb key vào `breadcrumb/vi.ts` và `breadcrumb/en.ts` chưa?
 
 ### i18n
+
 - [ ] Sử dụng `<DashboardTemplate>` với đầy đủ props (title, desc, icon, filter, loading, onRefresh) chưa?
 - [ ] Text tĩnh có dùng `useTranslation` (`t(...)`) chưa? **KHÔNG hardcode.**
 - [ ] Đã tạo file locale module `vi.ts` và `en.ts` đi kèm chưa?
 
 ### UI Components
+
 - [ ] Các card / box thành phần có box-shadow (`shadow-sm` hoặc `shadow-md`) chưa?
 - [ ] Biểu đồ (Chart) khi data rỗng đã dùng `<EmptyState size="sm">` thay cho vùng trắng chưa?
 - [ ] Bảng (Table) con nếu có, khi rỗng đã có `emptyLabel` hoặc `<EmptyState>` chưa?
 - [ ] Đã tách riêng biểu đồ thành component con (`[Entity][Metric]Chart`) chưa?
 
 ### Hooks
+
 - [ ] Đã tạo sẵn hook `use[Module]DashboardStats` trong `src/modules/[module]/hooks/` chưa?
