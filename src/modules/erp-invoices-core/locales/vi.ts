@@ -169,4 +169,12 @@ export const erpInvoicesVi = {
   "invoiceTemplate.stamp.signedDate": "Ký ngày",
   "invoiceTemplate.stamp.invoiceNo": "Số hóa đơn",
   "invoiceTemplate.stamp.serialNo": "Ký hiệu",
+
+  // Sinvoice Draft Sync - toasts & notifications
+  "sinvoiceDraft.syncSuccess":
+    "Đã cập nhật: +{{added}} mới, -{{removed}} đã xoá. Tổng: {{synced}}",
+  "sinvoiceDraft.syncFail": "Đồng bộ thất bại",
+  "sinvoiceDraft.notifyTitle": "Đồng bộ hóa đơn nháp thành công",
+  "sinvoiceDraft.notifyMessage":
+    "Danh sách hóa đơn nháp Viettel đã cập nhật: +{{added}} mới, -{{removed}} đã xoá. Tổng hiện tại: {{syncedCount}} nháp.",
 };
