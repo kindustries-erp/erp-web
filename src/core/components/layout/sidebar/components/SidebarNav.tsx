@@ -115,7 +115,10 @@ export function SidebarNav({
   return (
     <div className="flex-1 overflow-y-auto overflow-x-hidden">
       {/* Dashboard */}
-      {hasMatch([t("nav.items.dashboard")]) && (
+      {hasMatch([
+        t("nav.items.dashboard"),
+        t("nav.items.workshopDashboard"),
+      ]) && (
         <NavSection collapsed={c}>
           <NavItem
             collapsed={c}
@@ -126,6 +129,14 @@ export function SidebarNav({
             active={currentPage === "dashboard"}
             onClick={() => navTo("dashboard")}
             contextPage="dashboard"
+          />
+          <NavItem
+            collapsed={c}
+            icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
+            label={t("nav.items.workshopDashboard")}
+            active={currentPage === "workshop-dashboard"}
+            onClick={() => navTo("workshop-dashboard")}
+            contextPage="workshop-dashboard"
           />
         </NavSection>
       )}

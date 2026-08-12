@@ -258,6 +258,13 @@ const BudgetPage = lazy(() =>
     default: m.BudgetPage,
   })),
 );
+const WorkshopOperationsDashboard = lazy(() =>
+  import("@/pages/WorkshopOperationsDashboard").then((m) => ({
+    default: m.WorkshopOperationsDashboard,
+  })),
+);
+const loadWorkshopOperationsDashboard = () =>
+  import("@/pages/WorkshopOperationsDashboard");
 
 const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   dashboard: Dashboard,
@@ -317,10 +324,12 @@ const PAGE_COMPONENTS: Partial<Record<PageKey, React.ElementType>> = {
   "vinfast-parts-xemay-stock": VinfastPartsMotoStockPage,
   "vinfast-invoice-settlement": VinfastSettlementPage,
   "purchasing-report-dashboard": PurchasingReportDashboardPage,
+  "workshop-dashboard": WorkshopOperationsDashboard,
 };
 
 const PAGE_PRELOADERS: Partial<Record<PageKey, PageLoader>> = {
   dashboard: loadDashboard,
+  "workshop-dashboard": loadWorkshopOperationsDashboard,
   "inventory-dashboard": loadInventoryDashboard,
   purchasing: loadMuaHang,
   "erp-inventory-stock": loadInventoryStockPage,

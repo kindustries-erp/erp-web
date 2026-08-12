@@ -104,6 +104,7 @@ export const navVi = {
     garageReceivables: "Phải thu từ Garage",
     garagePayables: "Phải trả cho Garage",
     garageGrossProfit: "Doanh thu & Chi phí",
+    workshopDashboard: "Xưởng KD & Vận hành",
   },
   bottom: {
     themeLight: "Giao diện sáng",
