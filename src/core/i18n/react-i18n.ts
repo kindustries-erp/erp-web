@@ -7,6 +7,8 @@ import { erpInvoicesVi } from "@/core/locale/accounting/erpInvoices/vi";
 import { erpInvoicesEn } from "@/core/locale/accounting/erpInvoices/en";
 import { garageVi } from "@/core/locale/garage/garage/vi";
 import { garageEn } from "@/core/locale/garage/garage/en";
+import { vinfastPartsVi } from "@/core/locale/inventory/vinfastParts/vi";
+import { vinfastPartsEn } from "@/core/locale/inventory/vinfastParts/en";
 
 const getLang = () => (useAppStore.getState().locale === "en" ? "en" : "vi");
 
@@ -16,11 +18,13 @@ i18n.use(initReactI18next).init({
       budget: budgetVi,
       erpInvoices: erpInvoicesVi,
       garage: garageVi,
+      vinfastParts: vinfastPartsVi,
     },
     en: {
       budget: budgetEn,
       erpInvoices: erpInvoicesEn,
       garage: garageEn,
+      vinfastParts: vinfastPartsEn,
     },
   },
   lng: getLang(),

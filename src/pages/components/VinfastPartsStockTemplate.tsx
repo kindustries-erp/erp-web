@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, FileText, RefreshCw, DownloadCloud } from "lucide-react";
 import api from "@/core/api/axiosInstance";
 import { DataTableColumn } from "@/shared/components/DataTable";
@@ -24,7 +24,8 @@ export function VinfastPartsStockTemplate({
   title,
   description,
 }: VinfastPartsStockTemplateProps) {
-  const { t } = useTranslation(["reports", "common"]);
+  const { t } = useTranslation(["vinfastParts", "reports", "common"]);
+  const queryClient = useQueryClient();
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [catalogData, setCatalogData] = useState<any>(null);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
@@ -157,10 +158,10 @@ export function VinfastPartsStockTemplate({
           <ActionDropdown
             items={[
               {
-                groupLabel: t("actionGroup.search", "TRA CỨU"),
+                groupLabel: t("vinfastParts:SEARCH", "TRA CỨU"),
                 items: [
                   {
-                    label: t("action.viewDetails", "Chi tiết"),
+                    label: t("vinfastParts:VIEW_DETAILS", "Chi tiết"),
                     icon: <Eye className="w-3.5 h-3.5" />,
                     onClick: () => {
                       setCatalogData(row);
@@ -177,7 +178,7 @@ export function VinfastPartsStockTemplate({
         key: "sku",
         header: (
           <TableColumnHeaderFilter
-            title={t("Mã phụ tùng", "Part SKU")}
+            title={t("vinfastParts:PART_SKU", "Mã phụ tùng")}
             sortState={getSortState("sku")}
             onSortChange={(state) => handleSortChange("sku", state)}
             searchValue={tableState.columnSearch["sku"] || ""}
@@ -207,7 +208,7 @@ export function VinfastPartsStockTemplate({
         key: "name",
         header: (
           <TableColumnHeaderFilter
-            title={t("Tên phụ tùng", "Part Name")}
+            title={t("vinfastParts:PART_NAME", "Tên phụ tùng")}
             sortState={getSortState("name")}
             onSortChange={(state) => handleSortChange("name", state)}
             searchValue={tableState.columnSearch["name"] || ""}
@@ -231,7 +232,7 @@ export function VinfastPartsStockTemplate({
         key: "uom",
         header: (
           <TableColumnHeaderFilter
-            title={t("ĐVT", "UOM")}
+            title={t("vinfastParts:UOM", "ĐVT")}
             sortState={getSortState("uom")}
             onSortChange={(state) => handleSortChange("uom", state)}
             searchValue={tableState.columnSearch["uom"] || ""}
@@ -252,7 +253,7 @@ export function VinfastPartsStockTemplate({
         key: "qtyIn",
         header: (
           <TableColumnHeaderFilter
-            title={t("Tổng Nhập", "Total IN")}
+            title={t("vinfastParts:TOTAL_IN", "Tổng Nhập")}
             sortState={getSortState("qtyIn")}
             onSortChange={(state) => handleSortChange("qtyIn", state)}
             searchValue={tableState.columnSearch["qtyIn"] || ""}
@@ -273,7 +274,7 @@ export function VinfastPartsStockTemplate({
         key: "qtyOut",
         header: (
           <TableColumnHeaderFilter
-            title={t("Tổng Xuất", "Total OUT")}
+            title={t("vinfastParts:TOTAL_OUT", "Tổng Xuất")}
             sortState={getSortState("qtyOut")}
             onSortChange={(state) => handleSortChange("qtyOut", state)}
             searchValue={tableState.columnSearch["qtyOut"] || ""}
@@ -294,7 +295,7 @@ export function VinfastPartsStockTemplate({
         key: "qtyBalance",
         header: (
           <TableColumnHeaderFilter
-            title={t("Tồn cuối", "Balance")}
+            title={t("vinfastParts:BALANCE", "Tồn cuối")}
             sortState={getSortState("qtyBalance")}
             onSortChange={(state) => handleSortChange("qtyBalance", state)}
             searchValue={tableState.columnSearch["qtyBalance"] || ""}
@@ -330,15 +331,20 @@ export function VinfastPartsStockTemplate({
         title={title}
         desc={description}
         icon={<FileText className="w-5 h-5 text-gray-500" />}
+        onRefresh={() =>
+          queryClient.invalidateQueries({
+            queryKey: ["vinfast-parts-stock", vehicleType],
+          })
+        }
         activeFilterCount={tableState.activeFilterCount}
         onClearAllFilters={() => tableState.resetFilters()}
-        createLabel={t("action.create", "Tạo mới")}
+        createLabel={t("vinfastParts:CREATE_NEW", "Tạo mới")}
         createActions={[
           {
-            groupLabel: t("actionGroup.system", "HỆ THỐNG"),
+            groupLabel: t("vinfastParts:SYSTEM", "HỆ THỐNG"),
             items: [
               {
-                label: t("action.syncLedger", "Đồng bộ sổ cái"),
+                label: t("vinfastParts:SYNC_LEDGER", "Đồng bộ sổ cái"),
                 icon: <RefreshCw className="w-4 h-4 text-blue-600" />,
                 onClick: () => {
                   setSyncDrawerOpen(true);
@@ -347,10 +353,10 @@ export function VinfastPartsStockTemplate({
             ],
           },
           {
-            groupLabel: t("actionGroup.search", "TRA CỨU"),
+            groupLabel: t("vinfastParts:SEARCH", "TRA CỨU"),
             items: [
               {
-                label: t("action.downloadReport", "Tải bảng kê"),
+                label: t("vinfastParts:DOWNLOAD_REPORT", "Tải bảng kê"),
                 icon: <DownloadCloud className="w-4 h-4 text-green-600" />,
                 onClick: () => {
                   alert("Tính năng đang phát triển");

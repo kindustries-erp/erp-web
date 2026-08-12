@@ -17,7 +17,7 @@ interface FifoUnitLedgerSectionProps {
 }
 
 export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
-  const { t } = useTranslation(["reports", "common"]);
+  const { t } = useTranslation(["vinfastParts", "reports", "common"]);
   const [invoiceIdToOpen, setInvoiceIdToOpen] = useState<string | null>(null);
 
   const [page, setPage] = useState(1);
@@ -81,7 +81,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
         key: "inDate",
         header: () => (
           <TableColumnHeaderFilter
-            title="Ngày nhập"
+            title={t("vinfastParts:IN_DATE", "Ngày nhập")}
             align="center"
             isActive={!!tableState.columnSearch["inDate"]?.length}
             hideFilter={true}
@@ -132,7 +132,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
         key: "inInvoiceNo",
         header: () => (
           <TableColumnHeaderFilter
-            title="Số HĐ vào"
+            title={t("vinfastParts:IN_INVOICE_NO", "Số HĐ vào")}
             align="center"
             isActive={!!tableState.columnFilters["inInvoiceNo"]?.length}
             sortState={
@@ -172,7 +172,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
         key: "outDate",
         header: () => (
           <TableColumnHeaderFilter
-            title="Ngày xuất"
+            title={t("vinfastParts:OUT_DATE", "Ngày xuất")}
             align="center"
             isActive={!!tableState.columnSearch["outDate"]?.length}
             hideFilter={true}
@@ -226,7 +226,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
         key: "outInvoiceNo",
         header: () => (
           <TableColumnHeaderFilter
-            title="Số HĐ ra"
+            title={t("vinfastParts:OUT_INVOICE_NO", "Số HĐ ra")}
             align="center"
             isActive={!!tableState.columnFilters["outInvoiceNo"]?.length}
             sortState={
@@ -271,7 +271,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
         key: "inUnitCost",
         header: () => (
           <TableColumnHeaderFilter
-            title="Giá vốn"
+            title={t("vinfastParts:COST_PRICE", "Giá vốn")}
             align="center"
             isActive={!!tableState.columnFilters["inUnitCost"]?.length}
             sortState={
@@ -294,18 +294,18 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
           />
         ),
         cell: (item) => (
-          <div className="tabular-nums font-semibold text-right w-full">
+          <div className="tabular-nums font-semibold text-right text-red-500 w-full">
             {money(item.inUnitCost)}
           </div>
         ),
         enableResizing: true,
-        size: 150,
+        size: 200,
       },
       {
         key: "outPrice",
         header: () => (
           <TableColumnHeaderFilter
-            title="Giá bán (trước thuế)"
+            title={t("vinfastParts:SELLING_PRICE", "Giá bán (trước VAT)")}
             align="center"
             isActive={!!tableState.columnFilters["outPrice"]?.length}
             sortState={
@@ -330,19 +330,19 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
         cell: (item) => {
           if (item.outPrice == null) return null;
           return (
-            <div className="tabular-nums font-semibold text-right text-blue-600 w-full">
+            <div className="tabular-nums font-semibold text-right text-emerald-600 w-full">
               {money(item.outPrice)}
             </div>
           );
         },
         enableResizing: true,
-        size: 150,
+        size: 200,
       },
       {
         key: "profit",
         header: () => (
           <TableColumnHeaderFilter
-            title="Lợi nhuận"
+            title={t("vinfastParts:PROFIT", "Lợi nhuận")}
             align="center"
             isActive={!!tableState.columnFilters["profit"]?.length}
             sortState={
@@ -374,7 +374,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
           );
         },
         enableResizing: true,
-        size: 150,
+        size: 200,
       },
     ],
     [tableState],
@@ -550,7 +550,10 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
   return (
     <>
       <DrawerSection
-        title="Chi tiết luân chuyển từng sản phẩm"
+        title={t(
+          "vinfastParts:FIFO_UNIT_LEDGER_DETAIL",
+          "Chi tiết luân chuyển từng sản phẩm",
+        )}
         titleExtra={
           activeFilterCount > 0 ? (
             <FilterButton
@@ -567,7 +570,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
           columns={columns as any}
           items={paginatedRows}
           loading={isLoading}
-          emptyLabel={t("Không có dữ liệu", "No data")}
+          emptyLabel={t("vinfastParts:NO_DATA", "Không có dữ liệu")}
           containerClassName="max-h-[440px] overflow-y-auto"
           summaryRow={summaryRow}
           page={page}
