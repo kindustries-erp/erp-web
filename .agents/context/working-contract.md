@@ -12,8 +12,8 @@
 - inspect before edits
 - MUST use bun/bunx exclusively (do NOT use npm)
 - evidence-first
-- before commit/push, `cd` into the repo root
-- before commit/push, remember to run `bun run check:ci`, `bun run test`, and `bun run build`
+- before commit/push, `cd` into the repo root (`./erp-web`)
+- **Strict Git Workflow**: You MUST follow the exact commit/push sequence defined in your `.agents/rules/` file (pull -> build -> check:ci -> test -> commit -> push).
 - push this repo with `github-industries`
 - when debugging and testing API locally, always start dev on port 10010
 - by default, always work on ERP_MASTER_DATABASE_URL unless ERP_KLTOUS_STAGING_DATABASE_URL or ERP_KLTOUS_MASTER_DATABASE_URL is explicitly indicated

@@ -37,7 +37,7 @@ Use this skill only inside this repository.
 - Be evidence-first
 - No code without a task file under `docs/tasks/`
 - Keep task checklist updated in realtime
-- Before commit/push, run `bun run check:ci`, `bun run test`, and `bun run build`
+- **Strict Git Workflow**: Follow the exact sequence: pull -> build -> check:ci -> test -> commit -> push (see rules for exact trigger definitions).
 - When task docs are stale, verify with code + build/test + git state before correcting status/checklist
 
 ## Team-scale reminders
