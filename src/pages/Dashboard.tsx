@@ -19,7 +19,7 @@ import type {
   VinfastPartsSummaryPayload,
 } from "@/modules/dashboard-core/types";
 import { DEFAULT_COLORS } from "@/modules/dashboard-core/components/DashboardTabsContent";
-import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { ComingSoon } from "@/pages/ComingSoon";
 
 function DashboardContent() {
@@ -217,9 +217,9 @@ function DashboardContent() {
 }
 
 export function Dashboard() {
-  const profile = useAuthStore((state) => state.profile);
+  const hasAdminPerm = useHasPermission("admin_users", "read");
 
-  if (profile?.email !== "admin@liouni.com") {
+  if (!hasAdminPerm) {
     return <ComingSoon />;
   }
 

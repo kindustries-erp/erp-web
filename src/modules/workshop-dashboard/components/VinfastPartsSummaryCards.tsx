@@ -78,9 +78,9 @@ export function VinfastPartTrendChart({
 
   const trend = data?.trend || [];
   const trendLabels = trend.map((t) => t.month);
-  const trendBuy = trend.map((t) => t.totalBuy);
-  const trendSell = trend.map((t) => t.totalSell);
-  const trendProfit = trend.map((t) => t.profit);
+  const trendBuy = trend.map((t: any) => t.cogs || 0);
+  const trendSell = trend.map((t: any) => t.revenue || 0);
+  const trendProfit = trend.map((t: any) => t.grossProfit || 0);
 
   return (
     <Panel title={title}>
