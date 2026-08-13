@@ -58,6 +58,9 @@ export interface DrawerModalProps {
 
   /** When true, skip slide-in/out animation (instant show/hide). Useful for inline type switching. */
   noAnimation?: boolean;
+
+  /** Custom element to render on the left side of the footer */
+  footerLeft?: React.ReactNode;
 }
 
 // ── Btn helper ─────────────────────────────────────────────────────────────
@@ -115,6 +118,7 @@ export function DrawerModal({
   panelClassName,
   bodyClassName,
   noAnimation = false,
+  footerLeft,
 }: DrawerModalProps) {
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -255,7 +259,7 @@ export function DrawerModal({
         </div>
 
         {/* ── Footer ── */}
-        {actions && actions.length > 0 && (
+        {(footerLeft || (actions && actions.length > 0)) && (
           <div
             className="mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 flex-shrink-0"
             style={{
@@ -264,10 +268,11 @@ export function DrawerModal({
               WebkitBackdropFilter: "blur(16px)",
             }}
           >
-            {/* Left-aligned actions */}
-            <div className="flex gap-2 flex-1 min-w-0">
+            {/* Left-aligned actions or custom footerLeft */}
+            <div className="flex gap-2 flex-1 min-w-0 items-center">
+              {footerLeft}
               {actions
-                .filter((a) => a.align === "left")
+                ?.filter((a) => a.align === "left")
                 .map((a) => (
                   <Btn key={a.label} action={a} />
                 ))}
@@ -275,7 +280,7 @@ export function DrawerModal({
             {/* Right-aligned actions (default) */}
             <div className="flex gap-2">
               {actions
-                .filter((a) => a.align !== "left")
+                ?.filter((a) => a.align !== "left")
                 .map((a) => (
                   <Btn key={a.label} action={a} />
                 ))}

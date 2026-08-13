@@ -1,5 +1,7 @@
 import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { ComingSoon } from "@/pages/ComingSoon";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import React from "react";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
@@ -21,6 +23,9 @@ import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpI
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 
 export function VinfastPartsDashboardPage() {
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({
     queryKey: ["vinfast-parts-dashboard"],
@@ -86,7 +91,16 @@ export function VinfastPartsDashboardPage() {
     },
   });
 
-  const summary = allData?.summary || { totalBuy: 0, totalSell: 0, profit: 0 };
+  const summary = allData?.summary || {
+    revenue: 0,
+    cogs: 0,
+    grossProfit: 0,
+    inventoryValue: 0,
+  };
+
+  if (!isAdminEmail) {
+    return <ComingSoon />;
+  }
 
   return (
     <DashboardTemplate
@@ -100,23 +114,31 @@ export function VinfastPartsDashboardPage() {
         queryClient.invalidateQueries({
           queryKey: ["vinfast-parts-dashboard"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["vinfast-parts-dashboard-table"],
+        });
       }}
     >
       <div className="flex flex-col gap-8 mb-8">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Panel title="Tổng mua">
-            <p className="text-2xl font-bold mt-2 text-[#ea580c]">
-              {money(summary.totalBuy)} đ
-            </p>
-          </Panel>
-          <Panel title="Tổng bán">
+        <div className="grid gap-4 md:grid-cols-4">
+          <Panel title="Doanh thu">
             <p className="text-2xl font-bold mt-2 text-[#059669]">
-              {money(summary.totalSell)} đ
+              {money(summary.revenue)} đ
             </p>
           </Panel>
-          <Panel title="Lợi nhuận">
+          <Panel title="Giá vốn (FIFO)">
+            <p className="text-2xl font-bold mt-2 text-[#ea580c]">
+              {money(summary.cogs)} đ
+            </p>
+          </Panel>
+          <Panel title="Lợi nhuận gộp">
             <p className="text-2xl font-bold mt-2 text-[#1e293b]">
-              {money(summary.profit)} đ
+              {money(summary.grossProfit)} đ
+            </p>
+          </Panel>
+          <Panel title="Giá trị tồn kho">
+            <p className="text-2xl font-bold mt-2 text-[#475569]">
+              {money(summary.inventoryValue)} đ
             </p>
           </Panel>
         </div>
@@ -255,12 +277,14 @@ export function VinfastPartTrendChart({
   filterState,
   groupBy,
   itemCode,
+  chartHeight = 300,
 }: {
   title: string;
   vehicleType: string;
   filterState: any;
   groupBy: string;
   itemCode?: string;
+  chartHeight?: number;
 }) {
   const { data, isLoading } = useQuery({
     queryKey: [
@@ -288,17 +312,17 @@ export function VinfastPartTrendChart({
 
   const trend = data?.trend || [];
   const trendLabels = trend.map((t: any) => t.month);
-  const trendBuy = trend.map((t: any) => t.totalBuy);
-  const trendSell = trend.map((t: any) => t.totalSell);
-  const trendProfit = trend.map((t: any) => t.profit);
+  const trendBuy = trend.map((t: any) => t.cogs);
+  const trendSell = trend.map((t: any) => t.revenue);
+  const trendProfit = trend.map((t: any) => t.grossProfit);
 
-  const colorRevenue = "#059669"; // Emerald 600 (Bán)
-  const colorExpense = "#ea580c"; // Orange 600 (Mua)
-  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận)
+  const colorRevenue = "#059669"; // Emerald 600 (Doanh thu)
+  const colorExpense = "#ea580c"; // Orange 600 (Giá vốn)
+  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận gộp)
 
   return (
     <Panel title={title}>
-      <div className="relative h-[300px]">
+      <div className="relative" style={{ height: chartHeight }}>
         {!isLoading && trendLabels.length > 0 ? (
           <BarChart
             labels={trendLabels}
@@ -311,19 +335,19 @@ export function VinfastPartTrendChart({
                 borderColor: lineProfit,
                 borderWidth: 2,
                 fill: false,
-                label: "Lợi nhuận",
+                label: "Lợi nhuận gộp",
               },
               {
                 type: "bar",
                 data: trendBuy,
                 color: colorExpense,
-                label: "Tổng mua",
+                label: "Giá vốn",
               },
               {
                 type: "bar",
                 data: trendSell,
                 color: colorRevenue,
-                label: "Tổng bán",
+                label: "Doanh thu",
               },
             ]}
           />
@@ -336,9 +360,9 @@ export function VinfastPartTrendChart({
         )}
       </div>
       <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={colorExpense} label="Mua vào" />
-        <LegendItem color={colorRevenue} label="Bán ra" />
-        <LegendItem color={lineProfit} label="Lợi nhuận" isLine={true} />
+        <LegendItem color={colorExpense} label="Giá vốn" />
+        <LegendItem color={colorRevenue} label="Doanh thu" />
+        <LegendItem color={lineProfit} label="Lợi nhuận gộp" isLine={true} />
       </div>
     </Panel>
   );

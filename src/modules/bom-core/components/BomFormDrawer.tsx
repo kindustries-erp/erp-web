@@ -124,9 +124,13 @@ export interface BomFormDrawerProps {
   saveError: string | null;
   handleSave: (statusTarget?: string) => void;
   itemOptions: Array<{ value: string; label: string }>;
+  fgItemOptions: Array<{ value: string; label: string }>;
   setItemSearch: (search: string) => void;
+  setFgItemSearch: (search: string) => void;
   fetchNextItems: () => void;
+  fetchNextFgItems: () => void;
   loadingItems: boolean;
+  loadingFgItems: boolean;
   addLine: () => void;
   removeLine: (index: number) => void;
   updateLine: (index: number, patch: Partial<BomLineForm>) => void;
@@ -148,9 +152,13 @@ export function BomFormDrawer({
   saveError,
   handleSave,
   itemOptions,
+  fgItemOptions,
   setItemSearch,
+  setFgItemSearch,
   fetchNextItems,
+  fetchNextFgItems,
   loadingItems,
+  loadingFgItems,
   addLine,
   removeLine,
   updateLine,
@@ -243,12 +251,22 @@ export function BomFormDrawer({
     }
   };
 
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(10);
+
   const mergedItemOptions = React.useMemo(() => {
     const combined = [...extraItemOptions, ...itemOptions];
     return combined.filter(
       (v, i, a) => a.findIndex((t) => t.value === v.value) === i,
     );
   }, [itemOptions, extraItemOptions]);
+
+  const mergedFgItemOptions = React.useMemo(() => {
+    const combined = [...extraItemOptions, ...fgItemOptions];
+    return combined.filter(
+      (v, i, a) => a.findIndex((t) => t.value === v.value) === i,
+    );
+  }, [fgItemOptions, extraItemOptions]);
 
   const getFilteredLinesForCol = React.useCallback(
     (excludeCol: string) => {
@@ -387,6 +405,13 @@ export function BomFormDrawer({
 
     return arr;
   }, [colSortConfig, getFilteredLinesForCol]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [sortedAndFilteredLines.length]);
+
+  const total = sortedAndFilteredLines.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const exportActions =
     editing && onExport
@@ -879,97 +904,106 @@ export function BomFormDrawer({
       leftPanel={
         <DrawerSection
           title={
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full justify-between pr-4 mt-2 sm:mt-0">
-              <div className="flex items-center gap-3">
-                <span className="shrink-0 mb-2 sm:mb-0">
-                  {t("Định mức nguyên vật liệu")} (
-                  {sortedAndFilteredLines.length < form.lines.length
-                    ? `${sortedAndFilteredLines.length}/${form.lines.length}`
-                    : form.lines.length}
-                  )
-                </span>
-                {!viewOnly && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleDownloadTemplate}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none"
-                    >
-                      <Download size={14} />
-                      {t("Template")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={importing}
-                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none disabled:opacity-50"
-                    >
-                      {importing ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Upload size={14} />
-                      )}
-                      {t("Tải lên")}
-                    </button>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept=".xlsx,.csv"
-                      onChange={handleFileUpload}
-                    />
-                    {(!editing || form.status === "DRAFT") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              t("Bạn có chắc chắn muốn xóa tất cả linh kiện?"),
-                            )
-                          ) {
-                            setForm((prev) => ({
-                              ...prev,
-                              lines: [
-                                {
-                                  componentItemId: "",
-                                  qtyRequired: "1",
-                                  uomId: "",
-                                  scrapRate: "0",
-                                  notes: "",
-                                },
-                              ],
-                            }));
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-red-600 rounded hover:bg-red-50 focus:outline-none ml-1"
-                      >
-                        <Trash2 size={14} />
-                        {t("Xóa tất cả")}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            <span className="shrink-0">
+              {t("Định mức nguyên vật liệu")} (
+              {sortedAndFilteredLines.length < form.lines.length
+                ? `${sortedAndFilteredLines.length}/${form.lines.length}`
+                : form.lines.length}
+              )
+            </span>
           }
           titleExtra={
-            <div className="flex items-center gap-2">
-              <FilterButton
-                onClick={() => {}}
-                activeCount={activeFilterCount}
-                onClear={clearAllFilters}
-              />
+            <div className="flex flex-wrap items-center gap-3 w-full sm:justify-end justify-between overflow-hidden">
+              {!viewOnly && (
+                <div className="flex flex-wrap items-center gap-2 order-2 sm:order-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={handleDownloadTemplate}
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none"
+                  >
+                    <Download size={14} />
+                    {t("Template")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={importing}
+                    className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-gray-700 rounded hover:bg-gray-50 focus:outline-none disabled:opacity-50"
+                  >
+                    {importing ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Upload size={14} />
+                    )}
+                    {t("Tải lên")}
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept=".xlsx,.csv"
+                    onChange={handleFileUpload}
+                  />
+                  {(!editing || form.status === "DRAFT") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            t("Bạn có chắc chắn muốn xóa tất cả linh kiện?"),
+                          )
+                        ) {
+                          setForm((prev) => ({
+                            ...prev,
+                            lines: [
+                              {
+                                componentItemId: "",
+                                qtyRequired: "1",
+                                uomId: "",
+                                scrapRate: "0",
+                                notes: "",
+                              },
+                            ],
+                          }));
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white border border-gray-300 text-red-600 rounded hover:bg-red-50 focus:outline-none ml-1"
+                    >
+                      <Trash2 size={14} />
+                      {t("Xóa tất cả")}
+                    </button>
+                  )}
+                </div>
+              )}
+              {activeFilterCount > 0 && (
+                <div className="flex items-center gap-2 order-1 sm:order-2 flex-shrink-0">
+                  <FilterButton
+                    onClick={() => {}}
+                    activeCount={activeFilterCount}
+                    onClear={clearAllFilters}
+                  />
+                </div>
+              )}
             </div>
           }
         >
           <DataTable
             variant="spreadsheet"
-            containerClassName="max-h-[calc(100vh-280px)] overflow-auto"
+            containerClassName="max-h-[480px] overflow-auto"
             enableColumnResizing={true}
             items={sortedAndFilteredLines}
             getRowKey={(item) => String(form.lines.indexOf(item))}
             emptyLabel={t("Không có dữ liệu")}
             columns={tableColumns}
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            totalPages={totalPages}
+            onPage={setPage}
+            onPageSize={(val) => {
+              setPageSize(val);
+              setPage(1);
+            }}
             tableMeta={{
               viewOnly,
               editing,
@@ -1036,12 +1070,12 @@ export function BomFormDrawer({
                   onChange={(value) =>
                     setForm((prev) => ({ ...prev, finishedGoodItemId: value }))
                   }
-                  options={mergedItemOptions}
+                  options={mergedFgItemOptions}
                   placeholder={t("Chọn thành phẩm")}
                   searchPlaceholder={t("Tìm SKU / tên thành phẩm")}
-                  onSearch={setItemSearch}
-                  onScrollBottom={fetchNextItems}
-                  loading={loadingItems}
+                  onSearch={setFgItemSearch}
+                  onScrollBottom={fetchNextFgItems}
+                  loading={loadingFgItems}
                   allowClear
                 />
               </DrawerField>

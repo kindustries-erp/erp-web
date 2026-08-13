@@ -549,6 +549,7 @@ export function ErpBomPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const [itemSearch, setItemSearch] = useState("");
+  const [fgItemSearch, setFgItemSearch] = useState("");
 
   const {
     data: itemsData,
@@ -560,6 +561,17 @@ export function ErpBomPage() {
     entities: "inventoryItems",
   });
 
+  const {
+    data: fgItemsData,
+    fetchNextPage: fetchNextFgItems,
+    isFetchingNextPage: loadingFgItems,
+  } = useBasicMasterInfinite({
+    search: fgItemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+    inventoryItemAttributes: "CAN_BE_MANUFACTURED",
+  });
+
   const { data: uomsData } = useBasicMasterInfinite({
     search: "",
     limit: 100,
@@ -569,6 +581,7 @@ export function ErpBomPage() {
   // Persistent cache: id -> label, survives search-term changes so selected
   // items never lose their labels when the API page no longer includes them.
   const cachedItems = useRef<Record<string, string>>({});
+  const cachedFgItems = useRef<Record<string, string>>({});
 
   // Populate cache whenever new API pages arrive
   useEffect(() => {
@@ -579,6 +592,15 @@ export function ErpBomPage() {
       });
     });
   }, [itemsData]);
+
+  useEffect(() => {
+    if (!fgItemsData) return;
+    fgItemsData.pages.forEach((p) => {
+      (p.items.inventoryItems || []).forEach((i) => {
+        cachedFgItems.current[i.id] = `${i.sku} — ${i.itemName}`;
+      });
+    });
+  }, [fgItemsData]);
 
   // Helper to populate cache synchronously when fetching BOM details
   const updateCacheWithBomDetail = useCallback((detail: ErpBom) => {
@@ -645,6 +667,33 @@ export function ErpBomPage() {
     }));
   }, [itemsData, form.finishedGoodItemId, form.lines, editing, t]);
 
+  const fgItemOptions = useMemo(() => {
+    const map = new Map<string, string>(
+      fgItemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map(
+          (i) => [i.id, `${i.sku} — ${i.itemName}`] as [string, string],
+        ),
+      ) || [],
+    );
+
+    if (form.finishedGoodItemId) {
+      if (!map.has(form.finishedGoodItemId)) {
+        map.set(
+          form.finishedGoodItemId,
+          cachedFgItems.current[form.finishedGoodItemId] ||
+            cachedItems.current[form.finishedGoodItemId] ||
+            editing?.finishedGoodItemName ||
+            t("Thành phẩm hiện tại"),
+        );
+      }
+    }
+
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [fgItemsData, form.finishedGoodItemId, editing, t]);
+
   const itemUomMap = useMemo(() => {
     const map = new Map<string, string>();
     itemsData?.pages.forEach((p) => {
@@ -688,15 +737,15 @@ export function ErpBomPage() {
           key: "finishedGoodItemId",
           label: t("Thành phẩm"),
           placeholder: t("Tất cả thành phẩm"),
-          options: itemOptions,
+          options: fgItemOptions,
           type: "combobox" as const,
-          onSearch: setItemSearch,
-          onLoadMore: fetchNextItems,
-          loading: loadingItems,
+          onSearch: setFgItemSearch,
+          onLoadMore: fetchNextFgItems,
+          loading: loadingFgItems,
         },
       ],
     }),
-    [itemOptions, fetchNextItems, loadingItems],
+    [fgItemOptions, fetchNextFgItems, loadingFgItems],
   );
   const filter = useFilterPanel(filterConfig);
 
@@ -706,11 +755,17 @@ export function ErpBomPage() {
     const filterFgId = filter.state.custom?.finishedGoodItemId as
       | string
       | undefined;
-    if (filterFgId && itemOptions.some((o) => o.value === filterFgId)) {
-      const label = itemOptions.find((o) => o.value === filterFgId)?.label;
-      if (label) cachedItems.current[filterFgId] = label;
+    if (filterFgId) {
+      const fgOpt = fgItemOptions.find((o) => o.value === filterFgId);
+      if (fgOpt?.label) {
+        cachedFgItems.current[filterFgId] = fgOpt.label;
+        cachedItems.current[filterFgId] = fgOpt.label;
+      } else {
+        const itemOpt = itemOptions.find((o) => o.value === filterFgId);
+        if (itemOpt?.label) cachedItems.current[filterFgId] = itemOpt.label;
+      }
     }
-  }, [filter.state.custom?.finishedGoodItemId, itemOptions]);
+  }, [filter.state.custom?.finishedGoodItemId, fgItemOptions, itemOptions]);
 
   const loadBoms = useCallback(async () => {
     setLoading(true);
@@ -790,8 +845,26 @@ export function ErpBomPage() {
     itemOptions.forEach((opt) => {
       map[opt.value] = opt.label;
     });
+    fgItemOptions.forEach((opt) => {
+      if (!map[opt.value]) map[opt.value] = opt.label;
+    });
     return map;
-  }, [itemOptions]);
+  }, [itemOptions, fgItemOptions]);
+
+  const itemCodeMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    itemOptions.forEach((opt) => {
+      const parts = opt.label.split(" — ");
+      if (parts.length > 0) map[opt.value] = parts[0];
+    });
+    fgItemOptions.forEach((opt) => {
+      if (!map[opt.value]) {
+        const parts = opt.label.split(" — ");
+        if (parts.length > 0) map[opt.value] = parts[0];
+      }
+    });
+    return map;
+  }, [itemOptions, fgItemOptions]);
 
   const handleSort = (key: string) => {
     if (sortBy === key) {
@@ -1031,6 +1104,7 @@ export function ErpBomPage() {
         />
       ),
       sortable: false,
+      size: 200,
       enableResizing: true,
       cell: (item) => (
         <div className="w-full overflow-hidden flex">
@@ -1042,10 +1116,51 @@ export function ErpBomPage() {
       skeletonClassName: "w-40",
     },
     {
+      key: "finishedGoodItemCode",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Mã thành phẩm")}
+          sortState={sortBy === "finishedGoodItemCode" ? sortOrder : "none"}
+          onSortChange={() => handleSort("finishedGoodItemCode")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="finished_good_item_code"
+          align="center"
+        />
+      ),
+      sortable: false,
+      size: 180,
+      enableResizing: true,
+      cell: (item) => {
+        const code =
+          item.finishedGoodItemCode ||
+          (item.finishedGoodItemId
+            ? itemCodeMap[item.finishedGoodItemId]
+            : null) ||
+          (item.finishedGoodItemId
+            ? itemsMap[item.finishedGoodItemId]?.split(" — ")[0]
+            : null) ||
+          "—";
+        return (
+          <div className="w-full overflow-hidden flex">
+            <Tooltip content={code}>
+              <span className="block truncate max-w-[160px] font-medium text-foreground">
+                {code}
+              </span>
+            </Tooltip>
+          </div>
+        );
+      },
+      skeletonClassName: "w-32",
+    },
+    {
       key: "finishedGoodItemName",
       header: (
         <TableColumnHeaderFilter
-          title={t("Thành phẩm")}
+          title={t("Tên thành phẩm")}
           sortState={sortBy === "finishedGoodItemName" ? sortOrder : "none"}
           onSortChange={() => handleSort("finishedGoodItemName")}
           searchValue=""
@@ -1058,16 +1173,30 @@ export function ErpBomPage() {
         />
       ),
       sortable: false,
+      size: 200,
       enableResizing: true,
       cell: (item) => {
-        const name =
+        const combined =
           item.finishedGoodItemName ||
-          (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—");
+          (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "");
+        let nameOnly = combined;
+        const code =
+          item.finishedGoodItemCode ||
+          (item.finishedGoodItemId
+            ? itemCodeMap[item.finishedGoodItemId]
+            : null) ||
+          (item.finishedGoodItemId
+            ? itemsMap[item.finishedGoodItemId]?.split(" — ")[0]
+            : null);
+        if (code && combined.startsWith(code)) {
+          nameOnly = combined.substring(code.length).replace(/^[\s-–—]+/, "");
+        }
+        const displayName = nameOnly || combined || "—";
         return (
           <div className="flex flex-col min-w-[80px] max-w-[200px]">
-            <Tooltip content={name}>
+            <Tooltip content={displayName}>
               <span className="truncate font-medium text-foreground block">
-                {name}
+                {displayName}
               </span>
             </Tooltip>
             {item.notes && (
@@ -1080,7 +1209,7 @@ export function ErpBomPage() {
           </div>
         );
       },
-      skeletonClassName: "w-36",
+      skeletonClassName: "w-40",
     },
     {
       key: "version",
@@ -1397,9 +1526,13 @@ export function ErpBomPage() {
         saveError={saveError}
         handleSave={handleSave}
         itemOptions={itemOptions}
+        fgItemOptions={fgItemOptions}
         setItemSearch={setItemSearch}
+        setFgItemSearch={setFgItemSearch}
         fetchNextItems={fetchNextItems}
+        fetchNextFgItems={fetchNextFgItems}
         loadingItems={loadingItems}
+        loadingFgItems={loadingFgItems}
         addLine={addLine}
         removeLine={removeLine}
         updateLine={updateLine}

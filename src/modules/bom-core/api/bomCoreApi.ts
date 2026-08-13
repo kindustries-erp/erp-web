@@ -18,6 +18,7 @@ export interface ErpBom {
   bomCode: string;
   bomName: string;
   finishedGoodItemId?: string | null;
+  finishedGoodItemCode?: string | null;
   finishedGoodItemName?: string | null;
   version: string;
   status?: string | null;

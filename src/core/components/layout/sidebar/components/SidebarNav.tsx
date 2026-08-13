@@ -324,6 +324,8 @@ export function SidebarNav({
                   currentPage === "vinfast-parts-dashboard" ||
                   currentPage === "vinfast-parts-oto" ||
                   currentPage === "vinfast-parts-xemay" ||
+                  currentPage === "vinfast-parts-oto-stock" ||
+                  currentPage === "vinfast-parts-xemay-stock" ||
                   currentPage === "vinfast-parts"
                 }
               >
@@ -344,6 +346,18 @@ export function SidebarNav({
                   active={currentPage === "vinfast-parts-xemay"}
                   onClick={() => navTo("vinfast-parts-xemay")}
                   contextPage="vinfast-parts-xemay"
+                />
+                <NavGroupItem
+                  label="Tồn kho ôtô"
+                  active={currentPage === "vinfast-parts-oto-stock"}
+                  onClick={() => navTo("vinfast-parts-oto-stock")}
+                  contextPage="vinfast-parts-oto-stock"
+                />
+                <NavGroupItem
+                  label="Tồn kho xe máy"
+                  active={currentPage === "vinfast-parts-xemay-stock"}
+                  onClick={() => navTo("vinfast-parts-xemay-stock")}
+                  contextPage="vinfast-parts-xemay-stock"
                 />
               </NavGroup>
             )}

@@ -1,4 +1,5 @@
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
 import { FileText, Eye, DownloadCloud } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
@@ -21,6 +22,7 @@ import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDra
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 export function ErpInvoicesDraftPage() {
+  const { t } = useTranslation("erpInvoices");
   const listHook = useSinvoiceDraftsList();
 
   const [draftOpen, setDraftOpen] = useState(false);
@@ -31,16 +33,18 @@ export function ErpInvoicesDraftPage() {
     try {
       setGlobalLoading(true);
       const res = await syncSinvoiceDraftsApi();
-      if (!res.changed) {
-        toast("Không có thay đổi mới từ Viettel", { icon: "ℹ️" });
-      } else {
+      if (res.changed) {
         toast.success(
-          `Đã cập nhật: +${res.added} mới, -${res.removed} đã xoá. Tổng: ${res.synced}`,
+          t("sinvoiceDraft.syncSuccess", {
+            added: res.added,
+            removed: res.removed,
+            synced: res.synced,
+          }),
         );
       }
       listHook.loadDrafts();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Đồng bộ thất bại");
+      toast.error(error.response?.data?.message || t("sinvoiceDraft.syncFail"));
     } finally {
       setGlobalLoading(false);
     }

@@ -21,7 +21,6 @@ import {
   DownloadCloud,
   Eye,
   Download,
-  RefreshCw,
   Trash,
   FileCode,
   FileText,
@@ -631,23 +630,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       listHook.tableState.columnFilters,
       listHook.tableState.columnSearch,
     ]);
-
-  const handleReparseXml = async (inv: ErpInvoice) => {
-    try {
-      const token = localStorage.getItem("erp_portal_token") || "";
-      showToast({ title: "Đang tải dữ liệu XML...", variant: "default" });
-      await erpInvoicesCoreApi.reparseXml(inv.id, token);
-      showToast({ title: "Đồng bộ chi tiết thành công", variant: "default" });
-      void listHook.loadInvoices();
-    } catch (e: unknown) {
-      showToast({
-        title:
-          (e as { response?: { data?: { message?: string } } }).response?.data
-            ?.message || "Đồng bộ thất bại",
-        variant: "destructive",
-      });
-    }
-  };
 
   function fmtAmt(val: string | null | undefined) {
     if (val == null) return "—";
@@ -2349,12 +2331,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               },
             });
           }
-
-          thaoTacItems.push({
-            label: t("actionReparseXml", "Đồng bộ lại từ XML"),
-            icon: <RefreshCw className="w-3.5 h-3.5" />,
-            onClick: () => handleReparseXml(inv),
-          });
 
           if (inv.status === "DRAFT") {
             thaoTacItems.push({
