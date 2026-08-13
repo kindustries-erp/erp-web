@@ -208,7 +208,6 @@ export function Dashboard() {
         filter={filter}
         data={mergedData}
         workshop={workshop}
-        onRefresh={handleRefresh}
       />
     </DashboardTemplate>
   );
