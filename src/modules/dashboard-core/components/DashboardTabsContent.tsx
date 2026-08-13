@@ -11,8 +11,6 @@ import {
   Calculator,
   ShoppingCart,
   Banknote,
-  ArrowRightLeft,
-  BarChart3,
   Warehouse,
   Car,
 } from "lucide-react";
@@ -20,7 +18,6 @@ import { KpiCard } from "@/shared/components/KpiCard";
 import { Panel } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import {
@@ -35,15 +32,12 @@ import {
   VinfastPartsSummaryCards,
   VinfastPartTrendChart,
 } from "@/modules/workshop-dashboard/components/VinfastPartsSummaryCards";
-import {
-  SummaryCard,
-  IconTrendUp,
-  IconTrendDown,
-} from "@/modules/dashboard-core/components/DashboardSharedHelpers";
+import { SummaryCard } from "@/modules/dashboard-core/components/DashboardSharedHelpers";
 import type {
   CoreDashboardOverview,
   WorkshopKpiGroups,
 } from "@/modules/dashboard-core/types";
+import { DashboardCashflowTab } from "./DashboardCashflowTab";
 
 const DASH_TABS = [
   {
@@ -66,16 +60,7 @@ const DASH_TABS = [
     labelKey: "tabs.cashflow",
     Icon: Wallet,
   },
-  {
-    value: "invoice",
-    labelKey: "tabs.invoice",
-    Icon: Receipt,
-  },
-  {
-    value: "settlement",
-    labelKey: "tabs.settlement",
-    Icon: Banknote,
-  },
+
   {
     value: "vinfastParts",
     labelKey: "tabs.vinfastParts",
@@ -103,18 +88,6 @@ const DEFAULT_COLORS = [
   "#14b8a6",
 ];
 
-const LazyInvoicePartnersTable = React.lazy(() =>
-  import("@/modules/workshop-dashboard/components/InvoicePartnersTable").then(
-    (m) => ({ default: m.InvoicePartnersTable }),
-  ),
-);
-
-const LazySettlementTable = React.lazy(() =>
-  import("@/modules/workshop-dashboard/components/SettlementTable").then(
-    (m) => ({ default: m.SettlementTable }),
-  ),
-);
-
 const LazyVFPartDashboardTable = React.lazy(() =>
   import("@/pages/components/VinfastPartDashboardTable").then((m) => ({
     default: m.VinfastPartDashboardTable,
@@ -136,7 +109,6 @@ export interface DashboardTabsContentProps {
   };
   data: CoreDashboardOverview;
   workshop: WorkshopKpiGroups;
-  onRefresh: () => void;
 }
 
 export function DashboardTabsContent({
@@ -144,7 +116,6 @@ export function DashboardTabsContent({
   filter,
   data,
   workshop,
-  onRefresh,
 }: DashboardTabsContentProps) {
   const { t } = useTranslation("dashboard");
   const {
@@ -157,7 +128,6 @@ export function DashboardTabsContent({
     cashTrendOut,
     salesLabels,
     salesData,
-    donutItems,
   } = data;
   const cashIn = cashflow.totalCashIn || 0;
   const cashOut = cashflow.totalCashOut || 0;
@@ -167,15 +137,19 @@ export function DashboardTabsContent({
   const zeroStock = inventory.zeroStockCount || 0;
 
   const settlementSummary = workshop.settlementSummary.data;
-  const completionRate =
-    (settlementSummary?.totalAmount || 0) > 0
-      ? Math.round(
-          (((settlementSummary?.totalAmount || 0) -
-            (settlementSummary?.totalRemaining || 0)) /
-            (settlementSummary?.totalAmount || 0)) *
-            100,
-        )
-      : 0;
+
+  const invoiceTrend = workshop.invoiceStats?.data?.cashTrend || [];
+  const totalReceivable = invoiceTrend.reduce(
+    (sum: number, t: any) => sum + (t.cashIn || 0),
+    0,
+  );
+  const totalPayable = invoiceTrend.reduce(
+    (sum: number, t: any) => sum + (t.cashOut || 0),
+    0,
+  );
+  // Net invoice cashflow
+  const netInvoiceCashflow = totalReceivable - totalPayable;
+  const totalInvoices = invoiceTrend.length > 0 ? invoiceTrend.length : 0; // Just use length as a placeholder for total count since we don't have total count in stats
 
   const overviewKpis = [
     {
@@ -201,60 +175,6 @@ export function DashboardTabsContent({
       value: money(workshop.vinfastSummary.data?.summary.profit || 0),
       icon: <Banknote className="w-4 h-4 text-indigo-500" />,
       loading: workshop.vinfastSummary.isLoading,
-    },
-  ];
-
-  const invoiceKpis = [
-    {
-      label: t("kpi.totalReceivable"),
-      value: money(cashOut > cashIn ? cashOut - cashIn : 0),
-      icon: <ArrowRightLeft className="w-4 h-4 text-blue-500" />,
-      loading,
-    },
-    {
-      label: t("kpi.totalPayable"),
-      value: money(cashIn > cashOut ? cashIn - cashOut : 0),
-      icon: <Truck className="w-4 h-4 text-red-500" />,
-      loading,
-    },
-    {
-      label: t("kpi.totalInvoices"),
-      value: String(cashTrendLabels.length || 0),
-      icon: <LayoutDashboard className="w-4 h-4 text-indigo-500" />,
-      loading,
-    },
-    {
-      label: "Dòng thu/chi ròng",
-      value: money(cashIn - cashOut),
-      icon: <BarChart3 className="w-4 h-4 text-slate-600" />,
-      loading,
-    },
-  ];
-
-  const settlementKpis = [
-    {
-      label: t("kpi.settlementOrders"),
-      value: String(settlementSummary?.totalOrders || 0),
-      icon: <Receipt className="w-4 h-4 text-indigo-500" />,
-      loading: workshop.settlementSummary.isLoading,
-    },
-    {
-      label: t("kpi.totalSettledAmount"),
-      value: money(settlementSummary?.totalSettled || 0),
-      icon: <DollarSign className="w-4 h-4 text-emerald-500" />,
-      loading: workshop.settlementSummary.isLoading,
-    },
-    {
-      label: t("kpi.remainingAmount"),
-      value: money(settlementSummary?.totalRemaining || 0),
-      icon: <Calculator className="w-4 h-4 text-red-500" />,
-      loading: workshop.settlementSummary.isLoading,
-    },
-    {
-      label: t("kpi.completionRate"),
-      value: `${completionRate}%`,
-      icon: <BarChart3 className="w-4 h-4 text-blue-500" />,
-      loading: workshop.settlementSummary.isLoading,
     },
   ];
 
@@ -392,7 +312,7 @@ export function DashboardTabsContent({
       </TabsContent>
 
       <TabsContent value="sales" className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <KpiCard
             loading={loading}
             label={t("kpi.totalOrders")}
@@ -407,6 +327,21 @@ export function DashboardTabsContent({
             loading={loading}
             label={t("kpi.completionRate")}
             value={`${(sales.kpi?.completionRate || 0).toFixed(2)}%`}
+          />
+          <KpiCard
+            loading={loading || workshop.invoiceStats.isLoading}
+            label={t("kpi.totalReceivable")}
+            value={money(totalReceivable)}
+          />
+          <KpiCard
+            loading={loading || workshop.invoiceStats.isLoading}
+            label="Dòng thu/chi ròng"
+            value={money(netInvoiceCashflow)}
+          />
+          <KpiCard
+            loading={loading || workshop.invoiceStats.isLoading}
+            label={t("kpi.totalInvoices")}
+            value={String(totalInvoices)}
           />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -457,7 +392,7 @@ export function DashboardTabsContent({
       </TabsContent>
 
       <TabsContent value="inventory" className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard
             loading={loading}
             label={t("kpi.totalSkus")}
@@ -472,6 +407,11 @@ export function DashboardTabsContent({
             loading={loading}
             label="Phiếu Xuất"
             value={String(inventory.totalIssuesCount || 0)}
+          />
+          <KpiCard
+            loading={loading || workshop.invoiceStats.isLoading}
+            label={t("kpi.totalPayable")}
+            value={money(totalPayable)}
           />
         </div>
         <Panel title={t("panel.stockTrend")}>
@@ -507,103 +447,8 @@ export function DashboardTabsContent({
       </TabsContent>
 
       <TabsContent value="cashflow" className="space-y-6">
-        <div className="grid grid-cols-2 max-[900px]:grid-cols-2 gap-3 mb-4">
-          <KpiCard
-            loading={loading}
-            label={t("kpi.totalCashIn")}
-            value={money(cashIn)}
-            icon={<IconTrendUp />}
-          />
-          <KpiCard
-            loading={loading}
-            label={t("kpi.totalCashOut")}
-            value={money(cashOut)}
-            icon={<IconTrendDown />}
-          />
-        </div>
-        <div className="grid grid-cols-1 min-[900px]:grid-cols-[1fr_300px] gap-3">
-          <Panel title={t("cashTrend")}>
-            <div className="relative h-[210px]">
-              {!loading && cashTrendLabels.length > 0 ? (
-                <BarChart
-                  labels={cashTrendLabels}
-                  yCallback={(v) => money(Number(v))}
-                  datasets={[
-                    {
-                      data: cashTrendIn,
-                      color: BAR_CASH_IN,
-                      label: t("cashIn"),
-                    },
-                    {
-                      data: cashTrendOut,
-                      color: BAR_CASH_OUT,
-                      label: t("cashOut"),
-                    },
-                  ]}
-                />
-              ) : loading ? (
-                <ChartSkeleton type="bar" />
-              ) : (
-                <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-                  {t("common.noData")}
-                </div>
-              )}
-            </div>
-          </Panel>
-          <Panel title={t("expenseByCategory")}>
-            {!loading && donutItems.length > 0 ? (
-              <>
-                <div className="relative h-[160px] mb-2">
-                  <DonutChart items={donutItems} />
-                </div>
-                <DonutLegend items={donutItems} />
-              </>
-            ) : loading ? (
-              <div className="h-[200px]">
-                <ChartSkeleton type="donut" />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
-                {t("common.noData")}
-              </div>
-            )}
-          </Panel>
-        </div>
-
+        <DashboardCashflowTab filter={filter} />
         <CashflowForecastDashboardWidget />
-      </TabsContent>
-
-      <TabsContent value="invoice" className="space-y-6">
-        <KpiSection items={invoiceKpis} columns={4} />
-        <React.Suspense fallback={<Skeleton className="h-[400px]" />}>
-          <LazyInvoicePartnersTable
-            filterParams={{
-              dateFrom: filter.state.dateFrom,
-              dateTo: filter.state.dateTo,
-              branchId: filter.state.custom.branchId,
-            }}
-          />
-        </React.Suspense>
-      </TabsContent>
-
-      <TabsContent value="settlement" className="space-y-6">
-        <KpiSection items={settlementKpis} columns={4} />
-        <React.Suspense fallback={<Skeleton className="h-[500px]" />}>
-          <LazySettlementTable
-            filterParams={{
-              dateFrom: filter.state.dateFrom,
-              dateTo: filter.state.dateTo,
-              branchId: filter.state.custom.branchId,
-            }}
-            onSetPeriod={(from, to) => {
-              filter.setDateFrom(from ?? "");
-              filter.setDateTo(to ?? "");
-            }}
-            onRefresh={onRefresh}
-            onClearAllFilters={() => filter.resetAll()}
-            extraActiveFilters={filter.activeFilterCount || 0}
-          />
-        </React.Suspense>
       </TabsContent>
 
       <TabsContent value="vinfastParts" className="space-y-8">

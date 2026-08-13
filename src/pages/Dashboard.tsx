@@ -19,8 +19,10 @@ import type {
   VinfastPartsSummaryPayload,
 } from "@/modules/dashboard-core/types";
 import { DEFAULT_COLORS } from "@/modules/dashboard-core/components/DashboardTabsContent";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { ComingSoon } from "@/pages/ComingSoon";
 
-export function Dashboard() {
+function DashboardContent() {
   const { t } = useTranslation("dashboard");
   const queryClient = useQueryClient();
 
@@ -208,8 +210,17 @@ export function Dashboard() {
         filter={filter}
         data={mergedData}
         workshop={workshop}
-        onRefresh={handleRefresh}
       />
     </DashboardTemplate>
   );
+}
+
+export function Dashboard() {
+  const profile = useAuthStore((state) => state.profile);
+
+  if (profile?.email !== "admin@liouni.com") {
+    return <ComingSoon />;
+  }
+
+  return <DashboardContent />;
 }

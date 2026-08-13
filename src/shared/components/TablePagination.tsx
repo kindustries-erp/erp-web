@@ -10,6 +10,7 @@ interface TablePaginationProps {
   onPage: (page: number) => void;
   onPageSize: (size: number) => void;
   pageSizeOptions?: number[];
+  className?: string;
 }
 
 export function TablePagination({
@@ -20,6 +21,7 @@ export function TablePagination({
   onPage,
   onPageSize,
   pageSizeOptions = [50, 100, 200],
+  className,
 }: TablePaginationProps) {
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
@@ -40,7 +42,12 @@ export function TablePagination({
     );
 
   return (
-    <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
+    <div
+      className={cn(
+        "flex items-center justify-between mt-2 gap-2 flex-wrap",
+        className,
+      )}
+    >
       {/* Page size selector */}
       <div className="flex items-center gap-2 text-xs text-[color:var(--muted-fg)]">
         Hiển thị{" "}
