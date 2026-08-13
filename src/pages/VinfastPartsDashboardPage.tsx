@@ -1,6 +1,5 @@
 import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
-import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import React from "react";
@@ -10,21 +9,10 @@ import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { money } from "@/shared/utils/format";
-import { VinfastPartDashboardTable } from "./components/VinfastPartDashboardTable";
-import { VinfastPartDashboardDrawer } from "./components/VinfastPartDashboardDrawer";
-import { VinfastPartDashboardTableRow } from "@/shared/hooks/useVinfastPartsDashboardTable";
-import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
-import {
-  ErpInvoiceInternalSidebar,
-  ErpInvoiceInternalMain,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 export function VinfastPartsDashboardPage() {
-  const { employee } = useAuthStore();
-  const isAdminEmail = employee?.email === "admin@liouni.com";
+  const hasVinfastPerm = useHasPermission("vinfast_parts_reports", "read");
 
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({
@@ -52,23 +40,6 @@ export function VinfastPartsDashboardPage() {
 
   const filter = useFilterPanel(filterConfig, () => {});
   const groupBy = filter.state.custom.groupBy || "month";
-
-  const [selectedPart, setSelectedPart] =
-    React.useState<VinfastPartDashboardTableRow | null>(null);
-  const [selectedVehicleType, setSelectedVehicleType] = React.useState<
-    "CAR" | "MOTORBIKE"
-  >("CAR");
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-  const formHook = useErpInvoiceForm(() => {});
-
-  const handleRowClick = React.useCallback(
-    (row: VinfastPartDashboardTableRow, vehicleType: "CAR" | "MOTORBIKE") => {
-      setSelectedPart(row);
-      setSelectedVehicleType(vehicleType);
-      setIsDrawerOpen(true);
-    },
-    [],
-  );
 
   const { data: allData } = useQuery({
     queryKey: [
@@ -98,7 +69,7 @@ export function VinfastPartsDashboardPage() {
     inventoryValue: 0,
   };
 
-  if (!isAdminEmail) {
+  if (!hasVinfastPerm) {
     return <ComingSoon />;
   }
 
@@ -172,101 +143,7 @@ export function VinfastPartsDashboardPage() {
             />
           </div>
         </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="h-auto">
-            <VinfastPartDashboardTable
-              filterState={filter.state}
-              vehicleType="CAR"
-              title="Chi tiết Phụ tùng Ô tô"
-              onRowClick={(row) => handleRowClick(row, "CAR")}
-            />
-          </div>
-          <div className="h-auto">
-            <VinfastPartDashboardTable
-              filterState={filter.state}
-              vehicleType="MOTORBIKE"
-              title="Chi tiết Phụ tùng Xe máy"
-              onRowClick={(row) => handleRowClick(row, "MOTORBIKE")}
-            />
-          </div>
-        </div>
       </div>
-
-      <VinfastPartDashboardDrawer
-        open={isDrawerOpen}
-        onOpenChange={(open) => {
-          setIsDrawerOpen(open);
-          if (!open) setTimeout(() => setSelectedPart(null), 300);
-        }}
-        part={selectedPart}
-        vehicleType={selectedVehicleType}
-        filterState={filter.state}
-        groupBy={groupBy as string}
-        onOpenInvoice={(id) => formHook.openInternal({ id } as any)}
-      />
-
-      <ErpInvoiceInternalDrawer
-        open={formHook.internalDrawerOpen}
-        onClose={formHook.closeDrawer}
-        editMode={formHook.editMode}
-        detailInvoice={formHook.detailInvoice}
-        startEdit={formHook.startEdit}
-        saving={formHook.saving}
-        handleSave={formHook.handleSave}
-        cancelEdit={formHook.cancelEdit}
-        rightPanel={
-          <div className="flex flex-col gap-5">
-            <ErpInvoiceInternalSidebar
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key: string, value: any) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={formHook.detailInvoice?.direction || "IN"}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={formHook.handleSyncDetail}
-              pdfSlot={
-                <ErpInvoicePdfUpload
-                  invoiceId={formHook.detailInvoice?.id ?? null}
-                  attachments={formHook.detailInvoice?.pdfFiles ?? null}
-                  editMode={formHook.editMode}
-                />
-              }
-            />
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-5">
-          <ErpInvoiceInternalMain
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key: string, value: any) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            direction={formHook.detailInvoice?.direction || "IN"}
-            detailInvoice={formHook.detailInvoice}
-            postingState={formHook.postingState}
-            pendingUnpost={formHook.pendingUnpost}
-            onUnpost={() => formHook.setPendingUnpost(true)}
-            onRefreshDetail={() => {
-              if (formHook.detailInvoice?.id) {
-                formHook.openInternal({ id: formHook.detailInvoice.id } as any);
-              }
-            }}
-            invoicePreview={
-              formHook.detailInvoice ? (
-                <div className="flex justify-center bg-slate-100 p-8 min-h-full">
-                  <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-                </div>
-              ) : undefined
-            }
-          />
-        </div>
-      </ErpInvoiceInternalDrawer>
     </DashboardTemplate>
   );
 }

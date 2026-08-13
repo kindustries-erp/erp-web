@@ -7,6 +7,24 @@ export function money(value: unknown) {
   });
 }
 
+export function compactMoney(value: unknown) {
+  const n = Number(value || 0);
+  if (Math.abs(n) >= 1_000_000_000) {
+    return (
+      (n / 1_000_000_000).toLocaleString("vi-VN", {
+        maximumFractionDigits: 2,
+      }) + " Tỷ đ"
+    );
+  }
+  if (Math.abs(n) >= 1_000_000) {
+    return (
+      (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 2 }) +
+      " Tr đ"
+    );
+  }
+  return money(n);
+}
+
 export function normalizeDate(value?: string | null) {
   return value ? String(value).slice(0, 10) : "";
 }
