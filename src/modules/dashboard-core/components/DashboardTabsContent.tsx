@@ -1,5 +1,14 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import {
+  format,
+  subMonths,
+  subWeeks,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+} from "date-fns";
 import {
   LayoutDashboard,
   AlertCircle,
@@ -11,16 +20,14 @@ import {
   Calculator,
   ShoppingCart,
   Banknote,
-  ArrowRightLeft,
-  BarChart3,
   Warehouse,
   Car,
 } from "lucide-react";
 import { KpiCard } from "@/shared/components/KpiCard";
+import { KpiSparkline } from "@/shared/components/KpiSparkline";
 import { Panel } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import {
@@ -35,15 +42,14 @@ import {
   VinfastPartsSummaryCards,
   VinfastPartTrendChart,
 } from "@/modules/workshop-dashboard/components/VinfastPartsSummaryCards";
-import {
-  SummaryCard,
-  IconTrendUp,
-  IconTrendDown,
-} from "@/modules/dashboard-core/components/DashboardSharedHelpers";
+import { SummaryCard } from "@/modules/dashboard-core/components/DashboardSharedHelpers";
 import type {
   CoreDashboardOverview,
   WorkshopKpiGroups,
 } from "@/modules/dashboard-core/types";
+import { DashboardCashflowTab } from "./DashboardCashflowTab";
+import { BranchInvoiceChart } from "@/pages/components/BranchInvoiceChart";
+import { erpInvoicesCoreApi } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 const DASH_TABS = [
   {
@@ -66,16 +72,7 @@ const DASH_TABS = [
     labelKey: "tabs.cashflow",
     Icon: Wallet,
   },
-  {
-    value: "invoice",
-    labelKey: "tabs.invoice",
-    Icon: Receipt,
-  },
-  {
-    value: "settlement",
-    labelKey: "tabs.settlement",
-    Icon: Banknote,
-  },
+
   {
     value: "vinfastParts",
     labelKey: "tabs.vinfastParts",
@@ -83,9 +80,8 @@ const DASH_TABS = [
   },
 ] as const;
 
-const BAR_CASH_IN = "#10b981";
-const BAR_CASH_OUT = "#ef4444";
-const BAR_SALES = "#3b82f6";
+const BAR_CASH_IN = "#10B981"; // emerald-500
+const BAR_CASH_OUT = "#EF4444"; // red-500
 
 const formatQty = (v: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -102,18 +98,6 @@ const DEFAULT_COLORS = [
   "#ec4899",
   "#14b8a6",
 ];
-
-const LazyInvoicePartnersTable = React.lazy(() =>
-  import("@/modules/workshop-dashboard/components/InvoicePartnersTable").then(
-    (m) => ({ default: m.InvoicePartnersTable }),
-  ),
-);
-
-const LazySettlementTable = React.lazy(() =>
-  import("@/modules/workshop-dashboard/components/SettlementTable").then(
-    (m) => ({ default: m.SettlementTable }),
-  ),
-);
 
 const LazyVFPartDashboardTable = React.lazy(() =>
   import("@/pages/components/VinfastPartDashboardTable").then((m) => ({
@@ -136,7 +120,7 @@ export interface DashboardTabsContentProps {
   };
   data: CoreDashboardOverview;
   workshop: WorkshopKpiGroups;
-  onRefresh: () => void;
+  branches: any[];
 }
 
 export function DashboardTabsContent({
@@ -144,7 +128,7 @@ export function DashboardTabsContent({
   filter,
   data,
   workshop,
-  onRefresh,
+  branches,
 }: DashboardTabsContentProps) {
   const { t } = useTranslation("dashboard");
   const {
@@ -155,9 +139,6 @@ export function DashboardTabsContent({
     cashTrendLabels,
     cashTrendIn,
     cashTrendOut,
-    salesLabels,
-    salesData,
-    donutItems,
   } = data;
   const cashIn = cashflow.totalCashIn || 0;
   const cashOut = cashflow.totalCashOut || 0;
@@ -167,15 +148,66 @@ export function DashboardTabsContent({
   const zeroStock = inventory.zeroStockCount || 0;
 
   const settlementSummary = workshop.settlementSummary.data;
-  const completionRate =
-    (settlementSummary?.totalAmount || 0) > 0
-      ? Math.round(
-          (((settlementSummary?.totalAmount || 0) -
-            (settlementSummary?.totalRemaining || 0)) /
-            (settlementSummary?.totalAmount || 0)) *
-            100,
-        )
-      : 0;
+
+  const invoiceTrend = workshop.invoiceStats?.data?.cashTrend || [];
+  const totalPayable = invoiceTrend.reduce(
+    (sum: number, t: any) => sum + (t.cashOut || 0),
+    0,
+  );
+
+  const selectedBranchId = filter.state.custom.branchId as string | undefined;
+
+  const sectionsToRender: Array<{ id: string | null; name: string }> =
+    React.useMemo(() => {
+      const res: Array<{ id: string | null; name: string }> = [];
+      if (selectedBranchId) {
+        const selectedBranch = (branches || []).find(
+          (b: any) => b.id === selectedBranchId,
+        );
+        if (selectedBranch) {
+          res.push({ id: selectedBranch.id, name: selectedBranch.name });
+        }
+      } else {
+        (branches || []).forEach((b: any) => {
+          res.push({ id: b.id, name: b.name });
+        });
+        res.push({ id: null, name: "Chưa phân loại chi nhánh" });
+      }
+      return res;
+    }, [branches, selectedBranchId]);
+
+  const monthLabels = React.useMemo(() => {
+    return Array.from({ length: 6 }).map((_, i) => {
+      const d = subMonths(new Date(), 5 - i);
+      return `Tháng ${format(d, "MM/yyyy")}`;
+    });
+  }, []);
+
+  const weekLabels = React.useMemo(() => {
+    return Array.from({ length: 4 }).map((_, i) => {
+      const d = subWeeks(new Date(), 3 - i);
+      const start = startOfWeek(d, { weekStartsOn: 1 });
+      const end = endOfWeek(d, { weekStartsOn: 1 });
+      return `${format(start, "dd/MM")} - ${format(end, "dd/MM")}`;
+    });
+  }, []);
+
+  const dayLabels = React.useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = subDays(new Date(), 6 - i);
+      return format(d, "dd/MM/yyyy");
+    });
+  }, []);
+
+  const { data: outStats, isLoading: outStatsLoading } = useQuery({
+    queryKey: ["erp-invoices-stats-dashboard", "OUT"],
+    queryFn: () => erpInvoicesCoreApi.getStats("OUT"),
+  });
+
+  const { data: inStats, isLoading: inStatsLoading } = useQuery({
+    queryKey: ["erp-invoices-stats-dashboard", "IN"],
+    queryFn: () => erpInvoicesCoreApi.getStats("IN"),
+  });
 
   const overviewKpis = [
     {
@@ -201,60 +233,6 @@ export function DashboardTabsContent({
       value: money(workshop.vinfastSummary.data?.summary.profit || 0),
       icon: <Banknote className="w-4 h-4 text-indigo-500" />,
       loading: workshop.vinfastSummary.isLoading,
-    },
-  ];
-
-  const invoiceKpis = [
-    {
-      label: t("kpi.totalReceivable"),
-      value: money(cashOut > cashIn ? cashOut - cashIn : 0),
-      icon: <ArrowRightLeft className="w-4 h-4 text-blue-500" />,
-      loading,
-    },
-    {
-      label: t("kpi.totalPayable"),
-      value: money(cashIn > cashOut ? cashIn - cashOut : 0),
-      icon: <Truck className="w-4 h-4 text-red-500" />,
-      loading,
-    },
-    {
-      label: t("kpi.totalInvoices"),
-      value: String(cashTrendLabels.length || 0),
-      icon: <LayoutDashboard className="w-4 h-4 text-indigo-500" />,
-      loading,
-    },
-    {
-      label: "Dòng thu/chi ròng",
-      value: money(cashIn - cashOut),
-      icon: <BarChart3 className="w-4 h-4 text-slate-600" />,
-      loading,
-    },
-  ];
-
-  const settlementKpis = [
-    {
-      label: t("kpi.settlementOrders"),
-      value: String(settlementSummary?.totalOrders || 0),
-      icon: <Receipt className="w-4 h-4 text-indigo-500" />,
-      loading: workshop.settlementSummary.isLoading,
-    },
-    {
-      label: t("kpi.totalSettledAmount"),
-      value: money(settlementSummary?.totalSettled || 0),
-      icon: <DollarSign className="w-4 h-4 text-emerald-500" />,
-      loading: workshop.settlementSummary.isLoading,
-    },
-    {
-      label: t("kpi.remainingAmount"),
-      value: money(settlementSummary?.totalRemaining || 0),
-      icon: <Calculator className="w-4 h-4 text-red-500" />,
-      loading: workshop.settlementSummary.isLoading,
-    },
-    {
-      label: t("kpi.completionRate"),
-      value: `${completionRate}%`,
-      icon: <BarChart3 className="w-4 h-4 text-blue-500" />,
-      loading: workshop.settlementSummary.isLoading,
     },
   ];
 
@@ -392,72 +370,247 @@ export function DashboardTabsContent({
       </TabsContent>
 
       <TabsContent value="sales" className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <KpiCard
-            loading={loading}
-            label={t("kpi.totalOrders")}
-            value={String(sales.kpi?.totalOrders || 0)}
-          />
-          <KpiCard
-            loading={loading}
-            label={t("kpi.salesQty")}
-            value={formatQty(salesQty)}
-          />
-          <KpiCard
-            loading={loading}
-            label={t("kpi.completionRate")}
-            value={`${(sales.kpi?.completionRate || 0).toFixed(2)}%`}
-          />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Panel title={t("panel.topCustomers")}>
-            <div className="space-y-2 mt-2 max-h-[300px] overflow-y-auto pr-2">
-              {(sales.topCustomers || []).map((row: any) => (
-                <div
-                  key={row.customerId}
-                  className="flex items-center justify-between p-2 bg-[color:var(--muted)] rounded text-sm"
-                >
-                  <span className="font-medium">{row.customerName}</span>
-                  <span className="font-semibold text-emerald-600">
-                    {formatQty(row.qty)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-          <Panel title={t("panel.colorDistribution")}>
-            <div className="flex items-center justify-center h-full min-h-[200px] text-sm text-[color:var(--muted-fg)]">
-              Vui lòng xem chi tiết ở trang Bán hàng
-            </div>
-          </Panel>
-        </div>
-        <Panel title={t("panel.salesTrend")}>
-          <div className="relative h-[250px]">
-            {!loading && salesLabels.length > 0 ? (
-              <BarChart
-                labels={salesLabels}
-                yCallback={(v) => formatQty(Number(v))}
-                datasets={[
-                  {
-                    data: salesData,
-                    color: BAR_SALES,
-                    label: t("kpi.salesQty"),
-                  },
-                ]}
-              />
-            ) : loading ? (
-              <ChartSkeleton type="bar" />
-            ) : (
-              <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-                {t("common.noData")}
-              </div>
-            )}
+        <div>
+          <div className="flex items-center gap-3 mb-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-md shadow-sm border border-emerald-100/50">
+              Doanh thu bán hàng
+            </h4>
+            <div className="h-px bg-emerald-100/50 flex-1"></div>
           </div>
-        </Panel>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KpiCard
+              compact
+              loading={outStatsLoading}
+              label="Doanh thu Tháng này"
+              value={money(outStats?.monthTotal || 0)}
+              sub={`Trước thuế: ${money(outStats?.monthPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={outStats?.monthChart || [0, 0, 0, 0, 0, 0]}
+                  preVatData={outStats?.monthPreVatChart || [0, 0, 0, 0, 0, 0]}
+                  labels={monthLabels}
+                />
+              }
+              bottomNode={(() => {
+                const branches = outStats?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b: any) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.monthTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+            <KpiCard
+              compact
+              loading={outStatsLoading}
+              label="Doanh thu Tuần này"
+              value={money(outStats?.weekTotal || 0)}
+              sub={`Trước thuế: ${money(outStats?.weekPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={outStats?.weekChart || [0, 0, 0, 0]}
+                  preVatData={outStats?.weekPreVatChart || [0, 0, 0, 0]}
+                  labels={weekLabels}
+                />
+              }
+              bottomNode={(() => {
+                const branches = outStats?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b: any) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.weekTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+            <KpiCard
+              compact
+              loading={outStatsLoading}
+              label="Doanh thu Hôm nay"
+              value={money(outStats?.dayTotal || 0)}
+              sub={`Trước thuế: ${money(outStats?.dayPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={outStats?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
+                  preVatData={outStats?.dayPreVatChart || [0, 0, 0, 0, 0, 0, 0]}
+                  labels={dayLabels}
+                />
+              }
+              bottomNode={(() => {
+                const branches = outStats?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b: any) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.dayTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center gap-3 mb-3 mt-6">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-orange-700 bg-orange-50 px-3 py-1.5 rounded-md shadow-sm border border-orange-200/50">
+              Chi phí mua hàng
+            </h4>
+            <div className="h-px bg-orange-200/50 flex-1"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KpiCard
+              compact
+              loading={inStatsLoading}
+              label="Chi phí Tháng này"
+              value={money(inStats?.monthTotal || 0)}
+              sub={`Trước thuế: ${money(inStats?.monthPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={inStats?.monthChart || [0, 0, 0, 0, 0, 0]}
+                  preVatData={inStats?.monthPreVatChart || [0, 0, 0, 0, 0, 0]}
+                  labels={monthLabels}
+                />
+              }
+              bottomNode={(() => {
+                const branches = inStats?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b: any) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.monthTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+            <KpiCard
+              compact
+              loading={inStatsLoading}
+              label="Chi phí Tuần này"
+              value={money(inStats?.weekTotal || 0)}
+              sub={`Trước thuế: ${money(inStats?.weekPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={inStats?.weekChart || [0, 0, 0, 0]}
+                  preVatData={inStats?.weekPreVatChart || [0, 0, 0, 0]}
+                  labels={weekLabels}
+                />
+              }
+              bottomNode={(() => {
+                const branches = inStats?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b: any) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.weekTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+            <KpiCard
+              compact
+              loading={inStatsLoading}
+              label="Chi phí Hôm nay"
+              value={money(inStats?.dayTotal || 0)}
+              sub={`Trước thuế: ${money(inStats?.dayPreVat || 0)}`}
+              rightNode={
+                <KpiSparkline
+                  data={inStats?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
+                  preVatData={inStats?.dayPreVatChart || [0, 0, 0, 0, 0, 0, 0]}
+                  labels={dayLabels}
+                />
+              }
+              bottomNode={(() => {
+                const branches = inStats?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b: any) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.dayTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold mb-4 text-slate-800">
+            Biến động Doanh thu / Chi phí
+          </h3>
+          {!selectedBranchId && (
+            <div className="mb-4">
+              <BranchInvoiceChart
+                key="chart-all"
+                branchId="all"
+                branchName="Tất cả chi nhánh (Tổng hợp)"
+                filterState={filter.state}
+                canView={true}
+                mode="all"
+              />
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {sectionsToRender.map((section) => (
+              <BranchInvoiceChart
+                key={`chart-${section.id || "unclassified"}`}
+                branchId={section.id}
+                branchName={section.name}
+                filterState={filter.state}
+                canView={true}
+                mode="all"
+              />
+            ))}
+          </div>
+        </div>
       </TabsContent>
 
       <TabsContent value="inventory" className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard
             loading={loading}
             label={t("kpi.totalSkus")}
@@ -472,6 +625,11 @@ export function DashboardTabsContent({
             loading={loading}
             label="Phiếu Xuất"
             value={String(inventory.totalIssuesCount || 0)}
+          />
+          <KpiCard
+            loading={loading || workshop.invoiceStats.isLoading}
+            label={t("kpi.totalPayable")}
+            value={money(totalPayable)}
           />
         </div>
         <Panel title={t("panel.stockTrend")}>
@@ -507,103 +665,8 @@ export function DashboardTabsContent({
       </TabsContent>
 
       <TabsContent value="cashflow" className="space-y-6">
-        <div className="grid grid-cols-2 max-[900px]:grid-cols-2 gap-3 mb-4">
-          <KpiCard
-            loading={loading}
-            label={t("kpi.totalCashIn")}
-            value={money(cashIn)}
-            icon={<IconTrendUp />}
-          />
-          <KpiCard
-            loading={loading}
-            label={t("kpi.totalCashOut")}
-            value={money(cashOut)}
-            icon={<IconTrendDown />}
-          />
-        </div>
-        <div className="grid grid-cols-1 min-[900px]:grid-cols-[1fr_300px] gap-3">
-          <Panel title={t("cashTrend")}>
-            <div className="relative h-[210px]">
-              {!loading && cashTrendLabels.length > 0 ? (
-                <BarChart
-                  labels={cashTrendLabels}
-                  yCallback={(v) => money(Number(v))}
-                  datasets={[
-                    {
-                      data: cashTrendIn,
-                      color: BAR_CASH_IN,
-                      label: t("cashIn"),
-                    },
-                    {
-                      data: cashTrendOut,
-                      color: BAR_CASH_OUT,
-                      label: t("cashOut"),
-                    },
-                  ]}
-                />
-              ) : loading ? (
-                <ChartSkeleton type="bar" />
-              ) : (
-                <div className="flex items-center justify-center h-full text-sm text-[color:var(--muted-fg)]">
-                  {t("common.noData")}
-                </div>
-              )}
-            </div>
-          </Panel>
-          <Panel title={t("expenseByCategory")}>
-            {!loading && donutItems.length > 0 ? (
-              <>
-                <div className="relative h-[160px] mb-2">
-                  <DonutChart items={donutItems} />
-                </div>
-                <DonutLegend items={donutItems} />
-              </>
-            ) : loading ? (
-              <div className="h-[200px]">
-                <ChartSkeleton type="donut" />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
-                {t("common.noData")}
-              </div>
-            )}
-          </Panel>
-        </div>
-
+        <DashboardCashflowTab filter={filter} />
         <CashflowForecastDashboardWidget />
-      </TabsContent>
-
-      <TabsContent value="invoice" className="space-y-6">
-        <KpiSection items={invoiceKpis} columns={4} />
-        <React.Suspense fallback={<Skeleton className="h-[400px]" />}>
-          <LazyInvoicePartnersTable
-            filterParams={{
-              dateFrom: filter.state.dateFrom,
-              dateTo: filter.state.dateTo,
-              branchId: filter.state.custom.branchId,
-            }}
-          />
-        </React.Suspense>
-      </TabsContent>
-
-      <TabsContent value="settlement" className="space-y-6">
-        <KpiSection items={settlementKpis} columns={4} />
-        <React.Suspense fallback={<Skeleton className="h-[500px]" />}>
-          <LazySettlementTable
-            filterParams={{
-              dateFrom: filter.state.dateFrom,
-              dateTo: filter.state.dateTo,
-              branchId: filter.state.custom.branchId,
-            }}
-            onSetPeriod={(from, to) => {
-              filter.setDateFrom(from ?? "");
-              filter.setDateTo(to ?? "");
-            }}
-            onRefresh={onRefresh}
-            onClearAllFilters={() => filter.resetAll()}
-            extraActiveFilters={filter.activeFilterCount || 0}
-          />
-        </React.Suspense>
       </TabsContent>
 
       <TabsContent value="vinfastParts" className="space-y-8">

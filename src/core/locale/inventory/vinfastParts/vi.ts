@@ -5,7 +5,7 @@ export const vinfastPartsVi = {
   TOTAL_IN: "Tổng Nhập",
   TOTAL_OUT: "Tổng Xuất",
   BALANCE: "Tồn cuối",
-  SYNC_LEDGER: "Đồng bộ sổ cái",
+  SYNC_LEDGER: "Đồng bộ danh mục Vinfast",
   DOWNLOAD_REPORT: "Tải bảng kê",
   CREATE_NEW: "Tạo mới",
   SYSTEM: "HỆ THỐNG",

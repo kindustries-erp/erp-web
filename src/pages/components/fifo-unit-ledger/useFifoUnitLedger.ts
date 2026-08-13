@@ -15,6 +15,8 @@ export interface LedgerRow {
   invoiceDate: string;
   buyerName: string;
   sellerName: string;
+  buyerTaxCode?: string;
+  sellerTaxCode?: string;
   licensePlate: string;
   calculatedCogs?: number;
   calculatedUnitCost?: number;

@@ -114,6 +114,8 @@ interface DataTableProps<T> {
   actionsColumn?: ActionsColumnConfig<T>;
   page?: number;
   pageSize?: number;
+  pageSizeOptions?: number[];
+  paginationClassName?: string;
   total?: number;
   totalPages?: number;
   onPage?: (page: number) => void;
@@ -317,6 +319,8 @@ export function DataTable<T>({
   actionsColumn,
   page,
   pageSize,
+  pageSizeOptions,
+  paginationClassName,
   total,
   totalPages,
   onPage,
@@ -1086,8 +1090,10 @@ export function DataTable<T>({
       </div>
       {showPagination && (
         <TablePagination
+          className={paginationClassName}
           page={page}
           pageSize={pageSize}
+          pageSizeOptions={pageSizeOptions}
           total={total}
           totalPages={totalPages}
           onPage={onPage}

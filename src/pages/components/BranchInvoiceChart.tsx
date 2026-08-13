@@ -11,6 +11,7 @@ interface BranchInvoiceChartProps {
   branchName: string;
   filterState: any;
   canView: boolean;
+  mode?: "all" | "revenue";
 }
 
 export function BranchInvoiceChart({
@@ -18,6 +19,7 @@ export function BranchInvoiceChart({
   branchName,
   filterState,
   canView,
+  mode = "all",
 }: BranchInvoiceChartProps) {
   const { data: statsData, isLoading: isLoadingStats } = useQuery({
     queryKey: [
@@ -45,6 +47,34 @@ export function BranchInvoiceChart({
   const cashProfit =
     statsData?.cashTrend?.map((t: any) => t.cashIn - t.cashOut) || []; // Lợi nhuận
 
+  const datasets = [];
+
+  if (mode === "all") {
+    datasets.push({
+      type: "line",
+      data: cashProfit,
+      color: "transparent",
+      borderColor: lineProfit,
+      borderWidth: 2,
+      fill: false,
+      label: "Lợi nhuận (Đầu ra - Đầu vào)",
+    });
+    datasets.push({
+      type: "bar",
+      data: cashTrendOut,
+      color: colorExpense, // Hóa đơn đầu vào
+      label: "HĐ Đầu vào (Chi phí)",
+    });
+  }
+
+  // Always show revenue
+  datasets.push({
+    type: "bar",
+    data: cashTrendIn,
+    color: colorRevenue, // Hóa đơn đầu ra
+    label: "HĐ Đầu ra (Doanh thu)",
+  });
+
   return (
     <Panel title={branchName} extra={<PanelMore />}>
       <div className="relative h-[280px]">
@@ -52,29 +82,7 @@ export function BranchInvoiceChart({
           <BarChart
             labels={cashTrendLabels}
             yCallback={(v) => money(Number(v))}
-            datasets={[
-              {
-                type: "line",
-                data: cashProfit,
-                color: "transparent",
-                borderColor: lineProfit,
-                borderWidth: 2,
-                fill: false,
-                label: "Lợi nhuận (Đầu ra - Đầu vào)",
-              },
-              {
-                type: "bar",
-                data: cashTrendOut,
-                color: colorExpense, // Hóa đơn đầu vào
-                label: "HĐ Đầu vào (Chi phí)",
-              },
-              {
-                type: "bar",
-                data: cashTrendIn,
-                color: colorRevenue, // Hóa đơn đầu ra
-                label: "HĐ Đầu ra (Doanh thu)",
-              },
-            ]}
+            datasets={datasets as any}
           />
         ) : isLoadingStats ? (
           <ChartSkeleton type="bar" />
@@ -85,9 +93,11 @@ export function BranchInvoiceChart({
         )}
       </div>
       <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={colorExpense} label="Đầu vào" />
+        {mode === "all" && <LegendItem color={colorExpense} label="Đầu vào" />}
         <LegendItem color={colorRevenue} label="Đầu ra" />
-        <LegendItem color={lineProfit} label="Lợi nhuận" isLine={true} />
+        {mode === "all" && (
+          <LegendItem color={lineProfit} label="Lợi nhuận" isLine={true} />
+        )}
       </div>
     </Panel>
   );

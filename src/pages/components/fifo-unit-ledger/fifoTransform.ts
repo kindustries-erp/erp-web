@@ -6,6 +6,7 @@ export interface LedgerDisplayRow {
   invoiceNo: string;
   invoiceId: string;
   partnerName: string;
+  partnerTaxCode?: string;
   direction: "IN" | "OUT";
 
   // IN
@@ -32,7 +33,14 @@ export function buildFlatLedgerRows(rows: LedgerRow[]): LedgerDisplayRow[] {
 
   const inQueue: { qty: number; unitCost: number }[] = [];
 
-  for (const row of rows) {
+  // Sort rows chronologically (oldest first) to simulate FIFO correctly
+  const sortedRows = [...rows].sort(
+    (a, b) =>
+      new Date(a.transactionDate).getTime() -
+      new Date(b.transactionDate).getTime(),
+  );
+
+  for (const row of sortedRows) {
     const rawQty = parseFloat(row.qty || "0");
     const isAdjNegative = row.isAdjustment && row.adjSign === -1;
     const qty = isAdjNegative ? -rawQty : rawQty;
@@ -42,6 +50,7 @@ export function buildFlatLedgerRows(rows: LedgerRow[]): LedgerDisplayRow[] {
 
     const isOut = row.direction === "OUT";
     const partnerName = isOut ? row.buyerName : row.sellerName;
+    const partnerTaxCode = isOut ? row.buyerTaxCode : row.sellerTaxCode;
 
     if (!isOut) {
       if (qty > 0) {
@@ -114,6 +123,7 @@ export function buildFlatLedgerRows(rows: LedgerRow[]): LedgerDisplayRow[] {
       invoiceNo: row.invoiceNo,
       invoiceId: row.invoiceId,
       partnerName,
+      partnerTaxCode,
       direction: row.direction as "IN" | "OUT",
 
       inQty,

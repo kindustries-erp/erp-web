@@ -6,7 +6,7 @@ import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 // import { Tooltip } from "@/core/components/ui/Tooltip";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
+
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useT } from "@/core/i18n";
@@ -21,7 +21,6 @@ import { StandardTable } from "@/shared/components/StandardTable";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { TableText } from "@/shared/components/DataTable/TableText";
-import { CategoryTransactionsDrawer } from "./components/CategoryTransactionsDrawer";
 import { PartnerTransactionsDrawer } from "./components/PartnerTransactionsDrawer";
 
 function BranchPartnerStatsTable({
@@ -316,12 +315,6 @@ export function CashflowDashboard() {
   const { employee } = useAuthStore();
   const isAdminEmail = employee?.email === "admin@liouni.com";
 
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [selectedTag, setSelectedTag] = React.useState<{
-    id: string;
-    label: string;
-  } | null>(null);
-
   const [partnerDrawerOpen, setPartnerDrawerOpen] = React.useState(false);
   const [selectedPartner, setSelectedPartner] = React.useState<{
     account?: string;
@@ -438,32 +431,6 @@ export function CashflowDashboard() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sourceOut = data?.sourceBreakdown?.map((t: any) => t.cashOut) || [];
 
-  const defaultColors = [
-    "#3b82f6",
-    "#10b981",
-    "#f59e0b",
-    "#ef4444",
-    "#8b5cf6",
-    "#ec4899",
-    "#14b8a6",
-  ];
-
-  const handleCategoryClick = (item: any) => {
-    if (item.id) {
-      setSelectedTag({ id: item.id, label: item.label });
-      setDrawerOpen(true);
-    }
-  };
-
-  const donutItems = (data?.categoryBreakdown || []).map(
-    (c: any, i: number) => ({
-      id: c.tagId,
-      label: c.label || t("common.other"),
-      value: c.amount,
-      color: c.color || defaultColors[i % defaultColors.length],
-    }),
-  );
-
   const hasCashflowPerm = useHasAnyPermission(
     [
       "bank_statements",
@@ -525,7 +492,7 @@ export function CashflowDashboard() {
       </div>
 
       {/* Panels row */}
-      <div className="grid grid-cols-1 min-[900px]:grid-cols-[1fr_300px] gap-3">
+      <div className="mb-4">
         <Panel title={t("dashboard.cashTrend")} extra={<PanelMore />}>
           <div className="relative h-[210px]">
             {!isLoading && cashTrendLabels.length > 0 ? (
@@ -557,35 +524,6 @@ export function CashflowDashboard() {
             <LegendItem color={barIn} label={t("dashboard.cashIn")} />
             <LegendItem color={barOut} label={t("dashboard.cashOut")} />
           </div>
-        </Panel>
-
-        <Panel title={t("dashboard.expenseByCategory")}>
-          {!isLoading && donutItems.length > 0 ? (
-            <>
-              <div className="relative h-[160px] mb-2 shrink-0">
-                <DonutChart
-                  items={donutItems}
-                  onClick={handleCategoryClick}
-                  valueFormatter={(v) => money(v)}
-                />
-              </div>
-              <div className="max-h-[160px] overflow-y-auto pr-1">
-                <DonutLegend
-                  items={donutItems}
-                  onClick={handleCategoryClick}
-                  valueFormatter={(v) => money(v)}
-                />
-              </div>
-            </>
-          ) : isLoading ? (
-            <div className="h-[200px]">
-              <ChartSkeleton type="donut" />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[200px] text-sm text-[color:var(--muted-fg)]">
-              {t("common.noData")}
-            </div>
-          )}
         </Panel>
       </div>
 
@@ -654,13 +592,6 @@ export function CashflowDashboard() {
           }}
         />
       </div>
-      <CategoryTransactionsDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        tagId={selectedTag?.id}
-        tagLabel={selectedTag?.label}
-        filterState={filter.state}
-      />
       <PartnerTransactionsDrawer
         open={partnerDrawerOpen}
         onClose={() => setPartnerDrawerOpen(false)}
