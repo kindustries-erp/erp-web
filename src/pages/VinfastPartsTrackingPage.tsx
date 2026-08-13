@@ -24,12 +24,16 @@ import {
   Info,
   Loader2,
   RefreshCw,
+  PanelRightOpen,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { Popover } from "@/core/components/ui/Popover";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { Button } from "@/shared/components/ui/Button";
+import { Badge } from "@/shared/components/ui/badge";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { StandardTable } from "@/shared/components/StandardTable";
 import {
@@ -38,10 +42,14 @@ import {
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { VinfastPartsExportDrawer } from "@/pages/components/VinfastPartsExportDrawer";
+import { VinfastPartsSyncDrawer } from "@/pages/components/VinfastPartsSyncDrawer";
 
 interface VinfastPartTrackingRow {
   itemCode: string;
   itemName: string;
+  vehicleType: "CAR" | "MOTORBIKE";
   month: string;
   qtyBought: number;
   qtySold: number;
@@ -52,6 +60,38 @@ interface VinfastPartTrackingRow {
   buyInvoiceIds: string[];
   sellInvoiceIds: string[];
 }
+
+function getVehicleTypeLabel(vehicleType: "CAR" | "MOTORBIKE") {
+  return vehicleType === "CAR" ? "Ô tô" : "Xe máy";
+}
+
+function getVehicleTypeBadgeClass(vehicleType: "CAR" | "MOTORBIKE") {
+  return vehicleType === "CAR"
+    ? "w-[80px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+    : "w-[80px] border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100";
+}
+
+const CopyIconBtn = ({ text }: { text: string }) => {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded text-slate-500"
+      title="Copy"
+    >
+      {copied ? (
+        <Check className="w-3.5 h-3.5 text-green-600" />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
+    </button>
+  );
+};
 
 function VinfastPartDetailDrawer({
   open,
@@ -501,18 +541,26 @@ function PriceWithInvoicePopover({
   );
 }
 
-export function VinfastPartsTrackingPage() {
-  const { t } = useTranslation("erpInvoices");
+export function VinfastPartsTrackingPage({
+  vehicleType,
+}: {
+  vehicleType?: "CAR" | "MOTORBIKE";
+}) {
+  const { t } = useTranslation("vinfast");
   const formHook = useErpInvoiceForm(() => {});
   const showToast = useUIStore((s) => s.showToast);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [detailRow, setDetailRow] = useState<VinfastPartTrackingRow | null>(
     null,
   );
 
-  const tableState = useTableColumnState("vinfast-parts-table");
+  const tableState = useTableColumnState(
+    `vinfast-parts-table-${vehicleType || "all"}`,
+  );
 
   const activeSort = tableState.sorts[0] || "";
   let sortBy = "";
@@ -558,6 +606,10 @@ export function VinfastPartsTrackingPage() {
       pageParam: number;
       filtersStr?: string;
     }) => {
+      const parsedFilters = filtersStr ? JSON.parse(filtersStr) : {};
+      if (vehicleType) {
+        parsedFilters["vehicleType"] = [vehicleType];
+      }
       const res = await api.get(
         "/api/v1/reports/vinfast-parts/column-options",
         {
@@ -566,7 +618,7 @@ export function VinfastPartsTrackingPage() {
             search,
             page: pageParam,
             limit: 20,
-            filters: filtersStr,
+            filters: JSON.stringify(parsedFilters),
           },
         },
       );
@@ -576,7 +628,7 @@ export function VinfastPartsTrackingPage() {
         next: res.data.page < res.data.totalPages ? res.data.page + 1 : null,
       };
     },
-    [],
+    [vehicleType],
   );
 
   const filterConfig: FilterPanelConfig = useMemo(
@@ -593,17 +645,17 @@ export function VinfastPartsTrackingPage() {
   const commonFilterProps = useMemo(
     () => ({
       enableSelectAllMatching: true,
-      requireSearchToFetchOptions: false,
-      queryKeyPrefix: "vinfast-parts-options",
+      queryKeyPrefix: `vinfast-parts-options-${vehicleType || "all"}`,
       allFilters: tableState.columnFilters,
       fetchOptions: fetchColumnOptions,
     }),
-    [tableState.columnFilters, fetchColumnOptions],
+    [tableState.columnFilters, fetchColumnOptions, vehicleType],
   );
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: [
       "vinfast-parts",
+      vehicleType || "all",
       page,
       pageSize,
       sortBy,
@@ -625,11 +677,14 @@ export function VinfastPartsTrackingPage() {
         params.append("sorts", JSON.stringify(tableState.sorts));
       if (Object.keys(tableState.columnSearch).length > 0)
         params.append("column_search", JSON.stringify(tableState.columnSearch));
-      if (Object.keys(tableState.columnFilters).length > 0)
-        params.append(
-          "column_filters",
-          JSON.stringify(tableState.columnFilters),
-        );
+
+      // Inject vehicleType filter if provided
+      const finalColumnFilters = { ...tableState.columnFilters };
+      if (vehicleType) {
+        finalColumnFilters["vehicleType"] = [vehicleType];
+      }
+      if (Object.keys(finalColumnFilters).length > 0)
+        params.append("column_filters", JSON.stringify(finalColumnFilters));
       params.append("page", page.toString());
       params.append("limit", pageSize.toString());
 
@@ -697,6 +752,37 @@ export function VinfastPartsTrackingPage() {
     };
   }, [data]);
 
+  const buildExportBaseQuery = useCallback(() => {
+    const payload: Record<string, string> = {};
+
+    if (filterState.search) payload.search = filterState.search;
+    if (sortBy) payload.sortBy = sortBy;
+    if (sortOrder) payload.sortDir = sortOrder;
+    if (tableState.sorts.length > 0)
+      payload.sorts = JSON.stringify(tableState.sorts);
+    if (Object.keys(tableState.columnSearch).length > 0) {
+      payload.columnSearch = JSON.stringify(tableState.columnSearch);
+    }
+
+    const finalExportFilters = { ...tableState.columnFilters };
+    if (vehicleType) {
+      finalExportFilters["vehicleType"] = [vehicleType];
+    }
+    if (Object.keys(finalExportFilters).length > 0) {
+      payload.columnFilters = JSON.stringify(finalExportFilters);
+    }
+
+    return payload;
+  }, [
+    filterState.search,
+    sortBy,
+    sortOrder,
+    tableState.columnFilters,
+    tableState.columnSearch,
+    tableState.sorts,
+    vehicleType,
+  ]);
+
   const columns: DataTableColumn<VinfastPartTrackingRow>[] = [
     {
       key: "actions",
@@ -729,7 +815,21 @@ export function VinfastPartsTrackingPage() {
           onFilterChange={(vals) => handleFilterChange("month", vals)}
           align="center"
           columnKey="month"
-          {...commonFilterProps}
+          hideFilter={true}
+          hideFooter={true}
+          isActive={!!(filterState.dateFrom || filterState.dateTo)}
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={filterState.dateFrom}
+              dateTo={filterState.dateTo}
+              onChange={(from, to) => {
+                filterProps.setDateFrom(from);
+                filterProps.setDateTo(to);
+                setPage(1);
+              }}
+              onClose={close}
+            />
+          )}
         />
       ),
       size: 100,
@@ -753,18 +853,25 @@ export function VinfastPartsTrackingPage() {
           {...commonFilterProps}
         />
       ),
+      size: 200,
       headerClassName: "text-center",
       cell: (row) => (
-        <Button
-          variant="link"
-          className="font-medium text-primary hover:underline p-0 h-auto"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDetailRow(row);
-          }}
-        >
-          {row.itemCode}
-        </Button>
+        <div className="group flex items-center justify-between w-full pr-1">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetailRow(row);
+              }}
+              className="h-5 w-5 p-0 flex items-center justify-center rounded opacity-40 hover:opacity-100 hover:bg-slate-200 transition-all flex-shrink-0"
+              title="Xem chi tiết"
+            >
+              <PanelRightOpen className="w-3.5 h-3.5 text-slate-700" />
+            </button>
+            <span className="truncate text-slate-700">{row.itemCode}</span>
+            <CopyIconBtn text={row.itemCode} />
+          </div>
+        </div>
       ),
     },
     {
@@ -783,7 +890,7 @@ export function VinfastPartsTrackingPage() {
           {...commonFilterProps}
         />
       ),
-      size: 200,
+      size: 250,
       headerClassName: "text-center",
       cell: (row) => (
         <Tooltip content={row.itemName || ""}>
@@ -793,6 +900,41 @@ export function VinfastPartsTrackingPage() {
           >
             {row.itemName}
           </div>
+        </Tooltip>
+      ),
+    },
+    {
+      key: "vehicleType",
+      header: (
+        <TableColumnHeaderFilter
+          title="Loại xe"
+          sortState={getSortState("vehicleType")}
+          onSortChange={(state) => handleSortChange("vehicleType", state)}
+          searchValue={tableState.columnSearch["vehicleType"] || ""}
+          onSearchChange={(val) => handleSearchChange("vehicleType", val)}
+          selectedFilters={tableState.columnFilters["vehicleType"] || []}
+          onFilterChange={(vals) => handleFilterChange("vehicleType", vals)}
+          align="center"
+          columnKey="vehicleType"
+          {...commonFilterProps}
+          formatOptionLabel={(label) =>
+            label === "CAR" ? "Ô tô" : label === "MOTORBIKE" ? "Xe máy" : label
+          }
+        />
+      ),
+      size: 120,
+      headerClassName: "text-center",
+      className: "text-center",
+      cell: (row) => (
+        <Tooltip content={getVehicleTypeLabel(row.vehicleType)}>
+          <Badge
+            variant="ghost"
+            className={`border ${getVehicleTypeBadgeClass(row.vehicleType)}`}
+          >
+            <span className="truncate block max-w-full">
+              {getVehicleTypeLabel(row.vehicleType)}
+            </span>
+          </Badge>
         </Tooltip>
       ),
     },
@@ -957,7 +1099,7 @@ export function VinfastPartsTrackingPage() {
       className: "text-right",
       cell: (row) => (
         <span className="font-semibold text-slate-700">
-          {money(row.margin)}
+          {row.qtySold > 0 && row.margin != null ? money(row.margin) : ""}
         </span>
       ),
     },
@@ -979,18 +1121,46 @@ export function VinfastPartsTrackingPage() {
       ),
       headerClassName: "text-center",
       className: "text-right",
-      cell: (row) => <span className="text-gray-600">{row.marginPct}</span>,
+      cell: (row) => (
+        <span className="text-gray-600">
+          {row.qtySold > 0 ? row.marginPct : ""}
+        </span>
+      ),
     },
   ];
 
   return (
     <>
       <SpreadsheetPageTemplate
-        title="Báo cáo phụ tùng VINFAST"
-        desc="Tổng hợp và đối chiếu phụ tùng mua vào từ VINFAST và bán ra theo tháng"
+        title={
+          vehicleType === "CAR"
+            ? "Báo cáo phụ tùng Ô tô VINFAST"
+            : vehicleType === "MOTORBIKE"
+              ? "Báo cáo phụ tùng Xe máy VINFAST"
+              : "Báo cáo phụ tùng VINFAST"
+        }
+        desc={
+          vehicleType === "CAR"
+            ? "Tổng hợp và đối chiếu phụ tùng ô tô mua vào từ VINFAST và bán ra theo tháng"
+            : vehicleType === "MOTORBIKE"
+              ? "Tổng hợp và đối chiếu phụ tùng xe máy mua vào từ VINFAST và bán ra theo tháng"
+              : "Tổng hợp và đối chiếu phụ tùng mua vào từ VINFAST và bán ra theo tháng"
+        }
         icon={<FileText className="w-4 h-4 opacity-75" />}
-        tableId="vinfast-parts"
+        tableId={`vinfast-parts-${vehicleType || "all"}`}
         createActions={[
+          {
+            groupLabel: "HỆ THỐNG",
+            items: [
+              {
+                label: "Đồng bộ sổ cái",
+                icon: <RefreshCw className="w-4 h-4 text-blue-600" />,
+                onClick: () => {
+                  setSyncDrawerOpen(true);
+                },
+              },
+            ],
+          },
           {
             groupLabel: "TRA CỨU",
             items: [
@@ -998,41 +1168,7 @@ export function VinfastPartsTrackingPage() {
                 label: "Tải bảng kê",
                 icon: <Download className="w-4 h-4 text-green-600" />,
                 onClick: () => {
-                  const params = new URLSearchParams();
-                  if (filterState.dateFrom)
-                    params.append("dateFrom", filterState.dateFrom);
-                  if (filterState.dateTo)
-                    params.append("dateTo", filterState.dateTo);
-                  if (filterState.search)
-                    params.append("search", filterState.search);
-                  if (sortBy) params.append("sortBy", sortBy);
-                  if (sortOrder) params.append("sortDir", sortOrder);
-                  if (tableState.sorts.length > 0)
-                    params.append("sorts", JSON.stringify(tableState.sorts));
-                  if (Object.keys(tableState.columnSearch).length > 0)
-                    params.append(
-                      "column_search",
-                      JSON.stringify(tableState.columnSearch),
-                    );
-                  if (Object.keys(tableState.columnFilters).length > 0)
-                    params.append(
-                      "column_filters",
-                      JSON.stringify(tableState.columnFilters),
-                    );
-
-                  // Logic to trigger download
-                  const url = `/api/v1/reports/vinfast-parts/export/excel?${params.toString()}`;
-                  api.get(url, { responseType: "blob" }).then((res) => {
-                    const fileUrl = window.URL.createObjectURL(res.data);
-                    const a = document.createElement("a");
-                    a.href = fileUrl;
-                    const timeStr = format(new Date(), "yyyyMMdd_HHmmss");
-                    a.download = `Bao_cao_phu_tung_VINFAST_${timeStr}.xlsx`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(fileUrl);
-                    document.body.removeChild(a);
-                  });
+                  setExportDrawerOpen(true);
                 },
               },
             ],
@@ -1075,6 +1211,14 @@ export function VinfastPartsTrackingPage() {
         onRefresh={() => refetch()}
         filterConfig={filterConfig}
         filter={filterProps}
+        activeFilterCount={
+          filterProps.activeFilterCount + (tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          filterProps.resetAll();
+          tableState.resetFilters();
+          setPage(1);
+        }}
       />
 
       <ErpInvoiceInternalDrawer
@@ -1103,8 +1247,7 @@ export function VinfastPartsTrackingPage() {
               pdfSlot={
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
-                  pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  attachments={formHook.detailInvoice?.pdfFiles ?? null}
                   editMode={formHook.editMode}
                 />
               }
@@ -1139,6 +1282,19 @@ export function VinfastPartsTrackingPage() {
           />
         </div>
       </ErpInvoiceInternalDrawer>
+
+      <VinfastPartsExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        buildBaseQuery={buildExportBaseQuery}
+        initialDateFrom={filterState.dateFrom}
+        initialDateTo={filterState.dateTo}
+      />
+
+      <VinfastPartsSyncDrawer
+        open={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
+      />
 
       <VinfastPartDetailDrawer
         open={!!detailRow}

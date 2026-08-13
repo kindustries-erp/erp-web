@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { DrawerModal, DrawerSection, type DrawerAction } from "./DrawerModal";
 import { useT } from "@/core/i18n";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import { Button } from "@/shared/components/ui/Button";
 import { cn } from "@/shared/utils";
 import type { DrawerMode } from "../stores/useDrawerStore";
 import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
@@ -74,6 +75,14 @@ export interface StandardFormDrawerProps {
 
   /** Whether the right panel should be sticky and have its own scrollbar. Default: true */
   stickyRightPanel?: boolean;
+
+  /** Whether the right panel should be collapsible. Defaults to true if rightPanelTitle is provided. */
+  collapsibleRightPanel?: boolean;
+  noAnimation?: boolean;
+  asContent?: boolean;
+
+  /** Custom element to render on the left side of the footer */
+  footerLeft?: React.ReactNode;
 }
 
 export function StandardFormDrawer({
@@ -97,8 +106,12 @@ export function StandardFormDrawer({
   hideRightPanel = false,
   rightPanelTitle,
   rightPanelDefaultCollapsed = false,
-  stickyRightPanel = true,
+  stickyRightPanel = false,
+  collapsibleRightPanel = false,
   zIndex,
+  asContent = false,
+  noAnimation = false,
+  footerLeft,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -112,42 +125,72 @@ export function StandardFormDrawer({
   }, [open, rightPanelDefaultCollapsed]);
 
   // view mode: border-primary outline, hover fills primary bg
-  const headerExtra =
-    mode === "view" && onToggleEdit ? (
-      <button
-        type="button"
-        onClick={onToggleEdit}
-        className="px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg"
-      >
-        {t("Chỉnh sửa")}
-      </button>
-    ) : undefined;
+  const headerExtra = (
+    <div className="flex items-center gap-2">
+      {mode === "view" && onToggleEdit && (
+        <button
+          type="button"
+          onClick={onToggleEdit}
+          className="px-3 py-[5px] rounded-lg text-xs font-medium border transition-colors border-primary text-primary bg-transparent hover:bg-primary hover:text-primary-fg"
+        >
+          {t("Chỉnh sửa")}
+        </button>
+      )}
+      {!hideRightPanel && rightPanel && collapsibleRightPanel && (
+        <div
+          className={cn(
+            "flex items-center",
+            mode === "view" &&
+              onToggleEdit &&
+              "border-l pl-2 ml-1 border-border/60",
+          )}
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setRightPanelCollapsed((s) => !s)}
+            className="text-[color:var(--faint)]"
+            title={
+              rightPanelCollapsed
+                ? t("Mở rộng cột phải")
+                : t("Thu gọn cột phải")
+            }
+          >
+            {rightPanelCollapsed ? (
+              <ChevronLeft className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
   // Resolve size → className (layout default: 1-column → sm, 2-columns → xl)
   const resolvedSize = size ?? (layout === "1-column" ? "sm" : "xl");
   const defaultPanelClassName = SIZE_CLASS[resolvedSize];
 
-  return (
-    <DrawerModal
-      open={open}
-      onClose={onClose}
-      icon={icon}
-      confirmOnClose={confirmOnClose}
-      headerExtra={headerExtra}
-      panelClassName={cn(defaultPanelClassName, panelClassName)}
-      title={title}
-      titleExtra={titleExtra}
-      subtitle={subtitle}
-      actions={actions}
-      zIndex={zIndex}
-    >
+  const innerContent = (
+    <>
+      {error && (
+        <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mb-4 flex-shrink-0">
+          {error}
+        </div>
+      )}
       {loading ? (
         <FormLoadingSkeleton />
       ) : layout === "1-column" ? (
         // 1-column: render leftPanel raw — caller uses DrawerSection/DrawerField directly
         <div className="w-full pb-4">{leftPanel}</div>
       ) : (
-        <div className="flex flex-col lg:flex-row gap-6 items-start w-full max-w-full relative h-full">
+        <div
+          className={cn(
+            "flex flex-col lg:flex-row items-start w-full max-w-full relative h-full transition-all duration-300",
+            rightPanelCollapsed ? "gap-0" : "gap-6",
+          )}
+        >
           {/* Cột trái: Chi tiết / Main Content */}
           <div className="flex-1 min-w-0 w-full order-2 lg:order-1 space-y-4">
             {leftPanel}
@@ -156,53 +199,18 @@ export function StandardFormDrawer({
           {/* Cột phải: Thông tin chung / Metadata */}
           {!hideRightPanel &&
             rightPanel &&
-            (rightPanelTitle ? (
+            (rightPanelTitle !== undefined || collapsibleRightPanel ? (
               <div
                 className={cn(
-                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300",
+                  "shrink-0 order-1 lg:order-2 space-y-4 transition-all duration-300 overflow-x-hidden",
                   stickyRightPanel && "lg:sticky lg:top-0",
                   rightPanelCollapsed
-                    ? "w-full lg:w-[52px]"
-                    : "w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px]",
+                    ? "w-full lg:w-0 h-0 lg:h-auto opacity-0 overflow-hidden"
+                    : "w-full lg:w-[300px] xl:w-[320px] 2xl:w-[360px] opacity-100",
                 )}
               >
-                <DrawerSection
-                  title={
-                    <span
-                      className={cn(
-                        "transition-all duration-300 inline-block overflow-hidden whitespace-nowrap align-middle",
-                        rightPanelCollapsed
-                          ? "max-w-0 opacity-0"
-                          : "max-w-[200px] opacity-100",
-                      )}
-                    >
-                      {rightPanelTitle}
-                    </span>
-                  }
-                  titleExtra={
-                    <button
-                      type="button"
-                      onClick={() => setRightPanelCollapsed((s) => !s)}
-                      className="p-1 -mr-1 rounded hover:bg-muted text-muted-foreground transition-colors"
-                      title={rightPanelCollapsed ? t("Mở rộng") : t("Thu gọn")}
-                    >
-                      {rightPanelCollapsed ? (
-                        <ChevronLeft className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </button>
-                  }
-                >
-                  <div
-                    className={cn(
-                      "grid transition-all duration-300 ease-in-out",
-                      rightPanelCollapsed ? "opacity-0" : "opacity-100",
-                    )}
-                    style={{
-                      gridTemplateRows: rightPanelCollapsed ? "0fr" : "1fr",
-                    }}
-                  >
+                {rightPanelTitle !== undefined ? (
+                  <DrawerSection title={rightPanelTitle}>
                     <div
                       className={cn(
                         "w-full",
@@ -220,8 +228,24 @@ export function StandardFormDrawer({
                         {rightPanel}
                       </div>
                     </div>
+                  </DrawerSection>
+                ) : (
+                  <div
+                    className={cn(
+                      "w-full",
+                      stickyRightPanel
+                        ? "overflow-x-hidden overflow-y-auto lg:max-h-[calc(100vh-190px)]"
+                        : "overflow-x-hidden overflow-y-visible",
+                    )}
+                    style={
+                      stickyRightPanel ? { scrollbarWidth: "none" } : undefined
+                    }
+                  >
+                    <div className="flex flex-col min-w-[280px]">
+                      {rightPanel}
+                    </div>
                   </div>
-                </DrawerSection>
+                )}
               </div>
             ) : (
               <div
@@ -235,12 +259,32 @@ export function StandardFormDrawer({
             ))}
         </div>
       )}
+    </>
+  );
 
-      {error && (
-        <div className="text-xs text-[color:var(--warn-fg)] bg-[color:var(--warn-bg)] border border-[color:var(--warn-fg)]/30 rounded-lg px-3 py-2 mt-3 flex-shrink-0">
-          {error}
-        </div>
-      )}
+  if (asContent) {
+    return (
+      <div className="h-full w-full flex flex-col relative">{innerContent}</div>
+    );
+  }
+
+  return (
+    <DrawerModal
+      open={open}
+      onClose={onClose}
+      icon={icon}
+      confirmOnClose={confirmOnClose}
+      headerExtra={headerExtra}
+      panelClassName={cn(defaultPanelClassName, panelClassName)}
+      title={title}
+      titleExtra={titleExtra}
+      subtitle={subtitle}
+      actions={actions}
+      zIndex={zIndex}
+      noAnimation={noAnimation}
+      footerLeft={footerLeft}
+    >
+      {innerContent}
     </DrawerModal>
   );
 }

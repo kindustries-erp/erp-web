@@ -56,10 +56,11 @@ export function PurchaseOrderDrawer({
     branchOptions,
     partnerOptions,
     isPurchaseLocked,
-    isPurchaseFullyLocked,
     purchaseFieldLocked,
     purchaseInventoryOptions,
     handleSubmit,
+    pendingDocumentChanges,
+    fieldSet,
   } = drawerState;
 
   const actions =
@@ -117,6 +118,7 @@ export function PurchaseOrderDrawer({
     <StandardFormDrawer
       open={open}
       mode={mode}
+      collapsibleRightPanel={true}
       onClose={onClose}
       onToggleEdit={onToggleEdit}
       title={
@@ -148,18 +150,21 @@ export function PurchaseOrderDrawer({
           purchaseFieldLocked={purchaseFieldLocked}
           viewOnly={viewOnly}
           purchaseInventoryOptions={purchaseInventoryOptions}
+          poReceipts={poReceipts}
+          pendingDocumentChanges={pendingDocumentChanges}
+          fieldSet={fieldSet}
+          purchaseOrderId={editing?.id}
+          open={open}
         />
       }
       rightPanel={
         <FormGeneralInfoPanel
           variant="purchase"
           isPurchaseLocked={isPurchaseLocked}
-          isPurchaseFullyLocked={isPurchaseFullyLocked}
           purchaseFieldLocked={purchaseFieldLocked}
           viewOnly={viewOnly}
           branchOptions={branchOptions}
           partnerOptions={partnerOptions}
-          poReceipts={poReceipts}
           entityId={editing?.id ?? null}
           entityType="erp_purchase_order"
           pendingTagIds={pendingTagIds}

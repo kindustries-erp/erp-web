@@ -22,6 +22,7 @@ export interface GiLineForm {
   salesOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
+  itemCode?: string;
   itemName: string;
   serialId: string;
   vehicleId: string;
@@ -50,6 +51,7 @@ export const emptyGiLine = (): GiLineForm => ({
   salesOrderLineId: "",
   productionOrderMaterialId: "",
   itemId: "",
+  itemCode: "",
   itemName: "",
   serialId: "",
   vehicleId: "",
@@ -60,7 +62,7 @@ export const emptyGiLine = (): GiLineForm => ({
 export const emptyGiForm = (): GiForm => ({
   issueNo: "",
   issueDate: new Date().toISOString().slice(0, 10),
-  issueType: "SALE",
+  issueType: "",
   salesOrderId: "",
   productionOrderId: "",
   status: "DRAFT",
@@ -82,6 +84,7 @@ export function buildGiForm(gi: ErpGoodsIssue): GiForm {
           salesOrderLineId: line.salesOrderLineId ?? "",
           productionOrderMaterialId: line.productionOrderMaterialId ?? "",
           itemId: line.itemId ?? "",
+          itemCode: "",
           itemName: line.itemName ?? "",
           serialId: line.serialId ?? "",
           vehicleId: line.vehicleId ?? "",
@@ -162,7 +165,9 @@ export function useGiDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) ?? [],
     [itemsData],
@@ -236,6 +241,7 @@ export function useGiDrawer({
                 ...emptyGiLine(),
                 salesOrderLineId: l.id || "",
                 itemId: l.itemId || "",
+                itemCode: "",
                 itemName: l.itemName || "",
                 qtyIssued: "1",
                 unitCost: l.unitPrice || "",
@@ -247,6 +253,7 @@ export function useGiDrawer({
               ...emptyGiLine(),
               salesOrderLineId: l.id || "",
               itemId: l.itemId || "",
+              itemCode: "",
               itemName: l.itemName || "",
               qtyIssued: String(qtyToDeliver),
               unitCost: l.unitPrice || "",
@@ -338,7 +345,7 @@ export function useGiDrawer({
         }
         if (editing) {
           await goodsIssuesCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsIssuesCoreApi.post(editing.id);
           }
           showToast({
@@ -402,4 +409,10 @@ export function useGiDrawer({
   };
 }
 
-export type UseGiDrawerReturn = ReturnType<typeof useGiDrawer>;
+export type UseGiDrawerReturn = ReturnType<typeof useGiDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

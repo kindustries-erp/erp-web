@@ -153,13 +153,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       // Auto query detail if items are empty
       if (!fullInv.items || fullInv.items.length === 0) {
-        const token = localStorage.getItem("erp_portal_token");
-        if (token) {
-          try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
-          } catch (syncErr) {
-            console.warn("Auto sync detail failed", syncErr);
-          }
+        try {
+          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+        } catch (syncErr) {
+          console.warn("Auto sync detail failed", syncErr);
         }
       }
       setDetailInvoice(fullInv);
@@ -171,7 +168,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     }
   }
 
-  async function openInternal(inv: ErpInvoice | string) {
+  async function openInternal(inv: ErpInvoice | string, skipFetch = false) {
     // Handle string ID — open drawer first then fetch
     if (typeof inv === "string") {
       setInternalDrawerOpen(true);
@@ -205,11 +202,12 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     setInternalDrawerOpen(true);
 
     if (
-      detailInvoice?.id === inv.id &&
-      detailInvoice?.items &&
-      detailInvoice.items.length > 0
+      skipFetch ||
+      (detailInvoice?.id === inv.id &&
+        detailInvoice?.items &&
+        detailInvoice.items.length > 0)
     ) {
-      setForm(mapInvoiceToForm(detailInvoice));
+      setForm(mapInvoiceToForm(inv));
       return;
     }
 
@@ -218,13 +216,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
     try {
       let fullInv = await erpInvoicesCoreApi.get(inv.id);
       if (!fullInv.items || fullInv.items.length === 0) {
-        const token = localStorage.getItem("erp_portal_token");
-        if (token) {
-          try {
-            fullInv = await erpInvoicesCoreApi.syncDetail(inv.id, token);
-          } catch (syncErr) {
-            console.warn("Auto sync detail failed", syncErr);
-          }
+        try {
+          fullInv = await erpInvoicesCoreApi.syncDetail(inv.id);
+        } catch (syncErr) {
+          console.warn("Auto sync detail failed", syncErr);
         }
       }
       setDetailInvoice(fullInv);
@@ -238,15 +233,10 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
 
   async function handleSyncDetail() {
     if (!detailInvoice) return;
-    const token = localStorage.getItem("erp_portal_token");
-    if (!token) return;
 
     setLoadingDetail(true);
     try {
-      const fullInv = await erpInvoicesCoreApi.syncDetail(
-        detailInvoice.id,
-        token,
-      );
+      const fullInv = await erpInvoicesCoreApi.syncDetail(detailInvoice.id);
       setDetailInvoice(fullInv);
       setForm(mapInvoiceToForm(fullInv));
       await onReload();
@@ -263,7 +253,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       ...mapInvoiceToForm(detailInvoice),
       pendingDocumentChanges: [],
       pendingDeletedPdfs: [],
-      pendingAddedPdfs: [],
+      pendingAddedAttachments: [],
     });
     setFormError(null);
     setPendingUnpost(false);
@@ -277,7 +267,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         ...mapInvoiceToForm(detailInvoice),
         pendingDocumentChanges: [],
         pendingDeletedPdfs: [],
-        pendingAddedPdfs: [],
+        pendingAddedAttachments: [],
       });
     }
     setFormError(null);
@@ -314,7 +304,11 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       return;
     }
 
-    if (postingState.lines.length > 0 && !postingState.isBalanced) {
+    if (
+      (form as any).accountingEnabled &&
+      postingState.lines.length > 0 &&
+      !postingState.isBalanced
+    ) {
       setFormError(
         "Hạch toán kế toán không cân bằng. Vui lòng kiểm tra lại tổng Nợ và Có.",
       );
@@ -348,7 +342,7 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
       delete payload.pendingDocumentChanges;
       delete (payload as any).accountingEnabled;
       delete payload.pendingDeletedPdfs;
-      delete payload.pendingAddedPdfs;
+      delete payload.pendingAddedAttachments;
 
       let invoiceIdToProcess = "";
       let invoiceNoToProcess = form.invoiceNo;
@@ -451,16 +445,30 @@ export function useErpInvoiceForm(onReload: () => Promise<void> | void) {
         }
       }
 
-      const pendingAddedPdfs = form.pendingAddedPdfs || [];
-      if (pendingAddedPdfs.length > 0) {
-        setForm((prev) => ({ ...prev, pendingAddedPdfs: [] }));
+      const pendingAddedAttachments = form.pendingAddedAttachments || [];
+      if (pendingAddedAttachments.length > 0) {
+        setForm((prev) => ({ ...prev, pendingAddedAttachments: [] }));
         try {
-          await erpInvoicesCoreApi.uploadPdfs(
-            invoiceIdToProcess,
-            pendingAddedPdfs,
-          );
+          // We need to upload each attachment or group by type.
+          // For now, let's just upload them one by one or grouped.
+          // The API uploadPdfs (which I'll rename or keep) accepts a file array, but wait...
+          // I will use `uploadAttachmentApi` from `system` instead!
+          // But wait, they are attached to invoice so we can use `uploadPdfs` in erpInvoicesCoreApi if we change it.
+          // Wait, `postInvoice` is for accounting, attachments are uploaded via `erpInvoicesCoreApi.uploadPdfs`.
+          for (const att of pendingAddedAttachments) {
+            const res =
+              await import("@/modules/system/api/attachmentsApi").then((m) =>
+                m.uploadAttachmentApi([att.file], att.documentType, "Hóa đơn"),
+              );
+            if (res.success && res.attachments.length > 0) {
+              await erpInvoicesCoreApi.linkAttachment(
+                invoiceIdToProcess,
+                res.attachments[0].id,
+              );
+            }
+          }
         } catch (err) {
-          console.error("Failed to upload PDFs", err);
+          console.error("Failed to upload attachments", err);
         }
       }
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
 import { Plus, Trash2, ExternalLink } from "lucide-react";
+import { EmptyState } from "@/shared/components/EmptyState";
 import { money } from "@/shared/utils/format";
 import { VoucherNetoffSelectionModal } from "./VoucherNetoffSelectionModal";
 import { purchaseOrdersCoreApi } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
@@ -9,9 +10,17 @@ import { Combobox } from "@/shared/components/Combobox";
 
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 interface LinkedDocument {
   id: string;
-  type: "PO" | "BANK";
+  type: "PO" | "BANK" | "CASE";
   refId: string;
   refNo: string;
   date?: string;
@@ -37,6 +46,7 @@ const EMPTY_ARRAY: any[] = [];
 export function ErpInvoiceLinkedDocuments({
   form,
   fieldSet,
+  invoiceId,
   direction,
   voucherNetOffs = EMPTY_ARRAY,
   relatedPos = EMPTY_ARRAY,
@@ -48,6 +58,19 @@ export function ErpInvoiceLinkedDocuments({
   const [poOptions, setPoOptions] = useState<
     { value: string; label: string }[]
   >([]);
+
+  const [linkedCases, setLinkedCases] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (invoiceId) {
+      import("../api/erpInvoicesCoreApi").then((m) => {
+        m.erpInvoicesCoreApi
+          .getLinkedCases(invoiceId)
+          .then((cases) => setLinkedCases(cases))
+          .catch(console.error);
+      });
+    }
+  }, [invoiceId]);
 
   // Sync rows from props and pending changes
   useEffect(() => {
@@ -86,6 +109,16 @@ export function ErpInvoiceLinkedDocuments({
       });
     });
 
+    linkedCases.forEach((c) => {
+      combined.push({
+        id: c.id,
+        type: "CASE",
+        refId: c.caseDbId,
+        refNo: `Sổ báo giá ${c.soChungTu || ""} - ${c.bienSoXe || ""}`,
+        date: c.createdAt,
+      });
+    });
+
     // Add pending adds
     pending
       .filter((p) => p.action === "ADD")
@@ -117,6 +150,7 @@ export function ErpInvoiceLinkedDocuments({
   }, [
     relatedPos,
     voucherNetOffs,
+    linkedCases,
     form.pendingDocumentChanges,
     poOptions,
     editMode,
@@ -135,7 +169,7 @@ export function ErpInvoiceLinkedDocuments({
     setRows([
       ...rows,
       {
-        id: crypto.randomUUID(),
+        id: createClientId(),
         type: direction === "IN" ? "PO" : "BANK",
         refId: "",
         refNo: "",
@@ -154,7 +188,7 @@ export function ErpInvoiceLinkedDocuments({
 
   const addPendingChange = (change: {
     action: "ADD" | "REMOVE";
-    type: "PO" | "BANK";
+    type: "PO" | "BANK" | "CASE";
     refId: string;
     amount?: number;
   }) => {
@@ -192,14 +226,21 @@ export function ErpInvoiceLinkedDocuments({
     setRows(rows.filter((r) => r.id !== rowId)); // Remove temp row
   };
 
-  const openDocument = (type: "PO" | "BANK", id: string) => {
-    const event = new CustomEvent("open_erp_document", {
-      detail: {
-        type: type === "PO" ? "purchase_order" : "bank_transaction",
-        id,
-      },
-    });
-    window.dispatchEvent(event);
+  const openDocument = (type: "PO" | "BANK" | "CASE", id: string) => {
+    let eventType = "";
+    if (type === "PO") eventType = "purchase_order";
+    else if (type === "BANK") eventType = "bank_transaction";
+    else if (type === "CASE") eventType = "garage_case";
+
+    if (eventType) {
+      const event = new CustomEvent("open_erp_document", {
+        detail: {
+          type: eventType,
+          id,
+        },
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   return (
@@ -222,9 +263,7 @@ export function ErpInvoiceLinkedDocuments({
           )}
 
           {rows.length === 0 ? (
-            <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
-              Chưa có chứng từ liên kết nào.
-            </div>
+            <EmptyState size="md" message="Chưa có chứng từ liên kết nào." />
           ) : (
             <div className="border rounded-md overflow-x-auto bg-white shadow-sm">
               <table className="w-full text-sm text-left">
@@ -264,7 +303,9 @@ export function ErpInvoiceLinkedDocuments({
                           <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700">
                             {row.type === "PO"
                               ? "Đơn mua hàng (PO)"
-                              : "Giao dịch ngân hàng"}
+                              : row.type === "CASE"
+                                ? "Sổ báo giá"
+                                : "Giao dịch ngân hàng"}
                           </span>
                         )}
                       </td>

@@ -1,22 +1,38 @@
+/**
+ * IaFormDrawer — Inventory Adjustment form drawer adapter.
+ * Builds type-specific config from useIaDrawer() and delegates rendering
+ * to the unified InventoryVoucherFormDrawer shell.
+ *
+ * Changes vs previous implementation:
+ * - STT: uses {idx} (1-based from core) instead of {i + 1}
+ * - Combobox moved to "item_code" column (Mã linh kiện) — was incorrectly in "itemName"
+ * - Filter: migrated from SearchInput/detailSearch to useTableColumnState (cascading)
+ * - All headers use TableColumnHeaderFilter with align="center"
+ * - Ghi chú in separate DrawerSection below Thông tin chung
+ */
+import { useState, useMemo, useEffect } from "react";
 import { cn } from "@/shared/utils";
 import { Button } from "@/shared/components/ui/Button";
-import { Skeleton } from "@/shared/components/Skeleton";
-import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { DocumentLineTable } from "@/shared/components/DocumentLineTable";
 import { Combobox } from "@/shared/components/Combobox";
-import {
-  DrawerField,
-  DrawerSection,
-  inputCls,
-} from "@/shared/components/DrawerModal";
-import { SearchInput } from "@/shared/components/SearchInput";
-import { useMemo, useState } from "react";
-import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
-import { useT } from "@/core/i18n";
-import { useEffect } from "react";
-import { useUIStore } from "@/core/config/uiStore";
+import { CellInput } from "@/shared/components/CellInput";
+import { CellTextarea } from "@/shared/components/CellTextarea";
+import { DrawerField, inputCls } from "@/shared/components/DrawerModal";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { DatePicker } from "@/shared/components/DatePicker";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
+import { useUIStore } from "@/core/config/uiStore";
+import { ImportExcelModal } from "@/shared/components/ImportExcelModal";
+import {
+  downloadInventoryTemplate,
+  parseExcelFile,
+} from "@/shared/utils/excelUtils";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
+import { useT } from "@/core/i18n";
+import toast from "react-hot-toast";
+import { FilterButton } from "@/shared/components/FilterPanel";
+import type { UseIaDrawerReturn } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
+import { InventoryVoucherFormDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherFormDrawer";
+import { useVoucherClientFilter } from "@/modules/inventory-core/hooks/useVoucherClientFilter";
 
 function fmtQty(value?: string | number | null) {
   if (!value && value !== 0) return "0";
@@ -41,46 +57,19 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
     form,
     setForm,
     saveError,
-
     saving,
     itemsDict,
     itemOptions,
     setItemSearch,
     fetchNextItems,
     loadingItems,
-
     close,
     handleSave,
     setViewOnly,
   } = drawer;
 
-  const [detailSearch, setDetailSearch] = useState("");
-
-  const filteredLines = useMemo(() => {
-    if (!detailSearch) return form.lines;
-    const lower = detailSearch.toLowerCase();
-    return form.lines.filter((l) => {
-      const code =
-        l.itemId && itemsDict[l.itemId]
-          ? itemsDict[l.itemId].sku?.toLowerCase()
-          : "";
-      const name = l.itemName?.toLowerCase() || "";
-      const qty = l.qtyAdjusted?.toString() || "";
-      return (
-        code?.includes(lower) || name?.includes(lower) || qty?.includes(lower)
-      );
-    });
-  }, [form.lines, detailSearch, itemsDict]);
-
-  const filteredTotalAmount = useMemo(
-    () =>
-      filteredLines.reduce(
-        (sum, line) =>
-          sum + Number(line.qtyAdjusted) * Number(line.unitCost || 0),
-        0,
-      ),
-    [filteredLines],
-  );
+  const t = useT();
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
   useEffect(() => {
@@ -89,7 +78,333 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
 
   const canUpdate = useHasPermission("inventory_adjustments", "update");
 
-  const t = useT();
+  // ── Client-side filter / sort ──────────────────────────────────────────────
+
+  const { listHook, processedLines, buildFilterOptions } =
+    useVoucherClientFilter({
+      tableId: "ia-details-table",
+      lines: form.lines,
+      isOpen: open,
+      getCode: (line: any) =>
+        line.itemCode ||
+        (line.itemId && itemsDict[line.itemId]
+          ? itemsDict[line.itemId].sku
+          : "") ||
+        "",
+      getName: (line: any) => {
+        const nameParts = line.itemName?.split(" — ");
+        return nameParts && nameParts.length > 1
+          ? nameParts[1]
+          : line.itemName || "";
+      },
+      customSort: (a, b, field, isDesc) => {
+        if (field === "qtyAdjusted") {
+          return isDesc
+            ? Number(b.qtyAdjusted ?? 0) - Number(a.qtyAdjusted ?? 0)
+            : Number(a.qtyAdjusted ?? 0) - Number(b.qtyAdjusted ?? 0);
+        }
+        return null;
+      },
+    });
+
+  // ── Totals ─────────────────────────────────────────────────────────────────
+
+  const filteredTotalAmount = useMemo(
+    () =>
+      processedLines.reduce(
+        (sum, line) =>
+          sum + Number(line.qtyAdjusted) * Number(line.unitCost || 0),
+        0,
+      ),
+    [processedLines],
+  );
+
+  // ── Column header helper ───────────────────────────────────────────────────
+
+  const makeFilterHeader = (
+    key: string,
+    title: string,
+    opts?: { hideFilter?: boolean },
+  ) => (
+    <TableColumnHeaderFilter
+      title={title}
+      sortState={
+        listHook.sorts.includes(key)
+          ? "asc"
+          : listHook.sorts.includes(`-${key}`)
+            ? "desc"
+            : "none"
+      }
+      onSortChange={(state) => listHook.setSort(key, state)}
+      searchValue={listHook.columnSearch[key] || ""}
+      onSearchChange={(val) => listHook.setColumnSearch(key, val)}
+      selectedFilters={listHook.columnFilters[key] || []}
+      onFilterChange={(vals) => listHook.setColumnFilter(key, vals)}
+      align="center"
+      columnKey={key}
+      queryKeyPrefix={`ia-${key}`}
+      allFilters={listHook.columnFilters}
+      hideFilter={opts?.hideFilter}
+      fetchOptions={
+        opts?.hideFilter
+          ? undefined
+          : buildFilterOptions(key as any, form.lines)
+      }
+    />
+  );
+
+  // ── Table columns ──────────────────────────────────────────────────────────
+
+  const tableColumns = [
+    {
+      key: "index",
+      header: "#",
+      size: 40,
+      headerClassName: "text-center w-[40px] min-w-[40px]",
+      className: "text-center w-[40px] min-w-[40px]",
+      // ✅ Use {idx} — core DataTable is already 1-based, do NOT add +1
+      cell: (_: any, idx: number) => (
+        <span className="text-muted-foreground">{idx}</span>
+      ),
+    },
+    {
+      // ✅ Combobox moved HERE (Mã linh kiện) — was incorrectly in itemName column
+      key: "item_code",
+      header: makeFilterHeader("itemCode", t("Mã linh kiện")),
+      minSize: 200,
+      enableResizing: true,
+      headerClassName: "w-[200px] min-w-[200px]",
+      className: "w-[200px] min-w-[200px] p-0 align-middle",
+      cell: (line: any) => {
+        if (viewOnly || editing?.status === "POSTED") {
+          const itemCode =
+            line.itemCode ||
+            (line.itemId && itemsDict[line.itemId]
+              ? itemsDict[line.itemId].sku
+              : "—");
+          return (
+            <span className="font-medium text-foreground px-3">{itemCode}</span>
+          );
+        }
+        return (
+          <Combobox
+            variant="spreadsheet"
+            options={itemOptions}
+            value={line.itemId}
+            fallbackLabel={
+              line.itemCode ||
+              (line.itemId && itemsDict[line.itemId]
+                ? itemsDict[line.itemId].sku
+                : undefined)
+            }
+            disabled={viewOnly || editing?.status === "POSTED"}
+            placeholder={t("Chọn linh kiện từ danh mục")}
+            searchPlaceholder={t("Tìm mã / tên linh kiện")}
+            onSearch={setItemSearch}
+            onScrollBottom={fetchNextItems}
+            loading={loadingItems}
+            onChange={(v) => {
+              const found = itemOptions.find((o) => o.value === v) as any;
+              setForm((f) => {
+                const lines = [...f.lines];
+                const actualIndex = form.lines.findIndex((fl) => fl === line);
+                if (actualIndex > -1) {
+                  lines[actualIndex] = {
+                    ...lines[actualIndex],
+                    itemId: v || "",
+                    itemCode: found?.label || "",
+                    itemName: found?._itemName ?? found?.label ?? "",
+                  };
+                }
+                return { ...f, lines };
+              });
+            }}
+          />
+        );
+      },
+    },
+    {
+      // ✅ itemName is now always read-only — shows resolved name after Combobox selection
+      key: "itemName",
+      header: makeFilterHeader("itemName", t("Tên linh kiện")),
+      minSize: 260,
+      enableResizing: true,
+      headerClassName: "w-[260px] min-w-[260px]",
+      className: "w-[260px] min-w-[260px]",
+      cell: (line: any) => {
+        const nameParts = line.itemName?.split(" — ");
+        const name =
+          nameParts && nameParts.length > 1
+            ? nameParts[1]
+            : line.itemName || "—";
+        return (
+          <div
+            className={cn(
+              "font-medium truncate max-w-[260px]",
+              "text-foreground",
+            )}
+            title={name}
+          >
+            {name}
+          </div>
+        );
+      },
+    },
+    {
+      key: "qtyAdjusted",
+      header: makeFilterHeader("qtyAdjusted", t("SL Điều chỉnh"), {
+        hideFilter: true,
+      }),
+      minSize: 140,
+      enableResizing: true,
+      headerClassName: "text-center w-[140px] min-w-[140px]",
+      className: "text-center w-[140px] min-w-[140px] p-0 align-middle",
+      cell: (line: any) => {
+        if (viewOnly || editing?.status === "POSTED") {
+          const val = Number(line.qtyAdjusted);
+          return (
+            <div
+              className={cn(
+                "font-medium",
+                val > 0 ? "text-emerald-600" : val < 0 ? "text-red-600" : "",
+              )}
+            >
+              {val > 0 ? "+" : ""}
+              {fmtQty(val)}
+            </div>
+          );
+        }
+        return (
+          <CellInput
+            type="number"
+            className={cn(
+              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
+            )}
+            placeholder="SL thực"
+            value={line.qtyAdjusted ?? ""}
+            disabled={viewOnly || editing?.status === "POSTED"}
+            onValueChange={(v) => {
+              setForm((f) => {
+                const lines = [...f.lines];
+                const actualIndex = form.lines.findIndex((fl) => fl === line);
+                if (actualIndex > -1) {
+                  lines[actualIndex] = {
+                    ...lines[actualIndex],
+                    qtyAdjusted: v,
+                  };
+                }
+                return { ...f, lines };
+              });
+            }}
+          />
+        );
+      },
+    },
+    {
+      key: "unitCost",
+      header: makeFilterHeader("unitCost", t("Đơn giá"), { hideFilter: true }),
+      minSize: 140,
+      enableResizing: true,
+      headerClassName: "text-center w-[140px] min-w-[140px]",
+      className: "text-center w-[140px] min-w-[140px] p-0 align-middle",
+      cell: (line: any) => {
+        if (viewOnly || editing?.status === "POSTED") {
+          return <div className="font-medium">{fmtQty(line.unitCost)}</div>;
+        }
+        return (
+          <CellInput
+            type="number"
+            min={0}
+            className={cn(
+              "w-full h-full min-h-[38px] text-right bg-transparent border-0 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-slate-50 focus:bg-white px-3 transition-all",
+            )}
+            placeholder={t("Đơn giá")}
+            value={line.unitCost ?? ""}
+            disabled={viewOnly || editing?.status === "POSTED"}
+            onValueChange={(v) => {
+              setForm((f) => {
+                const lines = [...f.lines];
+                const actualIndex = form.lines.findIndex((fl) => fl === line);
+                if (actualIndex > -1) {
+                  lines[actualIndex] = { ...lines[actualIndex], unitCost: v };
+                }
+                return { ...f, lines };
+              });
+            }}
+          />
+        );
+      },
+    },
+    {
+      key: "amount",
+      header: makeFilterHeader("amount", t("Thành tiền"), { hideFilter: true }),
+      minSize: 140,
+      enableResizing: true,
+      headerClassName: "text-center w-[140px] min-w-[140px]",
+      className: "text-center w-[140px] min-w-[140px]",
+      cell: (line: any) => {
+        const amount =
+          Number(line.qtyAdjusted || 0) * Number(line.unitCost || 0);
+        return (
+          <div className="font-medium text-foreground tabular-nums">
+            {amount.toLocaleString("vi-VN")}
+          </div>
+        );
+      },
+    },
+  ];
+
+  // ── Summary row ────────────────────────────────────────────────────────────
+
+  const summaryRow = {
+    itemName: (
+      <div className="text-right w-full font-semibold">{t("Tổng")}:</div>
+    ),
+    qtyAdjusted: (
+      <div className="text-center font-semibold">
+        {fmtQty(
+          processedLines
+            .reduce((sum, l) => sum + Number(l.qtyAdjusted || 0), 0)
+            .toString(),
+        )}
+      </div>
+    ),
+    amount: (
+      <div className="text-center font-semibold text-emerald-600">
+        {Number(filteredTotalAmount).toLocaleString("vi-VN")}
+      </div>
+    ),
+  };
+
+  // ── Actions column (delete) ────────────────────────────────────────────────
+
+  const actionsColumn =
+    !viewOnly && editing?.status !== "POSTED"
+      ? {
+          header: "" as any,
+          cell: (item: any) => (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-red-500"
+              onClick={() => {
+                setForm((f) => ({
+                  ...f,
+                  lines: f.lines.filter((l) => l !== item),
+                }));
+              }}
+            >
+              ✕
+            </Button>
+          ),
+        }
+      : undefined;
+
+  // ── Table footer ───────────────────────────────────────────────────────────
+
+  const tableFooter = undefined;
+
+  // ── Actions ────────────────────────────────────────────────────────────────
 
   const actions =
     viewOnly || loading
@@ -124,10 +439,135 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           },
         ];
 
+  // ── Status badge ───────────────────────────────────────────────────────────
+
+  const statusBadge =
+    editing?.status === "DRAFT" ? (
+      <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+        {t("Nháp")}
+      </span>
+    ) : editing?.status === "POSTED" ? (
+      <span className="inline-flex rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800">
+        {t("Đã vào sổ")}
+      </span>
+    ) : editing?.status === "CANCELLED" ? (
+      <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
+        {t("Đã hủy")}
+      </span>
+    ) : undefined;
+
+  // ── Right panel content (Thông tin chung) ─────────────────────────────────
+
+  const rightPanelContent = (
+    <>
+      <DrawerField label={t("Số phiếu")}>
+        <input
+          className={inputCls}
+          placeholder={t("Tự động nếu để trống")}
+          value={form.adjustmentNo}
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, adjustmentNo: e.target.value }))
+          }
+        />
+      </DrawerField>
+      <DrawerField label={t("Ngày điều chỉnh")}>
+        <DatePicker
+          value={form.adjustmentDate ? form.adjustmentDate.slice(0, 10) : ""}
+          disabled={viewOnly || editing?.status === "POSTED"}
+          onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
+        />
+      </DrawerField>
+    </>
+  );
+
+  // ── Remarks content (Ghi chú section) ─────────────────────────────────────
+
+  const remarksContent = (
+    <CellTextarea
+      className={`${inputCls} min-h-[60px] resize-y`}
+      value={form.remarks}
+      disabled={viewOnly}
+      onValueChange={(val) => setForm((f) => ({ ...f, remarks: val }))}
+      placeholder={t("Nhập ghi chú chung nếu có...")}
+    />
+  );
+
+  // ── Section info ───────────────────────────────────────────────────────────
+
+  const sectionTitle =
+    t("CHI TIẾT") +
+    " (" +
+    (processedLines.length < form.lines.length
+      ? `${processedLines.length}/${form.lines.length}`
+      : form.lines.length) +
+    ")";
+
+  const clearFilterBtn =
+    listHook.activeFilterCount > 0 ? (
+      <FilterButton
+        activeCount={listHook.activeFilterCount}
+        onClick={() => {}}
+        onClear={listHook.resetFilters}
+      />
+    ) : null;
+
+  const sectionTitleExtra = (
+    <div className="flex items-center gap-2">
+      {clearFilterBtn}
+      {!viewOnly && editing?.status !== "POSTED" && (
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs font-semibold"
+            onClick={() => {
+              setForm((f) => ({
+                ...f,
+                lines: [
+                  ...f.lines,
+                  {
+                    itemId: "",
+                    itemCode: "",
+                    itemName: "",
+                    qtyAdjusted: "",
+                    unitCost: "",
+                  },
+                ],
+              }));
+            }}
+          >
+            + {t("Thêm dòng")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs font-semibold"
+            onClick={() => setIsImportOpen(true)}
+          >
+            {t("Nhập từ Excel")}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
-    <StandardFormDrawer
+    <InventoryVoucherFormDrawer
       open={open}
       mode={viewOnly ? "view" : editing ? "edit" : "create"}
+      noAnimation={!!drawer.unifiedContext}
+      title={
+        editing
+          ? viewOnly
+            ? t("Phiếu điều chỉnh")
+            : t("Sửa điều chỉnh")
+          : t("Tạo phiếu điều chỉnh")
+      }
+      subtitle={editing?.adjustmentNo ?? t("Điều chỉnh kho")}
+      statusBadge={statusBadge}
       onClose={close}
       onToggleEdit={
         viewOnly &&
@@ -137,394 +577,109 @@ export function IaFormDrawer({ drawer }: IaFormDrawerProps) {
           ? () => setViewOnly(false)
           : undefined
       }
-      title={
-        editing
-          ? viewOnly
-            ? t("Phiếu điều chỉnh")
-            : t("Sửa điều chỉnh")
-          : t("Tạo phiếu điều chỉnh")
-      }
-      subtitle={
-        <div className="flex items-center gap-2">
-          <span>{editing?.adjustmentNo ?? t("Điều chỉnh kho")}</span>
-          {editing?.status === "DRAFT" && (
-            <span className="inline-flex rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-              {t("Nháp")}
-            </span>
-          )}
-          {editing?.status === "POSTED" && (
-            <span className="inline-flex rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800">
-              {t("Đã vào sổ")}
-            </span>
-          )}
-          {editing?.status === "CANCELLED" && (
-            <span className="inline-flex rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">
-              {t("Đã hủy")}
-            </span>
-          )}
-        </div>
-      }
-      rightPanelTitle={t("Thông tin chung")}
       actions={actions}
       loading={loading}
       error={saveError}
-      leftPanel={
-        <>
-          {loading ? (
-            <DrawerSection title={t("Chi tiết")}>
-              <div className="space-y-3">
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-                <Skeleton className="h-10 w-full" />
-              </div>
-            </DrawerSection>
-          ) : (
-            <DrawerSection
-              title={
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:justify-between pr-4 mt-2 sm:mt-0 uppercase">
-                  <span className="shrink-0 mb-2 sm:mb-0 text-sm font-semibold text-gray-700">
-                    {t("CHI TIẾT")} (
-                    {detailSearch
-                      ? `${filteredLines.length}/${form.lines.length}`
-                      : form.lines.length}
-                    )
-                  </span>
-                  <div className="w-full sm:w-64 relative font-normal text-sm">
-                    <SearchInput
-                      className="w-full"
-                      placeholder={t("Tìm mã/tên, SL...")}
-                      value={detailSearch}
-                      onChange={setDetailSearch}
-                    />
-                  </div>
-                </div>
+      unifiedContext={drawer.unifiedContext}
+      // Table
+      sectionTitle={sectionTitle}
+      sectionTitleExtra={sectionTitleExtra}
+      tableItems={processedLines}
+      getRowKey={(item) => String(form.lines.indexOf(item))}
+      tableColumns={tableColumns}
+      summaryRow={summaryRow}
+      actionsColumn={actionsColumn}
+      emptyLabel={t("Không có dữ liệu")}
+      tableFooter={tableFooter}
+      // Right panel
+      rightPanelContent={rightPanelContent}
+      remarksContent={remarksContent}
+      // No print slot for IA
+      importModalSlot={
+        <ImportExcelModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onDownloadTemplate={async () => {
+            const headers = ["Mã linh kiện", "Số lượng điều chỉnh", "Đơn giá"];
+            let refItems: any[] = [];
+            try {
+              const res = await basicMastersApi.list({
+                entities: "inventoryItems",
+                limit: 5000,
+              });
+              refItems = (res.items.inventoryItems || []).map((item: any) => ({
+                sku: item.sku || "",
+                name: item.itemName || "",
+              }));
+            } catch (e) {
+              console.error("Failed to fetch reference items", e);
+            }
+            downloadInventoryTemplate(
+              headers,
+              "Template_DieuChinhKho.xlsx",
+              refItems,
+            );
+          }}
+          onUpload={async (file, overwrite) => {
+            try {
+              const data = await parseExcelFile(file);
+              let skipped = 0;
+              const newLines: any[] = [];
+              let allItems: any[] = [];
+              try {
+                const res = await basicMastersApi.list({
+                  entities: "inventoryItems",
+                  limit: 5000,
+                });
+                allItems = res.items.inventoryItems || [];
+              } catch (e) {
+                console.error("Failed to fetch items for upload lookup", e);
               }
-              titleExtra={
-                <span className="text-foreground font-semibold shrink-0 uppercase text-sm">
-                  {t("Tổng")}:{" "}
-                  {Number(filteredTotalAmount).toLocaleString("vi-VN")} VND
-                </span>
+              const skuToId: Record<string, string> = {};
+              const idToName: Record<string, string> = {};
+              const idToSku: Record<string, string> = {};
+              allItems.forEach((item: any) => {
+                if (item.sku) {
+                  skuToId[item.sku.toLowerCase()] = item.id;
+                  idToName[item.id] = item.itemName;
+                  idToSku[item.id] = item.sku;
+                }
+              });
+              data.forEach((row: any) => {
+                const sku = row["Mã linh kiện"]?.toString().trim();
+                const qty = row["Số lượng điều chỉnh"]?.toString().trim();
+                const price = row["Đơn giá"]?.toString().trim();
+                if (!sku) return;
+                const itemId = skuToId[sku.toLowerCase()];
+                if (itemId) {
+                  newLines.push({
+                    itemId,
+                    itemCode: idToSku[itemId] || "",
+                    itemName: idToName[itemId] || "",
+                    qtyAdjusted: qty || "",
+                    unitCost: price || "",
+                  });
+                } else {
+                  skipped++;
+                }
+              });
+              if (skipped > 0) {
+                toast.error(
+                  `Đã bỏ qua ${skipped} dòng chứa mã linh kiện không tồn tại.`,
+                );
               }
-            >
-              <DocumentLineTable
-                data={filteredLines}
-                getRowKey={(_, i) => i}
-                tableContainerClassName="max-h-[calc(100vh-280px)] overflow-y-auto"
-                footer={
-                  <tr>
-                    <td
-                      colSpan={3}
-                      className="px-3 py-3 text-right font-semibold"
-                    ></td>
-                    <td className="px-3 py-3 text-center font-semibold">
-                      {fmtQty(
-                        filteredLines
-                          .reduce(
-                            (sum, l) => sum + Number(l.qtyAdjusted || 0),
-                            0,
-                          )
-                          .toString(),
-                      )}
-                    </td>
-                    <td className="px-3 py-3 text-center font-semibold">
-                      {Number(filteredTotalAmount).toLocaleString("vi-VN")}
-                    </td>
-                    {!viewOnly && <td className="px-3 py-3"></td>}
-                  </tr>
-                }
-                columns={[
-                  {
-                    key: "index",
-                    header: "#",
-                    width: 40,
-                    align: "center",
-                    cell: (_: any, i: number) => (
-                      <span className="text-muted-foreground">{i + 1}</span>
-                    ),
-                  },
-                  {
-                    key: "item_code",
-                    header: t("Mã linh kiện"),
-                    minWidth: 140,
-                    cell: (line: any) => {
-                      const itemCode =
-                        line.itemId && itemsDict[line.itemId]
-                          ? itemsDict[line.itemId].sku
-                          : "—";
-                      return (
-                        <span className="font-medium text-foreground">
-                          {itemCode}
-                        </span>
-                      );
-                    },
-                  },
-                  {
-                    key: "itemName",
-                    header: t("Linh kiện / Tên hàng"),
-                    minWidth: 260,
-                    cell: (line: any) => {
-                      if (viewOnly || editing?.status === "POSTED") {
-                        const nameParts = line.itemName?.split(" — ");
-                        const name =
-                          nameParts && nameParts.length > 1
-                            ? nameParts[1]
-                            : line.itemName || "—";
-                        return (
-                          <div
-                            className={cn(
-                              "font-medium truncate max-w-[260px]",
-                              "text-foreground",
-                            )}
-                            title={name}
-                          >
-                            {name}
-                          </div>
-                        );
-                      }
-                      return (
-                        <Combobox
-                          options={itemOptions}
-                          value={line.itemId}
-                          fallbackLabel={line.itemName}
-                          disabled={viewOnly || editing?.status === "POSTED"}
-                          placeholder={t("Chọn linh kiện từ danh mục")}
-                          searchPlaceholder={t("Tìm mã / tên linh kiện")}
-                          onSearch={setItemSearch}
-                          onScrollBottom={fetchNextItems}
-                          loading={loadingItems}
-                          onChange={(v) => {
-                            const found = itemOptions.find(
-                              (o) => o.value === v,
-                            );
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              const actualIndex = form.lines.findIndex(
-                                (fl) => fl === line,
-                              );
-                              if (actualIndex > -1) {
-                                lines[actualIndex] = {
-                                  ...lines[actualIndex],
-                                  itemId: v || "",
-                                  itemName: found?.label ?? "",
-                                };
-                              }
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    key: "qtyAdjusted",
-                    header: t("SL Điều chỉnh"),
-                    minWidth: 140,
-                    align: "center",
-                    cell: (line: any) => {
-                      if (viewOnly || editing?.status === "POSTED") {
-                        const val = Number(line.qtyAdjusted);
-                        return (
-                          <div
-                            className={cn(
-                              "font-medium",
-                              val > 0
-                                ? "text-emerald-600"
-                                : val < 0
-                                  ? "text-red-600"
-                                  : "",
-                            )}
-                          >
-                            {val > 0 ? "+" : ""}
-                            {fmtQty(val)}
-                          </div>
-                        );
-                      }
-                      return (
-                        <input
-                          type="number"
-                          className={cn(
-                            inputCls,
-                            "w-28 flex-shrink-0 text-right mx-auto",
-                          )}
-                          placeholder={`(+/-) SL`}
-                          value={line.qtyAdjusted ?? ""}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              const actualIndex = form.lines.findIndex(
-                                (fl) => fl === line,
-                              );
-                              if (actualIndex > -1) {
-                                lines[actualIndex] = {
-                                  ...lines[actualIndex],
-                                  qtyAdjusted: v,
-                                };
-                              }
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    key: "unitCost",
-                    header: t("Đơn giá"),
-                    minWidth: 140,
-                    align: "center",
-                    cell: (line: any) => {
-                      if (viewOnly || editing?.status === "POSTED") {
-                        return (
-                          <div className="font-medium">
-                            {fmtQty(line.unitCost)}
-                          </div>
-                        );
-                      }
-                      return (
-                        <input
-                          type="number"
-                          min={0}
-                          className={cn(
-                            inputCls,
-                            "w-28 flex-shrink-0 text-right mx-auto",
-                          )}
-                          placeholder={`Đơn giá`}
-                          value={line.unitCost ?? ""}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            setForm((f) => {
-                              const lines = [...f.lines];
-                              const actualIndex = form.lines.findIndex(
-                                (fl) => fl === line,
-                              );
-                              if (actualIndex > -1) {
-                                lines[actualIndex] = {
-                                  ...lines[actualIndex],
-                                  unitCost: v,
-                                };
-                              }
-                              return { ...f, lines };
-                            });
-                          }}
-                        />
-                      );
-                    },
-                  },
-                  {
-                    key: "amount",
-                    header: t("Thành tiền"),
-                    minWidth: 140,
-                    align: "center",
-                    cell: (line: any) => {
-                      const amount =
-                        Number(line.qtyAdjusted || 0) *
-                        Number(line.unitCost || 0);
-                      return (
-                        <div className="font-medium text-foreground">
-                          {amount.toLocaleString("vi-VN")}
-                        </div>
-                      );
-                    },
-                  },
-                  ...(!viewOnly && editing?.status !== "POSTED"
-                    ? [
-                        {
-                          key: "actions",
-                          header: "",
-                          minWidth: 50,
-                          align: "center" as const,
-                          cell: (_: any, i: number) => (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-500"
-                              onClick={() => {
-                                const lineToRemove = filteredLines[i];
-                                setForm((f) => ({
-                                  ...f,
-                                  lines: f.lines.filter(
-                                    (l) => l !== lineToRemove,
-                                  ),
-                                }));
-                              }}
-                            >
-                              ✕
-                            </Button>
-                          ),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
-              {!viewOnly && editing?.status !== "POSTED" && (
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setForm((f) => ({
-                        ...f,
-                        lines: [
-                          ...f.lines,
-                          {
-                            itemId: "",
-                            itemName: "",
-                            qtyAdjusted: "",
-                            unitCost: "",
-                          },
-                        ],
-                      }));
-                    }}
-                  >
-                    + {t("Thêm dòng")}
-                  </Button>
-                </div>
-              )}
-            </DrawerSection>
-          )}
-        </>
-      }
-      rightPanel={
-        loading ? (
-          <>
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-20 w-full" />
-          </>
-        ) : (
-          <>
-            <DrawerField label={t("Số phiếu")}>
-              <input
-                className={inputCls}
-                placeholder={t("Tự động nếu để trống")}
-                value={form.adjustmentNo}
-                disabled={viewOnly || editing?.status === "POSTED"}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, adjustmentNo: e.target.value }))
-                }
-              />
-            </DrawerField>
-            <DrawerField label={t("Ngày điều chỉnh")}>
-              <DatePicker
-                value={
-                  form.adjustmentDate ? form.adjustmentDate.slice(0, 10) : ""
-                }
-                disabled={viewOnly || editing?.status === "POSTED"}
-                onChange={(v) => setForm((f) => ({ ...f, adjustmentDate: v }))}
-              />
-            </DrawerField>
-            <DrawerField label={t("Ghi chú")}>
-              <textarea
-                className={`${inputCls} min-h-[60px] resize-y`}
-                value={form.remarks}
-                disabled={viewOnly}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, remarks: e.target.value }))
-                }
-              />
-            </DrawerField>
-          </>
-        )
+              setForm((f) => {
+                const filteredOldLines = overwrite
+                  ? []
+                  : f.lines.filter((l: any) => l.itemId);
+                return { ...f, lines: [...filteredOldLines, ...newLines] };
+              });
+              setIsImportOpen(false);
+            } catch {
+              toast.error("Lỗi khi đọc file Excel");
+            }
+          }}
+        />
       }
     />
   );

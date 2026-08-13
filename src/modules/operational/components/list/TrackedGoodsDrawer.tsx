@@ -6,17 +6,21 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import {
   DrawerSection,
   DrawerRow,
-  DrawerField,
   inputCls,
 } from "@/shared/components/DrawerModal";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
-import { FormLoadingSkeleton } from "@/modules/operational/components/form/FormLoadingSkeleton";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import type { InventorySerialRow } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
-
+import {
+  manufacturingApi,
+  type ErpVehicle,
+  type AsBuiltBomItem,
+} from "@/modules/manufacturing/api/manufacturingApi";
+import { AsBuiltBomTable } from "@/modules/inventory-core/components";
+import { EmptyState } from "@/shared/components/EmptyState";
 // ── Types ──────────────────────────────────────────────────────────────────
 
 interface AttributeEntry {
@@ -74,6 +78,13 @@ export function TrackedGoodsDrawer({
   // Detail state
   const [loading, setLoading] = useState(false);
   const [detailItem, setDetailItem] = useState<InventorySerialRow | null>(null);
+  const [assignedVehicle, setAssignedVehicle] = useState<ErpVehicle | null>(
+    null,
+  );
+  const [loadingVehicle, setLoadingVehicle] = useState(false);
+
+  const [bomItems, setBomItems] = useState<AsBuiltBomItem[]>([]);
+  const [loadingBom, setLoadingBom] = useState(false);
 
   // Edit state
   const [notes, setNotes] = useState("");
@@ -99,11 +110,57 @@ export function TrackedGoodsDrawer({
         });
     } else {
       setDetailItem(null);
+      setAssignedVehicle(null);
+      setBomItems([]);
     }
     return () => {
       active = false;
     };
   }, [item?.id, open]);
+
+  // Fetch assigned vehicle if ASSEMBLED
+  useEffect(() => {
+    let active = true;
+    if (open && detailItem?.status === "ASSEMBLED" && detailItem.id) {
+      setLoadingVehicle(true);
+      manufacturingApi
+        .getAssignedVehicleBySerial(detailItem.id)
+        .then((data) => {
+          if (active) {
+            setAssignedVehicle(data);
+            setLoadingVehicle(false);
+          }
+        })
+        .catch(() => {
+          if (active) setLoadingVehicle(false);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [open, detailItem?.status, detailItem?.id]);
+
+  // Fetch as-built bom if this serial is a vehicle (has vinId)
+  useEffect(() => {
+    let active = true;
+    if (open && detailItem?.vinId) {
+      setLoadingBom(true);
+      manufacturingApi
+        .getAsBuiltBom(detailItem.vinId)
+        .then((res) => {
+          if (active) {
+            setBomItems(res.data || []);
+            setLoadingBom(false);
+          }
+        })
+        .catch(() => {
+          if (active) setLoadingBom(false);
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, [open, detailItem?.vinId]);
 
   // Reset mode when drawer closes
   useEffect(() => {
@@ -252,8 +309,74 @@ export function TrackedGoodsDrawer({
 
   const leftPanel = (
     <div className="flex flex-col gap-4">
+      {detailItem?.vinId ? (
+        <DrawerSection title={t("Linh kiện (As-Built BOM)")}>
+          <AsBuiltBomTable items={bomItems} loading={loadingBom} />
+        </DrawerSection>
+      ) : (
+        <DrawerSection title={t("Linh kiện (As-Built BOM)")}>
+          <EmptyState
+            message={t("Chưa có linh kiện nào được lắp ráp.")}
+            className="py-6"
+          />
+        </DrawerSection>
+      )}
+
+      {detailItem?.status === "ASSEMBLED" && (
+        <DrawerSection title={t("Xe lắp ráp")}>
+          {loadingVehicle ? (
+            <div className="py-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mb-2" />
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
+            </div>
+          ) : assignedVehicle ? (
+            <>
+              <DrawerRow
+                label={t("Số VIN")}
+                value={assignedVehicle.vin || "-"}
+              />
+              <DrawerRow
+                label={t("Số khung")}
+                value={assignedVehicle.frame_no || "-"}
+              />
+              <DrawerRow
+                label={t("Số máy")}
+                value={assignedVehicle.engine_no || "-"}
+              />
+              <DrawerRow
+                label={t("Ngày lắp")}
+                value={
+                  assignedVehicle.assembly_date
+                    ? formatGMT7(assignedVehicle.assembly_date, "date")
+                    : "-"
+                }
+              />
+              <DrawerRow
+                label={t("Trạng thái xe")}
+                value={
+                  <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-100 text-blue-800">
+                    {assignedVehicle.status}
+                  </span>
+                }
+              />
+            </>
+          ) : (
+            <EmptyState
+              message={t("Không tìm thấy thông tin xe lắp ráp.")}
+              className="py-6"
+            />
+          )}
+        </DrawerSection>
+      )}
+    </div>
+  );
+
+  // ── Right panel ────────────────────────────────────────────────────────────
+
+  const rightPanel = (
+    <div className="flex flex-col gap-4">
       {/* Core info — always read-only */}
-      <DrawerSection title={t("Thông tin định danh")}>
+      <DrawerSection title={t("THÔNG TIN ĐỊNH DANH")}>
         <DrawerRow
           label={t("Mã vật tư")}
           value={detailItem?.item?.sku ?? "—"}
@@ -341,7 +464,7 @@ export function TrackedGoodsDrawer({
         </DrawerSection>
       ) : (
         <DrawerSection title={t("Ghi chú")}>
-          <DrawerField label={t("Ghi chú")}>
+          <div className="mt-1">
             <textarea
               className={`${inputCls} resize-none`}
               rows={4}
@@ -350,7 +473,7 @@ export function TrackedGoodsDrawer({
               disabled={saving}
               onChange={(e) => setNotes(e.target.value)}
             />
-          </DrawerField>
+          </div>
         </DrawerSection>
       )}
 
@@ -385,23 +508,18 @@ export function TrackedGoodsDrawer({
       <StandardFormDrawer
         open={open}
         mode={mode}
+        collapsibleRightPanel={true}
         onClose={handleClose}
         onToggleEdit={canUpdate ? handleToggleEdit : undefined}
         icon={<Barcode className="h-5 w-5" />}
         title={detailItem?.serialNo ?? t("Chi tiết tracking")}
         subtitle={detailItem?.item?.itemName}
-        layout="1-column"
-        size="md"
+        layout="2-columns"
+        size="xl"
         confirmOnClose={mode === "edit"}
-        leftPanel={
-          loading ? (
-            <div className="py-2">
-              <FormLoadingSkeleton layout="1-column" />
-            </div>
-          ) : detailItem ? (
-            leftPanel
-          ) : null
-        }
+        loading={loading}
+        leftPanel={detailItem ? leftPanel : null}
+        rightPanel={rightPanel}
         actions={drawerActions}
       />
       <SoPreviewDrawer

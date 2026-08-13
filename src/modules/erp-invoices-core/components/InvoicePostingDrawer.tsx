@@ -14,6 +14,14 @@ import { money } from "@/shared/utils/format";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import { DatePicker } from "@/shared/components/DatePicker";
 
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 interface PostInvoiceLine {
   id: string;
   accountId: string;
@@ -81,7 +89,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
           const accId = l.accountId || (l.account ? l.account.id : "");
           if (!lineMap.has(accId)) {
             lineMap.set(accId, {
-              id: l.id || crypto.randomUUID(),
+              id: l.id || createClientId(),
               accountId: accId,
               debit: 0,
               credit: 0,
@@ -125,7 +133,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       // Mua hàng: Nợ chi phí/tài sản (preVat), Nợ VAT (133), Có 331 (total)
       if (preVat > 0) {
         newLines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId:
             findAccount("642") || findAccount("152") || findAccount("156"),
           debit: preVat,
@@ -135,7 +143,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       }
       if (vat > 0) {
         newLines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: findAccount("133"), // User must select 133
           debit: vat,
           credit: 0,
@@ -144,7 +152,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       }
       if (total > 0) {
         newLines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: findAccount("331"), // User must select 331
           debit: 0,
           credit: total,
@@ -155,7 +163,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       // Bán hàng: Nợ 131 (total), Có doanh thu (preVat), Có VAT (333) (vat)
       if (total > 0) {
         newLines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: findAccount("131"), // User must select 131
           debit: total,
           credit: 0,
@@ -164,7 +172,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       }
       if (preVat > 0) {
         newLines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: findAccount("511"), // Doanh thu
           debit: 0,
           credit: preVat,
@@ -173,7 +181,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
       }
       if (vat > 0) {
         newLines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: findAccount("333"), // Thuế 333
           debit: 0,
           credit: vat,
@@ -194,7 +202,7 @@ export function InvoicePostingDrawer({ open, onClose, invoiceId }: Props) {
     setLines([
       ...lines,
       {
-        id: crypto.randomUUID(),
+        id: createClientId(),
         accountId: "",
         debit: 0,
         credit: 0,

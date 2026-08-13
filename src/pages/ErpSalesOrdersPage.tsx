@@ -26,6 +26,7 @@ import {
   salesOrdersCoreApi,
   type ErpSalesOrder,
 } from "@/modules/sales-orders-core/api/salesOrdersCoreApi";
+import { basicMastersApi } from "@/modules/basic-masters/api/basicMastersApi";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
@@ -35,8 +36,9 @@ import { useUIStore } from "@/core/config/uiStore";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { StatusBadge } from "@/shared/components/badges";
 import { DeliveryConfirmModal } from "@/modules/sales-orders-core/components/DeliveryConfirmModal";
-import { Button } from "@/shared/components/ui/Button";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 
 import {
@@ -63,11 +65,7 @@ function DeliveryDetailPopover({ item }: { item: ErpSalesOrder }) {
   });
 
   const itemAny = item as any;
-  const displayDate =
-    itemAny.deliveredDate ||
-    itemAny.actualDeliveryDate ||
-    itemAny.updatedAt ||
-    item.createdAt;
+  const displayDate = itemAny.deliveredDate;
   const dateStr = displayDate
     ? new Date(displayDate).toLocaleDateString("vi-VN")
     : "—";
@@ -442,28 +440,22 @@ export function ErpSalesOrdersPage() {
       setForm(buildForm(mergedDetail));
 
       if (!customerName && detail.customerId) {
-        import("@/modules/basic-masters/api/basicMastersApi").then(
-          ({ basicMastersApi }) => {
-            basicMastersApi
-              .list({
-                search: detail.customerId || undefined,
-                entities: "customers",
-              })
-              .then((res) => {
-                const c = res.items.customers?.find(
-                  (x: any) => x.id === detail.customerId,
-                );
-                if (c) {
-                  const name = `${c.code} — ${c.displayName || c.name}`;
-                  setEditing((prev) =>
-                    prev?.id === detail.id
-                      ? { ...prev, customerName: name }
-                      : prev,
-                  );
-                }
-              });
-          },
-        );
+        basicMastersApi
+          .list({
+            search: detail.customerId || undefined,
+            entities: "customers",
+          })
+          .then((res) => {
+            const c = res.items.customers?.find(
+              (x: any) => x.id === detail.customerId,
+            );
+            if (c) {
+              const name = `${c.code} — ${c.displayName || c.name}`;
+              setEditing((prev) =>
+                prev?.id === detail.id ? { ...prev, customerName: name } : prev,
+              );
+            }
+          });
       }
     } catch (e) {
       setError(
@@ -705,6 +697,23 @@ export function ErpSalesOrdersPage() {
           selectedFilters={columnState.columnFilters["orderDate"] || []}
           onFilterChange={(v) => columnState.setColumnFilter("orderDate", v)}
           fetchOptions={fetchSalesOrdersColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = columnState.columnSearch["orderDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  columnState.setColumnSearch("orderDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       size: 150,
@@ -732,18 +741,15 @@ export function ErpSalesOrdersPage() {
       ),
       size: 200,
       cell: (item) => (
-        <div className="flex flex-col gap-1 w-full pr-1">
-          <div className="flex items-center gap-2 w-full">
-            <Button
-              variant="ghost"
-              onClick={() => void openView(item)}
-              className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-            >
-              <span className="truncate">{item.soNo}</span>
-              <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-            </Button>
-          </div>
-        </div>
+        <TableText
+          text={item.soNo || "—"}
+          tooltip={item.soNo || false}
+          enableCopy={Boolean(item.soNo)}
+          onDrawerClick={item.soNo ? () => void openView(item) : undefined}
+          drawerIcon={
+            <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0" />
+          }
+        />
       ),
       skeletonClassName: "w-24",
     },
@@ -825,6 +831,23 @@ export function ErpSalesOrdersPage() {
             columnState.setColumnFilter("expectedDeliveryDate", v)
           }
           fetchOptions={fetchSalesOrdersColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = columnState.columnSearch["expectedDeliveryDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  columnState.setColumnSearch("expectedDeliveryDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       size: 150,
@@ -851,6 +874,23 @@ export function ErpSalesOrdersPage() {
             columnState.setColumnFilter("deliveredDate", v)
           }
           fetchOptions={fetchSalesOrdersColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = columnState.columnSearch["deliveredDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  columnState.setColumnSearch("deliveredDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       size: 150,

@@ -6,6 +6,9 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "purchasing",
   "erp-inventory-stock",
   "erp-inventory-tracking",
+  "erp-inventory-tracking-parts",
+  "erp-inventory-tracking-lot",
+  "erp-inventory-tracking-custom",
   "erp-inventory-vouchers",
   "mfg-items",
   "mfg-purchase-orders",
@@ -24,8 +27,10 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "invoice-dashboard",
   "erp-invoices-in",
   "erp-invoices-out",
+  "erp-invoices-draft",
   "bank-statement",
   "cash-statement",
+  "email-inbox",
   "settings-bank",
   "settings-cash-fund",
   "settings-branch",
@@ -39,11 +44,13 @@ export const ALL_PAGE_KEYS: PageKey[] = [
   "garage-cases",
   "after-sales",
   "purchasing-report-dashboard",
+  "vinfast-invoice-settlement",
 ];
 
 const LEGACY_SLUGS: Record<string, PageKey> = {
   "mua-hang": "purchasing",
   kho: "erp-inventory-stock",
+  "email-hop-thu": "email-inbox",
 };
 
 export function pageToPath(page: PageKey, tab?: string): string {

@@ -36,7 +36,6 @@ export interface TableColumnHeaderFilterProps {
   className?: string;
   columnKey?: string;
   queryKeyPrefix?: string;
-  requireSearchToFetchOptions?: boolean;
   allFilters?: Record<string, string[]>;
   formatOptionLabel?: (label: string) => string;
   fetchOptions?: (params: {
@@ -50,9 +49,12 @@ export interface TableColumnHeaderFilterProps {
     next: number | null;
   }>;
   hideFilter?: boolean;
+  hideFilterList?: boolean;
   hideFooter?: boolean;
   enableSelectAllMatching?: boolean;
   isActive?: boolean;
+  showBlankOption?: boolean;
+  hideSort?: boolean;
   /** Optional slot rendered between Sort buttons and Search input (e.g. a date range picker). Can be a function that receives a close function. */
   dateRangeSlot?:
     | React.ReactNode
@@ -60,6 +62,10 @@ export interface TableColumnHeaderFilterProps {
 }
 
 const dropdownSearchState = new Map<string, string>();
+
+export function clearAllDropdownSearchStates() {
+  dropdownSearchState.clear();
+}
 
 export function TableColumnHeaderFilter({
   title,
@@ -78,10 +84,13 @@ export function TableColumnHeaderFilter({
   formatOptionLabel,
   fetchOptions,
   hideFilter,
+  hideFilterList,
   hideFooter,
   enableSelectAllMatching,
   isActive,
   dateRangeSlot,
+  showBlankOption = false,
+  hideSort = false,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -99,7 +108,7 @@ export function TableColumnHeaderFilter({
 
   useEffect(() => {
     if (isAllMatchingMode) {
-      setPendingFilters([]);
+      setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
     }
   }, [debouncedLocalSearch]);
 
@@ -161,29 +170,44 @@ export function TableColumnHeaderFilter({
   });
 
   const finalOptions = useMemo(() => {
+    let opts: { label: string; value: string }[];
     if (filterOptions && filterOptions.length > 0) {
-      return filterOptions;
-    }
-    if (columnKey) {
+      if (!debouncedLocalSearch) {
+        opts = filterOptions;
+      } else {
+        const searchLower = debouncedLocalSearch.toLowerCase();
+        opts = filterOptions.filter(
+          (opt) =>
+            (opt.label || "").toLowerCase().includes(searchLower) ||
+            (opt.value || "").toLowerCase().includes(searchLower),
+        );
+      }
+    } else if (columnKey) {
       const apiOptions = optionsData?.pages.flatMap((p: any) => p.items) || [];
       const apiValues = new Set(apiOptions.map((o: any) => o.value));
       const isAllMatchingActive = selectedFilters[0] === "__ALL_MATCHING__";
       const missingSelected = isAllMatchingActive
         ? []
         : selectedFilters
-            .filter((v) => !apiValues.has(v))
+            .filter((v) => !apiValues.has(v) && v !== "__BLANK__")
             .map((v) => ({ label: v, value: v }));
-      return [...missingSelected, ...apiOptions];
+      opts = [...missingSelected, ...apiOptions];
+    } else {
+      opts = filterOptions || [];
     }
-    return filterOptions || [];
-  }, [optionsData, filterOptions, columnKey, selectedFilters]);
 
-  // Sync local search to global map
-  useEffect(() => {
-    if (columnKey) {
-      dropdownSearchState.set(columnKey, localSearch);
+    if (showBlankOption) {
+      opts = [{ label: "(blank)", value: "__BLANK__" }, ...opts];
     }
-  }, [localSearch, columnKey]);
+    return opts;
+  }, [
+    optionsData,
+    filterOptions,
+    columnKey,
+    selectedFilters,
+    debouncedLocalSearch,
+    showBlankOption,
+  ]);
 
   // Restore local search when popover opens
   useEffect(() => {
@@ -196,11 +220,10 @@ export function TableColumnHeaderFilter({
     }
   }, [open, searchValue, columnKey]);
 
-  const hasActiveFilters =
-    isActive ||
-    searchValue ||
-    selectedFilters.length > 0 ||
-    sortState !== "none";
+  const isFilterActive =
+    isActive || !!searchValue || selectedFilters.length > 0;
+  const isSortActive = sortState !== "none";
+  const hasActiveModifiers = isFilterActive || isSortActive;
 
   const handleToggleFilter = (value: string) => {
     const next = pendingFilters.includes(value)
@@ -214,7 +237,7 @@ export function TableColumnHeaderFilter({
       if (isAllMatchingMode) {
         setPendingFilters([]);
       } else {
-        setPendingFilters(["__ALL_MATCHING__", debouncedLocalSearch]);
+        setPendingFilters(["__ALL_MATCHING__", localSearch]);
       }
     } else {
       if (pendingFilters.length === finalOptions.length) {
@@ -243,13 +266,6 @@ export function TableColumnHeaderFilter({
       setOpen(true);
     } else {
       setOpen(false);
-      const isDifferent =
-        pendingFilters.length !== selectedFilters.length ||
-        !pendingFilters.every((f) => selectedFilters.includes(f));
-      if (isDifferent) {
-        onSearchChange("");
-        onFilterChange(pendingFilters);
-      }
     }
   };
 
@@ -267,17 +283,25 @@ export function TableColumnHeaderFilter({
           {title}
           <div
             className={cn(
-              "flex items-center justify-center w-5 h-5 rounded-md transition-colors relative",
-              hasActiveFilters
+              "flex items-center justify-center rounded-md transition-colors relative gap-0.5 px-0.5 min-w-[20px] h-5",
+              hasActiveModifiers
                 ? "text-primary"
                 : "text-muted-foreground/30 opacity-0 group-hover:opacity-100",
               open && "opacity-100 bg-muted",
             )}
           >
-            <ListFilter size={14} />
-            {(selectedFilters.length > 0 || isActive || !!searchValue) && (
+            {(!hasActiveModifiers || isFilterActive) && (
+              <ListFilter size={14} />
+            )}
+            {isSortActive &&
+              (sortState === "asc" ? (
+                <ArrowDownAZ size={14} />
+              ) : (
+                <ArrowUpAZ size={14} />
+              ))}
+            {hasActiveModifiers && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-primary"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
               </span>
             )}
@@ -294,37 +318,48 @@ export function TableColumnHeaderFilter({
             dateRangeSlot ? "w-72" : "w-64",
           )}
         >
-          {/* Sorting */}
-          <div className="p-2 border-b border-border flex flex-col gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start w-full text-left font-normal",
-                sortState === "asc" && "bg-muted text-primary",
-              )}
-              onClick={() => onSortChange(sortState === "asc" ? "none" : "asc")}
-            >
-              <ArrowDownAZ size={14} className="mr-2" />
-              Sắp xếp tăng dần
-              {sortState === "asc" && <Check size={14} className="ml-auto" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start w-full text-left font-normal",
-                sortState === "desc" && "bg-muted text-primary",
-              )}
-              onClick={() =>
-                onSortChange(sortState === "desc" ? "none" : "desc")
-              }
-            >
-              <ArrowUpAZ size={14} className="mr-2" />
-              Sắp xếp giảm dần
-              {sortState === "desc" && <Check size={14} className="ml-auto" />}
-            </Button>
-          </div>
+          {!hideSort && (
+            <div className="flex flex-col gap-1 border-b border-border p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-start font-normal rounded-sm h-8",
+                  sortState === "asc"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "",
+                )}
+                onClick={() => {
+                  onSortChange(sortState === "asc" ? "none" : "asc");
+                  setOpen(false);
+                }}
+              >
+                <ArrowDownAZ size={14} className="mr-2" />
+                Sắp xếp tăng dần
+                {sortState === "asc" && <Check size={14} className="ml-auto" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-start font-normal rounded-sm h-8",
+                  sortState === "desc"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "",
+                )}
+                onClick={() => {
+                  onSortChange(sortState === "desc" ? "none" : "desc");
+                  setOpen(false);
+                }}
+              >
+                <ArrowUpAZ size={14} className="mr-2" />
+                Sắp xếp giảm dần
+                {sortState === "desc" && (
+                  <Check size={14} className="ml-auto" />
+                )}
+              </Button>
+            </div>
+          )}
 
           {/* Date range slot (e.g. for invoiceDate column) */}
           {typeof dateRangeSlot === "function"
@@ -341,13 +376,18 @@ export function TableColumnHeaderFilter({
                     placeholder="Tìm trong bảng..."
                     className="pl-8 pr-8 h-8 text-xs"
                     value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
+                    onChange={(e) => {
+                      setLocalSearch(e.target.value);
+                      if (columnKey)
+                        dropdownSearchState.set(columnKey, e.target.value);
+                    }}
                   />
                   {localSearch && (
                     <button
                       className="absolute right-2 text-muted-foreground hover:text-foreground"
                       onClick={() => {
                         setLocalSearch("");
+                        if (columnKey) dropdownSearchState.set(columnKey, "");
                       }}
                     >
                       <X size={14} />
@@ -357,80 +397,82 @@ export function TableColumnHeaderFilter({
               </div>
 
               {/* Multi-select Filters */}
-              <div
-                className="p-2 max-h-48 overflow-y-auto flex flex-col"
-                ref={scrollRef}
-                onScroll={handleScroll}
-              >
-                {isOptionsLoading && finalOptions.length === 0 ? (
-                  <div className="p-4 flex justify-center text-muted-foreground">
-                    <Loader2 size={16} className="animate-spin" />
-                  </div>
-                ) : finalOptions.length > 0 ? (
-                  <>
-                    <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
-                      <Checkbox
-                        checked={
-                          enableSelectAllMatching
-                            ? isAllMatchingMode
-                            : pendingFilters.length === finalOptions.length &&
-                              finalOptions.length > 0
-                        }
-                        onCheckedChange={handleSelectAll}
-                      />
-                      <span className="text-xs font-medium">
-                        {enableSelectAllMatching
-                          ? "(Chọn tất cả kết quả tìm kiếm)"
-                          : "(Chọn tất cả đang hiển thị)"}
-                      </span>
-                    </label>
-                    {finalOptions.map((opt) => (
-                      <label
-                        key={opt.value}
-                        className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
-                      >
+              {!hideFilterList && (
+                <div
+                  className="p-2 max-h-48 overflow-y-auto flex flex-col"
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                >
+                  {isOptionsLoading && finalOptions.length === 0 ? (
+                    <div className="p-4 flex justify-center text-muted-foreground">
+                      <Loader2 size={16} className="animate-spin" />
+                    </div>
+                  ) : finalOptions.length > 0 ? (
+                    <>
+                      <label className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer">
                         <Checkbox
                           checked={
-                            isAllMatchingMode ||
-                            pendingFilters.includes(opt.value)
+                            enableSelectAllMatching
+                              ? isAllMatchingMode
+                              : pendingFilters.length === finalOptions.length &&
+                                finalOptions.length > 0
                           }
-                          onCheckedChange={() => {
-                            if (isAllMatchingMode) {
-                              const all = finalOptions.map((o) => o.value);
-                              setPendingFilters(
-                                all.filter((v) => v !== opt.value),
-                              );
-                            } else {
-                              handleToggleFilter(opt.value);
-                            }
-                          }}
+                          onCheckedChange={handleSelectAll}
                         />
-                        <span
-                          className="text-xs truncate"
-                          title={
-                            formatOptionLabel
-                              ? formatOptionLabel(opt.label)
-                              : opt.label
-                          }
-                        >
-                          {formatOptionLabel
-                            ? formatOptionLabel(opt.label)
-                            : opt.label || "(Trống)"}
+                        <span className="text-xs font-medium">
+                          {enableSelectAllMatching
+                            ? "(Chọn tất cả kết quả tìm kiếm)"
+                            : "(Chọn tất cả đang hiển thị)"}
                         </span>
                       </label>
-                    ))}
-                    {isFetchingNextPage && (
-                      <div className="p-2 flex justify-center text-muted-foreground">
-                        <Loader2 size={14} className="animate-spin" />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="p-2 text-center text-xs text-muted-foreground">
-                    Không có dữ liệu
-                  </div>
-                )}
-              </div>
+                      {finalOptions.map((opt) => (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 px-2 py-1.5 hover:bg-muted rounded-md cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={
+                              isAllMatchingMode ||
+                              pendingFilters.includes(opt.value)
+                            }
+                            onCheckedChange={() => {
+                              if (isAllMatchingMode) {
+                                const all = finalOptions.map((o) => o.value);
+                                setPendingFilters(
+                                  all.filter((v) => v !== opt.value),
+                                );
+                              } else {
+                                handleToggleFilter(opt.value);
+                              }
+                            }}
+                          />
+                          <span
+                            className="text-xs truncate"
+                            title={
+                              formatOptionLabel
+                                ? formatOptionLabel(opt.label)
+                                : opt.label
+                            }
+                          >
+                            {formatOptionLabel
+                              ? formatOptionLabel(opt.label)
+                              : opt.label || "(Trống)"}
+                          </span>
+                        </label>
+                      ))}
+                      {isFetchingNextPage && (
+                        <div className="p-2 flex justify-center text-muted-foreground">
+                          <Loader2 size={14} className="animate-spin" />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-2 text-center text-xs text-muted-foreground">
+                      Không có dữ liệu
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -444,6 +486,7 @@ export function TableColumnHeaderFilter({
                 onClick={() => {
                   setPendingFilters([]);
                   setLocalSearch("");
+                  if (columnKey) dropdownSearchState.set(columnKey, "");
                   onSearchChange("");
                   onFilterChange([]);
                   setOpen(false);
@@ -457,7 +500,11 @@ export function TableColumnHeaderFilter({
                 className="text-xs h-7 px-3"
                 onClick={() => {
                   onSearchChange(localSearch);
-                  onFilterChange(pendingFilters);
+                  let finalFilters = pendingFilters;
+                  if (pendingFilters[0] === "__ALL_MATCHING__") {
+                    finalFilters = ["__ALL_MATCHING__", localSearch];
+                  }
+                  onFilterChange(finalFilters);
                   setOpen(false);
                 }}
               >

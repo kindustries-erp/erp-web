@@ -35,6 +35,10 @@ import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 import { extractItemCodeAndName } from "@/shared/utils/format";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Badge } from "@/shared/components/ui/badge";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ITEM_LOOKUP_LIMIT = 200;
@@ -545,6 +549,7 @@ export function ErpBomPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const [itemSearch, setItemSearch] = useState("");
+  const [fgItemSearch, setFgItemSearch] = useState("");
 
   const {
     data: itemsData,
@@ -556,6 +561,17 @@ export function ErpBomPage() {
     entities: "inventoryItems",
   });
 
+  const {
+    data: fgItemsData,
+    fetchNextPage: fetchNextFgItems,
+    isFetchingNextPage: loadingFgItems,
+  } = useBasicMasterInfinite({
+    search: fgItemSearch,
+    limit: 50,
+    entities: "inventoryItems",
+    inventoryItemAttributes: "CAN_BE_MANUFACTURED",
+  });
+
   const { data: uomsData } = useBasicMasterInfinite({
     search: "",
     limit: 100,
@@ -565,6 +581,7 @@ export function ErpBomPage() {
   // Persistent cache: id -> label, survives search-term changes so selected
   // items never lose their labels when the API page no longer includes them.
   const cachedItems = useRef<Record<string, string>>({});
+  const cachedFgItems = useRef<Record<string, string>>({});
 
   // Populate cache whenever new API pages arrive
   useEffect(() => {
@@ -576,19 +593,41 @@ export function ErpBomPage() {
     });
   }, [itemsData]);
 
-  // Populate cache from editing BOM when it loads (edit/view mode)
   useEffect(() => {
-    if (!editing) return;
-    if (editing.finishedGoodItemId && editing.finishedGoodItemName) {
-      cachedItems.current[editing.finishedGoodItemId] =
-        editing.finishedGoodItemName;
+    if (!fgItemsData) return;
+    fgItemsData.pages.forEach((p) => {
+      (p.items.inventoryItems || []).forEach((i) => {
+        cachedFgItems.current[i.id] = `${i.sku} — ${i.itemName}`;
+      });
+    });
+  }, [fgItemsData]);
+
+  // Helper to populate cache synchronously when fetching BOM details
+  const updateCacheWithBomDetail = useCallback((detail: ErpBom) => {
+    if (detail.finishedGoodItemId && detail.finishedGoodItemName) {
+      cachedItems.current[detail.finishedGoodItemId] =
+        detail.finishedGoodItemName;
     }
-    editing.lines?.forEach((line) => {
-      if (line.componentItemId && line.componentItemName) {
-        cachedItems.current[line.componentItemId] = line.componentItemName;
+    detail.lines?.forEach((line) => {
+      if (line.componentItemId) {
+        const code = line.componentItemCode || "";
+        const name = line.componentItemName || "";
+        if (code && name) {
+          // If name already contains code, clean it up before building "Code — Name" format
+          let cleanName = name;
+          if (cleanName.startsWith(code)) {
+            cleanName = cleanName
+              .substring(code.length)
+              .replace(/^[\s-–—]+/, "");
+          }
+          cachedItems.current[line.componentItemId] =
+            `${code} — ${cleanName || name}`;
+        } else {
+          cachedItems.current[line.componentItemId] = name || code;
+        }
       }
     });
-  }, [editing]);
+  }, []);
 
   const itemOptions = useMemo(() => {
     // Start with current search-result pages
@@ -627,6 +666,33 @@ export function ErpBomPage() {
       label,
     }));
   }, [itemsData, form.finishedGoodItemId, form.lines, editing, t]);
+
+  const fgItemOptions = useMemo(() => {
+    const map = new Map<string, string>(
+      fgItemsData?.pages.flatMap((p) =>
+        (p.items.inventoryItems || []).map(
+          (i) => [i.id, `${i.sku} — ${i.itemName}`] as [string, string],
+        ),
+      ) || [],
+    );
+
+    if (form.finishedGoodItemId) {
+      if (!map.has(form.finishedGoodItemId)) {
+        map.set(
+          form.finishedGoodItemId,
+          cachedFgItems.current[form.finishedGoodItemId] ||
+            cachedItems.current[form.finishedGoodItemId] ||
+            editing?.finishedGoodItemName ||
+            t("Thành phẩm hiện tại"),
+        );
+      }
+    }
+
+    return Array.from(map.entries()).map(([value, label]) => ({
+      value,
+      label,
+    }));
+  }, [fgItemsData, form.finishedGoodItemId, editing, t]);
 
   const itemUomMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -671,15 +737,15 @@ export function ErpBomPage() {
           key: "finishedGoodItemId",
           label: t("Thành phẩm"),
           placeholder: t("Tất cả thành phẩm"),
-          options: itemOptions,
+          options: fgItemOptions,
           type: "combobox" as const,
-          onSearch: setItemSearch,
-          onLoadMore: fetchNextItems,
-          loading: loadingItems,
+          onSearch: setFgItemSearch,
+          onLoadMore: fetchNextFgItems,
+          loading: loadingFgItems,
         },
       ],
     }),
-    [itemOptions, fetchNextItems, loadingItems],
+    [fgItemOptions, fetchNextFgItems, loadingFgItems],
   );
   const filter = useFilterPanel(filterConfig);
 
@@ -689,11 +755,17 @@ export function ErpBomPage() {
     const filterFgId = filter.state.custom?.finishedGoodItemId as
       | string
       | undefined;
-    if (filterFgId && itemOptions.some((o) => o.value === filterFgId)) {
-      const label = itemOptions.find((o) => o.value === filterFgId)?.label;
-      if (label) cachedItems.current[filterFgId] = label;
+    if (filterFgId) {
+      const fgOpt = fgItemOptions.find((o) => o.value === filterFgId);
+      if (fgOpt?.label) {
+        cachedFgItems.current[filterFgId] = fgOpt.label;
+        cachedItems.current[filterFgId] = fgOpt.label;
+      } else {
+        const itemOpt = itemOptions.find((o) => o.value === filterFgId);
+        if (itemOpt?.label) cachedItems.current[filterFgId] = itemOpt.label;
+      }
     }
-  }, [filter.state.custom?.finishedGoodItemId, itemOptions]);
+  }, [filter.state.custom?.finishedGoodItemId, fgItemOptions, itemOptions]);
 
   const loadBoms = useCallback(async () => {
     setLoading(true);
@@ -739,9 +811,6 @@ export function ErpBomPage() {
     sortOrder,
   ]);
 
-  const [expandedBomIds, setExpandedBomIds] = useState<Record<string, boolean>>(
-    {},
-  );
   const [allBoms, setAllBoms] = useState<ErpBom[]>([]);
 
   const loadAllBoms = useCallback(async () => {
@@ -776,8 +845,26 @@ export function ErpBomPage() {
     itemOptions.forEach((opt) => {
       map[opt.value] = opt.label;
     });
+    fgItemOptions.forEach((opt) => {
+      if (!map[opt.value]) map[opt.value] = opt.label;
+    });
     return map;
-  }, [itemOptions]);
+  }, [itemOptions, fgItemOptions]);
+
+  const itemCodeMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    itemOptions.forEach((opt) => {
+      const parts = opt.label.split(" — ");
+      if (parts.length > 0) map[opt.value] = parts[0];
+    });
+    fgItemOptions.forEach((opt) => {
+      if (!map[opt.value]) {
+        const parts = opt.label.split(" — ");
+        if (parts.length > 0) map[opt.value] = parts[0];
+      }
+    });
+    return map;
+  }, [itemOptions, fgItemOptions]);
 
   const handleSort = (key: string) => {
     if (sortBy === key) {
@@ -792,13 +879,6 @@ export function ErpBomPage() {
     }
     setPage(1);
   };
-
-  function toggleExpand(id: string) {
-    setExpandedBomIds((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  }
 
   function resetForm() {
     setForm(emptyForm());
@@ -824,6 +904,7 @@ export function ErpBomPage() {
     setDrawerOpen(true);
     try {
       const detail = await bomCoreApi.get(item.id);
+      updateCacheWithBomDetail(detail);
       setEditing(detail);
       setForm(buildForm(detail));
     } catch (e) {
@@ -843,6 +924,7 @@ export function ErpBomPage() {
     setEditing(null);
     try {
       const detail = await bomCoreApi.get(item.id);
+      updateCacheWithBomDetail(detail);
       const clonedForm = buildForm(detail);
       clonedForm.bomCode = `${clonedForm.bomCode}-COPY`;
       clonedForm.bomName = `${clonedForm.bomName} (Copy)`;
@@ -964,54 +1046,66 @@ export function ErpBomPage() {
   const columns: DataTableColumn<ErpBom>[] = [
     {
       key: "bomCode",
-      header: t("Mã BOM"),
-      sortable: true,
-      sortKey: "bomCode",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Mã BOM")}
+          sortState={sortBy === "bomCode" ? sortOrder : "none"}
+          onSortChange={() => handleSort("bomCode")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="bom_code"
+          align="center"
+        />
+      ),
+      sortable: false,
+      size: 200,
+      enableResizing: true,
       cell: (item) => (
-        <div className="w-full">
-          <Tooltip content={item.bomCode}>
-            <span className="font-semibold text-primary block truncate max-w-[120px]">
-              {item.bomCode}
-            </span>
-          </Tooltip>
+        <div className="flex items-center gap-2 w-full">
+          <TableText
+            text={item.bomCode}
+            enableCopy={true}
+            tooltip={true}
+            onDrawerClick={(e) => {
+              e?.stopPropagation();
+              void openView(item);
+            }}
+          />
+          {item.status === "DRAFT" && (
+            <Badge
+              variant="secondary"
+              className="text-[10px] px-1 py-0 h-4 flex-shrink-0"
+            >
+              {t("Nháp")}
+            </Badge>
+          )}
         </div>
       ),
       skeletonClassName: "w-24",
     },
-    {
-      key: "__expand",
-      header: "",
-      className:
-        "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
-      headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-      size: 40,
-      enableResizing: false,
-      cell: (item) => {
-        const isExpanded = !!expandedBomIds[item.id];
-        return (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleExpand(item.id);
-            }}
-            className="focus:outline-none flex items-center justify-center w-full"
-          >
-            <ChevronRight
-              className={cn(
-                "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
-                isExpanded && "rotate-90",
-              )}
-            />
-          </button>
-        );
-      },
-    },
+
     {
       key: "bomName",
-      header: t("Tên BOM"),
-      sortable: true,
-      sortKey: "bomName",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Tên BOM")}
+          sortState={sortBy === "bomName" ? sortOrder : "none"}
+          onSortChange={() => handleSort("bomName")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="bom_name"
+          align="center"
+        />
+      ),
+      sortable: false,
+      size: 200,
+      enableResizing: true,
       cell: (item) => (
         <div className="w-full overflow-hidden flex">
           <Tooltip content={item.bomName}>
@@ -1022,19 +1116,87 @@ export function ErpBomPage() {
       skeletonClassName: "w-40",
     },
     {
-      key: "finishedGoodItemName",
-      header: t("Thành phẩm"),
-      sortable: true,
-      sortKey: "finishedGoodItemName",
+      key: "finishedGoodItemCode",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Mã thành phẩm")}
+          sortState={sortBy === "finishedGoodItemCode" ? sortOrder : "none"}
+          onSortChange={() => handleSort("finishedGoodItemCode")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="finished_good_item_code"
+          align="center"
+        />
+      ),
+      sortable: false,
+      size: 180,
+      enableResizing: true,
       cell: (item) => {
-        const name =
+        const code =
+          item.finishedGoodItemCode ||
+          (item.finishedGoodItemId
+            ? itemCodeMap[item.finishedGoodItemId]
+            : null) ||
+          (item.finishedGoodItemId
+            ? itemsMap[item.finishedGoodItemId]?.split(" — ")[0]
+            : null) ||
+          "—";
+        return (
+          <div className="w-full overflow-hidden flex">
+            <Tooltip content={code}>
+              <span className="block truncate max-w-[160px] font-medium text-foreground">
+                {code}
+              </span>
+            </Tooltip>
+          </div>
+        );
+      },
+      skeletonClassName: "w-32",
+    },
+    {
+      key: "finishedGoodItemName",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Tên thành phẩm")}
+          sortState={sortBy === "finishedGoodItemName" ? sortOrder : "none"}
+          onSortChange={() => handleSort("finishedGoodItemName")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="finished_good_item_name"
+          align="center"
+        />
+      ),
+      sortable: false,
+      size: 200,
+      enableResizing: true,
+      cell: (item) => {
+        const combined =
           item.finishedGoodItemName ||
-          (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "—");
+          (item.finishedGoodItemId ? itemsMap[item.finishedGoodItemId] : "");
+        let nameOnly = combined;
+        const code =
+          item.finishedGoodItemCode ||
+          (item.finishedGoodItemId
+            ? itemCodeMap[item.finishedGoodItemId]
+            : null) ||
+          (item.finishedGoodItemId
+            ? itemsMap[item.finishedGoodItemId]?.split(" — ")[0]
+            : null);
+        if (code && combined.startsWith(code)) {
+          nameOnly = combined.substring(code.length).replace(/^[\s-–—]+/, "");
+        }
+        const displayName = nameOnly || combined || "—";
         return (
           <div className="flex flex-col min-w-[80px] max-w-[200px]">
-            <Tooltip content={name}>
+            <Tooltip content={displayName}>
               <span className="truncate font-medium text-foreground block">
-                {name}
+                {displayName}
               </span>
             </Tooltip>
             {item.notes && (
@@ -1047,63 +1209,151 @@ export function ErpBomPage() {
           </div>
         );
       },
-      skeletonClassName: "w-36",
+      skeletonClassName: "w-40",
     },
     {
       key: "version",
-      header: "Version",
-      sortable: true,
-      sortKey: "version",
+      header: (
+        <TableColumnHeaderFilter
+          title="Version"
+          sortState={sortBy === "version" ? sortOrder : "none"}
+          onSortChange={() => handleSort("version")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="version"
+          align="center"
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
       cell: (item) => <div className="w-full">{item.version || "—"}</div>,
       skeletonClassName: "w-16",
     },
     {
       key: "status",
-      header: t("Trạng thái"),
-      sortable: true,
-      sortKey: "status",
-      cell: (item) => {
-        const statusMap = {
-          ACTIVE: {
-            label: t("Đang áp dụng"),
-            cls: "bg-green-100 text-green-700",
-          },
-          INACTIVE: {
-            label: t("Ngừng áp dụng"),
-            cls: "bg-red-100 text-red-700",
-          },
-          DRAFT: { label: t("Bản nháp"), cls: "bg-gray-100 text-gray-700" },
-        };
-        const s =
-          statusMap[item.status as keyof typeof statusMap] || statusMap.DRAFT;
-        return (
-          <div className="w-full">
-            <span
-              className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap inline-block ${s.cls}`}
-            >
-              {s.label}
-            </span>
-          </div>
-        );
-      },
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Trạng thái")}
+          sortState={sortBy === "status" ? sortOrder : "none"}
+          onSortChange={() => handleSort("status")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          fetchOptions={bomCoreApi.getBomColumnOptions}
+          columnKey="status"
+          filterOptions={[
+            { value: "DRAFT", label: t("Nháp") },
+            { value: "ACTIVE", label: t("Đang áp dụng") },
+            { value: "INACTIVE", label: t("Ngừng áp dụng") },
+          ]}
+          align="center"
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
+      cell: (item) => (
+        <div className="w-full">
+          <Badge
+            variant={
+              item.status === "ACTIVE"
+                ? "default"
+                : item.status === "INACTIVE"
+                  ? "destructive"
+                  : "secondary"
+            }
+          >
+            {item.status === "ACTIVE"
+              ? t("Đang áp dụng")
+              : item.status === "INACTIVE"
+                ? t("Ngừng áp dụng")
+                : t("Bản nháp")}
+          </Badge>
+        </div>
+      ),
       skeletonClassName: "w-20",
     },
     {
       key: "effectiveFrom",
-      header: t("Hiệu lực từ"),
-      sortable: true,
-      sortKey: "effectiveFrom",
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Hiệu lực từ")}
+          sortState={sortBy === "effectiveFrom" ? sortOrder : "none"}
+          onSortChange={() => handleSort("effectiveFrom")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          hideFilter={true}
+          hideFooter={true}
+          align="center"
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={filter.state.dateFrom}
+              dateTo={filter.state.dateTo}
+              onChange={(from, to) => {
+                filter.setDateFrom(from);
+                filter.setDateTo(to);
+                setPage(1);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
       cell: (item) => (
-        <div className="w-full">{fmtDate(item.effectiveFrom)}</div>
+        <div className="flex flex-col text-center w-full">
+          <span className="text-sm text-gray-900">
+            {fmtDate(item.effectiveFrom)}
+          </span>
+        </div>
       ),
       skeletonClassName: "w-20",
     },
     {
       key: "effectiveTo",
-      header: t("Hiệu lực đến"),
-      sortable: true,
-      sortKey: "effectiveTo",
-      cell: (item) => <div className="w-full">{fmtDate(item.effectiveTo)}</div>,
+      header: (
+        <TableColumnHeaderFilter
+          title={t("Hiệu lực đến")}
+          sortState={sortBy === "effectiveTo" ? sortOrder : "none"}
+          onSortChange={() => handleSort("effectiveTo")}
+          searchValue=""
+          onSearchChange={() => {}}
+          selectedFilters={[]}
+          onFilterChange={() => {}}
+          hideFilter={true}
+          hideFooter={true}
+          align="center"
+          dateRangeSlot={({ close }) => (
+            <DateRangeColumnSlot
+              dateFrom={filter.state.dateFrom}
+              dateTo={filter.state.dateTo}
+              onChange={(from, to) => {
+                filter.setDateFrom(from);
+                filter.setDateTo(to);
+                setPage(1);
+                close();
+              }}
+              onClose={close}
+            />
+          )}
+        />
+      ),
+      sortable: false,
+      enableResizing: true,
+      cell: (item) => (
+        <div className="flex flex-col text-center w-full">
+          <span className="text-sm text-gray-900">
+            {fmtDate(item.effectiveTo)}
+          </span>
+        </div>
+      ),
       skeletonClassName: "w-20",
     },
   ];
@@ -1152,9 +1402,6 @@ export function ErpBomPage() {
       filter={filter}
       renderSubRow={(item) => (
         <BomTree bomId={item.id} fgToBomMap={fgToBomMap} itemsMap={itemsMap} />
-      )}
-      expandedRowKeys={Object.keys(expandedBomIds).filter(
-        (key) => expandedBomIds[key],
       )}
       sortArray={
         sortBy ? [`${sortOrder === "desc" ? "-" : ""}${sortBy}`] : undefined
@@ -1279,9 +1526,13 @@ export function ErpBomPage() {
         saveError={saveError}
         handleSave={handleSave}
         itemOptions={itemOptions}
+        fgItemOptions={fgItemOptions}
         setItemSearch={setItemSearch}
+        setFgItemSearch={setFgItemSearch}
         fetchNextItems={fetchNextItems}
+        fetchNextFgItems={fetchNextFgItems}
         loadingItems={loadingItems}
+        loadingFgItems={loadingFgItems}
         addLine={addLine}
         removeLine={removeLine}
         updateLine={updateLine}

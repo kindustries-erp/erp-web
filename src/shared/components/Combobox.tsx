@@ -8,6 +8,7 @@ export interface ComboboxOption {
   value: string;
   label: string;
   searchText?: string;
+  subLabel?: string;
 }
 
 interface ComboboxProps {
@@ -25,6 +26,7 @@ interface ComboboxProps {
   loading?: boolean;
   onSearch?: (query: string) => void;
   fallbackLabel?: string;
+  variant?: "default" | "spreadsheet";
 }
 
 export function Combobox({
@@ -42,6 +44,7 @@ export function Combobox({
   loading,
   onSearch,
   fallbackLabel,
+  variant = "default",
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -101,10 +104,17 @@ export function Combobox({
             disabled={disabled || readOnly}
             onClick={() => !(disabled || readOnly) && setOpen(!open)}
             className={cn(
-              "flex items-center justify-between w-full px-3 py-2 text-xs border rounded-xl transition-all outline-none",
-              open
+              "flex items-center justify-between w-full outline-none transition-all",
+              variant === "default" && "px-3 py-2 text-xs border rounded-xl",
+              variant === "spreadsheet" &&
+                "h-full min-h-[38px] px-3 border-0 rounded-none bg-transparent hover:bg-slate-50 focus:bg-white text-xs",
+              variant === "default" && open
                 ? "border-primary ring-2 ring-primary/10 bg-surface"
-                : "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
+                : variant === "default" &&
+                    "border-border bg-muted/20 hover:border-border-hover hover:bg-surface",
+              variant === "spreadsheet" && open
+                ? "bg-white ring-1 ring-primary"
+                : "",
               disabled
                 ? "opacity-60 cursor-not-allowed"
                 : readOnly
@@ -113,12 +123,19 @@ export function Combobox({
               className,
             )}
           >
-            <span className="truncate flex-1 text-left">
-              {selected
-                ? selected.label
-                : value && fallbackLabel
-                  ? fallbackLabel
-                  : placeholder}
+            <span className="truncate flex-1 text-left flex flex-col justify-center">
+              <span className="truncate">
+                {selected
+                  ? selected.label
+                  : value && fallbackLabel
+                    ? fallbackLabel
+                    : placeholder}
+              </span>
+              {selected?.subLabel && (
+                <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                  {selected.subLabel}
+                </span>
+              )}
             </span>
             <ChevronDown className="w-3.5 h-3.5 shrink-0 text-[color:var(--muted-fg)] ml-2" />
           </button>
@@ -210,7 +227,14 @@ export function Combobox({
                         o.value === value ? "opacity-100" : "opacity-0",
                       )}
                     />
-                    <span className="truncate">{o.label}</span>
+                    <div className="flex-1 truncate flex flex-col justify-center">
+                      <span className="truncate">{o.label}</span>
+                      {o.subLabel && (
+                        <span className="truncate text-[10px] text-[color:var(--muted-fg)] leading-tight mt-0.5">
+                          {o.subLabel}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 </Tooltip>
               ))

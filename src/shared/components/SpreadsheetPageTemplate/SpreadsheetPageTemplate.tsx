@@ -20,6 +20,7 @@ export function SpreadsheetPageTemplate<T>({
   error,
   emptyLabel,
   minWidth = 1300,
+  actionColumnSize,
   page,
   pageSize,
   total,
@@ -49,6 +50,7 @@ export function SpreadsheetPageTemplate<T>({
   children,
   onRowClick,
   loadingRows,
+  topNode,
 }: SpreadsheetPageTemplateProps<T>) {
   const t = useT();
   const finalEmptyLabel = emptyLabel ?? t("common.noData");
@@ -141,6 +143,7 @@ export function SpreadsheetPageTemplate<T>({
       ) : null}
       <div className="flex items-stretch flex-1 min-h-0">
         <div className="flex-1 min-w-0 space-y-4 flex flex-col h-full">
+          {topNode}
           <StandardTable
             tableId={tableId}
             defaultColumnOrder={defaultColumnOrder}
@@ -161,6 +164,7 @@ export function SpreadsheetPageTemplate<T>({
             sortArray={sortArray}
             onSort={onSort}
             actions={rowActions}
+            actionColumnSize={actionColumnSize}
             summaryRow={summaryRow}
             page={page}
             pageSize={pageSize}

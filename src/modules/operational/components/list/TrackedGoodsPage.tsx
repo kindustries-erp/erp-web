@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import { useInventorySerialsQuery } from "@/modules/inventory-core/hooks/useInventorySerialsQuery";
 import type { DataTableColumn } from "@/shared/components/DataTable";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { extractApiError } from "@/shared/utils/apiError";
 import { useT } from "@/core/i18n";
@@ -14,13 +15,23 @@ import {
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { formatGMT7 } from "@/shared/utils/format";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
-import { Barcode, Eye, Copy, Check } from "lucide-react";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { Barcode, Eye, PanelRightOpen } from "lucide-react";
 import type { ActionDropdownItem } from "@/shared/components/ActionDropdown";
 import { TrackedGoodsDrawer } from "./TrackedGoodsDrawer";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
-import { Button } from "@/shared/components/ui/Button";
+import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
+import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 
-export function TrackedGoodsPage() {
+export function TrackedGoodsPage({
+  fixedTrackingPolicy,
+  title,
+  desc,
+}: {
+  fixedTrackingPolicy?: string;
+  title?: string;
+  desc?: string;
+} = {}) {
   const t = useT();
 
   const [page, setPage] = useState(1);
@@ -38,8 +49,13 @@ export function TrackedGoodsPage() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [previewSoNo, setPreviewSoNo] = useState<string | null>(null);
+  const giDrawer = useGiDrawer();
 
-  const tableState = useTableColumnState("inventory-tracked-goods-table");
+  const tableState = useTableColumnState(
+    fixedTrackingPolicy
+      ? `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`
+      : "inventory-tracked-goods-table",
+  );
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -54,7 +70,7 @@ export function TrackedGoodsPage() {
     pageSize,
     search: search || undefined,
     itemType: itemTypeFilter || undefined,
-    trackingPolicy: trackingPolicyFilter || undefined,
+    trackingPolicy: fixedTrackingPolicy || trackingPolicyFilter || undefined,
     status: statusFilter || undefined,
     missingSerial: missingSerialFilter || undefined,
     sort: [sortField],
@@ -85,28 +101,6 @@ export function TrackedGoodsPage() {
     !!statusFilter,
     missingSerialFilter,
   ].filter(Boolean).length;
-
-  const CopyIconBtn = ({ text }: { text: string }) => {
-    const [copied, setCopied] = useState(false);
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-        className="opacity-0 group-hover:opacity-100 hover:text-gray-900 transition-opacity p-1"
-        title="Copy"
-      >
-        {copied ? (
-          <Check className="w-4 h-4 text-green-600" />
-        ) : (
-          <Copy className="w-4 h-4 text-gray-400" />
-        )}
-      </button>
-    );
-  };
 
   const fetchSerialOptions = useCallback(
     async ({
@@ -163,7 +157,7 @@ export function TrackedGoodsPage() {
         key: "createdAt",
         header: (
           <TableColumnHeaderFilter
-            title={t("Ngày")}
+            title={t("Ngày nhập")}
             sortState={getSortState("createdAt")}
             onSortChange={(state) => handleSortChange("createdAt", state)}
             searchValue={tableState.columnSearch["createdAt"] || ""}
@@ -172,25 +166,43 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("createdAt", vals)}
             align="center"
             columnKey="createdAt"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
+            hideFilter={true}
+            hideFooter={true}
+            isActive={!!tableState.columnSearch["createdAt"]}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["createdAt"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    tableState.setColumnSearch("createdAt", next);
+                    setPage(1);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
           />
         ),
-        size: 120,
+        size: 140,
         className: "align-middle text-right",
         headerClassName: "text-center",
-        cell: (row) => (
-          <Tooltip
-            content={formatGMT7(row.createdAt, "datetime-sec")}
-            side="top"
-          >
-            <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.createdAt, "date")}
-            </span>
-          </Tooltip>
-        ),
+        cell: (row) => {
+          const dateTime = formatGMT7(row.createdAt, "datetime");
+          const [datePart = "", timePart = ""] = dateTime.split(" ");
+
+          return (
+            <Tooltip content={formatGMT7(row.createdAt, "datetime-sec")}>
+              <div className="cursor-help inline-flex flex-row items-baseline gap-1.5 whitespace-nowrap leading-tight">
+                <span className="text-sm text-gray-900">{datePart}</span>
+                <span className="text-xs text-gray-500">{timePart}</span>
+              </div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "itemCode",
@@ -205,16 +217,24 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("itemCode", vals)}
             align="center"
             columnKey="itemCode"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 100,
+        size: 150,
         className: "align-middle text-left",
         headerClassName: "text-center",
-        cell: (row) => row.item?.sku || "—",
+        cell: (row) => (
+          <TableText
+            text={row.item?.sku || "—"}
+            enableCopy
+            onDrawerClick={() => {
+              setSelectedItem(row);
+              setDrawerOpen(true);
+            }}
+          />
+        ),
       },
       {
         key: "itemName",
@@ -229,24 +249,28 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("itemName", vals)}
             align="center"
             columnKey="itemName"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 150,
+        size: 200,
         className: "align-middle text-left",
         headerClassName: "text-center",
-        cell: (row) => (
-          <div className="font-medium">{row.item?.itemName || "—"}</div>
-        ),
+        cell: (row) => {
+          const name = row.item?.itemName || "—";
+          return (
+            <Tooltip content={name} side="top">
+              <div className="truncate w-full">{name}</div>
+            </Tooltip>
+          );
+        },
       },
       {
         key: "serialNo",
         header: (
           <TableColumnHeaderFilter
-            title={t("SerialNo")}
+            title={t("Số Seri")}
             sortState={getSortState("serialNo")}
             onSortChange={(state) => handleSortChange("serialNo", state)}
             searchValue={tableState.columnSearch["serialNo"] || ""}
@@ -255,20 +279,24 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
             align="center"
             columnKey="serialNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="flex items-center gap-1.5 group font-medium">
-            <span className="flex-1 truncate">{row.serialNo || "—"}</span>
-            {row.serialNo && <CopyIconBtn text={row.serialNo} />}
-          </div>
+          <TableText
+            text={row.serialNo || "—"}
+            enableCopy
+            tooltip={true}
+            onDrawerClick={() => {
+              setSelectedItem(row);
+              setDrawerOpen(true);
+            }}
+          />
         ),
       },
       {
@@ -284,20 +312,20 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("vinNo", vals)}
             align="center"
             columnKey="vinNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="flex items-center gap-1.5 group font-medium">
-            <span className="flex-1 truncate">{row.vinNo || "—"}</span>
-            {row.vinNo && <CopyIconBtn text={row.vinNo} />}
-          </div>
+          <TableText
+            text={row.vinNo || "—"}
+            enableCopy={!!row.vinNo}
+            tooltip={!!row.vinNo}
+          />
         ),
       },
       {
@@ -313,54 +341,59 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("engineNo", vals)}
             align="center"
             columnKey="engineNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
         ),
-        size: 170,
+        size: 200,
         className: "align-middle text-left text-gray-800",
         headerClassName: "text-center",
         cell: (row) => (
-          <div className="flex items-center gap-1.5 group font-medium">
-            <span className="flex-1 truncate">{row.engineNo || "—"}</span>
-            {row.engineNo && <CopyIconBtn text={row.engineNo} />}
-          </div>
-        ),
-      },
-      {
-        key: "trackingPolicyName",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Chính sách Tracking")}
-            sortState={getSortState("trackingPolicyName")}
-            onSortChange={(state) =>
-              handleSortChange("trackingPolicyName", state)
-            }
-            searchValue={tableState.columnSearch["trackingPolicyName"] || ""}
-            onSearchChange={(val) =>
-              handleSearchChange("trackingPolicyName", val)
-            }
-            selectedFilters={
-              tableState.columnFilters["trackingPolicyName"] || []
-            }
-            onFilterChange={(vals) =>
-              handleFilterChange("trackingPolicyName", vals)
-            }
-            align="center"
-            columnKey="trackingPolicyName"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
+          <TableText
+            text={row.engineNo || "—"}
+            enableCopy={!!row.engineNo}
+            tooltip={!!row.engineNo}
           />
         ),
-        size: 180,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => row.item?.trackingPolicyName || "—",
       },
+      ...(fixedTrackingPolicy
+        ? []
+        : [
+            {
+              key: "trackingPolicyName",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Chính sách Tracking")}
+                  sortState={getSortState("trackingPolicyName")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("trackingPolicyName", state)
+                  }
+                  searchValue={
+                    tableState.columnSearch["trackingPolicyName"] || ""
+                  }
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("trackingPolicyName", val)
+                  }
+                  selectedFilters={
+                    tableState.columnFilters["trackingPolicyName"] || []
+                  }
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("trackingPolicyName", vals)
+                  }
+                  align="center"
+                  columnKey="trackingPolicyName"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 180,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) => row.item?.trackingPolicyName || "—",
+            },
+          ]),
       {
         key: "status",
         header: (
@@ -374,7 +407,6 @@ export function TrackedGoodsPage() {
             onFilterChange={(vals) => handleFilterChange("status", vals)}
             align="center"
             columnKey="status"
-            requireSearchToFetchOptions={false}
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={async () => {
@@ -437,142 +469,299 @@ export function TrackedGoodsPage() {
         },
       },
       {
-        key: "soNo",
+        key: "goodsIssueNo",
         header: (
           <TableColumnHeaderFilter
-            title={t("Đơn hàng")}
-            sortState={getSortState("soNo")}
-            onSortChange={(state) => handleSortChange("soNo", state)}
-            searchValue={tableState.columnSearch["soNo"] || ""}
-            onSearchChange={(val) => handleSearchChange("soNo", val)}
-            selectedFilters={tableState.columnFilters["soNo"] || []}
-            onFilterChange={(vals) => handleFilterChange("soNo", vals)}
+            title={t("Phiếu xuất kho")}
+            sortState={getSortState("goodsIssueNo")}
+            onSortChange={(state) => handleSortChange("goodsIssueNo", state)}
+            searchValue={tableState.columnSearch["goodsIssueNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("goodsIssueNo", val)}
+            selectedFilters={tableState.columnFilters["goodsIssueNo"] || []}
+            onFilterChange={(vals) => handleFilterChange("goodsIssueNo", vals)}
             align="center"
-            columnKey="soNo"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 170,
-        className: "align-middle text-center",
-        headerClassName: "text-center",
-        cell: (row) => {
-          if (!row.soNo) return "—";
-          return (
-            <Button
-              variant="link"
-              onClick={() => setPreviewSoNo(row.soNo || null)}
-              className="text-primary hover:underline p-0 h-auto"
-            >
-              {row.soNo}
-            </Button>
-          );
-        },
-      },
-
-      {
-        key: "delivery",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Ngày giao")}
-            sortState={getSortState("delivery")}
-            onSortChange={(state) => handleSortChange("delivery", state)}
-            searchValue={tableState.columnSearch["delivery"] || ""}
-            onSearchChange={(val) => handleSearchChange("delivery", val)}
-            selectedFilters={tableState.columnFilters["delivery"] || []}
-            onFilterChange={(vals) => handleFilterChange("delivery", vals)}
-            align="center"
-            columnKey="delivery"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 120,
-        className: "align-middle text-center",
-        headerClassName: "text-center",
-        cell: (row) => {
-          return row.lifecycle?.deliveryDate
-            ? formatGMT7(row.lifecycle.deliveryDate, "date")
-            : "—";
-        },
-      },
-
-      {
-        key: "color",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Màu sắc")}
-            sortState={getSortState("color")}
-            onSortChange={(state) => handleSortChange("color", state)}
-            searchValue={tableState.columnSearch["color"] || ""}
-            onSearchChange={(val) => handleSearchChange("color", val)}
-            selectedFilters={tableState.columnFilters["color"] || []}
-            onFilterChange={(vals) => handleFilterChange("color", vals)}
-            align="center"
-            columnKey="color"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 100,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => row.attributes?.color || "—",
-      },
-      {
-        key: "dealerCode",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Mã đại lý")}
-            sortState={getSortState("dealer_code")}
-            onSortChange={(state) => handleSortChange("dealer_code", state)}
-            searchValue={tableState.columnSearch["dealer_code"] || ""}
-            onSearchChange={(val) => handleSearchChange("dealer_code", val)}
-            selectedFilters={tableState.columnFilters["dealer_code"] || []}
-            onFilterChange={(vals) => handleFilterChange("dealer_code", vals)}
-            align="center"
-            columnKey="dealer_code"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="inventory-serial-options"
-            allFilters={tableState.columnFilters}
-            fetchOptions={fetchSerialOptions}
-          />
-        ),
-        size: 120,
-        className: "align-middle text-left",
-        headerClassName: "text-center",
-        cell: (row) => row.attributes?.dealer_code || "—",
-      },
-      {
-        key: "dealerName",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("Tên đại lý")}
-            sortState={getSortState("dealer_name")}
-            onSortChange={(state) => handleSortChange("dealer_name", state)}
-            searchValue={tableState.columnSearch["dealer_name"] || ""}
-            onSearchChange={(val) => handleSearchChange("dealer_name", val)}
-            selectedFilters={tableState.columnFilters["dealer_name"] || []}
-            onFilterChange={(vals) => handleFilterChange("dealer_name", vals)}
-            align="center"
-            columnKey="dealer_name"
-            requireSearchToFetchOptions={true}
+            columnKey="goodsIssueNo"
             queryKeyPrefix="inventory-serial-options"
             allFilters={tableState.columnFilters}
             fetchOptions={fetchSerialOptions}
           />
         ),
         size: 200,
-        className: "align-middle text-left",
+        className: "align-middle text-center",
         headerClassName: "text-center",
-        cell: (row) => row.attributes?.dealer_name || "—",
+        cell: (row) => {
+          if (!row.lifecycle?.goodsIssueNo) return "—";
+          return (
+            <div className="flex flex-col gap-1 w-full pr-1">
+              <div className="flex items-center justify-between gap-2 w-full">
+                <span className="truncate text-primary font-normal">
+                  {row.lifecycle.goodsIssueNo}
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (row.lifecycle?.goodsIssueId) {
+                      giDrawer.openDetail(row.lifecycle.goodsIssueId);
+                    }
+                  }}
+                  className="shrink-0 p-1 flex items-center justify-center outline-none"
+                >
+                  <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
+                </button>
+              </div>
+            </div>
+          );
+        },
       },
+      {
+        key: "goodsIssueDate",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("Ngày XK")}
+            sortState={getSortState("goodsIssueDate")}
+            onSortChange={(state) => handleSortChange("goodsIssueDate", state)}
+            searchValue={tableState.columnSearch["goodsIssueDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("goodsIssueDate", val)}
+            selectedFilters={tableState.columnFilters["goodsIssueDate"] || []}
+            onFilterChange={(vals) =>
+              handleFilterChange("goodsIssueDate", vals)
+            }
+            align="center"
+            columnKey="goodsIssueDate"
+            hideFilter={true}
+            hideFooter={true}
+            isActive={!!tableState.columnSearch["goodsIssueDate"]}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["goodsIssueDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    tableState.setColumnSearch("goodsIssueDate", next);
+                    setPage(1);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
+          />
+        ),
+        size: 120,
+        className: "align-middle text-right",
+        headerClassName: "text-center",
+        cell: (row) =>
+          row.lifecycle?.goodsIssueDate
+            ? formatGMT7(row.lifecycle.goodsIssueDate, "date")
+            : "—",
+      },
+      ...(fixedTrackingPolicy === "SERIAL"
+        ? []
+        : [
+            {
+              key: "soNo",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Đơn hàng")}
+                  sortState={getSortState("soNo")}
+                  onSortChange={(state: any) => handleSortChange("soNo", state)}
+                  searchValue={tableState.columnSearch["soNo"] || ""}
+                  onSearchChange={(val: any) => handleSearchChange("soNo", val)}
+                  selectedFilters={tableState.columnFilters["soNo"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("soNo", vals)
+                  }
+                  align="center"
+                  columnKey="soNo"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 200,
+              className: "align-middle text-center",
+              headerClassName: "text-center",
+              cell: (row: any) => {
+                if (!row.soNo) return "—";
+                return (
+                  <div className="flex flex-col gap-1 w-full pr-1">
+                    <div className="flex items-center justify-between gap-2 w-full">
+                      <span className="truncate text-primary font-normal">
+                        {row.soNo}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewSoNo(row.soNo || null);
+                        }}
+                        className="shrink-0 p-1 flex items-center justify-center outline-none"
+                      >
+                        <PanelRightOpen className="w-3.5 h-3.5 text-primary opacity-40 hover:opacity-100 transition-opacity" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              },
+            },
+            {
+              key: "delivery",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Ngày giao")}
+                  sortState={getSortState("delivery")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("delivery", state)
+                  }
+                  searchValue={tableState.columnSearch["delivery"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("delivery", val)
+                  }
+                  selectedFilters={tableState.columnFilters["delivery"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("delivery", vals)
+                  }
+                  align="center"
+                  columnKey="delivery"
+                  hideFilter={true}
+                  hideFooter={true}
+                  isActive={!!tableState.columnSearch["delivery"]}
+                  dateRangeSlot={({ close }) => {
+                    const val = tableState.columnSearch["delivery"] || "";
+                    const [from = "", to = ""] = val.split("|");
+                    return (
+                      <DateRangeColumnSlot
+                        dateFrom={from}
+                        dateTo={to}
+                        onChange={(f, t) => {
+                          const next = f || t ? `${f}|${t}` : "";
+                          tableState.setColumnSearch("delivery", next);
+                          setPage(1);
+                        }}
+                        onClose={close}
+                      />
+                    );
+                  }}
+                />
+              ),
+              size: 120,
+              className: "align-middle text-right",
+              headerClassName: "text-center",
+              cell: (row: any) => {
+                return row.lifecycle?.deliveryDate
+                  ? formatGMT7(row.lifecycle.deliveryDate, "date")
+                  : "—";
+              },
+            },
+          ]),
+
+      ...(fixedTrackingPolicy === "SERIAL"
+        ? []
+        : [
+            {
+              key: "color",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Màu sắc")}
+                  sortState={getSortState("color")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("color", state)
+                  }
+                  searchValue={tableState.columnSearch["color"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("color", val)
+                  }
+                  selectedFilters={tableState.columnFilters["color"] || []}
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("color", vals)
+                  }
+                  align="center"
+                  columnKey="color"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 100,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) => row.attributes?.color || "—",
+            },
+            {
+              key: "dealerCode",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Mã đại lý")}
+                  sortState={getSortState("dealer_code")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("dealer_code", state)
+                  }
+                  searchValue={tableState.columnSearch["dealer_code"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("dealer_code", val)
+                  }
+                  selectedFilters={
+                    tableState.columnFilters["dealer_code"] || []
+                  }
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("dealer_code", vals)
+                  }
+                  align="center"
+                  columnKey="dealer_code"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 120,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) => row.attributes?.dealer_code || "—",
+            },
+            {
+              key: "dealerName",
+              header: (
+                <TableColumnHeaderFilter
+                  title={t("Tên đại lý")}
+                  sortState={getSortState("dealer_name")}
+                  onSortChange={(state: any) =>
+                    handleSortChange("dealer_name", state)
+                  }
+                  searchValue={tableState.columnSearch["dealer_name"] || ""}
+                  onSearchChange={(val: any) =>
+                    handleSearchChange("dealer_name", val)
+                  }
+                  selectedFilters={
+                    tableState.columnFilters["dealer_name"] || []
+                  }
+                  onFilterChange={(vals: any) =>
+                    handleFilterChange("dealer_name", vals)
+                  }
+                  align="center"
+                  columnKey="dealer_name"
+                  queryKeyPrefix="inventory-serial-options"
+                  allFilters={tableState.columnFilters}
+                  fetchOptions={fetchSerialOptions}
+                />
+              ),
+              size: 250,
+              className: "align-middle text-left",
+              headerClassName: "text-center",
+              cell: (row: any) =>
+                row.attributes?.dealer_name ? (
+                  <Tooltip content={row.attributes.dealer_name} side="top">
+                    <span className="truncate block max-w-full cursor-help">
+                      {row.attributes.dealer_name}
+                    </span>
+                  </Tooltip>
+                ) : (
+                  "—"
+                ),
+            },
+          ]),
     ],
     [t, tableState, fetchSerialOptions],
   );
@@ -630,10 +819,14 @@ export function TrackedGoodsPage() {
         </div>
       )}
       <SpreadsheetPageTemplate
-        title={t("Serial / Tracking")}
-        desc={t("Danh sách sản phẩm / vật tư có tracking")}
+        title={title || t("Serial / Tracking")}
+        desc={desc || t("Danh sách sản phẩm / vật tư có tracking")}
         icon={<Barcode className="h-5 w-5" />}
-        tableId="inventory-tracked-goods-table"
+        tableId={
+          fixedTrackingPolicy
+            ? `inventory-tracked-goods-${fixedTrackingPolicy.toLowerCase()}-table`
+            : "inventory-tracked-goods-table"
+        }
         items={items}
         columns={columns}
         getRowKey={(row) => row.id}
@@ -722,6 +915,7 @@ export function TrackedGoodsPage() {
         soNo={previewSoNo}
         onClose={() => setPreviewSoNo(null)}
       />
+      <GiFormDrawer drawer={giDrawer} />
     </>
   );
 }

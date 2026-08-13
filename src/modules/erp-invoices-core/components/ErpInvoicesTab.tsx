@@ -1,7 +1,18 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { format, isValid } from "date-fns";
+import {
+  format,
+  isValid,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  subMonths,
+  subWeeks,
+  subDays,
+} from "date-fns";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -10,18 +21,21 @@ import {
   DownloadCloud,
   Eye,
   Download,
-  RefreshCw,
   Trash,
   FileCode,
   FileText,
   Building2,
-  ChevronDown,
   CheckSquare,
   XSquare,
-  PanelRightOpen,
   MoreHorizontal,
+  X,
+  GitMerge,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
+import { KpiCard } from "@/shared/components/KpiCard";
+import { KpiSparkline } from "@/shared/components/KpiSparkline";
+import { money } from "@/shared/utils/format";
+
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { Popover } from "@/core/components/ui/Popover";
 import { Button } from "@/shared/components/ui/Button";
@@ -38,6 +52,7 @@ import { useInvoiceSyncProgress } from "@/modules/erp-invoices-core/hooks/useInv
 import {
   erpInvoicesCoreApi,
   type ErpInvoice,
+  type ErpInvoiceListParams,
 } from "@/modules/erp-invoices-core/api/erpInvoicesCoreApi";
 
 import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
@@ -45,18 +60,44 @@ import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
+import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
   ErpInvoiceInternalMain,
   ErpInvoiceInternalSidebar,
 } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
 import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
+import { BulkEditDrawer } from "@/modules/erp-invoices-core/components/BulkEditDrawer";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { FilePreviewDrawer } from "@/shared/components/FilePreviewDrawer";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Combobox } from "@/shared/components/Combobox";
+
+const INVOICE_TYPE_MAP: Record<string, string> = {
+  CHI_NHANH: "Hóa đơn chi nhánh",
+  CHIET_KHAU: "Hóa đơn chiết khấu",
+  DICH_VU_CUU_HO: "Hóa đơn cứu hộ",
+  HANG_HOA: "Hàng hóa / Vật tư",
+  DICH_VU: "Dịch vụ",
+  PHI_THUE: "Phí & Thuế",
+  CUU_HO: "Cứu hộ",
+  KHAC: "Khác",
+};
+
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import { InvoiceExportDrawer } from "@/modules/erp-invoices-core/components/InvoiceExportDrawer";
 import type { FilterPanelConfig } from "@/shared/hooks/useFilterPanel";
+import {
+  getFileViewUrl,
+  getAttachmentContentBlobApi,
+  getAttachmentDownloadUrlApi,
+} from "@/modules/system/api/attachmentsApi";
+
+function getPdfAttachments(attachments: any[]) {
+  return (attachments ?? []).filter(
+    (a) => a.attachment?.mimeType === "application/pdf",
+  );
+}
 
 function formatTaxInvoiceType(type?: string | null) {
   if (type === "CASH_REGISTER") return "HĐ Máy tính tiền";
@@ -117,6 +158,132 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const listHook = useErpInvoicesList(direction);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
   const showToast = useUIStore((s) => s.showToast);
+  const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+
+  type SelectedPeriod = {
+    type: "month" | "week" | "day";
+    index: number;
+    label: string;
+    dateFrom: string;
+    dateTo: string;
+  } | null;
+
+  const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod>(null);
+
+  const handleMonthClick = (index: number) => {
+    const monthsAgo = 5 - index;
+    const date = subMonths(new Date(), monthsAgo);
+    const startStr = format(startOfMonth(date), "yyyy-MM-dd");
+    const endStr = format(endOfMonth(date), "yyyy-MM-dd");
+    listHook.filterPanel.setDateFrom(startStr);
+    listHook.filterPanel.setDateTo(endStr);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
+      "1",
+      "2",
+      "3",
+      "5",
+      "6",
+      "null",
+    ]);
+    listHook.setPage(1);
+
+    if (selectedPeriod?.type === "month" && selectedPeriod.index === index) {
+      setSelectedPeriod(null);
+    } else {
+      setSelectedPeriod({
+        type: "month",
+        index,
+        label: `Tháng ${format(date, "MM/yyyy")}`,
+        dateFrom: startStr,
+        dateTo: endStr,
+      });
+    }
+  };
+
+  const handleWeekClick = (index: number) => {
+    const weeksAgo = 3 - index;
+    const date = subWeeks(new Date(), weeksAgo);
+    const startStr = format(
+      startOfWeek(date, { weekStartsOn: 1 }),
+      "yyyy-MM-dd",
+    );
+    const endStr = format(endOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+    listHook.filterPanel.setDateFrom(startStr);
+    listHook.filterPanel.setDateTo(endStr);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
+      "1",
+      "2",
+      "3",
+      "5",
+      "6",
+      "null",
+    ]);
+    listHook.setPage(1);
+
+    if (selectedPeriod?.type === "week" && selectedPeriod.index === index) {
+      setSelectedPeriod(null);
+    } else {
+      setSelectedPeriod({
+        type: "week",
+        index,
+        label: `Tuần ${format(startOfWeek(date, { weekStartsOn: 1 }), "dd/MM")} - ${format(endOfWeek(date, { weekStartsOn: 1 }), "dd/MM")}`,
+        dateFrom: startStr,
+        dateTo: endStr,
+      });
+    }
+  };
+
+  const handleDayClick = (index: number) => {
+    const daysAgo = 6 - index;
+    const date = subDays(new Date(), daysAgo);
+    const dateStr = format(date, "yyyy-MM-dd");
+    listHook.filterPanel.setDateFrom(dateStr);
+    listHook.filterPanel.setDateTo(dateStr);
+    listHook.tableState.setColumnFilter("taxInvoiceStatus", [
+      "1",
+      "2",
+      "3",
+      "5",
+      "6",
+      "null",
+    ]);
+    listHook.setPage(1);
+
+    if (selectedPeriod?.type === "day" && selectedPeriod.index === index) {
+      setSelectedPeriod(null);
+    } else {
+      setSelectedPeriod({
+        type: "day",
+        index,
+        label: `${format(date, "dd/MM/yyyy")}`,
+        dateFrom: dateStr,
+        dateTo: dateStr,
+      });
+    }
+  };
+
+  const monthLabels = useMemo(() => {
+    return Array.from({ length: 6 }).map((_, i) => {
+      const d = subMonths(new Date(), 5 - i);
+      return `Tháng ${format(d, "MM/yyyy")}`;
+    });
+  }, []);
+
+  const weekLabels = useMemo(() => {
+    return Array.from({ length: 4 }).map((_, i) => {
+      const d = subWeeks(new Date(), 3 - i);
+      const start = startOfWeek(d, { weekStartsOn: 1 });
+      const end = endOfWeek(d, { weekStartsOn: 1 });
+      return `${format(start, "dd/MM")} - ${format(end, "dd/MM")}`;
+    });
+  }, []);
+
+  const dayLabels = useMemo(() => {
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = subDays(new Date(), 6 - i);
+      return format(d, "dd/MM/yyyy");
+    });
+  }, []);
 
   // Hook theo dõi tiến trình nền SSE, tự động refresh bảng khi hoàn thành
   useInvoiceSyncProgress(listHook.loadInvoices);
@@ -131,106 +298,112 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     filename: string;
     fileKey: string;
     invoiceId: string;
+    isAttachment?: boolean;
   } | null>(null);
 
   const [bulkDrawerOpen, setBulkDrawerOpen] = useState(false);
   const [bulkMonth, setBulkMonth] = useState("");
   const [bulkTypes, setBulkTypes] = useState<string[]>(["pdf", "xml"]);
   const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [bulkSelectedTypes, setBulkSelectedTypes] = useState<string[]>([
+    "pdf",
+    "xml",
+  ]);
+  const [bulkSelectedDownloading, setBulkSelectedDownloading] = useState(false);
+  const [bulkSelectedModalOpen, setBulkSelectedModalOpen] = useState(false);
 
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [bulkBranchModalOpen, setBulkBranchModalOpen] = useState(false);
+  const [bulkEditDrawerOpen, setBulkEditDrawerOpen] = useState(false);
   const [bulkPostingModalOpen, setBulkPostingModalOpen] = useState(false);
+  const [bulkNetOffDrawerOpen, setBulkNetOffDrawerOpen] = useState(false);
   const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
     "post",
   );
-  const [bulkBranchId, setBulkBranchId] = useState<string | null>(null);
-  const [bulkBranchSaving, setBulkBranchSaving] = useState(false);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
     [rowSelection],
   );
 
-  async function handleBulkSetBranch() {
-    if (!selectedIds.length) return;
-    setBulkBranchSaving(true);
-    try {
-      const result = await erpInvoicesCoreApi.bulkSetBranch(
-        selectedIds,
-        bulkBranchId,
-      );
-      showToast({
-        title: `Đã cập nhật ${result.updated} hóa đơn`,
-        variant: "default",
-      });
-      setRowSelection({});
-      setBulkBranchModalOpen(false);
-      void listHook.loadInvoices();
-    } catch {
-      showToast({
-        title: "Không thể cập nhật chi nhánh",
-        variant: "destructive",
-      });
-    } finally {
-      setBulkBranchSaving(false);
-    }
-  }
-
   const bulkActionsNode =
     selectedIds.length > 0 ? (
-      <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+      <div className="flex items-center rounded-md shadow-sm animate-in fade-in slide-in-from-top-1 duration-200">
         <ActionDropdown
           align="start"
           customTrigger={
             <Button
               variant="outline"
               size="sm"
-              className="h-8 shadow-sm text-primary border-primary/30 hover:bg-primary/5"
+              className="h-8 rounded-r-none border-r-0 text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
             >
               <CheckSquare className="w-4 h-4 mr-1.5" />
               {t("bulkActions", "Thao tác")} ({selectedIds.length})
-              <ChevronDown className="w-4 h-4 ml-1 opacity-70" />
             </Button>
           }
           items={[
             {
-              label: "Gán chi nhánh",
-              icon: (
-                <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => {
-                setBulkBranchId(null);
-                setBulkBranchModalOpen(true);
-              },
+              groupLabel: "Nghiệp vụ & Hạch toán",
+              items: [
+                {
+                  label: t("bulkAssignAll", "Gán hàng loạt"),
+                  icon: (
+                    <Building2 className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkEditDrawerOpen(true);
+                  },
+                },
+                {
+                  label: "Hạch toán hàng loạt",
+                  icon: (
+                    <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkPostingMode("post");
+                    setBulkPostingModalOpen(true);
+                  },
+                },
+                {
+                  label: "Đề xuất cấn trừ sao kê",
+                  icon: (
+                    <GitMerge className="w-4 h-4 mr-2 text-muted-foreground" />
+                  ),
+                  onClick: () => {
+                    setBulkNetOffDrawerOpen(true);
+                  },
+                },
+                {
+                  label: "Hủy hạch toán hàng loạt",
+                  icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
+                  onClick: () => {
+                    setBulkPostingMode("unpost");
+                    setBulkPostingModalOpen(true);
+                  },
+                },
+              ],
             },
             {
-              label: "Hạch toán hàng loạt",
-              icon: (
-                <CheckSquare className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => {
-                setBulkPostingMode("post");
-                setBulkPostingModalOpen(true);
-              },
-            },
-            {
-              label: "Hủy hạch toán hàng loạt",
-              icon: <XSquare className="w-4 h-4 mr-2 text-red-500" />,
-              onClick: () => {
-                setBulkPostingMode("unpost");
-                setBulkPostingModalOpen(true);
-              },
-            },
-            {
-              label: "Bỏ chọn",
-              icon: (
-                <RefreshCw className="w-4 h-4 mr-2 text-muted-foreground" />
-              ),
-              onClick: () => setRowSelection({}),
+              groupLabel: "Tải & Xuất tệp",
+              items: [
+                {
+                  label: "Tải ZIP PDF/XML",
+                  icon: <Download className="w-4 h-4 mr-2 text-blue-500" />,
+                  onClick: () => setBulkSelectedModalOpen(true),
+                },
+              ],
             },
           ]}
         />
+        <div className="w-[1px] h-8 bg-primary/20 z-10" />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setRowSelection({})}
+          className="h-8 w-8 px-0 rounded-l-none border-l-0 border-primary/30 bg-primary/5 text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors focus:z-10"
+          title={t("deselectAll", "Bỏ chọn")}
+        >
+          <X className="w-4 h-4" />
+        </Button>
       </div>
     ) : null;
 
@@ -298,6 +471,40 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     }
   };
 
+  const handleBulkDownloadSelected = async () => {
+    if (bulkSelectedTypes.length === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 loại file");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      toast.error("Không có hóa đơn nào được chọn");
+      return;
+    }
+
+    try {
+      setBulkSelectedDownloading(true);
+      const blob = await erpInvoicesCoreApi.bulkDownloadSelected({
+        ids: selectedIds,
+        types: bulkSelectedTypes,
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `HoaDon_${selectedIds.length}_invoices.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setBulkSelectedModalOpen(false);
+      toast.success(`Đã tải ${selectedIds.length} hóa đơn thành công!`);
+    } catch (error: any) {
+      toast.error("Tải thất bại: " + error.message);
+    } finally {
+      setBulkSelectedDownloading(false);
+    }
+  };
+
   const { data: allTags = [] } = useQuery({
     queryKey: ["sys-tags"],
     queryFn: getTags,
@@ -306,6 +513,27 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { data: branches = [] } = useQuery({
     queryKey: ["branches-options"],
     queryFn: getBranchOptionsApi,
+  });
+
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ["erp-invoices-stats", direction],
+    queryFn: () => erpInvoicesCoreApi.getStats(direction),
+  });
+
+  const { data: periodStats, isLoading: periodLoading } = useQuery({
+    queryKey: [
+      "erp-invoices-stats",
+      direction,
+      selectedPeriod?.dateFrom,
+      selectedPeriod?.dateTo,
+    ],
+    queryFn: () =>
+      erpInvoicesCoreApi.getStats(
+        direction,
+        selectedPeriod!.dateFrom,
+        selectedPeriod!.dateTo,
+      ),
+    enabled: !!selectedPeriod,
   });
 
   useEffect(() => {
@@ -323,9 +551,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
 
     const handleOpenDoc = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail && detail.type === "erp_invoice" && detail.id) {
-        formHook.openInternal({ id: detail.id } as ErpInvoice);
-      } else if (detail && detail.type === "bank_transaction" && detail.id) {
+      if (detail && detail.type === "bank_transaction" && detail.id) {
         setDetailTransactionId(detail.id);
       }
     };
@@ -371,21 +597,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
     }
   }
 
-  const handleExportExcel = async () => {
-    try {
-      showToast({
-        title: "Đang tạo file Excel...",
-        variant: "default",
-      });
-      const { search, dateFrom, dateTo, status, custom } =
-        listHook.filterPanel.state;
-      const blob = await erpInvoicesCoreApi.exportExcel({
+  const handleExportExcel = () => {
+    setExportDrawerOpen(true);
+  };
+
+  const buildExportBaseQuery =
+    useCallback((): Partial<ErpInvoiceListParams> => {
+      const { search, status, custom } = listHook.filterPanel.state;
+      return {
         direction,
         search: search || undefined,
         seller_name: custom?.seller_name || undefined,
         buyer_name: custom?.buyer_name || undefined,
-        date_from: dateFrom ? `${dateFrom}T00:00:00` : undefined,
-        date_to: dateTo ? `${dateTo}T23:59:59` : undefined,
         status: status || undefined,
         tag_id: (custom?.tag_id as string) || undefined,
         sort_by: listHook.sortBy || undefined,
@@ -398,45 +621,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           Object.keys(listHook.tableState.columnFilters).length > 0
             ? JSON.stringify(listHook.tableState.columnFilters)
             : undefined,
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Bao_cao_hoa_don_${direction === "IN" ? "dau_vao" : "dau_ra"}_${format(new Date(), "yyyyMMdd_HHmmss")}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      showToast({
-        title: "Xuất Excel thành công",
-        variant: "default",
-      });
-    } catch {
-      showToast({
-        title: "Không thể xuất Excel",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReparseXml = async (inv: ErpInvoice) => {
-    try {
-      const token = localStorage.getItem("erp_portal_token") || "";
-      showToast({ title: "Đang tải dữ liệu XML...", variant: "default" });
-      await erpInvoicesCoreApi.reparseXml(inv.id, token);
-      showToast({ title: "Đồng bộ chi tiết thành công", variant: "default" });
-      void listHook.loadInvoices();
-    } catch (e: unknown) {
-      showToast({
-        title:
-          (e as { response?: { data?: { message?: string } } }).response?.data
-            ?.message || "Đồng bộ thất bại",
-        variant: "destructive",
-      });
-    }
-  };
+      };
+    }, [
+      direction,
+      listHook.filterPanel.state,
+      listHook.sortBy,
+      listHook.sortOrder,
+      listHook.tableState.columnFilters,
+      listHook.tableState.columnSearch,
+    ]);
 
   function fmtAmt(val: string | null | undefined) {
     if (val == null) return "—";
@@ -519,7 +712,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               : String(i);
           if (columnKey === "branchId") {
             const branch = branches.find((b) => b.value === valStr);
-            if (branch) labelStr = branch.label;
+            if (branch) {
+              const parts = branch.label.split(" — ");
+              labelStr = parts.length > 1 ? parts[1] : branch.label;
+            }
           }
           if (columnKey === "invoiceDate" && valStr) {
             // Backend now returns YYYY-MM-DD via TO_CHAR — use as value directly
@@ -540,7 +736,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         next: res.page < res.totalPages ? res.page + 1 : null,
       };
     },
-    [direction],
+    [direction, branches],
   );
 
   const handleFilterChange = (key: string, vals: string[]) => {
@@ -565,7 +761,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("attachments", vals)}
             align="center"
             columnKey="attachments"
-            requireSearchToFetchOptions={false}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async ({ search }) => {
@@ -608,7 +803,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 <FileCode className="w-4 h-4 text-gray-300" />
               </Tooltip>
             )}
-            {inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0) ? (
+            {inv.pdfFileKey ||
+            (inv.pdfFiles && inv.pdfFiles.length > 0) ||
+            (inv.attachments &&
+              getPdfAttachments(inv.attachments).length > 0) ? (
               <Popover
                 align="start"
                 open={openPopoverId === inv.id}
@@ -620,8 +818,8 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                     </div>
                     <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto">
                       {inv.pdfFileKey &&
-                        !inv.pdfFiles?.some(
-                          (p: any) => p.key === inv.pdfFileKey,
+                        !inv.attachments?.some(
+                          (p: any) => p.attachment?.fileKey === inv.pdfFileKey,
                         ) && (
                           <div className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg mb-2">
                             <div className="flex flex-col min-w-0 flex-1 mr-2">
@@ -655,36 +853,46 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                             </Button>
                           </div>
                         )}
-                      {inv.pdfFiles?.map((pdf: any) => (
-                        <div
-                          key={pdf.key}
-                          className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg"
-                        >
-                          <div className="flex flex-col min-w-0 flex-1 mr-2">
-                            <span
-                              className="truncate font-medium text-slate-700"
-                              title={pdf.filename}
-                            >
-                              {pdf.filename}
-                            </span>
-                            <span className="text-xs text-gray-500 mt-0.5">
-                              Hóa đơn PDF
-                            </span>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenPopoverId(null);
-                              handlePreviewPdf(inv.id, pdf.key, pdf.filename);
-                            }}
+                      {getPdfAttachments(inv.attachments ?? []).map(
+                        (pdf: any) => (
+                          <div
+                            key={pdf.attachment?.fileKey}
+                            className="flex items-center justify-between text-sm py-2 px-3 border border-border rounded-lg"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <div className="flex flex-col min-w-0 flex-1 mr-2">
+                              <span
+                                className="truncate font-medium text-slate-700"
+                                title={pdf.attachment?.fileName}
+                              >
+                                {pdf.attachment?.fileName}
+                              </span>
+                              <span className="text-xs text-gray-500 mt-0.5">
+                                Hóa đơn PDF
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenPopoverId(null);
+                                const url = getFileViewUrl(pdf.attachment?.id);
+                                setPreviewPdf({
+                                  url,
+                                  filename:
+                                    pdf.attachment?.fileName || "document.pdf",
+                                  fileKey: pdf.attachment?.id,
+                                  invoiceId: inv.id,
+                                  isAttachment: true,
+                                });
+                              }}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 }
@@ -767,31 +975,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("invoiceNo", vals)}
             align="center"
             columnKey="invoiceNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
         headerClassName: "text-center",
         className: "font-medium text-primary text-left",
         cell: (inv) => (
-          <div className="flex flex-col gap-1 w-full pr-1">
-            <div className="flex items-center gap-2 w-full">
-              <Button
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  formHook.openInternal(inv);
-                }}
-                className="font-normal text-primary p-0 h-auto flex items-center justify-between w-full hover:bg-transparent hover:text-primary/80"
-              >
-                <span className="truncate">{inv.invoiceNo}</span>
-                <PanelRightOpen className="w-3.5 h-3.5 opacity-60 hover:opacity-100 transition-opacity flex-shrink-0 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <TableText
+            text={inv.invoiceNo || ""}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              formHook.openInternal(inv);
+            }}
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {
@@ -809,7 +1011,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("serialNo", vals)}
             align="center"
             columnKey="serialNo"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -837,21 +1038,23 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("partner", vals)}
             align="center"
             columnKey="partner"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 250,
         headerClassName: "text-center",
         className: "text-left",
         cell: (inv) => {
+          const buyerDisplayName =
+            inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "—";
           const text =
-            direction === "IN" ? inv.sellerName || "—" : inv.buyerName || "—";
+            direction === "IN" ? inv.sellerName || "—" : buyerDisplayName;
           return (
             <Tooltip content={text !== "—" ? text : ""}>
-              <div className="whitespace-normal break-words w-full cursor-pointer">
+              <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
                 {text}
               </div>
             </Tooltip>
@@ -871,13 +1074,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("taxCode", vals)}
             align="center"
             columnKey="taxCode"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
-        size: 120,
+        size: 150,
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
         cell: (inv) =>
@@ -910,7 +1113,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="taxInvoiceType"
           />
         ),
-        size: 110,
+        size: 150,
         className: "text-center text-xs",
         cell: (inv) => formatTaxInvoiceType(inv.taxInvoiceType),
       },
@@ -947,7 +1150,7 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             columnKey="taxInvoiceStatus"
           />
         ),
-        size: 110,
+        size: 150,
         className: "text-center",
         cell: (inv) => {
           const lbl = formatTaxInvoiceStatus(inv.taxInvoiceStatus);
@@ -1059,54 +1262,60 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("description", vals)}
             align="center"
             columnKey="description"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 300,
         className: "text-left whitespace-normal",
         headerClassName: "text-center",
-        cell: (row) => (
-          <Popover
-            content={
-              <div className="p-3 max-h-[300px] max-w-[800px] max-w-[90vw] overflow-auto">
-                <h4 className="font-semibold text-sm mb-2 text-slate-800">
-                  Chi tiết mặt hàng
-                </h4>
-                {row.items && row.items.length > 0 ? (
-                  <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                    <thead className="bg-slate-50 sticky top-0">
-                      <tr>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium">
-                          Tên mặt hàng
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          SL
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
-                          ĐVT
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Đơn giá
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thành tiền trước thuế
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thuế suất
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thuế VAT
-                        </th>
-                        <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
-                          Thành tiền
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {row.items.map((item: any, idx: number) => (
+        cell: (row) => {
+          const popoverContent = (
+            <div className="p-3 max-h-[350px] w-[850px] max-w-[90vw] overflow-auto">
+              <h4 className="font-semibold text-sm mb-2 text-slate-800">
+                Chi tiết mặt hàng
+              </h4>
+              {row.items && row.items.length > 0 ? (
+                <table className="w-full text-sm text-left border-collapse min-w-[700px]">
+                  <thead className="bg-slate-50 sticky top-0">
+                    <tr>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium">
+                        Tên mặt hàng
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        SL
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-left">
+                        ĐVT
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Đơn giá
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thành tiền trước thuế
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thuế suất
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thuế VAT
+                      </th>
+                      <th className="px-2 py-1 border-b text-slate-600 font-medium text-right">
+                        Thành tiền
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {row.items.map((item: any, idx: number) => {
+                      const compVatAmt =
+                        Number(item.vatAmount) ||
+                        (Number(item.preVatAmount) || 0) *
+                          (Number(item.vatRate) || 0);
+                      const compTotalAmt =
+                        (Number(item.preVatAmount) || 0) + compVatAmt;
+                      return (
                         <tr
                           key={item.id || idx}
                           className="border-b last:border-0 hover:bg-slate-50"
@@ -1137,100 +1346,127 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                               : "—"}
                           </td>
                           <td className="px-2 py-1 text-right whitespace-nowrap">
-                            {fmtAmt(item.vatAmount?.toString())}
+                            {fmtAmt(compVatAmt.toString())}
                           </td>
                           <td className="px-2 py-1 text-right whitespace-nowrap font-semibold text-slate-800">
-                            {fmtAmt(
-                              (
-                                (Number(item.preVatAmount) || 0) +
-                                (Number(item.vatAmount) || 0)
-                              ).toString(),
-                            )}
+                            {fmtAmt(compTotalAmt.toString())}
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-slate-50 sticky bottom-0 border-t">
-                      <tr>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          Tổng cộng
-                        </td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {row.items
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-slate-50 sticky bottom-0 border-t">
+                    <tr>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        Tổng cộng
+                      </td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        {row.items
+                          .reduce(
+                            (acc: number, item: any) =>
+                              acc + (Number(item.quantity) || 0),
+                            0,
+                          )
+                          .toLocaleString("vi-VN", {
+                            minimumFractionDigits: 1,
+                            maximumFractionDigits: 1,
+                          })}
+                      </td>
+                      <td className="px-2 py-2"></td>
+                      <td className="px-2 py-2"></td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        {fmtAmt(
+                          row.items
                             .reduce(
                               (acc: number, item: any) =>
-                                acc + (Number(item.quantity) || 0),
+                                acc + (Number(item.preVatAmount) || 0),
                               0,
                             )
-                            .toLocaleString("vi-VN", {
-                              minimumFractionDigits: 1,
-                              maximumFractionDigits: 1,
-                            })}
-                        </td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {fmtAmt(
-                            row.items
-                              .reduce(
-                                (acc: number, item: any) =>
-                                  acc + (Number(item.preVatAmount) || 0),
-                                0,
-                              )
-                              .toString(),
-                          )}
-                        </td>
-                        <td className="px-2 py-2"></td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-700">
-                          {fmtAmt(
-                            row.items
-                              .reduce(
-                                (acc: number, item: any) =>
-                                  acc + (Number(item.vatAmount) || 0),
-                                0,
-                              )
-                              .toString(),
-                          )}
-                        </td>
-                        <td className="px-2 py-2 font-semibold text-right text-slate-800">
-                          {fmtAmt(
-                            row.items
-                              .reduce(
-                                (acc: number, item: any) =>
-                                  acc +
-                                  (Number(item.preVatAmount) || 0) +
-                                  (Number(item.vatAmount) || 0),
-                                0,
-                              )
-                              .toString(),
-                          )}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                ) : (
-                  <div className="text-slate-500 text-sm italic">
-                    Không có chi tiết mặt hàng.
-                  </div>
-                )}
-              </div>
-            }
-          >
-            <div
-              className="group flex w-full cursor-pointer hover:text-primary text-slate-700 items-center justify-between gap-1"
-              title={row.description || ""}
-            >
-              <div className="line-clamp-2 break-words flex-1 text-left">
-                {row.description || "—"}
-              </div>
-              {row.description && (
-                <div className="opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <MoreHorizontal className="w-4 h-4" />
+                            .toString(),
+                        )}
+                      </td>
+                      <td className="px-2 py-2"></td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-700">
+                        {fmtAmt(
+                          row.items
+                            .reduce((acc: number, item: any) => {
+                              const compVatAmt =
+                                Number(item.vatAmount) ||
+                                (Number(item.preVatAmount) || 0) *
+                                  (Number(item.vatRate) || 0);
+                              return acc + compVatAmt;
+                            }, 0)
+                            .toString(),
+                        )}
+                      </td>
+                      <td className="px-2 py-2 font-semibold text-right text-slate-800">
+                        {fmtAmt(
+                          row.items
+                            .reduce((acc: number, item: any) => {
+                              const compVatAmt =
+                                Number(item.vatAmount) ||
+                                (Number(item.preVatAmount) || 0) *
+                                  (Number(item.vatRate) || 0);
+                              return (
+                                acc +
+                                (Number(item.preVatAmount) || 0) +
+                                compVatAmt
+                              );
+                            }, 0)
+                            .toString(),
+                        )}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              ) : (
+                <div className="text-slate-500 text-sm italic">
+                  Không có chi tiết mặt hàng.
                 </div>
               )}
             </div>
-          </Popover>
+          );
+
+          return (
+            <TableText
+              text={(row.description || "—").replace(/\\n/g, " ")}
+              tooltip={true}
+              popoverContent={popoverContent}
+              textClassName="line-clamp-2 break-words whitespace-normal text-slate-700"
+            />
+          );
+        },
+      },
+      {
+        key: "discountAmount",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("discountAmount", "Chiết khấu")}
+            sortState={getSortState("discountAmount")}
+            onSortChange={(state) => handleSortChange("discountAmount", state)}
+            searchValue={
+              listHook.tableState.columnSearch["discountAmount"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("discountAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["discountAmount"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("discountAmount", vals)
+            }
+            align="center"
+            columnKey="discountAmount"
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
+          />
         ),
+        size: 120,
+        headerClassName: "text-center",
+        className: "text-right",
+        cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
         key: "preVatAmount",
@@ -1247,11 +1483,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("preVatAmount", vals)}
             align="center"
             columnKey="preVatAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
@@ -1272,7 +1508,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("vatRate", vals)}
             align="center"
             columnKey="vatRate"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
@@ -1299,48 +1534,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("vatAmount", vals)}
             align="center"
             columnKey="vatAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
         headerClassName: "text-center",
         className: "text-right",
         cell: (inv) => fmtAmt(inv.vatAmount),
-      },
-      {
-        key: "discountAmount",
-        header: (
-          <TableColumnHeaderFilter
-            title={t("discountAmount", "Chiết khấu")}
-            sortState={getSortState("discountAmount")}
-            onSortChange={(state) => handleSortChange("discountAmount", state)}
-            searchValue={
-              listHook.tableState.columnSearch["discountAmount"] || ""
-            }
-            onSearchChange={(val) => handleSearchChange("discountAmount", val)}
-            selectedFilters={
-              listHook.tableState.columnFilters["discountAmount"] || []
-            }
-            onFilterChange={(vals) =>
-              handleFilterChange("discountAmount", vals)
-            }
-            align="center"
-            columnKey="discountAmount"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
-            formatOptionLabel={formatAmtOption}
-          />
-        ),
-        size: 120,
-        headerClassName: "text-center",
-        className: "text-right",
-        cell: (inv) => fmtAmt(inv.discountAmount),
       },
       {
         key: "totalAmount",
@@ -1357,11 +1561,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("totalAmount", vals)}
             align="center"
             columnKey="totalAmount"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
+            enableSelectAllMatching={true}
           />
         ),
         size: 120,
@@ -1394,7 +1598,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   }
                   align="center"
                   columnKey="settlementOrder"
-                  requireSearchToFetchOptions={true}
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={fetchInvoiceOptions}
                 />
@@ -1426,7 +1629,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   }
                   align="center"
                   columnKey="licensePlate"
-                  requireSearchToFetchOptions={true}
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={fetchInvoiceOptions}
                 />
@@ -1439,7 +1641,25 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         : []),
       {
         key: "netOffAmount",
-        header: t("netOffAmount", "Đã cấn trừ"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("netOffAmount", "Đã cấn trừ")}
+            sortState={getSortState("netOffAmount")}
+            onSortChange={(state) => handleSortChange("netOffAmount", state)}
+            searchValue={listHook.tableState.columnSearch["netOffAmount"] || ""}
+            onSearchChange={(val) => handleSearchChange("netOffAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["netOffAmount"] || []
+            }
+            onFilterChange={(vals) => handleFilterChange("netOffAmount", vals)}
+            align="right"
+            filterOptions={[
+              { value: "settled_full", label: "Đã cấn trừ hết" },
+              { value: "settled_partial", label: "Đã cấn trừ một phần" },
+              { value: "unsettled", label: "Chưa cấn trừ" },
+            ]}
+          />
+        ),
         size: 150,
         headerClassName: "text-right bg-blue-50/50 border-l border-blue-200",
         className: "text-right bg-blue-50/50 border-l border-blue-200",
@@ -1453,7 +1673,29 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
       },
       {
         key: "remainingAmount",
-        header: t("invoice.columns.remainingAmount", "Còn lại"),
+        header: (
+          <TableColumnHeaderFilter
+            title={t("invoice.columns.remainingAmount", "Còn lại")}
+            sortState={getSortState("remainingAmount")}
+            onSortChange={(state) => handleSortChange("remainingAmount", state)}
+            searchValue={
+              listHook.tableState.columnSearch["remainingAmount"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("remainingAmount", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["remainingAmount"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("remainingAmount", vals)
+            }
+            align="right"
+            filterOptions={[
+              { value: "settled_full", label: "Đã cấn trừ hết" },
+              { value: "settled_partial", label: "Đã cấn trừ một phần" },
+              { value: "unsettled", label: "Chưa cấn trừ" },
+            ]}
+          />
+        ),
         size: 120,
         headerClassName: "text-center bg-blue-50/50",
         className: "text-right font-semibold bg-blue-50/50",
@@ -1532,7 +1774,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                   onFilterChange={(vals) => handleFilterChange("isValid", vals)}
                   align="center"
                   columnKey="isValid"
-                  requireSearchToFetchOptions={false}
                   queryKeyPrefix="erp-invoice-options"
                   allFilters={listHook.tableState.columnFilters}
                   fetchOptions={async ({ search }: { search: string }) => {
@@ -1598,10 +1839,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("branchId", vals)}
             align="center"
             columnKey="branchId"
-            requireSearchToFetchOptions={true}
-            queryKeyPrefix="erp-invoice-options"
+            queryKeyPrefix={`erp-invoice-options-branch-${branches.length}`}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 120,
@@ -1613,6 +1854,40 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
           if (!branch) return inv.branchId;
           const parts = branch.label.split(" — ");
           return parts.length > 1 ? parts[1] : branch.label;
+        },
+      },
+
+      {
+        key: "invoiceCategory",
+        header: (
+          <TableColumnHeaderFilter
+            title="Phân loại HĐ"
+            sortState={getSortState("invoiceCategory")}
+            onSortChange={(state) => handleSortChange("invoiceCategory", state)}
+            searchValue={
+              listHook.tableState.columnSearch["invoiceCategory"] || ""
+            }
+            onSearchChange={(val) => handleSearchChange("invoiceCategory", val)}
+            selectedFilters={
+              listHook.tableState.columnFilters["invoiceCategory"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("invoiceCategory", vals)
+            }
+            align="center"
+            columnKey="invoiceCategory"
+            queryKeyPrefix="erp-invoice-options"
+            allFilters={listHook.tableState.columnFilters}
+            fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
+          />
+        ),
+        size: 140,
+        headerClassName: "text-center",
+        className: "text-center",
+        cell: (inv: any) => {
+          if (!inv.invoiceCategory) return "—";
+          return INVOICE_TYPE_MAP[inv.invoiceCategory] || inv.invoiceCategory;
         },
       },
       {
@@ -1628,10 +1903,10 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             onFilterChange={(vals) => handleFilterChange("notes", vals)}
             align="center"
             columnKey="notes"
-            requireSearchToFetchOptions={true}
             queryKeyPrefix="erp-invoice-options"
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            showBlankOption={true}
           />
         ),
         size: 200,
@@ -1767,6 +2042,174 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   return (
     <>
       <SpreadsheetPageTemplate
+        topNode={
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+            <KpiCard
+              compact
+              loading={
+                statsLoading ||
+                (selectedPeriod?.type === "month" && periodLoading)
+              }
+              label={
+                selectedPeriod?.type === "month"
+                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
+                  : direction === "OUT"
+                    ? "Doanh thu Tháng này"
+                    : "Chi phí Tháng này"
+              }
+              value={money(
+                selectedPeriod?.type === "month" && periodStats
+                  ? periodStats.monthTotal
+                  : statsData?.monthTotal || 0,
+              )}
+              sub={`Trước thuế: ${money(
+                selectedPeriod?.type === "month" && periodStats
+                  ? periodStats.monthPreVat
+                  : statsData?.monthPreVat || 0,
+              )}`}
+              active={selectedPeriod?.type === "month"}
+              onClear={() => setSelectedPeriod(null)}
+              rightNode={
+                <KpiSparkline
+                  data={statsData?.monthChart || [0, 0, 0, 0, 0, 0]}
+                  preVatData={statsData?.monthPreVatChart || [0, 0, 0, 0, 0, 0]}
+                  labels={monthLabels}
+                  onClick={handleMonthClick}
+                />
+              }
+              bottomNode={(() => {
+                const branches =
+                  selectedPeriod?.type === "month" && periodStats
+                    ? periodStats.byBranch
+                    : statsData?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.monthTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+            <KpiCard
+              compact
+              loading={
+                statsLoading ||
+                (selectedPeriod?.type === "week" && periodLoading)
+              }
+              label={
+                selectedPeriod?.type === "week"
+                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
+                  : direction === "OUT"
+                    ? "Doanh thu Tuần này"
+                    : "Chi phí Tuần này"
+              }
+              value={money(
+                selectedPeriod?.type === "week" && periodStats
+                  ? periodStats.weekTotal
+                  : statsData?.weekTotal || 0,
+              )}
+              sub={`Trước thuế: ${money(
+                selectedPeriod?.type === "week" && periodStats
+                  ? periodStats.weekPreVat
+                  : statsData?.weekPreVat || 0,
+              )}`}
+              active={selectedPeriod?.type === "week"}
+              onClear={() => setSelectedPeriod(null)}
+              rightNode={
+                <KpiSparkline
+                  data={statsData?.weekChart || [0, 0, 0, 0]}
+                  preVatData={statsData?.weekPreVatChart || [0, 0, 0, 0]}
+                  labels={weekLabels}
+                  onClick={handleWeekClick}
+                />
+              }
+              bottomNode={(() => {
+                const branches =
+                  selectedPeriod?.type === "week" && periodStats
+                    ? periodStats.byBranch
+                    : statsData?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.weekTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+            <KpiCard
+              compact
+              loading={
+                statsLoading ||
+                (selectedPeriod?.type === "day" && periodLoading)
+              }
+              label={
+                selectedPeriod?.type === "day"
+                  ? `${direction === "OUT" ? "Doanh thu" : "Chi phí"} ${selectedPeriod.label}`
+                  : direction === "OUT"
+                    ? "Doanh thu Hôm nay"
+                    : "Chi phí Hôm nay"
+              }
+              value={money(
+                selectedPeriod?.type === "day" && periodStats
+                  ? periodStats.dayTotal
+                  : statsData?.dayTotal || 0,
+              )}
+              sub={`Trước thuế: ${money(
+                selectedPeriod?.type === "day" && periodStats
+                  ? periodStats.dayPreVat
+                  : statsData?.dayPreVat || 0,
+              )}`}
+              active={selectedPeriod?.type === "day"}
+              onClear={() => setSelectedPeriod(null)}
+              rightNode={
+                <KpiSparkline
+                  data={statsData?.dayChart || [0, 0, 0, 0, 0, 0, 0]}
+                  preVatData={
+                    statsData?.dayPreVatChart || [0, 0, 0, 0, 0, 0, 0]
+                  }
+                  labels={dayLabels}
+                  onClick={handleDayClick}
+                />
+              }
+              bottomNode={(() => {
+                const branches =
+                  selectedPeriod?.type === "day" && periodStats
+                    ? periodStats.byBranch
+                    : statsData?.byBranch;
+                return branches && branches.length > 0 ? (
+                  <div className="pt-3 border-t border-border/50 grid grid-cols-3 gap-2">
+                    {branches.map((b) => (
+                      <div key={b.branchName} className="flex flex-col min-w-0">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+                          {b.branchName}
+                        </span>
+                        <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+                          {money(b.dayTotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+            />
+          </div>
+        }
         defaultColumnOrder={["__selection", "__actions", "__expand"]}
         title={
           direction === "IN"
@@ -1831,13 +2274,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             });
           }
           const hasPdf =
-            inv.pdfFileKey || (inv.pdfFiles && inv.pdfFiles.length > 0);
+            inv.pdfFileKey ||
+            (inv.pdfFiles && inv.pdfFiles.length > 0) ||
+            (inv.attachments && getPdfAttachments(inv.attachments).length > 0);
           if (hasPdf) {
             traCuuItems.push({
               label: t("actionDownloadPdf", "Tải PDF"),
               icon: <Download className="w-3.5 h-3.5" />,
               onClick: async () => {
-                if (inv.pdfFiles && inv.pdfFiles.length > 1) {
+                if (inv.attachments && inv.attachments.length > 1) {
                   try {
                     showToast({
                       title: "Đang nén file PDF...",
@@ -1860,17 +2305,17 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                       variant: "destructive",
                     });
                   }
-                } else if (inv.pdfFiles && inv.pdfFiles.length === 1) {
-                  const f = inv.pdfFiles[0];
+                } else if (inv.attachments && inv.attachments.length === 1) {
+                  const f = inv.attachments[0];
                   try {
                     const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
                       inv.id,
-                      f.key,
+                      f.attachment?.fileKey,
                       false,
                     );
                     const a = document.createElement("a");
                     a.href = url;
-                    a.download = f.filename || "document.pdf";
+                    a.download = f.attachment?.fileName || "document.pdf";
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
@@ -1886,12 +2331,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
               },
             });
           }
-
-          thaoTacItems.push({
-            label: t("actionReparseXml", "Đồng bộ lại từ XML"),
-            icon: <RefreshCw className="w-3.5 h-3.5" />,
-            onClick: () => handleReparseXml(inv),
-          });
 
           if (inv.status === "DRAFT") {
             thaoTacItems.push({
@@ -1927,11 +2366,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 icon: <Download className="w-4 h-4 text-green-600" />,
                 onClick: () => handleExportExcel(),
               },
-              {
-                label: t("bulkDownloadZip", "Tải ZIP PDF/XML hàng loạt"),
-                icon: <Download className="w-4 h-4 text-blue-600" />,
-                onClick: () => setBulkDrawerOpen(true),
-              },
             ],
           },
           {
@@ -1958,7 +2392,6 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         cancelEdit={formHook.cancelEdit}
         loadingDetail={formHook.loadingDetail}
         onSyncDetail={formHook.handleSyncDetail}
-        onDownload={handleDownload}
         rightPanel={
           <div className="flex flex-col gap-5">
             {formHook.loadingDetail ? (
@@ -1982,8 +2415,9 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 pdfSlot={
                   <ErpInvoicePdfUpload
                     invoiceId={formHook.detailInvoice?.id ?? null}
-                    pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                    attachments={formHook.detailInvoice?.attachments ?? null}
                     pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                    pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                     editMode={formHook.editMode}
                     pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                     onPendingDeletePdf={(key) => {
@@ -1993,11 +2427,13 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                         pendingDeletedPdfs: [...current, key],
                       }));
                     }}
-                    pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                    onPendingAddedPdfsChange={(files) => {
+                    pendingAddedAttachments={
+                      formHook.form.pendingAddedAttachments
+                    }
+                    onPendingAddedAttachmentsChange={(files) => {
                       formHook.setForm((prev) => ({
                         ...prev,
-                        pendingAddedPdfs: files,
+                        pendingAddedAttachments: files,
                       }));
                     }}
                   />
@@ -2090,21 +2526,28 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         fetchBlobFn={
           previewPdf
             ? () =>
-                erpInvoicesCoreApi.getPdfBlob(
-                  previewPdf.invoiceId,
-                  previewPdf.fileKey,
-                )
+                previewPdf.isAttachment
+                  ? getAttachmentContentBlobApi(previewPdf.fileKey)
+                  : erpInvoicesCoreApi.getPdfBlob(
+                      previewPdf.invoiceId,
+                      previewPdf.fileKey,
+                    )
             : undefined
         }
         onDownload={
           previewPdf
             ? async () => {
                 try {
-                  const { url } = await erpInvoicesCoreApi.getPdfDownloadUrl(
-                    previewPdf.invoiceId,
-                    previewPdf.fileKey,
-                    false,
-                  );
+                  const url = previewPdf.isAttachment
+                    ? (await getAttachmentDownloadUrlApi(previewPdf.fileKey))
+                        .url
+                    : (
+                        await erpInvoicesCoreApi.getPdfDownloadUrl(
+                          previewPdf.invoiceId,
+                          previewPdf.fileKey,
+                          false,
+                        )
+                      ).url;
                   const a = document.createElement("a");
                   a.href = url;
                   a.download = previewPdf.filename || "document.pdf";
@@ -2122,11 +2565,91 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         }
       />
 
+      <InvoiceExportDrawer
+        open={exportDrawerOpen}
+        onClose={() => setExportDrawerOpen(false)}
+        direction={direction}
+        buildBaseQuery={buildExportBaseQuery}
+      />
+
       <BankTransactionDetailDrawer
         isOpen={!!detailTransactionId}
         onClose={() => setDetailTransactionId(null)}
         transactionId={detailTransactionId}
       />
+
+      <DrawerModal
+        open={bulkSelectedModalOpen}
+        onClose={() => setBulkSelectedModalOpen(false)}
+        title={`Tải ZIP ${selectedIds.length} hóa đơn đã chọn`}
+        actions={[
+          {
+            label: "Hủy",
+            onClick: () => setBulkSelectedModalOpen(false),
+            variant: "outline" as const,
+            disabled: bulkSelectedDownloading,
+          },
+          {
+            label: bulkSelectedDownloading
+              ? "Đang nén file..."
+              : "Xác nhận tải",
+            onClick: handleBulkDownloadSelected,
+            primary: true,
+            disabled: bulkSelectedDownloading,
+            loading: bulkSelectedDownloading,
+          },
+        ]}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Đã chọn <strong>{selectedIds.length}</strong> hóa đơn. Hệ thống sẽ
+            nén PDF/XML của các hóa đơn này thành 1 file ZIP.
+          </p>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Định dạng file tải về *
+            </label>
+            <div className="flex flex-col gap-3 mt-2">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkSelectedTypes.includes("pdf")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkSelectedTypes((prev) =>
+                        prev.includes("pdf") ? prev : [...prev, "pdf"],
+                      );
+                    } else {
+                      setBulkSelectedTypes((prev) =>
+                        prev.filter((t) => t !== "pdf"),
+                      );
+                    }
+                  }}
+                />
+                <span className="text-sm">File PDF</span>
+              </label>
+
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <Checkbox
+                  checked={bulkSelectedTypes.includes("xml")}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setBulkSelectedTypes((prev) =>
+                        prev.includes("xml") ? prev : [...prev, "xml"],
+                      );
+                    } else {
+                      setBulkSelectedTypes((prev) =>
+                        prev.filter((t) => t !== "xml"),
+                      );
+                    }
+                  }}
+                />
+                <span className="text-sm">File XML</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </DrawerModal>
 
       <DrawerModal
         open={bulkDrawerOpen}
@@ -2199,38 +2722,18 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         </div>
       </DrawerModal>
 
-      <DrawerModal
-        open={bulkBranchModalOpen}
-        onClose={() => setBulkBranchModalOpen(false)}
-        title={`Gán chi nhánh cho ${selectedIds.length} hóa đơn`}
-        actions={[
-          {
-            label: "Hủy",
-            onClick: () => setBulkBranchModalOpen(false),
-            variant: "outline" as const,
-            disabled: bulkBranchSaving,
-          },
-          {
-            label: bulkBranchSaving ? "Đang lưu..." : "Xác nhận",
-            onClick: handleBulkSetBranch,
-            primary: true,
-            disabled: bulkBranchSaving,
-            loading: bulkBranchSaving,
-          },
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Chi nhánh *</label>
-            <Combobox
-              options={branches}
-              value={bulkBranchId ?? ""}
-              onChange={(v) => setBulkBranchId(v ?? null)}
-              placeholder="Chọn chi nhánh..."
-            />
-          </div>
-        </div>
-      </DrawerModal>
+      <BulkEditDrawer
+        open={bulkEditDrawerOpen}
+        onClose={() => setBulkEditDrawerOpen(false)}
+        selectedIds={selectedIds}
+        invoices={listHook.invoices || []}
+        branches={branches}
+        onSuccess={() => {
+          setBulkEditDrawerOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
+      />
 
       <InvoiceBulkPostingDrawer
         open={bulkPostingModalOpen}
@@ -2241,6 +2744,19 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
         direction={direction}
         onSuccess={() => {
           setBulkPostingModalOpen(false);
+          setRowSelection({});
+          listHook.loadInvoices();
+        }}
+      />
+
+      <InvoiceBulkNetOffDrawer
+        open={bulkNetOffDrawerOpen}
+        onClose={() => setBulkNetOffDrawerOpen(false)}
+        selectedInvoiceIds={selectedIds}
+        invoices={listHook.invoices || []}
+        direction={direction}
+        onSuccess={() => {
+          setBulkNetOffDrawerOpen(false);
           setRowSelection({});
           listHook.loadInvoices();
         }}

@@ -28,6 +28,7 @@ export interface GrLineForm {
   purchaseOrderLineId: string;
   productionOrderMaterialId: string;
   itemId: string;
+  itemCode?: string;
   itemName: string;
   qtyReceived: string;
   unitCost: string;
@@ -45,7 +46,7 @@ export interface GrForm {
 
 export function emptyGrForm(): GrForm {
   return {
-    receiptType: "OTHER",
+    receiptType: "" as GrReceiptType,
     receiptNo: "",
     purchaseOrderId: "",
     productionOrderId: "",
@@ -68,6 +69,7 @@ export function buildGrForm(gr: ErpGoodsReceipt): GrForm {
         purchaseOrderLineId: line.purchaseOrderLineId ?? "",
         productionOrderMaterialId: line.productionOrderMaterialId ?? "",
         itemId: line.itemId ?? "",
+        itemCode: "",
         itemName: line.itemName ?? "",
         qtyReceived: line.qtyReceived ?? "0",
         unitCost: line.unitCost ?? "",
@@ -165,6 +167,18 @@ export function useGrDrawer({
       .get(form.purchaseOrderId)
       .then((po) => {
         setPoDetail(po);
+        setPoOptions((prev) => {
+          if (!prev.find((p) => p.value === po.id)) {
+            return [
+              ...prev,
+              {
+                value: po.id,
+                label: `${po.poNo || po.id} — ${po.supplierName ?? ""}`,
+              },
+            ];
+          }
+          return prev;
+        });
         if (po.lines) {
           void fetchItemsDict(po.lines.map((l) => l.itemId || ""));
         }
@@ -247,7 +261,7 @@ export function useGrDrawer({
         }
         if (editing) {
           await goodsReceiptsCoreApi.update(editing.id, payload);
-          if (statusOverride === "POSTED") {
+          if (statusOverride === "POSTED" && editing.status !== "POSTED") {
             await goodsReceiptsCoreApi.post(editing.id);
           }
           showToast({
@@ -334,4 +348,10 @@ export function useGrDrawer({
   };
 }
 
-export type UseGrDrawerReturn = ReturnType<typeof useGrDrawer>;
+export type UseGrDrawerReturn = ReturnType<typeof useGrDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

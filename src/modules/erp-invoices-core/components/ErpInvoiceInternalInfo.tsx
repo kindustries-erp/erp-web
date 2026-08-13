@@ -6,87 +6,21 @@ import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { type CreateErpInvoicePayload } from "../api/erpInvoicesCoreApi";
 import { ErpInvoice } from "../api/erpInvoicesCoreApi";
-import { useQuery } from "@tanstack/react-query";
-import { accountingApi } from "@/modules/accounting/api/accountingApi";
-import { money } from "@/shared/utils/format";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { erpInvoicesCoreApi } from "../api/erpInvoicesCoreApi";
 import toast from "react-hot-toast";
+import { PostedAccountingSummary } from "@/shared/components/accounting/PostedAccountingSummary";
 import { PostingSection } from "@/shared/components/accounting/PostingSection";
 import { ErpInvoiceLinkedDocuments } from "./ErpInvoiceLinkedDocuments";
 import { Button } from "@/shared/components/ui/Button";
 import { Textarea } from "@/shared/components/ui/textarea";
 
-function TAccountDiagram({ journalEntryId }: { journalEntryId: string }) {
-  const { data: journalEntry, isLoading } = useQuery({
-    queryKey: ["journal-entry", journalEntryId],
-    queryFn: () => accountingApi.getJournalEntryById(journalEntryId),
-    enabled: !!journalEntryId,
-  });
-
-  if (isLoading)
-    return <div className="text-xs text-gray-500">Đang tải sơ đồ...</div>;
-  if (!journalEntry || !journalEntry.lines) return null;
-
-  const accounts: Record<
-    string,
-    { accountCode: string; accountName: string; debit: number; credit: number }
-  > = {};
-
-  journalEntry.lines.forEach((line: any) => {
-    if (!line.account) return;
-    const ac = line.account.accountCode;
-    if (!accounts[ac]) {
-      accounts[ac] = {
-        accountCode: ac,
-        accountName: line.account.accountName,
-        debit: 0,
-        credit: 0,
-      };
-    }
-    if (Number(line.debit) > 0) accounts[ac].debit += Number(line.debit);
-    if (Number(line.credit) > 0) accounts[ac].credit += Number(line.credit);
-  });
-
-  return (
-    <div className="mt-3 flex flex-wrap gap-4">
-      {Object.values(accounts).map((acc) => (
-        <div
-          key={acc.accountCode}
-          className="flex flex-col text-xs border border-gray-300 rounded-md overflow-hidden min-w-[140px] bg-white"
-        >
-          <div
-            className="bg-gray-100 text-center py-1 font-bold border-b border-gray-300 text-gray-800 px-2"
-            title={acc.accountName}
-          >
-            {acc.accountCode}
-          </div>
-          <div className="flex">
-            <div className="flex-1 border-r border-gray-300 px-2 py-1 min-h-[40px]">
-              <div className="text-[10px] text-gray-400 text-center font-medium mb-1 border-b border-gray-200">
-                NỢ
-              </div>
-              {acc.debit > 0 && (
-                <div className="text-right text-gray-700 tabular-nums">
-                  {money(acc.debit)}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 px-2 py-1 min-h-[40px]">
-              <div className="text-[10px] text-gray-400 text-center font-medium mb-1 border-b border-gray-200">
-                CÓ
-              </div>
-              {acc.credit > 0 && (
-                <div className="text-right text-gray-700 tabular-nums">
-                  {money(acc.credit)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function ErpInvoiceInternalSidebar({
@@ -100,6 +34,7 @@ export function ErpInvoiceInternalSidebar({
   detailInvoice,
   pdfSlot,
   onRefreshDetail,
+  hideAccountingSection = false,
 }: {
   form: CreateErpInvoicePayload;
   editMode: boolean;
@@ -111,6 +46,7 @@ export function ErpInvoiceInternalSidebar({
   detailInvoice: ErpInvoice | null;
   pdfSlot?: React.ReactNode;
   onRefreshDetail?: () => void;
+  hideAccountingSection?: boolean;
 }) {
   const { t } = useTranslation("erpInvoices");
   const [branchOptions, setBranchOptions] = useState<
@@ -141,7 +77,21 @@ export function ErpInvoiceInternalSidebar({
               </div>
             )}
           </DrawerField>
-
+          <DrawerField label="Phân loại hóa đơn">
+            {editMode ? (
+              <Combobox
+                options={[]}
+                value={(form as any).invoiceCategory || ""}
+                onChange={(val) => fieldSet("invoiceCategory", val || null)}
+                placeholder="-- Chọn phân loại --"
+                allowClear={true}
+              />
+            ) : (
+              <div className="font-medium text-[color:var(--foreground)] text-sm px-3 py-2 bg-gray-50 rounded-lg border border-transparent">
+                {(form as any).invoiceCategory || "—"}
+              </div>
+            )}
+          </DrawerField>
           <DrawerField label={t("notes", "Ghi chú")}>
             {editMode ? (
               <Textarea
@@ -232,38 +182,13 @@ export function ErpInvoiceInternalSidebar({
 
       {pdfSlot && <div className="mt-0">{pdfSlot}</div>}
 
-      {!editMode && (
+      {!editMode && !hideAccountingSection && (
         <DrawerSection title="HẠCH TOÁN KẾ TOÁN">
-          <div className="space-y-4">
-            <div className="pt-2">
-              {detailInvoice?.postingStatus === "POSTED" ? (
-                <>
-                  <div className="text-sm font-medium mb-2 text-gray-700">
-                    Trạng thái hạch toán
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-800 w-max">
-                      ĐÃ HẠCH TOÁN
-                    </span>
-                    {detailInvoice.postingDate && (
-                      <span className="text-xs text-gray-500">
-                        Ngày: {detailInvoice.postingDate.slice(0, 10)}
-                      </span>
-                    )}
-                    {detailInvoice.journalEntryId && (
-                      <TAccountDiagram
-                        journalEntryId={detailInvoice.journalEntryId}
-                      />
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="text-sm text-gray-500 py-4 text-center border border-dashed rounded bg-gray-50">
-                  Chưa có hạch toán kế toán nào.
-                </div>
-              )}
-            </div>
-          </div>
+          <PostedAccountingSummary
+            isPosted={detailInvoice?.postingStatus === "POSTED"}
+            journalEntryId={detailInvoice?.journalEntryId}
+            postingDate={detailInvoice?.postingDate}
+          />
         </DrawerSection>
       )}
     </div>
@@ -281,6 +206,7 @@ export function ErpInvoiceInternalMain({
   onUnpost,
   onRefreshDetail,
   invoicePreview,
+  hideLinkedDocuments = false,
 }: {
   form: CreateErpInvoicePayload;
   editMode: boolean;
@@ -292,6 +218,7 @@ export function ErpInvoiceInternalMain({
   onUnpost?: () => void;
   onRefreshDetail?: () => void;
   invoicePreview?: React.ReactNode;
+  hideLinkedDocuments?: boolean;
 }) {
   const { t } = useTranslation("erpInvoices");
   const isPosted = detailInvoice?.postingStatus === "POSTED" && !pendingUnpost;
@@ -329,7 +256,7 @@ export function ErpInvoiceInternalMain({
         <DrawerSection
           title={t("accountingSection", "HẠCH TOÁN KẾ TOÁN")}
           titleExtra={
-            detailInvoice?.branchId ? (
+            form.branchId ? (
               <Button
                 type="button"
                 variant={
@@ -352,7 +279,7 @@ export function ErpInvoiceInternalMain({
           }
         >
           <div className="space-y-4 pt-2">
-            {!detailInvoice?.branchId ? (
+            {!form.branchId ? (
               <div className="text-sm text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
                 Vui lòng chọn chi nhánh ở cột bên phải trước khi nhập hạch toán
                 kế toán.
@@ -403,7 +330,7 @@ export function ErpInvoiceInternalMain({
                   if (direction === "IN") {
                     if (preVat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId:
                           findAccount("642") ||
                           findAccount("152") ||
@@ -414,7 +341,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (vat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("133"),
                         debit: vat,
                         credit: 0,
@@ -422,7 +349,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (total > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("331"),
                         debit: 0,
                         credit: total,
@@ -431,7 +358,7 @@ export function ErpInvoiceInternalMain({
                   } else {
                     if (total > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("131"),
                         debit: total,
                         credit: 0,
@@ -439,7 +366,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (preVat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("511"),
                         debit: 0,
                         credit: preVat,
@@ -447,7 +374,7 @@ export function ErpInvoiceInternalMain({
                       });
                     if (vat > 0)
                       newLines.push({
-                        id: crypto.randomUUID(),
+                        id: createClientId(),
                         accountId: findAccount("333"),
                         debit: 0,
                         credit: vat,
@@ -462,7 +389,7 @@ export function ErpInvoiceInternalMain({
         </DrawerSection>
       )}
 
-      {detailInvoice?.id && (
+      {!hideLinkedDocuments && detailInvoice?.id && (
         <ErpInvoiceLinkedDocuments
           form={form}
           fieldSet={fieldSet}
@@ -477,7 +404,7 @@ export function ErpInvoiceInternalMain({
 
       {/* Invoice preview — rendered below linked docs in view mode */}
       {!editMode && (pdfKey || invoicePreview) && (
-        <div className="bg-slate-50 rounded-lg overflow-hidden">
+        <div className="rounded-2xl mb-24">
           {isPdfLoading ? (
             <div className="w-full min-h-[800px] flex items-center justify-center bg-gray-100 animate-pulse">
               <div className="text-gray-400 font-medium">Đang tải PDF...</div>
@@ -489,7 +416,7 @@ export function ErpInvoiceInternalMain({
               title="PDF Preview"
             />
           ) : (
-            invoicePreview
+            <div className="w-full">{invoicePreview}</div>
           )}
         </div>
       )}

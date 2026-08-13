@@ -1,16 +1,10 @@
 import { useMemo } from "react";
-import {
-  ChevronRight,
-  PackageCheck,
-  PackageOpen,
-  PackageX,
-} from "lucide-react";
-import { cn } from "@/shared/utils";
+import { PackageCheck, PackageOpen, PackageX } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { normalizeDateTime } from "@/shared/utils/format";
 import { useT } from "@/core/i18n";
-import { Button } from "@/shared/components/ui/Button";
 import type { DataTableColumn } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 import {
   operationalApi,
   type OperationalDocument,
@@ -20,11 +14,10 @@ import { StatusBadge } from "@/shared/components/badges";
 import { useQuery } from "@tanstack/react-query";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { type useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 
 interface UsePurchaseColumnsOptions {
   variant: OperationalVariant;
-  expandedRowIds: Record<string, boolean>;
-  onToggleExpand: (key: string) => void;
   onOpenDetail?: (row: OperationalDocument) => void;
   tableState: ReturnType<typeof useTableColumnState>;
   fetchColumnOptions: (params: {
@@ -97,8 +90,6 @@ function PoTooltipContent({ row }: { row: OperationalDocument }) {
  */
 export function usePurchaseColumns({
   variant,
-  expandedRowIds,
-  onToggleExpand,
   onOpenDetail,
   tableState,
   fetchColumnOptions,
@@ -123,38 +114,6 @@ export function usePurchaseColumns({
   return useMemo<DataTableColumn<OperationalDocument>[]>(
     () => [
       {
-        key: "__expand",
-        header: "",
-        className:
-          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
-        headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-        size: 40,
-        enableResizing: false,
-        cell: (row) => {
-          const rowKey = `${row.document_type || variant}-${row.id}`;
-          const isExpanded = !!expandedRowIds[rowKey];
-          return (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleExpand(rowKey);
-              }}
-              className="w-full flex items-center justify-center"
-            >
-              <ChevronRight
-                className={cn(
-                  "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
-                  isExpanded && "rotate-90",
-                )}
-              />
-            </Button>
-          );
-        },
-      },
-      {
         key: "order_date",
         header: (
           <TableColumnHeaderFilter
@@ -168,91 +127,102 @@ export function usePurchaseColumns({
             allFilters={tableState.columnFilters}
             title={t("Ngày đặt")}
             fetchOptions={fetchColumnOptions}
+            hideFilter={true}
+            hideFooter={true}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["orderDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    handleSearchChange("orderDate", next);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
+            align="center"
           />
         ),
-        sortable: true,
         sortKey: "order_date",
-        size: 120,
+        size: 150,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
         cell: (row) => {
-          const dt = normalizeDateTime(row.document_date);
-          if (!dt || dt === "—") return "—";
-          const [d] = dt.split(" ");
           return (
-            <Tooltip content={dt}>
-              <span className="cursor-default block w-full text-right">
-                {d}
-              </span>
-            </Tooltip>
+            <TableDateCell
+              date={row.document_date}
+              showTooltip={false}
+              className="justify-end w-full"
+            />
           );
         },
       },
-      {
-        key: "expected_date",
-        header: (
-          <TableColumnHeaderFilter
-            columnKey="expectedDate"
-            sortState={getSortState("expectedDate")}
-            onSortChange={(state) => handleSortChange("expectedDate", state)}
-            searchValue={tableState.columnSearch["expectedDate"] || ""}
-            onSearchChange={(val) => handleSearchChange("expectedDate", val)}
-            selectedFilters={tableState.columnFilters["expectedDate"] || []}
-            onFilterChange={(vals) => handleFilterChange("expectedDate", vals)}
-            allFilters={tableState.columnFilters}
-            title={t("Ngày nhập DK")}
-            fetchOptions={fetchColumnOptions}
-          />
-        ),
-        sortable: true,
-        sortKey: "expected_date",
-        size: 120,
-        enableResizing: true,
-        className: "!py-2 align-middle text-right",
-        headerClassName: "text-center",
-        cell: (row) => {
-          const dt = normalizeDateTime(row.due_date);
-          if (!dt || dt === "—") return "—";
-          const [d] = dt.split(" ");
-          return (
-            <Tooltip content={dt}>
-              <span className="cursor-default block w-full text-right">
-                {d}
-              </span>
-            </Tooltip>
-          );
-        },
-      },
+
       {
         key: "po_no",
-        header: t("Số PO"),
-        sortable: true,
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="poNo"
+            sortState={getSortState("poNo")}
+            onSortChange={(state) => handleSortChange("poNo", state)}
+            searchValue={tableState.columnSearch["poNo"] || ""}
+            onSearchChange={(val) => handleSearchChange("poNo", val)}
+            selectedFilters={tableState.columnFilters["poNo"] || []}
+            onFilterChange={(vals) => handleFilterChange("poNo", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Số PO")}
+            fetchOptions={fetchColumnOptions}
+            align="center"
+          />
+        ),
         sortKey: "purchase_no",
-        size: 150,
+        size: 200,
         enableResizing: true,
         className: "!py-2 align-middle font-medium text-left",
         headerClassName: "text-center",
         cell: (row) => {
           return (
-            <div className="flex items-center gap-1.5 text-left text-sm w-full">
-              <Tooltip content={<PoTooltipContent row={row} />}>
-                <Button
-                  variant="link"
-                  onClick={() => onOpenDetail?.(row)}
-                  className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
-                >
-                  {row.purchase_no || "—"}
-                </Button>
-              </Tooltip>
-            </div>
+            <TableText
+              text={row.purchase_no || "—"}
+              tooltip={<PoTooltipContent row={row} />}
+              enableCopy={Boolean(row.purchase_no)}
+              onDrawerClick={
+                row.purchase_no ? () => onOpenDetail?.(row) : undefined
+              }
+            />
           );
         },
       },
       {
         key: "supplier",
-        header: t("Nhà cung cấp"),
-        sortable: true,
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="supplierNameSnapshot"
+            sortState={getSortState("supplierNameSnapshot")}
+            onSortChange={(state) =>
+              handleSortChange("supplierNameSnapshot", state)
+            }
+            searchValue={tableState.columnSearch["supplierNameSnapshot"] || ""}
+            onSearchChange={(val) =>
+              handleSearchChange("supplierNameSnapshot", val)
+            }
+            selectedFilters={
+              tableState.columnFilters["supplierNameSnapshot"] || []
+            }
+            onFilterChange={(vals) =>
+              handleFilterChange("supplierNameSnapshot", vals)
+            }
+            allFilters={tableState.columnFilters}
+            title={t("Nhà cung cấp")}
+            fetchOptions={fetchColumnOptions}
+            align="center"
+          />
+        ),
         sortKey: "supplier_id",
         size: 250,
         enableResizing: true,
@@ -268,8 +238,21 @@ export function usePurchaseColumns({
       },
       {
         key: "total_qty",
-        header: t("Số lượng"),
-        size: 100,
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="totalQty"
+            sortState={getSortState("totalQty")}
+            onSortChange={(state) => handleSortChange("totalQty", state)}
+            searchValue={tableState.columnSearch["totalQty"] || ""}
+            onSearchChange={(val) => handleSearchChange("totalQty", val)}
+            selectedFilters={tableState.columnFilters["totalQty"] || []}
+            onFilterChange={(vals) => handleFilterChange("totalQty", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Số lượng")}
+            align="center"
+          />
+        ),
+        size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-right",
         headerClassName: "text-center",
@@ -285,8 +268,24 @@ export function usePurchaseColumns({
       },
       {
         key: "inventory_status",
-        header: t("common.inventoryStatus"),
-        size: 100,
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="inventoryStatus"
+            sortState={getSortState("inventoryStatus")}
+            onSortChange={(state) => handleSortChange("inventoryStatus", state)}
+            searchValue={tableState.columnSearch["inventoryStatus"] || ""}
+            onSearchChange={(val) => handleSearchChange("inventoryStatus", val)}
+            selectedFilters={tableState.columnFilters["inventoryStatus"] || []}
+            onFilterChange={(vals) =>
+              handleFilterChange("inventoryStatus", vals)
+            }
+            allFilters={tableState.columnFilters}
+            title={t("common.inventoryStatus")}
+            fetchOptions={fetchColumnOptions}
+            align="center"
+          />
+        ),
+        size: 120,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
         headerClassName: "text-center",
@@ -312,7 +311,21 @@ export function usePurchaseColumns({
       },
       {
         key: "status",
-        header: t("Trạng thái"),
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="status"
+            sortState={getSortState("status")}
+            onSortChange={(state) => handleSortChange("status", state)}
+            searchValue={tableState.columnSearch["status"] || ""}
+            onSearchChange={(val) => handleSearchChange("status", val)}
+            selectedFilters={tableState.columnFilters["status"] || []}
+            onFilterChange={(vals) => handleFilterChange("status", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Trạng thái")}
+            fetchOptions={fetchColumnOptions}
+            align="center"
+          />
+        ),
         size: 140,
         enableResizing: true,
         className: "!py-2 align-middle text-center",
@@ -333,8 +346,72 @@ export function usePurchaseColumns({
         },
       },
       {
+        key: "expected_date",
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="expectedDate"
+            sortState={getSortState("expectedDate")}
+            onSortChange={(state) => handleSortChange("expectedDate", state)}
+            searchValue={tableState.columnSearch["expectedDate"] || ""}
+            onSearchChange={(val) => handleSearchChange("expectedDate", val)}
+            selectedFilters={tableState.columnFilters["expectedDate"] || []}
+            onFilterChange={(vals) => handleFilterChange("expectedDate", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Ngày nhập DK")}
+            fetchOptions={fetchColumnOptions}
+            hideFilter={true}
+            hideFooter={true}
+            dateRangeSlot={({ close }) => {
+              const val = tableState.columnSearch["expectedDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    handleSearchChange("expectedDate", next);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
+            align="center"
+          />
+        ),
+        sortKey: "expected_date",
+        size: 150,
+        enableResizing: true,
+        className: "!py-2 align-middle text-right",
+        headerClassName: "text-center",
+        cell: (row) => {
+          return (
+            <TableDateCell
+              date={row.due_date}
+              showTooltip={false}
+              format="date"
+              className="justify-end w-full"
+            />
+          );
+        },
+      },
+      {
         key: "notes",
-        header: t("Ghi chú"),
+        header: (
+          <TableColumnHeaderFilter
+            columnKey="remarks"
+            sortState={getSortState("remarks")}
+            onSortChange={(state) => handleSortChange("remarks", state)}
+            searchValue={tableState.columnSearch["remarks"] || ""}
+            onSearchChange={(val) => handleSearchChange("remarks", val)}
+            selectedFilters={tableState.columnFilters["remarks"] || []}
+            onFilterChange={(vals) => handleFilterChange("remarks", vals)}
+            allFilters={tableState.columnFilters}
+            title={t("Ghi chú")}
+            fetchOptions={fetchColumnOptions}
+            align="center"
+          />
+        ),
         size: 250,
         enableResizing: true,
         className: "!py-2 align-middle text-left w-full",
@@ -348,6 +425,6 @@ export function usePurchaseColumns({
         ),
       },
     ],
-    [expandedRowIds, onToggleExpand, onOpenDetail, t, variant],
+    [onOpenDetail, t, variant, tableState, fetchColumnOptions],
   );
 }

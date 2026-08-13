@@ -14,17 +14,6 @@ export type OperationalDocumentType =
   | "purchase_orders"
   | "operating_expenses";
 
-export interface OperationalDocumentPaymentLink {
-  id: string;
-  document_type: OperationalDocumentType;
-  document_id: string;
-  payment_voucher_id: string;
-  applied_amount: number;
-  applied_date?: string | null;
-  notes?: string | null;
-  created_at?: string;
-}
-
 export interface OperationalDocument {
   id: string;
   order_no?: string;
@@ -53,7 +42,6 @@ export interface OperationalDocument {
   next_due_date?: string | null;
   notes?: string | null;
   lines?: OperationalLine[];
-  payments?: OperationalDocumentPaymentLink[];
 }
 
 export interface OperationalLine {
@@ -111,6 +99,7 @@ export interface InventoryStockRow {
   unit: string;
   received_qty: number;
   issued_qty: number;
+  adjusted_qty: number;
   on_hand_qty: number;
   reserved_qty: number;
   stock_value: number;
@@ -120,15 +109,6 @@ export interface InventoryStockRow {
 
 export interface CreateOperationalPayload extends Partial<OperationalDocument> {
   lines?: OperationalLine[];
-}
-
-export interface CreateOperationalPaymentLinkPayload {
-  document_type: OperationalDocumentType;
-  document_id: string;
-  payment_voucher_id: string;
-  applied_amount: number;
-  applied_date?: string;
-  notes?: string;
 }
 
 function normalizePurchaseRow(row: any): OperationalDocument {
@@ -207,9 +187,12 @@ function toCorePurchasePayload(
     expectedDate:
       (payload as any).expected_receipt_date || payload.due_date || undefined,
     status: payload.status,
-    remarks: payload.notes || undefined,
+    remarks: payload.notes !== undefined ? payload.notes : undefined,
 
-    supplierInvoiceNo: (payload as any).supplier_invoice_no || undefined,
+    supplierInvoiceNo:
+      (payload as any).supplier_invoice_no !== undefined
+        ? (payload as any).supplier_invoice_no
+        : undefined,
   };
 
   if (Array.isArray(payload.lines)) {
@@ -217,7 +200,8 @@ function toCorePurchasePayload(
       itemId: line.inventory_item_id || undefined,
       itemCode: line.item_code || undefined,
       itemName: line.item_name || undefined,
-      description: line.description || undefined,
+      description:
+        line.description !== undefined ? line.description : undefined,
       qtyOrdered: String(line.qty ?? 0),
       unitPrice:
         line.unit_price !== undefined ? String(line.unit_price) : undefined,
@@ -439,31 +423,6 @@ export const operationalApi = {
     return documentType === "purchase_orders"
       ? normalizePurchaseRow(data.data)
       : data.data;
-  },
-  listPaymentLinks: async (
-    documentType: OperationalDocumentType,
-    id: string,
-  ) => {
-    const { data } = await axiosInstance.get<{
-      items: OperationalDocumentPaymentLink[];
-    }>(`/api/v1/${resolvePath(documentType)}/${id}/payment-links`);
-    return data.items ?? [];
-  },
-  createPaymentLink: async (payload: CreateOperationalPaymentLinkPayload) => {
-    const { data } = await axiosInstance.post<{
-      message: string;
-      data: OperationalDocumentPaymentLink;
-    }>("/api/v1/document-payment-links", payload);
-    return data.data;
-  },
-  deletePaymentLink: async (
-    documentType: OperationalDocumentType,
-    id: string,
-    linkId: string,
-  ) => {
-    await axiosInstance.delete(
-      `/api/v1/${resolvePath(documentType)}/${id}/payment-links/${linkId}`,
-    );
   },
   postPurchaseReceipt: async (
     id: string,

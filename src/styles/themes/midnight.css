@@ -1,0 +1,126 @@
+/* ══════════════════════════════════════════
+   Midnight Theme — True dark mode
+   ══════════════════════════════════════════ */
+.theme-midnight {
+  /* ── Palette ── */
+  --background: #121212;
+  --surface: #1e1e1e;
+  --surface-hover: #2a2a2a;
+  --border: #333333;
+  --border-light: #2a2a2a;
+  --foreground: #f4f4f5;
+  --muted: #1e1e1e;
+  --muted-fg: #a1a1aa;
+  --faint: #52525b;
+  --primary: #ffffff;
+  --primary-fg: #121212;
+
+  /* ── Scrollbar ── */
+  --scrollbar-thumb: #3f3f46;
+  --scrollbar-thumb-hover: #52525b;
+
+  /* ── Semantic colors ── */
+  --up-bg: #052e16;
+  --up-fg: #4ade80;
+  --down-bg: #450a0a;
+  --down-fg: #f87171;
+  --warn-bg: #451a03;
+  --warn-fg: #fbbf24;
+  --approve-bg: #052e16;
+  --approve-fg: #4ade80;
+
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --panel-shadow:
+    3px 12px 24px -12px rgba(0, 0, 0, 0.55),
+    1px 4px 10px -8px rgba(0, 0, 0, 0.35);
+
+  /* ── Glass chrome ── */
+  --glass-chrome: #1e1e1e;
+  --glass-border: #333333;
+  --glass-blur: 0px;
+
+  /* ── Popups & dropdowns ── */
+  --popup-bg: #1e1e1e;
+  --popup-bg-hover: #2a2a2a;
+  --popup-border: #333333;
+  --popup-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --drawer-footer-bg: rgba(30, 30, 30, 0.82);
+
+  /* ── App shell ── */
+  --app-shell-bg: #0f0f0f;
+  --app-shell-border: transparent;
+  --sidebar-bg: #121212;
+  --sidebar-border: #262626;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-active-fg: #ffffff;
+  --main-panel-bg: var(--background);
+  --main-panel-border: #262626;
+
+  /* ── Midnight-specific tokens (reusing orca logic for tabs) ── */
+  --orcaq-tab-bg: #121212;
+  --orcaq-tab-active-bg: #1e1e1e;
+  --orcaq-tab-active-fg: #ffffff;
+  --orcaq-tab-inactive-fg: #a1a1aa;
+  --orcaq-breadcrumb-bg: #121212;
+  --orcaq-breadcrumb-border: #262626;
+  --orcaq-accent: #ffffff;
+}
+
+/* ── Midnight: border-radius 8px globally (except tab bar) ── */
+.theme-midnight * {
+  --radius: 8px;
+}
+
+.theme-midnight .rounded-lg,
+.theme-midnight .rounded-xl {
+  border-radius: 8px !important;
+}
+
+.theme-midnight
+  .rounded-full:not(.w-6):not(.w-8):not(.min-w-\[22px\]):not(
+    .min-w-\[18px\]
+  ):not(.min-w-\[32px\]) {
+  border-radius: 8px !important;
+}
+
+.theme-midnight .rounded-md {
+  border-radius: 6px !important;
+}
+
+.theme-midnight .rounded-sm {
+  border-radius: 4px !important;
+}
+
+/* Keep avatar circles round */
+.theme-midnight .rounded-full.bg-primary,
+.theme-midnight .rounded-full.bg-\[color\:var\(--muted\)\] {
+  border-radius: 9999px !important;
+}
+
+/* Cards, panels, inputs */
+.theme-midnight .card-shadow,
+.theme-midnight [class*="rounded-xl"],
+.theme-midnight [class*="rounded-lg"] {
+  border-radius: 8px;
+}
+
+.theme-midnight input,
+.theme-midnight textarea,
+.theme-midnight select,
+.theme-midnight [role="combobox"] {
+  border-radius: 6px !important;
+}
+
+.theme-midnight button {
+  border-radius: 6px;
+}
+
+/* Tab bar: no border-radius */
+.theme-midnight .tab-bar-wrapper,
+.theme-midnight .tab-bar-inner,
+.theme-midnight .tab-bar-inner > div,
+.theme-midnight .tab-bar-inner > div[data-tab-page],
+.theme-midnight .tab-bar-inner .tab-item,
+.theme-midnight [role="tab"] {
+  border-radius: 0 !important;
+}

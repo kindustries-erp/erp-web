@@ -8,40 +8,19 @@ import {
 import { useDrawerStore } from "@/shared/stores/useDrawerStore";
 import { AfterSalesDrawer } from "./AfterSalesDrawer";
 import { format } from "date-fns";
-import { Shield, Eye, Copy, Check } from "lucide-react";
+import { Shield, Eye } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useAfterSalesQuery } from "../hooks/useAfterSalesQuery";
 import { SoPreviewDrawer } from "@/modules/sales-orders-core/components/SoPreviewDrawer";
-import { Button } from "@/shared/components/ui/Button";
 import { useBasicMasterInfinite } from "@/modules/basic-masters/hooks/useBasicMasterInfinite";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 
 export function AfterSalesListPage() {
   const t = useT();
-
-  const CopyIconBtn = ({ text }: { text: string }) => {
-    const [copied, setCopied] = useState(false);
-    return (
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
-        className="opacity-0 group-hover:opacity-100 hover:text-gray-900 transition-opacity p-1"
-        title={copied ? t("Đã copy") : t("Copy")}
-      >
-        {copied ? (
-          <Check className="w-3.5 h-3.5 text-green-600" />
-        ) : (
-          <Copy className="w-3.5 h-3.5" />
-        )}
-      </button>
-    );
-  };
 
   const { openDrawer, closeDrawer, isOpen, type, mode, entityData } =
     useDrawerStore();
@@ -183,7 +162,7 @@ export function AfterSalesListPage() {
   const columns = [
     {
       key: "expectedDeliveryDate",
-      size: 100,
+      size: 150,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -202,6 +181,23 @@ export function AfterSalesListPage() {
             tableState.setColumnFilter("expectedDeliveryDate", v)
           }
           fetchOptions={fetchAfterSalesColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch["expectedDeliveryDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch("expectedDeliveryDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       cell: (row: any) =>
@@ -211,7 +207,7 @@ export function AfterSalesListPage() {
     },
     {
       key: "deliveryDate",
-      size: 100,
+      size: 150,
       header: (
         <TableColumnHeaderFilter
           align="center"
@@ -224,6 +220,23 @@ export function AfterSalesListPage() {
           selectedFilters={tableState.columnFilters["deliveryDate"] || []}
           onFilterChange={(v) => tableState.setColumnFilter("deliveryDate", v)}
           fetchOptions={fetchAfterSalesColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch["deliveryDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch("deliveryDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       cell: (row: any) =>
@@ -272,16 +285,12 @@ export function AfterSalesListPage() {
       ),
       size: 170,
       cell: (row: any) => (
-        <div className="flex items-center gap-1.5 group">
-          <Button
-            variant="link"
-            onClick={() => handleRowClick(row)}
-            className="font-medium text-primary hover:underline p-0 h-auto flex-1 truncate justify-start"
-          >
-            {row.serialNo || "-"}
-          </Button>
-          {row.serialNo && <CopyIconBtn text={row.serialNo} />}
-        </div>
+        <TableText
+          text={row.serialNo || "—"}
+          tooltip={row.serialNo || false}
+          enableCopy={Boolean(row.serialNo)}
+          onDrawerClick={row.serialNo ? () => handleRowClick(row) : undefined}
+        />
       ),
     },
     {
@@ -302,12 +311,7 @@ export function AfterSalesListPage() {
       ),
       size: 170,
       cell: (row: any) => (
-        <div className="flex items-center gap-1.5 group">
-          <span className="font-medium text-gray-800 flex-1 truncate">
-            {row.vinNo || "-"}
-          </span>
-          {row.vinNo && <CopyIconBtn text={row.vinNo} />}
-        </div>
+        <TableText text={row.vinNo || "—"} enableCopy={Boolean(row.vinNo)} />
       ),
     },
     {
@@ -328,12 +332,10 @@ export function AfterSalesListPage() {
       ),
       size: 170,
       cell: (row: any) => (
-        <div className="flex items-center gap-1.5 group">
-          <span className="font-medium text-gray-800 flex-1 truncate">
-            {row.engineNo || "-"}
-          </span>
-          {row.engineNo && <CopyIconBtn text={row.engineNo} />}
-        </div>
+        <TableText
+          text={row.engineNo || "—"}
+          enableCopy={Boolean(row.engineNo)}
+        />
       ),
     },
     {
@@ -352,18 +354,16 @@ export function AfterSalesListPage() {
           fetchOptions={fetchAfterSalesColumnOptions}
         />
       ),
-      cell: (row: any) => {
-        if (!row.soNo) return "—";
-        return (
-          <Button
-            variant="link"
-            onClick={() => setPreviewSoNo(row.soNo || null)}
-            className="text-primary hover:underline p-0 h-auto"
-          >
-            {row.soNo}
-          </Button>
-        );
-      },
+      cell: (row: any) => (
+        <TableText
+          text={row.soNo || "—"}
+          tooltip={row.soNo || false}
+          enableCopy={Boolean(row.soNo)}
+          onDrawerClick={
+            row.soNo ? () => setPreviewSoNo(row.soNo || null) : undefined
+          }
+        />
+      ),
     },
     {
       key: "trackingAttributes",
@@ -453,6 +453,23 @@ export function AfterSalesListPage() {
             tableState.setColumnFilter("activationDate", v)
           }
           fetchOptions={fetchAfterSalesColumnOptions}
+          hideFilter={true}
+          hideFooter={true}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch["activationDate"] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch("activationDate", next);
+                }}
+                onClose={close}
+              />
+            );
+          }}
         />
       ),
       cell: (row: any) => {

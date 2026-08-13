@@ -53,6 +53,8 @@ export const erpInvoiceDashboardApi = {
     branch_id?: string;
     sortBy?: string;
     sortOrder?: "ASC" | "DESC";
+    column_search?: string;
+    column_filters?: string;
   }): Promise<InvoiceDashboardPartnersResponse> => {
     const { data } = await axiosInstance.get<InvoiceDashboardPartnersResponse>(
       `${BASE}/partners`,

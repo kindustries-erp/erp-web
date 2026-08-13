@@ -7,6 +7,7 @@ export interface ErpInvoiceItem {
   unit?: string;
   quantity?: number;
   unitPrice?: number;
+  invoiceSubcategory?: string;
   preVatAmount: number | string;
   vatRate?: number | string | null;
   vatAmount: number | string;
@@ -39,6 +40,7 @@ export interface ErpInvoice {
   description?: string | null;
   licensePlate?: string | null;
   settlementOrder?: string | null;
+  invoiceCategory?: string | null;
   invoiceType?: string | null;
   preVatAmount: string;
   vatRate?: string | null;
@@ -66,6 +68,10 @@ export interface ErpInvoice {
     bankTransactionId: string;
     netOffAmount: number;
     bankTransaction?: any;
+  }[];
+  attachments?: {
+    attachmentId: string;
+    attachment: import("@/modules/system/api/attachmentsApi").ErpAttachment;
   }[];
 }
 
@@ -106,7 +112,7 @@ export interface CreateErpInvoicePayload {
   }[];
   accountingEnabled?: boolean;
   pendingDeletedPdfs?: string[];
-  pendingAddedPdfs?: File[];
+  pendingAddedAttachments?: import("../components/ErpInvoicePdfUpload").PendingAttachment[];
 }
 
 export type UpdateErpInvoicePayload = Partial<CreateErpInvoicePayload>;
@@ -127,6 +133,7 @@ export interface ErpInvoiceListParams {
   sort_order?: "asc" | "desc";
   column_search?: string;
   column_filters?: string;
+  unlinked_po_id?: string;
 }
 
 export interface ErpInvoiceListResponse {
@@ -135,6 +142,33 @@ export interface ErpInvoiceListResponse {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export interface BranchStatEntry {
+  branchId: string | null;
+  branchName: string;
+  monthTotal: number;
+  monthPreVat: number;
+  weekTotal: number;
+  weekPreVat: number;
+  dayTotal: number;
+  dayPreVat: number;
+}
+
+export interface ErpInvoiceStats {
+  monthTotal: number;
+  monthPreVat: number;
+  monthChart: number[];
+  monthPreVatChart: number[];
+  weekTotal: number;
+  weekPreVat: number;
+  weekChart: number[];
+  weekPreVatChart: number[];
+  dayTotal: number;
+  dayPreVat: number;
+  dayChart: number[];
+  dayPreVatChart: number[];
+  byBranch?: BranchStatEntry[];
 }
 
 export interface PortalInvoiceDto {
@@ -168,7 +202,93 @@ export interface PortalSyncResult {
   note?: string;
 }
 
+export interface InvoiceExportBackgroundStartResult {
+  jobId: string;
+  message: string;
+  reused?: boolean;
+}
+
+export interface InvoiceExportHistoryItem {
+  jobId: string;
+  fileName: string;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  current: number;
+  total: number;
+  message: string;
+  createdAt: string;
+  finishedAt?: string;
+  expiresAt?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  canDownload: boolean;
+}
+
+export interface InvoiceExportHistoryResponse {
+  items: InvoiceExportHistoryItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface InvoiceExportProgressEvent {
+  processId: "invoice-xlsx-export" | "ping";
+  jobId?: string;
+  current: number;
+  total: number;
+  isRunning: boolean;
+  completed: boolean;
+  ready: boolean;
+  failed: boolean;
+  message?: string;
+  fileName?: string;
+}
+
 const BASE = "/api/v1/erp-invoices";
+
+function extractErrorMessageFromPayload(payload: any): string | null {
+  if (!payload) return null;
+  if (typeof payload === "string") return payload;
+  if (typeof payload?.message === "string") return payload.message;
+  if (Array.isArray(payload?.message)) {
+    return payload.message.join(", ");
+  }
+  if (typeof payload?.error === "string") return payload.error;
+  return null;
+}
+
+async function resolveBlobErrorMessage(
+  error: any,
+  fallback: string,
+): Promise<string> {
+  const responseData = error?.response?.data;
+
+  if (responseData instanceof Blob) {
+    try {
+      const text = (await responseData.text())?.trim();
+      if (text) {
+        try {
+          const parsed = JSON.parse(text);
+          const parsedMsg = extractErrorMessageFromPayload(parsed);
+          if (parsedMsg) return parsedMsg;
+        } catch {
+          return text;
+        }
+      }
+    } catch {
+      // Ignore blob parsing errors and fall back to common paths.
+    }
+  }
+
+  const directMsg = extractErrorMessageFromPayload(responseData);
+  if (directMsg) return directMsg;
+
+  if (typeof error?.message === "string" && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export const erpInvoicesCoreApi = {
   list: async (
@@ -206,11 +326,29 @@ export const erpInvoicesCoreApi = {
     };
   },
 
+  getStats: async (
+    direction?: "IN" | "OUT",
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<ErpInvoiceStats> => {
+    const { data } = await axiosInstance.get<ErpInvoiceStats>(`${BASE}/stats`, {
+      params: { direction, dateFrom, dateTo },
+    });
+    return data;
+  },
+
   get: async (id: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.get<{ data: ErpInvoice }>(
       `${BASE}/${id}`,
     );
     return data.data;
+  },
+
+  getBulkNetOffs: async (ids: string[]): Promise<any[]> => {
+    const { data } = await axiosInstance.post<any[]>(`${BASE}/bulk-net-offs`, {
+      ids,
+    });
+    return data;
   },
 
   create: async (payload: CreateErpInvoicePayload): Promise<ErpInvoice> => {
@@ -240,6 +378,14 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
+  bulkSetNotes: async (ids: string[], notes: string) => {
+    const { data } = await axiosInstance.patch<{
+      updated: number;
+      ids: string[];
+    }>(`${BASE}/bulk-set-notes`, { ids, notes });
+    return data;
+  },
+
   remove: async (id: string): Promise<void> => {
     await axiosInstance.delete(`${BASE}/${id}`);
   },
@@ -251,15 +397,14 @@ export const erpInvoicesCoreApi = {
     return data.data;
   },
 
-  reparseXml: async (id: string, token?: string): Promise<ErpInvoice> => {
-    const { data } = await axiosInstance.post<ErpInvoice>(
-      `${BASE}/${id}/reparse-xml`,
-      { token },
+  getLinkedCases: async (invoiceId: string) => {
+    const res = await axiosInstance.get(
+      `/api/v1/greenway/invoices/${invoiceId}/linked-cases`,
     );
-    return data;
+    return res.data;
   },
 
-  syncDetail: async (id: string, token: string): Promise<ErpInvoice> => {
+  syncDetail: async (id: string, token?: string): Promise<ErpInvoice> => {
     const { data } = await axiosInstance.post<ErpInvoice>(
       `${BASE}/${id}/sync-detail`,
       { token },
@@ -408,12 +553,12 @@ export const erpInvoicesCoreApi = {
   uploadPdfs: async (
     id: string,
     files: File[],
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
     const { data } = await axiosInstance.post<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
@@ -421,11 +566,17 @@ export const erpInvoicesCoreApi = {
   },
 
   getPdfBlob: async (id: string, key: string): Promise<Blob> => {
-    const { data } = await axiosInstance.get<Blob>(
-      `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
-      { responseType: "blob" },
-    );
-    return data;
+    try {
+      const { data } = await axiosInstance.get<Blob>(
+        `${BASE}/${id}/pdfs/${encodeURIComponent(key)}/content`,
+        { responseType: "blob" },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Không thể tải nội dung file PDF"),
+      );
+    }
   },
 
   getPdfDownloadUrl: async (
@@ -441,40 +592,139 @@ export const erpInvoicesCoreApi = {
   },
 
   downloadPdfsZip: async (id: string): Promise<Blob> => {
-    const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
-      responseType: "blob",
-    });
-    return data;
+    try {
+      const { data } = await axiosInstance.get<Blob>(`${BASE}/${id}/pdfs/zip`, {
+        responseType: "blob",
+      });
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Không thể tải file ZIP PDF"),
+      );
+    }
   },
 
   bulkDownloadFiles: async (payload: {
     query: { date_from?: string; date_to?: string; direction?: string };
     types: string[];
   }): Promise<Blob> => {
-    const { data } = await axiosInstance.post<Blob>(
-      `${BASE}/bulk-download-files`,
-      payload,
-      { responseType: "blob", timeout: 600000 },
-    );
-    return data;
+    try {
+      const { data } = await axiosInstance.post<Blob>(
+        `${BASE}/bulk-download-files`,
+        payload,
+        { responseType: "blob", timeout: 600000 },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Tải ZIP hàng loạt thất bại"),
+      );
+    }
+  },
+
+  bulkDownloadSelected: async (payload: {
+    ids: string[];
+    types: string[];
+  }): Promise<Blob> => {
+    try {
+      const { data } = await axiosInstance.post<Blob>(
+        `${BASE}/bulk-download-selected`,
+        payload,
+        { responseType: "blob", timeout: 300000 },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(
+          error,
+          "Tải ZIP hóa đơn đã chọn thất bại",
+        ),
+      );
+    }
   },
 
   deletePdf: async (
     id: string,
     key: string,
-  ): Promise<{ success: boolean; pdfFiles: any[] }> => {
+  ): Promise<{ success: boolean; attachments: any[] }> => {
     const { data } = await axiosInstance.delete<{
       success: boolean;
-      pdfFiles: any[];
+      attachments: any[];
     }>(`${BASE}/${id}/pdfs/${encodeURIComponent(key)}`);
     return data;
   },
 
+  linkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.post(
+      `${BASE}/${id}/attachments/link`,
+      {
+        attachmentId,
+      },
+    );
+    return data;
+  },
+
+  unlinkAttachment: async (id: string, attachmentId: string): Promise<any> => {
+    const { data } = await axiosInstance.delete(
+      `${BASE}/${id}/attachments/${attachmentId}`,
+    );
+    return data;
+  },
+
   exportExcel: async (params: ErpInvoiceListParams): Promise<Blob> => {
-    const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
-      params,
-      responseType: "blob",
-    });
+    try {
+      const { data } = await axiosInstance.get<Blob>(`${BASE}/export/excel`, {
+        params,
+        responseType: "blob",
+      });
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Xuất Excel thất bại"),
+      );
+    }
+  },
+
+  startExportExcelBackground: async (
+    params: ErpInvoiceListParams,
+  ): Promise<InvoiceExportBackgroundStartResult> => {
+    const { data } =
+      await axiosInstance.post<InvoiceExportBackgroundStartResult>(
+        `${BASE}/export/excel/background`,
+        params,
+      );
+    return data;
+  },
+
+  downloadExportExcelBackground: async (jobId: string): Promise<Blob> => {
+    try {
+      const { data } = await axiosInstance.get<Blob>(
+        `${BASE}/export/excel/background/${jobId}/download`,
+        {
+          responseType: "blob",
+        },
+      );
+      return data;
+    } catch (error: any) {
+      throw new Error(
+        await resolveBlobErrorMessage(error, "Tai file Excel that bai"),
+      );
+    }
+  },
+
+  listExportExcelBackgroundHistory: async (
+    page = 1,
+    pageSize = 10,
+  ): Promise<InvoiceExportHistoryResponse> => {
+    const { data } = await axiosInstance.get<InvoiceExportHistoryResponse>(
+      `${BASE}/export/excel/background/history`,
+      {
+        params: {
+          page,
+          pageSize,
+        },
+      },
+    );
     return data;
   },
 

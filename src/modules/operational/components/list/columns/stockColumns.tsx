@@ -1,7 +1,4 @@
 import { useMemo } from "react";
-import { ChevronRight } from "lucide-react";
-import { cn } from "@/shared/utils";
-import { Button } from "@/shared/components/ui/Button";
 import { useT } from "@/core/i18n";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import type { DataTableColumn } from "@/shared/components/DataTable";
@@ -9,10 +6,10 @@ import type { InventoryStockRow } from "@/modules/operational/api/operationalApi
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
+import { TableText } from "@/shared/components/DataTable/TableText";
 interface UseStockColumnsOptions {
-  expandedStockItemIds: Record<string, boolean>;
-  onToggleExpand: (row: InventoryStockRow) => void;
   stockItems: InventoryStockRow[];
+  onViewItem: (id: string) => void;
 }
 
 /**
@@ -20,9 +17,8 @@ interface UseStockColumnsOptions {
  * Extracted từ OperationalListPage.tsx (dòng 1576–1688).
  */
 export function useStockColumns({
-  expandedStockItemIds,
-  onToggleExpand,
   stockItems,
+  onViewItem,
 }: UseStockColumnsOptions): DataTableColumn<InventoryStockRow>[] {
   const t = useT();
   const store = useOperationalListStore();
@@ -58,37 +54,6 @@ export function useStockColumns({
   return useMemo<DataTableColumn<InventoryStockRow>[]>(
     () => [
       {
-        key: "__expand",
-        header: "",
-        className:
-          "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center align-middle",
-        headerClassName: "w-[40px] min-w-[40px] max-w-[40px] px-2 text-center",
-        size: 40,
-        enableResizing: false,
-        cell: (row) => {
-          const expanded = !!expandedStockItemIds[row.inventory_item_id];
-          return (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleExpand(row);
-              }}
-              className="w-full flex items-center justify-center"
-            >
-              <ChevronRight
-                className={cn(
-                  "h-4 w-4 transition-transform text-[color:var(--muted-fg)] shrink-0",
-                  expanded && "rotate-90",
-                )}
-              />
-            </Button>
-          );
-        },
-      },
-      {
         key: "item_code",
         header: (
           <TableColumnHeaderFilter
@@ -101,17 +66,26 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("item_code", vals)}
             align="center"
             columnKey="item_code"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
           />
         ),
         className: "align-middle text-left",
         headerClassName: "px-2",
         sortable: false,
-        size: 140,
+        size: 200,
         enableResizing: true,
-        dataIndex: "item_code",
-        valueType: "text",
+        cell: (row) => (
+          <TableText
+            text={row.item_code || ""}
+            onDrawerClick={(e) => {
+              e.stopPropagation();
+              onViewItem(row.inventory_item_id);
+            }}
+            tooltip={true}
+            enableCopy={true}
+            textClassName="font-medium text-primary"
+          />
+        ),
       },
       {
         key: "item_name",
@@ -126,7 +100,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("item_name", vals)}
             align="center"
             columnKey="item_name"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
           />
         ),
@@ -152,7 +125,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("received_qty", vals)}
             align="right"
             columnKey="received_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -181,7 +153,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("issued_qty", vals)}
             align="right"
             columnKey="issued_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -198,6 +169,34 @@ export function useStockColumns({
         ),
       },
       {
+        key: "adjusted_qty",
+        header: (
+          <TableColumnHeaderFilter
+            title={t("inventory.table.columns.adjusted", "Điều chỉnh")}
+            sortState={getSortState("adjusted_qty")}
+            onSortChange={(state) => handleSortChange("adjusted_qty", state)}
+            searchValue={tableState.columnSearch["adjusted_qty"] || ""}
+            onSearchChange={(val) => handleSearchChange("adjusted_qty", val)}
+            selectedFilters={tableState.columnFilters["adjusted_qty"] || []}
+            onFilterChange={(vals) => handleFilterChange("adjusted_qty", vals)}
+            align="right"
+            columnKey="adjusted_qty"
+            allFilters={tableState.columnFilters}
+            formatOptionLabel={formatQty}
+          />
+        ),
+        className: "align-middle text-right",
+        headerClassName: "px-2",
+        sortable: false,
+        size: 140,
+        enableResizing: true,
+        cell: (row) => (
+          <span className="inline-block w-full text-right text-sm tabular-nums">
+            {formatQty(row.adjusted_qty)}
+          </span>
+        ),
+      },
+      {
         key: "on_hand_qty",
         header: (
           <TableColumnHeaderFilter
@@ -210,7 +209,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("on_hand_qty", vals)}
             align="right"
             columnKey="on_hand_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -239,7 +237,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("reserved_qty", vals)}
             align="right"
             columnKey="reserved_qty"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
             formatOptionLabel={formatQty}
           />
@@ -295,7 +292,6 @@ export function useStockColumns({
             onFilterChange={(vals) => handleFilterChange("last", vals)}
             align="right"
             columnKey="last"
-            requireSearchToFetchOptions={true}
             allFilters={tableState.columnFilters}
           />
         ),
@@ -378,6 +374,6 @@ export function useStockColumns({
         valueType: "status",
       },
     ],
-    [expandedStockItemIds, onToggleExpand, t, store, tableState, stockItems],
+    [t, store, tableState, stockItems, onViewItem],
   );
 }

@@ -1,6 +1,8 @@
 import React, { useMemo, useCallback } from "react";
 import { format, isValid } from "date-fns";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { TableText } from "@/shared/components/DataTable/TableText";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useQuery } from "@tanstack/react-query";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { erpInvoiceDashboardApi } from "../api/erpInvoiceDashboardApi";
@@ -11,7 +13,6 @@ import { money } from "@/shared/utils/format";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
 import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { VietnamInvoiceTemplate } from "./VietnamInvoiceTemplate";
 
 import { ErpInvoiceInternalDrawer } from "./ErpInvoiceInternalDrawer";
@@ -193,10 +194,23 @@ export function PartnerInvoiceDrawer({
             onFilterChange={(vals) => handleFilterChange("invoiceDate", vals)}
             align="center"
             columnKey="invoiceDate"
-            queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
-            allFilters={listHook.tableState.columnFilters}
-            fetchOptions={fetchInvoiceOptions}
+            hideFilter={true}
+            hideFooter={true}
+            dateRangeSlot={({ close }) => {
+              const val = listHook.tableState.columnSearch["invoiceDate"] || "";
+              const [from = "", to = ""] = val.split("|");
+              return (
+                <DateRangeColumnSlot
+                  dateFrom={from}
+                  dateTo={to}
+                  onChange={(f, t) => {
+                    const next = f || t ? `${f}|${t}` : "";
+                    handleSearchChange("invoiceDate", next);
+                  }}
+                  onClose={close}
+                />
+              );
+            }}
           />
         ),
         size: 100,
@@ -222,7 +236,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="serialNo"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -247,24 +260,23 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="invoiceNo"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
+            enableSelectAllMatching={true}
           />
         ),
         size: 100,
-        className: "font-medium text-primary text-left",
+        className: "text-primary text-left",
         cell: (inv: any) => (
-          <Button
-            variant="link"
-            onClick={(e) => {
+          <TableText
+            text={inv.invoiceNo || ""}
+            onDrawerClick={(e) => {
               e.stopPropagation();
               formHook.openInternal(inv);
             }}
-            className="font-medium text-primary hover:underline p-0 h-auto"
-          >
-            {inv.invoiceNo}
-          </Button>
+            tooltip={true}
+            enableCopy={true}
+          />
         ),
       },
       {
@@ -283,7 +295,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="preVatAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -309,7 +320,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="vatAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -335,7 +345,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="totalAmount"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
             formatOptionLabel={formatAmtOption}
@@ -359,7 +368,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="status"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={false}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={async () => ({
               items: [
@@ -408,7 +416,6 @@ export function PartnerInvoiceDrawer({
             align="center"
             columnKey="description"
             queryKeyPrefix={`partner-invoice-options-${taxCode}`}
-            requireSearchToFetchOptions={true}
             allFilters={listHook.tableState.columnFilters}
             fetchOptions={fetchInvoiceOptions}
           />
@@ -534,8 +541,9 @@ export function PartnerInvoiceDrawer({
               pdfSlot={
                 <ErpInvoicePdfUpload
                   invoiceId={formHook.detailInvoice?.id ?? null}
-                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
+                  attachments={formHook.detailInvoice?.attachments ?? null}
                   pdfFileKey={formHook.detailInvoice?.pdfFileKey ?? null}
+                  pdfFiles={formHook.detailInvoice?.pdfFiles ?? null}
                   editMode={formHook.editMode}
                   pendingDeletedPdfs={formHook.form.pendingDeletedPdfs}
                   onPendingDeletePdf={(key) => {
@@ -545,11 +553,13 @@ export function PartnerInvoiceDrawer({
                       pendingDeletedPdfs: [...current, key],
                     }));
                   }}
-                  pendingAddedPdfs={formHook.form.pendingAddedPdfs}
-                  onPendingAddedPdfsChange={(files) => {
+                  pendingAddedAttachments={
+                    formHook.form.pendingAddedAttachments
+                  }
+                  onPendingAddedAttachmentsChange={(files) => {
                     formHook.setForm((prev) => ({
                       ...prev,
-                      pendingAddedPdfs: files,
+                      pendingAddedAttachments: files,
                     }));
                   }}
                 />

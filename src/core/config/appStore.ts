@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { PageKey, TabInfo, SectionRoot } from "@/shared/types";
 import { pageToPath } from "@/shared/utils/pageUrl";
 
-export type AppTheme = "shell" | "classic" | "orcaq";
+export type AppTheme = "shell" | "classic" | "orcaq" | "midnight";
 
 function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
@@ -13,6 +13,10 @@ function applyDocumentTheme(appTheme: AppTheme) {
   document.documentElement.classList.toggle(
     "theme-orcaq",
     appTheme === "orcaq",
+  );
+  document.documentElement.classList.toggle(
+    "theme-midnight",
+    appTheme === "midnight",
   );
 }
 
@@ -32,6 +36,18 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "erp-inventory-tracking": {
     labelKey: "nav.items.erpInventoryTracking",
+    group: "inventory",
+  },
+  "erp-inventory-tracking-parts": {
+    labelKey: "nav.items.erpInventoryTrackingParts",
+    group: "inventory",
+  },
+  "erp-inventory-tracking-lot": {
+    labelKey: "nav.items.erpInventoryTrackingLot",
+    group: "inventory",
+  },
+  "erp-inventory-tracking-custom": {
+    labelKey: "nav.items.erpInventoryTrackingCustom",
     group: "inventory",
   },
   "erp-inventory-vouchers": {
@@ -121,8 +137,16 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.sysTags",
     group: "settings",
   },
+  attachments: {
+    labelKey: "nav.items.attachments",
+    group: "settings",
+  },
   "invoice-dashboard": {
     labelKey: "nav.items.invoiceDashboard",
+    group: "accounting",
+  },
+  "erp-invoices-draft": {
+    labelKey: "Hóa đơn nháp",
     group: "accounting",
   },
   "erp-invoices-in": {
@@ -136,6 +160,22 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   "vinfast-parts": {
     labelKey: "nav.items.vinfastParts",
     group: "accounting",
+  },
+  "vinfast-invoice-settlement": {
+    labelKey: "Lệnh quyết toán xưởng Vinfast",
+    group: "manufacturing",
+  },
+  "vinfast-parts-dashboard": {
+    labelKey: "Tổng quan phụ tùng",
+    group: "inventory",
+  },
+  "vinfast-parts-oto-stock": {
+    labelKey: "nav.items.vinfastPartsOtoStock",
+    group: "inventory",
+  },
+  "vinfast-parts-xemay-stock": {
+    labelKey: "nav.items.vinfastPartsXemayStock",
+    group: "inventory",
   },
   "settings-branch": {
     labelKey: "thietlap.tabs.chi-nhanh",
@@ -157,6 +197,7 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "bankStatement.cashTitle",
     group: "accounting",
   },
+  "email-inbox": { labelKey: "nav.items.emailInbox", group: "system" },
   "cashflow-dashboard": {
     labelKey: "nav.items.cashflowDashboard",
     group: "accounting",
@@ -169,6 +210,10 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.garageCases",
     group: "garage",
   },
+  "garage-gross-profit": {
+    labelKey: "Báo cáo lợi nhuận gộp",
+    group: "garage",
+  },
   "garage-receivables": {
     labelKey: "nav.items.garageReceivables",
     group: "garage",
@@ -177,10 +222,15 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "nav.items.garagePayables",
     group: "garage",
   },
+  budget: {
+    labelKey: "budget:pageTitle",
+    group: "accounting",
+  },
 };
 
 export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   dashboard: [["breadcrumb.dashboard"]],
+  budget: [["nav.items.accounting"], ["budget:pageTitle"]],
 
   purchasing: [["breadcrumb.purchasing"], ["breadcrumb.purchasingOrders"]],
   "inventory-dashboard": [
@@ -193,7 +243,23 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-inventory-tracking": [
     ["breadcrumb.inventory"],
-    ["breadcrumb.inventoryTracking"],
+    ["nav.items.erpInventoryTrackingGroup"],
+    ["nav.items.erpInventoryTracking"],
+  ],
+  "erp-inventory-tracking-parts": [
+    ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
+    ["nav.items.erpInventoryTrackingParts"],
+  ],
+  "erp-inventory-tracking-lot": [
+    ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
+    ["nav.items.erpInventoryTrackingLot"],
+  ],
+  "erp-inventory-tracking-custom": [
+    ["breadcrumb.inventory"],
+    ["nav.items.erpInventoryTrackingGroup"],
+    ["nav.items.erpInventoryTrackingCustom"],
   ],
   "erp-inventory-vouchers": [
     ["breadcrumb.inventory"],
@@ -246,11 +312,28 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   ],
   "erp-employees": [["breadcrumb.hr"], ["breadcrumb.erpEmployees"]],
   "erp-users": [["breadcrumb.settings"], ["breadcrumb.users"]],
-  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.permissions"]],
+  "erp-permissions-core": [["breadcrumb.settings"], ["breadcrumb.phanquyen"]],
+  attachments: [["breadcrumb.settings"], ["nav.items.attachments"]],
   "invoice-dashboard": [["breadcrumb.accounting"], ["Tổng quan hóa đơn"]],
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
+  "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
   "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
+  "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
+  "vinfast-parts-oto-stock": [
+    ["breadcrumb.inventory"],
+    ["nav.items.vinfastParts"],
+    ["nav.items.vinfastPartsOtoStock"],
+  ],
+  "vinfast-parts-xemay-stock": [
+    ["breadcrumb.inventory"],
+    ["nav.items.vinfastParts"],
+    ["nav.items.vinfastPartsXemayStock"],
+  ],
+  "vinfast-invoice-settlement": [
+    ["breadcrumb.manufacturing"],
+    ["Lệnh quyết toán xưởng Vinfast"],
+  ],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [
     ["breadcrumb.accounting"],
@@ -266,6 +349,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
     ["nav.items.cashflow"],
     ["bankStatement.cashTitle"],
   ],
+  "email-inbox": [["nav.items.system"], ["nav.items.emailInbox"]],
   "cashflow-dashboard": [
     ["breadcrumb.accounting"],
     ["nav.items.cashflow"],
@@ -276,6 +360,7 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "settings-cash-fund": [["breadcrumb.settings"], ["thietlap.tabs.quy"]],
   "garage-dashboard": [["nav.items.garage"], ["nav.items.garageDashboard"]],
   "garage-cases": [["nav.items.garage"], ["nav.items.garageCases"]],
+  "garage-gross-profit": [["nav.items.garage"], ["Báo cáo lợi nhuận gộp"]],
   "garage-receivables": [["nav.items.garage"], ["nav.items.garageReceivables"]],
   "garage-payables": [["nav.items.garage"], ["nav.items.garagePayables"]],
 };
@@ -472,7 +557,7 @@ export const useAppStore = create<AppState>()(
       setCompanyProfileOpen: (open) => set({ companyProfileOpen: open }),
 
       toggleAppTheme: () => {
-        const order: AppTheme[] = ["classic", "shell", "orcaq"];
+        const order: AppTheme[] = ["classic", "shell", "orcaq", "midnight"];
         const idx = order.indexOf(get().appTheme);
         const appTheme = order[(idx + 1) % order.length];
         set({ appTheme });

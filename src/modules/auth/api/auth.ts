@@ -140,11 +140,13 @@ export interface UpdateProfileRequest {
 }
 
 export interface ChangePasswordRequest {
-  new_password: string;
+  oldPassword: string;
+  newPassword: string;
 }
 
 export interface SelfUpdateProfileRequest {
-  full_name?: string;
+  email?: string;
+  full_name?: string | null;
   phone?: string | null;
   notes?: string | null;
 }

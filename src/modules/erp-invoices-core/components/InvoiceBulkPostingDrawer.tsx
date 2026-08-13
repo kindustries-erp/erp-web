@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueries } from "@tanstack/react-query";
 import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { type DrawerAction } from "@/shared/components/DrawerModal";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
@@ -12,6 +12,7 @@ import { Settings2, Plus, Trash2, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { accountingApi } from "@/modules/accounting/api/accountingApi";
 import { erpInvoicesCoreApi, type ErpInvoice } from "../api/erpInvoicesCoreApi";
+import { getBranchOptionsApi } from "@/modules/branches/api/branchApi";
 import { money } from "@/shared/utils/format";
 
 interface Props {
@@ -36,6 +37,14 @@ type CustomConfig = {
   description: string;
   lines: PostInvoiceLine[];
 };
+
+function createClientId() {
+  const maybeCrypto = (globalThis as any)?.crypto;
+  if (maybeCrypto && typeof maybeCrypto.randomUUID === "function") {
+    return maybeCrypto.randomUUID();
+  }
+  return `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 // Component helper để format số tiền
 function NumberInput({ value, onChange, ...props }: any) {
@@ -97,7 +106,7 @@ export function InvoiceBulkPostingDrawer({
         selectedInvoiceIds.includes(inv.id) &&
         (mode === "unpost"
           ? inv.postingStatus === "POSTED"
-          : inv.postingStatus !== "POSTED" && !!inv.branchId),
+          : inv.postingStatus !== "POSTED"),
     );
   }, [invoices, selectedInvoiceIds, mode]);
 
@@ -107,28 +116,90 @@ export function InvoiceBulkPostingDrawer({
         selectedInvoiceIds.includes(inv.id) &&
         (mode === "unpost"
           ? inv.postingStatus !== "POSTED"
-          : inv.postingStatus === "POSTED" || !inv.branchId),
+          : inv.postingStatus === "POSTED"),
     );
   }, [invoices, selectedInvoiceIds, mode]);
 
-  const branchId =
-    selectedInvoices.length > 0 ? selectedInvoices[0].branchId : null;
-
-  const { data: chartOfAccounts } = useQuery({
-    queryKey: ["chart-of-accounts", branchId],
-    queryFn: () => accountingApi.getChartOfAccounts({ branchId }),
-    enabled: !!branchId && open,
+  const { data: branches = [] } = useQuery({
+    queryKey: ["branches-options"],
+    queryFn: getBranchOptionsApi,
+    enabled: open,
   });
 
+  const [globalBranchId, setGlobalBranchId] = useState<string>("");
+  const [branchAssignments, setBranchAssignments] = useState<
+    Record<string, string>
+  >({});
+
+  useEffect(() => {
+    if (open) {
+      const initialMap: Record<string, string> = {};
+      selectedInvoices.forEach((inv) => {
+        if (inv.branchId) {
+          initialMap[inv.id] = inv.branchId;
+        }
+      });
+      setBranchAssignments(initialMap);
+
+      const branchIds = selectedInvoices.map((i) => i.branchId).filter(Boolean);
+      if (branchIds.length > 0 && branchIds.every((b) => b === branchIds[0])) {
+        setGlobalBranchId(branchIds[0] as string);
+      } else {
+        setGlobalBranchId("");
+      }
+    }
+  }, [open, selectedInvoiceIds]);
+
+  const uniqueBranchIds = useMemo(() => {
+    const set = new Set<string>();
+    if (globalBranchId) set.add(globalBranchId);
+    Object.values(branchAssignments).forEach((b) => {
+      if (b) set.add(b);
+    });
+    return Array.from(set);
+  }, [globalBranchId, branchAssignments]);
+
+  const coaQueries = useQueries({
+    queries: uniqueBranchIds.map((bId) => ({
+      queryKey: ["chart-of-accounts", bId],
+      queryFn: () => accountingApi.getChartOfAccounts({ branchId: bId }),
+      enabled: !!bId && open,
+    })),
+  });
+
+  const accountOptionsByBranch = useMemo(() => {
+    const map: Record<string, { value: string; label: string }[]> = {};
+    uniqueBranchIds.forEach((bId, idx) => {
+      const data = coaQueries[idx]?.data;
+      const list = Array.isArray(data) ? data : data?.items || [];
+      map[bId] = list.map((a: any) => ({
+        value: a.id,
+        label: `${a.accountCode} - ${a.accountName}`,
+      }));
+    });
+    return map;
+  }, [uniqueBranchIds, coaQueries]);
+
+  const primaryBranchId =
+    globalBranchId ||
+    uniqueBranchIds[0] ||
+    (selectedInvoices.length > 0 ? selectedInvoices[0].branchId : null);
+
   const accountOptions = useMemo(() => {
-    const list = Array.isArray(chartOfAccounts)
-      ? chartOfAccounts
-      : chartOfAccounts?.items || [];
-    return list.map((a: any) => ({
-      value: a.id,
-      label: `${a.accountCode} - ${a.accountName}`,
-    }));
-  }, [chartOfAccounts]);
+    if (primaryBranchId && accountOptionsByBranch[primaryBranchId]) {
+      return accountOptionsByBranch[primaryBranchId];
+    }
+    const firstKey = Object.keys(accountOptionsByBranch)[0];
+    return firstKey ? accountOptionsByBranch[firstKey] : [];
+  }, [primaryBranchId, accountOptionsByBranch]);
+
+  const getAccountOptionsForInvoice = (inv: ErpInvoice) => {
+    const invBranch = branchAssignments[inv.id] || globalBranchId;
+    if (invBranch && accountOptionsByBranch[invBranch]) {
+      return accountOptionsByBranch[invBranch];
+    }
+    return accountOptions;
+  };
 
   const [globalDate, setGlobalDate] = useState<string>(
     new Date().toISOString().slice(0, 10),
@@ -194,7 +265,7 @@ export function InvoiceBulkPostingDrawer({
     if (direction === "IN") {
       if (preVat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalInCost,
           debit: preVat,
           credit: 0,
@@ -202,7 +273,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (vat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalInVat,
           debit: vat,
           credit: 0,
@@ -210,7 +281,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (total > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalInAp,
           debit: 0,
           credit: total,
@@ -219,7 +290,7 @@ export function InvoiceBulkPostingDrawer({
     } else {
       if (total > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalOutAr,
           debit: total,
           credit: 0,
@@ -227,7 +298,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (preVat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalOutRev,
           debit: 0,
           credit: preVat,
@@ -235,7 +306,7 @@ export function InvoiceBulkPostingDrawer({
         });
       if (vat > 0)
         lines.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           accountId: globalOutVat,
           debit: 0,
           credit: vat,
@@ -317,7 +388,7 @@ export function InvoiceBulkPostingDrawer({
           lines: [
             ...conf.lines,
             {
-              id: crypto.randomUUID(),
+              id: createClientId(),
               accountId: "",
               debit: 0,
               credit: 0,
@@ -352,6 +423,9 @@ export function InvoiceBulkPostingDrawer({
     if (!globalDate) return false;
 
     return selectedInvoices.every((inv) => {
+      const targetBranch = branchAssignments[inv.id] || globalBranchId;
+      if (!targetBranch) return false;
+
       const config = getComputedConfig(inv);
       if (config.lines.length === 0) return false;
 
@@ -360,8 +434,8 @@ export function InvoiceBulkPostingDrawer({
 
       for (const l of config.lines) {
         if (!l.accountId) return false;
-        totalDebit += l.debit;
-        totalCredit += l.credit;
+        totalDebit += l.debit || 0;
+        totalCredit += l.credit || 0;
       }
 
       if (Math.abs(totalDebit - totalCredit) >= 0.01) return false;
@@ -374,6 +448,8 @@ export function InvoiceBulkPostingDrawer({
   }, [
     selectedInvoices,
     globalDate,
+    branchAssignments,
+    globalBranchId,
     globalInCost,
     globalInVat,
     globalInAp,
@@ -397,6 +473,20 @@ export function InvoiceBulkPostingDrawer({
 
   const bulkPostMutation = useMutation({
     mutationFn: async () => {
+      // Group invoices by target branch to bulk set branch first if changed
+      const branchGroups: Record<string, string[]> = {};
+      for (const inv of selectedInvoices) {
+        const targetBranch = branchAssignments[inv.id] || globalBranchId;
+        if (targetBranch && inv.branchId !== targetBranch) {
+          if (!branchGroups[targetBranch]) branchGroups[targetBranch] = [];
+          branchGroups[targetBranch].push(inv.id);
+        }
+      }
+
+      for (const [bId, ids] of Object.entries(branchGroups)) {
+        await erpInvoicesCoreApi.bulkSetBranch(ids, bId);
+      }
+
       for (const inv of selectedInvoices) {
         const config = getComputedConfig(inv);
         await erpInvoicesCoreApi.postInvoice(inv.id, {
@@ -503,18 +593,42 @@ export function InvoiceBulkPostingDrawer({
       open={open}
       onClose={onClose}
       mode="create"
+      collapsibleRightPanel={true}
       title="Hạch toán hàng loạt"
       subtitle={`Áp dụng cho ${selectedInvoices.length} hóa đơn`}
       layout="2-columns"
       size="xl"
       actions={postActions}
       confirmOnClose={isDirty}
+      rightPanelTitle={mode === "post" ? "Cấu hình hạch toán chung" : undefined}
+      rightPanelDefaultCollapsed={false}
       rightPanel={
         mode === "post" ? (
-          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col gap-4">
-            <h3 className="text-sm font-medium text-slate-800">
-              Cấu hình hạch toán chung
-            </h3>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                Chi nhánh mặc định chung <span className="text-red-500">*</span>
+              </label>
+              <Combobox
+                options={branches}
+                value={globalBranchId}
+                onChange={(val) => {
+                  const bId = val || "";
+                  setGlobalBranchId(bId);
+                  if (bId) {
+                    setBranchAssignments((prev) => {
+                      const updated = { ...prev };
+                      selectedInvoices.forEach((inv) => {
+                        updated[inv.id] = bId;
+                      });
+                      return updated;
+                    });
+                  }
+                  setIsDirty(true);
+                }}
+                placeholder="Chọn chi nhánh áp dụng chung..."
+              />
+            </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">
                 Ngày hạch toán <span className="text-red-500">*</span>
@@ -658,14 +772,13 @@ export function InvoiceBulkPostingDrawer({
           )}
 
           {/* Invoice List */}
-          <div>
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 gap-2">
-              <h3 className="text-sm font-medium text-slate-800 shrink-0">
-                Danh sách hóa đơn áp dụng{" "}
-                {displayedInvoices.length < selectedInvoices.length &&
-                  `(Hiển thị ${displayedInvoices.length}/${selectedInvoices.length})`}
-              </h3>
-              <div className="w-full md:w-80 shrink-0">
+          <div className="space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <label className="text-xs font-semibold text-slate-700 shrink-0">
+                Danh sách hóa đơn áp dụng ({displayedInvoices.length}/
+                {selectedInvoices.length})
+              </label>
+              <div className="w-full md:w-64 shrink-0">
                 <SearchInput
                   className="w-full"
                   value={searchTerm}
@@ -718,18 +831,38 @@ export function InvoiceBulkPostingDrawer({
                     >
                       {/* Row Header */}
                       <div
-                        className={`flex items-center justify-between py-1.5 px-3 bg-white ${
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between py-2 px-3 bg-white gap-2 ${
                           isExpanded ? "border-b border-slate-100" : ""
                         }`}
                       >
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-[13px] text-slate-800">
-                              HĐ: {inv.invoiceNo}
-                            </span>
-                            <span className="text-[11px] text-slate-500 line-clamp-1 max-w-[200px] md:max-w-xs">
-                              {inv.sellerName || inv.buyerName || ""}
-                            </span>
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-[13px] text-slate-800">
+                                HĐ: {inv.invoiceNo}
+                              </span>
+                              <span className="text-[11px] text-slate-500 line-clamp-1 max-w-[180px]">
+                                {inv.sellerName || inv.buyerName || ""}
+                              </span>
+                            </div>
+                            <div className="w-full sm:w-48 shrink-0">
+                              <Combobox
+                                options={branches}
+                                value={
+                                  branchAssignments[inv.id] ||
+                                  globalBranchId ||
+                                  ""
+                                }
+                                onChange={(val) => {
+                                  setBranchAssignments((prev) => ({
+                                    ...prev,
+                                    [inv.id]: val || "",
+                                  }));
+                                  setIsDirty(true);
+                                }}
+                                placeholder="Chọn chi nhánh..."
+                              />
+                            </div>
                           </div>
                           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
                             <span>
@@ -763,8 +896,10 @@ export function InvoiceBulkPostingDrawer({
                             {isModified && !isExpanded && (
                               <div className="mt-1 flex flex-wrap gap-1">
                                 {config.lines.map((l) => {
+                                  const invAccounts =
+                                    getAccountOptionsForInvoice(inv);
                                   const acc =
-                                    accountOptions
+                                    invAccounts
                                       .find((a: any) => a.value === l.accountId)
                                       ?.label.split(" - ")[0] ||
                                     l.accountId ||
@@ -854,7 +989,7 @@ export function InvoiceBulkPostingDrawer({
                               >
                                 <div className="col-span-4">
                                   <Combobox
-                                    options={accountOptions}
+                                    options={getAccountOptionsForInvoice(inv)}
                                     value={l.accountId}
                                     onChange={(v) =>
                                       updateCustomLine(

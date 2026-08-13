@@ -1,8 +1,7 @@
 import { useCallback } from "react";
-import { RefreshCcw, Plus, ChevronDown } from "lucide-react";
+import { RefreshCcw, Plus, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { FilterButton } from "@/shared/components/FilterPanel";
-import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
 
 interface TableActionGroupProps {
@@ -73,7 +72,11 @@ export function TableActionGroup({
           disabled={loading}
           title={t("Tải lại")}
         >
-          <RefreshCcw className={cn("h-4 w-4", loading && "animate-spin")} />
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCcw className="h-4 w-4" />
+          )}
         </Button>
       )}
 

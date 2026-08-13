@@ -4,7 +4,10 @@
  * Filter tabs: Tất cả / Nhập kho / Xuất kho
  */
 
+import { useInventoryVoucherDrawer } from "@/modules/inventory-core/hooks/useInventoryVoucherDrawer";
+import { InventoryVoucherDrawer } from "@/modules/inventory-core/components/inventory-voucher-drawer/InventoryVoucherDrawer";
 import { useEffect, useMemo, useState, useRef } from "react";
+import { cn } from "@/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   PackagePlus,
@@ -16,13 +19,15 @@ import {
   Eye,
   FileSpreadsheet,
 } from "lucide-react";
-import { formatGMT7 } from "@/shared/utils/format";
+
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { Forbidden } from "@/pages/Forbidden";
 import type { DataTableColumn } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
+import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { ReceiptText } from "lucide-react";
 import {
@@ -39,12 +44,8 @@ import {
   warehouseVouchersCoreApi,
   type WarehouseRow,
 } from "@/modules/inventory-core/api/warehouseVouchersCoreApi";
-import { GrFormDrawer } from "@/modules/goods-receipts-core/components/GrFormDrawer";
-import { useGrDrawer } from "@/modules/goods-receipts-core/hooks/useGrDrawer";
-import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
-import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
-import { IaFormDrawer } from "@/modules/inventory-adjustments/components/IaFormDrawer";
-import { useIaDrawer } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
+
+import { inventoryAdjustmentsApi } from "@/modules/inventory-adjustments/api/inventoryAdjustmentsApi";
 import { useReactToPrint } from "react-to-print";
 import {
   GoodsReceiptPrintTemplate,
@@ -57,6 +58,7 @@ import {
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -98,18 +100,15 @@ export function ErpWarehouseTab() {
   const [pageSize, setPageSize] = useState(50);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // ── GR drawer — delegated to useGrDrawer
-  const grDrawer = useGrDrawer({ invalidateWarehouseQuery: true });
+  // ── Unified Drawer
+  const unifiedDrawer = useInventoryVoucherDrawer({
+    invalidateWarehouseQuery: true,
+  });
+  const { grDrawer, giDrawer, iaDrawer } = unifiedDrawer;
   const grCancelId = grDrawer.cancelId;
   const [deleteTarget, setDeleteTarget] = useState<WarehouseRow | null>(null);
   const [cancelTarget, setCancelTarget] = useState<WarehouseRow | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  // ── GI drawer — delegated to useGiDrawer
-  const giDrawer = useGiDrawer({ invalidateWarehouseQuery: true });
-
-  // ── IA drawer
-  const iaDrawer = useIaDrawer({ invalidateWarehouseQuery: true });
 
   // ── Background Print Setup
   const { data: companyProfile } = useCompanyProfile();
@@ -345,6 +344,42 @@ export function ErpWarehouseTab() {
   };
 
   const renderHeaderFilter = (key: string, label: string) => {
+    if (key === "date") {
+      return (
+        <TableColumnHeaderFilter
+          title={label}
+          align="center"
+          className="w-full justify-center"
+          sortState={getSortState(key)}
+          onSortChange={(state) => handleSortChange(key, state)}
+          searchValue={tableState.columnSearch[key] || ""}
+          onSearchChange={(val) => handleSearchChange(key, val)}
+          selectedFilters={tableState.columnFilters[key] || []}
+          onFilterChange={(vals) => handleFilterChange(key, vals)}
+          columnKey={key}
+          hideFilter={true}
+          hideFooter={true}
+          isActive={!!tableState.columnSearch[key]}
+          dateRangeSlot={({ close }) => {
+            const val = tableState.columnSearch[key] || "";
+            const [from = "", to = ""] = val.split("|");
+            return (
+              <DateRangeColumnSlot
+                dateFrom={from}
+                dateTo={to}
+                onChange={(f, t) => {
+                  const next = f || t ? `${f}|${t}` : "";
+                  tableState.setColumnSearch(key, next);
+                  setPage(1);
+                }}
+                onClose={close}
+              />
+            );
+          }}
+        />
+      );
+    }
+
     let formatOptionLabel: ((val: string) => string) | undefined;
     if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
       formatOptionLabel = (val: string | number) => {
@@ -446,8 +481,6 @@ export function ErpWarehouseTab() {
           queryKey: ["warehouse-vouchers", "unified"],
         });
       } else if (deleteTarget.type === "adjustment") {
-        const { inventoryAdjustmentsApi } =
-          await import("@/modules/inventory-adjustments/api/inventoryAdjustmentsApi");
         await inventoryAdjustmentsApi.delete(deleteTarget.id);
         showToast({ title: "Đã xóa phiếu điều chỉnh", variant: "success" });
         await queryClient.invalidateQueries({
@@ -471,49 +504,22 @@ export function ErpWarehouseTab() {
       {
         key: "date",
         header: renderHeaderFilter("date", t("Ngày")),
-        size: 100,
+        size: 130,
         className: "text-right",
-        headerClassName: "p-0 h-full",
-        cell: (row) => (
-          <Tooltip
-            content={formatGMT7(row.createdAt, "datetime-sec")}
-            side="top"
-          >
-            <span className="cursor-help border-b border-dotted border-gray-400">
-              {formatGMT7(row.date || row.createdAt, "date")}
-            </span>
-          </Tooltip>
-        ),
+        cell: (row) => <TableDateCell date={row.createdAt} />,
       },
       {
         key: "voucherNo",
         header: renderHeaderFilter("voucherNo", t("Số phiếu")),
-        size: 150,
+        size: 200,
         className: "font-mono text-sm text-left",
         headerClassName: "p-0 h-full",
         cell: (row) => (
           <div className="flex items-center gap-2">
-            <span
-              title={
-                row.type === "receipt"
-                  ? t("Nhập kho")
-                  : row.type === "issue"
-                    ? t("Xuất kho")
-                    : t("Điều chỉnh")
-              }
-              className="flex-shrink-0"
-            >
-              {row.type === "receipt" ? (
-                <PackagePlus className="h-4 w-4 text-emerald-600" />
-              ) : row.type === "issue" ? (
-                <PackageMinus className="h-4 w-4 text-orange-600" />
-              ) : (
-                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
-              )}
-            </span>
-            <button
-              className="font-medium text-primary hover:underline"
-              onClick={() => {
+            <TableText
+              text={row.voucherNo || ""}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
                 if (row.type === "receipt") {
                   grDrawer.openDetail(row.id);
                 } else if (row.type === "issue") {
@@ -522,9 +528,10 @@ export function ErpWarehouseTab() {
                   iaDrawer.openDetail(row.id);
                 }
               }}
-            >
-              {row.voucherNo}
-            </button>
+              tooltip={true}
+              enableCopy={true}
+              textClassName="font-medium text-primary"
+            />
           </div>
         ),
       },
@@ -573,10 +580,17 @@ export function ErpWarehouseTab() {
         cell: (row) => {
           if (row.type !== "adjustment") return "";
           const qty = Number(row.totalQty);
-          return isNaN(qty) ? (
-            ""
-          ) : (
-            <span className="font-medium text-blue-600">
+          if (isNaN(qty)) return "";
+
+          const colorClass =
+            qty > 0
+              ? "text-emerald-600"
+              : qty < 0
+                ? "text-red-600"
+                : "text-blue-600";
+          return (
+            <span className={cn("font-medium", colorClass)}>
+              {qty > 0 ? "+" : ""}
               {qty.toLocaleString("vi-VN")}
             </span>
           );
@@ -753,6 +767,8 @@ export function ErpWarehouseTab() {
             ],
           },
         ]}
+        onCreate={() => unifiedDrawer.openUnifiedCreate("receipt")}
+        createLabel={t("Tạo mới")}
         createActions={[
           {
             groupLabel: t("groupThemMoi", "Thêm mới"),
@@ -840,14 +856,8 @@ export function ErpWarehouseTab() {
         danger
       />
 
-      {/* ─── GR Drawer ──────────────────────────────────────────────────────── */}
-      <GrFormDrawer drawer={grDrawer} />
-
-      {/* ─── GI Drawer ──────────────────────────────────────────────────────── */}
-      <GiFormDrawer drawer={giDrawer} />
-
-      {/* ─── IA Drawer ──────────────────────────────────────────────────────── */}
-      <IaFormDrawer drawer={iaDrawer} />
+      {/* ─── Unified Inventory Drawer ─────────────────────────────────────────── */}
+      <InventoryVoucherDrawer unifiedDrawer={unifiedDrawer} />
 
       <div style={{ display: "none" }}>
         {printGrData && (

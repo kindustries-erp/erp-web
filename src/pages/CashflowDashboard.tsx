@@ -5,7 +5,6 @@ import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { Panel, PanelMore } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 // import { Tooltip } from "@/core/components/ui/Tooltip";
-import { Button } from "@/shared/components/ui/Button";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
@@ -21,7 +20,7 @@ import { StandardTable } from "@/shared/components/StandardTable";
 // import { EntityTagSelector } from "@/modules/tags/components/EntityTagSelector";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { CategoryTransactionsDrawer } from "./components/CategoryTransactionsDrawer";
 import { PartnerTransactionsDrawer } from "./components/PartnerTransactionsDrawer";
 
@@ -36,8 +35,9 @@ function BranchPartnerStatsTable({
   filterState: any;
   onPartnerClick: (account?: string, name?: string) => void;
 }) {
-  const page = 1;
-  const pageSize = 20;
+  const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(20);
+
   const tableState = useTableColumnState(
     `cashflow-dashboard-partners-${branchId || "all"}`,
   );
@@ -75,6 +75,9 @@ function BranchPartnerStatsTable({
       filterState.dateTo,
       filterState.custom.sourceType,
       filterState.custom.tagIds,
+      tableState.columnSearch,
+      tableState.columnFilters,
+      tableState.sorts,
     ],
     queryFn: () =>
       bankStatementApi.getPartnerStats({
@@ -85,77 +88,81 @@ function BranchPartnerStatsTable({
         branchId: branchId || undefined,
         sourceType: (filterState.custom.sourceType as any) || undefined,
         tagIds: (filterState.custom.tagIds as unknown as string[]) || undefined,
+        column_search: JSON.stringify(tableState.columnSearch),
+        column_filters: JSON.stringify(tableState.columnFilters),
+        sortBy: tableState.sorts?.[0]?.replace(/^-/, ""),
+        sortOrder: tableState.sorts?.[0]?.startsWith("-") ? "DESC" : "ASC",
       }),
   });
 
-  const partnerOptions = React.useMemo(() => {
+  const fetchPartnerOptions = async ({ search, pageParam }: any) => {
+    const res = await bankStatementApi.getPartnerStats({
+      page: pageParam,
+      pageSize: 20,
+      branchId: branchId || undefined,
+      startDate: filterState.dateFrom || undefined,
+      endDate: filterState.dateTo || undefined,
+      sourceType: (filterState.custom.sourceType as any) || undefined,
+      tagIds: (filterState.custom.tagIds as unknown as string[]) || undefined,
+      column_search: search ? JSON.stringify({ partner: search }) : undefined,
+    });
+
+    const options = new Set<string>();
+    (res.items || []).forEach((row: any) => {
+      const name = row.correspondentName || row.correspondentAccount || "Khác";
+      if (name !== "Khác") options.add(name);
+    });
+
+    return {
+      items: Array.from(options).map((o) => ({ label: o, value: o })),
+      total: res.total || 0,
+      next: res.page < (res.totalPages || 1) ? res.page + 1 : null,
+    };
+  };
+
+  const countOptions = React.useMemo(() => {
     const options = new Set<string>();
     (partnerStats?.items || []).forEach((row: any) => {
-      const name = row.correspondentName || row.correspondentAccount || "Khác";
-      options.add(name);
+      if (row.transactionCount != null)
+        options.add(row.transactionCount.toString());
     });
     return Array.from(options).map((o) => ({ label: o, value: o }));
   }, [partnerStats?.items]);
 
-  const filteredItems = React.useMemo(() => {
-    let items = partnerStats?.items || [];
+  const creditOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    (partnerStats?.items || []).forEach((row: any) => {
+      if (row.totalCredit != null && row.totalCredit > 0)
+        options.add(row.totalCredit.toString());
+    });
+    return Array.from(options).map((o) => ({
+      label: money(Number(o)),
+      value: o,
+    }));
+  }, [partnerStats?.items]);
 
-    if (tableState.columnFilters.partner?.length > 0) {
-      items = items.filter((row: any) => {
-        const name =
-          row.correspondentName || row.correspondentAccount || "Khác";
-        return tableState.columnFilters.partner.includes(name);
-      });
-    }
-
-    if (tableState.columnSearch.partner) {
-      const search = tableState.columnSearch.partner.toLowerCase();
-      items = items.filter((row: any) => {
-        const name =
-          row.correspondentName || row.correspondentAccount || "Khác";
-        return name.toLowerCase().includes(search);
-      });
-    }
-
-    if (tableState.sorts?.[0]) {
-      const sort = tableState.sorts[0];
-      const isDesc = sort.startsWith("-");
-      const key = sort.replace(/^-/, "");
-
-      items = [...items].sort((a: any, b: any) => {
-        let valA = a[key];
-        let valB = b[key];
-
-        if (key === "partner") {
-          valA = a.correspondentName || a.correspondentAccount || "Khác";
-          valB = b.correspondentName || b.correspondentAccount || "Khác";
-        } else if (key === "totalCredit" || key === "totalDebit") {
-          valA = Number(a[key]) || 0;
-          valB = Number(b[key]) || 0;
-        }
-
-        if (valA < valB) return isDesc ? 1 : -1;
-        if (valA > valB) return isDesc ? -1 : 1;
-        return 0;
-      });
-    }
-
-    return items;
-  }, [
-    partnerStats?.items,
-    tableState.columnFilters,
-    tableState.columnSearch,
-    tableState.sorts,
-  ]);
+  const debitOptions = React.useMemo(() => {
+    const options = new Set<string>();
+    (partnerStats?.items || []).forEach((row: any) => {
+      if (row.totalDebit != null && row.totalDebit > 0)
+        options.add(row.totalDebit.toString());
+    });
+    return Array.from(options).map((o) => ({
+      label: money(Number(o)),
+      value: o,
+    }));
+  }, [partnerStats?.items]);
 
   const renderHeaderFilter = (
     key: string,
     title: string,
     options?: { label: string; value: string }[],
+    fetchOptions?: any,
   ) => (
     <TableColumnHeaderFilter
       title={title}
       align="center"
+      columnKey={key}
       sortState={getSortState(key)}
       onSortChange={(state) => handleSortChange(key, state)}
       searchValue={tableState.columnSearch[key] || ""}
@@ -163,35 +170,63 @@ function BranchPartnerStatsTable({
       selectedFilters={tableState.columnFilters[key] || []}
       onFilterChange={(vals) => handleFilterChange(key, vals)}
       filterOptions={options}
+      fetchOptions={fetchOptions}
     />
   );
 
   const partnerCols = [
     {
       key: "partner",
-      header: renderHeaderFilter("partner", "Đối tác", partnerOptions),
+      header: renderHeaderFilter(
+        "partner",
+        "Đối tác",
+        undefined,
+        fetchPartnerOptions,
+      ),
       cell: (row: any) => {
         const name =
           row.correspondentName || row.correspondentAccount || "Khác";
-
         return (
-          <Button
-            variant="link"
-            onClick={(e: React.MouseEvent) => {
-              e.stopPropagation();
-              onPartnerClick(row.correspondentAccount, row.correspondentName);
-            }}
-            className="font-medium text-primary hover:underline p-0 h-auto whitespace-normal text-left"
-          >
-            {name}
-          </Button>
+          <div className="flex items-center gap-2">
+            <TableText
+              text={name}
+              className="font-medium text-slate-700 w-full"
+              onDrawerClick={(e: any) => {
+                e.stopPropagation();
+                onPartnerClick(row.correspondentAccount, row.correspondentName);
+              }}
+              tooltip={name !== "Khác"}
+              enableCopy={name !== "Khác"}
+            />
+          </div>
         );
       },
-      size: 250,
+      size: 300,
+      className: "text-left",
+      headerClassName: "text-center",
+    },
+    {
+      key: "transactionCount",
+      header: renderHeaderFilter(
+        "transactionCount",
+        "Số lượng GD",
+        countOptions,
+      ),
+      cell: (row: any) => {
+        return (
+          <TableText
+            text={row.transactionCount?.toString() || "0"}
+            className="text-center font-medium justify-center"
+          />
+        );
+      },
+      size: 150,
+      className: "text-center",
+      headerClassName: "text-center",
     },
     {
       key: "totalCredit",
-      header: "Tổng thu",
+      header: renderHeaderFilter("totalCredit", "Tổng thu", creditOptions),
       cell: (row: any) => {
         if (row.totalCredit > 0)
           return (
@@ -207,7 +242,7 @@ function BranchPartnerStatsTable({
     },
     {
       key: "totalDebit",
-      header: "Tổng chi",
+      header: renderHeaderFilter("totalDebit", "Tổng chi", debitOptions),
       cell: (row: any) => {
         if (row.totalDebit > 0)
           return (
@@ -224,38 +259,40 @@ function BranchPartnerStatsTable({
   ];
 
   const topTransactionsInTotal = React.useMemo(() => {
-    return filteredItems.reduce(
+    return (partnerStats?.items || []).reduce(
       (acc: number, row: any) => acc + (parseFloat(row.totalCredit) || 0),
       0,
     );
-  }, [filteredItems]);
+  }, [partnerStats?.items]);
 
   const topTransactionsOutTotal = React.useMemo(() => {
-    return filteredItems.reduce(
+    return (partnerStats?.items || []).reduce(
       (acc: number, row: any) => acc + (parseFloat(row.totalDebit) || 0),
       0,
     );
-  }, [filteredItems]);
+  }, [partnerStats?.items]);
 
   return (
-    <div className="mb-8">
-      <h3 className="text-lg font-semibold mb-3">
-        Top 20 đối tác nổi bật - {branchName}
+    <div className="mb-4">
+      <h3 className="text-lg font-semibold text-slate-800 mb-4 px-2">
+        Danh sách đối tác - {branchName || "Tất cả chi nhánh"}
       </h3>
       <StandardTable
-        items={filteredItems}
+        tableId="cashflow-dashboard-partners"
+        items={partnerStats?.items || []}
         columns={partnerCols}
         getRowKey={(row: any) => row.id}
         loading={isPartnerFetching}
         variant="spreadsheet"
-        minWidth={800}
+        minWidth={700}
         enableColumnResizing={true}
-        containerClassName=""
+        containerClassName="max-h-[400px]"
         total={partnerStats?.total || 0}
         totalPages={partnerStats?.totalPages || 0}
-        onRowClick={(row: any) => {
-          onPartnerClick(row.correspondentAccount, row.correspondentName);
-        }}
+        page={page}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={setPageSize}
         summaryRow={{
           partner: <span className="font-semibold text-right block">Tổng</span>,
           totalCredit: (
@@ -337,16 +374,6 @@ export function CashflowDashboard() {
   const filter = useFilterPanel(filterConfig, () => {});
 
   const queryClient = useQueryClient();
-
-  const activeBranches = React.useMemo(() => {
-    if (filter.state.custom.branchId) {
-      const b = branches.find(
-        (b: any) => b.id === filter.state.custom.branchId,
-      );
-      return b ? [b] : [];
-    }
-    return branches; // If no branch selected, return all branches
-  }, [filter.state.custom.branchId, branches]);
 
   const { data: bankAccounts = [] } = useQuery({
     queryKey: [
@@ -611,30 +638,21 @@ export function CashflowDashboard() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 min-[900px]:grid-cols-2 gap-6 mt-8 mb-4 items-start">
-        {activeBranches.length > 0 ? (
-          activeBranches.map((b: any) => (
-            <BranchPartnerStatsTable
-              key={b.id}
-              branchId={b.id}
-              branchName={b.name}
-              filterState={filter.state}
-              onPartnerClick={(account, name) => {
-                setSelectedPartner({ account, name });
-                setPartnerDrawerOpen(true);
-              }}
-            />
-          ))
-        ) : (
-          <BranchPartnerStatsTable
-            branchName="Tất cả chi nhánh"
-            filterState={filter.state}
-            onPartnerClick={(account, name) => {
-              setSelectedPartner({ account, name });
-              setPartnerDrawerOpen(true);
-            }}
-          />
-        )}
+      <div className="flex flex-col gap-6 mt-8 mb-4 items-start w-full">
+        <BranchPartnerStatsTable
+          branchId={filter.state.custom.branchId as string | undefined}
+          branchName={
+            filter.state.custom.branchId
+              ? branches.find((b: any) => b.id === filter.state.custom.branchId)
+                  ?.name || ""
+              : "Tất cả chi nhánh"
+          }
+          filterState={filter.state}
+          onPartnerClick={(account, name) => {
+            setSelectedPartner({ account, name });
+            setPartnerDrawerOpen(true);
+          }}
+        />
       </div>
       <CategoryTransactionsDrawer
         open={drawerOpen}

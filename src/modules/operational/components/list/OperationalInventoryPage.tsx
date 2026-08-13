@@ -17,7 +17,7 @@ import {
   type ErpProductionOrder,
 } from "@/modules/production-core/api/productionCoreApi";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
-import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
+
 import { useStockColumns } from "@/modules/operational/components/list/columns/stockColumns";
 import { useOperationalListStore } from "@/modules/operational/hooks/useOperationalListStore";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
@@ -27,10 +27,7 @@ import {
   type InventoryStockRow,
   operationalApi,
 } from "@/modules/operational/api/operationalApi";
-import {
-  inventoryCoreApi,
-  type InventoryMovementsPayload,
-} from "@/modules/inventory-core/api/inventoryCoreApi";
+import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { useAppQuery } from "@/shared/hooks/useAppQuery";
 import { useUIStore } from "@/core/config/uiStore";
 import type { Updater } from "@tanstack/react-table";
@@ -43,10 +40,6 @@ interface OperationalInventoryPageProps {
   totalPages: number;
   viewingItemId: string | null;
   creatingItem: boolean;
-  movLoadingId: string | null;
-  movError: string | null;
-  movMap: Record<string, InventoryMovementsPayload>;
-  onToggleInventoryExpand: (row: InventoryStockRow) => void;
   onViewItem: (id: string) => void;
   onCloseViewItem: () => void;
   onOpenCreateItem: () => void;
@@ -69,10 +62,6 @@ export function OperationalInventoryPage({
   totalPages,
   viewingItemId,
   creatingItem,
-  movLoadingId,
-  movError,
-  movMap,
-  onToggleInventoryExpand,
   onViewItem,
   onCloseViewItem,
   onOpenCreateItem,
@@ -94,7 +83,6 @@ export function OperationalInventoryPage({
     setSearchInput,
     itemTypeFilter,
     setItemTypeFilter,
-    expandedStockItemIds,
     resetAllFilters,
   } = useOperationalListStore();
 
@@ -185,25 +173,8 @@ export function OperationalInventoryPage({
   ).length;
 
   const stockColumns = useStockColumns({
-    expandedStockItemIds,
-    onToggleExpand: onToggleInventoryExpand,
     stockItems,
-  });
-
-  const expandedStockRowKeys = useMemo(
-    () =>
-      stockItems
-        .filter((row) => expandedStockItemIds[row.inventory_item_id])
-        .map((row) => `${row.inventory_item_id}-${row.branch_id || "all"}`),
-    [expandedStockItemIds, stockItems],
-  );
-
-  console.log("DEBUG INVENTORY EXPAND", {
-    expandedStockItemIds,
-    expandedStockRowKeys,
-    firstItemKey: stockItems[0]
-      ? `${stockItems[0].inventory_item_id}-${stockItems[0].branch_id || "all"}`
-      : null,
+    onViewItem,
   });
 
   const { data: itemTypesData } = useAppQuery({
@@ -346,22 +317,6 @@ export function OperationalInventoryPage({
       enableRowSelection={false}
       rowSelection={rowSelection}
       onRowSelectionChange={onRowSelectionChange}
-      expandedRowKeys={expandedStockRowKeys}
-      renderSubRow={(row: InventoryStockRow) => (
-        <InventoryTimelineBlock
-          itemId={row.inventory_item_id}
-          loadingId={movLoadingId}
-          error={movError}
-          data={movMap[row.inventory_item_id]}
-          onOpenDocument={(docId, docType) => {
-            if (docType === "GOODS_RECEIPT") {
-              void grDrawer.openDetail(docId, true);
-            } else if (docType === "GOODS_ISSUE") {
-              void giDrawer.openDetail(docId, true);
-            }
-          }}
-        />
-      )}
       sortArray={tableState.sorts.length > 0 ? tableState.sorts : undefined}
       onSort={(key: string) => {
         tableState.toggleSort(key);
@@ -464,6 +419,15 @@ export function OperationalInventoryPage({
         itemId={viewingItemId}
         viewOnly={!!viewingItemId}
         onSuccess={onRefetch}
+        onOpenDocument={(docId, docType) => {
+          if (docType === "GOODS_RECEIPT") {
+            void grDrawer.openDetail(docId, true);
+          } else if (docType === "GOODS_ISSUE") {
+            void giDrawer.openDetail(docId, true);
+          } else if (docType === "PRODUCTION_ORDER") {
+            void openPoDetail(docId);
+          }
+        }}
       />
       <ConnectionGraphDrawer
         open={graphOpen}

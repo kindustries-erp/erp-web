@@ -9,6 +9,7 @@ const THEME_OPTIONS: { value: AppTheme; labelKey: string }[] = [
   { value: "classic", labelKey: "nav.bottom.themeClassic" },
   { value: "shell", labelKey: "nav.bottom.themeShell" },
   { value: "orcaq", labelKey: "nav.bottom.themeOrca" },
+  { value: "midnight", labelKey: "nav.bottom.themeMidnight" },
 ];
 
 const LOCALE_OPTIONS: { value: "vi" | "en"; label: string }[] = [

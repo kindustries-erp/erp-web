@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { PageKey } from "@/shared/types";
 import { cn } from "@/shared/utils";
@@ -31,8 +31,9 @@ export function SubItem({
     <div
       className={cn(
         "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden",
-        "text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground",
-        active && "!text-foreground font-medium",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-surface-hover hover:text-foreground",
+        active &&
+          "!text-[color:var(--sidebar-active-fg)] font-semibold opacity-100 bg-[color:var(--sidebar-active-bg)]",
       )}
       onClick={onClick}
       onContextMenu={pageKey ? onContextMenu : undefined}
@@ -93,9 +94,10 @@ export function NavItem({
     <Tooltip content={label} disabled={!collapsed}>
       <div
         className={cn(
-          "flex items-center gap-2 px-[14px] py-[7px] cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px]",
-          "text-[color:var(--muted-fg)] hover:bg-surface-hover",
-          active && "bg-[color:var(--muted)] text-foreground font-medium",
+          "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md cursor-pointer whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
+          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
+          active &&
+            "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -145,11 +147,12 @@ export function NavGroup({
   const triggerContent = (
     <div
       className={cn(
-        "flex items-center gap-2 px-[14px] py-[7px] whitespace-nowrap overflow-hidden min-h-[34px]",
-        "text-[color:var(--muted-fg)]",
-        active && "text-foreground font-medium",
+        "flex items-center gap-2 mx-2 px-2 py-[7px] rounded-md whitespace-nowrap overflow-hidden min-h-[34px] transition-colors",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100",
         !isMobile &&
-          "hover:bg-surface-hover hover:text-foreground cursor-pointer outline-none select-none",
+          "hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground cursor-pointer outline-none select-none",
+        active &&
+          "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
       )}
     >
       <span className="nav-icon flex-shrink-0">{icon}</span>
@@ -234,9 +237,9 @@ export function NavGroupItem({
       <DropdownMenu.Item
         className={cn(
           "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm cursor-pointer outline-none select-none transition-colors",
-          "text-[color:var(--muted-fg)] hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)] hover:text-foreground data-[highlighted]:text-foreground",
+          "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] data-[highlighted]:bg-[color:var(--popup-bg-hover)] hover:text-foreground data-[highlighted]:text-foreground",
           active &&
-            "!text-foreground font-medium bg-[color:var(--muted)] data-[highlighted]:bg-[color:var(--muted)]",
+            "!text-foreground font-semibold opacity-100 bg-black/5 dark:bg-white/10 data-[highlighted]:bg-black/10 dark:data-[highlighted]:bg-white/15",
         )}
         onClick={onClick}
         onContextMenu={contextPage ? onContextMenu : undefined}
@@ -257,14 +260,57 @@ export function NavGroupItem({
   return (
     <div
       className={cn(
-        "py-[6px] pl-3 pr-4 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-r-md",
-        "text-[color:var(--muted-fg)] hover:bg-surface-hover hover:text-foreground",
-        active && "!text-foreground font-medium bg-[color:var(--muted)]",
+        "py-[6px] mx-2 px-2 cursor-pointer text-[12px] whitespace-nowrap overflow-hidden rounded-md transition-colors",
+        "text-[color:var(--muted-fg)] opacity-75 hover:opacity-100 hover:bg-[color:var(--popup-bg-hover)] hover:text-foreground",
+        active &&
+          "!text-foreground font-semibold opacity-100 bg-black/[0.03] dark:bg-white/10",
       )}
       onClick={onClick}
       onContextMenu={contextPage ? onContextMenu : undefined}
     >
       {label}
+    </div>
+  );
+}
+
+// ── Nav section ──
+export function NavSection({
+  label,
+  collapsed,
+  children,
+}: {
+  label?: string;
+  collapsed?: boolean;
+  children: ReactNode;
+}) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  if (!label) {
+    return <div className="sidebar-nav-section py-2">{children}</div>;
+  }
+
+  return (
+    <div className="sidebar-nav-section py-2">
+      <div
+        className="sidebar-label-el px-4 pt-2 pb-1 text-[11px] font-semibold text-[color:var(--sidebar-label)] uppercase tracking-[0.08em] mb-[2px] whitespace-nowrap flex items-center justify-between cursor-pointer hover:text-[color:var(--sidebar-active-fg)] transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <span>{label}</span>
+        <span
+          className={cn(
+            "nav-arrow-el ml-auto text-[10px] text-[color:var(--sidebar-label)] opacity-70 flex-shrink-0 transition-transform duration-200 hide-on-collapse",
+            isExpanded && "rotate-90",
+          )}
+        >
+          <IconChevronRight />
+        </span>
+      </div>
+      <div
+        className="grid transition-[grid-template-rows] duration-200 ease-in-out"
+        style={{ gridTemplateRows: isExpanded || collapsed ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">{children}</div>
+      </div>
     </div>
   );
 }

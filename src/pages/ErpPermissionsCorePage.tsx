@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Shield, PlusCircle, Settings, Trash } from "lucide-react";
 import { useUIStore } from "@/core/config/uiStore";
 import { useT } from "@/core/i18n";
 import { ConfirmModal } from "@/shared/components/ConfirmModal";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { type DataTableColumn } from "@/shared/components/DataTable";
+import { TableText } from "@/shared/components/DataTable/TableText";
 import { Badge } from "@/shared/components/ui/badge";
 import { useCoreRoles } from "@/modules/system/hooks/useCoreRoles";
 import { useCorePermissionsEditor } from "@/modules/system/hooks/useCorePermissionsEditor";
@@ -45,6 +46,7 @@ export function ErpPermissionsCorePage() {
   } = useCoreRoles();
 
   const {
+    initialPermMap,
     permMap,
     resources,
     loading: permLoading,
@@ -64,6 +66,7 @@ export function ErpPermissionsCorePage() {
   } = useCorePermissionsEditor();
 
   const {
+    initialSelectedIds,
     selectedIds: selectedUserIds,
     setSelectedIds: setSelectedUserIds,
     allUsers,
@@ -189,16 +192,18 @@ export function ErpPermissionsCorePage() {
       {
         key: "name",
         header: t("rbac.headers.name"),
-        cell: (role) => role.name,
-        className: "font-medium text-foreground whitespace-nowrap text-left",
+        cell: (role) => (
+          <TableText text={role.name} onDrawerClick={() => openEdit(role)} />
+        ),
+        className: "whitespace-nowrap text-left px-4",
         headerClassName: "text-center",
       },
       {
         key: "description",
         header: t("rbac.headers.description"),
+        size: 250,
         cell: (role) => role.description || "—",
-        className:
-          "text-[color:var(--muted-fg)] max-w-[300px] truncate text-left",
+        className: "text-[color:var(--muted-fg)] truncate text-left",
         headerClassName: "text-center",
       },
       {
@@ -301,6 +306,8 @@ export function ErpPermissionsCorePage() {
         saveError={saveError}
         onClose={handleClose}
         onSave={handleSave}
+        initialPermMap={initialPermMap}
+        initialSelectedUserIds={initialSelectedIds}
         resources={resources}
         permMap={permMap}
         permLoading={permLoading}

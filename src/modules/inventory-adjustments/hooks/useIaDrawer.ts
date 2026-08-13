@@ -17,6 +17,7 @@ import { useMemo } from "react";
 export interface IaLineForm {
   id?: string;
   itemId: string;
+  itemCode?: string;
   itemName?: string;
   qtyAdjusted: string;
   unitCost: string;
@@ -29,12 +30,16 @@ export interface IaForm {
   lines: IaLineForm[];
 }
 
+export function emptyIaLine(): IaLineForm {
+  return { itemId: "", qtyAdjusted: "", unitCost: "" };
+}
+
 export function emptyIaForm(): IaForm {
   return {
     adjustmentNo: "",
     adjustmentDate: new Date().toISOString().slice(0, 10),
     remarks: "",
-    lines: [],
+    lines: [emptyIaLine()],
   };
 }
 
@@ -47,6 +52,7 @@ export function buildIaForm(adj: IaHeaderDto): IaForm {
       adj.lines?.map((line) => ({
         id: line.id,
         itemId: line.itemId ?? "",
+        itemCode: "",
         qtyAdjusted: line.qtyAdjusted?.toString() ?? "0",
         unitCost: line.unitCost?.toString() ?? "0",
       })) ?? [],
@@ -111,7 +117,9 @@ export function useIaDrawer({
       itemsData?.pages.flatMap((p) =>
         (p.items.inventoryItems || []).map((i: any) => ({
           value: i.id,
-          label: `${i.sku} — ${i.itemName}`,
+          label: i.sku,
+          searchText: `${i.sku} ${i.itemName}`,
+          _itemName: i.itemName,
         })),
       ) || []
     );
@@ -270,4 +278,10 @@ export function useIaDrawer({
   };
 }
 
-export type UseIaDrawerReturn = ReturnType<typeof useIaDrawer>;
+export type UseIaDrawerReturn = ReturnType<typeof useIaDrawer> & {
+  unifiedContext?: {
+    type: "receipt" | "issue" | "adjustment";
+    setType: (t: "receipt" | "issue" | "adjustment") => void;
+    mode: "create" | "view" | "edit";
+  };
+};

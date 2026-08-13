@@ -23,6 +23,7 @@ export interface SpreadsheetPageTemplateProps<T> {
   error?: string | null;
   emptyLabel?: string;
   minWidth?: number;
+  actionColumnSize?: number;
 
   // --- Pagination ---
   page: number;
@@ -63,6 +64,7 @@ export interface SpreadsheetPageTemplateProps<T> {
 
   // --- Drawers / Modals ---
   children?: ReactNode;
+  topNode?: ReactNode;
 
   // --- Row Interaction ---
   onRowClick?: (row: T) => void;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/shared/utils";
 import { useT } from "@/core/i18n";
+import { X } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { ConfirmModal } from "./ConfirmModal";
 
@@ -54,6 +55,12 @@ export interface DrawerModalProps {
   /** Optional classes for special drawer layouts */
   panelClassName?: string;
   bodyClassName?: string;
+
+  /** When true, skip slide-in/out animation (instant show/hide). Useful for inline type switching. */
+  noAnimation?: boolean;
+
+  /** Custom element to render on the left side of the footer */
+  footerLeft?: React.ReactNode;
 }
 
 // ── Btn helper ─────────────────────────────────────────────────────────────
@@ -110,6 +117,8 @@ export function DrawerModal({
   stackOffset,
   panelClassName,
   bodyClassName,
+  noAnimation = false,
+  footerLeft,
 }: DrawerModalProps) {
   const t = useT();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -122,19 +131,27 @@ export function DrawerModal({
   useEffect(() => {
     if (open) {
       setMounted(true);
-      // Trigger enter animation on next frame after portal is in DOM
-      requestAnimationFrame(() => {
+      if (noAnimation) {
+        setVisible(true);
+      } else {
+        // Trigger enter animation on next frame after portal is in DOM
         requestAnimationFrame(() => {
-          setVisible(true);
+          requestAnimationFrame(() => {
+            setVisible(true);
+          });
         });
-      });
+      }
     } else {
       setVisible(false);
-      // Wait for exit animation before unmounting
-      const timer = setTimeout(() => setMounted(false), 280);
-      return () => clearTimeout(timer);
+      if (noAnimation) {
+        setMounted(false);
+      } else {
+        // Wait for exit animation before unmounting
+        const timer = setTimeout(() => setMounted(false), 280);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [open]);
+  }, [open, noAnimation]);
 
   const [instanceId] = useState(() => {
     drawerStackSeq += 1;
@@ -224,9 +241,9 @@ export function DrawerModal({
             variant="ghost"
             size="icon-sm"
             onClick={requestClose}
-            className="ml-1 text-[color:var(--faint)] text-xl leading-none"
+            className="text-[color:var(--faint)]"
           >
-            ×
+            <X className="w-4 h-4" />
           </Button>
         </div>
 
@@ -242,19 +259,20 @@ export function DrawerModal({
         </div>
 
         {/* ── Footer ── */}
-        {actions && actions.length > 0 && (
+        {(footerLeft || (actions && actions.length > 0)) && (
           <div
             className="mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 flex-shrink-0"
             style={{
-              background: "rgba(249,251,255,0.82)",
+              background: "var(--drawer-footer-bg, rgba(249,251,255,0.82))",
               backdropFilter: "blur(16px)",
               WebkitBackdropFilter: "blur(16px)",
             }}
           >
-            {/* Left-aligned actions */}
-            <div className="flex gap-2 flex-1 min-w-0">
+            {/* Left-aligned actions or custom footerLeft */}
+            <div className="flex gap-2 flex-1 min-w-0 items-center">
+              {footerLeft}
               {actions
-                .filter((a) => a.align === "left")
+                ?.filter((a) => a.align === "left")
                 .map((a) => (
                   <Btn key={a.label} action={a} />
                 ))}
@@ -262,7 +280,7 @@ export function DrawerModal({
             {/* Right-aligned actions (default) */}
             <div className="flex gap-2">
               {actions
-                .filter((a) => a.align !== "left")
+                ?.filter((a) => a.align !== "left")
                 .map((a) => (
                   <Btn key={a.label} action={a} />
                 ))}

@@ -9,12 +9,11 @@ import {
   purchaseOrdersCoreApi,
   type ErpPoReceipt,
 } from "@/modules/purchase-orders-core/api/purchaseOrdersCoreApi";
-import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
-import { getPaymentVouchersPagedApi } from "@/modules/finance/api/financeApi";
 import { extractApiError } from "@/shared/utils/apiError";
-import { today } from "@/shared/utils/format";
 import { usePurchaseOrderList } from "./usePurchaseOrderList";
 import { usePurchaseOrderGraph } from "./usePurchaseOrderGraph";
+
+import { useOperationalFlowStore } from "@/modules/operational/hooks/useOperationalFlowStore";
 
 export function usePurchaseOrderPage() {
   const t = useT();
@@ -60,16 +59,11 @@ export function usePurchaseOrderPage() {
 
   const {
     rootDocument,
-    rootDocumentType,
-    settlementForm,
-    setRootContext,
     setActiveStep,
-    setSettlementState,
     setPostingState,
     activeStep,
     postingLineForms,
     resetFlow,
-    setDetailState,
   } = useOperationalFlowStore();
 
   const openDetail = useCallback(
@@ -155,8 +149,8 @@ export function usePurchaseOrderPage() {
     try {
       await operationalApi.postPurchaseReceipt(rootDocument.id, {
         receipt_lines: postingLineForms
-          .filter((l) => l.requested_qty > 0)
-          .map((l) => ({
+          .filter((l: any) => l.requested_qty > 0)
+          .map((l: any) => ({
             line_id: l.line_id,
             qty: l.requested_qty,
           })),
@@ -177,172 +171,6 @@ export function usePurchaseOrderPage() {
     showToast,
     t,
   ]);
-
-  const openSettlement = useCallback(
-    async (row: OperationalDocument) => {
-      setRootContext(row, "purchase_orders");
-      setActiveStep("settlement");
-      setSettlementState({
-        settlementError: null,
-        settlementForm: {
-          payment_voucher_id: "",
-          applied_date: today(),
-          applied_amount: Number(row.open_amount || 0),
-          notes: "",
-        },
-        voucherLoading: true,
-        paymentLinks: [],
-        voucherOptions: [],
-      });
-      try {
-        const [links, vouchers] = await Promise.all([
-          operationalApi.listPaymentLinks("purchase_orders", row.id),
-          getPaymentVouchersPagedApi({
-            page: 1,
-            pageSize: 100,
-            status: "APPROVED",
-            voucher_direction: "OUT",
-            counterparty_id:
-              typeof row.supplier_id === "string" ? row.supplier_id : undefined,
-            sort: ["-document_date"],
-          }),
-        ]);
-        setSettlementState({
-          paymentLinks: links,
-          voucherOptions: vouchers.items ?? [],
-        });
-      } catch (err) {
-        setSettlementState({
-          settlementError: extractApiError(
-            err,
-            t("Không tải được dữ liệu cấn trừ"),
-          ),
-          paymentLinks: [],
-          voucherOptions: [],
-        });
-      } finally {
-        setSettlementState({ voucherLoading: false });
-      }
-    },
-    [setRootContext, setActiveStep, setSettlementState, t],
-  );
-
-  const closeSettlement = useCallback(() => {
-    resetFlow();
-  }, [resetFlow]);
-
-  const refreshSettlementData = useCallback(async () => {
-    if (!rootDocument || !rootDocumentType) return;
-    const [document, links] = await Promise.all([
-      operationalApi.getDocument(rootDocumentType, rootDocument.id),
-      operationalApi.listPaymentLinks(rootDocumentType, rootDocument.id),
-    ]);
-    setRootContext(document, rootDocumentType);
-    setDetailState({ detailDocument: document });
-    setSettlementState({ paymentLinks: links });
-  }, [
-    rootDocument,
-    rootDocumentType,
-    setRootContext,
-    setDetailState,
-    setSettlementState,
-  ]);
-
-  const saveSettlement = useCallback(async () => {
-    if (!rootDocument || !rootDocumentType) return;
-    if (!settlementForm.payment_voucher_id) {
-      setSettlementState({
-        settlementError: t("Vui lòng chọn phiếu dòng tiền."),
-      });
-      return;
-    }
-    if (settlementForm.applied_amount <= 0) {
-      setSettlementState({
-        settlementError: t("Số tiền cấn trừ phải lớn hơn 0."),
-      });
-      return;
-    }
-    setSettlementState({ settlementLoading: true, settlementError: null });
-    try {
-      await operationalApi.createPaymentLink({
-        document_type: rootDocumentType,
-        document_id: rootDocument.id,
-        payment_voucher_id: settlementForm.payment_voucher_id,
-        applied_amount: settlementForm.applied_amount,
-        applied_date: settlementForm.applied_date,
-        notes: settlementForm.notes || undefined,
-      });
-      await refreshSettlementData();
-      await listData.listQuery.refetch();
-      showToast({
-        title: t("Đã liên kết phiếu dòng tiền"),
-        variant: "success",
-      });
-      setSettlementState({
-        settlementForm: {
-          ...settlementForm,
-          payment_voucher_id: "",
-          notes: "",
-        },
-      });
-    } catch (err) {
-      setSettlementState({
-        settlementError: extractApiError(
-          err,
-          t("Liên kết thanh toán thất bại"),
-        ),
-      });
-    } finally {
-      setSettlementState({ settlementLoading: false });
-    }
-  }, [
-    rootDocument,
-    rootDocumentType,
-    settlementForm,
-    refreshSettlementData,
-    listData.listQuery,
-    showToast,
-    setSettlementState,
-    t,
-  ]);
-
-  const removePaymentLink = useCallback(
-    async (linkId: string) => {
-      if (!rootDocument || !rootDocumentType) return;
-      setSettlementState({ settlementLoading: true, settlementError: null });
-      try {
-        await operationalApi.deletePaymentLink(
-          rootDocumentType,
-          rootDocument.id,
-          linkId,
-        );
-        await refreshSettlementData();
-        await listData.listQuery.refetch();
-        showToast({
-          title: t("Đã gỡ liên kết thanh toán"),
-          variant: "success",
-        });
-      } catch (err) {
-        setSettlementState({
-          settlementError: extractApiError(
-            err,
-            t("Không gỡ được liên kết thanh toán"),
-          ),
-        });
-      } finally {
-        setSettlementState({ settlementLoading: false });
-      }
-    },
-    [
-      rootDocument,
-      rootDocumentType,
-      refreshSettlementData,
-      listData.listQuery,
-      showToast,
-      setSettlementState,
-      t,
-    ],
-  );
 
   const handleCreateNew = useCallback(() => {
     setEditingRow(null);
@@ -422,10 +250,6 @@ export function usePurchaseOrderPage() {
     handleInventoryPostingSubmit,
     closeInventoryPosting,
     inventoryPostingOpen: activeStep === "posting",
-    openSettlement,
-    closeSettlement,
-    saveSettlement,
-    removePaymentLink,
     handleCreateNew,
     handleCloseForm,
     handleToggleEdit,

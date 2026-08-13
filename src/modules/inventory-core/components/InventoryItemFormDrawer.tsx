@@ -18,7 +18,9 @@ import {
   type CreateInventoryItemPayload,
   type ErpInventoryItem,
   type InventoryMasterOption,
+  type InventoryMovementsPayload,
 } from "@/modules/inventory-core/api/inventoryCoreApi";
+import { InventoryTimelineBlock } from "@/modules/operational/components/list/InventoryTimelineBlock";
 
 interface ItemForm {
   sku: string;
@@ -91,6 +93,7 @@ export function InventoryItemFormDrawer({
   onSuccess,
   viewOnly: initialViewOnly = false,
   onToggleEdit,
+  onOpenDocument,
 }: {
   open: boolean;
   onClose: () => void;
@@ -98,6 +101,7 @@ export function InventoryItemFormDrawer({
   onSuccess?: () => void;
   viewOnly?: boolean;
   onToggleEdit?: () => void;
+  onOpenDocument?: (docId: string, docType: string) => void;
 }) {
   const t = useT();
   const showToast = useUIStore((s) => s.showToast);
@@ -108,6 +112,11 @@ export function InventoryItemFormDrawer({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [movData, setMovData] = useState<InventoryMovementsPayload | undefined>(
+    undefined,
+  );
+  const [movLoading, setMovLoading] = useState(false);
+  const [movError, setMovError] = useState<string | null>(null);
 
   const [uomOptions, setUomOptions] = useState<
     Array<{ value: string; label: string }>
@@ -164,6 +173,8 @@ export function InventoryItemFormDrawer({
       setEditing(null);
       setForm(emptyForm());
       setSaveError(null);
+      setMovData(undefined);
+      setMovError(null);
       return;
     }
     setViewOnly(initialViewOnly);
@@ -186,7 +197,22 @@ export function InventoryItemFormDrawer({
     } else {
       setEditing(null);
       setForm(emptyForm());
+      setMovData(undefined);
+      setMovError(null);
     }
+  }, [open, itemId]);
+
+  useEffect(() => {
+    if (!open || !itemId) return;
+    setMovLoading(true);
+    setMovError(null);
+    inventoryCoreApi
+      .movements(itemId)
+      .then((data) => setMovData(data))
+      .catch((e) =>
+        setMovError(e instanceof Error ? e.message : "Lỗi tải lịch sử"),
+      )
+      .finally(() => setMovLoading(false));
   }, [open, itemId]);
 
   async function handleSave() {
@@ -251,8 +277,30 @@ export function InventoryItemFormDrawer({
       }
       subtitle={editing ? editing.sku : "Danh mục item kho dùng chung"}
       actions={drawerActions}
-      layout="1-column"
+      layout="2-columns"
+      size="xl"
+      collapsibleRightPanel={true}
       leftPanel={
+        <div className="flex flex-col h-full rounded-lg overflow-hidden">
+          <InventoryTimelineBlock
+            itemId={itemId || "new"}
+            loadingId={movLoading && itemId ? itemId : null}
+            error={movError}
+            data={
+              itemId
+                ? movData
+                : {
+                    item: {} as any,
+                    currentOnHand: 0,
+                    movements: [],
+                  }
+            }
+            onOpenDocument={onOpenDocument}
+            containerClassName="max-h-[calc(100vh-140px)] overflow-y-auto"
+          />
+        </div>
+      }
+      rightPanel={
         <>
           {saveError && (
             <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
@@ -262,169 +310,184 @@ export function InventoryItemFormDrawer({
 
           {loading ? (
             <DrawerSection title="Thông tin item kho">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="flex flex-col gap-3">
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
                 <Skeleton className="h-10 w-full" />
-                <div className="md:col-span-2">
+                <div className="w-full">
                   <Skeleton className="h-20 w-full" />
                 </div>
               </div>
             </DrawerSection>
           ) : (
-            <DrawerSection title="Thông tin item kho">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <DrawerField label="SKU" required>
-                  <input
-                    value={form.sku}
-                    disabled={viewOnly || !!editing}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, sku: e.target.value }))
-                    }
-                    className={inputCls}
-                    placeholder="VD: FG-001"
-                  />
-                </DrawerField>
+            <>
+              <DrawerSection title="Thông tin item kho">
+                <div className="flex flex-col gap-3">
+                  <DrawerField label="SKU" required>
+                    <input
+                      value={form.sku}
+                      disabled={viewOnly || !!editing}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, sku: e.target.value }))
+                      }
+                      className={inputCls}
+                      placeholder="VD: FG-001"
+                    />
+                  </DrawerField>
 
-                <DrawerField label="Tên item kho" required>
-                  <input
-                    value={form.itemName}
-                    disabled={viewOnly}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, itemName: e.target.value }))
-                    }
-                    className={inputCls}
-                    placeholder="Tên đầy đủ của item kho"
-                  />
-                </DrawerField>
+                  <DrawerField label="Tên item kho" required>
+                    <input
+                      value={form.itemName}
+                      disabled={viewOnly}
+                      onChange={(e) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          itemName: e.target.value,
+                        }))
+                      }
+                      className={inputCls}
+                      placeholder="Tên đầy đủ của item kho"
+                    />
+                  </DrawerField>
 
-                <DrawerField label="Đơn vị tính (ĐVT)" required>
-                  <Combobox
-                    value={form.uomId}
-                    disabled={viewOnly}
-                    allowClear={false}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        uomId: value || form.uomId,
-                      }))
-                    }
-                    options={uomOptions}
-                    placeholder="Chọn ĐVT"
-                  />
-                </DrawerField>
+                  <DrawerField label="Đơn vị tính (ĐVT)" required>
+                    <Combobox
+                      value={form.uomId}
+                      disabled={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          uomId: value || form.uomId,
+                        }))
+                      }
+                      options={uomOptions}
+                      placeholder="Chọn ĐVT"
+                    />
+                  </DrawerField>
 
-                <DrawerField label="Loại item">
-                  <Combobox
-                    value={form.itemTypeId}
-                    disabled={viewOnly}
-                    allowClear={false}
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        itemTypeId: value || form.itemTypeId,
-                      }))
-                    }
-                    options={itemTypeOptions}
-                    placeholder="Chọn loại"
-                  />
-                </DrawerField>
+                  <DrawerField label="Loại item">
+                    <Combobox
+                      value={form.itemTypeId}
+                      disabled={viewOnly}
+                      allowClear={false}
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          itemTypeId: value || form.itemTypeId,
+                        }))
+                      }
+                      options={itemTypeOptions}
+                      placeholder="Chọn loại"
+                    />
+                  </DrawerField>
 
-                <DrawerField label="Tracking policy">
-                  <Combobox
-                    value={form.trackingPolicyId}
-                    disabled={viewOnly}
-                    allowClear
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        trackingPolicyId: value || "",
-                        // Clear category when policy changes
-                        trackingCategoryId: value
-                          ? prev.trackingCategoryId
-                          : "",
-                      }))
-                    }
-                    options={trackingPolicyOptions}
-                    placeholder="Chọn chính sách tracking"
-                  />
-                </DrawerField>
+                  <DrawerField label="Tracking policy">
+                    <Combobox
+                      value={form.trackingPolicyId}
+                      disabled={viewOnly}
+                      allowClear
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          trackingPolicyId: value || "",
+                          // Clear category when policy changes
+                          trackingCategoryId: value
+                            ? prev.trackingCategoryId
+                            : "",
+                        }))
+                      }
+                      options={trackingPolicyOptions}
+                      placeholder="Chọn chính sách tracking"
+                    />
+                  </DrawerField>
 
-                <DrawerField label="Tracking category">
-                  <Combobox
-                    value={form.trackingCategoryId}
-                    disabled={viewOnly}
-                    allowClear
-                    onChange={(value) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        trackingCategoryId: value || "",
-                      }))
-                    }
-                    options={trackingCategoryOptions}
-                    placeholder="Chọn nhóm tracking"
-                  />
-                </DrawerField>
-
-                <div className="md:col-span-2">
-                  <DrawerField
-                    label={t("inventoryMasters.attributes.label", "Thuộc tính")}
-                  >
-                    <div className="flex flex-wrap gap-4 mt-2">
-                      {[
-                        {
-                          value: "CAN_BE_SOLD",
-                          label: t(
-                            "inventoryMasters.attributes.CAN_BE_SOLD",
-                            "Có thể bán",
-                          ),
-                        },
-                        {
-                          value: "CAN_BE_PURCHASED",
-                          label: t(
-                            "inventoryMasters.attributes.CAN_BE_PURCHASED",
-                            "Có thể mua",
-                          ),
-                        },
-                        {
-                          value: "CAN_BE_MANUFACTURED",
-                          label: t(
-                            "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
-                            "Có thể sản xuất",
-                          ),
-                        },
-                      ].map((attr) => (
-                        <label
-                          key={attr.value}
-                          className="flex items-center space-x-2 cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={form.attributes.includes(attr.value)}
-                            disabled={viewOnly}
-                            onCheckedChange={(checked) => {
-                              setForm((prev) => ({
-                                ...prev,
-                                attributes: checked
-                                  ? [...prev.attributes, attr.value]
-                                  : prev.attributes.filter(
-                                      (a) => a !== attr.value,
-                                    ),
-                              }));
-                            }}
-                          />
-                          <span className="text-sm font-medium text-foreground">
-                            {attr.label}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+                  <DrawerField label="Tracking category">
+                    <Combobox
+                      value={form.trackingCategoryId}
+                      disabled={viewOnly}
+                      allowClear
+                      onChange={(value) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          trackingCategoryId: value || "",
+                        }))
+                      }
+                      options={trackingCategoryOptions}
+                      placeholder="Chọn nhóm tracking"
+                    />
                   </DrawerField>
                 </div>
+              </DrawerSection>
 
-                <div className="md:col-span-2">
-                  <DrawerField label="Ghi chú">
+              <DrawerSection
+                title={t("inventoryMasters.attributes.label", "Thuộc tính")}
+              >
+                <div className="flex flex-wrap gap-4 mt-2">
+                  {[
+                    {
+                      value: "CAN_BE_SOLD",
+                      label: t(
+                        "inventoryMasters.attributes.CAN_BE_SOLD",
+                        "Có thể bán",
+                      ),
+                    },
+                    {
+                      value: "CAN_BE_PURCHASED",
+                      label: t(
+                        "inventoryMasters.attributes.CAN_BE_PURCHASED",
+                        "Có thể mua",
+                      ),
+                    },
+                    {
+                      value: "CAN_BE_MANUFACTURED",
+                      label: t(
+                        "inventoryMasters.attributes.CAN_BE_MANUFACTURED",
+                        "Có thể sản xuất",
+                      ),
+                    },
+                  ].map((attr) => (
+                    <label
+                      key={attr.value}
+                      className="flex items-center space-x-2 cursor-pointer"
+                    >
+                      <Checkbox
+                        checked={form.attributes.includes(attr.value)}
+                        disabled={viewOnly}
+                        onCheckedChange={(checked) => {
+                          setForm((prev) => ({
+                            ...prev,
+                            attributes: checked
+                              ? [...prev.attributes, attr.value]
+                              : prev.attributes.filter((a) => a !== attr.value),
+                          }));
+                        }}
+                      />
+                      <span className="text-sm font-medium text-foreground">
+                        {attr.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </DrawerSection>
+
+              {viewOnly ? (
+                <DrawerSection title="Ghi chú">
+                  {form.note ? (
+                    <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                      {form.note}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Không có ghi chú.
+                    </p>
+                  )}
+                </DrawerSection>
+              ) : (
+                <DrawerSection title="Ghi chú">
+                  <div className="mt-1">
                     <textarea
                       value={form.note}
                       disabled={viewOnly}
@@ -434,10 +497,10 @@ export function InventoryItemFormDrawer({
                       className={`${inputCls} min-h-[80px] resize-y`}
                       placeholder="Ghi chú thêm về item kho này..."
                     />
-                  </DrawerField>
-                </div>
-              </div>
-            </DrawerSection>
+                  </div>
+                </DrawerSection>
+              )}
+            </>
           )}
         </>
       }

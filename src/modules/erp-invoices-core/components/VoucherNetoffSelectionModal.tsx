@@ -12,8 +12,16 @@ import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSelect: (selectedVouchers: { id: string; amount: number }[]) => void;
+  onSelect: (
+    selectedVouchers: {
+      id: string;
+      amount: number;
+      maxAmount?: number;
+      txn?: any;
+    }[],
+  ) => void;
   existingVoucherIds?: string[];
+  excludeTxnIds?: string[];
 }
 
 function NetOffInput({
@@ -55,16 +63,21 @@ export function VoucherNetoffSelectionModal({
   onClose,
   onSelect,
   existingVoucherIds = [],
+  excludeTxnIds = [],
 }: Props) {
   const { t } = useTranslation("erpInvoices");
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    existingVoucherIds || [],
+  );
   const [netOffAmounts, setNetOffAmounts] = useState<Record<string, number>>(
     {},
   );
+  const [maxAmounts, setMaxAmounts] = useState<Record<string, number>>({});
+  const [selectedTxns, setSelectedTxns] = useState<Record<string, any>>({});
 
   const tableState = useTableColumnState(`voucher-netoff-selection-table`);
   const sortBy = tableState.sorts[0]?.replace("-", "") || "transDate";
@@ -97,15 +110,24 @@ export function VoucherNetoffSelectionModal({
     enabled: open,
   });
 
-  const vouchers = (data?.items || []).filter(
-    (v: any) => !existingVoucherIds.includes(v.id),
-  );
+  const vouchers = (data?.items || []).filter((v: any) => {
+    if (existingVoucherIds.includes(v.id)) return false;
+    if (excludeTxnIds.includes(v.id)) return false;
+    const credit = parseFloat(v.creditAmount) || 0;
+    const debit = parseFloat(v.debitAmount) || 0;
+    const amount = credit > 0 ? credit : debit;
+    const netOff = parseFloat(v.netOffAmount) || 0;
+    const remaining = amount - netOff;
+    return remaining > 0;
+  });
 
   // Clear selections when modal closes or opens
   useEffect(() => {
     if (open) {
       setSelectedIds([]);
       setNetOffAmounts({});
+      setMaxAmounts({});
+      setSelectedTxns({});
     }
   }, [open]);
 
@@ -122,9 +144,21 @@ export function VoucherNetoffSelectionModal({
         ...prev,
         [v.id]: remaining > 0 ? remaining : 0,
       }));
+      setMaxAmounts((prev) => ({ ...prev, [v.id]: remaining }));
+      setSelectedTxns((prev) => ({ ...prev, [v.id]: v }));
     } else {
       setSelectedIds((prev) => prev.filter((id) => id !== v.id));
       setNetOffAmounts((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+      setMaxAmounts((prev) => {
+        const next = { ...prev };
+        delete next[v.id];
+        return next;
+      });
+      setSelectedTxns((prev) => {
         const next = { ...prev };
         delete next[v.id];
         return next;
@@ -141,6 +175,8 @@ export function VoucherNetoffSelectionModal({
       selectedIds.map((id) => ({
         id,
         amount: netOffAmounts[id] || 0,
+        maxAmount: maxAmounts[id],
+        txn: selectedTxns[id],
       })),
     );
     onClose();
