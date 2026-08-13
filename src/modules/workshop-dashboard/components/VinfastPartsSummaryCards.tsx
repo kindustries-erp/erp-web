@@ -1,10 +1,9 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { KpiSection } from "./KpiSection";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
-import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 import { money } from "@/shared/utils/format";
 import { workshopDashboardApi } from "../api/workshopDashboardApi";
 
@@ -137,7 +136,6 @@ export function VinfastPartTrendChart({
 export function VinfastPartsSummaryCards({
   filterState,
 }: VinfastPartsSummaryCardsProps) {
-  const { t } = useTranslation("dashboard");
   const groupBy = filterState.custom?.groupBy || "month";
 
   const { data, isLoading } = useQuery({
@@ -155,29 +153,53 @@ export function VinfastPartsSummaryCards({
       }),
   });
 
-  const summary = data?.summary || { totalBuy: 0, totalSell: 0, profit: 0 };
-
-  const kpiItems = [
-    {
-      label: t("kpi.vfPartsTotalBuy"),
-      value: `${money(summary.totalBuy)}`,
-      loading: isLoading,
-    },
-    {
-      label: t("kpi.vfPartsTotalSell"),
-      value: `${money(summary.totalSell)}`,
-      loading: isLoading,
-    },
-    {
-      label: t("kpi.vfPartsProfit"),
-      value: `${money(summary.profit)}`,
-      loading: isLoading,
-    },
-  ];
+  const summary = data?.summary || {
+    revenue: 0,
+    cogs: 0,
+    grossProfit: 0,
+    inventoryValue: 0,
+  };
 
   return (
     <div className="flex flex-col gap-6">
-      <KpiSection items={kpiItems} columns={3} />
+      <div className="grid gap-4 md:grid-cols-4">
+        <Panel title="Doanh thu">
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold mt-2 text-[#059669]">
+              {money(summary.revenue)} đ
+            </p>
+          )}
+        </Panel>
+        <Panel title="Giá vốn (FIFO)">
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold mt-2 text-[#ea580c]">
+              {money(summary.cogs)} đ
+            </p>
+          )}
+        </Panel>
+        <Panel title="Lợi nhuận gộp">
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold mt-2 text-[#1e293b]">
+              {money(summary.grossProfit)} đ
+            </p>
+          )}
+        </Panel>
+        <Panel title="Giá trị tồn kho">
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-2" />
+          ) : (
+            <p className="text-2xl font-bold mt-2 text-[#475569]">
+              {money(summary.inventoryValue)} đ
+            </p>
+          )}
+        </Panel>
+      </div>
     </div>
   );
 }
