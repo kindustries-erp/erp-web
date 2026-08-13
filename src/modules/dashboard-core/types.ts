@@ -88,9 +88,21 @@ export interface SettlementSummaryRow {
 }
 
 export interface VinfastPartsSummaryPayload {
-  summary: { totalBuy: number; totalSell: number; profit: number };
+  summary: {
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    inventoryValue: number;
+    totalBuy: number;
+    totalSell: number;
+    profit: number;
+  };
   trend: {
     month: string;
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    inventoryValue: number;
     totalBuy: number;
     totalSell: number;
     profit: number;

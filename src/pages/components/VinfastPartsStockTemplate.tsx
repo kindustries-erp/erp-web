@@ -1,6 +1,6 @@
 import { VinfastPartsStockExportDrawer } from "./VinfastPartsStockExportDrawer";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { useState, useMemo, useCallback } from "react";
-import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,8 +28,7 @@ export function VinfastPartsStockTemplate({
   description,
 }: VinfastPartsStockTemplateProps) {
   const { t } = useTranslation(["vinfastParts", "reports", "common"]);
-  const { employee } = useAuthStore();
-  const isAdminEmail = employee?.email === "admin@liouni.com";
+  const hasVinfastPerm = useHasPermission("vinfast_parts_reports", "read");
   const queryClient = useQueryClient();
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
   const [catalogData, setCatalogData] = useState<any>(null);
@@ -330,7 +329,7 @@ export function VinfastPartsStockTemplate({
     ],
   );
 
-  if (!isAdminEmail) {
+  if (!hasVinfastPerm) {
     return <ComingSoon />;
   }
 

@@ -49,12 +49,20 @@ export interface SettlementOrdersResponse {
 
 export interface VinfastPartsSummary {
   summary: {
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    inventoryValue: number;
     totalBuy: number;
     totalSell: number;
     profit: number;
   };
   trend: Array<{
     month: string;
+    revenue: number;
+    cogs: number;
+    grossProfit: number;
+    inventoryValue: number;
     totalBuy: number;
     totalSell: number;
     profit: number;
