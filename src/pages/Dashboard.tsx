@@ -6,7 +6,7 @@ import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { dashboardCoreApi } from "@/modules/dashboard-core/api/dashboardCoreApi";
-import { workshopDashboardApi } from "@/modules/workshop-dashboard/api/workshopDashboardApi";
+
 import { DashboardTabsContent } from "@/modules/dashboard-core/components/DashboardTabsContent";
 import type {
   CoreDashboardOverview,
@@ -14,9 +14,6 @@ import type {
   DashboardSales,
   DashboardPurchasing,
   DashboardInventory,
-  WorkshopKpiGroups,
-  SettlementSummaryRow,
-  VinfastPartsSummaryPayload,
 } from "@/modules/dashboard-core/types";
 import { DEFAULT_COLORS } from "@/modules/dashboard-core/components/DashboardTabsContent";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
@@ -61,7 +58,6 @@ function DashboardContent() {
   const dateFrom = filter.state.dateFrom;
   const dateTo = filter.state.dateTo;
   const branchId = filter.state.custom.branchId;
-  const groupBy = filter.state.custom.groupBy || "month";
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["dashboard-core-overview", dateFrom, dateTo, branchId],
@@ -73,41 +69,7 @@ function DashboardContent() {
       }),
   });
 
-  const invoiceStats = useQuery({
-    queryKey: ["workshop-invoice-stats", dateFrom, dateTo, branchId],
-    queryFn: () =>
-      workshopDashboardApi.getInvoiceStats({
-        dateFrom,
-        dateTo,
-        branchId,
-      }),
-  });
-
-  const settlementSummary = useQuery<SettlementSummaryRow, Error>({
-    queryKey: ["workshop-settlement-summary", dateFrom, dateTo, branchId],
-    queryFn: () =>
-      workshopDashboardApi.getSettlementSummary({
-        dateFrom,
-        dateTo,
-        branchId,
-      }),
-  });
-
-  const vinfastSummary = useQuery<VinfastPartsSummaryPayload, Error>({
-    queryKey: ["workshop-vf-summary", dateFrom, dateTo, groupBy],
-    queryFn: () =>
-      workshopDashboardApi.getVinfastPartsSummary({
-        dateFrom,
-        dateTo,
-        groupBy,
-      }),
-  });
-
-  const loading =
-    isLoading ||
-    invoiceStats.isLoading ||
-    settlementSummary.isLoading ||
-    vinfastSummary.isLoading;
+  const loading = isLoading;
 
   const handleRefresh = () => {
     void refetch();
@@ -189,12 +151,6 @@ function DashboardContent() {
     };
   }, [data, t]);
 
-  const workshop: WorkshopKpiGroups = {
-    invoiceStats,
-    settlementSummary,
-    vinfastSummary,
-  };
-
   return (
     <DashboardTemplate
       title={t("title")}
@@ -209,7 +165,6 @@ function DashboardContent() {
         loading={loading}
         filter={filter}
         data={mergedData}
-        workshop={workshop}
         branches={branches}
       />
     </DashboardTemplate>
