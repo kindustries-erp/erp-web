@@ -24,6 +24,8 @@ export interface FifoFlatTableTotals {
   outValue: number;
   outRevenue: number;
   outProfit: number;
+  balanceQty: number;
+  balanceValue: number;
 }
 
 interface FifoFlatTableProps {
@@ -31,6 +33,7 @@ interface FifoFlatTableProps {
   onOpenInvoice: (invoiceId: string) => void;
   tableState: ReturnType<typeof useTableColumnState>;
   totals: FifoFlatTableTotals;
+  optionsMap?: Record<string, { label: string; value: string }[]>;
 }
 
 export function FifoFlatTable({
@@ -38,11 +41,12 @@ export function FifoFlatTable({
   onOpenInvoice,
   tableState,
   totals,
+  optionsMap = {},
 }: FifoFlatTableProps) {
   const { t } = useTranslation(["vinfastParts", "common"]);
 
   return (
-    <div className="w-full overflow-x-auto max-h-[440px] overflow-y-auto border border-slate-200 rounded-md bg-white relative">
+    <div className="w-full overflow-x-auto max-h-[520px] overflow-y-auto border border-slate-200 rounded-md bg-white relative">
       <Table className="w-full text-sm text-left whitespace-nowrap min-w-max border-collapse">
         <TableHeader className="sticky top-0 z-10 bg-slate-50 text-slate-700 shadow-[0_1px_0_0_var(--border-light)]">
           <TableRow className="hover:bg-transparent border-b-0">
@@ -90,6 +94,8 @@ export function FifoFlatTable({
                 title={t("common:date", "Ngày")}
                 align="center"
                 hideFilter={true}
+                hideFilterList={true}
+                hideFooter={true}
                 hideSort={true}
                 sortState="none"
                 onSortChange={() => {}}
@@ -117,63 +123,410 @@ export function FifoFlatTable({
               />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-center bg-slate-50 shadow-[0_1px_0_0_var(--border-light)]">
-              Số HĐ
-            </TableHead>
-            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-center bg-slate-50 shadow-[0_1px_0_0_var(--border-light)] min-w-[200px]">
-              Đối tác
+              <TableColumnHeaderFilter
+                title="Số HĐ"
+                align="center"
+                sortState={
+                  tableState.sorts.includes("invoiceNo")
+                    ? "asc"
+                    : tableState.sorts.includes("-invoiceNo")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("invoiceNo", state)}
+                searchValue={tableState.columnSearch["invoiceNo"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("invoiceNo", val)
+                }
+                filterOptions={optionsMap["invoiceNo"] || []}
+                selectedFilters={tableState.columnFilters["invoiceNo"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("invoiceNo", vals)
+                }
+                isActive={!!tableState.columnFilters["invoiceNo"]?.length}
+              />
             </TableHead>
 
             {/* IN */}
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-orange-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]">
-              SL
+              <TableColumnHeaderFilter
+                title="SL"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("inQty")
+                    ? "asc"
+                    : tableState.sorts.includes("-inQty")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("inQty", state)}
+                searchValue={tableState.columnSearch["inQty"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("inQty", val)
+                }
+                filterOptions={optionsMap["inQty"] || []}
+                selectedFilters={tableState.columnFilters["inQty"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("inQty", vals)
+                }
+                isActive={!!tableState.columnFilters["inQty"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-orange-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Đơn giá
+              <TableColumnHeaderFilter
+                title="Đơn giá"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("inUnitCost")
+                    ? "asc"
+                    : tableState.sorts.includes("-inUnitCost")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("inUnitCost", state)
+                }
+                searchValue={tableState.columnSearch["inUnitCost"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("inUnitCost", val)
+                }
+                filterOptions={optionsMap["inUnitCost"] || []}
+                selectedFilters={tableState.columnFilters["inUnitCost"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("inUnitCost", vals)
+                }
+                isActive={!!tableState.columnFilters["inUnitCost"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-orange-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Thành tiền
+              <TableColumnHeaderFilter
+                title="Thành tiền"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("inTotal")
+                    ? "asc"
+                    : tableState.sorts.includes("-inTotal")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("inTotal", state)}
+                searchValue={tableState.columnSearch["inTotal"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("inTotal", val)
+                }
+                filterOptions={optionsMap["inTotal"] || []}
+                selectedFilters={tableState.columnFilters["inTotal"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("inTotal", vals)
+                }
+                isActive={!!tableState.columnFilters["inTotal"]?.length}
+              />
             </TableHead>
 
             {/* OUT */}
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-emerald-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]">
-              SL
+              <TableColumnHeaderFilter
+                title="SL"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outQty")
+                    ? "asc"
+                    : tableState.sorts.includes("-outQty")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("outQty", state)}
+                searchValue={tableState.columnSearch["outQty"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outQty", val)
+                }
+                filterOptions={optionsMap["outQty"] || []}
+                selectedFilters={tableState.columnFilters["outQty"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outQty", vals)
+                }
+                isActive={!!tableState.columnFilters["outQty"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-emerald-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Đơn giá
+              <TableColumnHeaderFilter
+                title="Đơn giá"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outUnitCost")
+                    ? "asc"
+                    : tableState.sorts.includes("-outUnitCost")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("outUnitCost", state)
+                }
+                searchValue={tableState.columnSearch["outUnitCost"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outUnitCost", val)
+                }
+                filterOptions={optionsMap["outUnitCost"] || []}
+                selectedFilters={tableState.columnFilters["outUnitCost"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outUnitCost", vals)
+                }
+                isActive={!!tableState.columnFilters["outUnitCost"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-emerald-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Thành tiền
+              <TableColumnHeaderFilter
+                title="Thành tiền"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outCogs")
+                    ? "asc"
+                    : tableState.sorts.includes("-outCogs")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("outCogs", state)}
+                searchValue={tableState.columnSearch["outCogs"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outCogs", val)
+                }
+                filterOptions={optionsMap["outCogs"] || []}
+                selectedFilters={tableState.columnFilters["outCogs"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outCogs", vals)
+                }
+                isActive={!!tableState.columnFilters["outCogs"]?.length}
+              />
             </TableHead>
 
             {/* BALANCE */}
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-blue-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]">
-              SL
+              <TableColumnHeaderFilter
+                title="SL"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("balanceQty")
+                    ? "asc"
+                    : tableState.sorts.includes("-balanceQty")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("balanceQty", state)
+                }
+                searchValue={tableState.columnSearch["balanceQty"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("balanceQty", val)
+                }
+                filterOptions={optionsMap["balanceQty"] || []}
+                selectedFilters={tableState.columnFilters["balanceQty"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("balanceQty", vals)
+                }
+                isActive={!!tableState.columnFilters["balanceQty"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-blue-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Thành tiền
+              <TableColumnHeaderFilter
+                title="Thành tiền"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("balanceValue")
+                    ? "asc"
+                    : tableState.sorts.includes("-balanceValue")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("balanceValue", state)
+                }
+                searchValue={tableState.columnSearch["balanceValue"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("balanceValue", val)
+                }
+                filterOptions={optionsMap["balanceValue"] || []}
+                selectedFilters={tableState.columnFilters["balanceValue"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("balanceValue", vals)
+                }
+                isActive={!!tableState.columnFilters["balanceValue"]?.length}
+              />
             </TableHead>
 
             {/* PERFORMANCE */}
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]">
-              SL
+              <TableColumnHeaderFilter
+                title="SL"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outQty")
+                    ? "asc"
+                    : tableState.sorts.includes("-outQty")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("outQty", state)}
+                searchValue={tableState.columnSearch["outQty"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outQty", val)
+                }
+                filterOptions={optionsMap["outQty"] || []}
+                selectedFilters={tableState.columnFilters["outQty"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outQty", vals)
+                }
+                isActive={!!tableState.columnFilters["outQty"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Đơn giá mua
+              <TableColumnHeaderFilter
+                title="Đơn giá mua"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outUnitCost")
+                    ? "asc"
+                    : tableState.sorts.includes("-outUnitCost")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("outUnitCost", state)
+                }
+                searchValue={tableState.columnSearch["outUnitCost"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outUnitCost", val)
+                }
+                filterOptions={optionsMap["outUnitCost"] || []}
+                selectedFilters={tableState.columnFilters["outUnitCost"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outUnitCost", vals)
+                }
+                isActive={!!tableState.columnFilters["outUnitCost"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Giá mua
+              <TableColumnHeaderFilter
+                title="Giá mua"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outCogs")
+                    ? "asc"
+                    : tableState.sorts.includes("-outCogs")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("outCogs", state)}
+                searchValue={tableState.columnSearch["outCogs"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outCogs", val)
+                }
+                filterOptions={optionsMap["outCogs"] || []}
+                selectedFilters={tableState.columnFilters["outCogs"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outCogs", vals)
+                }
+                isActive={!!tableState.columnFilters["outCogs"]?.length}
+              />
             </TableHead>
             <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Đơn giá bán
+              <TableColumnHeaderFilter
+                title="Đơn giá bán"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outSellPrice")
+                    ? "asc"
+                    : tableState.sorts.includes("-outSellPrice")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("outSellPrice", state)
+                }
+                searchValue={tableState.columnSearch["outSellPrice"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outSellPrice", val)
+                }
+                filterOptions={optionsMap["outSellPrice"] || []}
+                selectedFilters={tableState.columnFilters["outSellPrice"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outSellPrice", vals)
+                }
+                isActive={!!tableState.columnFilters["outSellPrice"]?.length}
+              />
             </TableHead>
-            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Giá bán
+            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]">
+              <TableColumnHeaderFilter
+                title="Doanh thu"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outRevenue")
+                    ? "asc"
+                    : tableState.sorts.includes("-outRevenue")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) =>
+                  tableState.setSort("outRevenue", state)
+                }
+                searchValue={tableState.columnSearch["outRevenue"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outRevenue", val)
+                }
+                filterOptions={optionsMap["outRevenue"] || []}
+                selectedFilters={tableState.columnFilters["outRevenue"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outRevenue", vals)
+                }
+                isActive={!!tableState.columnFilters["outRevenue"]?.length}
+              />
             </TableHead>
-            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              Lợi nhuận
+            <TableHead className="px-3 py-2 border-r border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] min-w-[100px]">
+              <TableColumnHeaderFilter
+                title="Lợi nhuận gộp"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outProfit")
+                    ? "asc"
+                    : tableState.sorts.includes("-outProfit")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("outProfit", state)}
+                searchValue={tableState.columnSearch["outProfit"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outProfit", val)
+                }
+                filterOptions={optionsMap["outProfit"] || []}
+                selectedFilters={tableState.columnFilters["outProfit"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outProfit", vals)
+                }
+                isActive={!!tableState.columnFilters["outProfit"]?.length}
+              />
             </TableHead>
-            <TableHead className="px-3 py-2 border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)]">
-              % LN
+            <TableHead className="px-3 py-2 border-t border-slate-200 font-medium text-right bg-purple-50/50 shadow-[0_1px_0_0_var(--border-light)] min-w-[60px]">
+              <TableColumnHeaderFilter
+                title="% LN"
+                align="right"
+                sortState={
+                  tableState.sorts.includes("outMargin")
+                    ? "asc"
+                    : tableState.sorts.includes("-outMargin")
+                      ? "desc"
+                      : "none"
+                }
+                onSortChange={(state) => tableState.setSort("outMargin", state)}
+                searchValue={tableState.columnSearch["outMargin"] || ""}
+                onSearchChange={(val) =>
+                  tableState.setColumnSearch("outMargin", val)
+                }
+                filterOptions={optionsMap["outMargin"] || []}
+                selectedFilters={tableState.columnFilters["outMargin"] || []}
+                onFilterChange={(vals) =>
+                  tableState.setColumnFilter("outMargin", vals)
+                }
+                isActive={!!tableState.columnFilters["outMargin"]?.length}
+              />
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -205,7 +558,13 @@ export function FifoFlatTable({
                   {row.invoiceNo && (
                     <TableText
                       text={row.invoiceNo}
-                      tooltip={row.invoiceNo}
+                      tooltip={[
+                        row.invoiceNo,
+                        row.partnerName,
+                        row.partnerTaxCode,
+                      ]
+                        .filter(Boolean)
+                        .join(" - ")}
                       enableCopy={false}
                       onDrawerClick={() => {
                         if (row.invoiceId) onOpenInvoice(row.invoiceId);
@@ -214,13 +573,6 @@ export function FifoFlatTable({
                     />
                   )}
                 </TableCell>
-                <TableCell
-                  className="px-3 py-2 border-r border-slate-200 text-left bg-white text-slate-600 max-w-[250px] truncate"
-                  title={row.partnerName}
-                >
-                  {row.partnerName}
-                </TableCell>
-
                 {/* INBOUND */}
                 <TableCell className="px-3 py-2 border-r border-slate-200 text-right font-medium text-slate-700 tabular-nums bg-white w-[80px]">
                   {row.inQty
@@ -312,7 +664,7 @@ export function FifoFlatTable({
         <TableFooter className="sticky bottom-0 z-10 font-semibold bg-slate-50 border-t-2 border-slate-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
           <TableRow className="hover:bg-slate-50">
             <TableCell
-              colSpan={4}
+              colSpan={3}
               className="px-3 py-3 border-r border-slate-200 text-right uppercase text-slate-700"
             >
               {t("common:total", "Tổng cộng")}
@@ -347,8 +699,17 @@ export function FifoFlatTable({
             </TableCell>
 
             {/* STOCK TOTALS */}
-            <TableCell className="px-3 py-2 border-r border-slate-200 text-right bg-blue-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]" />
-            <TableCell className="px-3 py-2 border-r border-slate-200 text-right bg-blue-50 shadow-[0_1px_0_0_var(--border-light)]" />
+            <TableCell className="px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 bg-blue-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]">
+              <span className="underline">
+                {totals.balanceQty?.toLocaleString(undefined, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </TableCell>
+            <TableCell className="px-3 py-2 border-r border-slate-200 text-right font-semibold text-blue-700 bg-blue-50 shadow-[0_1px_0_0_var(--border-light)]">
+              <span className="underline">{money(totals.balanceValue)}</span>
+            </TableCell>
 
             {/* PERF TOTALS */}
             <TableCell className="px-3 py-2 border-r border-slate-200 text-right font-semibold text-purple-700 bg-purple-50 shadow-[0_1px_0_0_var(--border-light)] w-[80px]">

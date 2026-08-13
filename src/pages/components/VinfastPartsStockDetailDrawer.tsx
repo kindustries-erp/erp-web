@@ -76,9 +76,13 @@ export function VinfastPartsStockDetailDrawer({
   const filterAndSortEntries = (
     data: LedgerEntry[],
     tableState: ReturnType<typeof useTableColumnState>,
+    colToSkip?: string,
   ) => {
     let result = [...data];
-    if (tableState.columnSearch["transactionDate"]?.length) {
+    if (
+      colToSkip !== "transactionDate" &&
+      tableState.columnSearch["transactionDate"]?.length
+    ) {
       const dateRange = tableState.columnSearch["transactionDate"];
       if (dateRange) {
         const [from, to] = dateRange.split("|");
@@ -96,7 +100,7 @@ export function VinfastPartsStockDetailDrawer({
     }
 
     Object.entries(tableState.columnSearch).forEach(([col, searchVal]) => {
-      if (!searchVal || col === "transactionDate") return;
+      if (!searchVal || col === "transactionDate" || col === colToSkip) return;
       result = result.filter((e) => {
         const val = e[col as keyof LedgerEntry];
         if (val === undefined || val === null) return false;
@@ -105,7 +109,7 @@ export function VinfastPartsStockDetailDrawer({
     });
 
     Object.entries(tableState.columnFilters).forEach(([col, selectedVals]) => {
-      if (!selectedVals || !selectedVals.length) return;
+      if (!selectedVals || !selectedVals.length || col === colToSkip) return;
       result = result.filter((e) => {
         const val = e[col as keyof LedgerEntry];
         let formattedVal = String(val || "");
@@ -175,47 +179,93 @@ export function VinfastPartsStockDetailDrawer({
 
   const inInvoiceOptions = useMemo(() => {
     const opts = new Set<string>();
-    inEntriesAll.forEach((r) => r.invoiceNo && opts.add(r.invoiceNo));
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [inEntriesAll]);
+    const filtered = filterAndSortEntries(
+      inEntriesAll,
+      inTableState,
+      "invoiceNo",
+    );
+    filtered.forEach((r) => r.invoiceNo && opts.add(r.invoiceNo));
+    return Array.from(opts)
+      .sort((a, b) => a.localeCompare(b))
+      .map((v) => ({ label: v, value: v }));
+  }, [inEntriesAll, inTableState]);
 
   const inQtyOptions = useMemo(() => {
-    const opts = new Set<string>();
-    inEntriesAll.forEach((r) => {
-      const prefix = r.isAdjustment && r.adjSign === -1 ? "-" : "";
-      opts.add(`${prefix}${Number(r.qty || 0).toLocaleString()}`);
+    const opts = new Set<number>();
+    const filtered = filterAndSortEntries(inEntriesAll, inTableState, "qty");
+    filtered.forEach((r) => {
+      const prefix = r.isAdjustment && r.adjSign === -1 ? -1 : 1;
+      const num = prefix * Number(r.qty || 0);
+      opts.add(num);
     });
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [inEntriesAll]);
+    return Array.from(opts)
+      .sort((a, b) => a - b)
+      .map((v) => {
+        const str = v.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+        return { label: str, value: str };
+      });
+  }, [inEntriesAll, inTableState]);
 
   const inUnitCostOptions = useMemo(() => {
-    const opts = new Set<string>();
-    inEntriesAll.forEach((r) => opts.add(money(Number(r.unitCost || 0))));
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [inEntriesAll]);
+    const opts = new Set<number>();
+    const filtered = filterAndSortEntries(
+      inEntriesAll,
+      inTableState,
+      "unitCost",
+    );
+    filtered.forEach((r) => opts.add(Number(r.unitCost || 0)));
+    return Array.from(opts)
+      .sort((a, b) => a - b)
+      .map((v) => ({ label: money(v), value: money(v) }));
+  }, [inEntriesAll, inTableState]);
 
   const outInvoiceOptions = useMemo(() => {
     const opts = new Set<string>();
-    outEntriesAll.forEach((r) => r.invoiceNo && opts.add(r.invoiceNo));
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [outEntriesAll]);
+    const filtered = filterAndSortEntries(
+      outEntriesAll,
+      outTableState,
+      "invoiceNo",
+    );
+    filtered.forEach((r) => r.invoiceNo && opts.add(r.invoiceNo));
+    return Array.from(opts)
+      .sort((a, b) => a.localeCompare(b))
+      .map((v) => ({ label: v, value: v }));
+  }, [outEntriesAll, outTableState]);
 
   const outQtyOptions = useMemo(() => {
-    const opts = new Set<string>();
-    outEntriesAll.forEach((r) => {
-      const prefix = r.isAdjustment && r.adjSign === -1 ? "-" : "";
-      opts.add(`${prefix}${Number(r.qty || 0).toLocaleString()}`);
+    const opts = new Set<number>();
+    const filtered = filterAndSortEntries(outEntriesAll, outTableState, "qty");
+    filtered.forEach((r) => {
+      const prefix = r.isAdjustment && r.adjSign === -1 ? -1 : 1;
+      const num = prefix * Number(r.qty || 0);
+      opts.add(num);
     });
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [outEntriesAll]);
+    return Array.from(opts)
+      .sort((a, b) => a - b)
+      .map((v) => {
+        const str = v.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        });
+        return { label: str, value: str };
+      });
+  }, [outEntriesAll, outTableState]);
 
   const outCalculatedUnitCostOptions = useMemo(() => {
-    const opts = new Set<string>();
-    outEntriesAll.forEach((r) =>
-      opts.add(money(Number(r.calculatedUnitCost || 0))),
+    const opts = new Set<number>();
+    const filtered = filterAndSortEntries(
+      outEntriesAll,
+      outTableState,
+      "calculatedUnitCost",
     );
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [outEntriesAll]);
+    filtered.forEach((r) => opts.add(Number(r.calculatedUnitCost || 0)));
+    return Array.from(opts)
+      .sort((a, b) => a - b)
+      .map((v) => ({ label: money(v), value: money(v) }));
+  }, [outEntriesAll, outTableState]);
 
   const inColumns = useMemo<DataTableColumn<LedgerEntry>[]>(
     () => [
@@ -306,7 +356,7 @@ export function VinfastPartsStockDetailDrawer({
           />
         ),
         align: "center",
-        size: 150,
+        size: 120,
         enableResizing: true,
       },
       {
@@ -340,7 +390,7 @@ export function VinfastPartsStockDetailDrawer({
           );
         },
         align: "right",
-        size: 100,
+        size: 80,
         enableResizing: true,
       },
       {
@@ -374,6 +424,8 @@ export function VinfastPartsStockDetailDrawer({
           </span>
         ),
         align: "right",
+        size: 120,
+        enableResizing: true,
       },
     ],
     [inTableState, t, setInvoiceIdToOpen],
@@ -468,7 +520,7 @@ export function VinfastPartsStockDetailDrawer({
           />
         ),
         align: "center",
-        size: 150,
+        size: 120,
         enableResizing: true,
       },
       {
@@ -504,7 +556,7 @@ export function VinfastPartsStockDetailDrawer({
           );
         },
         align: "right",
-        size: 100,
+        size: 80,
         enableResizing: true,
       },
       {
@@ -542,6 +594,8 @@ export function VinfastPartsStockDetailDrawer({
           </span>
         ),
         align: "right",
+        size: 120,
+        enableResizing: true,
       },
     ],
     [outTableState, t, setInvoiceIdToOpen],
@@ -578,7 +632,7 @@ export function VinfastPartsStockDetailDrawer({
               filterState={{}}
               groupBy="day"
               itemCode={sku}
-              chartHeight={220}
+              chartHeight={148}
             />
             <FifoUnitLedgerSection sku={sku} />
           </div>
@@ -600,34 +654,32 @@ export function VinfastPartsStockDetailDrawer({
                 label={t("vinfastParts:PART_NAME", "Tên phụ tùng")}
                 value={catalogData?.name}
               />
-            </DrawerSection>
-            <DrawerSection
-              title={t("vinfastParts:STOCK_SUMMARY", "Tổng hợp kho")}
-            >
-              <DrawerRow
-                label={t("vinfastParts:TOTAL_IN", "Tổng Nhập")}
-                value={
-                  <span className="font-semibold">
+              <div className="mt-6 grid grid-cols-3 gap-2 text-center">
+                <div className="flex flex-col items-center justify-center p-2 bg-orange-50/50 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1">
+                    {t("vinfastParts:TOTAL_IN", "Tổng Nhập")}
+                  </span>
+                  <span className="font-semibold text-orange-700 text-base">
                     {Number(catalogData?.qtyIn || 0).toLocaleString()}
                   </span>
-                }
-              />
-              <DrawerRow
-                label={t("vinfastParts:TOTAL_OUT", "Tổng Xuất")}
-                value={
-                  <span className="font-semibold">
+                </div>
+                <div className="flex flex-col items-center justify-center p-2 bg-emerald-50/50 rounded-md">
+                  <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider mb-1">
+                    {t("vinfastParts:TOTAL_OUT", "Tổng Xuất")}
+                  </span>
+                  <span className="font-semibold text-emerald-700 text-base">
                     {Number(catalogData?.qtyOut || 0).toLocaleString()}
                   </span>
-                }
-              />
-              <DrawerRow
-                label={t("vinfastParts:BALANCE", "Tồn cuối")}
-                value={
-                  <span className="font-bold underline">
+                </div>
+                <div className="flex flex-col items-center justify-center p-2 bg-blue-50/50 rounded-md border border-blue-100">
+                  <span className="text-[11px] font-medium text-blue-600/80 uppercase tracking-wider mb-1">
+                    {t("vinfastParts:BALANCE", "Tồn cuối")}
+                  </span>
+                  <span className="font-bold text-blue-700 text-lg">
                     {Number(catalogData?.qtyBalance || 0).toLocaleString()}
                   </span>
-                }
-              />
+                </div>
+              </div>
             </DrawerSection>
             <DrawerSection
               title={t("vinfastParts:IN_HISTORY", "Lịch sử Nhập (IN)")}
@@ -651,7 +703,7 @@ export function VinfastPartsStockDetailDrawer({
                   "vinfastParts:NO_DATA_IN",
                   "Không có dữ liệu nhập",
                 )}
-                containerClassName="h-auto overflow-y-auto max-h-64"
+                containerClassName="h-auto overflow-y-auto max-h-[240px]"
                 summaryRow={{
                   invoiceNo: (
                     <div className="text-right w-full font-semibold pr-2">
@@ -666,6 +718,8 @@ export function VinfastPartsStockDetailDrawer({
                 }}
                 page={inPage}
                 pageSize={inPageSize}
+                pageSizeOptions={[4, 10, 20, 50]}
+                paginationClassName="justify-center"
                 onPage={setInPage}
                 onPageSize={setInPageSize}
                 total={inEntries.length}
@@ -695,7 +749,7 @@ export function VinfastPartsStockDetailDrawer({
                   "vinfastParts:NO_DATA_OUT",
                   "Không có dữ liệu xuất",
                 )}
-                containerClassName="h-auto overflow-y-auto max-h-64"
+                containerClassName="h-auto overflow-y-auto max-h-[240px]"
                 summaryRow={{
                   invoiceNo: (
                     <div className="text-right w-full font-semibold pr-2">
@@ -710,6 +764,8 @@ export function VinfastPartsStockDetailDrawer({
                 }}
                 page={outPage}
                 pageSize={outPageSize}
+                pageSizeOptions={[4, 10, 20, 50]}
+                paginationClassName="justify-center"
                 onPage={setOutPage}
                 onPageSize={setOutPageSize}
                 total={outEntries.length}
