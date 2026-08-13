@@ -13,12 +13,15 @@ import {
   Banknote,
   ArrowRightLeft,
   BarChart3,
+  Warehouse,
+  Car,
 } from "lucide-react";
 import { KpiCard } from "@/shared/components/KpiCard";
 import { Panel } from "@/shared/components/Panel";
 import { ChartSkeleton, Skeleton } from "@/shared/components/Skeleton";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { DonutChart, DonutLegend } from "@/shared/components/charts/DonutChart";
+import { cn } from "@/shared/utils";
 import { money } from "@/shared/utils/format";
 import {
   Tabs,
@@ -41,6 +44,44 @@ import type {
   CoreDashboardOverview,
   WorkshopKpiGroups,
 } from "@/modules/dashboard-core/types";
+
+const DASH_TABS = [
+  {
+    value: "overview",
+    labelKey: "tabs.overview",
+    Icon: LayoutDashboard,
+  },
+  {
+    value: "sales",
+    labelKey: "tabs.sales",
+    Icon: ShoppingBag,
+  },
+  {
+    value: "inventory",
+    labelKey: "tabs.inventory",
+    Icon: Warehouse,
+  },
+  {
+    value: "cashflow",
+    labelKey: "tabs.cashflow",
+    Icon: Wallet,
+  },
+  {
+    value: "invoice",
+    labelKey: "tabs.invoice",
+    Icon: Receipt,
+  },
+  {
+    value: "settlement",
+    labelKey: "tabs.settlement",
+    Icon: Banknote,
+  },
+  {
+    value: "vinfastParts",
+    labelKey: "tabs.vinfastParts",
+    Icon: Car,
+  },
+] as const;
 
 const BAR_CASH_IN = "#10b981";
 const BAR_CASH_OUT = "#ef4444";
@@ -219,14 +260,27 @@ export function DashboardTabsContent({
 
   return (
     <Tabs defaultValue="overview" className="w-full">
-      <TabsList className="flex flex-nowrap overflow-x-auto min-w-max gap-1 mb-6 shadow-sm border border-[color:var(--border)] px-2 py-2 rounded-xl w-full lg:w-auto">
-        <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
-        <TabsTrigger value="sales">{t("tabs.sales")}</TabsTrigger>
-        <TabsTrigger value="inventory">{t("tabs.inventory")}</TabsTrigger>
-        <TabsTrigger value="cashflow">{t("tabs.cashflow")}</TabsTrigger>
-        <TabsTrigger value="invoice">{t("tabs.invoice")}</TabsTrigger>
-        <TabsTrigger value="settlement">{t("tabs.settlement")}</TabsTrigger>
-        <TabsTrigger value="vinfastParts">{t("tabs.vinfastParts")}</TabsTrigger>
+      <TabsList className="mb-6 h-11 max-w-full rounded-full bg-slate-100/70 shadow-[0_1px_2px_rgba(15,23,42,.03),0_6px_18px_-14px_rgba(15,23,42,.08)] p-1 gap-2 overflow-x-auto overflow-y-clip scrollbar-thin pr-3">
+        {DASH_TABS.map(({ value, labelKey, Icon }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            className={cn(
+              "group relative shrink-0 rounded-full px-4 h-full gap-0 transition-[color,background-color,box-shadow,transform] duration-150 ease-out",
+              "data-[state=inactive]:text-slate-500 data-[state=inactive]:font-medium hover:text-slate-700",
+              "data-[state=active]:text-slate-900 data-[state=active]:font-semibold whitespace-nowrap",
+            )}
+          >
+            <Icon
+              className={cn(
+                "shrink-0 transition-[width,height,opacity,margin] duration-150 ease-out overflow-hidden",
+                "w-0 h-0 opacity-0 mr-0",
+                "group-data-[state=active]:w-4 group-data-[state=active]:h-4 group-data-[state=active]:opacity-100 group-data-[state=active]:mr-[10px]",
+              )}
+            />
+            <span className="text-[13px] tracking-tight">{t(labelKey)}</span>
+          </TabsTrigger>
+        ))}
       </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
