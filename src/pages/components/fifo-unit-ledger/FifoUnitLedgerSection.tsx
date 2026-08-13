@@ -2,15 +2,14 @@ import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DrawerSection } from "@/shared/components/DrawerModal";
 import { FilterButton } from "@/shared/components/FilterPanel";
-import { money } from "@/shared/utils/format";
-import { DataTable, type DataTableColumn } from "@/shared/components/DataTable";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
-import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
-import { TableText } from "@/shared/components/DataTable/TableText";
-import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
-import { DateRangeColumnSlot } from "@/shared/components/DataTable/DateRangeColumnSlot";
-import { useFifoUnitLedger, FifoUnitRow } from "./useFifoUnitLedger";
+import { TablePagination } from "@/shared/components/TablePagination";
+import { money } from "@/shared/utils/format";
+
+import { useFifoUnitLedger } from "./useFifoUnitLedger";
 import { ErpInvoiceStandaloneDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceStandaloneDrawer";
+import { FifoGroupedTable, FifoGroupedTableTotals } from "./FifoGroupedTable";
+import { buildGroupedRows } from "./fifoTransform";
 
 interface FifoUnitLedgerSectionProps {
   sku: string;
@@ -26,394 +25,120 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
   const { data, isLoading } = useFifoUnitLedger(sku, true);
   const rows = data?.data || [];
 
+  const displayRows = useMemo(() => {
+    return buildGroupedRows(rows);
+  }, [rows]);
+
   const tableState = useTableColumnState("fifo-unit-ledger");
 
-  const inInvoiceOptions = useMemo(() => {
-    const opts = new Set<string>();
-    rows.forEach((r: FifoUnitRow) => r.inInvoiceNo && opts.add(r.inInvoiceNo));
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [rows]);
+  const filterOptions = useMemo(() => {
+    const inQtyOpts = new Set<number>();
+    const outQtyOpts = new Set<number>();
+    const inTotalOpts = new Set<number>();
+    const outCogsOpts = new Set<number>();
+    const lotBalanceQtyOpts = new Set<number>();
+    const lotBalanceTotalOpts = new Set<number>();
+    const outPriceOpts = new Set<number>();
+    const outRevenueOpts = new Set<number>();
+    const outProfitMarginOpts = new Set<number>();
+    const inUnitCostOpts = new Set<number>();
 
-  const outInvoiceOptions = useMemo(() => {
-    const opts = new Set<string>();
-    rows.forEach(
-      (r: FifoUnitRow) => r.outInvoiceNo && opts.add(r.outInvoiceNo),
-    );
-    return Array.from(opts).map((v) => ({ label: v, value: v }));
-  }, [rows]);
+    displayRows.forEach((r) => {
+      if (r.inQty != null) inQtyOpts.add(r.inQty);
+      if (r.inUnitCost != null) inUnitCostOpts.add(r.inUnitCost);
+      if (r.outQty != null) outQtyOpts.add(r.outQty);
+      if (r.inTotal != null) inTotalOpts.add(r.inTotal);
+      if (r.outCogs != null) outCogsOpts.add(r.outCogs);
+      if (r.lotBalanceQty != null) lotBalanceQtyOpts.add(r.lotBalanceQty);
+      if (r.lotBalanceTotal != null) lotBalanceTotalOpts.add(r.lotBalanceTotal);
+      if (r.outPrice != null) outPriceOpts.add(r.outPrice);
+      if (r.outRevenue != null) outRevenueOpts.add(r.outRevenue);
+      if (r.outProfitMargin != null) outProfitMarginOpts.add(r.outProfitMargin);
+    });
 
-  const inUnitCostOptions = useMemo(() => {
-    const opts = new Set<number>();
-    rows.forEach(
-      (r: FifoUnitRow) => r.inUnitCost != null && opts.add(r.inUnitCost),
-    );
-    return Array.from(opts).map((v) => ({ label: money(v), value: String(v) }));
-  }, [rows]);
-
-  const outPriceOptions = useMemo(() => {
-    const opts = new Set<number>();
-    rows.forEach(
-      (r: FifoUnitRow) => r.outPrice != null && opts.add(r.outPrice),
-    );
-    return Array.from(opts).map((v) => ({ label: money(v), value: String(v) }));
-  }, [rows]);
-
-  const profitOptions = useMemo(() => {
-    const opts = new Set<number>();
-    rows.forEach((r: FifoUnitRow) => r.profit != null && opts.add(r.profit));
-    return Array.from(opts).map((v) => ({ label: money(v), value: String(v) }));
-  }, [rows]);
-
-  const columns = useMemo<DataTableColumn<FifoUnitRow>[]>(
-    () => [
-      {
-        key: "index",
-        header: () => <div className="text-center w-full">#</div>,
-        cell: (_, idx) => (
-          <span className="text-center block w-full">{idx}</span>
-        ),
-        size: 40,
-        enableResizing: false,
-        className: "text-center w-[40px] min-w-[40px]",
-        headerClassName: "text-center w-[40px] min-w-[40px]",
-      },
-      {
-        key: "inDate",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:IN_DATE", "Ngày nhập")}
-            align="center"
-            isActive={!!tableState.columnSearch["inDate"]?.length}
-            hideFilter={true}
-            hideFooter={true}
-            sortState={
-              tableState.sorts.includes("inDate")
-                ? "asc"
-                : tableState.sorts.includes("-inDate")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("inDate", state)}
-            searchValue={tableState.columnSearch["inDate"] || ""}
-            onSearchChange={(val) => tableState.setColumnSearch("inDate", val)}
-            selectedFilters={tableState.columnFilters["inDate"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("inDate", vals)
-            }
-            dateRangeSlot={({ close }) => {
-              const val = tableState.columnSearch["inDate"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    tableState.setColumnSearch("inDate", next);
-                    close();
-                  }}
-                />
-              );
-            }}
-          />
-        ),
-        cell: (item) => (
-          <TableDateCell
-            date={item.inDate}
-            className="justify-end w-full"
-            format="date"
-          />
-        ),
-        className: "text-right",
-        enableResizing: true,
-        size: 150,
-      },
-      {
-        key: "inInvoiceNo",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:IN_INVOICE_NO", "Số HĐ vào")}
-            align="center"
-            isActive={!!tableState.columnFilters["inInvoiceNo"]?.length}
-            sortState={
-              tableState.sorts.includes("inInvoiceNo")
-                ? "asc"
-                : tableState.sorts.includes("-inInvoiceNo")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("inInvoiceNo", state)}
-            searchValue={tableState.columnSearch["inInvoiceNo"] || ""}
-            onSearchChange={(val) =>
-              tableState.setColumnSearch("inInvoiceNo", val)
-            }
-            filterOptions={inInvoiceOptions}
-            selectedFilters={tableState.columnFilters["inInvoiceNo"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("inInvoiceNo", vals)
-            }
-          />
-        ),
-        cell: (item) => (
-          <TableText
-            text={item.inInvoiceNo}
-            enableCopy={true}
-            tooltip={true}
-            onDrawerClick={(e) => {
-              e.stopPropagation();
-              setInvoiceIdToOpen(item.inInvoiceId);
-            }}
-          />
-        ),
-        enableResizing: true,
-        size: 150,
-      },
-      {
-        key: "outDate",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:OUT_DATE", "Ngày xuất")}
-            align="center"
-            isActive={!!tableState.columnSearch["outDate"]?.length}
-            hideFilter={true}
-            hideFooter={true}
-            sortState={
-              tableState.sorts.includes("outDate")
-                ? "asc"
-                : tableState.sorts.includes("-outDate")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("outDate", state)}
-            searchValue={tableState.columnSearch["outDate"] || ""}
-            onSearchChange={(val) => tableState.setColumnSearch("outDate", val)}
-            selectedFilters={tableState.columnFilters["outDate"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("outDate", vals)
-            }
-            dateRangeSlot={({ close }) => {
-              const val = tableState.columnSearch["outDate"] || "";
-              const [from = "", to = ""] = val.split("|");
-              return (
-                <DateRangeColumnSlot
-                  dateFrom={from}
-                  dateTo={to}
-                  onChange={(f, t) => {
-                    const next = f || t ? `${f}|${t}` : "";
-                    tableState.setColumnSearch("outDate", next);
-                    close();
-                  }}
-                />
-              );
-            }}
-          />
-        ),
-        cell: (item) => {
-          if (!item.outDate) return null;
-          return (
-            <TableDateCell
-              date={item.outDate}
-              className="justify-end w-full"
-              format="date"
-            />
-          );
-        },
-        className: "text-right",
-        enableResizing: true,
-        size: 150,
-      },
-      {
-        key: "outInvoiceNo",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:OUT_INVOICE_NO", "Số HĐ ra")}
-            align="center"
-            isActive={!!tableState.columnFilters["outInvoiceNo"]?.length}
-            sortState={
-              tableState.sorts.includes("outInvoiceNo")
-                ? "asc"
-                : tableState.sorts.includes("-outInvoiceNo")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("outInvoiceNo", state)}
-            searchValue={tableState.columnSearch["outInvoiceNo"] || ""}
-            onSearchChange={(val) =>
-              tableState.setColumnSearch("outInvoiceNo", val)
-            }
-            filterOptions={outInvoiceOptions}
-            selectedFilters={tableState.columnFilters["outInvoiceNo"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("outInvoiceNo", vals)
-            }
-          />
-        ),
-        cell: (item) => {
-          if (!item.outInvoiceNo) return null;
-          return (
-            <TableText
-              text={item.outInvoiceNo}
-              enableCopy={true}
-              tooltip={true}
-              onDrawerClick={(e) => {
-                e.stopPropagation();
-                if (item.outInvoiceId) {
-                  setInvoiceIdToOpen(item.outInvoiceId);
-                }
-              }}
-            />
-          );
-        },
-        enableResizing: true,
-        size: 150,
-      },
-      {
-        key: "inUnitCost",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:COST_PRICE", "Giá vốn")}
-            align="center"
-            isActive={!!tableState.columnFilters["inUnitCost"]?.length}
-            sortState={
-              tableState.sorts.includes("inUnitCost")
-                ? "asc"
-                : tableState.sorts.includes("-inUnitCost")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("inUnitCost", state)}
-            searchValue={tableState.columnSearch["inUnitCost"] || ""}
-            onSearchChange={(val) =>
-              tableState.setColumnSearch("inUnitCost", val)
-            }
-            filterOptions={inUnitCostOptions}
-            selectedFilters={tableState.columnFilters["inUnitCost"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("inUnitCost", vals)
-            }
-          />
-        ),
-        cell: (item) => (
-          <div className="tabular-nums font-semibold text-right text-red-500 w-full">
-            {money(item.inUnitCost)}
-          </div>
-        ),
-        enableResizing: true,
-        size: 200,
-      },
-      {
-        key: "outPrice",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:SELLING_PRICE", "Giá bán (trước VAT)")}
-            align="center"
-            isActive={!!tableState.columnFilters["outPrice"]?.length}
-            sortState={
-              tableState.sorts.includes("outPrice")
-                ? "asc"
-                : tableState.sorts.includes("-outPrice")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("outPrice", state)}
-            searchValue={tableState.columnSearch["outPrice"] || ""}
-            onSearchChange={(val) =>
-              tableState.setColumnSearch("outPrice", val)
-            }
-            filterOptions={outPriceOptions}
-            selectedFilters={tableState.columnFilters["outPrice"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("outPrice", vals)
-            }
-          />
-        ),
-        cell: (item) => {
-          if (item.outPrice == null) return null;
-          return (
-            <div className="tabular-nums font-semibold text-right text-emerald-600 w-full">
-              {money(item.outPrice)}
-            </div>
-          );
-        },
-        enableResizing: true,
-        size: 200,
-      },
-      {
-        key: "profit",
-        header: () => (
-          <TableColumnHeaderFilter
-            title={t("vinfastParts:PROFIT", "Lợi nhuận")}
-            align="center"
-            isActive={!!tableState.columnFilters["profit"]?.length}
-            sortState={
-              tableState.sorts.includes("profit")
-                ? "asc"
-                : tableState.sorts.includes("-profit")
-                  ? "desc"
-                  : "none"
-            }
-            onSortChange={(state) => tableState.setSort("profit", state)}
-            searchValue={tableState.columnSearch["profit"] || ""}
-            onSearchChange={(val) => tableState.setColumnSearch("profit", val)}
-            filterOptions={profitOptions}
-            selectedFilters={tableState.columnFilters["profit"] || []}
-            onFilterChange={(vals) =>
-              tableState.setColumnFilter("profit", vals)
-            }
-          />
-        ),
-        cell: (item) => {
-          if (item.profit == null) return null;
-          return (
-            <div
-              className={`tabular-nums font-semibold text-right w-full ${item.profit < 0 ? "text-red-500" : "text-emerald-600"}`}
-            >
-              {item.profit > 0 ? "+" : ""}
-              {money(item.profit)}
-            </div>
-          );
-        },
-        enableResizing: true,
-        size: 200,
-      },
-    ],
-    [tableState],
-  );
+    return {
+      inQty: Array.from(inQtyOpts).map((v) => ({
+        label: String(v),
+        value: String(v),
+      })),
+      outQty: Array.from(outQtyOpts).map((v) => ({
+        label: String(v),
+        value: String(v),
+      })),
+      inTotal: Array.from(inTotalOpts).map((v) => ({
+        label: money(v),
+        value: String(v),
+      })),
+      outCogs: Array.from(outCogsOpts).map((v) => ({
+        label: money(v),
+        value: String(v),
+      })),
+      lotBalanceQty: Array.from(lotBalanceQtyOpts).map((v) => ({
+        label: String(v),
+        value: String(v),
+      })),
+      lotBalanceTotal: Array.from(lotBalanceTotalOpts).map((v) => ({
+        label: money(v),
+        value: String(v),
+      })),
+      outPrice: Array.from(outPriceOpts).map((v) => ({
+        label: String(v),
+        value: String(v),
+      })),
+      outRevenue: Array.from(outRevenueOpts).map((v) => ({
+        label: String(v),
+        value: String(v),
+      })),
+      outProfitMargin: Array.from(outProfitMarginOpts).map((v) => ({
+        label: `${v.toFixed(2)}%`,
+        value: String(v),
+      })),
+      inUnitCost: Array.from(inUnitCostOpts).map((v) => ({
+        label: money(v),
+        value: String(v),
+      })),
+    };
+  }, [displayRows]);
 
   const filteredRows = useMemo(() => {
-    let result = [...rows];
+    let result = [...displayRows];
 
     // Text search
-    if (tableState.columnSearch["inInvoiceNo"]) {
-      const q = tableState.columnSearch["inInvoiceNo"].toLowerCase();
-      result = result.filter((r: FifoUnitRow) =>
-        r.inInvoiceNo?.toLowerCase().includes(q),
-      );
-    }
-    if (tableState.columnSearch["outInvoiceNo"]) {
-      const q = tableState.columnSearch["outInvoiceNo"].toLowerCase();
-      result = result.filter((r: FifoUnitRow) =>
-        r.outInvoiceNo?.toLowerCase().includes(q),
-      );
-    }
-    if (tableState.columnSearch["inUnitCost"]) {
-      const q = tableState.columnSearch["inUnitCost"].toLowerCase();
+    if (tableState.columnSearch["inQty"]) {
+      const q = tableState.columnSearch["inQty"].toLowerCase();
       result = result.filter(
-        (r: FifoUnitRow) =>
-          r.inUnitCost != null && String(r.inUnitCost).includes(q),
+        (r) => r.inQty != null && String(r.inQty).includes(q),
       );
     }
-    if (tableState.columnSearch["outPrice"]) {
-      const q = tableState.columnSearch["outPrice"].toLowerCase();
+    if (tableState.columnSearch["outQty"]) {
+      const q = tableState.columnSearch["outQty"].toLowerCase();
       result = result.filter(
-        (r: FifoUnitRow) =>
-          r.outPrice != null && String(r.outPrice).includes(q),
+        (r) => r.outQty != null && String(r.outQty).includes(q),
       );
     }
-    if (tableState.columnSearch["profit"]) {
-      const q = tableState.columnSearch["profit"].toLowerCase();
+    if (tableState.columnSearch["inTotal"]) {
+      const q = tableState.columnSearch["inTotal"].toLowerCase();
       result = result.filter(
-        (r: FifoUnitRow) => r.profit != null && String(r.profit).includes(q),
+        (r) => r.inTotal != null && String(r.inTotal).includes(q),
+      );
+    }
+    if (tableState.columnSearch["outCogs"]) {
+      const q = tableState.columnSearch["outCogs"].toLowerCase();
+      result = result.filter(
+        (r) => r.outCogs != null && String(r.outCogs).includes(q),
+      );
+    }
+    if (tableState.columnSearch["lotBalanceQty"]) {
+      const q = tableState.columnSearch["lotBalanceQty"].toLowerCase();
+      result = result.filter(
+        (r) => r.lotBalanceQty != null && String(r.lotBalanceQty).includes(q),
+      );
+    }
+    if (tableState.columnSearch["lotBalanceTotal"]) {
+      const q = tableState.columnSearch["lotBalanceTotal"].toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.lotBalanceTotal != null && String(r.lotBalanceTotal).includes(q),
       );
     }
 
@@ -422,11 +147,11 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
     if (inDateRange) {
       const [from, to] = inDateRange.split("|");
       if (from || to) {
-        result = result.filter((r: FifoUnitRow) => {
+        result = result.filter((r) => {
           if (!r.inDate) return false;
           const rDate = new Date(r.inDate).getTime();
           if (from && rDate < new Date(from).getTime()) return false;
-          // To date should include the end of the day if it's just a date
+          // date from UI is start of day, so add 86400000 - 1 for end of day
           if (to && rDate > new Date(to).getTime() + 86400000 - 1) return false;
           return true;
         });
@@ -438,7 +163,7 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
     if (outDateRange) {
       const [from, to] = outDateRange.split("|");
       if (from || to) {
-        result = result.filter((r: FifoUnitRow) => {
+        result = result.filter((r) => {
           if (!r.outDate) return false;
           const rDate = new Date(r.outDate).getTime();
           if (from && rDate < new Date(from).getTime()) return false;
@@ -449,90 +174,140 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
     }
 
     // Checkbox filters
-    if (tableState.columnFilters["inInvoiceNo"]?.length) {
+    if (tableState.columnFilters["inQty"]?.length) {
       result = result.filter(
-        (r: FifoUnitRow) =>
-          r.inInvoiceNo &&
-          tableState.columnFilters["inInvoiceNo"].includes(r.inInvoiceNo),
+        (r) =>
+          r.inQty != null &&
+          tableState.columnFilters["inQty"].includes(String(r.inQty)),
       );
     }
-    if (tableState.columnFilters["outInvoiceNo"]?.length) {
+    if (tableState.columnFilters["outQty"]?.length) {
       result = result.filter(
-        (r: FifoUnitRow) =>
-          r.outInvoiceNo &&
-          tableState.columnFilters["outInvoiceNo"].includes(r.outInvoiceNo),
+        (r) =>
+          r.outQty != null &&
+          tableState.columnFilters["outQty"].includes(String(r.outQty)),
       );
     }
-    if (tableState.columnFilters["inUnitCost"]?.length) {
+    if (tableState.columnFilters["inTotal"]?.length) {
       result = result.filter(
-        (r: FifoUnitRow) =>
-          r.inUnitCost != null &&
-          tableState.columnFilters["inUnitCost"].includes(String(r.inUnitCost)),
+        (r) =>
+          r.inTotal != null &&
+          tableState.columnFilters["inTotal"].includes(String(r.inTotal)),
+      );
+    }
+    if (tableState.columnFilters["outCogs"]?.length) {
+      result = result.filter(
+        (r) =>
+          r.outCogs != null &&
+          tableState.columnFilters["outCogs"].includes(String(r.outCogs)),
+      );
+    }
+    if (tableState.columnFilters["lotBalanceQty"]?.length) {
+      result = result.filter(
+        (r) =>
+          r.lotBalanceQty != null &&
+          tableState.columnFilters["lotBalanceQty"].includes(
+            String(r.lotBalanceQty),
+          ),
+      );
+    }
+    if (tableState.columnFilters["lotBalanceTotal"]?.length) {
+      result = result.filter(
+        (r) =>
+          r.lotBalanceTotal != null &&
+          tableState.columnFilters["lotBalanceTotal"].includes(
+            String(r.lotBalanceTotal),
+          ),
       );
     }
     if (tableState.columnFilters["outPrice"]?.length) {
       result = result.filter(
-        (r: FifoUnitRow) =>
+        (r) =>
           r.outPrice != null &&
           tableState.columnFilters["outPrice"].includes(String(r.outPrice)),
       );
     }
-    if (tableState.columnFilters["profit"]?.length) {
+    if (tableState.columnFilters["outRevenue"]?.length) {
       result = result.filter(
-        (r: FifoUnitRow) =>
-          r.profit != null &&
-          tableState.columnFilters["profit"].includes(String(r.profit)),
+        (r) =>
+          r.outRevenue != null &&
+          tableState.columnFilters["outRevenue"].includes(String(r.outRevenue)),
+      );
+    }
+    if (tableState.columnFilters["outProfitMargin"]?.length) {
+      result = result.filter(
+        (r) =>
+          r.outProfitMargin != null &&
+          tableState.columnFilters["outProfitMargin"].includes(
+            String(r.outProfitMargin),
+          ),
+      );
+    }
+    if (tableState.columnFilters["inUnitCost"]?.length) {
+      result = result.filter(
+        (r) =>
+          r.inUnitCost != null &&
+          tableState.columnFilters["inUnitCost"].includes(String(r.inUnitCost)),
       );
     }
 
-    // Sorting
-    if (tableState.sorts.length > 0) {
-      result.sort((a, b) => {
-        for (const sort of tableState.sorts) {
-          const isDesc = sort.startsWith("-");
-          const field = isDesc ? sort.substring(1) : sort;
-          const aVal = a[field as keyof FifoUnitRow];
-          const bVal = b[field as keyof FifoUnitRow];
-
-          if (aVal == null && bVal == null) continue;
-          if (aVal == null) return isDesc ? 1 : -1;
-          if (bVal == null) return isDesc ? -1 : 1;
-
-          if (aVal < bVal) return isDesc ? 1 : -1;
-          if (aVal > bVal) return isDesc ? -1 : 1;
-        }
-        return 0;
-      });
-    }
+    // Re-calculate isFirstOfGroup for the filtered view so that partial lots don't lose their IN data rendering
+    const groupSeen = new Set<string>();
+    result = result.map((r) => {
+      if (!groupSeen.has(r.groupId)) {
+        groupSeen.add(r.groupId);
+        return { ...r, isFirstOfGroup: true };
+      }
+      return { ...r, isFirstOfGroup: false };
+    });
 
     return result;
-  }, [
-    rows,
-    tableState.columnSearch,
-    tableState.columnFilters,
-    tableState.sorts,
-  ]);
+  }, [displayRows, tableState.columnSearch, tableState.columnFilters]);
 
   const paginatedRows = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, page, pageSize]);
 
-  const summaryRow = useMemo(() => {
-    const totalProfit = filteredRows.reduce(
-      (acc, curr: FifoUnitRow) => acc + (curr.profit || 0),
-      0,
-    );
+  const totals = useMemo<FifoGroupedTableTotals>(() => {
+    let inQty = 0;
+    let outQty = 0;
+    let inValue = 0;
+    let outValue = 0;
+    let stockQty = 0;
+    let stockValue = 0;
+    let outRevenue = 0;
+
+    const groupSeen = new Set<string>();
+    const lastRowOfGroup = new Map<string, any>();
+
+    filteredRows.forEach((r) => {
+      if (!groupSeen.has(r.groupId)) {
+        groupSeen.add(r.groupId);
+        inQty += r.inQty || 0;
+        inValue += r.inTotal || 0;
+      }
+      outQty += r.outQty || 0;
+      outValue += r.outCogs || 0;
+      outRevenue += r.outRevenue || 0;
+
+      // Keep replacing with the latest row of this group to get the final visible balance
+      lastRowOfGroup.set(r.groupId, r);
+    });
+
+    lastRowOfGroup.forEach((r) => {
+      stockQty += r.lotBalanceQty || 0;
+      stockValue += r.lotBalanceTotal || 0;
+    });
 
     return {
-      profit: (
-        <div
-          className={`tabular-nums font-semibold text-right ${totalProfit < 0 ? "text-red-500" : "text-emerald-600"}`}
-        >
-          {totalProfit > 0 ? "+" : ""}
-          {money(totalProfit)}
-        </div>
-      ),
+      inQty,
+      outQty,
+      inValue,
+      outValue,
+      stockQty,
+      stockValue,
+      outRevenue,
     };
   }, [filteredRows]);
 
@@ -555,22 +330,29 @@ export function FifoUnitLedgerSection({ sku }: FifoUnitLedgerSectionProps) {
           ) : undefined
         }
       >
-        <DataTable
-          variant="spreadsheet"
-          enableColumnResizing={true}
-          columns={columns as any}
-          items={paginatedRows}
-          loading={isLoading}
-          emptyLabel={t("vinfastParts:NO_DATA", "Không có dữ liệu")}
-          containerClassName="max-h-[440px] overflow-y-auto"
-          summaryRow={summaryRow}
-          page={page}
-          pageSize={pageSize}
-          onPage={setPage}
-          onPageSize={setPageSize}
-          total={filteredRows.length}
-          totalPages={Math.ceil(filteredRows.length / pageSize)}
-        />
+        {isLoading ? (
+          <div className="py-8 flex justify-center text-slate-500 text-sm">
+            Loading...
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <FifoGroupedTable
+              data={paginatedRows}
+              onOpenInvoice={setInvoiceIdToOpen}
+              tableState={tableState}
+              filterOptions={filterOptions}
+              totals={totals}
+            />
+            <TablePagination
+              page={page}
+              pageSize={pageSize}
+              onPage={setPage}
+              onPageSize={setPageSize}
+              total={filteredRows.length}
+              totalPages={Math.ceil(filteredRows.length / pageSize)}
+            />
+          </div>
+        )}
       </DrawerSection>
       <ErpInvoiceStandaloneDrawer
         isOpen={!!invoiceIdToOpen}
