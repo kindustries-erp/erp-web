@@ -67,5 +67,4 @@ export const breadcrumbVi = {
   catalogFunds: "Quỹ tiền mặt",
   catalogBank: "Tài khoản ngân hàng",
   catalogAccounts: "Hệ thống tài khoản",
-  workshopDashboard: "Xưởng KD & Vận hành",
 };

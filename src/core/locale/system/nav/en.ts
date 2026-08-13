@@ -104,7 +104,6 @@ export const navEn = {
     garageReceivables: "Receivables (Garage)",
     garagePayables: "Payables (Garage)",
     garageGrossProfit: "Revenue & Costs",
-    workshopDashboard: "Workshop Ops Dashboard",
   },
   bottom: {
     themeLight: "Light mode",

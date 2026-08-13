@@ -1,6 +1,6 @@
 export const dashboardEn = {
-  title: "Financial Overview",
-  desc: "Key financial metrics up to today.",
+  title: "Business & Ops Dashboard",
+  desc: "Overview of financial metrics, sales, inventory, invoices, settlements and Vinfast parts KPIs.",
   kpi: {
     cash: "Total Cash",
     ar: "AR",
@@ -21,6 +21,12 @@ export const dashboardEn = {
     vfPartsTotalBuy: "Total Parts Purchases",
     vfPartsTotalSell: "Total Parts Sales",
     vfPartsProfit: "Parts Profit",
+    salesQty: "Qty Sold",
+    purQty: "Qty Purchased",
+    totalSkus: "Total SKUs",
+    zeroStock: "Out of Stock",
+    lowStock: "Low Stock",
+    totalOrders: "Total Orders",
   },
   cashTrend: "Cash Flow Trend",
   cashIn: "Cash In",
@@ -39,9 +45,25 @@ export const dashboardEn = {
   },
   tabs: {
     overview: "Overview",
+    sales: "Sales",
+    inventory: "Inventory & Ops",
+    cashflow: "Cash Flow",
     invoice: "Invoices",
     settlement: "Settlement",
     vinfastParts: "Vinfast Parts",
+  },
+  panel: {
+    cashTrend: "Cash In/Out Trend",
+    salesTrend: "Sales Volume Trend",
+    topCustomers: "Top Customers",
+    stockTrend: "Receipt/Issue Trend",
+    expenseByCategory: "Expense by Category",
+    colorDistribution: "Color Distribution",
+  },
+  alert: {
+    zeroStock: "Out of Stock",
+    lowStock: "Low Stock",
+    salesOrders: "Sales Orders",
   },
   common: {
     total: "Total",

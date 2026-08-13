@@ -1,6 +1,6 @@
 export const dashboardVi = {
-  title: "Tổng Quan Tài Chính",
-  desc: "Tổng quan các chỉ số tài chính chính yếu tính đến hôm nay.",
+  title: "Tổng Quan HĐKD & Vận hành",
+  desc: "Tổng quan các chỉ số tài chính, kinh doanh, kho, hóa đơn, quyết toán và phụ tùng Vinfast.",
   kpi: {
     cash: "Tổng tiền mặt",
     ar: "Phải thu",
@@ -21,6 +21,12 @@ export const dashboardVi = {
     vfPartsTotalBuy: "Tổng mua phụ tùng",
     vfPartsTotalSell: "Tổng bán phụ tùng",
     vfPartsProfit: "Lợi nhuận phụ tùng",
+    salesQty: "Số lượng bán ra",
+    purQty: "Số lượng mua vào",
+    totalSkus: "Tổng SKUs",
+    zeroStock: "Hết hàng",
+    lowStock: "Sắp hết hàng",
+    totalOrders: "Tổng đơn hàng",
   },
   cashTrend: "Biến động dòng tiền",
   cashIn: "Tiền vào",
@@ -39,9 +45,25 @@ export const dashboardVi = {
   },
   tabs: {
     overview: "Tổng quan",
+    sales: "Kinh doanh",
+    inventory: "Kho & Vận hành",
+    cashflow: "Dòng tiền",
     invoice: "Hóa đơn",
     settlement: "Sao kê",
     vinfastParts: "Phụ tùng Vinfast",
+  },
+  panel: {
+    cashTrend: "Dòng tiền Thu/Chi",
+    salesTrend: "Sản lượng Bán",
+    topCustomers: "Top Khách hàng",
+    stockTrend: "Biến động Nhập/Xuất",
+    expenseByCategory: "Chi theo danh mục",
+    colorDistribution: "Phân bổ màu sắc",
+  },
+  alert: {
+    zeroStock: "Hết hàng",
+    lowStock: "Sắp hết hàng",
+    salesOrders: "Đơn bán hàng",
   },
   common: {
     total: "Tổng cộng",
