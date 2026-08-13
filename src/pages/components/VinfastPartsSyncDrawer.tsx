@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { fetchEventSource } from "@microsoft/fetch-event-source";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
 
 import { format } from "date-fns";
 import api, { API_BASE_URL } from "@/core/api/axiosInstance";
@@ -8,6 +10,8 @@ import { DatePicker } from "@/shared/components/DatePicker";
 import { Button } from "@/shared/components/ui/Button";
 import { RefreshCw, CheckCircle2 } from "lucide-react";
 import { useVinfastPartsSyncProgressStore } from "@/shared/stores/useVinfastPartsSyncProgressStore";
+import { Checkbox } from "@/shared/components/ui/checkbox";
+import { Combobox } from "@/shared/components/Combobox";
 
 interface SyncProgressEvent {
   message: string;
@@ -37,6 +41,9 @@ export function VinfastPartsSyncDrawer({
     format(new Date(), "yyyy-MM-dd"),
   );
 
+  const [syncRange, setSyncRange] = useState<"custom" | "all">("custom");
+  const [clearDb, setClearDb] = useState<boolean>(false);
+
   const {
     isSyncing,
     progress,
@@ -49,56 +56,80 @@ export function VinfastPartsSyncDrawer({
     setSseConnected,
   } = useVinfastPartsSyncProgressStore();
 
+  const token = useAuthStore((s) => s.accessToken);
+  const controllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
-    // If it's syncing, we just need to make sure we are listening to SSE
-    // If it's already syncing when drawer opens, the eventSource might be disconnected since it was local.
-    // Wait, if it was local to the component, it was destroyed. We need to mount SSE listener independently, or just re-listen when opening if syncing.
-    // Let's create a reconnect logic.
-    let eventSource: EventSource | null = null;
-
-    if (isSyncing && open && !sseConnected) {
+    if (isSyncing && open && !sseConnected && token) {
+      controllerRef.current = new AbortController();
       const sseUrl = `${API_BASE_URL}/api/v1/vinfast-parts/sync/progress`;
-      eventSource = new EventSource(sseUrl);
-      setSseConnected(true);
 
-      eventSource.onmessage = (event) => {
+      const connect = async () => {
         try {
-          const data = JSON.parse(event.data) as SyncProgressEvent;
-          if (
-            data.message &&
-            data.message !== "Connected" &&
-            data.message !== "Ping"
-          ) {
-            addLog(data.message);
-          }
-          if (data.total > 0) {
-            setProgress(Math.round((data.current / data.total) * 100));
-          }
-          if (data.completed) {
-            setSyncing(false);
-            setSseConnected(false);
-            eventSource?.close();
-            setProgress(100);
-          }
+          await fetchEventSource(sseUrl, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            signal: controllerRef.current?.signal,
+            onopen(res) {
+              if (res.ok && res.status === 200) {
+                setSseConnected(true);
+                return Promise.resolve();
+              }
+              setSseConnected(false);
+              return Promise.reject(
+                new Error(`Failed to open SSE: ${res.status}`),
+              );
+            },
+            onmessage(event) {
+              if (!event.data) return;
+              try {
+                const data = JSON.parse(event.data) as SyncProgressEvent;
+                if (
+                  data.message &&
+                  data.message !== "Connected" &&
+                  data.message !== "Ping"
+                ) {
+                  addLog(data.message);
+                }
+                if (data.total > 0) {
+                  setProgress(Math.round((data.current / data.total) * 100));
+                }
+                if (data.completed) {
+                  setSyncing(false);
+                  setSseConnected(false);
+                  if (controllerRef.current) {
+                    controllerRef.current.abort();
+                  }
+                  setProgress(100);
+                }
+              } catch (err) {
+                console.error("SSE parse error", err);
+              }
+            },
+            onerror(err) {
+              console.error("SSE error", err);
+              setSseConnected(false);
+              throw err;
+            },
+          });
         } catch (err) {
-          console.error("SSE parse error", err);
+          console.error("fetchEventSource error", err);
+          setSseConnected(false);
         }
       };
 
-      eventSource.onerror = (err) => {
-        console.error("SSE error", err);
-        eventSource?.close();
-        setSseConnected(false);
-      };
+      void connect();
     }
 
     return () => {
-      if (eventSource) {
-        eventSource.close();
-        setSseConnected(false);
+      if (controllerRef.current) {
+        controllerRef.current.abort();
       }
+      setSseConnected(false);
     };
-  }, [open, isSyncing]); // removed sseConnected to prevent infinite loop
+  }, [open, isSyncing, token]); // removed sseConnected to prevent infinite loop
 
   const startSync = async () => {
     if (isSyncing) return;
@@ -107,14 +138,15 @@ export function VinfastPartsSyncDrawer({
     clearLogs();
     addLog("Đang khởi tạo tiến trình đồng bộ...");
 
-    const fromStr = dateFrom;
-    const toStr = dateTo;
+    const fromStr = syncRange === "custom" ? dateFrom : undefined;
+    const toStr = syncRange === "custom" ? dateTo : undefined;
 
     try {
       // Trigger Sync API
       await api.post("/api/v1/vinfast-parts/sync-ledger", {
         dateFrom: fromStr,
         dateTo: toStr,
+        clearDb: clearDb,
       });
     } catch (err: any) {
       setSyncing(false);
@@ -126,7 +158,7 @@ export function VinfastPartsSyncDrawer({
     <StandardFormDrawer
       open={open}
       onClose={onClose}
-      title="Đồng bộ Sổ cái & Danh mục VinFast"
+      title="Đồng bộ danh mục Vinfast"
       subtitle="Quét hóa đơn nội bộ trong ERP để cập nhật tồn kho và giá vốn FIFO"
       layout="1-column"
       size="sm"
@@ -135,21 +167,51 @@ export function VinfastPartsSyncDrawer({
         <div className="space-y-6">
           <DrawerSection title="Cấu hình đồng bộ">
             <div className="space-y-4 pt-2">
-              <DrawerField
-                label="Từ ngày (Mặc định lấy tháng hiện tại)"
-                required
-              >
-                <DatePicker
-                  value={dateFrom || ""}
-                  onChange={(v) => setDateFrom(v)}
+              <DrawerField label="Chu kỳ đồng bộ" required>
+                <Combobox
+                  value={syncRange}
+                  onChange={(v) => setSyncRange(v as "custom" | "all")}
+                  options={[
+                    { value: "custom", label: "Tùy chọn ngày" },
+                    { value: "all", label: "Toàn thời gian" },
+                  ]}
+                  allowClear={false}
                 />
               </DrawerField>
-              <DrawerField label="Đến ngày" required>
-                <DatePicker
-                  value={dateTo || ""}
-                  onChange={(v) => setDateTo(v)}
+
+              {syncRange === "custom" && (
+                <>
+                  <DrawerField
+                    label="Từ ngày (Mặc định lấy tháng hiện tại)"
+                    required
+                  >
+                    <DatePicker
+                      value={dateFrom || ""}
+                      onChange={(v) => setDateFrom(v)}
+                    />
+                  </DrawerField>
+                  <DrawerField label="Đến ngày" required>
+                    <DatePicker
+                      value={dateTo || ""}
+                      onChange={(v) => setDateTo(v)}
+                    />
+                  </DrawerField>
+                </>
+              )}
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="clearDb"
+                  checked={clearDb}
+                  onCheckedChange={(checked) => setClearDb(checked as boolean)}
                 />
-              </DrawerField>
+                <label
+                  htmlFor="clearDb"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700 dark:text-slate-200"
+                >
+                  Xóa sạch dữ liệu cũ trước khi đồng bộ
+                </label>
+              </div>
 
               <div className="pt-4 flex justify-end">
                 <Button

@@ -210,6 +210,7 @@ function DashboardContent() {
         filter={filter}
         data={mergedData}
         workshop={workshop}
+        branches={branches}
       />
     </DashboardTemplate>
   );
