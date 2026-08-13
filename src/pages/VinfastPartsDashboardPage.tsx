@@ -1,5 +1,7 @@
 import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
+import { useAuthStore } from "@/modules/auth/domain/authStore";
+import { ComingSoon } from "@/pages/ComingSoon";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import React from "react";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
@@ -21,6 +23,9 @@ import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpI
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 
 export function VinfastPartsDashboardPage() {
+  const { employee } = useAuthStore();
+  const isAdminEmail = employee?.email === "admin@liouni.com";
+
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({
     queryKey: ["vinfast-parts-dashboard"],
@@ -92,6 +97,10 @@ export function VinfastPartsDashboardPage() {
     grossProfit: 0,
     inventoryValue: 0,
   };
+
+  if (!isAdminEmail) {
+    return <ComingSoon />;
+  }
 
   return (
     <DashboardTemplate
