@@ -553,10 +553,7 @@ export function VinfastPartsStockDetailDrawer({
         open={open}
         mode="view"
         onClose={onClose}
-        title={t(
-          "vinfastParts:FIFO_TRACE_LEDGER",
-          "Lịch sử luân chuyển FIFO (Ledger)",
-        )}
+        title={t("vinfastParts:FIFO_TRACE_LEDGER", "Lịch sử xuất nhập kho")}
         subtitle={`${sku} - ${catalogData?.name || ""}`}
         titleExtra={
           <Badge
@@ -581,7 +578,7 @@ export function VinfastPartsStockDetailDrawer({
               filterState={{}}
               groupBy="day"
               itemCode={sku}
-              chartHeight={270}
+              chartHeight={220}
             />
             <FifoUnitLedgerSection sku={sku} />
           </div>

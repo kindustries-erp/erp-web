@@ -11,7 +11,7 @@ export const vinfastPartsVi = {
   SYSTEM: "HỆ THỐNG",
   SEARCH: "TRA CỨU",
   VIEW_DETAILS: "Chi tiết",
-  FIFO_TRACE_LEDGER: "Lịch sử luân chuyển FIFO (Ledger)",
+  FIFO_TRACE_LEDGER: "Lịch sử xuất nhập kho",
   CAR: "Ô tô",
   MOTORBIKE: "Xe máy",
   IN_HISTORY: "Lịch sử Nhập (IN)",
