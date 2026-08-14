@@ -80,6 +80,9 @@ export interface StandardFormDrawerProps {
   collapsibleRightPanel?: boolean;
   noAnimation?: boolean;
   asContent?: boolean;
+
+  /** Custom element to render on the left side of the footer */
+  footerLeft?: React.ReactNode;
 }
 
 export function StandardFormDrawer({
@@ -108,6 +111,7 @@ export function StandardFormDrawer({
   zIndex,
   asContent = false,
   noAnimation = false,
+  footerLeft,
 }: StandardFormDrawerProps) {
   const t = useT();
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
@@ -278,6 +282,7 @@ export function StandardFormDrawer({
       actions={actions}
       zIndex={zIndex}
       noAnimation={noAnimation}
+      footerLeft={footerLeft}
     >
       {innerContent}
     </DrawerModal>

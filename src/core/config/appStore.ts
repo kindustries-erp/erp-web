@@ -169,12 +169,12 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
     labelKey: "Tổng quan phụ tùng",
     group: "inventory",
   },
-  "vinfast-parts-oto": {
-    labelKey: "Phụ tùng ôtô",
+  "vinfast-parts-oto-stock": {
+    labelKey: "nav.items.vinfastPartsOtoStock",
     group: "inventory",
   },
-  "vinfast-parts-xemay": {
-    labelKey: "Phụ tùng xe máy",
+  "vinfast-parts-xemay-stock": {
+    labelKey: "nav.items.vinfastPartsXemayStock",
     group: "inventory",
   },
   "settings-branch": {
@@ -320,8 +320,16 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
   "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
   "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
-  "vinfast-parts-oto": [["breadcrumb.inventory"], ["Phụ tùng ôtô"]],
-  "vinfast-parts-xemay": [["breadcrumb.inventory"], ["Phụ tùng xe máy"]],
+  "vinfast-parts-oto-stock": [
+    ["breadcrumb.inventory"],
+    ["nav.items.vinfastParts"],
+    ["nav.items.vinfastPartsOtoStock"],
+  ],
+  "vinfast-parts-xemay-stock": [
+    ["breadcrumb.inventory"],
+    ["nav.items.vinfastParts"],
+    ["nav.items.vinfastPartsXemayStock"],
+  ],
   "vinfast-invoice-settlement": [
     ["breadcrumb.manufacturing"],
     ["Lệnh quyết toán xưởng Vinfast"],

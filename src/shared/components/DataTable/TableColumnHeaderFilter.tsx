@@ -54,6 +54,7 @@ export interface TableColumnHeaderFilterProps {
   enableSelectAllMatching?: boolean;
   isActive?: boolean;
   showBlankOption?: boolean;
+  hideSort?: boolean;
   /** Optional slot rendered between Sort buttons and Search input (e.g. a date range picker). Can be a function that receives a close function. */
   dateRangeSlot?:
     | React.ReactNode
@@ -88,7 +89,8 @@ export function TableColumnHeaderFilter({
   enableSelectAllMatching,
   isActive,
   dateRangeSlot,
-  showBlankOption,
+  showBlankOption = false,
+  hideSort = false,
 }: TableColumnHeaderFilterProps) {
   const [open, setOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(() => {
@@ -316,41 +318,48 @@ export function TableColumnHeaderFilter({
             dateRangeSlot ? "w-72" : "w-64",
           )}
         >
-          {/* Sorting */}
-          <div className="p-2 border-b border-border flex flex-col gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start w-full text-left font-normal",
-                sortState === "asc" && "bg-muted text-primary",
-              )}
-              onClick={() => {
-                onSortChange(sortState === "asc" ? "none" : "asc");
-                setOpen(false);
-              }}
-            >
-              <ArrowDownAZ size={14} className="mr-2" />
-              Sắp xếp tăng dần
-              {sortState === "asc" && <Check size={14} className="ml-auto" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "justify-start w-full text-left font-normal",
-                sortState === "desc" && "bg-muted text-primary",
-              )}
-              onClick={() => {
-                onSortChange(sortState === "desc" ? "none" : "desc");
-                setOpen(false);
-              }}
-            >
-              <ArrowUpAZ size={14} className="mr-2" />
-              Sắp xếp giảm dần
-              {sortState === "desc" && <Check size={14} className="ml-auto" />}
-            </Button>
-          </div>
+          {!hideSort && (
+            <div className="flex flex-col gap-1 border-b border-border p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-start font-normal rounded-sm h-8",
+                  sortState === "asc"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "",
+                )}
+                onClick={() => {
+                  onSortChange(sortState === "asc" ? "none" : "asc");
+                  setOpen(false);
+                }}
+              >
+                <ArrowDownAZ size={14} className="mr-2" />
+                Sắp xếp tăng dần
+                {sortState === "asc" && <Check size={14} className="ml-auto" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-start font-normal rounded-sm h-8",
+                  sortState === "desc"
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "",
+                )}
+                onClick={() => {
+                  onSortChange(sortState === "desc" ? "none" : "desc");
+                  setOpen(false);
+                }}
+              >
+                <ArrowUpAZ size={14} className="mr-2" />
+                Sắp xếp giảm dần
+                {sortState === "desc" && (
+                  <Check size={14} className="ml-auto" />
+                )}
+              </Button>
+            </div>
+          )}
 
           {/* Date range slot (e.g. for invoiceDate column) */}
           {typeof dateRangeSlot === "function"

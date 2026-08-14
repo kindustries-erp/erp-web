@@ -324,6 +324,8 @@ export function SidebarNav({
                   currentPage === "vinfast-parts-dashboard" ||
                   currentPage === "vinfast-parts-oto" ||
                   currentPage === "vinfast-parts-xemay" ||
+                  currentPage === "vinfast-parts-oto-stock" ||
+                  currentPage === "vinfast-parts-xemay-stock" ||
                   currentPage === "vinfast-parts"
                 }
               >
@@ -334,17 +336,33 @@ export function SidebarNav({
                   contextPage="vinfast-parts-dashboard"
                 />
                 <NavGroupItem
-                  label="Phụ tùng ôtô"
-                  active={currentPage === "vinfast-parts-oto"}
-                  onClick={() => navTo("vinfast-parts-oto")}
-                  contextPage="vinfast-parts-oto"
+                  label="Tồn kho ôtô"
+                  active={currentPage === "vinfast-parts-oto-stock"}
+                  onClick={() => navTo("vinfast-parts-oto-stock")}
+                  contextPage="vinfast-parts-oto-stock"
                 />
                 <NavGroupItem
-                  label="Phụ tùng xe máy"
-                  active={currentPage === "vinfast-parts-xemay"}
-                  onClick={() => navTo("vinfast-parts-xemay")}
-                  contextPage="vinfast-parts-xemay"
+                  label="Tồn kho xe máy"
+                  active={currentPage === "vinfast-parts-xemay-stock"}
+                  onClick={() => navTo("vinfast-parts-xemay-stock")}
+                  contextPage="vinfast-parts-xemay-stock"
                 />
+                {isAdminEmail && (
+                  <>
+                    <NavGroupItem
+                      label="Phụ tùng ôtô"
+                      active={currentPage === "vinfast-parts-oto"}
+                      onClick={() => navTo("vinfast-parts-oto")}
+                      contextPage="vinfast-parts-oto"
+                    />
+                    <NavGroupItem
+                      label="Phụ tùng xe máy"
+                      active={currentPage === "vinfast-parts-xemay"}
+                      onClick={() => navTo("vinfast-parts-xemay")}
+                      contextPage="vinfast-parts-xemay"
+                    />
+                  </>
+                )}
               </NavGroup>
             )}
           </NavSection>

@@ -1,5 +1,6 @@
 import { LayoutDashboard } from "lucide-react";
 import { DashboardTemplate } from "@/shared/components/DashboardTemplate";
+import { ComingSoon } from "@/pages/ComingSoon";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import React from "react";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
@@ -7,20 +8,15 @@ import api from "@/core/api/axiosInstance";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { KpiCard } from "@/shared/components/KpiCard";
+import { KpiSparkline } from "@/shared/components/KpiSparkline";
+import { format, subMonths, subWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { money } from "@/shared/utils/format";
-import { VinfastPartDashboardTable } from "./components/VinfastPartDashboardTable";
-import { VinfastPartDashboardDrawer } from "./components/VinfastPartDashboardDrawer";
-import { VinfastPartDashboardTableRow } from "@/shared/hooks/useVinfastPartsDashboardTable";
-import { useErpInvoiceForm } from "@/modules/erp-invoices-core/hooks/useErpInvoiceForm";
-import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
-import {
-  ErpInvoiceInternalSidebar,
-  ErpInvoiceInternalMain,
-} from "@/modules/erp-invoices-core/components/ErpInvoiceInternalInfo";
-import { ErpInvoicePdfUpload } from "@/modules/erp-invoices-core/components/ErpInvoicePdfUpload";
-import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 export function VinfastPartsDashboardPage() {
+  const hasVinfastPerm = useHasPermission("vinfast_parts_reports", "read");
+
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({
     queryKey: ["vinfast-parts-dashboard"],
@@ -48,23 +44,6 @@ export function VinfastPartsDashboardPage() {
   const filter = useFilterPanel(filterConfig, () => {});
   const groupBy = filter.state.custom.groupBy || "month";
 
-  const [selectedPart, setSelectedPart] =
-    React.useState<VinfastPartDashboardTableRow | null>(null);
-  const [selectedVehicleType, setSelectedVehicleType] = React.useState<
-    "CAR" | "MOTORBIKE"
-  >("CAR");
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
-  const formHook = useErpInvoiceForm(() => {});
-
-  const handleRowClick = React.useCallback(
-    (row: VinfastPartDashboardTableRow, vehicleType: "CAR" | "MOTORBIKE") => {
-      setSelectedPart(row);
-      setSelectedVehicleType(vehicleType);
-      setIsDrawerOpen(true);
-    },
-    [],
-  );
-
   const { data: allData } = useQuery({
     queryKey: [
       "vinfast-parts-dashboard",
@@ -86,7 +65,72 @@ export function VinfastPartsDashboardPage() {
     },
   });
 
-  const summary = allData?.summary || { totalBuy: 0, totalSell: 0, profit: 0 };
+  const summary = allData?.summary || {
+    revenue: 0,
+    cogs: 0,
+    grossProfit: 0,
+    inventoryValue: 0,
+    byVehicleType: {
+      CAR: { revenue: 0, cogs: 0, grossProfit: 0, inventoryValue: 0 },
+      MOTORBIKE: { revenue: 0, cogs: 0, grossProfit: 0, inventoryValue: 0 },
+    },
+  };
+
+  const charts = allData?.charts || {
+    revenue: [],
+    cogs: [],
+    grossProfit: [],
+    inventoryValue: [],
+  };
+
+  const monthLabels = React.useMemo(() => {
+    return Array.from({ length: 6 }).map((_, i) => {
+      const d = subMonths(new Date(), 5 - i);
+      return `Tháng ${format(d, "MM/yyyy")}`;
+    });
+  }, []);
+
+  const weekLabels = React.useMemo(() => {
+    return Array.from({ length: 4 }).map((_, i) => {
+      const d = subWeeks(new Date(), 3 - i);
+      const start = startOfWeek(d, { weekStartsOn: 1 });
+      const end = endOfWeek(d, { weekStartsOn: 1 });
+      return `${format(start, "dd/MM")} - ${format(end, "dd/MM")}`;
+    });
+  }, []);
+
+  const chartLabels = groupBy === "week" ? weekLabels : monthLabels;
+
+  const renderBottomNode = (
+    key: "revenue" | "cogs" | "grossProfit" | "inventoryValue",
+  ) => {
+    const carVal = summary.byVehicleType?.CAR?.[key] || 0;
+    const motorVal = summary.byVehicleType?.MOTORBIKE?.[key] || 0;
+    return (
+      <div className="pt-3 border-t border-border/50 grid grid-cols-2 gap-2">
+        <div className="flex flex-col min-w-0">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+            Ô tô
+          </span>
+          <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+            {money(carVal)}
+          </span>
+        </div>
+        <div className="flex flex-col min-w-0">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+            Xe máy
+          </span>
+          <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+            {money(motorVal)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  if (!hasVinfastPerm) {
+    return <ComingSoon />;
+  }
 
   return (
     <DashboardTemplate
@@ -106,22 +150,41 @@ export function VinfastPartsDashboardPage() {
       }}
     >
       <div className="flex flex-col gap-8 mb-8">
-        <div className="grid gap-4 md:grid-cols-3">
-          <Panel title="Tổng mua">
-            <p className="text-2xl font-bold mt-2 text-[#ea580c]">
-              {money(summary.totalBuy)} đ
-            </p>
-          </Panel>
-          <Panel title="Tổng bán">
-            <p className="text-2xl font-bold mt-2 text-[#059669]">
-              {money(summary.totalSell)} đ
-            </p>
-          </Panel>
-          <Panel title="Lợi nhuận">
-            <p className="text-2xl font-bold mt-2 text-[#1e293b]">
-              {money(summary.profit)} đ
-            </p>
-          </Panel>
+        <div className="grid gap-4 md:grid-cols-4">
+          <KpiCard
+            compact
+            label="Doanh thu"
+            value={`${money(summary.revenue)} đ`}
+            rightNode={
+              <KpiSparkline data={charts.revenue} labels={chartLabels} />
+            }
+            bottomNode={renderBottomNode("revenue")}
+          />
+          <KpiCard
+            compact
+            label="Giá vốn (FIFO)"
+            value={`${money(summary.cogs)} đ`}
+            rightNode={<KpiSparkline data={charts.cogs} labels={chartLabels} />}
+            bottomNode={renderBottomNode("cogs")}
+          />
+          <KpiCard
+            compact
+            label="Lợi nhuận gộp"
+            value={`${money(summary.grossProfit)} đ`}
+            rightNode={
+              <KpiSparkline data={charts.grossProfit} labels={chartLabels} />
+            }
+            bottomNode={renderBottomNode("grossProfit")}
+          />
+          <KpiCard
+            compact
+            label="Giá trị tồn kho"
+            value={`${money(summary.inventoryValue)} đ`}
+            rightNode={
+              <KpiSparkline data={charts.inventoryValue} labels={chartLabels} />
+            }
+            bottomNode={renderBottomNode("inventoryValue")}
+          />
         </div>
 
         <div>
@@ -153,101 +216,7 @@ export function VinfastPartsDashboardPage() {
             />
           </div>
         </div>
-
-        <div className="flex flex-col gap-6">
-          <div className="h-auto">
-            <VinfastPartDashboardTable
-              filterState={filter.state}
-              vehicleType="CAR"
-              title="Chi tiết Phụ tùng Ô tô"
-              onRowClick={(row) => handleRowClick(row, "CAR")}
-            />
-          </div>
-          <div className="h-auto">
-            <VinfastPartDashboardTable
-              filterState={filter.state}
-              vehicleType="MOTORBIKE"
-              title="Chi tiết Phụ tùng Xe máy"
-              onRowClick={(row) => handleRowClick(row, "MOTORBIKE")}
-            />
-          </div>
-        </div>
       </div>
-
-      <VinfastPartDashboardDrawer
-        open={isDrawerOpen}
-        onOpenChange={(open) => {
-          setIsDrawerOpen(open);
-          if (!open) setTimeout(() => setSelectedPart(null), 300);
-        }}
-        part={selectedPart}
-        vehicleType={selectedVehicleType}
-        filterState={filter.state}
-        groupBy={groupBy as string}
-        onOpenInvoice={(id) => formHook.openInternal({ id } as any)}
-      />
-
-      <ErpInvoiceInternalDrawer
-        open={formHook.internalDrawerOpen}
-        onClose={formHook.closeDrawer}
-        editMode={formHook.editMode}
-        detailInvoice={formHook.detailInvoice}
-        startEdit={formHook.startEdit}
-        saving={formHook.saving}
-        handleSave={formHook.handleSave}
-        cancelEdit={formHook.cancelEdit}
-        rightPanel={
-          <div className="flex flex-col gap-5">
-            <ErpInvoiceInternalSidebar
-              form={formHook.form}
-              editMode={formHook.editMode}
-              fieldSet={(key: string, value: any) =>
-                formHook.setForm((prev) => ({ ...prev, [key]: value }))
-              }
-              invoiceId={formHook.detailInvoice?.id ?? null}
-              pendingTagIds={formHook.pendingTagIds}
-              onPendingTagsChange={formHook.setPendingTagIds}
-              direction={formHook.detailInvoice?.direction || "IN"}
-              detailInvoice={formHook.detailInvoice}
-              onRefreshDetail={formHook.handleSyncDetail}
-              pdfSlot={
-                <ErpInvoicePdfUpload
-                  invoiceId={formHook.detailInvoice?.id ?? null}
-                  attachments={formHook.detailInvoice?.pdfFiles ?? null}
-                  editMode={formHook.editMode}
-                />
-              }
-            />
-          </div>
-        }
-      >
-        <div className="flex flex-col gap-5">
-          <ErpInvoiceInternalMain
-            form={formHook.form}
-            editMode={formHook.editMode}
-            fieldSet={(key: string, value: any) =>
-              formHook.setForm((prev) => ({ ...prev, [key]: value }))
-            }
-            direction={formHook.detailInvoice?.direction || "IN"}
-            detailInvoice={formHook.detailInvoice}
-            postingState={formHook.postingState}
-            pendingUnpost={formHook.pendingUnpost}
-            onUnpost={() => formHook.setPendingUnpost(true)}
-            onRefreshDetail={() => {
-              if (formHook.detailInvoice?.id) {
-                formHook.openInternal({ id: formHook.detailInvoice.id } as any);
-              }
-            }}
-            invoicePreview={
-              formHook.detailInvoice ? (
-                <div className="flex justify-center bg-slate-100 p-8 min-h-full">
-                  <VietnamInvoiceTemplate invoice={formHook.detailInvoice} />
-                </div>
-              ) : undefined
-            }
-          />
-        </div>
-      </ErpInvoiceInternalDrawer>
     </DashboardTemplate>
   );
 }
@@ -293,13 +262,13 @@ export function VinfastPartTrendChart({
 
   const trend = data?.trend || [];
   const trendLabels = trend.map((t: any) => t.month);
-  const trendBuy = trend.map((t: any) => t.totalBuy);
-  const trendSell = trend.map((t: any) => t.totalSell);
-  const trendProfit = trend.map((t: any) => t.profit);
+  const trendBuy = trend.map((t: any) => t.cogs);
+  const trendSell = trend.map((t: any) => t.revenue);
+  const trendProfit = trend.map((t: any) => t.grossProfit);
 
-  const colorRevenue = "#059669"; // Emerald 600 (Bán)
-  const colorExpense = "#ea580c"; // Orange 600 (Mua)
-  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận)
+  const colorRevenue = "#059669"; // Emerald 600 (Doanh thu)
+  const colorExpense = "#ea580c"; // Orange 600 (Giá vốn)
+  const lineProfit = "#1e293b"; // Slate 800 (Lợi nhuận gộp)
 
   return (
     <Panel title={title}>
@@ -316,19 +285,19 @@ export function VinfastPartTrendChart({
                 borderColor: lineProfit,
                 borderWidth: 2,
                 fill: false,
-                label: "Lợi nhuận",
+                label: "Lợi nhuận gộp",
               },
               {
                 type: "bar",
                 data: trendBuy,
                 color: colorExpense,
-                label: "Tổng mua",
+                label: "Giá vốn",
               },
               {
                 type: "bar",
                 data: trendSell,
                 color: colorRevenue,
-                label: "Tổng bán",
+                label: "Doanh thu",
               },
             ]}
           />
@@ -341,9 +310,9 @@ export function VinfastPartTrendChart({
         )}
       </div>
       <div className="flex gap-4 mt-[10px] justify-center">
-        <LegendItem color={colorExpense} label="Mua vào" />
-        <LegendItem color={colorRevenue} label="Bán ra" />
-        <LegendItem color={lineProfit} label="Lợi nhuận" isLine={true} />
+        <LegendItem color={colorExpense} label="Giá vốn" />
+        <LegendItem color={colorRevenue} label="Doanh thu" />
+        <LegendItem color={lineProfit} label="Lợi nhuận gộp" isLine={true} />
       </div>
     </Panel>
   );
