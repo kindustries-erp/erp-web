@@ -57,6 +57,8 @@ export interface ErpInvoice {
   xmlImportId?: string | null;
   taxInvoiceStatus?: number | null;
   taxProcessStatus?: number | null;
+  relatedInvoiceNo?: string | null;
+  relatedSerialNo?: string | null;
   createdAt?: string;
   updatedAt?: string;
   postingStatus?: string | null;
