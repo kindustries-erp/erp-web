@@ -110,6 +110,12 @@ export function InvoiceImportSyncDrawer({
   const portal = usePortalSync();
 
   useEffect(() => {
+    if (portal.needsRelogin) {
+      setConfigOpen(true);
+    }
+  }, [portal.needsRelogin]);
+
+  useEffect(() => {
     if (open) {
       setDirection(initialDirection);
       xml.setDirection(initialDirection);
@@ -355,8 +361,8 @@ export function InvoiceImportSyncDrawer({
                     </Button>
                     <div
                       title={
-                        !portal.token
-                          ? "Vui lòng cấu hình token Cổng thuế trước"
+                        !portal.token && !portal.hasPassword
+                          ? "Vui lòng cấu hình tài khoản Cổng thuế trước"
                           : ""
                       }
                     >
@@ -365,7 +371,9 @@ export function InvoiceImportSyncDrawer({
                         size="sm"
                         onClick={handleBulkXml}
                         disabled={
-                          bulkXmlLoading || portal.loading || !portal.token
+                          bulkXmlLoading ||
+                          portal.loading ||
+                          (!portal.token && !portal.hasPassword)
                         }
                         className="gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700 disabled:opacity-50"
                       >
@@ -379,15 +387,17 @@ export function InvoiceImportSyncDrawer({
 
                   <div
                     title={
-                      !portal.token
-                        ? "Vui lòng cấu hình token Cổng thuế trước"
+                      !portal.token && !portal.hasPassword
+                        ? "Vui lòng cấu hình tài khoản Cổng thuế trước"
                         : ""
                     }
                   >
                     <Button
                       onClick={handleSync}
                       disabled={
-                        portal.loading || bulkXmlLoading || !portal.token
+                        portal.loading ||
+                        bulkXmlLoading ||
+                        (!portal.token && !portal.hasPassword)
                       }
                       className="gap-2 w-36 justify-center disabled:opacity-50"
                     >

@@ -25,7 +25,7 @@ describe("GdtPortalAuthForm", () => {
     vi.clearAllMocks();
     (erpInvoicesCoreApi.getPortalConfig as any).mockResolvedValue({
       username: "0318334886-003",
-      password: "ExistingPassword",
+      hasPassword: true,
       token: "existing-token",
       cookies: "existing-cookie",
     });
@@ -51,11 +51,6 @@ describe("GdtPortalAuthForm", () => {
       "Ví dụ: 0318334886 hoặc 0318334886-003",
     ) as HTMLInputElement;
     expect(usernameInput.value).toBe("0318334886-003");
-
-    const passwordInput = screen.getByPlaceholderText(
-      "Nhập mật khẩu Cổng thuế...",
-    ) as HTMLInputElement;
-    expect(passwordInput.value).toBe("ExistingPassword");
   });
 
   it("submits login with username, password, captcha and key", async () => {
@@ -72,6 +67,13 @@ describe("GdtPortalAuthForm", () => {
       expect(erpInvoicesCoreApi.getPortalCaptcha).toHaveBeenCalled();
     });
 
+    const passwordInput = screen.getByPlaceholderText(
+      "Nhập mật khẩu Cổng thuế...",
+    ) as HTMLInputElement;
+    fireEvent.change(passwordInput, {
+      target: { value: "MySecurePassword123" },
+    });
+
     const captchaInput = screen.getByPlaceholderText(
       "Nhập mã...",
     ) as HTMLInputElement;
@@ -86,7 +88,7 @@ describe("GdtPortalAuthForm", () => {
     await waitFor(() => {
       expect(erpInvoicesCoreApi.loginPortal).toHaveBeenCalledWith({
         username: "0318334886-003",
-        password: "ExistingPassword",
+        password: "MySecurePassword123",
         cvalue: "VMRBXR",
         ckey: "captcha-key-123",
       });
@@ -98,7 +100,7 @@ describe("GdtPortalAuthForm", () => {
     (erpInvoicesCoreApi.getPortalCaptcha as any).mockResolvedValue({
       content: "base64image",
       key: "captcha-key-123",
-      text: "8A9AWD",
+      text: "AUTO88",
     });
 
     render(<GdtPortalAuthForm />);
@@ -107,7 +109,7 @@ describe("GdtPortalAuthForm", () => {
       const captchaInput = screen.getByPlaceholderText(
         "Nhập mã...",
       ) as HTMLInputElement;
-      expect(captchaInput.value).toBe("8A9AWD");
+      expect(captchaInput.value).toBe("AUTO88");
     });
   });
 });

@@ -485,13 +485,13 @@ export const erpInvoicesCoreApi = {
     token: string;
     cookies: string;
     username?: string;
-    password?: string;
+    hasPassword?: boolean;
   }> => {
     const { data } = await axiosInstance.get<{
       token: string;
       cookies: string;
       username?: string;
-      password?: string;
+      hasPassword?: boolean;
     }>(`${BASE}/portal/token`);
     return data;
   },

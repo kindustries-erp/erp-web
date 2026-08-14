@@ -33,6 +33,7 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [hasSavedPassword, setHasSavedPassword] = useState(false);
 
   // Captcha
   const [captchaImg, setCaptchaImg] = useState<string | null>(null);
@@ -92,7 +93,7 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
       const config = await erpInvoicesCoreApi.getPortalConfig();
       if (config) {
         if (config.username) setUsername(config.username);
-        if (config.password) setPassword(config.password);
+        if (config.hasPassword) setHasSavedPassword(true);
         if (config.token) {
           setCurrentToken(config.token);
           setManualToken(config.token);
@@ -245,10 +246,18 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
 
         {/* Password */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
-            <KeyRound className="w-3.5 h-3.5 text-muted-foreground" />
-            Mật khẩu (*)
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-foreground flex items-center gap-1.5">
+              <KeyRound className="w-3.5 h-3.5 text-muted-foreground" />
+              Mật khẩu (*)
+            </label>
+            {hasSavedPassword && (
+              <span className="text-[11px] text-emerald-600 font-normal flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" />
+                Đã lưu mật khẩu
+              </span>
+            )}
+          </div>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
