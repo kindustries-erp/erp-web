@@ -103,6 +103,7 @@ export function AfterSalesListPage() {
   const {
     data: resData,
     isLoading: loading,
+    isFetching,
     refetch: fetchList,
   } = useAfterSalesQuery({
     page,
@@ -566,7 +567,7 @@ export function AfterSalesListPage() {
         items={data}
         columns={columns}
         getRowKey={(row: any) => row.lifecycleId}
-        loading={loading}
+        loading={loading || isFetching}
         sortArray={
           tableState.sorts.length > 0
             ? tableState.sorts.map((s) => (s.startsWith("-") ? s : s))
@@ -583,7 +584,7 @@ export function AfterSalesListPage() {
           setPageSize(size);
           setPage(1);
         }}
-        onRefresh={fetchList}
+        onRefresh={() => fetchList()}
         filterConfig={filterConfig}
         filter={filter}
         rowActions={rowActions}

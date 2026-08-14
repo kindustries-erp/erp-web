@@ -8,6 +8,9 @@ import api from "@/core/api/axiosInstance";
 import { Panel } from "@/shared/components/Panel";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { ChartSkeleton } from "@/shared/components/Skeleton";
+import { KpiCard } from "@/shared/components/KpiCard";
+import { KpiSparkline } from "@/shared/components/KpiSparkline";
+import { format, subMonths, subWeeks, startOfWeek, endOfWeek } from "date-fns";
 import { money } from "@/shared/utils/format";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
@@ -67,6 +70,62 @@ export function VinfastPartsDashboardPage() {
     cogs: 0,
     grossProfit: 0,
     inventoryValue: 0,
+    byVehicleType: {
+      CAR: { revenue: 0, cogs: 0, grossProfit: 0, inventoryValue: 0 },
+      MOTORBIKE: { revenue: 0, cogs: 0, grossProfit: 0, inventoryValue: 0 },
+    },
+  };
+
+  const charts = allData?.charts || {
+    revenue: [],
+    cogs: [],
+    grossProfit: [],
+    inventoryValue: [],
+  };
+
+  const monthLabels = React.useMemo(() => {
+    return Array.from({ length: 6 }).map((_, i) => {
+      const d = subMonths(new Date(), 5 - i);
+      return `Tháng ${format(d, "MM/yyyy")}`;
+    });
+  }, []);
+
+  const weekLabels = React.useMemo(() => {
+    return Array.from({ length: 4 }).map((_, i) => {
+      const d = subWeeks(new Date(), 3 - i);
+      const start = startOfWeek(d, { weekStartsOn: 1 });
+      const end = endOfWeek(d, { weekStartsOn: 1 });
+      return `${format(start, "dd/MM")} - ${format(end, "dd/MM")}`;
+    });
+  }, []);
+
+  const chartLabels = groupBy === "week" ? weekLabels : monthLabels;
+
+  const renderBottomNode = (
+    key: "revenue" | "cogs" | "grossProfit" | "inventoryValue",
+  ) => {
+    const carVal = summary.byVehicleType?.CAR?.[key] || 0;
+    const motorVal = summary.byVehicleType?.MOTORBIKE?.[key] || 0;
+    return (
+      <div className="pt-3 border-t border-border/50 grid grid-cols-2 gap-2">
+        <div className="flex flex-col min-w-0">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+            Ô tô
+          </span>
+          <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+            {money(carVal)}
+          </span>
+        </div>
+        <div className="flex flex-col min-w-0">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-wider truncate">
+            Xe máy
+          </span>
+          <span className="font-semibold text-foreground text-sm mt-0.5 truncate">
+            {money(motorVal)}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   if (!hasVinfastPerm) {
@@ -92,26 +151,40 @@ export function VinfastPartsDashboardPage() {
     >
       <div className="flex flex-col gap-8 mb-8">
         <div className="grid gap-4 md:grid-cols-4">
-          <Panel title="Doanh thu">
-            <p className="text-2xl font-bold mt-2 text-[#059669]">
-              {money(summary.revenue)} đ
-            </p>
-          </Panel>
-          <Panel title="Giá vốn (FIFO)">
-            <p className="text-2xl font-bold mt-2 text-[#ea580c]">
-              {money(summary.cogs)} đ
-            </p>
-          </Panel>
-          <Panel title="Lợi nhuận gộp">
-            <p className="text-2xl font-bold mt-2 text-[#1e293b]">
-              {money(summary.grossProfit)} đ
-            </p>
-          </Panel>
-          <Panel title="Giá trị tồn kho">
-            <p className="text-2xl font-bold mt-2 text-[#475569]">
-              {money(summary.inventoryValue)} đ
-            </p>
-          </Panel>
+          <KpiCard
+            compact
+            label="Doanh thu"
+            value={`${money(summary.revenue)} đ`}
+            rightNode={
+              <KpiSparkline data={charts.revenue} labels={chartLabels} />
+            }
+            bottomNode={renderBottomNode("revenue")}
+          />
+          <KpiCard
+            compact
+            label="Giá vốn (FIFO)"
+            value={`${money(summary.cogs)} đ`}
+            rightNode={<KpiSparkline data={charts.cogs} labels={chartLabels} />}
+            bottomNode={renderBottomNode("cogs")}
+          />
+          <KpiCard
+            compact
+            label="Lợi nhuận gộp"
+            value={`${money(summary.grossProfit)} đ`}
+            rightNode={
+              <KpiSparkline data={charts.grossProfit} labels={chartLabels} />
+            }
+            bottomNode={renderBottomNode("grossProfit")}
+          />
+          <KpiCard
+            compact
+            label="Giá trị tồn kho"
+            value={`${money(summary.inventoryValue)} đ`}
+            rightNode={
+              <KpiSparkline data={charts.inventoryValue} labels={chartLabels} />
+            }
+            bottomNode={renderBottomNode("inventoryValue")}
+          />
         </div>
 
         <div>
