@@ -56,6 +56,26 @@ export interface VinfastPartsSummary {
     totalBuy: number;
     totalSell: number;
     profit: number;
+    byVehicleType: {
+      CAR: {
+        revenue: number;
+        cogs: number;
+        grossProfit: number;
+        inventoryValue: number;
+      };
+      MOTORBIKE: {
+        revenue: number;
+        cogs: number;
+        grossProfit: number;
+        inventoryValue: number;
+      };
+    };
+  };
+  charts: {
+    revenue: number[];
+    cogs: number[];
+    grossProfit: number[];
+    inventoryValue: number[];
   };
   trend: Array<{
     month: string;
