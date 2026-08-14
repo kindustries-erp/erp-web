@@ -5,11 +5,7 @@ import {
   ExternalLink,
   AlertCircle,
   RefreshCw,
-  Settings,
-  CheckCircle2,
   XCircle,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Button } from "@/shared/components/ui/Button";
@@ -40,147 +36,36 @@ import { ImportResultSummary } from "./xml-upload/ImportResultSummary";
 import { ImportResultTables } from "./xml-upload/ImportResultTables";
 import { ImportPreviewModal } from "./xml-upload/ImportPreviewModal";
 import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
+import { GdtPortalAuthForm } from "./GdtPortalAuthForm";
+import { KeyRound } from "lucide-react";
 
-function TokenConfigDrawer({
+function GdtPortalAuthDrawer({
   open,
   onClose,
-  token,
-  cookies,
-  onSave,
+  onSuccess,
 }: {
   open: boolean;
   onClose: () => void;
-  token: string;
-  cookies: string;
-  onSave: (t: string, c: string) => void;
+  onSuccess?: () => void;
 }) {
-  const [draft, setDraft] = useState(token);
-  const [draftCookies, setDraftCookies] = useState(cookies);
-  const [showToken, setShowToken] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setDraft(token);
-      setDraftCookies(cookies);
-    }
-  }, [open, token, cookies]);
-
-  const handleClose = () => {
-    if (draft !== token || draftCookies !== cookies) {
-      setShowConfirm(true);
-    } else {
-      onClose();
-    }
-  };
-
   return (
-    <>
-      <DrawerModal
-        open={open}
-        onClose={handleClose}
-        title="Cấu hình Portal GDT"
-        panelClassName="min-[1024px]:w-[480px]"
-        actions={[
-          {
-            label: "Đóng",
-            onClick: handleClose,
-            variant: "outline" as const,
-          },
-          {
-            label: "Lưu cấu hình",
-            primary: true,
-            onClick: () => {
-              onSave(draft, draftCookies);
-              onClose();
-            },
-          },
-        ]}
-      >
-        <div className="space-y-4 p-1">
-          <p className="text-sm text-muted-foreground">
-            Nhập Bearer token và WAF Cookies (TS011...) đã đăng nhập vào hệ
-            thống <span className="font-medium">hoadondientu.gdt.gov.vn</span>.
-            Token được lưu trong trình duyệt và dùng để đồng bộ hóa đơn.
-          </p>
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Bearer Token
-            </label>
-            <div className="relative">
-              {showToken ? (
-                <textarea
-                  className="w-full h-32 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none pr-10"
-                  placeholder="eyJhbGciOiJ..."
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                />
-              ) : (
-                <input
-                  type="password"
-                  className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 pr-10"
-                  placeholder="eyJhbGciOiJ..."
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                />
-              )}
-              <button
-                type="button"
-                className="absolute right-2 top-2 p-1 text-muted-foreground hover:text-foreground"
-                onClick={() => setShowToken(!showToken)}
-              >
-                {showToken ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-            {draft && (
-              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Token đã nhập ({draft.length} ký tự)
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-1 mt-4">
-            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              WAF Cookies (Tùy chọn)
-            </label>
-            <div className="relative">
-              <textarea
-                className="w-full h-16 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                placeholder="TS0114b13e=..."
-                value={draftCookies}
-                onChange={(e) => setDraftCookies(e.target.value)}
-              />
-            </div>
-            {draftCookies && (
-              <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Cookies đã nhập ({draftCookies.length} ký tự)
-              </p>
-            )}
-          </div>
-        </div>
-      </DrawerModal>
-
-      <ConfirmModal
-        open={showConfirm}
-        title="Đóng mà không lưu?"
-        message="Thay đổi của bạn sẽ không được lưu."
-        confirmLabel="Đóng"
-        cancelLabel="Tiếp tục chỉnh sửa"
-        danger={true}
-        zIndex={1000}
-        onConfirm={() => {
-          setShowConfirm(false);
-          onClose();
-        }}
-        onCancel={() => setShowConfirm(false)}
-      />
-    </>
+    <DrawerModal
+      open={open}
+      onClose={onClose}
+      title="Đăng nhập Cổng Hóa đơn điện tử (GDT)"
+      panelClassName="min-[1024px]:w-[500px]"
+    >
+      <div className="p-1">
+        <GdtPortalAuthForm
+          onSuccess={() => {
+            onSuccess?.();
+            onClose();
+          }}
+          onCancel={onClose}
+          showCancelButton
+        />
+      </div>
+    </DrawerModal>
   );
 }
 
@@ -465,8 +350,8 @@ export function InvoiceImportSyncDrawer({
                       onClick={() => setConfigOpen(true)}
                       className="gap-1.5"
                     >
-                      <Settings className="h-4 w-4" />
-                      Cấu hình token
+                      <KeyRound className="h-4 w-4 text-primary" />
+                      Đăng nhập Cổng Thuế
                     </Button>
                     <div
                       title={
@@ -621,12 +506,10 @@ export function InvoiceImportSyncDrawer({
         </div>
       </div>
 
-      <TokenConfigDrawer
+      <GdtPortalAuthDrawer
         open={configOpen}
         onClose={() => setConfigOpen(false)}
-        token={portal.token}
-        cookies={portal.cookies}
-        onSave={portal.saveConfig}
+        onSuccess={() => portal.refreshConfig()}
       />
       <ImportPreviewModal
         open={showPreview}

@@ -454,10 +454,44 @@ export const erpInvoicesCoreApi = {
     return data;
   },
 
-  getPortalConfig: async (): Promise<{ token: string; cookies: string }> => {
+  getPortalCaptcha: async (): Promise<{
+    content: string;
+    key: string;
+    text?: string;
+  }> => {
+    const { data } = await axiosInstance.get<{
+      content: string;
+      key: string;
+      text?: string;
+    }>(`${BASE}/portal/captcha`);
+    return data;
+  },
+
+  loginPortal: async (payload: {
+    username: string;
+    password?: string;
+    cvalue: string;
+    ckey: string;
+  }): Promise<{ success: boolean; token: string; message: string }> => {
+    const { data } = await axiosInstance.post<{
+      success: boolean;
+      token: string;
+      message: string;
+    }>(`${BASE}/portal/login`, payload);
+    return data;
+  },
+
+  getPortalConfig: async (): Promise<{
+    token: string;
+    cookies: string;
+    username?: string;
+    password?: string;
+  }> => {
     const { data } = await axiosInstance.get<{
       token: string;
       cookies: string;
+      username?: string;
+      password?: string;
     }>(`${BASE}/portal/token`);
     return data;
   },
@@ -465,10 +499,12 @@ export const erpInvoicesCoreApi = {
   savePortalConfig: async (
     token: string,
     cookies?: string,
+    username?: string,
+    password?: string,
   ): Promise<{ message: string }> => {
     const { data } = await axiosInstance.post<{ message: string }>(
       `${BASE}/portal/token`,
-      { token, cookies },
+      { token, cookies, username, password },
     );
     return data;
   },

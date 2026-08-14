@@ -15,29 +15,36 @@ export function usePortalSync() {
   const [result, setResult] = useState<PortalSyncResult | null>(null);
   const [isTokenLoaded, setIsTokenLoaded] = useState(false);
 
-  useEffect(() => {
-    erpInvoicesCoreApi
-      .getPortalConfig()
-      .then((res) => {
-        setTokenState(res.token);
-        setCookiesState(res.cookies);
-        setIsTokenLoaded(true);
-      })
-      .catch(() => {
-        setIsTokenLoaded(true);
-      });
-  }, []);
-
-  const saveConfig = useCallback(async (t: string, c?: string) => {
-    setTokenState(t);
-    if (c !== undefined) setCookiesState(c);
+  const refreshConfig = useCallback(async () => {
     try {
-      await erpInvoicesCoreApi.savePortalConfig(t, c);
-      toast.success("Đã lưu cấu hình portal thành công!");
+      const res = await erpInvoicesCoreApi.getPortalConfig();
+      if (res) {
+        setTokenState(res.token || "");
+        setCookiesState(res.cookies || "");
+      }
+      setIsTokenLoaded(true);
     } catch {
-      toast.error("Lưu cấu hình portal thất bại");
+      setIsTokenLoaded(true);
     }
   }, []);
+
+  useEffect(() => {
+    refreshConfig();
+  }, [refreshConfig]);
+
+  const saveConfig = useCallback(
+    async (t: string, c?: string, u?: string, p?: string) => {
+      setTokenState(t);
+      if (c !== undefined) setCookiesState(c);
+      try {
+        await erpInvoicesCoreApi.savePortalConfig(t, c, u, p);
+        toast.success("Đã lưu cấu hình portal thành công!");
+      } catch {
+        toast.error("Lưu cấu hình portal thất bại");
+      }
+    },
+    [],
+  );
 
   const sync = useCallback(
     async (type: "purchase" | "sold") => {
@@ -121,6 +128,7 @@ export function usePortalSync() {
     token,
     cookies,
     saveConfig,
+    refreshConfig,
     dateFrom,
     setDateFrom,
     dateTo,
