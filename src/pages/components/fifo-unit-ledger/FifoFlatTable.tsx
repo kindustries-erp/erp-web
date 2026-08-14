@@ -46,7 +46,7 @@ export function FifoFlatTable({
   const { t } = useTranslation(["vinfastParts", "common"]);
 
   return (
-    <div className="w-full overflow-x-auto max-h-[520px] overflow-y-auto border border-slate-200 rounded-md bg-white relative">
+    <div className="w-full overflow-x-auto overflow-y-visible border border-slate-200 rounded-md bg-white relative">
       <Table className="w-full text-sm text-left whitespace-nowrap min-w-max border-collapse">
         <TableHeader className="sticky top-0 z-10 bg-slate-50 text-slate-700 shadow-[0_1px_0_0_var(--border-light)]">
           <TableRow className="hover:bg-transparent border-b-0">

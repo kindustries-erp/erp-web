@@ -12,6 +12,8 @@ import { useGiDrawer } from "@/modules/goods-issues-core/hooks/useGiDrawer";
 import { GiFormDrawer } from "@/modules/goods-issues-core/components/GiFormDrawer";
 import { useProductionOrderDrawer } from "@/modules/production-core/hooks/useProductionOrderDrawer";
 import { ProductionOrderDrawer } from "@/modules/production-core/components/ProductionOrderDrawer";
+import { useIaDrawer } from "@/modules/inventory-adjustments/hooks/useIaDrawer";
+import { IaFormDrawer } from "@/modules/inventory-adjustments/components/IaFormDrawer";
 import {
   productionCoreApi,
   type ErpProductionOrder,
@@ -115,6 +117,7 @@ export function OperationalInventoryPage({
 
   const grDrawer = useGrDrawer({});
   const giDrawer = useGiDrawer({});
+  const iaDrawer = useIaDrawer({});
 
   const [poOpen, setPoOpen] = useState(false);
   const [editingPo, setEditingPo] = useState<ErpProductionOrder | null>(null);
@@ -424,6 +427,8 @@ export function OperationalInventoryPage({
             void grDrawer.openDetail(docId, true);
           } else if (docType === "GOODS_ISSUE") {
             void giDrawer.openDetail(docId, true);
+          } else if (docType === "INVENTORY_ADJUSTMENT") {
+            void iaDrawer.openDetail(docId, true);
           } else if (docType === "PRODUCTION_ORDER") {
             void openPoDetail(docId);
           }
@@ -463,6 +468,7 @@ export function OperationalInventoryPage({
       />
       <GrFormDrawer drawer={grDrawer} />
       <GiFormDrawer drawer={giDrawer} />
+      <IaFormDrawer drawer={iaDrawer} />
       <ProductionOrderDrawer
         open={poOpen}
         editing={editingPo}

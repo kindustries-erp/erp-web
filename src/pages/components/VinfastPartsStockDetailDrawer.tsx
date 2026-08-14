@@ -621,7 +621,8 @@ export function VinfastPartsStockDetailDrawer({
           </Badge>
         }
         layout="2-columns"
-        size="xl"
+        size="full"
+        panelClassName="w-full lg:w-[calc(100vw-208px)]"
         collapsibleRightPanel={true}
         actions={[{ label: t("common:close", "Đóng"), onClick: onClose }]}
         leftPanel={
@@ -703,7 +704,7 @@ export function VinfastPartsStockDetailDrawer({
                   "vinfastParts:NO_DATA_IN",
                   "Không có dữ liệu nhập",
                 )}
-                containerClassName="h-auto overflow-y-auto max-h-[240px]"
+                containerClassName="h-auto overflow-visible"
                 summaryRow={{
                   invoiceNo: (
                     <div className="text-right w-full font-semibold pr-2">
@@ -749,7 +750,7 @@ export function VinfastPartsStockDetailDrawer({
                   "vinfastParts:NO_DATA_OUT",
                   "Không có dữ liệu xuất",
                 )}
-                containerClassName="h-auto overflow-y-auto max-h-[240px]"
+                containerClassName="h-auto overflow-visible"
                 summaryRow={{
                   invoiceNo: (
                     <div className="text-right w-full font-semibold pr-2">
