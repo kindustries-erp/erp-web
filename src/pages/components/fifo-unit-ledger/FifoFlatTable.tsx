@@ -57,7 +57,7 @@ export function FifoFlatTable({
               #
             </TableHead>
             <TableHead
-              colSpan={3}
+              colSpan={2}
               className="px-3 py-2 border-r border-slate-200 font-semibold text-center bg-slate-100 shadow-[0_1px_0_0_var(--border-light)]"
             >
               THÔNG TIN CHUNG
@@ -535,7 +535,7 @@ export function FifoFlatTable({
           {data.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={17}
+                colSpan={18}
                 className="text-center py-6 text-slate-500"
               >
                 {t("common:noData", "Không có dữ liệu")}

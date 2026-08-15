@@ -6,6 +6,7 @@ import { FilterButton } from "@/shared/components/FilterPanel";
 import { useTableColumnState } from "@/shared/hooks/useTableColumnState";
 import { TablePagination } from "@/shared/components/TablePagination";
 import { fmtQty } from "@/shared/utils/format";
+import { useT } from "@/core/i18n";
 import type { InventoryMovement } from "../api/inventoryCoreApi";
 import {
   buildInventoryLedgerRows,
@@ -38,6 +39,7 @@ export function InventoryStockLedgerSection({
   itemInfo,
   onOpenDocument,
 }: InventoryStockLedgerSectionProps) {
+  const t = useT();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -230,7 +232,7 @@ export function InventoryStockLedgerSection({
     return (
       <div className="rounded-xl bg-card p-12 flex flex-col items-center justify-center text-sm text-muted-foreground my-2 shadow-sm border border-border">
         <Loader2 className="mb-2 h-6 w-6 animate-spin text-primary" />
-        Đang tải lịch sử xuất nhập kho...
+        {t("inventory.history.loading", "Đang tải lịch sử xuất nhập kho...")}
       </div>
     );
   }
@@ -245,12 +247,11 @@ export function InventoryStockLedgerSection({
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {/* 1. Trend Chart */}
       <InventoryItemTrendChart
         trendData={trendData}
-        title="Biểu đồ biến động"
-        chartHeight={148}
+        chartHeight={200}
         uomName={itemInfo.uom}
       />
 
@@ -258,13 +259,13 @@ export function InventoryStockLedgerSection({
       <DrawerSection
         title={
           <div className="flex items-center gap-2">
-            <span>Lịch sử xuất nhập kho</span>
+            <span>{t("inventory.history.title", "Lịch sử xuất nhập kho")}</span>
             <span className="text-xs font-normal text-muted-foreground">
               (
               {filteredRows.length < allRows.length
                 ? `${filteredRows.length}/${allRows.length}`
                 : allRows.length}{" "}
-              giao dịch)
+              {t("inventory.history.transactions", "giao dịch")})
             </span>
           </div>
         }
@@ -287,7 +288,7 @@ export function InventoryStockLedgerSection({
               disabled={allRows.length === 0}
             >
               <DownloadCloud className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Xuất Excel</span>
+              <span>{t("inventory.history.exportExcel", "Xuất Excel")}</span>
             </Button>
           </div>
         }

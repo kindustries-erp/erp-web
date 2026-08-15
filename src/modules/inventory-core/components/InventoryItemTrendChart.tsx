@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { BarChart } from "@/shared/components/charts/BarChart";
 import { fmtQty } from "@/shared/utils/format";
+import { DrawerSection } from "@/shared/components/DrawerModal";
+import { useT } from "@/core/i18n";
 import type { InventoryTrendPoint } from "../utils/inventoryLedgerTransform";
 
 interface InventoryItemTrendChartProps {
@@ -39,10 +41,13 @@ function LegendItem({
 
 export function InventoryItemTrendChart({
   trendData,
-  title = "Biểu đồ biến động",
-  chartHeight = 148,
+  title,
+  chartHeight = 200,
   uomName,
 }: InventoryItemTrendChartProps) {
+  const t = useT();
+  const displayTitle = title || t("inventory.chart.trendTitle", "Biểu đồ biến động");
+
   const colorIn = "#ea580c"; // Orange 600 (Nhập kho)
   const colorOut = "#059669"; // Emerald 600 (Xuất kho)
   const lineBalance = "#1e293b"; // Slate 800 (Tồn kho)
@@ -58,16 +63,16 @@ export function InventoryItemTrendChart({
   const hasData = trendData.length > 0;
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-semibold text-foreground">{title}</h4>
-        {uomName && (
+    <DrawerSection
+      title={displayTitle}
+      titleExtra={
+        uomName ? (
           <span className="text-xs text-muted-foreground font-medium">
-            Đơn vị: {uomName}
+            {t("inventory.chart.unit", "Đơn vị")}: {uomName}
           </span>
-        )}
-      </div>
-
+        ) : undefined
+      }
+    >
       <div className="relative" style={{ height: chartHeight }}>
         {hasData ? (
           <BarChart
@@ -81,34 +86,44 @@ export function InventoryItemTrendChart({
                 borderColor: lineBalance,
                 borderWidth: 2,
                 fill: false,
-                label: "Tồn kho",
+                label: t("inventory.chart.balance", "Tồn kho"),
               },
               {
                 type: "bar",
                 data: inData,
                 color: colorIn,
-                label: "Nhập kho",
+                label: t("inventory.chart.inQty", "Nhập kho"),
               },
               {
                 type: "bar",
                 data: outData,
                 color: colorOut,
-                label: "Xuất kho",
+                label: t("inventory.chart.outQty", "Xuất kho"),
               },
             ]}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-            Chưa có dữ liệu biến động
+            {t("inventory.chart.noData", "Chưa có dữ liệu biến động")}
           </div>
         )}
       </div>
 
       <div className="flex gap-4 mt-2.5 justify-center flex-wrap">
-        <LegendItem color={colorIn} label="Số lượng nhập" />
-        <LegendItem color={colorOut} label="Số lượng xuất" />
-        <LegendItem color={lineBalance} label="Tồn kho" isLine={true} />
+        <LegendItem
+          color={colorIn}
+          label={t("inventory.chart.inQtyLegend", "Số lượng nhập")}
+        />
+        <LegendItem
+          color={colorOut}
+          label={t("inventory.chart.outQtyLegend", "Số lượng xuất")}
+        />
+        <LegendItem
+          color={lineBalance}
+          label={t("inventory.chart.balanceLegend", "Tồn kho")}
+          isLine={true}
+        />
       </div>
-    </div>
+    </DrawerSection>
   );
 }

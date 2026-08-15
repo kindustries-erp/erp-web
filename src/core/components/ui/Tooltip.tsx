@@ -26,7 +26,7 @@ export function Tooltip({
       <RadixTooltip.Portal>
         <RadixTooltip.Content
           side={side}
-          sideOffset={10}
+          sideOffset={6}
           className="tooltip-content"
         >
           {content}
