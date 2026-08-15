@@ -3,7 +3,6 @@ import { DrawerModal } from "@/shared/components/DrawerModal";
 import { Settings } from "lucide-react";
 import { useT } from "@/core/i18n";
 import { ChangePasswordForm } from "@/modules/auth/components/ChangePasswordForm";
-import { InvoiceSettingsForm } from "@/modules/erp-invoices-core/components/InvoiceSettingsForm";
 
 export function GlobalSettingsDrawer({
   open,
@@ -29,13 +28,6 @@ export function GlobalSettingsDrawer({
             {t("globalSettings.accountSecurity")}
           </h2>
           <ChangePasswordForm onClose={onClose} />
-        </div>
-
-        <div>
-          <h2 className="text-lg font-semibold text-foreground mb-4">
-            {t("globalSettings.eInvoice")}
-          </h2>
-          <InvoiceSettingsForm open={open} onClose={onClose} />
         </div>
       </div>
     </DrawerModal>

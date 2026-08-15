@@ -30,6 +30,7 @@ import {
   MoreHorizontal,
   X,
   GitMerge,
+  KeyRound,
 } from "lucide-react";
 import { Tooltip } from "@/core/components/ui/Tooltip";
 import { KpiCard } from "@/shared/components/KpiCard";
@@ -58,6 +59,8 @@ import {
 import { ErpInvoiceInternalDrawer } from "@/modules/erp-invoices-core/components/ErpInvoiceInternalDrawer";
 
 import { InvoiceImportSyncDrawer } from "@/modules/erp-invoices-core/components/InvoiceImportSyncDrawer";
+import { GdtPortalAuthDrawer } from "@/modules/erp-invoices-core/components/GdtPortalAuthDrawer";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
@@ -155,10 +158,12 @@ interface ErpInvoicesTabProps {
 
 export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
   const { t } = useTranslation("erpInvoices");
+  const canEditInvoice = useHasPermission("invoices", "update");
   const listHook = useErpInvoicesList(direction);
   const formHook = useErpInvoiceForm(listHook.loadInvoices);
   const showToast = useUIStore((s) => s.showToast);
   const [exportDrawerOpen, setExportDrawerOpen] = useState(false);
+  const [portalAuthOpen, setPortalAuthOpen] = useState(false);
 
   type SelectedPeriod = {
     type: "month" | "week" | "day";
@@ -2376,6 +2381,15 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
                 onClick: () => setImportModalOpen(true),
               },
+              ...(canEditInvoice
+                ? [
+                    {
+                      label: t("loginTaxPortal", "Đăng nhập Cổng Thuế"),
+                      icon: <KeyRound className="w-4 h-4 text-primary" />,
+                      onClick: () => setPortalAuthOpen(true),
+                    },
+                  ]
+                : []),
             ],
           },
         ]}
@@ -2516,6 +2530,11 @@ export function ErpInvoicesTab({ direction }: ErpInvoicesTabProps) {
             void listHook.loadInvoices();
           }
         }}
+      />
+
+      <GdtPortalAuthDrawer
+        open={portalAuthOpen}
+        onClose={() => setPortalAuthOpen(false)}
       />
 
       <FilePreviewDrawer

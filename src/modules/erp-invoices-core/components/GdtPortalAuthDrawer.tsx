@@ -1,6 +1,7 @@
 import React from "react";
-import { DrawerModal } from "@/shared/components/DrawerModal";
+import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { GdtPortalAuthForm } from "./GdtPortalAuthForm";
+import { useTranslation } from "react-i18next";
 
 export interface GdtPortalAuthDrawerProps {
   open: boolean;
@@ -13,23 +14,29 @@ export function GdtPortalAuthDrawer({
   onClose,
   onSuccess,
 }: GdtPortalAuthDrawerProps) {
+  const { t } = useTranslation("erpInvoices");
+
   return (
-    <DrawerModal
+    <StandardFormDrawer
       open={open}
+      mode="edit"
       onClose={onClose}
-      title="Đăng nhập Cổng Hóa đơn điện tử (GDT)"
-      panelClassName="min-[1024px]:w-[500px]"
-    >
-      <div className="p-1">
-        <GdtPortalAuthForm
-          onSuccess={() => {
-            onSuccess?.();
-            onClose();
-          }}
-          onCancel={onClose}
-          showCancelButton
-        />
-      </div>
-    </DrawerModal>
+      title={t("loginTaxPortal", "Đăng nhập Cổng Hóa đơn điện tử (GDT)")}
+      layout="1-column"
+      size="sm"
+      confirmOnClose={true}
+      leftPanel={
+        <div className="flex flex-col gap-4">
+          <GdtPortalAuthForm
+            onSuccess={() => {
+              onSuccess?.();
+              onClose();
+            }}
+            onCancel={onClose}
+            showCancelButton
+          />
+        </div>
+      }
+    />
   );
 }

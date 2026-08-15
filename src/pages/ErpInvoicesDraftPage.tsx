@@ -1,7 +1,7 @@
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import React, { useState } from "react";
-import { FileText, Eye, DownloadCloud } from "lucide-react";
+import { FileText, Eye, DownloadCloud, Settings } from "lucide-react";
 import { SpreadsheetPageTemplate } from "@/shared/components/SpreadsheetPageTemplate/SpreadsheetPageTemplate";
 import { TableColumnHeaderFilter } from "@/shared/components/DataTable/TableColumnHeaderFilter";
 import { Tooltip } from "@/core/components/ui/Tooltip";
@@ -18,14 +18,18 @@ import {
 } from "@/modules/accounting/api/sinvoiceDraftApi";
 import { SinvoiceDraftModal } from "@/modules/accounting/components/SinvoiceDraftModal";
 import { SinvoiceDraftDetailWrapper } from "@/modules/accounting/components/SinvoiceDraftDetailWrapper";
+import { SinvoiceConfigDrawer } from "@/modules/accounting/components/SinvoiceConfigDrawer";
 import { useSinvoiceDraftsList } from "@/modules/accounting/hooks/useSinvoiceDraftsList";
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { InvoiceDateRangeSlot } from "@/modules/erp-invoices-core/components/InvoiceDateRangeSlot";
 
 export function ErpInvoicesDraftPage() {
   const { t } = useTranslation("erpInvoices");
+  const canEditInvoice = useHasPermission("invoices", "update");
   const listHook = useSinvoiceDraftsList();
 
   const [draftOpen, setDraftOpen] = useState(false);
+  const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
   const [detailDraft, setDetailDraft] = useState<SinvoiceDraft | null>(null);
   const setGlobalLoading = useUIStore((s) => s.setGlobalLoading);
 
@@ -675,6 +679,15 @@ export function ErpInvoicesDraftPage() {
                 icon: <DownloadCloud className="w-4 h-4 text-indigo-600" />,
                 onClick: handleSync,
               },
+              ...(canEditInvoice
+                ? [
+                    {
+                      label: t("sinvoiceDraft.config", "Cấu hình SInvoice"),
+                      icon: <Settings className="w-4 h-4 text-primary" />,
+                      onClick: () => setConfigDrawerOpen(true),
+                    },
+                  ]
+                : []),
             ],
           },
         ]}
@@ -697,6 +710,11 @@ export function ErpInvoicesDraftPage() {
           onClose={() => setDetailDraft(null)}
         />
       )}
+
+      <SinvoiceConfigDrawer
+        open={configDrawerOpen}
+        onClose={() => setConfigDrawerOpen(false)}
+      />
     </>
   );
 }
