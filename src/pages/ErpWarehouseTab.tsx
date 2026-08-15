@@ -58,6 +58,7 @@ import {
 import { useCompanyProfile } from "@/core/api/companyProfileApi";
 import { inventoryCoreApi } from "@/modules/inventory-core/api/inventoryCoreApi";
 import { StatusBadge } from "@/shared/components/badges";
+import { Badge } from "@/shared/components/ui/badge";
 import { TableDateCell } from "@/shared/components/DataTable/TableDateCell";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -381,7 +382,14 @@ export function ErpWarehouseTab() {
     }
 
     let formatOptionLabel: ((val: string) => string) | undefined;
-    if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
+    if (key === "type") {
+      formatOptionLabel = (val: string) => {
+        if (val === "receipt") return t("Nhập kho");
+        if (val === "issue") return t("Xuất kho");
+        if (val === "adjustment") return t("Điều chỉnh");
+        return val;
+      };
+    } else if (["qtyReceipt", "qtyIssue", "qtyAdjustment"].includes(key)) {
       formatOptionLabel = (val: string | number) => {
         const n = Number(val || 0);
         if (isNaN(n)) return String(val);
@@ -509,14 +517,53 @@ export function ErpWarehouseTab() {
         cell: (row) => <TableDateCell date={row.createdAt} />,
       },
       {
+        key: "type",
+        header: renderHeaderFilter("type", t("Loại phiếu")),
+        size: 130,
+        className: "text-center",
+        headerClassName: "p-0 h-full",
+        cell: (row) => {
+          const typeMap: Record<string, { label: string; cls: string }> = {
+            receipt: {
+              label: t("Nhập kho"),
+              cls: "bg-emerald-100 text-emerald-700",
+            },
+            issue: {
+              label: t("Xuất kho"),
+              cls: "bg-orange-100 text-orange-700",
+            },
+            adjustment: {
+              label: t("Điều chỉnh"),
+              cls: "bg-blue-100 text-blue-700",
+            },
+          };
+          const item = typeMap[row.type] ?? {
+            label: row.type,
+            cls: "bg-slate-100 text-slate-700",
+          };
+          return (
+            <span
+              className={cn(
+                "text-[11px] px-2 py-[3px] rounded-md font-semibold whitespace-nowrap",
+                item.cls,
+              )}
+            >
+              {item.label}
+            </span>
+          );
+        },
+      },
+      {
         key: "voucherNo",
         header: renderHeaderFilter("voucherNo", t("Số phiếu")),
-        size: 200,
+        size: 220,
+        enableResizing: true,
         className: "font-mono text-sm text-left",
         headerClassName: "p-0 h-full",
         cell: (row) => (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 w-full min-w-0">
             <TableText
+              className="w-auto min-w-0"
               text={row.voucherNo || ""}
               onDrawerClick={(e) => {
                 e.stopPropagation();
@@ -532,6 +579,22 @@ export function ErpWarehouseTab() {
               enableCopy={true}
               textClassName="font-medium text-primary"
             />
+            {row.status === "DRAFT" && (
+              <Badge
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium"
+              >
+                {t("Nháp")}
+              </Badge>
+            )}
+            {(row.status === "CANCELLED" || row.status === "CANCELED") && (
+              <Badge
+                variant="destructive"
+                className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0 font-medium"
+              >
+                {t("Hủy")}
+              </Badge>
+            )}
           </div>
         ),
       },
@@ -598,7 +661,7 @@ export function ErpWarehouseTab() {
       },
       {
         key: "poNo",
-        header: renderHeaderFilter("poNo", t("Số PO")),
+        header: renderHeaderFilter("poNo", t("Chứng từ")),
         size: 150,
         className: "font-mono text-sm text-left",
         headerClassName: "p-0 h-full",
@@ -697,6 +760,15 @@ export function ErpWarehouseTab() {
         onRefresh={() => void vouchersQuery.refetch()}
         filterConfig={filterConfig}
         filter={filterPanel}
+        activeFilterCount={
+          (filterPanel?.activeFilterCount || 0) +
+          (tableState.activeFilterCount || 0)
+        }
+        onClearAllFilters={() => {
+          filterPanel.resetAll();
+          tableState.resetFilters();
+          setPage(1);
+        }}
         rowActions={(row) => [
           {
             groupLabel: t("groupTraCuu", "Tra cứu"),
