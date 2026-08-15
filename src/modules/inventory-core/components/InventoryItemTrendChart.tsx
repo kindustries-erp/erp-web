@@ -46,7 +46,8 @@ export function InventoryItemTrendChart({
   uomName,
 }: InventoryItemTrendChartProps) {
   const t = useT();
-  const displayTitle = title || t("inventory.chart.trendTitle", "Biểu đồ biến động");
+  const displayTitle =
+    title || t("inventory.chart.trendTitle", "Biểu đồ biến động");
 
   const colorIn = "#ea580c"; // Orange 600 (Nhập kho)
   const colorOut = "#059669"; // Emerald 600 (Xuất kho)

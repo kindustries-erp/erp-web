@@ -30,9 +30,7 @@ export function VinfastPartsStockDetailDrawer({
       subtitle={`${sku} - ${catalogData?.name || ""}`}
       titleExtra={
         <Badge
-          variant={
-            catalogData?.vehicleType === "CAR" ? "default" : "secondary"
-          }
+          variant={catalogData?.vehicleType === "CAR" ? "default" : "secondary"}
         >
           {catalogData?.vehicleType === "CAR"
             ? t("vinfastParts:CAR", "Ô tô")

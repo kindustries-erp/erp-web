@@ -271,9 +271,19 @@ export function InventoryItemFormDrawer({
 
   const mode: DrawerMode = viewOnly ? "view" : editing ? "edit" : "create";
   const drawerActions: DrawerAction[] = viewOnly
-    ? [{ label: t("common.close", "Đóng"), onClick: onClose, variant: "outline" }]
+    ? [
+        {
+          label: t("common.close", "Đóng"),
+          onClick: onClose,
+          variant: "outline",
+        },
+      ]
     : [
-        { label: t("common.cancel", "Hủy"), onClick: onClose, variant: "outline" },
+        {
+          label: t("common.cancel", "Hủy"),
+          onClick: onClose,
+          variant: "outline",
+        },
         {
           label: editing
             ? t("common.save", "Lưu thay đổi")

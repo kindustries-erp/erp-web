@@ -262,7 +262,10 @@ export function InventoryFlatLedgerTable({
                 colSpan={11}
                 className="text-center py-8 text-muted-foreground text-sm"
               >
-                {t("inventory.ledger.empty", "Không có dữ liệu lịch sử xuất nhập kho.")}
+                {t(
+                  "inventory.ledger.empty",
+                  "Không có dữ liệu lịch sử xuất nhập kho.",
+                )}
               </TableCell>
             </TableRow>
           ) : (
@@ -284,17 +287,25 @@ export function InventoryFlatLedgerTable({
                       text={row.documentNo}
                       tooltip={
                         <div className="flex flex-col gap-1 max-w-xs text-xs text-left">
-                          <div className="font-semibold text-slate-100">{row.documentNo}</div>
+                          <div className="font-semibold text-slate-100">
+                            {row.documentNo}
+                          </div>
                           {row.typeLabel && (
                             <div className="text-slate-300">
-                              <span className="text-slate-400 font-medium">Loại: </span>
+                              <span className="text-slate-400 font-medium">
+                                Loại:{" "}
+                              </span>
                               {row.typeLabel}
                             </div>
                           )}
                           {row.notes && (
                             <div className="text-slate-300">
-                              <span className="text-slate-400 font-medium">Ghi chú: </span>
-                              <span className="whitespace-pre-wrap">{row.notes}</span>
+                              <span className="text-slate-400 font-medium">
+                                Ghi chú:{" "}
+                              </span>
+                              <span className="whitespace-pre-wrap">
+                                {row.notes}
+                              </span>
                             </div>
                           )}
                         </div>
