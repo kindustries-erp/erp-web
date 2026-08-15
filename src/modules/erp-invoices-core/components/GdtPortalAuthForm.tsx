@@ -6,10 +6,7 @@ import {
   EyeOff,
   CheckCircle2,
   AlertCircle,
-  ChevronDown,
-  ChevronUp,
   LogIn,
-  Save,
   ShieldCheck,
   Building,
 } from "lucide-react";
@@ -45,13 +42,6 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [currentToken, setCurrentToken] = useState("");
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
-
-  // Advanced Manual Mode
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [manualToken, setManualToken] = useState("");
-  const [manualCookies, setManualCookies] = useState("");
-  const [showManualToken, setShowManualToken] = useState(false);
-  const [isSavingManual, setIsSavingManual] = useState(false);
 
   // Fetch Captcha
   const fetchCaptcha = useCallback(async () => {
@@ -96,10 +86,6 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
         if (config.hasPassword) setHasSavedPassword(true);
         if (config.token) {
           setCurrentToken(config.token);
-          setManualToken(config.token);
-        }
-        if (config.cookies) {
-          setManualCookies(config.cookies);
         }
       }
     } catch {
@@ -149,7 +135,6 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
         toast.success(res.message || "Đăng nhập Cổng Thuế thành công!");
         if (res.token) {
           setCurrentToken(res.token);
-          setManualToken(res.token);
         }
         onSuccess?.();
       }
@@ -163,31 +148,6 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
       fetchCaptcha();
     } finally {
       setIsLoggingIn(false);
-    }
-  };
-
-  // Handle Manual Save
-  const handleSaveManual = async () => {
-    if (!manualToken.trim()) {
-      toast.error("Vui lòng nhập Bearer Token");
-      return;
-    }
-
-    setIsSavingManual(true);
-    try {
-      await erpInvoicesCoreApi.savePortalConfig(
-        manualToken.trim(),
-        manualCookies.trim() || undefined,
-        username.trim() || undefined,
-        password || undefined,
-      );
-      setCurrentToken(manualToken.trim());
-      toast.success("Lưu cấu hình thủ công thành công!");
-      onSuccess?.();
-    } catch {
-      toast.error("Lưu cấu hình thất bại");
-    } finally {
-      setIsSavingManual(false);
     }
   };
 
@@ -365,107 +325,6 @@ export const GdtPortalAuthForm: React.FC<GdtPortalAuthFormProps> = ({
           </Button>
         </div>
       </form>
-
-      {/* Advanced Collapsible Manual Token Input */}
-      <div className="rounded-xl border border-border bg-surface p-3 card-shadow">
-        <button
-          type="button"
-          className="w-full flex items-center justify-between text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-1"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-        >
-          <span className="flex items-center gap-1.5">
-            <KeyRound className="w-3.5 h-3.5" />
-            Cấu hình nâng cao (Dán Token & Cookies thủ công)
-          </span>
-          {showAdvanced ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
-
-        {showAdvanced && (
-          <div className="space-y-4 pt-3 border-t border-border mt-2">
-            <p className="text-xs text-muted-foreground">
-              Dành cho quản trị viên muốn dán trực tiếp Bearer token và WAF
-              Cookies (TS011...) từ trình duyệt.
-            </p>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Bearer Token
-              </label>
-              <div className="relative">
-                {showManualToken ? (
-                  <textarea
-                    className="w-full h-24 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none pr-10"
-                    placeholder="eyJhbGciOiJ..."
-                    value={manualToken}
-                    onChange={(e) => setManualToken(e.target.value)}
-                  />
-                ) : (
-                  <input
-                    type="password"
-                    className="w-full rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 pr-10"
-                    placeholder="eyJhbGciOiJ..."
-                    value={manualToken}
-                    onChange={(e) => setManualToken(e.target.value)}
-                  />
-                )}
-                <button
-                  type="button"
-                  className="absolute right-2 top-2 p-1 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowManualToken(!showManualToken)}
-                >
-                  {showManualToken ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-              {manualToken && (
-                <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Token ({manualToken.length} ký tự)
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                WAF Cookies (Tùy chọn)
-              </label>
-              <textarea
-                className="w-full h-16 rounded-md border border-border bg-surface px-3 py-2 text-xs font-mono outline-none focus:ring-2 focus:ring-primary/30 resize-none"
-                placeholder="TS0114b13e=..."
-                value={manualCookies}
-                onChange={(e) => setManualCookies(e.target.value)}
-              />
-              {manualCookies && (
-                <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Cookies ({manualCookies.length} ký tự)
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleSaveManual}
-                disabled={isSavingManual}
-                className="gap-1.5 text-xs"
-              >
-                <Save className="w-3.5 h-3.5" />
-                {isSavingManual ? "Đang lưu..." : "Lưu Token thủ công"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

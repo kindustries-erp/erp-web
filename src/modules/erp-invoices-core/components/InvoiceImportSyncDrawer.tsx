@@ -36,38 +36,9 @@ import { ImportResultSummary } from "./xml-upload/ImportResultSummary";
 import { ImportResultTables } from "./xml-upload/ImportResultTables";
 import { ImportPreviewModal } from "./xml-upload/ImportPreviewModal";
 import { InvoiceDetailWrapper } from "./InvoiceDetailWrapper";
-import { GdtPortalAuthForm } from "./GdtPortalAuthForm";
+import { GdtPortalAuthDrawer } from "./GdtPortalAuthDrawer";
 import { KeyRound } from "lucide-react";
-
-function GdtPortalAuthDrawer({
-  open,
-  onClose,
-  onSuccess,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSuccess?: () => void;
-}) {
-  return (
-    <DrawerModal
-      open={open}
-      onClose={onClose}
-      title="Đăng nhập Cổng Hóa đơn điện tử (GDT)"
-      panelClassName="min-[1024px]:w-[500px]"
-    >
-      <div className="p-1">
-        <GdtPortalAuthForm
-          onSuccess={() => {
-            onSuccess?.();
-            onClose();
-          }}
-          onCancel={onClose}
-          showCancelButton
-        />
-      </div>
-    </DrawerModal>
-  );
-}
+import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 interface Props {
   open: boolean;
@@ -83,6 +54,7 @@ export function InvoiceImportSyncDrawer({
   initialDirection,
 }: Props) {
   const { t } = useTranslation("erpInvoices");
+  const canEditInvoice = useHasPermission("invoices", "update");
 
   const presetOptions = useMemo(() => {
     const options = [];
@@ -110,10 +82,10 @@ export function InvoiceImportSyncDrawer({
   const portal = usePortalSync();
 
   useEffect(() => {
-    if (portal.needsRelogin) {
+    if (portal.needsRelogin && canEditInvoice) {
       setConfigOpen(true);
     }
-  }, [portal.needsRelogin]);
+  }, [portal.needsRelogin, canEditInvoice]);
 
   useEffect(() => {
     if (open) {
@@ -350,15 +322,17 @@ export function InvoiceImportSyncDrawer({
 
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfigOpen(true)}
-                      className="gap-1.5"
-                    >
-                      <KeyRound className="h-4 w-4 text-primary" />
-                      Đăng nhập Cổng Thuế
-                    </Button>
+                    {canEditInvoice && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfigOpen(true)}
+                        className="gap-1.5"
+                      >
+                        <KeyRound className="h-4 w-4 text-primary" />
+                        Đăng nhập Cổng Thuế
+                      </Button>
+                    )}
                     <div
                       title={
                         !portal.token && !portal.hasPassword

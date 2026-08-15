@@ -35,7 +35,7 @@ export function GlobalSettingsDrawer({
           <h2 className="text-lg font-semibold text-foreground mb-4">
             {t("globalSettings.eInvoice")}
           </h2>
-          <InvoiceSettingsForm open={open} onClose={onClose} defaultTab="gdt" />
+          <InvoiceSettingsForm open={open} onClose={onClose} />
         </div>
       </div>
     </DrawerModal>
