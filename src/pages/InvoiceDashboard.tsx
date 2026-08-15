@@ -15,6 +15,7 @@ import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { BranchInvoiceChart } from "./components/BranchInvoiceChart";
 import { BranchVatChart } from "./components/BranchVatChart";
 import { BranchInvoiceTable } from "./components/BranchInvoiceTable";
+import { InvoiceStatsCards } from "./components/InvoiceStatsCards";
 
 export function InvoiceDashboard() {
   const { employee } = useAuthStore();
@@ -154,6 +155,9 @@ export function InvoiceDashboard() {
         queryClient.invalidateQueries({
           queryKey: ["invoice-dashboard-partners"],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["erp-invoices-stats"],
+        });
       }}
       extraActions={
         <Button
@@ -168,6 +172,15 @@ export function InvoiceDashboard() {
       }
     >
       <div className="flex flex-col gap-8 mb-8">
+        {/* KPI Summary Cards */}
+        <div className="flex flex-col gap-6">
+          <InvoiceStatsCards
+            direction="OUT"
+            title="Hóa đơn Bán ra (Doanh thu)"
+          />
+          <InvoiceStatsCards direction="IN" title="Hóa đơn Mua vào (Chi phí)" />
+        </div>
+
         {/* Biến động Hóa đơn (Charts) */}
         <div>
           <h3 className="text-lg font-semibold mb-4">

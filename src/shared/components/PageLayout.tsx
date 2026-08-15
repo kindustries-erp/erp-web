@@ -69,10 +69,11 @@ export function PageLayout({
     <div
       className={cn(
         "flex flex-col h-full overflow-hidden space-y-4 px-5 pt-[18px]",
+        hideHeader && "px-4 pt-3 pb-2 space-y-3",
         className,
       )}
     >
-      {!hideHeader && icon && (
+      {!hideHeader && icon ? (
         <PageHeader
           title={title}
           desc={desc}
@@ -80,7 +81,9 @@ export function PageLayout({
           actions={actions}
           className="mb-0"
         />
-      )}
+      ) : hideHeader && actions ? (
+        <div className="flex items-center justify-end">{actions}</div>
+      ) : null}
 
       {middleContent && <div>{middleContent}</div>}
 

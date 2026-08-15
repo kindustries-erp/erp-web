@@ -30,6 +30,7 @@ export function SpreadsheetPageTemplate<T>({
   onRefresh,
   onCreate,
   createLabel,
+  createIcon,
   createActions,
   extraActions,
   bulkActionsNode,
@@ -51,6 +52,7 @@ export function SpreadsheetPageTemplate<T>({
   onRowClick,
   loadingRows,
   topNode,
+  hideHeader,
 }: SpreadsheetPageTemplateProps<T>) {
   const t = useT();
   const finalEmptyLabel = emptyLabel ?? t("common.noData");
@@ -111,6 +113,7 @@ export function SpreadsheetPageTemplate<T>({
       title={title}
       desc={desc}
       icon={icon}
+      hideHeader={hideHeader}
       actions={
         <TableActionGroup
           onRefresh={onRefresh}
@@ -122,6 +125,7 @@ export function SpreadsheetPageTemplate<T>({
           onClearAllFilters={onClearAllFilters}
           onCreate={onCreate}
           createLabel={finalCreateLabel}
+          createIcon={createIcon}
           createActions={createActions}
           extraActions={
             <div className="flex items-center gap-2">
