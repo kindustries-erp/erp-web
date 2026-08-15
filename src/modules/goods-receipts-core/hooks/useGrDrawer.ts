@@ -329,7 +329,15 @@ export function useGrDrawer({
         setSaving(false);
       }
     },
-    [editing, form, itemsDict, invalidateWarehouseQuery, onSaved, queryClient, showToast],
+    [
+      editing,
+      form,
+      itemsDict,
+      invalidateWarehouseQuery,
+      onSaved,
+      queryClient,
+      showToast,
+    ],
   );
 
   // ── Cancel a posted GR

@@ -529,7 +529,9 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
                 idx = form.lines.length;
                 target = newLine;
               }
-              const actualQty = Math.round(Number(target.qtyReceived || qty || 1));
+              const actualQty = Math.round(
+                Number(target.qtyReceived || qty || 1),
+              );
               handleOpenSerialDrawer(target, idx, item, actualQty);
             }}
           >
@@ -1229,187 +1231,190 @@ export function GrFormDrawer({ drawer }: GrFormDrawerProps) {
   return (
     <>
       <InventoryVoucherFormDrawer
-      open={open}
-      mode={viewOnly ? "view" : editing ? "edit" : "create"}
-      noAnimation={!!drawer.unifiedContext}
-      title={
-        editing
-          ? viewOnly
-            ? t("Phiếu nhập kho")
-            : t("Sửa nhập kho")
-          : t("Tạo phiếu nhập kho")
-      }
-      subtitle={editing?.receiptNo ?? t("Nhập kho")}
-      statusBadge={statusBadge}
-      onClose={close}
-      onToggleEdit={
-        viewOnly &&
-        editing &&
-        canUpdate &&
-        !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
-          ? () => setViewOnly(false)
-          : undefined
-      }
-      actions={actions}
-      loading={loading}
-      error={saveError}
-      unifiedContext={drawer.unifiedContext}
-      // Table
-      sectionTitle={sectionTitle}
-      sectionTitleExtra={sectionTitleExtra}
-      tableItems={tableItems}
-      getRowKey={getRowKey}
-      tableColumns={tableColumns}
-      summaryRow={summaryRow}
-      actionsColumn={actionsColumn}
-      emptyLabel={emptyLabel}
-      tableFooter={tableFooter}
-      // Right panel
-      rightPanelContent={rightPanelContent}
-      remarksContent={remarksContent}
-      // Slots
-      printSlot={
-        <div className="hidden">
-          <GoodsReceiptPrintTemplate
-            ref={printRef}
-            companyProfile={companyProfile}
-            data={{
-              receiptNo: editing?.receiptNo || form.receiptNo || "...",
-              receiptDate:
-                editing?.receiptDate ||
-                form.receiptDate ||
-                new Date().toISOString(),
-              supplierName: "",
-              poNo:
-                poOptions.find((o) => o.value === form.purchaseOrderId)
-                  ?.label || "",
-              remarks: form.remarks,
-              lines: form.lines.map((l) => {
-                const dictItem = itemsDict[l.itemId];
-                return {
-                  itemId: l.itemId,
-                  itemCode: dictItem?.sku || l.itemId,
-                  itemName: l.itemName || dictItem?.itemName || "",
-                  qtyReceived: l.qtyReceived,
-                  unitCost: l.unitCost,
-                };
-              }),
-            }}
-          />
-        </div>
-      }
-      importModalSlot={
-        <ImportExcelModal
-          isOpen={isImportOpen}
-          onClose={() => setIsImportOpen(false)}
-          onDownloadTemplate={async () => {
-            const headers = [
-              "Mã linh kiện",
-              "Tên linh kiện",
-              "Số lượng",
-              "Đơn giá",
-            ];
-            let refItems: any[] = [];
-            try {
-              const res = await basicMastersApi.list({
-                entities: "inventoryItems",
-                limit: 5000,
-              });
-              refItems = (res.items.inventoryItems || []).map((item: any) => ({
-                sku: item.sku || "",
-                name: item.itemName || "",
-              }));
-            } catch (e) {
-              console.error("Failed to fetch reference items", e);
-            }
-            downloadInventoryTemplate(
-              headers,
-              "Template_NhapKho.xlsx",
-              refItems,
-            );
-          }}
-          onUpload={async (file, overwrite) => {
-            try {
-              const data = await parseExcelFile(file);
-              let skipped = 0;
-              const newLines: any[] = [];
-              let allItems: any[] = [];
+        open={open}
+        mode={viewOnly ? "view" : editing ? "edit" : "create"}
+        noAnimation={!!drawer.unifiedContext}
+        title={
+          editing
+            ? viewOnly
+              ? t("Phiếu nhập kho")
+              : t("Sửa nhập kho")
+            : t("Tạo phiếu nhập kho")
+        }
+        subtitle={editing?.receiptNo ?? t("Nhập kho")}
+        statusBadge={statusBadge}
+        onClose={close}
+        onToggleEdit={
+          viewOnly &&
+          editing &&
+          canUpdate &&
+          !["CANCELLED", "VOIDED"].includes(editing.status || "DRAFT")
+            ? () => setViewOnly(false)
+            : undefined
+        }
+        actions={actions}
+        loading={loading}
+        error={saveError}
+        unifiedContext={drawer.unifiedContext}
+        // Table
+        sectionTitle={sectionTitle}
+        sectionTitleExtra={sectionTitleExtra}
+        tableItems={tableItems}
+        getRowKey={getRowKey}
+        tableColumns={tableColumns}
+        summaryRow={summaryRow}
+        actionsColumn={actionsColumn}
+        emptyLabel={emptyLabel}
+        tableFooter={tableFooter}
+        // Right panel
+        rightPanelContent={rightPanelContent}
+        remarksContent={remarksContent}
+        // Slots
+        printSlot={
+          <div className="hidden">
+            <GoodsReceiptPrintTemplate
+              ref={printRef}
+              companyProfile={companyProfile}
+              data={{
+                receiptNo: editing?.receiptNo || form.receiptNo || "...",
+                receiptDate:
+                  editing?.receiptDate ||
+                  form.receiptDate ||
+                  new Date().toISOString(),
+                supplierName: "",
+                poNo:
+                  poOptions.find((o) => o.value === form.purchaseOrderId)
+                    ?.label || "",
+                remarks: form.remarks,
+                lines: form.lines.map((l) => {
+                  const dictItem = itemsDict[l.itemId];
+                  return {
+                    itemId: l.itemId,
+                    itemCode: dictItem?.sku || l.itemId,
+                    itemName: l.itemName || dictItem?.itemName || "",
+                    qtyReceived: l.qtyReceived,
+                    unitCost: l.unitCost,
+                  };
+                }),
+              }}
+            />
+          </div>
+        }
+        importModalSlot={
+          <ImportExcelModal
+            isOpen={isImportOpen}
+            onClose={() => setIsImportOpen(false)}
+            onDownloadTemplate={async () => {
+              const headers = [
+                "Mã linh kiện",
+                "Tên linh kiện",
+                "Số lượng",
+                "Đơn giá",
+              ];
+              let refItems: any[] = [];
               try {
                 const res = await basicMastersApi.list({
                   entities: "inventoryItems",
                   limit: 5000,
                 });
-                allItems = res.items.inventoryItems || [];
-              } catch (e) {
-                console.error("Failed to fetch items for upload lookup", e);
-              }
-              const skuToId: Record<string, string> = {};
-              const idToName: Record<string, string> = {};
-              const idToSku: Record<string, string> = {};
-              allItems.forEach((item: any) => {
-                if (item.sku) {
-                  skuToId[item.sku.toLowerCase()] = item.id;
-                  idToName[item.id] = item.itemName;
-                  idToSku[item.id] = item.sku;
-                }
-              });
-              data.forEach((row: any) => {
-                const sku = row["Mã linh kiện"]?.toString().trim();
-                const qty = row["Số lượng"]?.toString().trim();
-                const price = row["Đơn giá"]?.toString().trim();
-                if (!sku) return;
-                const itemId = skuToId[sku.toLowerCase()];
-                if (itemId) {
-                  newLines.push({
-                    purchaseOrderLineId: "",
-                    productionOrderMaterialId: "",
-                    itemId,
-                    itemCode: idToSku[itemId] || "",
-                    itemName: idToName[itemId] || "",
-                    qtyReceived: qty || "",
-                    unitCost: price || "",
-                  });
-                } else {
-                  skipped++;
-                }
-              });
-              if (skipped > 0) {
-                toast.error(
-                  `Đã bỏ qua ${skipped} dòng chứa mã linh kiện không tồn tại.`,
+                refItems = (res.items.inventoryItems || []).map(
+                  (item: any) => ({
+                    sku: item.sku || "",
+                    name: item.itemName || "",
+                  }),
                 );
+              } catch (e) {
+                console.error("Failed to fetch reference items", e);
               }
-              setForm((f) => {
-                const filteredOldLines = overwrite
-                  ? []
-                  : f.lines.filter((l: any) => l.itemId);
-                return { ...f, lines: [...filteredOldLines, ...newLines] };
-              });
-              setIsImportOpen(false);
-            } catch {
-              toast.error("Lỗi khi đọc file Excel");
-            }
-          }}
-        />
-      }
-    />
-    <GoodsReceiptSerialDrawer
-      open={serialDrawerState.open}
-      onClose={() =>
-        setSerialDrawerState((s) => ({ ...s, open: false, lineIndex: -1 }))
-      }
-      viewOnly={
-        serialDrawerState.viewOnly ?? (viewOnly || editing?.status === "POSTED")
-      }
-      itemId={serialDrawerState.itemId}
-      itemSku={serialDrawerState.itemSku}
-      itemName={serialDrawerState.itemName}
-      trackingPolicyCode={serialDrawerState.trackingPolicyCode}
-      trackingPolicyName={serialDrawerState.trackingPolicyName}
-      requiredQty={serialDrawerState.requiredQty}
-      receiptDate={serialDrawerState.receiptDate}
-      initialSerials={serialDrawerState.initialSerials}
-      onSaveSerials={handleSaveSerialsForLine}
-    />
-  </>
+              downloadInventoryTemplate(
+                headers,
+                "Template_NhapKho.xlsx",
+                refItems,
+              );
+            }}
+            onUpload={async (file, overwrite) => {
+              try {
+                const data = await parseExcelFile(file);
+                let skipped = 0;
+                const newLines: any[] = [];
+                let allItems: any[] = [];
+                try {
+                  const res = await basicMastersApi.list({
+                    entities: "inventoryItems",
+                    limit: 5000,
+                  });
+                  allItems = res.items.inventoryItems || [];
+                } catch (e) {
+                  console.error("Failed to fetch items for upload lookup", e);
+                }
+                const skuToId: Record<string, string> = {};
+                const idToName: Record<string, string> = {};
+                const idToSku: Record<string, string> = {};
+                allItems.forEach((item: any) => {
+                  if (item.sku) {
+                    skuToId[item.sku.toLowerCase()] = item.id;
+                    idToName[item.id] = item.itemName;
+                    idToSku[item.id] = item.sku;
+                  }
+                });
+                data.forEach((row: any) => {
+                  const sku = row["Mã linh kiện"]?.toString().trim();
+                  const qty = row["Số lượng"]?.toString().trim();
+                  const price = row["Đơn giá"]?.toString().trim();
+                  if (!sku) return;
+                  const itemId = skuToId[sku.toLowerCase()];
+                  if (itemId) {
+                    newLines.push({
+                      purchaseOrderLineId: "",
+                      productionOrderMaterialId: "",
+                      itemId,
+                      itemCode: idToSku[itemId] || "",
+                      itemName: idToName[itemId] || "",
+                      qtyReceived: qty || "",
+                      unitCost: price || "",
+                    });
+                  } else {
+                    skipped++;
+                  }
+                });
+                if (skipped > 0) {
+                  toast.error(
+                    `Đã bỏ qua ${skipped} dòng chứa mã linh kiện không tồn tại.`,
+                  );
+                }
+                setForm((f) => {
+                  const filteredOldLines = overwrite
+                    ? []
+                    : f.lines.filter((l: any) => l.itemId);
+                  return { ...f, lines: [...filteredOldLines, ...newLines] };
+                });
+                setIsImportOpen(false);
+              } catch {
+                toast.error("Lỗi khi đọc file Excel");
+              }
+            }}
+          />
+        }
+      />
+      <GoodsReceiptSerialDrawer
+        open={serialDrawerState.open}
+        onClose={() =>
+          setSerialDrawerState((s) => ({ ...s, open: false, lineIndex: -1 }))
+        }
+        viewOnly={
+          serialDrawerState.viewOnly ??
+          (viewOnly || editing?.status === "POSTED")
+        }
+        itemId={serialDrawerState.itemId}
+        itemSku={serialDrawerState.itemSku}
+        itemName={serialDrawerState.itemName}
+        trackingPolicyCode={serialDrawerState.trackingPolicyCode}
+        trackingPolicyName={serialDrawerState.trackingPolicyName}
+        requiredQty={serialDrawerState.requiredQty}
+        receiptDate={serialDrawerState.receiptDate}
+        initialSerials={serialDrawerState.initialSerials}
+        onSaveSerials={handleSaveSerialsForLine}
+      />
+    </>
   );
 }

@@ -61,9 +61,7 @@ export function GoodsReceiptSerialDrawer({
   const showToast = useUIStore((s) => s.showToast);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [mode, setMode] = useState<"view" | "edit">(
-    viewOnly ? "view" : "edit",
-  );
+  const [mode, setMode] = useState<"view" | "edit">(viewOnly ? "view" : "edit");
   const [serials, setSerials] = useState<ErpGrDeclaredSerial[]>([]);
   const [isBulkPasteOpen, setIsBulkPasteOpen] = useState(false);
   const [bulkText, setBulkText] = useState("");
@@ -246,10 +244,7 @@ export function GoodsReceiptSerialDrawer({
     setBulkText("");
     setIsBulkPasteOpen(false);
     showToast({
-      title: t(
-        "inventory.serialsAdded",
-        `Đã thêm ${newRows.length} mã serial`,
-      ),
+      title: t("inventory.serialsAdded", `Đã thêm ${newRows.length} mã serial`),
       variant: "success",
     });
   };
@@ -293,10 +288,12 @@ export function GoodsReceiptSerialDrawer({
 
         if (newRows.length > 0) {
           const maxAllowed = Math.max(0, requiredQty - serials.length);
-          const limitedRows = maxAllowed > 0 ? newRows.slice(0, maxAllowed) : newRows;
+          const limitedRows =
+            maxAllowed > 0 ? newRows.slice(0, maxAllowed) : newRows;
 
           setSerials((prev) => {
-            const combined = prev.length === 0 ? limitedRows : [...prev, ...limitedRows];
+            const combined =
+              prev.length === 0 ? limitedRows : [...prev, ...limitedRows];
             return combined;
           });
           showToast({
@@ -424,11 +421,7 @@ export function GoodsReceiptSerialDrawer({
       titleExtra={
         <Badge
           variant={
-            isComplete
-              ? "default"
-              : isOver
-                ? "destructive"
-                : "secondary"
+            isComplete ? "default" : isOver ? "destructive" : "secondary"
           }
           className="ml-2"
         >
@@ -460,18 +453,26 @@ export function GoodsReceiptSerialDrawer({
               <DrawerField label={t("inventory.fields.sku", "Mã SKU")}>
                 <div className="font-semibold text-sm">{itemSku || "—"}</div>
               </DrawerField>
-              <DrawerField label={t("inventory.fields.itemName", "Tên hàng hóa")}>
+              <DrawerField
+                label={t("inventory.fields.itemName", "Tên hàng hóa")}
+              >
                 <div className="font-medium text-sm">{itemName || "—"}</div>
               </DrawerField>
               <DrawerField
-                label={t("inventory.fields.trackingPolicy", "Chính sách theo dõi")}
+                label={t(
+                  "inventory.fields.trackingPolicy",
+                  "Chính sách theo dõi",
+                )}
               >
                 <Badge variant="outline" className="font-medium">
                   {trackingPolicyName || trackingPolicyCode}
                 </Badge>
               </DrawerField>
               <DrawerField
-                label={t("inventory.fields.requiredQty", "Số lượng cần khai báo")}
+                label={t(
+                  "inventory.fields.requiredQty",
+                  "Số lượng cần khai báo",
+                )}
               >
                 <div className="text-sm font-bold text-primary">
                   {requiredQty} {t("inventory.units", "đơn vị")}
@@ -554,7 +555,9 @@ export function GoodsReceiptSerialDrawer({
                     className="h-7 text-xs font-semibold gap-1 text-primary border-primary/30 hover:bg-primary/5"
                     disabled={isGenerating}
                     onClick={handleAutoGenerate}
-                    title={t("Tự động sinh đúng số lượng cần khai báo (ghi đè danh sách hiện tại)")}
+                    title={t(
+                      "Tự động sinh đúng số lượng cần khai báo (ghi đè danh sách hiện tại)",
+                    )}
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     {isGenerating
@@ -586,12 +589,16 @@ export function GoodsReceiptSerialDrawer({
                         items: [
                           {
                             label: t("Tải file mẫu Excel"),
-                            icon: <Download className="w-4 h-4 text-emerald-600" />,
+                            icon: (
+                              <Download className="w-4 h-4 text-emerald-600" />
+                            ),
                             onClick: handleDownloadTemplate,
                           },
                           {
                             label: t("Nhập từ file Excel"),
-                            icon: <FileSpreadsheet className="w-4 h-4 text-emerald-600" />,
+                            icon: (
+                              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                            ),
                             onClick: () => fileInputRef.current?.click(),
                           },
                         ],
