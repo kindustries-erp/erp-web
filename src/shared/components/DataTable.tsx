@@ -728,7 +728,7 @@ export function DataTable<T>({
               variant === "spreadsheet" && "border-collapse border-spacing-0",
             )}
           >
-            <TableHeader className="sticky top-0 z-30 bg-muted shadow-[0_1px_0_0_var(--border-light)]">
+            <TableHeader className="sticky top-0 z-30 bg-muted border-b border-border shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06),0_1px_2px_-1px_rgba(0,0,0,0.04)]">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
                   key={headerGroup.id}
@@ -745,7 +745,7 @@ export function DataTable<T>({
                         key={header.id}
                         className={cn(
                           meta?.headerClassName,
-                          "sticky top-0 bg-muted z-20 shadow-[0_1px_0_0_var(--border-light)]",
+                          "sticky top-0 bg-muted z-20 border-r border-border",
                           isFirstCol &&
                             !enableRowSelection &&
                             variant !== "spreadsheet" &&
@@ -1048,8 +1048,8 @@ export function DataTable<T>({
                 })}
             </TableBody>
             {summaryRow && (
-              <TableFooter className="sticky bottom-0 z-30 bg-muted shadow-[0_-1px_0_0_var(--border-light)]">
-                <TableRow className="hover:bg-transparent">
+              <TableFooter className="sticky bottom-0 z-30 bg-muted border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
+                <TableRow className="hover:bg-transparent bg-muted">
                   {table.getVisibleLeafColumns().map((column, index) => {
                     const meta = column.columnDef.meta as DataTableRowMeta;
                     const isFirstCol = index === 0;

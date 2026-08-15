@@ -15,6 +15,15 @@ import { StandardFormDrawer } from "@/shared/components/StandardFormDrawer";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/Button";
 import {
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/shared/components/ui/table";
+import { cn } from "@/shared/utils";
+import {
   DrawerSection,
   DrawerField,
   inputCls,
@@ -648,31 +657,31 @@ export function GoodsReceiptSerialDrawer({
                 className="border border-dashed rounded-lg py-8 bg-muted/10 my-1"
               />
             ) : (
-              <div className="border rounded-lg overflow-hidden">
-                <div className="max-h-[380px] overflow-y-auto">
-                  <table className="w-full text-xs text-left border-collapse">
-                    <thead className="sticky top-0 bg-muted/80 backdrop-blur border-b text-muted-foreground font-semibold">
-                      <tr>
-                        <th className="py-2 px-3 w-[40px] min-w-[40px] text-center border-r">
+              <div className="border rounded-lg overflow-hidden bg-surface shadow-panel">
+                <div className="max-h-[380px] overflow-y-auto relative">
+                  <Table className="w-full table-fixed border-collapse text-xs">
+                    <TableHeader className="sticky top-0 z-30 bg-muted border-b border-border shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06),0_1px_2px_-1px_rgba(0,0,0,0.04)]">
+                      <TableRow className="hover:bg-transparent border-b border-border bg-muted">
+                        <TableHead className="sticky top-0 bg-muted z-20 w-[40px] min-w-[40px] text-center border-r border-border py-2 px-3">
                           #
-                        </th>
-                        <th className="py-2 px-3 border-r min-w-[220px]">
+                        </TableHead>
+                        <TableHead className="sticky top-0 bg-muted z-20 min-w-[220px] border-r border-border py-2 px-3">
                           {t(
                             "inventory.fields.serialNo",
                             "Số Serial / Mã định danh",
                           )}
-                        </th>
-                        <th className="py-2 px-3 border-r min-w-[160px]">
+                        </TableHead>
+                        <TableHead className="sticky top-0 bg-muted z-20 min-w-[160px] border-r border-border py-2 px-3">
                           {t("inventory.fields.notes", "Ghi chú")}
-                        </th>
+                        </TableHead>
                         {mode === "edit" && (
-                          <th className="py-2 px-3 w-[60px] text-center">
+                          <TableHead className="sticky top-0 bg-muted z-20 w-[60px] text-center border-r border-border py-2 px-3">
                             {t("common.delete", "Xóa")}
-                          </th>
+                          </TableHead>
                         )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {serials.map((row, idx) => {
                         const trimmedSn = row.serialNo?.trim().toUpperCase();
                         const isInternalDupe =
@@ -684,18 +693,18 @@ export function GoodsReceiptSerialDrawer({
                           );
 
                         return (
-                          <tr
+                          <TableRow
                             key={idx}
-                            className={`hover:bg-muted/30 transition-colors ${
-                              isInternalDupe || isDbDupe
-                                ? "bg-red-50/50 dark:bg-red-950/20"
-                                : ""
-                            }`}
+                            className={cn(
+                              "hover:bg-surface-hover transition-colors",
+                              (isInternalDupe || isDbDupe) &&
+                                "bg-red-50/50 dark:bg-red-950/20",
+                            )}
                           >
-                            <td className="py-2 px-3 text-center text-muted-foreground border-r tabular-nums">
+                            <TableCell className="py-2 px-3 text-center text-muted-foreground border-r border-border tabular-nums">
                               {idx + 1}
-                            </td>
-                            <td className="py-1.5 px-3 border-r">
+                            </TableCell>
+                            <TableCell className="py-1.5 px-3 border-r border-border">
                               {mode === "edit" ? (
                                 <div>
                                   <input
@@ -739,8 +748,8 @@ export function GoodsReceiptSerialDrawer({
                                   {row.serialNo || "—"}
                                 </span>
                               )}
-                            </td>
-                            <td className="py-1.5 px-3 border-r">
+                            </TableCell>
+                            <TableCell className="py-1.5 px-3 border-r border-border">
                               {mode === "edit" ? (
                                 <input
                                   className={`${inputCls} h-8 text-xs`}
@@ -762,9 +771,9 @@ export function GoodsReceiptSerialDrawer({
                                   {row.notes || "—"}
                                 </span>
                               )}
-                            </td>
+                            </TableCell>
                             {mode === "edit" && (
-                              <td className="py-1.5 px-3 text-center">
+                              <TableCell className="py-1.5 px-3 text-center border-r border-border">
                                 <Button
                                   size="icon"
                                   variant="ghost"
@@ -773,17 +782,17 @@ export function GoodsReceiptSerialDrawer({
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </Button>
-                              </td>
+                              </TableCell>
                             )}
-                          </tr>
+                          </TableRow>
                         );
                       })}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
 
                 {/* Footer summary */}
-                <div className="p-2.5 bg-muted/40 border-t flex items-center justify-between text-xs">
+                <div className="p-2.5 bg-muted border-t border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)] flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">
                       {t("inventory.totalDeclared", "Tổng số lượng khai báo:")}

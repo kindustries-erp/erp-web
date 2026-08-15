@@ -661,8 +661,8 @@ export function FifoFlatTable({
             ))
           )}
         </TableBody>
-        <TableFooter className="sticky bottom-0 z-10 font-semibold bg-slate-50 border-t-2 border-slate-300 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-          <TableRow className="hover:bg-slate-50">
+        <TableFooter className="sticky bottom-0 z-10 font-semibold bg-slate-50 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-border shadow-[0_-2px_6px_rgba(0,0,0,0.04)]">
+          <TableRow className="hover:bg-transparent bg-slate-50 dark:bg-slate-900">
             <TableCell
               colSpan={3}
               className="px-3 py-3 border-r border-slate-200 text-right uppercase text-slate-700"
