@@ -16,7 +16,7 @@ import { money } from "@/shared/utils/format";
 import { useHasPermission } from "@/shared/hooks/useHasPermission";
 
 export function VinfastPartsDashboardPage() {
-  const hasVinfastPerm = useHasPermission("vinfast_parts_reports", "read");
+  const hasVinfastPerm = useHasPermission("vinfast", "read");
 
   const queryClient = useQueryClient();
   const isFetchingCount = useIsFetching({

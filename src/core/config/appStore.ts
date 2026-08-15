@@ -159,23 +159,23 @@ export const SECTION_ROOTS: Partial<Record<PageKey, SectionRoot>> = {
   },
   "vinfast-parts": {
     labelKey: "nav.items.vinfastParts",
-    group: "accounting",
+    group: "vinfast",
   },
   "vinfast-invoice-settlement": {
-    labelKey: "Lệnh quyết toán xưởng Vinfast",
-    group: "manufacturing",
+    labelKey: "nav.items.vinfastSettlement",
+    group: "vinfast",
   },
   "vinfast-parts-dashboard": {
-    labelKey: "Tổng quan phụ tùng",
-    group: "inventory",
+    labelKey: "nav.items.vinfastPartsDashboard",
+    group: "vinfast",
   },
   "vinfast-parts-oto-stock": {
     labelKey: "nav.items.vinfastPartsOtoStock",
-    group: "inventory",
+    group: "vinfast",
   },
   "vinfast-parts-xemay-stock": {
     labelKey: "nav.items.vinfastPartsXemayStock",
-    group: "inventory",
+    group: "vinfast",
   },
   "settings-branch": {
     labelKey: "thietlap.tabs.chi-nhanh",
@@ -318,21 +318,26 @@ export const BREADCRUMBS: Partial<Record<PageKey, Array<[string, string?]>>> = {
   "erp-invoices-in": [["breadcrumb.accounting"], ["breadcrumb.inbound"]],
   "erp-invoices-out": [["breadcrumb.accounting"], ["breadcrumb.outbound"]],
   "erp-invoices-draft": [["breadcrumb.accounting"], ["Hóa đơn nháp"]],
-  "vinfast-parts": [["breadcrumb.accounting"], ["nav.items.vinfastParts"]],
-  "vinfast-parts-dashboard": [["breadcrumb.inventory"], ["Tổng quan phụ tùng"]],
+  "vinfast-parts": [["breadcrumb.vinfast"], ["nav.items.vinfastParts"]],
+  "vinfast-parts-dashboard": [
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
+    ["nav.items.vinfastPartsDashboard"],
+  ],
   "vinfast-parts-oto-stock": [
-    ["breadcrumb.inventory"],
-    ["nav.items.vinfastParts"],
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
     ["nav.items.vinfastPartsOtoStock"],
   ],
   "vinfast-parts-xemay-stock": [
-    ["breadcrumb.inventory"],
-    ["nav.items.vinfastParts"],
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastPartsGroup"],
     ["nav.items.vinfastPartsXemayStock"],
   ],
   "vinfast-invoice-settlement": [
-    ["breadcrumb.manufacturing"],
-    ["Lệnh quyết toán xưởng Vinfast"],
+    ["breadcrumb.vinfast"],
+    ["nav.items.vinfastWorkshopGroup"],
+    ["nav.items.vinfastSettlement"],
   ],
   "journal-entry": [["breadcrumb.accounting"], ["nav.items.reportJournal"]],
   "settings-accounts": [

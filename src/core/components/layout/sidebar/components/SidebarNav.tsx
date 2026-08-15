@@ -65,13 +65,19 @@ export function SidebarNav({
     "inventory_vouchers",
     "read",
   );
-  const canReadVinfastParts = useHasPermission("vinfast_parts_reports", "read");
-  const showInventory =
-    canReadInventoryItems || canReadInventoryVouchers || canReadVinfastParts;
+  const showInventory = canReadInventoryItems || canReadInventoryVouchers;
+
+  const canReadVinfast = useHasPermission("vinfast", "read");
+  const showVinfast = canReadVinfast;
 
   const canReadBom = useHasPermission("bom", "read");
   const canReadProduction = useHasPermission("production", "read");
-  const showManufacturing = canReadBom || canReadProduction;
+  const canReadGreenwayIntegration = useHasPermission(
+    "greenway_integration",
+    "read",
+  );
+  const showManufacturing =
+    canReadBom || canReadProduction || canReadGreenwayIntegration;
 
   const canReadInvoices = useHasPermission("invoices", "read");
   const canReadBankStatements = useHasPermission("bank_statements", "read");
@@ -84,10 +90,6 @@ export function SidebarNav({
   const canReadActivityLogs = useHasPermission("activity_logs", "read");
   const canReadSysTags = useHasPermission("sys_tags", "read");
   const canReadEmailInbox = useHasPermission("email_ingest", "read");
-  const canReadGreenwayIntegration = useHasPermission(
-    "greenway_integration",
-    "read",
-  );
 
   const showSettingsAccess = canReadAdminUsers || canReadActivityLogs;
   const showSettingsGeneral =
@@ -315,56 +317,6 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
-            {canReadVinfastParts && (
-              <NavGroup
-                collapsed={c}
-                icon={<FileText className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Phụ tùng Vinfast"
-                active={
-                  currentPage === "vinfast-parts-dashboard" ||
-                  currentPage === "vinfast-parts-oto" ||
-                  currentPage === "vinfast-parts-xemay" ||
-                  currentPage === "vinfast-parts-oto-stock" ||
-                  currentPage === "vinfast-parts-xemay-stock" ||
-                  currentPage === "vinfast-parts"
-                }
-              >
-                <NavGroupItem
-                  label="Tổng quan"
-                  active={currentPage === "vinfast-parts-dashboard"}
-                  onClick={() => navTo("vinfast-parts-dashboard")}
-                  contextPage="vinfast-parts-dashboard"
-                />
-                <NavGroupItem
-                  label="Tồn kho ôtô"
-                  active={currentPage === "vinfast-parts-oto-stock"}
-                  onClick={() => navTo("vinfast-parts-oto-stock")}
-                  contextPage="vinfast-parts-oto-stock"
-                />
-                <NavGroupItem
-                  label="Tồn kho xe máy"
-                  active={currentPage === "vinfast-parts-xemay-stock"}
-                  onClick={() => navTo("vinfast-parts-xemay-stock")}
-                  contextPage="vinfast-parts-xemay-stock"
-                />
-                {isAdminEmail && (
-                  <>
-                    <NavGroupItem
-                      label="Phụ tùng ôtô"
-                      active={currentPage === "vinfast-parts-oto"}
-                      onClick={() => navTo("vinfast-parts-oto")}
-                      contextPage="vinfast-parts-oto"
-                    />
-                    <NavGroupItem
-                      label="Phụ tùng xe máy"
-                      active={currentPage === "vinfast-parts-xemay"}
-                      onClick={() => navTo("vinfast-parts-xemay")}
-                      contextPage="vinfast-parts-xemay"
-                    />
-                  </>
-                )}
-              </NavGroup>
-            )}
           </NavSection>
         )}
 
@@ -377,8 +329,6 @@ export function SidebarNav({
           canReadGreenwayIntegration ? t("nav.items.garage") : "",
           canReadGreenwayIntegration ? t("nav.items.garageCases") : "",
           canReadGreenwayIntegration ? t("nav.items.garageGrossProfit") : "",
-          "Xưởng Vinfast",
-          "Quyết toán Hóa đơn",
         ]) && (
           <NavSection collapsed={c} label={t("nav.sections.manufacturing")}>
             {canReadBom && (
@@ -404,21 +354,6 @@ export function SidebarNav({
             {canReadGreenwayIntegration && (
               <NavGroup
                 collapsed={c}
-                icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
-                label="Xưởng Vinfast"
-                active={currentPage === "vinfast-invoice-settlement"}
-              >
-                <NavGroupItem
-                  label="Quyết toán Hóa đơn"
-                  active={currentPage === "vinfast-invoice-settlement"}
-                  onClick={() => navTo("vinfast-invoice-settlement")}
-                  contextPage="vinfast-invoice-settlement"
-                />
-              </NavGroup>
-            )}
-            {canReadGreenwayIntegration && (
-              <NavGroup
-                collapsed={c}
                 icon={<Car className="w-4 h-4 opacity-65 flex-shrink-0" />}
                 label={t("nav.items.garage")}
                 active={
@@ -440,6 +375,82 @@ export function SidebarNav({
                 />
               </NavGroup>
             )}
+          </NavSection>
+        )}
+
+      {/* VINFAST */}
+      {showVinfast &&
+        hasMatch([
+          t("nav.sections.vinfast"),
+          t("nav.items.vinfastPartsGroup"),
+          t("nav.items.vinfastWorkshopGroup"),
+          t("nav.items.vinfastPartsDashboard"),
+          t("nav.items.vinfastPartsOtoStock"),
+          t("nav.items.vinfastPartsXemayStock"),
+          t("nav.items.vinfastSettlement"),
+        ]) && (
+          <NavSection collapsed={c} label={t("nav.sections.vinfast")}>
+            <NavGroup
+              collapsed={c}
+              icon={<Package className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.vinfastPartsGroup")}
+              active={
+                currentPage === "vinfast-parts-dashboard" ||
+                currentPage === "vinfast-parts-oto-stock" ||
+                currentPage === "vinfast-parts-xemay-stock" ||
+                currentPage === "vinfast-parts-oto" ||
+                currentPage === "vinfast-parts-xemay" ||
+                currentPage === "vinfast-parts"
+              }
+            >
+              <NavGroupItem
+                label={t("nav.items.vinfastPartsDashboard")}
+                active={currentPage === "vinfast-parts-dashboard"}
+                onClick={() => navTo("vinfast-parts-dashboard")}
+                contextPage="vinfast-parts-dashboard"
+              />
+              <NavGroupItem
+                label={t("nav.items.vinfastPartsOtoStock")}
+                active={currentPage === "vinfast-parts-oto-stock"}
+                onClick={() => navTo("vinfast-parts-oto-stock")}
+                contextPage="vinfast-parts-oto-stock"
+              />
+              <NavGroupItem
+                label={t("nav.items.vinfastPartsXemayStock")}
+                active={currentPage === "vinfast-parts-xemay-stock"}
+                onClick={() => navTo("vinfast-parts-xemay-stock")}
+                contextPage="vinfast-parts-xemay-stock"
+              />
+              {isAdminEmail && (
+                <>
+                  <NavGroupItem
+                    label="Phụ tùng ôtô"
+                    active={currentPage === "vinfast-parts-oto"}
+                    onClick={() => navTo("vinfast-parts-oto")}
+                    contextPage="vinfast-parts-oto"
+                  />
+                  <NavGroupItem
+                    label="Phụ tùng xe máy"
+                    active={currentPage === "vinfast-parts-xemay"}
+                    onClick={() => navTo("vinfast-parts-xemay")}
+                    contextPage="vinfast-parts-xemay"
+                  />
+                </>
+              )}
+            </NavGroup>
+            <NavGroup
+              collapsed={c}
+              icon={<Factory className="w-4 h-4 opacity-65 flex-shrink-0" />}
+              label={t("nav.items.vinfastWorkshopGroup")}
+              active={currentPage === "vinfast-invoice-settlement"}
+            >
+              <NavGroupItem
+                label={t("nav.items.vinfastSettlement")}
+                active={currentPage === "vinfast-invoice-settlement"}
+                onClick={() => navTo("vinfast-invoice-settlement")}
+                contextPage="vinfast-invoice-settlement"
+              />
+            </NavGroup>
           </NavSection>
         )}
 
