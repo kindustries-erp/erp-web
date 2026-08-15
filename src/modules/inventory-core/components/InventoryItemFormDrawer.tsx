@@ -575,7 +575,7 @@ export function InventoryItemFormDrawer({
                   >
                     <Combobox
                       value={form.trackingPolicyId}
-                      disabled={viewOnly}
+                      disabled={viewOnly || !!editing?.hasSerials}
                       allowClear
                       onChange={(value) =>
                         setForm((prev) => ({
@@ -589,6 +589,14 @@ export function InventoryItemFormDrawer({
                       options={trackingPolicyOptions}
                       placeholder="Chọn chính sách tracking"
                     />
+                    {editing?.hasSerials && !viewOnly && (
+                      <span className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 block">
+                        {t(
+                          "inventoryMasters.warnings.lockedPolicy",
+                          "⚠️ Mặt hàng đã có số Serial trong kho, không thể thay đổi Tracking Policy.",
+                        )}
+                      </span>
+                    )}
                   </DrawerField>
 
                   <DrawerField
@@ -599,7 +607,7 @@ export function InventoryItemFormDrawer({
                   >
                     <Combobox
                       value={form.trackingCategoryId}
-                      disabled={viewOnly}
+                      disabled={viewOnly || !!editing?.hasSerials}
                       allowClear
                       onChange={(value) =>
                         setForm((prev) => ({

@@ -81,6 +81,7 @@ export interface ErpInventoryItem {
   trackingCategoryId?: string | null;
   trackingCategory?: InventoryMasterOption | null;
   attributes?: string[];
+  hasSerials?: boolean;
   isDeleted?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
