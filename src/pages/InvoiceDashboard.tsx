@@ -8,14 +8,14 @@ import { format } from "date-fns";
 import { useFilterPanel } from "@/shared/hooks/useFilterPanel";
 import { getBranchesApi } from "@/modules/branches/api/branchApi";
 import { erpInvoiceDashboardApi } from "@/modules/erp-invoices-core/api/erpInvoiceDashboardApi";
-import { PartnerInvoiceDrawer } from "@/modules/erp-invoices-core/components/PartnerInvoiceDrawer";
 import { useAuthStore } from "@/modules/auth/domain/authStore";
 import { ComingSoon } from "@/pages/ComingSoon";
 import { useHasAnyPermission } from "@/shared/hooks/useHasPermission";
 import { BranchInvoiceChart } from "./components/BranchInvoiceChart";
 import { BranchVatChart } from "./components/BranchVatChart";
-import { BranchInvoiceTable } from "./components/BranchInvoiceTable";
 import { InvoiceStatsCards } from "./components/InvoiceStatsCards";
+import { Switch } from "@/shared/components/ui/switch";
+import { cn } from "@/shared/utils";
 
 export function InvoiceDashboard() {
   const { employee } = useAuthStore();
@@ -25,12 +25,10 @@ export function InvoiceDashboard() {
   const hasPerm = useHasAnyPermission(["invoices"], "read");
   const canView = hasPerm || isAdminEmail;
 
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [selectedPartner, setSelectedPartner] = React.useState<{
-    taxCode: string;
-    partnerName: string;
-  } | null>(null);
   const [isExporting, setIsExporting] = React.useState(false);
+  const [chartViewMode, setChartViewMode] = React.useState<"invoice" | "vat">(
+    "invoice",
+  );
 
   const { data: branches = [], isLoading: isLoadingBranches } = useQuery({
     queryKey: ["branches"],
@@ -40,15 +38,9 @@ export function InvoiceDashboard() {
   const isFetchingStats = useIsFetching({
     queryKey: ["invoice-dashboard-stats"],
   });
-  const isFetchingPartners = useIsFetching({
-    queryKey: ["invoice-dashboard-partners"],
-  });
   const isFetchingBranches = useIsFetching({ queryKey: ["branches"] });
   const isRefreshing =
-    isLoadingBranches ||
-    isFetchingStats > 0 ||
-    isFetchingPartners > 0 ||
-    isFetchingBranches > 0;
+    isLoadingBranches || isFetchingStats > 0 || isFetchingBranches > 0;
 
   const filterConfig = React.useMemo(() => {
     const custom: any[] = [
@@ -68,16 +60,6 @@ export function InvoiceDashboard() {
   }, [branches]);
 
   const filter = useFilterPanel(filterConfig, () => {});
-
-  const handleRowClick = (row: any) => {
-    if (row.taxCode) {
-      setSelectedPartner({
-        taxCode: row.taxCode,
-        partnerName: row.partnerName,
-      });
-      setDrawerOpen(true);
-    }
-  };
 
   if (!canView) {
     return <ComingSoon />;
@@ -153,9 +135,6 @@ export function InvoiceDashboard() {
           queryKey: ["invoice-dashboard-stats"],
         });
         queryClient.invalidateQueries({
-          queryKey: ["invoice-dashboard-partners"],
-        });
-        queryClient.invalidateQueries({
           queryKey: ["erp-invoices-stats"],
         });
       }}
@@ -171,126 +150,111 @@ export function InvoiceDashboard() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-8 mb-8">
+      <div className="flex flex-col gap-6 mb-8">
         {/* KPI Summary Cards */}
-        <div className="flex flex-col gap-6">
-          <InvoiceStatsCards
-            direction="OUT"
-            title="Hóa đơn Bán ra (Doanh thu)"
-          />
-          <InvoiceStatsCards direction="IN" title="Hóa đơn Mua vào (Chi phí)" />
-        </div>
+        <InvoiceStatsCards direction="OUT" title="Hóa đơn Bán ra (Doanh thu)" />
+        <InvoiceStatsCards direction="IN" title="Hóa đơn Mua vào (Chi phí)" />
 
-        {/* Biến động Hóa đơn (Charts) */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">
-            Biến động Hóa đơn (Doanh thu / Chi phí)
-          </h3>
-
-          {!selectedBranchId && (
-            <div className="mb-4">
-              <BranchInvoiceChart
-                key="chart-all"
-                branchId="all"
-                branchName="Tất cả chi nhánh (Tổng hợp)"
-                filterState={filter.state}
-                canView={canView}
-              />
+        {/* Biểu đồ Biến động (Doanh thu / Chi phí hoặc Thuế VAT) */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm whitespace-nowrap">
+                {chartViewMode === "vat"
+                  ? "Biến động Thuế VAT (Đầu vào / Đầu ra)"
+                  : "Biến động Hóa đơn (Doanh thu / Chi phí)"}
+              </h4>
+              <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1 hidden sm:block" />
             </div>
-          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {sectionsToRender.map((section) => (
-              <BranchInvoiceChart
-                key={`chart-${section.id || "unclassified"}`}
-                branchId={section.id}
-                branchName={section.name}
-                filterState={filter.state}
-                canView={canView}
+            <div className="flex items-center gap-2.5 flex-shrink-0">
+              <span
+                className={cn(
+                  "text-xs cursor-pointer select-none transition-colors",
+                  chartViewMode === "invoice"
+                    ? "font-semibold text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => setChartViewMode("invoice")}
+              >
+                Doanh thu / Chi phí
+              </span>
+              <Switch
+                checked={chartViewMode === "vat"}
+                onCheckedChange={(checked) =>
+                  setChartViewMode(checked ? "vat" : "invoice")
+                }
+                aria-label="Chuyển đổi xem Doanh thu hoặc VAT"
               />
-            ))}
-          </div>
-        </div>
-
-        {/* Biểu đồ VAT (VAT Charts) */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">
-            Biến động Thuế VAT (Đầu vào / Đầu ra)
-          </h3>
-
-          {!selectedBranchId && (
-            <div className="mb-4">
-              <BranchVatChart
-                key="vat-chart-all"
-                branchId="all"
-                branchName="Tất cả chi nhánh (Tổng hợp)"
-                filterState={filter.state}
-                canView={canView}
-              />
+              <span
+                className={cn(
+                  "text-xs cursor-pointer select-none transition-colors",
+                  chartViewMode === "vat"
+                    ? "font-semibold text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => setChartViewMode("vat")}
+              >
+                Thuế VAT
+              </span>
             </div>
+          </div>
+
+          {chartViewMode === "invoice" ? (
+            <>
+              {!selectedBranchId && (
+                <div className="mb-1">
+                  <BranchInvoiceChart
+                    key="chart-all"
+                    branchId="all"
+                    branchName="Tất cả chi nhánh (Tổng hợp)"
+                    filterState={filter.state}
+                    canView={canView}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {sectionsToRender.map((section) => (
+                  <BranchInvoiceChart
+                    key={`chart-${section.id || "unclassified"}`}
+                    branchId={section.id}
+                    branchName={section.name}
+                    filterState={filter.state}
+                    canView={canView}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              {!selectedBranchId && (
+                <div className="mb-4">
+                  <BranchVatChart
+                    key="vat-chart-all"
+                    branchId="all"
+                    branchName="Tất cả chi nhánh (Tổng hợp)"
+                    filterState={filter.state}
+                    canView={canView}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {sectionsToRender.map((section) => (
+                  <BranchVatChart
+                    key={`vat-chart-${section.id || "unclassified"}`}
+                    branchId={section.id}
+                    branchName={section.name}
+                    filterState={filter.state}
+                    canView={canView}
+                  />
+                ))}
+              </div>
+            </>
           )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {sectionsToRender.map((section) => (
-              <BranchVatChart
-                key={`vat-chart-${section.id || "unclassified"}`}
-                branchId={section.id}
-                branchName={section.name}
-                filterState={filter.state}
-                canView={canView}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Công nợ Phải thu (Receivables) */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">
-            Công nợ Phải thu (Khách hàng)
-          </h3>
-          <div className="flex flex-col gap-6">
-            {sectionsToRender.map((section) => (
-              <BranchInvoiceTable
-                key={`receivable-${section.id || "unclassified"}`}
-                branchId={section.id}
-                branchName={section.name}
-                filterState={filter.state}
-                type="receivable"
-                canView={canView}
-                onRowClick={handleRowClick}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Công nợ Phải trả (Payables) */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">
-            Công nợ Phải trả (Nhà cung cấp)
-          </h3>
-          <div className="flex flex-col gap-6">
-            {sectionsToRender.map((section) => (
-              <BranchInvoiceTable
-                key={`payable-${section.id || "unclassified"}`}
-                branchId={section.id}
-                branchName={section.name}
-                filterState={filter.state}
-                type="payable"
-                canView={canView}
-                onRowClick={handleRowClick}
-              />
-            ))}
-          </div>
         </div>
       </div>
-
-      <PartnerInvoiceDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        taxCode={selectedPartner?.taxCode}
-        partnerName={selectedPartner?.partnerName}
-        filterState={filter.state}
-      />
     </DashboardTemplate>
   );
 }

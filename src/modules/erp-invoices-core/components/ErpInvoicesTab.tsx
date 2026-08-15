@@ -51,6 +51,7 @@ import { useHasPermission } from "@/shared/hooks/useHasPermission";
 import { VietnamInvoiceTemplate } from "@/modules/erp-invoices-core/components/VietnamInvoiceTemplate";
 import { InvoiceBulkPostingDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkPostingDrawer";
 import { InvoiceBulkNetOffDrawer } from "@/modules/erp-invoices-core/components/InvoiceBulkNetOffDrawer";
+import { PartnerInvoiceDrawer } from "@/modules/erp-invoices-core/components/PartnerInvoiceDrawer";
 import { BankTransactionDetailDrawer } from "@/pages/finance/components/BankTransactionDetailDrawer";
 import {
   ErpInvoiceInternalMain,
@@ -207,6 +208,11 @@ export function ErpInvoicesTab({
   const [bulkPostingMode, setBulkPostingMode] = useState<"post" | "unpost">(
     "post",
   );
+  const [selectedPartner, setSelectedPartner] = useState<{
+    taxCode: string;
+    partnerName: string;
+  } | null>(null);
+  const [partnerDrawerOpen, setPartnerDrawerOpen] = useState(false);
 
   const selectedIds = useMemo(
     () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
@@ -919,12 +925,28 @@ export function ErpInvoicesTab({
             inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "—";
           const text =
             direction === "IN" ? inv.sellerName || "—" : buyerDisplayName;
+          const taxCode =
+            direction === "IN" ? inv.sellerTaxCode : inv.buyerTaxCode;
+
           return (
-            <Tooltip content={text !== "—" ? text : ""}>
-              <div className="whitespace-normal line-clamp-2 break-words w-full cursor-pointer">
-                {text}
-              </div>
-            </Tooltip>
+            <TableText
+              text={text}
+              onDrawerClick={
+                taxCode
+                  ? (e) => {
+                      e.stopPropagation();
+                      setSelectedPartner({
+                        taxCode,
+                        partnerName: text !== "—" ? text : "",
+                      });
+                      setPartnerDrawerOpen(true);
+                    }
+                  : undefined
+              }
+              tooltip={true}
+              enableCopy={true}
+              textClassName="whitespace-normal line-clamp-2 break-words"
+            />
           );
         },
       },
@@ -950,10 +972,34 @@ export function ErpInvoicesTab({
         size: 150,
         headerClassName: "text-center",
         className: "text-muted-foreground text-xs text-left",
-        cell: (inv) =>
-          direction === "IN"
-            ? inv.sellerTaxCode || "—"
-            : inv.buyerTaxCode || "—",
+        cell: (inv) => {
+          const taxCode =
+            direction === "IN"
+              ? inv.sellerTaxCode || "—"
+              : inv.buyerTaxCode || "—";
+          const buyerDisplayName =
+            inv.buyerName?.trim() || inv.buyerPersonalName?.trim() || "";
+          const partnerName =
+            direction === "IN" ? inv.sellerName || "" : buyerDisplayName;
+
+          if (!taxCode || taxCode === "—") return "—";
+
+          return (
+            <TableText
+              text={taxCode}
+              onDrawerClick={(e) => {
+                e.stopPropagation();
+                setSelectedPartner({
+                  taxCode,
+                  partnerName,
+                });
+                setPartnerDrawerOpen(true);
+              }}
+              tooltip={true}
+              enableCopy={true}
+            />
+          );
+        },
       },
       {
         key: "taxInvoiceType",
@@ -2474,6 +2520,13 @@ export function ErpInvoicesTab({
           setRowSelection({});
           listHook.loadInvoices();
         }}
+      />
+
+      <PartnerInvoiceDrawer
+        open={partnerDrawerOpen}
+        onClose={() => setPartnerDrawerOpen(false)}
+        taxCode={selectedPartner?.taxCode}
+        partnerName={selectedPartner?.partnerName}
       />
     </>
   );

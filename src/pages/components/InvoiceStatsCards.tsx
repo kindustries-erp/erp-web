@@ -109,7 +109,14 @@ export function InvoiceStatsCards({
 
   return (
     <div className="flex flex-col gap-3">
-      {title && <h3 className="text-base font-semibold">{title}</h3>}
+      {title && (
+        <div className="flex items-center gap-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-sm">
+            {title}
+          </h4>
+          <div className="h-px bg-slate-200/80 dark:bg-slate-700 flex-1" />
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {/* Month Card */}
         <KpiCard
