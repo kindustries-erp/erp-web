@@ -7,20 +7,21 @@
 .slide-panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.16);
+  background: var(--drawer-overlay-bg, rgba(15, 23, 42, 0.04));
   z-index: 400;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.22s;
+  transition: opacity 0.22s ease-out;
 }
 .slide-panel-overlay.open {
   opacity: 1;
   pointer-events: all;
 }
 
-/* Orcaq theme: darker overlay */
-.theme-orcaq .slide-panel-overlay {
-  background: rgba(0, 0, 0, 0.35);
+/* Orcaq & Midnight theme: subtle dark overlay */
+.theme-orcaq .slide-panel-overlay,
+.theme-midnight .slide-panel-overlay {
+  background: var(--drawer-overlay-bg, rgba(0, 0, 0, 0.18));
 }
 
 /* ── Slide Panel ── */
@@ -32,15 +33,17 @@
   height: calc(100vh - 18px) !important;
   width: 420px;
   max-width: calc(100vw - 44px);
-  background: var(--surface, #ffffff);
-  border: 1px solid var(--border);
+  background: var(--drawer-bg, rgba(255, 255, 255, 0.82));
+  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  border: 1px solid var(--drawer-border, var(--border));
   border-radius: 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow:
-    0 16px 48px -8px rgba(15, 23, 42, 0.18),
-    0 4px 16px rgba(15, 23, 42, 0.08),
+    0 20px 50px -10px rgba(15, 23, 42, 0.16),
+    0 8px 24px -4px rgba(15, 23, 42, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.6) inset;
   transform: translateX(calc(100% + 16px));
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -67,9 +70,25 @@
   border-radius: 0;
   border: none;
   border-left: 1px solid var(--border);
+  background: var(--drawer-bg, rgba(24, 24, 27, 0.82));
+  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
   box-shadow:
-    -4px 0 24px rgba(0, 0, 0, 0.08),
-    -2px 0 8px rgba(0, 0, 0, 0.04);
+    -6px 0 28px rgba(0, 0, 0, 0.4),
+    -2px 0 8px rgba(0, 0, 0, 0.2),
+    1px 0 0 0 rgba(255, 255, 255, 0.08) inset;
+}
+
+/* Midnight theme: frosted dark glass */
+.theme-midnight .slide-panel {
+  background: var(--drawer-bg, rgba(20, 20, 24, 0.82));
+  backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%) contrast(102%);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 20px 50px -10px rgba(0, 0, 0, 0.55),
+    0 8px 24px -4px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
 @media (max-width: 500px) {

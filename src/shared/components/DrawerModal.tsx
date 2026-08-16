@@ -252,11 +252,16 @@ export function DrawerModal({
           {/* ── Sticky Header ── */}
           <div
             className={cn(
-              "sticky top-0 z-20 px-5 py-3.5 border-b border-border table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
+              "sticky top-0 z-20 px-5 py-3.5 border-b border-border/80 table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
               isScrolledTop
                 ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
                 : "shadow-none",
             )}
+            style={{
+              backgroundColor: isScrolledTop
+                ? "var(--drawer-header-scrolled-bg, rgba(246, 248, 252, 0.90))"
+                : "var(--drawer-header-bg, rgba(246, 248, 252, 0.75))",
+            }}
           >
             {icon && (
               <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
@@ -292,11 +297,16 @@ export function DrawerModal({
           {(footerLeft || (actions && actions.length > 0)) && (
             <div
               className={cn(
-                "sticky bottom-0 z-20 mt-auto px-5 py-3 border-t border-border table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
+                "sticky bottom-0 z-20 mt-auto px-5 py-3 border-t border-border/80 table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
                 isScrolledBottom
                   ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
                   : "shadow-none",
               )}
+              style={{
+                backgroundColor: isScrolledBottom
+                  ? "var(--drawer-footer-scrolled-bg, rgba(246, 248, 252, 0.90))"
+                  : "var(--drawer-footer-bg, rgba(246, 248, 252, 0.75))",
+              }}
             >
               {/* Left-aligned actions or custom footerLeft */}
               <div className="flex gap-2 flex-1 min-w-0 items-center">
@@ -366,7 +376,7 @@ export function DrawerSection({
         className,
       )}
       style={{
-        background: "var(--drawer-section-bg, rgba(255,255,255,0.55))",
+        background: "var(--drawer-section-bg, rgba(255,255,255,0.65))",
         backdropFilter: "blur(12px) saturate(180%)",
         WebkitBackdropFilter: "blur(12px) saturate(180%)",
       }}
