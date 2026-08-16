@@ -16,14 +16,12 @@ import { CellInput } from "@/shared/components/CellInput";
 import { bomCoreApi, type ErpBom } from "@/modules/bom-core/api/bomCoreApi";
 import {
   bomConfigApi,
-  type BomCategory,
   type BomAttributeDef,
 } from "@/modules/bom-core/api/bomConfigApi";
 import type { DrawerMode } from "@/shared/stores/useDrawerStore";
 import toast from "react-hot-toast";
 import { ActionDropdown } from "@/shared/components/ActionDropdown";
 import {
-  Upload,
   Download,
   Loader2,
   Trash2,
@@ -1035,8 +1033,12 @@ export function BomFormDrawer({
                       <Button
                         size="sm"
                         variant="outline"
+                        disabled={importing}
                         className="h-7 text-xs font-semibold gap-1"
                       >
+                        {importing && (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        )}
                         <span>{t("common.actions", "Thao tác")}</span>
                         <ChevronDown className="w-3.5 h-3.5 opacity-60" />
                       </Button>

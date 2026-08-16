@@ -10,7 +10,6 @@ import {
   CheckCircle,
   FileSpreadsheet,
   FileText,
-  Plus,
   Settings,
 } from "lucide-react";
 import toast from "react-hot-toast";
