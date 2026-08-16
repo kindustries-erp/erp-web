@@ -488,28 +488,75 @@ export function BomFormDrawer({
   const total = sortedAndFilteredLines.length;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const exportActions =
-    editing && onExport
-      ? [
+  const validateForm = () => {
+    if (selectedCategory && activeAttributeDefs.length > 0) {
+      for (const attr of activeAttributeDefs) {
+        if (attr.isRequired) {
+          const val = form.attributes?.[attr.id];
+          if (
+            val === undefined ||
+            val === null ||
+            (typeof val === "string" && val.trim() === "")
+          ) {
+            toast.error(
+              `${t("Vui lòng chọn hoặc điền thuộc tính bắt buộc")}: ${attr.name}`,
+            );
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  };
+
+  const onSaveWithValidation = (statusTarget?: string) => {
+    if (!validateForm()) return;
+    setSubmittingStatus(statusTarget || null);
+    handleSave(statusTarget);
+  };
+
+  const footerLeft =
+    editing && onExport ? (
+      <ActionDropdown
+        align="start"
+        items={[
           {
-            label: t("common.exportExcel"),
-            onClick: () => onExport("xlsx"),
-            variant: "outline" as const,
-            disabled: drawerLoading || saving,
+            groupLabel: t("common.exportGroup", "XUẤT DỮ LIỆU"),
+            items: [
+              {
+                label: t("common.exportExcel", "Tải file Excel"),
+                icon: (
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                ),
+                onClick: () => onExport("xlsx"),
+                disabled: drawerLoading || saving,
+              },
+              {
+                label: t("common.exportCsv", "Tải file CSV"),
+                icon: <FileSpreadsheet className="w-4 h-4 text-primary" />,
+                onClick: () => onExport("csv"),
+                disabled: drawerLoading || saving,
+              },
+            ],
           },
-          {
-            label: t("common.exportCsv"),
-            onClick: () => onExport("csv"),
-            variant: "outline" as const,
-            disabled: drawerLoading || saving,
-          },
-        ]
-      : [];
+        ]}
+        customTrigger={
+          <button
+            type="button"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-[color:var(--border)] bg-white dark:bg-zinc-800 hover:bg-[color:var(--bg-muted)] text-[color:var(--fg)] shadow-sm transition-colors"
+          >
+            <span className="font-semibold text-[color:var(--fg)]">
+              {t("common.actions", "Thao tác")}
+            </span>
+            <ChevronDown className="w-3.5 h-3.5 text-[color:var(--faint)]" />
+          </button>
+        }
+      />
+    ) : undefined;
 
   const drawerActions =
     viewOnly || drawerLoading
       ? [
-          ...exportActions,
           {
             label: t("Đóng"),
             onClick: onClose,
@@ -531,8 +578,7 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "DRAFT",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("DRAFT");
-                handleSave("DRAFT");
+                onSaveWithValidation("DRAFT");
               },
             },
             {
@@ -541,13 +587,11 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("ACTIVE");
-                handleSave("ACTIVE");
+                onSaveWithValidation("ACTIVE");
               },
             },
           ]
         : [
-            ...exportActions,
             {
               label: t("Hủy"),
               onClick: onClose,
@@ -560,8 +604,7 @@ export function BomFormDrawer({
               loading: saving && submittingStatus === "ACTIVE",
               disabled: saving,
               onClick: () => {
-                setSubmittingStatus("ACTIVE");
-                handleSave("ACTIVE");
+                onSaveWithValidation("ACTIVE");
               },
             },
           ];
@@ -986,6 +1029,7 @@ export function BomFormDrawer({
       }
       subtitle={editing ? editing.bomCode : t("Định mức nguyên vật liệu")}
       actions={drawerActions}
+      footerLeft={footerLeft}
       size="xl"
       error={saveError}
       loading={drawerLoading}

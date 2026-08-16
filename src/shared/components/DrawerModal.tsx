@@ -252,16 +252,11 @@ export function DrawerModal({
           {/* ── Sticky Header ── */}
           <div
             className={cn(
-              "sticky top-0 z-20 px-[18px] py-[14px] border-b border-border flex items-center gap-[10px] flex-shrink-0 transition-shadow duration-200",
+              "sticky top-0 z-20 px-5 py-3.5 border-b border-border table-header-glass flex items-center gap-2.5 flex-shrink-0 transition-shadow duration-200",
               isScrolledTop
-                ? "shadow-[0_4px_16px_-2px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
+                ? "shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08),0_2px_4px_-2px_rgba(15,23,42,0.04)]"
                 : "shadow-none",
             )}
-            style={{
-              background: "var(--drawer-header-bg, rgba(246, 248, 252, 0.72))",
-              backdropFilter: "blur(20px) saturate(200%)",
-              WebkitBackdropFilter: "blur(20px) saturate(200%)",
-            }}
           >
             {icon && (
               <div className="w-[30px] h-[30px] bg-[color:var(--muted)] rounded-lg flex items-center justify-center flex-shrink-0 text-[color:var(--muted-fg)]">
@@ -297,17 +292,11 @@ export function DrawerModal({
           {(footerLeft || (actions && actions.length > 0)) && (
             <div
               className={cn(
-                "sticky bottom-0 z-20 mt-auto px-[18px] py-3 border-t border-[rgba(228,231,236,0.6)] flex gap-2 flex-shrink-0 transition-shadow duration-200",
+                "sticky bottom-0 z-20 mt-auto px-5 py-3 border-t border-border table-footer-glass flex gap-2 flex-shrink-0 transition-shadow duration-200",
                 isScrolledBottom
-                  ? "shadow-[0_-4px_16px_-2px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
+                  ? "shadow-[0_-4px_16px_-4px_rgba(15,23,42,0.08),0_-2px_4px_-2px_rgba(15,23,42,0.04)]"
                   : "shadow-none",
               )}
-              style={{
-                background:
-                  "var(--drawer-footer-bg, rgba(246, 248, 252, 0.76))",
-                backdropFilter: "blur(20px) saturate(200%)",
-                WebkitBackdropFilter: "blur(20px) saturate(200%)",
-              }}
             >
               {/* Left-aligned actions or custom footerLeft */}
               <div className="flex gap-2 flex-1 min-w-0 items-center">

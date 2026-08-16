@@ -52,9 +52,11 @@
 
   /* ── Drawer frosted glass ── */
   --drawer-bg: rgba(246, 248, 252, 0.68);
-  --drawer-header-bg: rgba(246, 248, 252, 0.72);
-  --drawer-footer-bg: rgba(246, 248, 252, 0.76);
-  --drawer-section-bg: rgba(255, 255, 255, 0.55);
+  --drawer-header-bg: rgba(246, 248, 252, 0.7);
+  --drawer-header-scrolled-bg: rgba(246, 248, 252, 0.82);
+  --drawer-footer-bg: rgba(246, 248, 252, 0.7);
+  --drawer-footer-scrolled-bg: rgba(246, 248, 252, 0.82);
+  --drawer-section-bg: rgba(255, 255, 255, 0.6);
 
   /* ── App shell ── */
   --app-shell-bg: #1e1e1e;

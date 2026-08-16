@@ -32,9 +32,7 @@
   height: calc(100vh - 18px) !important;
   width: 420px;
   max-width: calc(100vw - 44px);
-  background: var(--drawer-bg, rgba(246, 248, 252, 0.68));
-  backdrop-filter: blur(24px) saturate(210%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(210%) !important;
+  background: var(--surface, #ffffff);
   border: 1px solid var(--border);
   border-radius: 14px;
   display: flex;
