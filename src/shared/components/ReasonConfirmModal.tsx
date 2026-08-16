@@ -51,17 +51,25 @@ export function ReasonConfirmModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 transition-all duration-300"
+      className="fixed inset-0 transition-all duration-300 flex items-center justify-center p-4"
       style={{
         zIndex,
-        backgroundColor: "rgba(0, 0, 0, 0.15)",
+        backgroundColor: "rgba(15, 23, 42, 0.20)",
+        backdropFilter: "blur(2px)",
+        WebkitBackdropFilter: "blur(2px)",
       }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !loading) onCancel();
       }}
     >
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white border border-border/50 rounded-2xl shadow-xl p-6 w-full max-w-[380px]">
-        <h3 className="text-sm font-semibold text-slate-900 mb-1.5">
+      <div
+        className="relative bg-surface border border-border rounded-2xl p-6 w-full max-w-[400px] animate-in fade-in-0 zoom-in-95 duration-150"
+        style={{
+          boxShadow:
+            "0 24px 48px -12px rgba(15, 23, 42, 0.22), 0 4px 16px rgba(15, 23, 42, 0.08)",
+        }}
+      >
+        <h3 className="text-sm font-semibold text-foreground mb-1.5">
           {title || "Xác nhận"}
         </h3>
         {message && (

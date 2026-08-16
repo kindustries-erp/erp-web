@@ -1192,7 +1192,7 @@ export function ErpInvoicesTab({
               </h4>
               {row.items && row.items.length > 0 ? (
                 <table className="w-full text-sm text-left border-collapse min-w-[700px]">
-                  <thead className="bg-slate-50 sticky top-0">
+                  <thead className="bg-slate-100/60 sticky top-0 backdrop-blur-sm">
                     <tr>
                       <th className="px-2 py-1 border-b text-slate-600 font-medium">
                         Tên mặt hàng

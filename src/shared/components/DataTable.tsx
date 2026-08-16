@@ -273,7 +273,7 @@ function ColumnToggle<T>({
         <Popover.Content
           align="end"
           sideOffset={6}
-          className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content bg-surface border border-border shadow-md"
+          className="z-[9999] min-w-[180px] rounded-lg p-1 popup-content border border-border shadow-md"
         >
           <DndContext
             sensors={sensors}

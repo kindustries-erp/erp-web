@@ -78,7 +78,16 @@
 
 /* Collapsed state */
 .sidebar.collapsed {
-  width: 52px;
+  width: 58px;
+}
+
+.sidebar.collapsed .overflow-y-auto {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar.collapsed .overflow-y-auto::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar.collapsed .hide-on-collapse {
@@ -137,8 +146,19 @@
   padding-bottom: 0;
 }
 
+.sidebar.collapsed .mx-2 {
+  margin-left: 6px;
+  margin-right: 6px;
+  padding-left: 0;
+  padding-right: 0;
+  justify-content: center;
+}
+
 .sidebar.collapsed .nav-icon {
-  transform: translateX(4px);
+  transform: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ── Right Panel ── */
