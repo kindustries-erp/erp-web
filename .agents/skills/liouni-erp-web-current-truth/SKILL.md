@@ -9,12 +9,9 @@ Use this skill only inside this repository.
 
 ## Local read order
 
-1. `@.agents/context/current-truth.md`
-2. `@AGENTS.md`
-3. `@docs/web-current-truth-index.md`
-4. `@docs/ai/technical-instructions.md`
-5. `@docs/app-structure.md`
-6. Relevant file in `@docs/tasks/`
+1. `@.agents/AGENTS.md`
+2. `@README.md`
+3. Antigravity Brain (`implementation_plan.md` & `walkthrough.md`)
 
 ## Current truth
 
@@ -35,7 +32,7 @@ Use this skill only inside this repository.
 - Inspect current state before edits
 - Use Bun/Bunx first
 - Be evidence-first
-- No code without a task file under `docs/tasks/`
+- Manage all task execution, planning, and verification in Antigravity Brain (`implementation_plan.md` -> `walkthrough.md`)
 - Keep task checklist updated in realtime
 - **Strict Git Workflow**: Follow the exact sequence: pull -> build -> check:ci -> test -> commit -> push (see rules for exact trigger definitions).
 - When task docs are stale, verify with code + build/test + git state before correcting status/checklist
